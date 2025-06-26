@@ -5,16 +5,31 @@ import { Navigation } from "@/components/Navigation";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { InvestTab } from "@/components/InvestTab";
 import { MoreTab } from "@/components/MoreTab";
+import { SwapPage } from "@/components/SwapPage";
+import { InvestmentOpportunity } from "@/types/investment";
 
 export default function DashboardApp() {
   const [activeTab, setActiveTab] = useState("portfolio");
+  const [selectedStrategy, setSelectedStrategy] = useState<InvestmentOpportunity | null>(null);
+
+  const handleInvestClick = (strategy: InvestmentOpportunity) => {
+    setSelectedStrategy(strategy);
+  };
+
+  const handleBackToInvest = () => {
+    setSelectedStrategy(null);
+  };
 
   const renderTabContent = () => {
+    if (selectedStrategy) {
+      return <SwapPage strategy={selectedStrategy} onBack={handleBackToInvest} />;
+    }
+
     switch (activeTab) {
       case "portfolio":
         return <WalletPortfolio />;
       case "invest":
-        return <InvestTab />;
+        return <InvestTab onInvestClick={handleInvestClick} />;
       case "more":
         return <MoreTab />;
       default:

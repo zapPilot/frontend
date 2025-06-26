@@ -14,14 +14,14 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { PieChart, PieChartLegend } from "./PieChart";
+import { mockPortfolioData } from "../data/mockPortfolio";
+import { usePortfolio } from "../hooks/usePortfolio";
 import {
   formatCurrency,
   formatNumber,
   getChangeColorClasses,
 } from "../lib/utils";
-import { mockPortfolioData } from "../data/mockPortfolio";
-import { usePortfolio } from "../hooks/usePortfolio";
+import { PieChart, PieChartLegend } from "./PieChart";
 
 export function WalletPortfolio() {
   const {
@@ -65,7 +65,7 @@ export function WalletPortfolio() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
             <p className="text-3xl font-bold text-white">
@@ -99,6 +99,36 @@ export function WalletPortfolio() {
               {formatCurrency(portfolioMetrics.totalChange24h, balanceHidden)}
             </p>
           </div>
+        </div>
+
+        {/* Wallet Action Buttons */}
+        <div className="grid grid-cols-3 gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+          >
+            <ArrowUpRight className="w-5 h-5" />
+            <span className="text-sm">ZapIn</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+          >
+            <ArrowDownLeft className="w-5 h-5" />
+            <span className="text-sm">ZapOut</span>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98 }}
+            className="p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="text-sm">Optimize</span>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -250,48 +280,6 @@ export function WalletPortfolio() {
         </div>
       </motion.div>
 
-      {/* Action Buttons */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
-        <motion.button
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className="p-6 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold flex items-center justify-center space-x-3 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
-        >
-          <ArrowUpRight className="w-6 h-6" />
-          <div className="text-left">
-            <div className="text-lg">ZapIn</div>
-            <div className="text-sm opacity-90">Add liquidity optimally</div>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className="p-6 rounded-2xl bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold flex items-center justify-center space-x-3 hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
-        >
-          <ArrowDownLeft className="w-6 h-6" />
-          <div className="text-left">
-            <div className="text-lg">ZapOut</div>
-            <div className="text-sm opacity-90">Exit with minimal slippage</div>
-          </div>
-        </motion.button>
-
-        <motion.button
-          whileHover={{ scale: 1.02, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className="p-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold flex items-center justify-center space-x-3 hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-        >
-          <Settings className="w-6 h-6" />
-          <div className="text-left">
-            <div className="text-lg">Optimize</div>
-            <div className="text-sm opacity-90">Rebalance for max yield</div>
-          </div>
-        </motion.button>
-      </motion.div>
     </div>
   );
 }

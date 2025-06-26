@@ -7,8 +7,13 @@ import {
   mockInvestmentStats,
 } from "../data/mockInvestments";
 import { getRiskLevelClasses } from "../lib/utils";
+import { InvestmentOpportunity } from "../types/investment";
 
-export function InvestTab() {
+interface InvestTabProps {
+  onInvestClick?: (strategy: InvestmentOpportunity) => void;
+}
+
+export function InvestTab({ onInvestClick }: InvestTabProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -107,6 +112,7 @@ export function InvestTab() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => onInvestClick?.(opportunity)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:shadow-lg transition-all duration-300"
               >
                 <span>Invest Now</span>
