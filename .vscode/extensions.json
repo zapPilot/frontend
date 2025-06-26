@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "ms-vscode.vscode-typescript-next",
+    "christian-kohler.path-intellisense",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
+    "ms-vscode.vscode-json",
+    "EditorConfig.EditorConfig",
+    "GitHub.vscode-pull-request-github",
+    "GitHub.copilot",
+    "ms-vscode.vscode-typescript-next"
+  ],
+  "unwantedRecommendations": ["ms-vscode.vscode-typescript"]
+}
