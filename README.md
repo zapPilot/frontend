@@ -7,8 +7,13 @@ execution.
 
 - 📱 **PWA Support** - Install as mobile app with offline capabilities
 - 🎨 **Modern Design** - Glass morphism effects with purple/blue gradient theme
-- 📊 **Portfolio Dashboard** - Real-time metrics including balance, APR, and drawdown
-- 🔄 **Intent-Based Actions** - ZapIn, ZapOut, and Rebalance operations
+- 💼 **Wallet Interface** - Professional wallet-style portfolio management
+- 📊 **Smart Navigation** - Responsive navigation (sidebar for web, bottom for mobile)
+- 🥧 **Asset Categories** - Visual pie chart for BTC, ETH, STABLECOIN, ALTCOIN categories
+- 🔍 **Detailed Analytics** - Expandable asset details with pool information and APR
+- 🔄 **Intent-Based Actions** - ZapIn, ZapOut, and Optimize operations
+- 🚀 **Investment Hub** - Curated DeFi strategies and opportunities
+- ⚙️ **Settings & More** - Comprehensive settings and help section
 - 📱 **Mobile Responsive** - Optimized for all screen sizes
 - ⚡ **Performance** - Built with Next.js 15 and Turbopack
 - 🎭 **Animations** - Smooth Framer Motion transitions
@@ -32,13 +37,43 @@ The dashboard displays key portfolio metrics:
 - **Risk Score**: Portfolio risk assessment (1-10 scale)
 - **Composition**: Asset allocation breakdown
 
+## Application Structure
+
+### 📱 Navigation
+- **Desktop**: Left sidebar with detailed navigation
+- **Mobile**: Bottom tab bar with swipe gestures
+- **Three main sections**: Portfolio, Invest, More
+
+### 💼 Portfolio Tab (Wallet Interface)
+- **Balance Overview**: Total value, 24h change, portfolio metrics
+- **Asset Categories**: Interactive pie chart showing:
+  - **BTC**: All Bitcoin-related assets (WBTC, BTC, etc.)
+  - **ETH**: Ethereum assets (stETH, ETH, LSTs)
+  - **STABLECOIN**: USDC, USDT, DAI pools
+  - **ALTCOIN**: LINK, AAVE, and other tokens
+- **Detailed View**: Expandable categories showing:
+  - Individual assets and pools
+  - Protocol information (Lido, Aave, Uniswap)
+  - APR rates and asset types
+  - Pool performance metrics
+
+### 🚀 Invest Tab
+- **Strategy Discovery**: Curated DeFi investment opportunities
+- **Risk Assessment**: Low, Medium, High risk categorization
+- **Performance Metrics**: APR, TVL, and strategy details
+
+### ⚙️ More Tab
+- **Account Settings**: Preferences and configuration
+- **Help & Support**: Documentation and community links
+- **About**: App information and social connections
+
 ## Quick Actions
 
 Three main intent-based actions available:
 
-1. **ZapIn** - Add funds to portfolio with optimal routing
-2. **ZapOut** - Withdraw funds with minimal slippage
-3. **Rebalance** - Automatically rebalance to target allocation
+1. **ZapIn** - Add liquidity optimally across protocols
+2. **ZapOut** - Exit positions with minimal slippage
+3. **Optimize** - Rebalance portfolio for maximum yield
 
 ## Getting Started
 
