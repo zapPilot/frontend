@@ -14,6 +14,9 @@ import { useState } from "react";
 import { formatCurrency, getRiskLevelClasses } from "../lib/utils";
 import { InvestmentOpportunity } from "../types/investment";
 import { SwapToken } from "../types/swap";
+import { PortfolioOverview } from "./PortfolioOverview";
+import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
+import { useStrategyPortfolio } from "../hooks/useStrategyPortfolio";
 
 interface SwapPageProps {
   strategy: InvestmentOpportunity;
@@ -33,8 +36,21 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [slippage, setSlippage] = useState(0.5);
 
-  const estimatedShares = fromAmount ? (parseFloat(fromAmount) / 100).toFixed(4) : "0";
-  const minimumReceived = fromAmount ? (parseFloat(fromAmount) * 0.995).toFixed(2) : "0";
+  const {
+    portfolioData,
+    expandedCategory,
+    portfolioMetrics,
+    pieChartData,
+    toggleCategoryExpansion,
+    handleLegendItemClick,
+  } = useStrategyPortfolio(strategy.id);
+
+  const estimatedShares = fromAmount
+    ? (parseFloat(fromAmount) / 100).toFixed(4)
+    : "0";
+  const minimumReceived = fromAmount
+    ? (parseFloat(fromAmount) * 0.995).toFixed(2)
+    : "0";
 
   return (
     <div className="space-y-6">
@@ -52,13 +68,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         </button>
         <div>
           <h1 className="text-2xl font-bold text-white">Invest in Strategy</h1>
-          <p className="text-gray-400">Swap tokens to invest in {strategy.name}</p>
+          <p className="text-gray-400">
+            Swap tokens to invest in {strategy.name}
+          </p>
         </div>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Swap Interface */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -77,7 +95,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-400">From</span>
                   <span className="text-sm text-gray-400">
-                    Balance: {formatCurrency(fromToken.balance * fromToken.price)}
+                    Balance:{" "}
+                    {formatCurrency(fromToken.balance * fromToken.price)}
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -86,14 +105,16 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                     className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
                   >
                     <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
-                    <span className="font-semibold text-white">{fromToken.symbol}</span>
+                    <span className="font-semibold text-white">
+                      {fromToken.symbol}
+                    </span>
                     <ChevronDown className="w-4 h-4 text-gray-400" />
                   </button>
                   <input
                     type="number"
                     placeholder="0.0"
                     value={fromAmount}
-                    onChange={(e) => setFromAmount(e.target.value)}
+                    onChange={e => setFromAmount(e.target.value)}
                     className="flex-1 bg-transparent text-2xl font-bold text-white placeholder-gray-500 outline-none"
                   />
                   <button
@@ -125,16 +146,24 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className={`w-10 h-10 rounded-2xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}>
+                  <div
+                    className={`w-10 h-10 rounded-2xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}
+                  >
                     <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold text-white">{strategy.name}</div>
-                    <div className="text-sm text-gray-400">{strategy.category} Strategy</div>
+                    <div className="font-semibold text-white">
+                      {strategy.name}
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {strategy.category} Strategy
+                    </div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-white">
-                      {fromAmount ? (parseFloat(fromAmount) * 0.97).toFixed(2) : "0.0"}
+                      {fromAmount
+                        ? (parseFloat(fromAmount) * 0.97).toFixed(2)
+                        : "0.0"}
                     </div>
                     <div className="text-sm text-gray-400">USD Value</div>
                   </div>
@@ -177,7 +206,9 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               disabled={!fromAmount || parseFloat(fromAmount) <= 0}
               className="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
             >
-              {!fromAmount || parseFloat(fromAmount) <= 0 ? "Enter Amount" : "Swap & Invest"}
+              {!fromAmount || parseFloat(fromAmount) <= 0
+                ? "Enter Amount"
+                : "Swap & Invest"}
             </motion.button>
           </motion.div>
         </div>
@@ -190,15 +221,21 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         >
           {/* Strategy Overview */}
           <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">Strategy Details</h3>
+            <h3 className="text-lg font-bold gradient-text mb-4">
+              Strategy Details
+            </h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">APR</span>
-                <span className="text-2xl font-bold text-green-400">{strategy.apr}%</span>
+                <span className="text-2xl font-bold text-green-400">
+                  {strategy.apr}%
+                </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Risk Level</span>
-                <span className={`px-3 py-1 rounded-lg text-xs font-medium ${getRiskLevelClasses(strategy.risk)}`}>
+                <span
+                  className={`px-3 py-1 rounded-lg text-xs font-medium ${getRiskLevelClasses(strategy.risk)}`}
+                >
                   {strategy.risk}
                 </span>
               </div>
@@ -208,14 +245,18 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Category</span>
-                <span className="text-white font-semibold">{strategy.category}</span>
+                <span className="text-white font-semibold">
+                  {strategy.category}
+                </span>
               </div>
             </div>
           </div>
 
           {/* Strategy Description */}
           <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">How it Works</h3>
+            <h3 className="text-lg font-bold gradient-text mb-4">
+              How it Works
+            </h3>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
               {strategy.description}
             </p>
@@ -227,19 +268,26 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
           {/* Performance Stats */}
           <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">Performance</h3>
+            <h3 className="text-lg font-bold gradient-text mb-4">
+              Performance
+            </h3>
             <div className="space-y-3">
               {[
                 { period: "24h", change: "+2.4%" },
                 { period: "7d", change: "+8.1%" },
                 { period: "30d", change: "+12.7%" },
                 { period: "1y", change: "+45.2%" },
-              ].map((stat) => (
-                <div key={stat.period} className="flex items-center justify-between">
+              ].map(stat => (
+                <div
+                  key={stat.period}
+                  className="flex items-center justify-between"
+                >
                   <span className="text-gray-400">{stat.period}</span>
                   <div className="flex items-center space-x-1">
                     <TrendingUp className="w-3 h-3 text-green-400" />
-                    <span className="text-green-400 font-semibold">{stat.change}</span>
+                    <span className="text-green-400 font-semibold">
+                      {stat.change}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -247,6 +295,26 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           </div>
         </motion.div>
       </div>
+
+      {/* Strategy Portfolio Details */}
+      {portfolioData.length > 0 && (
+        <>
+          <PortfolioOverview
+            portfolioData={portfolioData}
+            onLegendItemClick={handleLegendItemClick}
+            title={`${strategy.name} Allocation`}
+            className="mt-8"
+          />
+
+          <AssetCategoriesDetail
+            portfolioData={portfolioData}
+            expandedCategory={expandedCategory}
+            onCategoryToggle={toggleCategoryExpansion}
+            title={`${strategy.name} Portfolio Details`}
+            className="mt-6"
+          />
+        </>
+      )}
 
       {/* Token Selector Modal */}
       {showTokenSelector && (
@@ -260,11 +328,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="glass-morphism rounded-3xl p-6 border border-gray-800 w-full max-w-md"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <h3 className="text-lg font-bold text-white mb-4">Select Token</h3>
             <div className="space-y-2">
-              {mockTokens.map((token) => (
+              {mockTokens.map(token => (
                 <button
                   key={token.symbol}
                   onClick={() => {
@@ -276,12 +344,16 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
                     <div className="text-left">
-                      <div className="font-semibold text-white">{token.symbol}</div>
+                      <div className="font-semibold text-white">
+                        {token.symbol}
+                      </div>
                       <div className="text-sm text-gray-400">{token.name}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-white font-semibold">{token.balance}</div>
+                    <div className="text-white font-semibold">
+                      {token.balance}
+                    </div>
                     <div className="text-sm text-gray-400">
                       {formatCurrency(token.balance * token.price)}
                     </div>
