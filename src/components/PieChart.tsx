@@ -1,13 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-
-interface PieChartData {
-  label: string;
-  value: number;
-  percentage: number;
-  color: string;
-}
+import { PieChartData } from "../types/portfolio";
+import { PORTFOLIO_CONFIG } from "../constants/app";
 
 interface PieChartProps {
   data: PieChartData[];
@@ -15,10 +10,14 @@ interface PieChartProps {
   strokeWidth?: number;
 }
 
-export function PieChart({ data, size = 200, strokeWidth = 8 }: PieChartProps) {
+export function PieChart({
+  data,
+  size = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_SIZE,
+  strokeWidth = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_STROKE_WIDTH,
+}: PieChartProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  
+
   let cumulativePercentage = 0;
 
   return (
@@ -32,10 +31,11 @@ export function PieChart({ data, size = 200, strokeWidth = 8 }: PieChartProps) {
         >
           {data.map((item, index) => {
             const strokeDasharray = `${(item.percentage / 100) * circumference} ${circumference}`;
-            const strokeDashoffset = -cumulativePercentage * circumference / 100;
-            
+            const strokeDashoffset =
+              (-cumulativePercentage * circumference) / 100;
+
             cumulativePercentage += item.percentage;
-            
+
             return (
               <motion.circle
                 key={item.label}
@@ -50,7 +50,11 @@ export function PieChart({ data, size = 200, strokeWidth = 8 }: PieChartProps) {
                 strokeLinecap="round"
                 initial={{ strokeDasharray: `0 ${circumference}` }}
                 animate={{ strokeDasharray, strokeDashoffset }}
-                transition={{ duration: 1, delay: index * 0.2, ease: "easeOut" }}
+                transition={{
+                  duration: 1,
+                  delay: index * PORTFOLIO_CONFIG.ANIMATION_DELAY_STEP * 2,
+                  ease: "easeOut",
+                }}
                 className="hover:brightness-110 transition-all duration-200 cursor-pointer"
                 style={{
                   filter: `drop-shadow(0 0 8px ${item.color}40)`,
@@ -59,16 +63,18 @@ export function PieChart({ data, size = 200, strokeWidth = 8 }: PieChartProps) {
             );
           })}
         </svg>
-        
+
         {/* Center content */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-2xl font-bold text-white">
-              {data.reduce((sum, item) => sum + item.value, 0).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                maximumFractionDigits: 0
-              })}
+              {data
+                .reduce((sum, item) => sum + item.value, 0)
+                .toLocaleString(PORTFOLIO_CONFIG.CURRENCY_LOCALE, {
+                  style: "currency",
+                  currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
+                  maximumFractionDigits: 0,
+                })}
             </div>
             <div className="text-sm text-gray-400">Total Value</div>
           </div>
@@ -91,7 +97,10 @@ export function PieChartLegend({ data, onItemClick }: PieChartLegendProps) {
           key={item.label}
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.1 }}
+          transition={{
+            duration: 0.4,
+            delay: index * PORTFOLIO_CONFIG.ANIMATION_DELAY_STEP,
+          }}
           onClick={() => onItemClick?.(item)}
           className="flex items-center space-x-3 p-3 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-all duration-200 cursor-pointer"
         >
@@ -104,10 +113,11 @@ export function PieChartLegend({ data, onItemClick }: PieChartLegendProps) {
               {item.label}
             </div>
             <div className="text-xs text-gray-400">
-              {item.percentage.toFixed(1)}% • {item.value.toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                maximumFractionDigits: 0
+              {item.percentage.toFixed(1)}% •{" "}
+              {item.value.toLocaleString(PORTFOLIO_CONFIG.CURRENCY_LOCALE, {
+                style: "currency",
+                currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
+                maximumFractionDigits: 0,
               })}
             </div>
           </div>

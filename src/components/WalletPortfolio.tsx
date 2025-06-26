@@ -14,173 +14,25 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
 import { PieChart, PieChartLegend } from "./PieChart";
-
-interface AssetDetail {
-  name: string;
-  symbol: string;
-  protocol: string;
-  amount: number;
-  value: number;
-  apr: number;
-  type: string; // e.g., "Staking", "Lending", "Liquidity Pool"
-}
-
-interface AssetCategory {
-  id: string;
-  name: string;
-  color: string;
-  totalValue: number;
-  percentage: number;
-  change24h: number;
-  assets: AssetDetail[];
-}
-
-const mockPortfolioData: AssetCategory[] = [
-  {
-    id: "btc",
-    name: "BTC",
-    color: "#F7931A",
-    totalValue: 45000,
-    percentage: 35.3,
-    change24h: 2.4,
-    assets: [
-      {
-        name: "Wrapped Bitcoin",
-        symbol: "WBTC",
-        protocol: "Lido",
-        amount: 1.234,
-        value: 42000,
-        apr: 4.2,
-        type: "Staking"
-      },
-      {
-        name: "Bitcoin",
-        symbol: "BTC",
-        protocol: "Native",
-        amount: 0.087,
-        value: 3000,
-        apr: 0,
-        type: "Holding"
-      }
-    ]
-  },
-  {
-    id: "eth",
-    name: "ETH",
-    color: "#627EEA",
-    totalValue: 38000,
-    percentage: 29.8,
-    change24h: 1.8,
-    assets: [
-      {
-        name: "Liquid Staked ETH",
-        symbol: "stETH",
-        protocol: "Lido",
-        amount: 12.5,
-        value: 30000,
-        apr: 3.8,
-        type: "Liquid Staking"
-      },
-      {
-        name: "Ethereum",
-        symbol: "ETH",
-        protocol: "Uniswap V3",
-        amount: 3.2,
-        value: 8000,
-        apr: 12.5,
-        type: "Liquidity Pool"
-      }
-    ]
-  },
-  {
-    id: "stablecoin",
-    name: "STABLECOIN",
-    color: "#2775CA",
-    totalValue: 25000,
-    percentage: 19.6,
-    change24h: 0.1,
-    assets: [
-      {
-        name: "USD Coin",
-        symbol: "USDC",
-        protocol: "Aave",
-        amount: 20000,
-        value: 20000,
-        apr: 5.2,
-        type: "Lending"
-      },
-      {
-        name: "Tether",
-        symbol: "USDT",
-        protocol: "Compound",
-        amount: 5000,
-        value: 5000,
-        apr: 4.8,
-        type: "Lending"
-      }
-    ]
-  },
-  {
-    id: "altcoin",
-    name: "ALTCOIN",
-    color: "#B6509E",
-    totalValue: 19500,
-    percentage: 15.3,
-    change24h: -1.2,
-    assets: [
-      {
-        name: "Chainlink",
-        symbol: "LINK",
-        protocol: "Chainlink Staking",
-        amount: 800,
-        value: 12000,
-        apr: 7.5,
-        type: "Staking"
-      },
-      {
-        name: "Aave",
-        symbol: "AAVE",
-        protocol: "Aave Safety",
-        amount: 50,
-        value: 7500,
-        apr: 6.8,
-        type: "Safety Module"
-      }
-    ]
-  }
-];
+import {
+  formatCurrency,
+  formatNumber,
+  getChangeColorClasses,
+} from "../lib/utils";
+import { mockPortfolioData } from "../data/mockPortfolio";
+import { usePortfolio } from "../hooks/usePortfolio";
 
 export function WalletPortfolio() {
-  const [balanceHidden, setBalanceHidden] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
-  const totalValue = mockPortfolioData.reduce((sum, cat) => sum + cat.totalValue, 0);
-  const totalChange24h = mockPortfolioData.reduce((sum, cat) => sum + (cat.totalValue * cat.change24h / 100), 0);
-  const totalChangePercentage = (totalChange24h / totalValue) * 100;
-
-  const pieChartData = mockPortfolioData.map(cat => ({
-    label: cat.name,
-    value: cat.totalValue,
-    percentage: cat.percentage,
-    color: cat.color
-  }));
-
-  const formatCurrency = (amount: number) => {
-    if (balanceHidden) return "••••••••";
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(amount);
-  };
-
-  const formatNumber = (amount: number) => {
-    if (balanceHidden) return "••••";
-    return amount.toLocaleString('en-US', { maximumFractionDigits: 4 });
-  };
+  const {
+    balanceHidden,
+    expandedCategory,
+    portfolioMetrics,
+    pieChartData,
+    toggleBalanceVisibility,
+    toggleCategoryExpansion,
+    handleLegendItemClick,
+  } = usePortfolio(mockPortfolioData);
 
   return (
     <div className="space-y-6">
@@ -200,9 +52,9 @@ export function WalletPortfolio() {
               <p className="text-sm text-gray-400">DeFi Portfolio Overview</p>
             </div>
           </div>
-          
+
           <button
-            onClick={() => setBalanceHidden(!balanceHidden)}
+            onClick={toggleBalanceVisibility}
             className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
           >
             {balanceHidden ? (
@@ -217,28 +69,34 @@ export function WalletPortfolio() {
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
             <p className="text-3xl font-bold text-white">
-              {formatCurrency(totalValue)}
+              {formatCurrency(portfolioMetrics.totalValue, balanceHidden)}
             </p>
           </div>
-          
+
           <div>
             <p className="text-sm text-gray-400 mb-1">24h Change</p>
-            <div className={`flex items-center space-x-2 ${totalChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {totalChangePercentage >= 0 ? (
+            <div
+              className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
+            >
+              {portfolioMetrics.totalChangePercentage >= 0 ? (
                 <TrendingUp className="w-4 h-4" />
               ) : (
                 <TrendingDown className="w-4 h-4" />
               )}
               <span className="text-xl font-semibold">
-                {totalChangePercentage >= 0 ? '+' : ''}{totalChangePercentage.toFixed(2)}%
+                {portfolioMetrics.totalChangePercentage >= 0 ? "+" : ""}
+                {portfolioMetrics.totalChangePercentage.toFixed(2)}%
               </span>
             </div>
           </div>
-          
+
           <div>
             <p className="text-sm text-gray-400 mb-1">Value Change</p>
-            <p className={`text-xl font-semibold ${totalChangePercentage >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-              {totalChangePercentage >= 0 ? '+' : ''}{formatCurrency(totalChange24h)}
+            <p
+              className={`text-xl font-semibold ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
+            >
+              {portfolioMetrics.totalChangePercentage >= 0 ? "+" : ""}
+              {formatCurrency(portfolioMetrics.totalChange24h, balanceHidden)}
             </p>
           </div>
         </div>
@@ -252,7 +110,9 @@ export function WalletPortfolio() {
           animate={{ opacity: 1, x: 0 }}
           className="glass-morphism rounded-3xl p-6 border border-gray-800"
         >
-          <h2 className="text-xl font-bold gradient-text mb-6">Asset Distribution</h2>
+          <h2 className="text-xl font-bold gradient-text mb-6">
+            Asset Distribution
+          </h2>
           <PieChart data={pieChartData} size={250} />
         </motion.div>
 
@@ -263,15 +123,9 @@ export function WalletPortfolio() {
           className="lg:col-span-2 glass-morphism rounded-3xl p-6 border border-gray-800"
         >
           <h2 className="text-xl font-bold gradient-text mb-6">Categories</h2>
-          <PieChartLegend 
-            data={pieChartData} 
-            onItemClick={(item) => {
-              const category = mockPortfolioData.find(cat => cat.name === item.label);
-              if (category) {
-                setSelectedCategory(category.id);
-                setExpandedCategory(expandedCategory === category.id ? null : category.id);
-              }
-            }}
+          <PieChartLegend
+            data={pieChartData}
+            onItemClick={handleLegendItemClick}
           />
         </motion.div>
       </div>
@@ -282,8 +136,10 @@ export function WalletPortfolio() {
         animate={{ opacity: 1, y: 0 }}
         className="glass-morphism rounded-3xl p-6 border border-gray-800"
       >
-        <h2 className="text-xl font-bold gradient-text mb-6">Portfolio Details</h2>
-        
+        <h2 className="text-xl font-bold gradient-text mb-6">
+          Portfolio Details
+        </h2>
+
         <div className="space-y-4">
           {mockPortfolioData.map((category, categoryIndex) => (
             <motion.div
@@ -294,7 +150,7 @@ export function WalletPortfolio() {
               className="border border-gray-800 rounded-2xl overflow-hidden"
             >
               <button
-                onClick={() => setExpandedCategory(expandedCategory === category.id ? null : category.id)}
+                onClick={() => toggleCategoryExpansion(category.id)}
                 className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-all duration-200 flex items-center justify-between"
               >
                 <div className="flex items-center space-x-4">
@@ -303,23 +159,28 @@ export function WalletPortfolio() {
                     style={{ backgroundColor: category.color }}
                   />
                   <div className="text-left">
-                    <div className="font-semibold text-white">{category.name}</div>
+                    <div className="font-semibold text-white">
+                      {category.name}
+                    </div>
                     <div className="text-sm text-gray-400">
                       {category.assets.length} assets • {category.percentage}%
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
                     <div className="font-semibold text-white">
-                      {formatCurrency(category.totalValue)}
+                      {formatCurrency(category.totalValue, balanceHidden)}
                     </div>
-                    <div className={`text-sm ${category.change24h >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {category.change24h >= 0 ? '+' : ''}{category.change24h}%
+                    <div
+                      className={`text-sm ${category.change24h >= 0 ? "text-green-400" : "text-red-400"}`}
+                    >
+                      {category.change24h >= 0 ? "+" : ""}
+                      {category.change24h}%
                     </div>
                   </div>
-                  
+
                   {expandedCategory === category.id ? (
                     <ChevronUp className="w-5 h-5 text-gray-400" />
                   ) : (
@@ -353,25 +214,28 @@ export function WalletPortfolio() {
                               </span>
                             </div>
                             <div>
-                              <div className="font-medium text-white">{asset.name}</div>
+                              <div className="font-medium text-white">
+                                {asset.name}
+                              </div>
                               <div className="text-sm text-gray-400">
                                 {asset.protocol} • {asset.type}
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="text-right">
                             <div className="font-semibold text-white">
-                              {formatCurrency(asset.value)}
+                              {formatCurrency(asset.value, balanceHidden)}
                             </div>
                             <div className="text-sm text-gray-400">
-                              {formatNumber(asset.amount)} {asset.symbol}
+                              {formatNumber(asset.amount, balanceHidden)}{" "}
+                              {asset.symbol}
                             </div>
                             <div className="text-sm text-green-400">
                               {asset.apr}% APR
                             </div>
                           </div>
-                          
+
                           <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors">
                             <ExternalLink className="w-4 h-4 text-gray-400" />
                           </button>
