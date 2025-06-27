@@ -10,7 +10,7 @@ import {
   X,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 
 interface NavigationProps {
   activeTab: string;
@@ -44,8 +44,12 @@ const navItems = [
   },
 ];
 
-export function Navigation({ activeTab, onTabChange }: NavigationProps) {
+const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = useCallback(() => {
+    setIsMobileMenuOpen(prev => !prev);
+  }, []);
 
   return (
     <>
@@ -150,7 +154,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
             </div>
 
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={toggleMobileMenu}
               className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
             >
               {isMobileMenuOpen ? (
@@ -169,7 +173,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-40 bg-gray-950/80 backdrop-blur-lg lg:hidden"
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={toggleMobileMenu}
           >
             <motion.div
               initial={{ x: "-100%" }}
@@ -189,7 +193,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
                         <button
                           onClick={() => {
                             onTabChange(item.id);
-                            setIsMobileMenuOpen(false);
+                            toggleMobileMenu();
                           }}
                           data-testid={`mobile-menu-tab-${item.id}`}
                           className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
@@ -254,4 +258,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
       </div>
     </>
   );
-}
+};
+
+// Export memoized component
+export const Navigation = memo(NavigationComponent);

@@ -107,6 +107,7 @@ body {
 
 .animate-glow {
   animation: glow 2s ease-in-out infinite alternate;
+  will-change: box-shadow;
 }
 
 @keyframes glow {
@@ -118,4 +119,19 @@ body {
       0 0 30px rgba(139, 92, 246, 0.6),
       0 0 40px rgba(59, 130, 246, 0.3);
   }
+}
+
+/* GPU acceleration utilities */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+}
+
+.hover-transform {
+  will-change: transform;
+  transition: transform 0.2s ease;
+}
+
+.hover-transform:hover {
+  transform: translate3d(0, -1px, 0);
 }

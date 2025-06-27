@@ -1,34 +1,84 @@
 "use client";
 
-import { InvestTab } from "@/components/InvestTab";
-import { MoreTab } from "@/components/MoreTab";
-import { SettingsTab } from "@/components/SettingsTab";
 import { Navigation } from "@/components/Navigation";
-import { SwapPage } from "@/components/SwapPage";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { InvestmentOpportunity } from "@/types/investment";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import dynamic from "next/dynamic";
+
+// Dynamic imports for code splitting
+const InvestTab = dynamic(
+  () =>
+    import("@/components/InvestTab").then(mod => ({ default: mod.InvestTab })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
+const MoreTab = dynamic(
+  () => import("@/components/MoreTab").then(mod => ({ default: mod.MoreTab })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
+const SettingsTab = dynamic(
+  () =>
+    import("@/components/SettingsTab").then(mod => ({
+      default: mod.SettingsTab,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
+const SwapPage = dynamic(
+  () =>
+    import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
 
 export default function DashboardApp() {
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
 
-  const handleInvestClick = (strategy: InvestmentOpportunity) => {
+  const handleInvestClick = useCallback((strategy: InvestmentOpportunity) => {
     setSelectedStrategy(strategy);
-  };
+  }, []);
 
-  const handleBackToInvest = () => {
+  const handleBackToInvest = useCallback(() => {
     setSelectedStrategy(null);
-  };
+  }, []);
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    // Reset strategy when switching tabs to enable navigation from SwapPage
-    if (selectedStrategy) {
-      setSelectedStrategy(null);
-    }
-  };
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      setActiveTab(tab);
+      // Reset strategy when switching tabs to enable navigation from SwapPage
+      if (selectedStrategy) {
+        setSelectedStrategy(null);
+      }
+    },
+    [selectedStrategy]
+  );
 
   const renderTabContent = () => {
     if (selectedStrategy) {
