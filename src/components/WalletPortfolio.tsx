@@ -8,6 +8,7 @@ import {
   Eye,
   EyeOff,
   Settings,
+  TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -48,7 +49,7 @@ export function WalletPortfolio({
 
   // Mock APR and monthly return data - in real app this would come from API
   const portfolioAPR = 18.5;
-  const monthlyReturn = 1.4;
+  const estimatedMonthlyIncome = 1730;
 
   return (
     <div className="space-y-6">
@@ -115,19 +116,17 @@ export function WalletPortfolio({
                 <TrendingDown className="w-4 h-4" />
               )}
               <span className="text-xl font-semibold">
-                {portfolioMetrics.totalChangePercentage >= 0 ? "+" : ""}
-                {portfolioMetrics.totalChangePercentage.toFixed(2)}%
+                {portfolioAPR.toFixed(2)}%
               </span>
             </div>
           </div>
 
           <div>
-            <p className="text-sm text-gray-400 mb-1">Monthly Return</p>
+            <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
             <p
               className={`text-xl font-semibold ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
             >
-              {portfolioMetrics.totalChangePercentage >= 0 ? "+" : ""}
-              {formatCurrency(portfolioMetrics.totalChange24h, balanceHidden)}
+              ${estimatedMonthlyIncome.toFixed(2)}
             </p>
           </div>
         </div>
