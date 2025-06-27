@@ -1,62 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Menu,
-  BarChart3,
-  Settings,
-  TrendingUp,
-  Wallet,
-  X,
-  Users,
-  Gift,
-} from "lucide-react";
+import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useState, useCallback, memo } from "react";
+import { NAVIGATION_ITEMS } from "../constants/navigation";
 
 interface NavigationProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
 }
-
-const navItems = [
-  {
-    id: "wallet",
-    label: "Portfolio",
-    icon: Wallet,
-    description: "Your wallet overview",
-  },
-  {
-    id: "invest",
-    label: "Invest",
-    icon: TrendingUp,
-    description: "Investment opportunities",
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    icon: BarChart3,
-    description: "Performance metrics & charts",
-  },
-  {
-    id: "community",
-    label: "Community",
-    icon: Users,
-    description: "Social & ecosystem",
-  },
-  {
-    id: "airdrop",
-    label: "Airdrop",
-    icon: Gift,
-    description: "Token rewards & airdrops",
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    description: "App preferences & help",
-  },
-];
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -90,7 +43,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {navItems.map(item => {
+                  {NAVIGATION_ITEMS.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
 
@@ -198,7 +151,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             >
               <nav className="mt-16">
                 <ul className="space-y-2">
-                  {navItems.map(item => {
+                  {NAVIGATION_ITEMS.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
 
@@ -241,7 +194,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800">
         <div className="flex items-center justify-around px-4 py-2">
-          {navItems.map(item => {
+          {NAVIGATION_ITEMS.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 

@@ -3,7 +3,8 @@ import { test, expect } from "@playwright/test";
 test.describe("InvestTab", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await page.getByTestId("tab-invest").click();
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.getByTestId("desktop-tab-invest").click();
   });
 
   test("should display investment opportunities", async ({ page }) => {

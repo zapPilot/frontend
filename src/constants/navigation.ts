@@ -1,23 +1,48 @@
-import { BarChart3, Plus, Settings } from "lucide-react";
+import {
+  BarChart3,
+  TrendingUp,
+  Wallet,
+  Users,
+  Gift,
+  Settings,
+} from "lucide-react";
 import { NavItem } from "../types/navigation";
 
 export const NAVIGATION_ITEMS: NavItem[] = [
   {
-    id: "portfolio",
+    id: "wallet",
     label: "Portfolio",
-    icon: BarChart3,
-    description: "View your DeFi portfolio overview",
+    icon: Wallet,
+    description: "Your wallet overview",
   },
   {
     id: "invest",
     label: "Invest",
-    icon: Plus,
-    description: "Discover new investment opportunities",
+    icon: TrendingUp,
+    description: "Investment opportunities",
   },
   {
-    id: "more",
-    label: "More",
+    id: "analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    description: "Performance metrics & charts",
+  },
+  {
+    id: "community",
+    label: "Community",
+    icon: Users,
+    description: "Social & ecosystem",
+  },
+  {
+    id: "airdrop",
+    label: "Airdrop",
+    icon: Gift,
+    description: "Token rewards & airdrops",
+  },
+  {
+    id: "settings",
+    label: "Settings",
     icon: Settings,
-    description: "Settings and additional features",
+    description: "App preferences & help",
   },
 ] as const;

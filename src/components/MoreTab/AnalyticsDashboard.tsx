@@ -3,154 +3,40 @@
 import { motion } from "framer-motion";
 import {
   TrendingUp,
-  TrendingDown,
   BarChart3,
   PieChart,
   Target,
-  Shield,
-  Clock,
-  Activity,
   ArrowUpRight,
   ArrowDownRight,
   AlertTriangle,
 } from "lucide-react";
 import { memo, useMemo } from "react";
 import { GlassCard, APRMetrics } from "../ui";
-
-interface AnalyticsMetric {
-  label: string;
-  value: string;
-  change: number;
-  trend: "up" | "down" | "neutral";
-  icon: React.ComponentType<{ className?: string }>;
-  description?: string;
-}
-
-interface PerformancePeriod {
-  period: string;
-  return: number;
-  volatility: number;
-  sharpe: number;
-  maxDrawdown: number;
-}
+import {
+  getAnalyticsMetrics,
+  getPerformanceData,
+  generateAssetAttribution,
+  getChangeColor,
+  getPerformanceColor,
+} from "../../lib/portfolioUtils";
+import {
+  AnalyticsMetric,
+  PerformancePeriod,
+  AssetAttribution,
+} from "../../types/portfolio";
 
 const AnalyticsDashboardComponent = () => {
   // Mock analytics data - in real app this would come from API
   const portfolioMetrics: AnalyticsMetric[] = useMemo(
-    () => [
-      {
-        label: "Total Return",
-        value: "+24.3%",
-        change: 2.4,
-        trend: "up",
-        icon: TrendingUp,
-        description: "All-time portfolio performance",
-      },
-      {
-        label: "Annualized Return",
-        value: "+18.7%",
-        change: 1.2,
-        trend: "up",
-        icon: BarChart3,
-        description: "Year-over-year performance",
-      },
-      {
-        label: "Risk Score",
-        value: "6.2/10",
-        change: -0.3,
-        trend: "down",
-        icon: Shield,
-        description: "Portfolio risk assessment",
-      },
-      {
-        label: "Sharpe Ratio",
-        value: "1.34",
-        change: 0.15,
-        trend: "up",
-        icon: Target,
-        description: "Risk-adjusted returns",
-      },
-      {
-        label: "Max Drawdown",
-        value: "-12.4%",
-        change: 2.1,
-        trend: "down",
-        icon: TrendingDown,
-        description: "Largest peak-to-trough decline",
-      },
-      {
-        label: "Volatility",
-        value: "22.8%",
-        change: -1.8,
-        trend: "up",
-        icon: Activity,
-        description: "Portfolio standard deviation",
-      },
-      {
-        label: "Active Positions",
-        value: "12",
-        change: 2,
-        trend: "up",
-        icon: PieChart,
-        description: "Currently held assets",
-      },
-      {
-        label: "Days Invested",
-        value: "147",
-        change: 1,
-        trend: "neutral",
-        icon: Clock,
-        description: "Portfolio age",
-      },
-    ],
+    () => getAnalyticsMetrics(),
     []
   );
-
   const performanceData: PerformancePeriod[] = useMemo(
-    () => [
-      {
-        period: "1D",
-        return: 2.34,
-        volatility: 1.2,
-        sharpe: 1.95,
-        maxDrawdown: -0.8,
-      },
-      {
-        period: "1W",
-        return: 8.67,
-        volatility: 4.3,
-        sharpe: 2.01,
-        maxDrawdown: -3.2,
-      },
-      {
-        period: "1M",
-        return: 12.45,
-        volatility: 18.7,
-        sharpe: 0.67,
-        maxDrawdown: -8.9,
-      },
-      {
-        period: "3M",
-        return: 18.23,
-        volatility: 21.4,
-        sharpe: 0.85,
-        maxDrawdown: -12.4,
-      },
-      {
-        period: "6M",
-        return: 24.89,
-        volatility: 22.1,
-        sharpe: 1.13,
-        maxDrawdown: -15.6,
-      },
-      {
-        period: "1Y",
-        return: 18.67,
-        volatility: 22.8,
-        sharpe: 0.82,
-        maxDrawdown: -18.3,
-      },
-    ],
+    () => getPerformanceData(),
+    []
+  );
+  const assetAttributionData: AssetAttribution[] = useMemo(
+    () => generateAssetAttribution(),
     []
   );
 
@@ -169,18 +55,6 @@ const AnalyticsDashboardComponent = () => {
     ],
     []
   );
-
-  const getChangeColor = (trend: string) => {
-    if (trend === "neutral") return "text-gray-400";
-    if (trend === "up") return "text-green-400";
-    return "text-red-400";
-  };
-
-  const getPerformanceColor = (value: number) => {
-    if (value > 0) return "text-green-400";
-    if (value < 0) return "text-red-400";
-    return "text-gray-400";
-  };
 
   return (
     <div className="space-y-6">
@@ -419,43 +293,7 @@ const AnalyticsDashboardComponent = () => {
           </p>
 
           <div className="space-y-4">
-            {[
-              {
-                asset: "BTC",
-                contribution: 8.2,
-                allocation: 35.2,
-                performance: 23.4,
-                color: "bg-orange-500",
-              },
-              {
-                asset: "ETH",
-                contribution: 5.3,
-                allocation: 28.7,
-                performance: 18.6,
-                color: "bg-blue-500",
-              },
-              {
-                asset: "DeFi Tokens",
-                contribution: 4.1,
-                allocation: 12.4,
-                performance: 33.2,
-                color: "bg-purple-500",
-              },
-              {
-                asset: "Stablecoins",
-                contribution: 0.8,
-                allocation: 20.1,
-                performance: 4.2,
-                color: "bg-green-500",
-              },
-              {
-                asset: "Altcoins",
-                contribution: -1.8,
-                allocation: 3.6,
-                performance: -48.9,
-                color: "bg-red-500",
-              },
-            ].map((item, index) => (
+            {assetAttributionData.map((item, index) => (
               <motion.div
                 key={item.asset}
                 initial={{ opacity: 0, x: -20 }}

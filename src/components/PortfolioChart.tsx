@@ -4,28 +4,18 @@ import { motion } from "framer-motion";
 import { TrendingUp, Calendar, PieChart, Activity } from "lucide-react";
 import { useState, useMemo, memo } from "react";
 import { GlassCard } from "./ui";
-
-interface ChartPeriod {
-  label: string;
-  value: string;
-  days: number;
-}
-
-interface PortfolioDataPoint {
-  date: string;
-  value: number;
-  change: number;
-  benchmark?: number;
-}
-
-interface AssetAllocationPoint {
-  date: string;
-  btc: number;
-  eth: number;
-  stablecoin: number;
-  defi: number;
-  altcoin: number;
-}
+import {
+  CHART_PERIODS,
+  generatePortfolioHistory,
+  calculateDrawdownData,
+} from "../lib/portfolioUtils";
+import {
+  generateSVGPath,
+  generateAreaPath,
+  formatAxisLabel,
+  generateYAxisLabels,
+} from "../lib/chartUtils";
+import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
 
 const PortfolioChartComponent = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
@@ -33,58 +23,14 @@ const PortfolioChartComponent = () => {
     "performance" | "allocation" | "drawdown"
   >("performance");
 
-  const periods: ChartPeriod[] = useMemo(
-    () => [
-      { label: "1W", value: "1W", days: 7 },
-      { label: "1M", value: "1M", days: 30 },
-      { label: "3M", value: "3M", days: 90 },
-      { label: "6M", value: "6M", days: 180 },
-      { label: "1Y", value: "1Y", days: 365 },
-      { label: "ALL", value: "ALL", days: 500 },
-    ],
-    []
-  );
-
   // Mock historical data - in real app this would come from API
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
-    const days = periods.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: PortfolioDataPoint[] = [];
-    const baseValue = 100000;
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // Simulate portfolio performance with some volatility
-      const progress = (days - i) / days;
-      const trend = Math.sin(progress * Math.PI * 3) * 0.1 + progress * 0.25;
-      const noise = (Math.random() - 0.5) * 0.05;
-      const value = baseValue * (1 + trend + noise);
-
-      // Simulate benchmark (more stable growth)
-      const benchmarkTrend = progress * 0.15;
-      const benchmarkNoise = (Math.random() - 0.5) * 0.02;
-      const benchmark = baseValue * (1 + benchmarkTrend + benchmarkNoise);
-
-      const change =
-        i === days
-          ? 0
-          : ((value - (data[data.length - 1]?.value || value)) / value) * 100;
-
-      data.push({
-        date: date.toISOString().split("T")[0]!,
-        value,
-        change,
-        benchmark,
-      });
-    }
-
-    return data;
-  }, [selectedPeriod, periods]);
+    return generatePortfolioHistory(selectedPeriod);
+  }, [selectedPeriod]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
     const days = Math.min(
-      periods.find(p => p.value === selectedPeriod)?.days || 90,
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
       90
     );
     const data: AssetAllocationPoint[] = [];
@@ -107,7 +53,7 @@ const PortfolioChartComponent = () => {
     }
 
     return data;
-  }, [selectedPeriod, periods]);
+  }, [selectedPeriod]);
 
   const currentValue =
     portfolioHistory[portfolioHistory.length - 1]?.value || 0;
@@ -119,15 +65,7 @@ const PortfolioChartComponent = () => {
   const minValue = Math.min(...portfolioHistory.map(d => d.value));
 
   const drawdownData = useMemo(() => {
-    let peak = 0;
-    return portfolioHistory.map(point => {
-      peak = Math.max(peak, point.value);
-      const drawdown = peak > 0 ? ((point.value - peak) / peak) * 100 : 0;
-      return {
-        date: point.date,
-        drawdown,
-      };
-    });
+    return calculateDrawdownData(portfolioHistory);
   }, [portfolioHistory]);
 
   const renderPerformanceChart = () => (
@@ -171,18 +109,13 @@ const PortfolioChartComponent = () => {
         {/* Portfolio line */}
         {portfolioHistory.length > 0 && (
           <path
-            d={`${portfolioHistory
-              .map((point, index) => {
-                const x =
-                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
-                const y =
-                  300 -
-                  ((point.value - minValue) /
-                    Math.max(maxValue - minValue, 1)) *
-                    280;
-                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-              })
-              .join(" ")}`}
+            d={generateSVGPath(
+              portfolioHistory,
+              point => point.value,
+              800,
+              300,
+              10
+            )}
             fill="none"
             stroke="#8b5cf6"
             strokeWidth="3"
@@ -193,18 +126,13 @@ const PortfolioChartComponent = () => {
         {/* Benchmark line */}
         {portfolioHistory.length > 0 && (
           <path
-            d={`${portfolioHistory
-              .map((point, index) => {
-                const x =
-                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
-                const y =
-                  300 -
-                  ((point.benchmark! - minValue) /
-                    Math.max(maxValue - minValue, 1)) *
-                    280;
-                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-              })
-              .join(" ")}`}
+            d={generateSVGPath(
+              portfolioHistory,
+              point => point.benchmark || 0,
+              800,
+              300,
+              10
+            )}
             fill="none"
             stroke="#3b82f6"
             strokeWidth="2"
@@ -216,18 +144,13 @@ const PortfolioChartComponent = () => {
         {/* Fill area under portfolio curve */}
         {portfolioHistory.length > 0 && (
           <path
-            d={`${portfolioHistory
-              .map((point, index) => {
-                const x =
-                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
-                const y =
-                  300 -
-                  ((point.value - minValue) /
-                    Math.max(maxValue - minValue, 1)) *
-                    280;
-                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-              })
-              .join(" ")} L 800 300 L 0 300 Z`}
+            d={generateAreaPath(
+              portfolioHistory,
+              point => point.value,
+              800,
+              300,
+              10
+            )}
             fill="url(#portfolioGradient)"
           />
         )}
@@ -235,9 +158,9 @@ const PortfolioChartComponent = () => {
 
       {/* Y-axis labels */}
       <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
-        <span>${(maxValue / 1000).toFixed(0)}k</span>
-        <span>${((maxValue + minValue) / 2000).toFixed(0)}k</span>
-        <span>${(minValue / 1000).toFixed(0)}k</span>
+        {generateYAxisLabels(minValue, maxValue, 3).map((value, index) => (
+          <span key={index}>{formatAxisLabel(value)}</span>
+        ))}
       </div>
 
       {/* Legend */}
@@ -451,7 +374,7 @@ const PortfolioChartComponent = () => {
 
         {/* Period Selector */}
         <div className="flex space-x-2 mb-6">
-          {periods.map(period => (
+          {CHART_PERIODS.map(period => (
             <button
               key={period.value}
               onClick={() => setSelectedPeriod(period.value)}

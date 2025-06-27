@@ -6,68 +6,97 @@ test.describe("Navigation", () => {
   });
 
   test("should have all navigation tabs visible", async ({ page }) => {
-    await expect(page.getByTestId("tab-wallet")).toBeVisible();
-    await expect(page.getByTestId("tab-invest")).toBeVisible();
-    await expect(page.getByTestId("tab-more")).toBeVisible();
+    // Desktop navigation should be visible on large screens
+    await page.setViewportSize({ width: 1200, height: 800 });
+
+    await expect(page.getByTestId("desktop-tab-wallet")).toBeVisible();
+    await expect(page.getByTestId("desktop-tab-invest")).toBeVisible();
+    await expect(page.getByTestId("desktop-tab-analytics")).toBeVisible();
+    await expect(page.getByTestId("desktop-tab-community")).toBeVisible();
+    await expect(page.getByTestId("desktop-tab-airdrop")).toBeVisible();
+    await expect(page.getByTestId("desktop-tab-settings")).toBeVisible();
   });
 
   test("should start with wallet tab active", async ({ page }) => {
-    await expect(page.getByTestId("tab-wallet")).toHaveClass(
+    await page.setViewportSize({ width: 1200, height: 800 });
+    await expect(page.getByTestId("desktop-tab-wallet")).toHaveClass(
       /bg-gradient-to-r/
     );
   });
 
   test("should navigate between tabs", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Navigate to invest tab
-    await page.getByTestId("tab-invest").click();
-    await expect(page.getByTestId("tab-invest")).toHaveClass(
+    await page.getByTestId("desktop-tab-invest").click();
+    await expect(page.getByTestId("desktop-tab-invest")).toHaveClass(
       /bg-gradient-to-r/
     );
-    await expect(page.getByTestId("tab-wallet")).not.toHaveClass(
+    await expect(page.getByTestId("desktop-tab-wallet")).not.toHaveClass(
       /bg-gradient-to-r/
     );
 
-    // Navigate to more tab
-    await page.getByTestId("tab-more").click();
-    await expect(page.getByTestId("tab-more")).toHaveClass(/bg-gradient-to-r/);
-    await expect(page.getByTestId("tab-invest")).not.toHaveClass(
+    // Navigate to analytics tab
+    await page.getByTestId("desktop-tab-analytics").click();
+    await expect(page.getByTestId("desktop-tab-analytics")).toHaveClass(
+      /bg-gradient-to-r/
+    );
+    await expect(page.getByTestId("desktop-tab-invest")).not.toHaveClass(
       /bg-gradient-to-r/
     );
 
     // Navigate back to wallet tab
-    await page.getByTestId("tab-wallet").click();
-    await expect(page.getByTestId("tab-wallet")).toHaveClass(
+    await page.getByTestId("desktop-tab-wallet").click();
+    await expect(page.getByTestId("desktop-tab-wallet")).toHaveClass(
       /bg-gradient-to-r/
     );
-    await expect(page.getByTestId("tab-more")).not.toHaveClass(
+    await expect(page.getByTestId("desktop-tab-analytics")).not.toHaveClass(
       /bg-gradient-to-r/
     );
   });
 
   test("should display correct content for each tab", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Wallet tab content
-    await page.getByTestId("tab-wallet").click();
+    await page.getByTestId("desktop-tab-wallet").click();
     await expect(page.locator("text=My Wallet")).toBeVisible();
     await expect(page.locator("text=DeFi Portfolio Overview")).toBeVisible();
 
     // Invest tab content
-    await page.getByTestId("tab-invest").click();
+    await page.getByTestId("desktop-tab-invest").click();
     await expect(page.locator("text=Investment Opportunities")).toBeVisible();
 
-    // More tab content
-    await page.getByTestId("tab-more").click();
+    // Analytics tab content
+    await page.getByTestId("desktop-tab-analytics").click();
+    await expect(page.locator("text=Portfolio Analytics")).toBeVisible();
+
+    // Community tab content
+    await page.getByTestId("desktop-tab-community").click();
+    await expect(page.locator("text=Zap Pilot Community")).toBeVisible();
+
+    // Airdrop tab content
+    await page.getByTestId("desktop-tab-airdrop").click();
+    await expect(page.locator("text=Zap Pilot Airdrops")).toBeVisible();
+
+    // Settings tab content
+    await page.getByTestId("desktop-tab-settings").click();
     await expect(page.locator("text=Settings & More")).toBeVisible();
   });
 
   test("should have proper tab styling", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Check inactive tab styling
-    await expect(page.getByTestId("tab-invest")).toHaveClass(/text-gray-400/);
+    await expect(page.getByTestId("desktop-tab-invest")).toHaveClass(
+      /text-gray-300/
+    );
 
     // Click to make active
-    await page.getByTestId("tab-invest").click();
+    await page.getByTestId("desktop-tab-invest").click();
 
     // Check active tab styling
-    await expect(page.getByTestId("tab-invest")).toHaveClass(
+    await expect(page.getByTestId("desktop-tab-invest")).toHaveClass(
       /bg-gradient-to-r/
     );
   });
@@ -77,7 +106,7 @@ test.describe("Navigation", () => {
 
     // Tab icons should be visible
     const tabIcons = page.locator('[data-testid^="tab-"] svg');
-    await expect(tabIcons).toHaveCount(3);
+    await expect(tabIcons).toHaveCount(6);
 
     // Tab labels might be hidden on very small screens depending on implementation
     const tabLabels = page.locator('[data-testid^="tab-"] span');
@@ -87,35 +116,41 @@ test.describe("Navigation", () => {
   });
 
   test("should maintain state when switching tabs", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Go to invest tab and interact with content
-    await page.getByTestId("tab-invest").click();
+    await page.getByTestId("desktop-tab-invest").click();
 
     // Switch to another tab and back
-    await page.getByTestId("tab-more").click();
-    await page.getByTestId("tab-invest").click();
+    await page.getByTestId("desktop-tab-analytics").click();
+    await page.getByTestId("desktop-tab-invest").click();
 
     // Content should still be there
     await expect(page.locator("text=Investment Opportunities")).toBeVisible();
   });
 
   test("should have proper keyboard navigation", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Focus on first tab
-    await page.getByTestId("tab-wallet").focus();
+    await page.getByTestId("desktop-tab-wallet").focus();
 
     // Tab navigation with keyboard
     await page.keyboard.press("Tab");
-    await expect(page.getByTestId("tab-invest")).toBeFocused();
+    await expect(page.getByTestId("desktop-tab-invest")).toBeFocused();
 
     // Enter key should activate tab
     await page.keyboard.press("Enter");
-    await expect(page.getByTestId("tab-invest")).toHaveClass(
+    await expect(page.getByTestId("desktop-tab-invest")).toHaveClass(
       /bg-gradient-to-r/
     );
   });
 
   test("should have smooth transitions", async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+
     // Check for transition classes or styles
-    const navigation = page.locator('[data-testid^="tab-"]').first();
+    const navigation = page.locator('[data-testid^="desktop-tab-"]').first();
     await expect(navigation).toHaveClass(/transition/);
   });
 });

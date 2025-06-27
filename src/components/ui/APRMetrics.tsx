@@ -2,12 +2,13 @@
 
 import { TrendingUp, TrendingDown, Percent, Calendar } from "lucide-react";
 import { getChangeColorClasses } from "../../lib/utils";
+import { APRMetricsSize } from "../../types/portfolio";
 
 interface APRMetricsProps {
   annualAPR: number;
   monthlyReturn: number;
   className?: string;
-  size?: "small" | "medium" | "large";
+  size?: APRMetricsSize;
 }
 
 export function APRMetrics({
