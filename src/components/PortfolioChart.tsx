@@ -68,253 +68,262 @@ const PortfolioChartComponent = () => {
     return calculateDrawdownData(portfolioHistory);
   }, [portfolioHistory]);
 
-  const renderPerformanceChart = () => (
-    <div className="relative h-80">
-      {/* Grid lines */}
-      <div className="absolute inset-0 flex flex-col justify-between">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="border-t border-gray-800/50" />
-        ))}
-      </div>
-
-      {/* Chart area */}
-      <svg
-        viewBox="0 0 800 300"
-        className="w-full h-full"
-        preserveAspectRatio="xMidYMid meet"
-      >
-        <defs>
-          <linearGradient
-            id="portfolioGradient"
-            x1="0%"
-            y1="0%"
-            x2="0%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-          </linearGradient>
-          <linearGradient
-            id="benchmarkGradient"
-            x1="0%"
-            y1="0%"
-            x2="0%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {/* Portfolio line */}
-        {portfolioHistory.length > 0 && (
-          <path
-            d={generateSVGPath(
-              portfolioHistory,
-              point => point.value,
-              800,
-              300,
-              10
-            )}
-            fill="none"
-            stroke="#8b5cf6"
-            strokeWidth="3"
-            className="drop-shadow-lg"
-          />
-        )}
-
-        {/* Benchmark line */}
-        {portfolioHistory.length > 0 && (
-          <path
-            d={generateSVGPath(
-              portfolioHistory,
-              point => point.benchmark || 0,
-              800,
-              300,
-              10
-            )}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="2"
-            strokeDasharray="5,5"
-            opacity="0.7"
-          />
-        )}
-
-        {/* Fill area under portfolio curve */}
-        {portfolioHistory.length > 0 && (
-          <path
-            d={generateAreaPath(
-              portfolioHistory,
-              point => point.value,
-              800,
-              300,
-              10
-            )}
-            fill="url(#portfolioGradient)"
-          />
-        )}
-      </svg>
-
-      {/* Y-axis labels */}
-      <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
-        {generateYAxisLabels(minValue, maxValue, 3).map((value, index) => (
-          <span key={index}>{formatAxisLabel(value)}</span>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="absolute top-4 right-4 flex items-center space-x-4 text-xs">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-0.5 bg-purple-500"></div>
-          <span className="text-white">Portfolio</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div
-            className="w-3 h-0.5 bg-blue-500 opacity-70"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(to right, #3b82f6, #3b82f6 3px, transparent 3px, transparent 6px)",
-            }}
-          ></div>
-          <span className="text-gray-400">Benchmark</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAllocationChart = () => (
-    <div className="h-80">
-      <div className="relative h-full">
-        <svg viewBox="0 0 800 300" className="w-full h-full">
-          {allocationHistory.map((point, index) => {
-            const x = (index / (allocationHistory.length - 1)) * 800;
-            const total =
-              point.btc +
-              point.eth +
-              point.stablecoin +
-              point.defi +
-              point.altcoin;
-            let yOffset = 300;
-
-            // Stack areas
-            const assets = [
-              { value: point.btc, color: "#f59e0b" },
-              { value: point.eth, color: "#6366f1" },
-              { value: point.stablecoin, color: "#10b981" },
-              { value: point.defi, color: "#8b5cf6" },
-              { value: point.altcoin, color: "#ef4444" },
-            ];
-
-            return (
-              <g key={index}>
-                {assets.map((asset, assetIndex) => {
-                  const height = (asset.value / total) * 280;
-                  const y = yOffset - height;
-                  yOffset -= height;
-
-                  return (
-                    <rect
-                      key={assetIndex}
-                      x={x - 2}
-                      y={y}
-                      width="4"
-                      height={height}
-                      fill={asset.color}
-                      opacity="0.8"
-                    />
-                  );
-                })}
-              </g>
-            );
-          })}
-        </svg>
-
-        {/* Legend */}
-        <div className="absolute top-4 right-4 space-y-1 text-xs">
-          {[
-            { label: "BTC", color: "#f59e0b" },
-            { label: "ETH", color: "#6366f1" },
-            { label: "Stablecoin", color: "#10b981" },
-            { label: "DeFi", color: "#8b5cf6" },
-            { label: "Altcoin", color: "#ef4444" },
-          ].map(asset => (
-            <div key={asset.label} className="flex items-center space-x-2">
-              <div
-                className="w-3 h-3 rounded"
-                style={{ backgroundColor: asset.color }}
-              ></div>
-              <span className="text-gray-300">{asset.label}</span>
-            </div>
+  const renderPerformanceChart = useMemo(
+    () => (
+      <div className="relative h-80">
+        {/* Grid lines */}
+        <div className="absolute inset-0 flex flex-col justify-between">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="border-t border-gray-800/50" />
           ))}
         </div>
+
+        {/* Chart area */}
+        <svg
+          viewBox="0 0 800 300"
+          className="w-full h-full"
+          preserveAspectRatio="xMidYMid meet"
+        >
+          <defs>
+            <linearGradient
+              id="portfolioGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient
+              id="benchmarkGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Portfolio line */}
+          {portfolioHistory.length > 0 && (
+            <path
+              d={generateSVGPath(
+                portfolioHistory,
+                point => point.value,
+                800,
+                300,
+                10
+              )}
+              fill="none"
+              stroke="#8b5cf6"
+              strokeWidth="3"
+              className="drop-shadow-lg"
+            />
+          )}
+
+          {/* Benchmark line */}
+          {portfolioHistory.length > 0 && (
+            <path
+              d={generateSVGPath(
+                portfolioHistory,
+                point => point.benchmark || 0,
+                800,
+                300,
+                10
+              )}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="2"
+              strokeDasharray="5,5"
+              opacity="0.7"
+            />
+          )}
+
+          {/* Fill area under portfolio curve */}
+          {portfolioHistory.length > 0 && (
+            <path
+              d={generateAreaPath(
+                portfolioHistory,
+                point => point.value,
+                800,
+                300,
+                10
+              )}
+              fill="url(#portfolioGradient)"
+            />
+          )}
+        </svg>
+
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+          {generateYAxisLabels(minValue, maxValue, 3).map((value, index) => (
+            <span key={index}>{formatAxisLabel(value)}</span>
+          ))}
+        </div>
+
+        {/* Legend */}
+        <div className="absolute top-4 right-4 flex items-center space-x-4 text-xs">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-0.5 bg-purple-500"></div>
+            <span className="text-white">Portfolio</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div
+              className="w-3 h-0.5 bg-blue-500 opacity-70"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(to right, #3b82f6, #3b82f6 3px, transparent 3px, transparent 6px)",
+              }}
+            ></div>
+            <span className="text-gray-400">Benchmark</span>
+          </div>
+        </div>
       </div>
-    </div>
+    ),
+    [portfolioHistory, minValue, maxValue]
   );
 
-  const renderDrawdownChart = () => (
-    <div className="relative h-80">
-      <svg viewBox="0 0 800 300" className="w-full h-full">
-        <defs>
-          <linearGradient
-            id="drawdownGradient"
-            x1="0%"
-            y1="0%"
-            x2="0%"
-            y2="100%"
-          >
-            <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
-          </linearGradient>
-        </defs>
+  const renderAllocationChart = useMemo(
+    () => (
+      <div className="h-80">
+        <div className="relative h-full">
+          <svg viewBox="0 0 800 300" className="w-full h-full">
+            {allocationHistory.map((point, index) => {
+              const x = (index / (allocationHistory.length - 1)) * 800;
+              const total =
+                point.btc +
+                point.eth +
+                point.stablecoin +
+                point.defi +
+                point.altcoin;
+              let yOffset = 300;
 
-        {/* Zero line */}
-        <line
-          x1="0"
-          y1="50"
-          x2="800"
-          y2="50"
-          stroke="#374151"
-          strokeWidth="1"
-          strokeDasharray="2,2"
-        />
+              // Stack areas
+              const assets = [
+                { value: point.btc, color: "#f59e0b" },
+                { value: point.eth, color: "#6366f1" },
+                { value: point.stablecoin, color: "#10b981" },
+                { value: point.defi, color: "#8b5cf6" },
+                { value: point.altcoin, color: "#ef4444" },
+              ];
 
-        {/* Drawdown area */}
-        <path
-          d={`M 0 50 ${drawdownData
-            .map((point, index) => {
-              const x = (index / (drawdownData.length - 1)) * 800;
-              const y = 50 - (point.drawdown / -20) * 250; // Scale to -20% max
-              return `L ${x} ${y}`;
-            })
-            .join(" ")} L 800 50 Z`}
-          fill="url(#drawdownGradient)"
-        />
+              return (
+                <g key={index}>
+                  {assets.map((asset, assetIndex) => {
+                    const height = (asset.value / total) * 280;
+                    const y = yOffset - height;
+                    yOffset -= height;
 
-        {/* Drawdown line */}
-        <path
-          d={`M ${drawdownData
-            .map((point, index) => {
-              const x = (index / (drawdownData.length - 1)) * 800;
-              const y = 50 - (point.drawdown / -20) * 250;
-              return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-            })
-            .join(" ")}`}
-          fill="none"
-          stroke="#ef4444"
-          strokeWidth="2"
-        />
-      </svg>
+                    return (
+                      <rect
+                        key={assetIndex}
+                        x={x - 2}
+                        y={y}
+                        width="4"
+                        height={height}
+                        fill={asset.color}
+                        opacity="0.8"
+                      />
+                    );
+                  })}
+                </g>
+              );
+            })}
+          </svg>
 
-      {/* Y-axis labels */}
-      <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
-        <span>0%</span>
-        <span>-5%</span>
-        <span>-10%</span>
-        <span>-15%</span>
-        <span>-20%</span>
+          {/* Legend */}
+          <div className="absolute top-4 right-4 space-y-1 text-xs">
+            {[
+              { label: "BTC", color: "#f59e0b" },
+              { label: "ETH", color: "#6366f1" },
+              { label: "Stablecoin", color: "#10b981" },
+              { label: "DeFi", color: "#8b5cf6" },
+              { label: "Altcoin", color: "#ef4444" },
+            ].map(asset => (
+              <div key={asset.label} className="flex items-center space-x-2">
+                <div
+                  className="w-3 h-3 rounded"
+                  style={{ backgroundColor: asset.color }}
+                ></div>
+                <span className="text-gray-300">{asset.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    ),
+    [allocationHistory]
+  );
+
+  const renderDrawdownChart = useMemo(
+    () => (
+      <div className="relative h-80">
+        <svg viewBox="0 0 800 300" className="w-full h-full">
+          <defs>
+            <linearGradient
+              id="drawdownGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+          </defs>
+
+          {/* Zero line */}
+          <line
+            x1="0"
+            y1="50"
+            x2="800"
+            y2="50"
+            stroke="#374151"
+            strokeWidth="1"
+            strokeDasharray="2,2"
+          />
+
+          {/* Drawdown area */}
+          <path
+            d={`M 0 50 ${drawdownData
+              .map((point, index) => {
+                const x = (index / (drawdownData.length - 1)) * 800;
+                const y = 50 - (point.drawdown / -20) * 250; // Scale to -20% max
+                return `L ${x} ${y}`;
+              })
+              .join(" ")} L 800 50 Z`}
+            fill="url(#drawdownGradient)"
+          />
+
+          {/* Drawdown line */}
+          <path
+            d={`M ${drawdownData
+              .map((point, index) => {
+                const x = (index / (drawdownData.length - 1)) * 800;
+                const y = 50 - (point.drawdown / -20) * 250;
+                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              })
+              .join(" ")}`}
+            fill="none"
+            stroke="#ef4444"
+            strokeWidth="2"
+          />
+        </svg>
+
+        {/* Y-axis labels */}
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+          <span>0%</span>
+          <span>-5%</span>
+          <span>-10%</span>
+          <span>-15%</span>
+          <span>-20%</span>
+        </div>
+      </div>
+    ),
+    [drawdownData]
   );
 
   return (
@@ -391,9 +400,9 @@ const PortfolioChartComponent = () => {
 
         {/* Chart Content */}
         <div className="relative">
-          {selectedChart === "performance" && renderPerformanceChart()}
-          {selectedChart === "allocation" && renderAllocationChart()}
-          {selectedChart === "drawdown" && renderDrawdownChart()}
+          {selectedChart === "performance" && renderPerformanceChart}
+          {selectedChart === "allocation" && renderAllocationChart}
+          {selectedChart === "drawdown" && renderDrawdownChart}
         </div>
 
         {/* Chart Summary */}

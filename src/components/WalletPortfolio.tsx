@@ -16,6 +16,7 @@ import { useCallback, useState } from "react";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
+import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
@@ -48,7 +49,7 @@ export function WalletPortfolio({
   }, []);
 
   // Mock APR and monthly return data - in real app this would come from API
-  const portfolioAPR = 18.5;
+  const portfolioAPR = BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
   const estimatedMonthlyIncome = 1730;
 
   return (
@@ -134,7 +135,7 @@ export function WalletPortfolio({
         {/* Wallet Action Buttons */}
         <div className="grid grid-cols-3 gap-3">
           <GradientButton
-            gradient="from-green-600 to-emerald-600"
+            gradient={GRADIENTS.SUCCESS}
             shadowColor="green-500"
             icon={ArrowUpRight}
           >
@@ -142,7 +143,7 @@ export function WalletPortfolio({
           </GradientButton>
 
           <GradientButton
-            gradient="from-red-600 to-pink-600"
+            gradient={GRADIENTS.DANGER}
             shadowColor="red-500"
             icon={ArrowDownLeft}
           >
@@ -150,7 +151,7 @@ export function WalletPortfolio({
           </GradientButton>
 
           <GradientButton
-            gradient="from-purple-600 to-blue-600"
+            gradient={GRADIENTS.PRIMARY}
             shadowColor="purple-500"
             icon={Settings}
           >

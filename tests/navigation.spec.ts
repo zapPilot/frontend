@@ -60,28 +60,40 @@ test.describe("Navigation", () => {
 
     // Wallet tab content
     await page.getByTestId("desktop-tab-wallet").click();
-    await expect(page.locator("text=My Wallet")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "My Wallet" })
+    ).toBeVisible();
     await expect(page.locator("text=DeFi Portfolio Overview")).toBeVisible();
 
     // Invest tab content
     await page.getByTestId("desktop-tab-invest").click();
-    await expect(page.locator("text=Investment Opportunities")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Investment Opportunities" })
+    ).toBeVisible();
 
     // Analytics tab content
     await page.getByTestId("desktop-tab-analytics").click();
-    await expect(page.locator("text=Portfolio Analytics")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Portfolio Analytics" }).first()
+    ).toBeVisible();
 
     // Community tab content
     await page.getByTestId("desktop-tab-community").click();
-    await expect(page.locator("text=Zap Pilot Community")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Zap Pilot Community" })
+    ).toBeVisible();
 
     // Airdrop tab content
     await page.getByTestId("desktop-tab-airdrop").click();
-    await expect(page.locator("text=Zap Pilot Airdrops")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Zap Pilot Airdrops" })
+    ).toBeVisible();
 
     // Settings tab content
     await page.getByTestId("desktop-tab-settings").click();
-    await expect(page.locator("text=Settings & More")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Settings & More" })
+    ).toBeVisible();
   });
 
   test("should have proper tab styling", async ({ page }) => {
@@ -126,7 +138,9 @@ test.describe("Navigation", () => {
     await page.getByTestId("desktop-tab-invest").click();
 
     // Content should still be there
-    await expect(page.locator("text=Investment Opportunities")).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Investment Opportunities" })
+    ).toBeVisible();
   });
 
   test("should have proper keyboard navigation", async ({ page }) => {
