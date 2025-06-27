@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -14,15 +13,15 @@ import {
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
-import { PortfolioOverview } from "./PortfolioOverview";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
+import { PortfolioOverview } from "./PortfolioOverview";
+import { GlassCard, GradientButton } from "./ui";
 
 export function WalletPortfolio() {
   const {
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
-    pieChartData,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
     handleLegendItemClick,
@@ -31,11 +30,7 @@ export function WalletPortfolio() {
   return (
     <div className="space-y-6">
       {/* Wallet Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="glass-morphism rounded-3xl p-6 border border-gray-800"
-      >
+      <GlassCard>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
@@ -97,39 +92,37 @@ export function WalletPortfolio() {
 
         {/* Wallet Action Buttons */}
         <div className="grid grid-cols-3 gap-3">
-          <motion.button
-            whileHover={{ scale: 1.02, y: -1 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-4 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300"
+          <GradientButton
+            gradient="from-green-600 to-emerald-600"
+            shadowColor="green-500"
+            icon={ArrowUpRight}
           >
-            <ArrowUpRight className="w-5 h-5" />
             <span className="text-sm">ZapIn</span>
-          </motion.button>
+          </GradientButton>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -1 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-4 rounded-2xl bg-gradient-to-r from-red-600 to-pink-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+          <GradientButton
+            gradient="from-red-600 to-pink-600"
+            shadowColor="red-500"
+            icon={ArrowDownLeft}
           >
-            <ArrowDownLeft className="w-5 h-5" />
             <span className="text-sm">ZapOut</span>
-          </motion.button>
+          </GradientButton>
 
-          <motion.button
-            whileHover={{ scale: 1.02, y: -1 }}
-            whileTap={{ scale: 0.98 }}
-            className="p-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold flex items-center justify-center space-x-2 hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
+          <GradientButton
+            gradient="from-purple-600 to-blue-600"
+            shadowColor="purple-500"
+            icon={Settings}
           >
-            <Settings className="w-5 h-5" />
             <span className="text-sm">Optimize</span>
-          </motion.button>
+          </GradientButton>
         </div>
-      </motion.div>
+      </GlassCard>
 
-      {/* Portfolio Overview and Pie Chart */}
+      {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={mockPortfolioData}
         onLegendItemClick={handleLegendItemClick}
+        title="Asset Distribution"
       />
 
       {/* Asset Categories Detail */}
