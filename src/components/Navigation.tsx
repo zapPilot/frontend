@@ -1,13 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  Wallet,
-  TrendingUp,
-  MoreHorizontal,
-  Menu,
-  X,
-} from "lucide-react";
+import { Wallet, TrendingUp, MoreHorizontal, Menu, X } from "lucide-react";
 import { useState } from "react";
 
 interface NavigationProps {
@@ -17,22 +11,22 @@ interface NavigationProps {
 
 const navItems = [
   {
-    id: "portfolio",
+    id: "wallet",
     label: "Portfolio",
     icon: Wallet,
-    description: "Your wallet overview"
+    description: "Your wallet overview",
   },
   {
     id: "invest",
     label: "Invest",
     icon: TrendingUp,
-    description: "Investment opportunities"
+    description: "Investment opportunities",
   },
   {
     id: "more",
     label: "More",
     icon: MoreHorizontal,
-    description: "Settings & tools"
+    description: "Settings & tools",
   },
 ];
 
@@ -55,21 +49,22 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </motion.div>
           </div>
-          
+
           <nav className="flex flex-1 flex-col">
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {navItems.map((item) => {
+                  {navItems.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
-                    
+
                     return (
                       <li key={item.id}>
                         <motion.button
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
                           onClick={() => onTabChange(item.id)}
+                          data-testid={`desktop-tab-${item.id}`}
                           className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
                             isActive
                               ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30"
@@ -78,12 +73,16 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
                         >
                           <Icon
                             className={`h-5 w-5 shrink-0 transition-colors ${
-                              isActive ? "text-purple-400" : "text-gray-400 group-hover:text-white"
+                              isActive
+                                ? "text-purple-400"
+                                : "text-gray-400 group-hover:text-white"
                             }`}
                           />
                           <div className="text-left">
                             <div>{item.label}</div>
-                            <div className="text-xs text-gray-400">{item.description}</div>
+                            <div className="text-xs text-gray-400">
+                              {item.description}
+                            </div>
                           </div>
                           {isActive && (
                             <motion.div
@@ -127,7 +126,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
               </div>
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </div>
-            
+
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
@@ -155,14 +154,14 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               className="fixed inset-y-0 left-0 z-50 w-64 glass-morphism border-r border-gray-800 p-6"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <nav className="mt-16">
                 <ul className="space-y-2">
-                  {navItems.map((item) => {
+                  {navItems.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
-                    
+
                     return (
                       <li key={item.id}>
                         <button
@@ -170,6 +169,7 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
                             onTabChange(item.id);
                             setIsMobileMenuOpen(false);
                           }}
+                          data-testid={`mobile-menu-tab-${item.id}`}
                           className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
                             isActive
                               ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30"
@@ -183,7 +183,9 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
                           />
                           <div className="text-left">
                             <div>{item.label}</div>
-                            <div className="text-xs text-gray-400">{item.description}</div>
+                            <div className="text-xs text-gray-400">
+                              {item.description}
+                            </div>
                           </div>
                         </button>
                       </li>
@@ -199,15 +201,16 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800">
         <div className="flex items-center justify-around px-4 py-2">
-          {navItems.map((item) => {
+          {navItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
-            
+
             return (
               <motion.button
                 key={item.id}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onTabChange(item.id)}
+                data-testid={`tab-${item.id}`}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 ${
                   isActive
                     ? "text-purple-400"

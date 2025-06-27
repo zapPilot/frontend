@@ -9,7 +9,7 @@ import { InvestmentOpportunity } from "@/types/investment";
 import { useState } from "react";
 
 export default function DashboardApp() {
-  const [activeTab, setActiveTab] = useState("portfolio");
+  const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
 
@@ -21,6 +21,14 @@ export default function DashboardApp() {
     setSelectedStrategy(null);
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Reset strategy when switching tabs to enable navigation from SwapPage
+    if (selectedStrategy) {
+      setSelectedStrategy(null);
+    }
+  };
+
   const renderTabContent = () => {
     if (selectedStrategy) {
       return (
@@ -29,7 +37,7 @@ export default function DashboardApp() {
     }
 
     switch (activeTab) {
-      case "portfolio":
+      case "wallet":
         return <WalletPortfolio />;
       case "invest":
         return <InvestTab onInvestClick={handleInvestClick} />;
@@ -46,7 +54,7 @@ export default function DashboardApp() {
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
 
       {/* Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Main content */}
       <div className="relative z-10 lg:pl-72">
