@@ -1,15 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-  AnalyticsDashboard,
-  CommunityStats,
-  PodcastSection,
-  UpcomingEvents,
-  SocialLinks,
-} from "./MoreTab/index";
+import { CommunityStats, PodcastSection, SocialLinks } from "./MoreTab/index";
 
-export function MoreTab() {
+export function CommunityTab() {
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -19,17 +13,14 @@ export function MoreTab() {
         className="text-center"
       >
         <h1 className="text-3xl font-bold gradient-text mb-2">
-          Community & More
+          Zap Pilot Community
         </h1>
         <p className="text-gray-400">
-          Stay connected and explore the Zap Pilot ecosystem
+          Connect with fellow DeFi enthusiasts and stay updated
         </p>
       </motion.div>
 
-      {/* Portfolio Analytics Dashboard */}
-      <AnalyticsDashboard />
-
-      {/* Community Stats - Moved to top for credibility */}
+      {/* Community Stats */}
       <CommunityStats />
 
       {/* Podcast Section */}
@@ -37,9 +28,6 @@ export function MoreTab() {
         spotifyUrl="#" // Replace with your actual Spotify URL
         appleUrl="#" // Replace with your actual Apple Podcast URL
       />
-
-      {/* Upcoming Events */}
-      <UpcomingEvents />
 
       {/* Social Links */}
       <SocialLinks />

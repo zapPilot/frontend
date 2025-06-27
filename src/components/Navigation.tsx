@@ -3,11 +3,13 @@
 import { motion } from "framer-motion";
 import {
   Menu,
-  MoreHorizontal,
+  BarChart3,
   Settings,
   TrendingUp,
   Wallet,
   X,
+  Users,
+  Gift,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useCallback, memo } from "react";
@@ -31,10 +33,22 @@ const navItems = [
     description: "Investment opportunities",
   },
   {
-    id: "more",
-    label: "More",
-    icon: MoreHorizontal,
-    description: "Community & ecosystem",
+    id: "analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    description: "Performance metrics & charts",
+  },
+  {
+    id: "community",
+    label: "Community",
+    icon: Users,
+    description: "Social & ecosystem",
+  },
+  {
+    id: "airdrop",
+    label: "Airdrop",
+    icon: Gift,
+    description: "Token rewards & airdrops",
   },
   {
     id: "settings",

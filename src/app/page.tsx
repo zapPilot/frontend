@@ -19,8 +19,39 @@ const InvestTab = dynamic(
   }
 );
 
-const MoreTab = dynamic(
-  () => import("@/components/MoreTab").then(mod => ({ default: mod.MoreTab })),
+const AnalyticsTab = dynamic(
+  () =>
+    import("@/components/AnalyticsTab").then(mod => ({
+      default: mod.AnalyticsTab,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
+const CommunityTab = dynamic(
+  () =>
+    import("@/components/CommunityTab").then(mod => ({
+      default: mod.CommunityTab,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
+const AirdropTab = dynamic(
+  () =>
+    import("@/components/AirdropTab").then(mod => ({
+      default: mod.AirdropTab,
+    })),
   {
     loading: () => (
       <div className="flex items-center justify-center min-h-96">
@@ -92,8 +123,12 @@ export default function DashboardApp() {
         return <WalletPortfolio />;
       case "invest":
         return <InvestTab onInvestClick={handleInvestClick} />;
-      case "more":
-        return <MoreTab />;
+      case "analytics":
+        return <AnalyticsTab />;
+      case "community":
+        return <CommunityTab />;
+      case "airdrop":
+        return <AirdropTab />;
       case "settings":
         return <SettingsTab />;
       default:
