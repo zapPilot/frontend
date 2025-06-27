@@ -6,6 +6,8 @@ import {
   Github,
   MessageCircle,
   Twitter,
+  MessageSquare,
+  Send,
   LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +31,16 @@ const defaultLinks: SocialLink[] = [
     label: "Discord",
     url: "https://discord.gg/d3vXUtcFCJ",
   },
+  {
+    icon: MessageSquare,
+    label: "Farcaster",
+    url: "https://warpcast.com/zappilot",
+  },
+  {
+    icon: Send,
+    label: "Telegram",
+    url: "https://t.me/zappilot",
+  },
 ];
 
 export function SocialLinks({
@@ -44,7 +56,7 @@ export function SocialLinks({
       className={`glass-morphism rounded-2xl p-6 border border-gray-800 ${className}`}
     >
       <h2 className="text-lg font-semibold text-white mb-4">{title}</h2>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {links.map((link, index) => (
           <motion.a
             key={link.label}

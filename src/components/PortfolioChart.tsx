@@ -140,7 +140,11 @@ const PortfolioChartComponent = () => {
       </div>
 
       {/* Chart area */}
-      <svg viewBox="0 0 800 300" className="w-full h-full">
+      <svg
+        viewBox="0 0 800 300"
+        className="w-full h-full"
+        preserveAspectRatio="xMidYMid meet"
+      >
         <defs>
           <linearGradient
             id="portfolioGradient"
@@ -165,51 +169,68 @@ const PortfolioChartComponent = () => {
         </defs>
 
         {/* Portfolio line */}
-        <path
-          d={`M ${portfolioHistory
-            .map((point, index) => {
-              const x = (index / (portfolioHistory.length - 1)) * 800;
-              const y =
-                300 - ((point.value - minValue) / (maxValue - minValue)) * 280;
-              return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-            })
-            .join(" ")}`}
-          fill="none"
-          stroke="#8b5cf6"
-          strokeWidth="3"
-          className="drop-shadow-lg"
-        />
+        {portfolioHistory.length > 0 && (
+          <path
+            d={`${portfolioHistory
+              .map((point, index) => {
+                const x =
+                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
+                const y =
+                  300 -
+                  ((point.value - minValue) /
+                    Math.max(maxValue - minValue, 1)) *
+                    280;
+                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              })
+              .join(" ")}`}
+            fill="none"
+            stroke="#8b5cf6"
+            strokeWidth="3"
+            className="drop-shadow-lg"
+          />
+        )}
 
         {/* Benchmark line */}
-        <path
-          d={`M ${portfolioHistory
-            .map((point, index) => {
-              const x = (index / (portfolioHistory.length - 1)) * 800;
-              const y =
-                300 -
-                ((point.benchmark! - minValue) / (maxValue - minValue)) * 280;
-              return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-            })
-            .join(" ")}`}
-          fill="none"
-          stroke="#3b82f6"
-          strokeWidth="2"
-          strokeDasharray="5,5"
-          opacity="0.7"
-        />
+        {portfolioHistory.length > 0 && (
+          <path
+            d={`${portfolioHistory
+              .map((point, index) => {
+                const x =
+                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
+                const y =
+                  300 -
+                  ((point.benchmark! - minValue) /
+                    Math.max(maxValue - minValue, 1)) *
+                    280;
+                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              })
+              .join(" ")}`}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="2"
+            strokeDasharray="5,5"
+            opacity="0.7"
+          />
+        )}
 
         {/* Fill area under portfolio curve */}
-        <path
-          d={`M ${portfolioHistory
-            .map((point, index) => {
-              const x = (index / (portfolioHistory.length - 1)) * 800;
-              const y =
-                300 - ((point.value - minValue) / (maxValue - minValue)) * 280;
-              return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-            })
-            .join(" ")} L 800 300 L 0 300 Z`}
-          fill="url(#portfolioGradient)"
-        />
+        {portfolioHistory.length > 0 && (
+          <path
+            d={`${portfolioHistory
+              .map((point, index) => {
+                const x =
+                  (index / Math.max(portfolioHistory.length - 1, 1)) * 800;
+                const y =
+                  300 -
+                  ((point.value - minValue) /
+                    Math.max(maxValue - minValue, 1)) *
+                    280;
+                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+              })
+              .join(" ")} L 800 300 L 0 300 Z`}
+            fill="url(#portfolioGradient)"
+          />
+        )}
       </svg>
 
       {/* Y-axis labels */}

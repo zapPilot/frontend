@@ -111,6 +111,13 @@ export default function DashboardApp() {
     [selectedStrategy]
   );
 
+  const handleAnalyticsClick = useCallback(() => {
+    setActiveTab("analytics");
+    if (selectedStrategy) {
+      setSelectedStrategy(null);
+    }
+  }, [selectedStrategy]);
+
   const renderTabContent = () => {
     if (selectedStrategy) {
       return (
@@ -120,7 +127,7 @@ export default function DashboardApp() {
 
     switch (activeTab) {
       case "wallet":
-        return <WalletPortfolio />;
+        return <WalletPortfolio onAnalyticsClick={handleAnalyticsClick} />;
       case "invest":
         return <InvestTab onInvestClick={handleInvestClick} />;
       case "analytics":

@@ -3,15 +3,15 @@
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  BarChart3,
   DollarSign,
   Eye,
   EyeOff,
   Settings,
-  TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
@@ -20,7 +20,13 @@ import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
 
-export function WalletPortfolio() {
+interface WalletPortfolioProps {
+  onAnalyticsClick?: () => void;
+}
+
+export function WalletPortfolio({
+  onAnalyticsClick,
+}: WalletPortfolioProps = {}) {
   const {
     balanceHidden,
     expandedCategory,
@@ -40,6 +46,10 @@ export function WalletPortfolio() {
     setIsWalletManagerOpen(false);
   }, []);
 
+  // Mock APR and monthly return data - in real app this would come from API
+  const portfolioAPR = 18.5;
+  const monthlyReturn = 1.4;
+
   return (
     <div className="space-y-6">
       {/* Wallet Header */}
@@ -56,6 +66,15 @@ export function WalletPortfolio() {
           </div>
 
           <div className="flex space-x-2">
+            {onAnalyticsClick && (
+              <button
+                onClick={onAnalyticsClick}
+                className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+                title="View Analytics"
+              >
+                <BarChart3 className="w-5 h-5 text-gray-300" />
+              </button>
+            )}
             <button
               onClick={openWalletManager}
               className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
@@ -86,7 +105,7 @@ export function WalletPortfolio() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-400 mb-1">24h Change</p>
+            <p className="text-sm text-gray-400 mb-1">Portfolio APR</p>
             <div
               className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
             >
@@ -103,7 +122,7 @@ export function WalletPortfolio() {
           </div>
 
           <div>
-            <p className="text-sm text-gray-400 mb-1">Value Change</p>
+            <p className="text-sm text-gray-400 mb-1">Monthly Return</p>
             <p
               className={`text-xl font-semibold ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
             >
