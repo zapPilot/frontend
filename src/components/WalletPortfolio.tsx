@@ -9,12 +9,15 @@ import {
   Settings,
   TrendingDown,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
+import { useState, useCallback } from "react";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PortfolioOverview } from "./PortfolioOverview";
+import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
 
 export function WalletPortfolio() {
@@ -26,6 +29,16 @@ export function WalletPortfolio() {
     toggleCategoryExpansion,
     handleLegendItemClick,
   } = usePortfolio(mockPortfolioData);
+
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+
+  const openWalletManager = useCallback(() => {
+    setIsWalletManagerOpen(true);
+  }, []);
+
+  const closeWalletManager = useCallback(() => {
+    setIsWalletManagerOpen(false);
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -42,16 +55,26 @@ export function WalletPortfolio() {
             </div>
           </div>
 
-          <button
-            onClick={toggleBalanceVisibility}
-            className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
-          >
-            {balanceHidden ? (
-              <EyeOff className="w-5 h-5 text-gray-300" />
-            ) : (
-              <Eye className="w-5 h-5 text-gray-300" />
-            )}
-          </button>
+          <div className="flex space-x-2">
+            <button
+              onClick={openWalletManager}
+              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+              title="Manage Wallets"
+            >
+              <Wallet className="w-5 h-5 text-gray-300" />
+            </button>
+            <button
+              onClick={toggleBalanceVisibility}
+              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+              title={balanceHidden ? "Show Balance" : "Hide Balance"}
+            >
+              {balanceHidden ? (
+                <EyeOff className="w-5 h-5 text-gray-300" />
+              ) : (
+                <Eye className="w-5 h-5 text-gray-300" />
+              )}
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -131,6 +154,12 @@ export function WalletPortfolio() {
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
+      />
+
+      {/* Wallet Manager Modal */}
+      <WalletManager
+        isOpen={isWalletManagerOpen}
+        onClose={closeWalletManager}
       />
     </div>
   );

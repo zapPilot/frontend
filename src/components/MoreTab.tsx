@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
+  AnalyticsDashboard,
   CommunityStats,
   PodcastSection,
   UpcomingEvents,
@@ -24,6 +25,9 @@ export function MoreTab() {
           Stay connected and explore the Zap Pilot ecosystem
         </p>
       </motion.div>
+
+      {/* Portfolio Analytics Dashboard */}
+      <AnalyticsDashboard />
 
       {/* Community Stats - Moved to top for credibility */}
       <CommunityStats />

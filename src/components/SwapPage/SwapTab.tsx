@@ -1,11 +1,13 @@
 "use client";
 
 import { ArrowDown, ChevronDown, Settings, Zap } from "lucide-react";
+import { useState, useCallback } from "react";
 import { formatCurrency } from "../../lib/utils";
 import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
 import { SWAP_CONSTANTS } from "../../constants/swap";
 import { AmountButtons } from "./AmountButtons";
+import { IntentProgressModal } from "./IntentProgressModal";
 import { GlassCard, GradientButton } from "../ui";
 
 interface SwapTabProps {
@@ -23,6 +25,8 @@ export function SwapTab({
   onFromAmountChange,
   onTokenSelectorOpen,
 }: SwapTabProps) {
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+
   const estimatedShares = fromAmount
     ? (
         parseFloat(fromAmount) / SWAP_CONSTANTS.SHARES_CALCULATION_DIVISOR
@@ -31,6 +35,16 @@ export function SwapTab({
   const minimumReceived = fromAmount
     ? (parseFloat(fromAmount) * SWAP_CONSTANTS.MINIMUM_RECEIVED_RATE).toFixed(2)
     : "0";
+
+  const handleSwapClick = useCallback(() => {
+    if (fromAmount && parseFloat(fromAmount) > 0) {
+      setIsProgressModalOpen(true);
+    }
+  }, [fromAmount]);
+
+  const handleCloseProgressModal = useCallback(() => {
+    setIsProgressModalOpen(false);
+  }, []);
 
   return (
     <GlassCard testId="swap-tab">
@@ -161,12 +175,26 @@ export function SwapTab({
           gradient="from-purple-600 to-blue-600"
           className="w-full py-4"
           testId="swap-invest-button"
+          onClick={handleSwapClick}
         >
           {!fromAmount || parseFloat(fromAmount) <= 0
             ? "Enter Amount"
             : "Swap & Invest"}
         </GradientButton>
       </div>
+
+      {/* Intent Progress Modal */}
+      <IntentProgressModal
+        isOpen={isProgressModalOpen}
+        onClose={handleCloseProgressModal}
+        strategy={{
+          name: strategy.name,
+          color: strategy.color,
+        }}
+        amount={fromAmount}
+        fromToken={fromToken.symbol}
+        showDetailed={true}
+      />
     </GlassCard>
   );
 }
