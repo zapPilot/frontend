@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Navigation } from "@/components/Navigation";
-import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { InvestTab } from "@/components/InvestTab";
 import { MoreTab } from "@/components/MoreTab";
+import { Navigation } from "@/components/Navigation";
 import { SwapPage } from "@/components/SwapPage";
+import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { InvestmentOpportunity } from "@/types/investment";
+import { useState } from "react";
 
 export default function DashboardApp() {
   const [activeTab, setActiveTab] = useState("portfolio");
-  const [selectedStrategy, setSelectedStrategy] = useState<InvestmentOpportunity | null>(null);
+  const [selectedStrategy, setSelectedStrategy] =
+    useState<InvestmentOpportunity | null>(null);
 
   const handleInvestClick = (strategy: InvestmentOpportunity) => {
     setSelectedStrategy(strategy);
@@ -22,7 +23,9 @@ export default function DashboardApp() {
 
   const renderTabContent = () => {
     if (selectedStrategy) {
-      return <SwapPage strategy={selectedStrategy} onBack={handleBackToInvest} />;
+      return (
+        <SwapPage strategy={selectedStrategy} onBack={handleBackToInvest} />
+      );
     }
 
     switch (activeTab) {
@@ -41,21 +44,19 @@ export default function DashboardApp() {
     <div className="min-h-screen bg-gray-950 relative overflow-hidden">
       {/* Background gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
-      
+
       {/* Navigation */}
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
-      
+
       {/* Main content */}
       <div className="relative z-10 lg:pl-72">
         {/* Mobile header spacing */}
         <div className="lg:hidden h-16" />
-        
+
         <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">
-            {renderTabContent()}
-          </div>
+          <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
         </main>
-        
+
         {/* Mobile bottom nav spacing */}
         <div className="lg:hidden h-20" />
       </div>

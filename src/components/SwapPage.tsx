@@ -2,21 +2,24 @@
 
 import { motion } from "framer-motion";
 import {
+  Activity,
   ArrowDown,
   ArrowLeft,
+  BarChart3,
   ChevronDown,
   Info,
+  PieChart as PieChartIcon,
   Settings,
   TrendingUp,
   Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { useStrategyPortfolio } from "../hooks/useStrategyPortfolio";
 import { formatCurrency, getRiskLevelClasses } from "../lib/utils";
 import { InvestmentOpportunity } from "../types/investment";
 import { SwapToken } from "../types/swap";
-import { PortfolioOverview } from "./PortfolioOverview";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
-import { useStrategyPortfolio } from "../hooks/useStrategyPortfolio";
+import { PieChart } from "./PieChart";
 
 interface SwapPageProps {
   strategy: InvestmentOpportunity;
@@ -30,11 +33,13 @@ const mockTokens: SwapToken[] = [
   { symbol: "BTC", name: "Bitcoin", balance: 0.1, price: 45000.0 },
 ];
 
+type TabType = "swap" | "allocation" | "performance" | "details";
+
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [fromToken, setFromToken] = useState<SwapToken>(mockTokens[0]);
   const [fromAmount, setFromAmount] = useState("");
   const [showTokenSelector, setShowTokenSelector] = useState(false);
-  const [slippage, setSlippage] = useState(0.5);
+  const [activeTab, setActiveTab] = useState<TabType>("swap");
 
   const {
     portfolioData,
@@ -42,7 +47,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     portfolioMetrics,
     pieChartData,
     toggleCategoryExpansion,
-    handleLegendItemClick,
   } = useStrategyPortfolio(strategy.id);
 
   const estimatedShares = fromAmount
@@ -52,50 +56,88 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     ? (parseFloat(fromAmount) * 0.995).toFixed(2)
     : "0";
 
+  const tabs = [
+    { id: "swap" as TabType, label: "Swap", icon: Zap },
+    { id: "allocation" as TabType, label: "Allocation", icon: PieChartIcon },
+    { id: "performance" as TabType, label: "Performance", icon: BarChart3 },
+    { id: "details" as TabType, label: "Details", icon: Activity },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center space-x-4"
+        className="flex items-center justify-between"
       >
-        <button
-          onClick={onBack}
-          className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
-        >
-          <ArrowLeft className="w-5 h-5 text-gray-300" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-white">Invest in Strategy</h1>
-          <p className="text-gray-400">
-            Swap tokens to invest in {strategy.name}
-          </p>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onBack}
+            className="p-2 rounded-lg glass-morphism hover:bg-white/10 transition-all duration-300"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-300" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{strategy.name}</h1>
+            <p className="text-gray-400">
+              Invest • {strategy.apr}% APR • {strategy.risk} Risk
+            </p>
+          </div>
+        </div>
+        <div className="text-sm text-gray-400">TVL: {strategy.tvl}</div>
+      </motion.div>
+
+      {/* Tab Navigation */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass-morphism rounded-2xl p-2 border border-gray-800"
+      >
+        <div className="grid grid-cols-4 gap-1">
+          {tabs.map(tab => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+                  activeTab === tab.id
+                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-sm font-medium hidden sm:inline">
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Swap Interface */}
-        <div className="lg:col-span-2 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-morphism rounded-3xl p-6 border border-gray-800"
-          >
+      {/* Tab Content */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-[600px]"
+      >
+        {activeTab === "swap" && (
+          <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold gradient-text">Swap</h2>
-              <button className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300">
-                <Settings className="w-5 h-5 text-gray-400" />
-              </button>
+              <h3 className="text-xl font-bold gradient-text">Swap & Invest</h3>
+              <Settings className="w-5 h-5 text-gray-400" />
             </div>
 
-            {/* From Token */}
-            <div className="space-y-4">
-              <div className="glass-morphism rounded-2xl p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
+            <div className="max-w-md mx-auto space-y-4">
+              {/* From */}
+              <div className="p-5 rounded-2xl bg-gray-900/50 border border-gray-700">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-gray-400">From</span>
                   <span className="text-sm text-gray-400">
-                    Balance:{" "}
                     {formatCurrency(fromToken.balance * fromToken.price)}
                   </span>
                 </div>
@@ -119,202 +161,222 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                   />
                   <button
                     onClick={() => setFromAmount(fromToken.balance.toString())}
-                    className="px-3 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-sm font-medium hover:bg-purple-600/30 transition-colors"
+                    className="px-3 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-sm hover:bg-purple-600/30"
                   >
                     MAX
                   </button>
                 </div>
               </div>
 
-              {/* Swap Arrow */}
+              {/* Arrow */}
               <div className="flex justify-center">
-                <motion.button
-                  whileHover={{ rotate: 180 }}
-                  transition={{ duration: 0.3 }}
-                  className="p-3 rounded-full glass-morphism border border-gray-700 hover:border-gray-600 transition-colors"
-                >
+                <div className="p-3 rounded-full glass-morphism border border-gray-700">
                   <ArrowDown className="w-5 h-5 text-gray-400" />
-                </motion.button>
+                </div>
               </div>
 
-              {/* To Strategy */}
-              <div className="glass-morphism rounded-2xl p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-2">
+              {/* To */}
+              <div className="p-5 rounded-2xl bg-gray-900/50 border border-gray-700">
+                <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-gray-400">To</span>
                   <span className="text-sm text-gray-400">
-                    Estimated: {estimatedShares} shares
+                    ~{estimatedShares} shares
                   </span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div
-                    className={`w-10 h-10 rounded-2xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}
+                    className={`w-8 h-8 rounded-xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}
                   >
-                    <Zap className="w-5 h-5 text-white" />
+                    <Zap className="w-4 h-4 text-white" />
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-white">
                       {strategy.name}
                     </div>
                     <div className="text-sm text-gray-400">
-                      {strategy.category} Strategy
+                      {strategy.category}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-white">
-                      {fromAmount
-                        ? (parseFloat(fromAmount) * 0.97).toFixed(2)
-                        : "0.0"}
-                    </div>
-                    <div className="text-sm text-gray-400">USD Value</div>
+                  <div className="text-2xl font-bold text-white">
+                    {fromAmount
+                      ? (parseFloat(fromAmount) * 0.97).toFixed(2)
+                      : "0.0"}
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Swap Details */}
-            {fromAmount && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                className="mt-6 p-4 rounded-2xl bg-gray-900/50 border border-gray-700"
+              {/* Swap Details */}
+              {fromAmount && (
+                <div className="p-4 rounded-2xl bg-gray-900/30 border border-gray-700/50">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Network Fee</span>
+                      <span className="text-white">~$2.50</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Slippage</span>
+                      <span className="text-white">0.5%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Min. Received</span>
+                      <span className="text-white">${minimumReceived}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <button
+                disabled={!fromAmount || parseFloat(fromAmount) <= 0}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold disabled:opacity-50"
               >
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Price Impact</span>
-                    <span className="text-green-400">{"<0.01%"}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Network Fee</span>
-                    <span className="text-white">~$2.50</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Minimum Received</span>
-                    <span className="text-white">${minimumReceived}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Slippage Tolerance</span>
-                    <span className="text-white">{slippage}%</span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                {!fromAmount || parseFloat(fromAmount) <= 0
+                  ? "Enter Amount"
+                  : "Swap & Invest"}
+              </button>
+            </div>
+          </div>
+        )}
 
-            {/* Swap Button */}
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              disabled={!fromAmount || parseFloat(fromAmount) <= 0}
-              className="w-full mt-6 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300"
-            >
-              {!fromAmount || parseFloat(fromAmount) <= 0
-                ? "Enter Amount"
-                : "Swap & Invest"}
-            </motion.button>
-          </motion.div>
-        </div>
-
-        {/* Strategy Details */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
-        >
-          {/* Strategy Overview */}
+        {activeTab === "allocation" && (
           <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">
-              Strategy Details
+            <h3 className="text-xl font-bold gradient-text mb-6">
+              Portfolio Allocation
             </h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">APR</span>
-                <span className="text-2xl font-bold text-green-400">
-                  {strategy.apr}%
-                </span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="flex justify-center">
+                <PieChart data={pieChartData} size={250} strokeWidth={10} />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Risk Level</span>
-                <span
-                  className={`px-3 py-1 rounded-lg text-xs font-medium ${getRiskLevelClasses(strategy.risk)}`}
-                >
-                  {strategy.risk}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">TVL</span>
-                <span className="text-white font-semibold">{strategy.tvl}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Category</span>
-                <span className="text-white font-semibold">
-                  {strategy.category}
-                </span>
+              <div className="space-y-4">
+                {pieChartData.map(item => (
+                  <div
+                    key={item.label}
+                    className="p-4 rounded-2xl bg-gray-900/30 border border-gray-700/50"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div
+                          className="w-4 h-4 rounded-full"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="font-medium text-white">
+                          {item.label}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-white">
+                          {item.percentage.toFixed(1)}%
+                        </div>
+                        <div className="text-sm text-gray-400">
+                          {formatCurrency(item.value)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+        )}
 
-          {/* Strategy Description */}
+        {activeTab === "performance" && (
           <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">
-              How it Works
+            <h3 className="text-xl font-bold gradient-text mb-6">
+              Performance Metrics
             </h3>
-            <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              {strategy.description}
-            </p>
-            <div className="flex items-center space-x-2 text-sm text-blue-400">
-              <Info className="w-4 h-4" />
-              <span>Learn more about this strategy</span>
-            </div>
-          </div>
-
-          {/* Performance Stats */}
-          <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
-            <h3 className="text-lg font-bold gradient-text mb-4">
-              Performance
-            </h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
-                { period: "24h", change: "+2.4%" },
-                { period: "7d", change: "+8.1%" },
-                { period: "30d", change: "+12.7%" },
-                { period: "1y", change: "+45.2%" },
+                {
+                  period: "24 Hours",
+                  change: "+2.4%",
+                  color: "text-green-400",
+                  desc: "Daily return",
+                },
+                {
+                  period: "7 Days",
+                  change: "+8.1%",
+                  color: "text-green-400",
+                  desc: "Weekly return",
+                },
+                {
+                  period: "30 Days",
+                  change: "+12.7%",
+                  color: "text-green-400",
+                  desc: "Monthly return",
+                },
+                {
+                  period: "1 Year",
+                  change: "+45.2%",
+                  color: "text-green-400",
+                  desc: "Annual return",
+                },
               ].map(stat => (
                 <div
                   key={stat.period}
-                  className="flex items-center justify-between"
+                  className="p-5 rounded-2xl bg-gray-900/30 border border-gray-700/50"
                 >
-                  <span className="text-gray-400">{stat.period}</span>
-                  <div className="flex items-center space-x-1">
-                    <TrendingUp className="w-3 h-3 text-green-400" />
-                    <span className="text-green-400 font-semibold">
-                      {stat.change}
-                    </span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-gray-400">{stat.period}</span>
+                    <TrendingUp className="w-4 h-4 text-green-400" />
                   </div>
+                  <div className={`text-2xl font-bold ${stat.color} mb-1`}>
+                    {stat.change}
+                  </div>
+                  <div className="text-sm text-gray-500">{stat.desc}</div>
                 </div>
               ))}
             </div>
           </div>
-        </motion.div>
-      </div>
+        )}
 
-      {/* Strategy Portfolio Details */}
-      {portfolioData.length > 0 && (
-        <>
-          <PortfolioOverview
-            portfolioData={portfolioData}
-            onLegendItemClick={handleLegendItemClick}
-            title={`${strategy.name} Allocation`}
-            className="mt-8"
-          />
+        {activeTab === "details" && (
+          <div className="space-y-6">
+            <div className="glass-morphism rounded-3xl p-6 border border-gray-800">
+              <div className="flex items-start space-x-4">
+                <Info className="w-6 h-6 text-blue-400 mt-1" />
+                <div>
+                  <h3 className="text-xl font-bold gradient-text mb-3">
+                    Strategy Overview
+                  </h3>
+                  <p className="text-gray-300 leading-relaxed mb-4">
+                    {strategy.description}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-3 rounded-xl bg-gray-900/30">
+                      <div className="text-sm text-gray-400">APR</div>
+                      <div className="text-lg font-bold text-green-400">
+                        {strategy.apr}%
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-gray-900/30">
+                      <div className="text-sm text-gray-400">Risk Level</div>
+                      <div
+                        className={`text-lg font-bold ${getRiskLevelClasses(strategy.risk)}`}
+                      >
+                        {strategy.risk}
+                      </div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-gray-900/30">
+                      <div className="text-sm text-gray-400">TVL</div>
+                      <div className="text-lg font-bold text-white">
+                        {strategy.tvl}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <AssetCategoriesDetail
-            portfolioData={portfolioData}
-            expandedCategory={expandedCategory}
-            onCategoryToggle={toggleCategoryExpansion}
-            title={`${strategy.name} Portfolio Details`}
-            className="mt-6"
-          />
-        </>
-      )}
+            {portfolioData.length > 0 && (
+              <AssetCategoriesDetail
+                portfolioData={portfolioData}
+                expandedCategory={expandedCategory}
+                onCategoryToggle={toggleCategoryExpansion}
+                title="Strategy Assets"
+              />
+            )}
+          </div>
+        )}
+      </motion.div>
 
       {/* Token Selector Modal */}
       {showTokenSelector && (
