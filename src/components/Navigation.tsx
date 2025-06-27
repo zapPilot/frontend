@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Wallet, TrendingUp, MoreHorizontal, Menu, X } from "lucide-react";
+import {
+  Menu,
+  MoreHorizontal,
+  Settings,
+  TrendingUp,
+  Wallet,
+  X,
+} from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 interface NavigationProps {
@@ -26,7 +34,13 @@ const navItems = [
     id: "more",
     label: "More",
     icon: MoreHorizontal,
-    description: "Settings & tools",
+    description: "Community & ecosystem",
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    description: "App preferences & help",
   },
 ];
 
@@ -43,9 +57,13 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
               whileHover={{ scale: 1.05 }}
               className="flex items-center space-x-3"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-white" />
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="w-6 h-6"
+              />
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </motion.div>
           </div>
@@ -121,9 +139,13 @@ export function Navigation({ activeTab, onTabChange }: NavigationProps) {
         <div className="fixed top-0 left-0 right-0 z-50 glass-morphism border-b border-gray-800">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
-                <Wallet className="w-4 h-4 text-white" />
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="Logo"
+                width={32}
+                height={32}
+                className="w-6 h-6"
+              />
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </div>
 

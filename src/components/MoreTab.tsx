@@ -2,52 +2,71 @@
 
 import { motion } from "framer-motion";
 import {
-  Bell,
-  ChevronRight,
   ExternalLink,
-  FileText,
+  Gift,
   Github,
-  HelpCircle,
+  Headphones,
   MessageCircle,
-  Settings,
-  Shield,
+  Music,
   Twitter,
+  Vote,
 } from "lucide-react";
+import Image from "next/image";
+
+interface CommunityItem {
+  icon: any;
+  label: string;
+  description: string;
+  color: string;
+  url?: string;
+  status?: string;
+}
+
+interface CommunitySection {
+  title: string;
+  description: string;
+  items: CommunityItem[];
+}
 
 export function MoreTab() {
-  const menuSections = [
+  const communityFeatures: CommunitySection[] = [
     {
-      title: "Account",
+      title: "🎧 Podcast",
+      description: "Listen to our latest insights on DeFi",
       items: [
         {
-          icon: Settings,
-          label: "Settings",
-          description: "App preferences and configuration",
+          icon: Headphones,
+          label: "Spotify",
+          description: "Stream on Spotify",
+          url: "#", // Add your Spotify podcast URL here
+          color: "from-green-500 to-green-600",
         },
         {
-          icon: Bell,
-          label: "Notifications",
-          description: "Manage alerts and notifications",
-        },
-        {
-          icon: Shield,
-          label: "Security",
-          description: "Privacy and security settings",
+          icon: Music,
+          label: "Apple Podcasts",
+          description: "Listen on Apple Podcasts",
+          url: "#", // Add your Apple Podcast URL here
+          color: "from-purple-500 to-pink-600",
         },
       ],
     },
     {
-      title: "Help & Support",
+      title: "🪂 Upcoming Events",
+      description: "Don't miss out on exclusive opportunities",
       items: [
         {
-          icon: HelpCircle,
-          label: "Help Center",
-          description: "FAQs and documentation",
+          icon: Gift,
+          label: "Airdrop Campaign",
+          description: "Exclusive rewards for early adopters",
+          status: "Coming Soon",
+          color: "from-yellow-500 to-orange-600",
         },
         {
-          icon: FileText,
-          label: "User Guide",
-          description: "Learn how to use Zap Pilot",
+          icon: Vote,
+          label: "Pool Voting",
+          description: "Vote on new investment pools",
+          status: "Coming Soon",
+          color: "from-blue-500 to-indigo-600",
         },
       ],
     },
@@ -72,15 +91,15 @@ export function MoreTab() {
         className="text-center"
       >
         <h1 className="text-3xl font-bold gradient-text mb-2">
-          Settings & More
+          Community & More
         </h1>
         <p className="text-gray-400">
-          Manage your account and access helpful resources
+          Stay connected and explore the Zap Pilot ecosystem
         </p>
       </motion.div>
 
-      {/* Menu Sections */}
-      {menuSections.map((section, sectionIndex) => (
+      {/* Community Features */}
+      {communityFeatures.map((section, sectionIndex) => (
         <motion.div
           key={section.title}
           initial={{ opacity: 0, y: 20 }}
@@ -92,31 +111,62 @@ export function MoreTab() {
             <h2 className="text-lg font-semibold text-white">
               {section.title}
             </h2>
+            <p className="text-sm text-gray-400 mt-1">{section.description}</p>
           </div>
 
-          <div className="divide-y divide-gray-800">
+          <div className="p-4 space-y-3">
             {section.items.map((item, itemIndex) => (
-              <motion.button
+              <motion.div
                 key={item.label}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: sectionIndex * 0.1 + itemIndex * 0.05 }}
-                whileHover={{ backgroundColor: "rgba(55, 65, 81, 0.3)" }}
-                className="w-full p-4 flex items-center justify-between hover:bg-gray-700/20 transition-all duration-200"
+                className="group"
               >
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-xl bg-gray-800">
-                    <item.icon className="w-5 h-5 text-gray-300" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-medium text-white">{item.label}</div>
-                    <div className="text-sm text-gray-400">
-                      {item.description}
+                {item.url ? (
+                  <motion.a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${item.color} hover:shadow-lg transition-all duration-200`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <item.icon className="w-6 h-6 text-white" />
+                      <div className="text-left">
+                        <div className="font-semibold text-white">
+                          {item.label}
+                        </div>
+                        <div className="text-sm text-white/80">
+                          {item.description}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </motion.button>
+                    <ExternalLink className="w-5 h-5 text-white/80" />
+                  </motion.a>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${item.color} opacity-75 cursor-default`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <item.icon className="w-6 h-6 text-white" />
+                      <div className="text-left">
+                        <div className="font-semibold text-white">
+                          {item.label}
+                        </div>
+                        <div className="text-sm text-white/80">
+                          {item.description}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-white/20 text-xs font-medium text-white">
+                      {item.status}
+                    </span>
+                  </motion.div>
+                )}
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -129,7 +179,7 @@ export function MoreTab() {
         className="glass-morphism rounded-2xl p-6 border border-gray-800"
       >
         <h2 className="text-lg font-semibold text-white mb-4">
-          Connect With Us
+          🌐 Connect With Us
         </h2>
         <div className="grid grid-cols-3 gap-4">
           {socialLinks.map((link, index) => (
@@ -143,7 +193,7 @@ export function MoreTab() {
               transition={{ delay: index * 0.1 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-4 rounded-xl bg-gray-800/50 hover:bg-gray-800 transition-all duration-200 flex flex-col items-center space-y-2"
+              className="p-4 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-200 flex flex-col items-center space-y-2 border border-gray-700/50"
             >
               <link.icon className="w-6 h-6 text-gray-300" />
               <span className="text-sm font-medium text-gray-300">
@@ -155,23 +205,49 @@ export function MoreTab() {
         </div>
       </motion.div>
 
-      {/* App Info */}
+      {/* Community Stats & Info */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center glass-morphism rounded-2xl p-6 border border-gray-800"
+        className="glass-morphism rounded-2xl p-6 border border-gray-800"
       >
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center mx-auto mb-4">
-          <span className="text-2xl font-bold text-white">ZP</span>
+        <div className="flex items-center justify-center mb-4">
+          <Image
+            src="/logo.svg"
+            alt="Logo"
+            width={64}
+            height={64}
+            className="w-16 h-16"
+          />
         </div>
-        <h3 className="text-lg font-semibold text-white mb-2">Zap Pilot</h3>
-        <p className="text-sm text-gray-400 mb-4">
-          Intent-based execution engine for DeFi portfolio management
+
+        <h3 className="text-lg font-semibold text-white mb-2 text-center">
+          Zap Pilot Community
+        </h3>
+        <p className="text-sm text-gray-400 mb-6 text-center">
+          Join our growing ecosystem of DeFi innovators
         </p>
-        <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">
-          <span>Version 1.0.0</span>
+
+        {/* Community Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">2.5K+</div>
+            <div className="text-xs text-gray-400">Active Users</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">$50M+</div>
+            <div className="text-xs text-gray-400">TVL Managed</div>
+          </div>
+          <div className="text-center">
+            <div className="text-2xl font-bold text-white">20+</div>
+            <div className="text-xs text-gray-400">Networks</div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center space-x-4 text-xs text-gray-500 border-t border-gray-800 pt-4">
+          <span>v1.0.0</span>
           <span>•</span>
-          <span>Built with ❤️ for DeFi</span>
+          <span>Intent-Based DeFi Engine</span>
         </div>
       </motion.div>
     </div>

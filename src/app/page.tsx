@@ -2,6 +2,7 @@
 
 import { InvestTab } from "@/components/InvestTab";
 import { MoreTab } from "@/components/MoreTab";
+import { SettingsTab } from "@/components/SettingsTab";
 import { Navigation } from "@/components/Navigation";
 import { SwapPage } from "@/components/SwapPage";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
@@ -43,6 +44,8 @@ export default function DashboardApp() {
         return <InvestTab onInvestClick={handleInvestClick} />;
       case "more":
         return <MoreTab />;
+      case "settings":
+        return <SettingsTab />;
       default:
         return <WalletPortfolio />;
     }
