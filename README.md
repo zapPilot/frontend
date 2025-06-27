@@ -40,11 +40,13 @@ The dashboard displays key portfolio metrics:
 ## Application Structure
 
 ### 📱 Navigation
+
 - **Desktop**: Left sidebar with detailed navigation
 - **Mobile**: Bottom tab bar with swipe gestures
 - **Three main sections**: Portfolio, Invest, More
 
 ### 💼 Portfolio Tab (Wallet Interface)
+
 - **Balance Overview**: Total value, 24h change, portfolio metrics
 - **Asset Categories**: Interactive pie chart showing:
   - **BTC**: All Bitcoin-related assets (WBTC, BTC, etc.)
@@ -58,11 +60,13 @@ The dashboard displays key portfolio metrics:
   - Pool performance metrics
 
 ### 🚀 Invest Tab
+
 - **Strategy Discovery**: Curated DeFi investment opportunities
 - **Risk Assessment**: Low, Medium, High risk categorization
 - **Performance Metrics**: APR, TVL, and strategy details
 
 ### ⚙️ More Tab
+
 - **Account Settings**: Preferences and configuration
 - **Help & Support**: Documentation and community links
 - **About**: App information and social connections
