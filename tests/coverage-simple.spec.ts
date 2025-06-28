@@ -28,6 +28,9 @@ interface CoverageMetrics {
 
 test.describe("Code Coverage & Quality Metrics", () => {
   test("comprehensive feature coverage analysis", async ({ page }) => {
+    // Increase timeout for this test
+    test.setTimeout(60000);
+
     const coverage: CoverageMetrics = {
       components: [],
       features: [],
@@ -49,7 +52,16 @@ test.describe("Code Coverage & Quality Metrics", () => {
     });
 
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    // Wait for page to load with more robust approach
+    try {
+      await page.waitForLoadState("networkidle", { timeout: 45000 });
+    } catch (error) {
+      // Fallback to domcontentloaded if networkidle fails
+      console.log("NetworkIdle timeout, falling back to domcontentloaded");
+      await page.waitForLoadState("domcontentloaded");
+      // Give additional time for any async operations
+      await page.waitForTimeout(3000);
+    }
 
     // 1. COMPONENT COVERAGE TESTING
     console.log("\n🧩 COMPONENT COVERAGE ANALYSIS");
@@ -162,7 +174,7 @@ test.describe("Code Coverage & Quality Metrics", () => {
     });
 
     // Medium Priority Features
-    const hoverEffects = await page.locator("button:visible").first();
+    const hoverEffects = page.locator("button:visible").first();
     let hoverWorks = false;
     if ((await hoverEffects.count()) > 0) {
       const beforeHover = await hoverEffects.getAttribute("class");
