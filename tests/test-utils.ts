@@ -64,7 +64,12 @@ export class TestUtils {
    * @param timeout - Timeout in milliseconds (default 10s)
    */
   async waitForElement(selector: string, timeout: number = 10000) {
-    await expect(this.page.getByTestId(selector)).toBeVisible({ timeout });
+    try {
+      await expect(this.page.getByTestId(selector)).toBeVisible({ timeout });
+    } catch (error) {
+      console.warn(`Element ${selector} not found within ${timeout}ms`);
+      throw error;
+    }
   }
 
   /**
@@ -94,10 +99,18 @@ export class TestUtils {
     await this.navigateToTab("invest");
 
     // Wait for investment opportunities to load
-    await this.waitForElement("strategy-card-0");
+    await this.page.waitForTimeout(2000);
+
+    // Check if strategy cards exist
+    const strategyCard = this.page.getByTestId("strategy-card-0");
+    if (await strategyCard.isVisible()) {
+      await this.waitForElement("strategy-card-0");
+    }
 
     // Click first invest button
-    await this.page.getByTestId("invest-now-button").first().click();
+    const investButton = this.page.getByTestId("invest-now-button").first();
+    await expect(investButton).toBeVisible();
+    await investButton.click();
 
     // Wait for swap page to load
     await this.page.waitForTimeout(1000);

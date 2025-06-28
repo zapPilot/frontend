@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "test": "playwright test",
+    "test:essential": "playwright test tests/essential.spec.ts",
+    "test:essential-fast": "playwright test tests/essential.spec.ts --project=chromium",
+    "test:smoke": "playwright test tests/essential.spec.ts --grep=\"Essential Functionality\"",
+    "test:dev": "playwright test tests/essential.spec.ts --project=chromium --headed",
+    "test:ci": "playwright test tests/essential.spec.ts --project=chromium --workers=1"
+  }
+}

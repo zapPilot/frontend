@@ -64,6 +64,7 @@ export function InvestTab({ onInvestClick }: InvestTabProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
             className="glass-morphism rounded-2xl p-6 border border-gray-800 hover:border-gray-700 transition-all duration-300"
+            data-testid={`strategy-card-${index}`}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -114,6 +115,7 @@ export function InvestTab({ onInvestClick }: InvestTabProps) {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onInvestClick?.(opportunity)}
                 className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:shadow-lg transition-all duration-300 cursor-pointer"
+                data-testid="invest-now-button"
               >
                 <span>Invest Now</span>
                 <ArrowUpRight className="w-4 h-4" />
