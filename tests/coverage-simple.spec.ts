@@ -7,6 +7,15 @@ import { test, expect } from "@playwright/test";
  * we'll track coverage by measuring which components/features are exercised.
  */
 
+// Coverage thresholds - fail test if below these percentages
+const COVERAGE_THRESHOLDS = {
+  overall: 85, // Overall coverage must be >= 85%
+  components: 75, // Component coverage must be >= 75%
+  features: 80, // Feature coverage must be >= 80%
+  critical: 100, // Critical features must be 100%
+  quality: 90, // Code quality must be >= 90%
+};
+
 interface CoverageMetrics {
   components: {
     name: string;
@@ -266,6 +275,39 @@ test.describe("Code Coverage & Quality Metrics", () => {
       4;
     console.log(`\n🎯 OVERALL COVERAGE: ${overallCoverage.toFixed(1)}%`);
 
+    // 7. ENFORCE COVERAGE THRESHOLDS
+    const failures: string[] = [];
+
+    if (overallCoverage < COVERAGE_THRESHOLDS.overall) {
+      failures.push(
+        `Overall coverage ${overallCoverage.toFixed(1)}% < ${COVERAGE_THRESHOLDS.overall}%`
+      );
+    }
+
+    if (componentCoverage < COVERAGE_THRESHOLDS.components) {
+      failures.push(
+        `Component coverage ${componentCoverage.toFixed(1)}% < ${COVERAGE_THRESHOLDS.components}%`
+      );
+    }
+
+    if (featureCoverage < COVERAGE_THRESHOLDS.features) {
+      failures.push(
+        `Feature coverage ${featureCoverage.toFixed(1)}% < ${COVERAGE_THRESHOLDS.features}%`
+      );
+    }
+
+    if (criticalCoverage < COVERAGE_THRESHOLDS.critical) {
+      failures.push(
+        `Critical features ${criticalCoverage.toFixed(1)}% < ${COVERAGE_THRESHOLDS.critical}%`
+      );
+    }
+
+    if (qualityCoverage < COVERAGE_THRESHOLDS.quality) {
+      failures.push(
+        `Code quality ${qualityCoverage.toFixed(1)}% < ${COVERAGE_THRESHOLDS.quality}%`
+      );
+    }
+
     // Component details
     console.log("\n📦 Component Details:");
     coverage.components.forEach(comp => {
@@ -310,11 +352,18 @@ test.describe("Code Coverage & Quality Metrics", () => {
       console.log("🚨 POOR - Major development needed");
     }
 
-    // 7. ASSERTIONS FOR CI/CD
-    expect(criticalCoverage).toBeGreaterThan(80); // All critical features must work
-    expect(componentCoverage).toBeGreaterThan(50); // At least half the components tested
+    // 8. ENFORCE COVERAGE THRESHOLDS - FAIL TEST IF BELOW REQUIREMENTS
+    if (failures.length > 0) {
+      console.log("\n🚨 COVERAGE THRESHOLD FAILURES:");
+      failures.forEach(failure => console.log(`   ❌ ${failure}`));
+      console.log(
+        `\n💡 Required thresholds: Overall ≥${COVERAGE_THRESHOLDS.overall}%, Components ≥${COVERAGE_THRESHOLDS.components}%, Features ≥${COVERAGE_THRESHOLDS.features}%, Critical ≥${COVERAGE_THRESHOLDS.critical}%, Quality ≥${COVERAGE_THRESHOLDS.quality}%`
+      );
+      throw new Error(`Coverage thresholds not met: ${failures.join(", ")}`);
+    }
+
+    // 9. BASIC ASSERTIONS FOR CI/CD
     expect(jsErrors.length).toBeLessThan(5); // Minimal JavaScript errors
-    expect(overallCoverage).toBeGreaterThan(40); // Reasonable overall coverage
 
     console.log("\n✅ Coverage analysis completed!");
   });

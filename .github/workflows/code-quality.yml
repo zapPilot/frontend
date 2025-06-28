@@ -29,6 +29,9 @@ jobs:
       - name: Check Prettier formatting
         run: npm run format:check
 
+      - name: Run Test
+        run: npm run test:coverage
+
       - name: Comment on PR if formatting issues found
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
