@@ -34,21 +34,23 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button
+            <motion.button
               key={tab.id}
+              whileHover={{ scale: activeTab === tab.id ? 1.02 : 1.05 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => onTabChange(tab.id)}
               data-testid={`tab-${tab.id}`}
-              className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+              className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800/50"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800/50 hover:shadow-md"
               }`}
             >
               <Icon className="w-4 h-4" />
               <span className="text-sm font-medium hidden sm:inline">
                 {tab.label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

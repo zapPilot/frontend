@@ -1,10 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { TestUtils, VIEWPORTS } from "./test-utils";
 
 test.describe("InvestTab", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    await page.setViewportSize({ width: 1200, height: 800 });
-    await page.getByTestId("desktop-tab-invest").click();
+    const testUtils = new TestUtils(page);
+    await testUtils.setupTest("invest", VIEWPORTS.DESKTOP);
   });
 
   test("should display investment opportunities", async ({ page }) => {

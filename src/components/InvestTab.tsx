@@ -113,7 +113,7 @@ export function InvestTab({ onInvestClick }: InvestTabProps) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onInvestClick?.(opportunity)}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:shadow-lg transition-all duration-300"
+                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium hover:shadow-lg transition-all duration-300 cursor-pointer"
               >
                 <span>Invest Now</span>
                 <ArrowUpRight className="w-4 h-4" />

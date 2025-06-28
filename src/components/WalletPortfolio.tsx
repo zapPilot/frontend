@@ -71,7 +71,7 @@ export function WalletPortfolio({
             {onAnalyticsClick && (
               <button
                 onClick={onAnalyticsClick}
-                className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+                className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
                 title="View Analytics"
               >
                 <BarChart3 className="w-5 h-5 text-gray-300" />
@@ -79,14 +79,14 @@ export function WalletPortfolio({
             )}
             <button
               onClick={openWalletManager}
-              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
               title="Manage Wallets"
             >
               <Wallet className="w-5 h-5 text-gray-300" />
             </button>
             <button
               onClick={toggleBalanceVisibility}
-              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300"
+              className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
               title={balanceHidden ? "Show Balance" : "Hide Balance"}
             >
               {balanceHidden ? (

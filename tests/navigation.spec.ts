@@ -1,14 +1,18 @@
 import { test, expect } from "@playwright/test";
+import { TestUtils, VIEWPORTS } from "./test-utils";
 
 test.describe("Navigation", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
+    const testUtils = new TestUtils(page);
+    await testUtils.setupTest();
   });
 
   test("should have all navigation tabs visible", async ({ page }) => {
     // Desktop navigation should be visible on large screens
-    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
 
+    const testUtils = new TestUtils(page);
+    await testUtils.waitForElement("desktop-tab-wallet");
     await expect(page.getByTestId("desktop-tab-wallet")).toBeVisible();
     await expect(page.getByTestId("desktop-tab-invest")).toBeVisible();
     await expect(page.getByTestId("desktop-tab-analytics")).toBeVisible();
@@ -18,14 +22,18 @@ test.describe("Navigation", () => {
   });
 
   test("should start with wallet tab active", async ({ page }) => {
-    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
+    const testUtils = new TestUtils(page);
+    await testUtils.waitForElement("desktop-tab-wallet");
     await expect(page.getByTestId("desktop-tab-wallet")).toHaveClass(
       /bg-gradient-to-r/
     );
   });
 
   test("should navigate between tabs", async ({ page }) => {
-    await page.setViewportSize({ width: 1200, height: 800 });
+    await page.setViewportSize(VIEWPORTS.DESKTOP);
+    const testUtils = new TestUtils(page);
+    await testUtils.waitForElement("desktop-tab-wallet");
 
     // Navigate to invest tab
     await page.getByTestId("desktop-tab-invest").click();
@@ -79,9 +87,11 @@ test.describe("Navigation", () => {
 
     // Community tab content
     await page.getByTestId("desktop-tab-community").click();
-    await expect(
-      page.getByRole("heading", { name: "Zap Pilot Community" })
-    ).toBeVisible();
+    const testUtils = new TestUtils(page);
+    const communityHeading = await testUtils.getUniqueHeading(
+      "Zap Pilot Community"
+    );
+    await expect(communityHeading).toBeVisible();
 
     // Airdrop tab content
     await page.getByTestId("desktop-tab-airdrop").click();

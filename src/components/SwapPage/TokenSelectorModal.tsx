@@ -36,7 +36,7 @@ export function TokenSelectorModal({
             <button
               key={token.symbol}
               onClick={() => onTokenSelect(token)}
-              className="w-full p-3 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-colors flex items-center justify-between"
+              className="w-full p-3 rounded-xl bg-gray-900/50 hover:bg-gray-900/70 transition-colors flex items-center justify-between cursor-pointer"
               data-testid={`token-option-${token.symbol.toLowerCase()}`}
             >
               <div className="flex items-center space-x-3">

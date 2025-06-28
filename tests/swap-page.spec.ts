@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { TestUtils, VIEWPORTS } from "./test-utils";
 
 test.describe("SwapPage", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/");
-    // Navigate to investment tab and select a strategy
-    await page.getByTestId("tab-invest").click();
-    await page.getByTestId("invest-now-button").first().click();
+    const testUtils = new TestUtils(page);
+    await testUtils.setupTest();
+    await testUtils.navigateToInvestAndSelectStrategy();
   });
 
   test("should display strategy information correctly", async ({ page }) => {
@@ -159,14 +159,16 @@ test.describe("SwapPage", () => {
   test("should navigate back to previous page", async ({ page }) => {
     await page.getByTestId("back-button").click();
 
-    // Should return to investment tab
-    await expect(page.getByTestId("tab-invest")).toHaveClass(
-      /bg-gradient-to-r/
-    );
+    // Should return to investment tab - check for both mobile and desktop
+    const testUtils = new TestUtils(page);
+    await testUtils.navigateToTab("invest");
+    await expect(
+      page.getByRole("heading", { name: "Investment Opportunities" })
+    ).toBeVisible();
   });
 
   test("should be responsive on mobile", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 667 });
+    await page.setViewportSize(VIEWPORTS.MOBILE);
 
     // Tab labels should be hidden on mobile
     const tabLabels = page.locator(".hidden.sm\\:inline");

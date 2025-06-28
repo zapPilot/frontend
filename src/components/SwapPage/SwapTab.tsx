@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { ArrowDown, ChevronDown, Settings, Zap } from "lucide-react";
 import { useState, useCallback } from "react";
 import { formatCurrency } from "../../lib/utils";
@@ -67,9 +68,11 @@ export function SwapTab({
           </div>
           <div className="space-y-3">
             <div className="flex items-center space-x-3">
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={onTokenSelectorOpen}
-                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 hover:shadow-md hover:shadow-gray-700/50 transition-all duration-200 cursor-pointer"
                 data-testid="token-selector-button"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />
@@ -80,7 +83,7 @@ export function SwapTab({
                   {fromToken.symbol}
                 </span>
                 <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
+              </motion.button>
               <input
                 type="number"
                 placeholder="0.0"

@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { SwapToken } from "../../types/swap";
 
 interface AmountButtonsProps {
@@ -26,14 +27,16 @@ export function AmountButtons({
   return (
     <div className="flex gap-2 mt-3">
       {AMOUNT_PERCENTAGES.map(option => (
-        <button
+        <motion.button
           key={option.label}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => handlePercentageClick(option.value)}
-          className="flex-1 px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-xs font-medium hover:bg-purple-600/30 transition-colors"
+          className="flex-1 px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-xs font-medium hover:bg-purple-600/30 hover:shadow-md hover:shadow-purple-500/25 transition-all duration-200 cursor-pointer"
           data-testid={`amount-${option.label.toLowerCase()}-button`}
         >
           {option.label}
-        </button>
+        </motion.button>
       ))}
     </div>
   );

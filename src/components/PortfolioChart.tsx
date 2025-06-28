@@ -368,7 +368,7 @@ const PortfolioChartComponent = () => {
                     key as "performance" | "allocation" | "drawdown"
                   )
                 }
-                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 ${
+                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
                   selectedChart === key
                     ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
                     : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
@@ -387,7 +387,7 @@ const PortfolioChartComponent = () => {
             <button
               key={period.value}
               onClick={() => setSelectedPeriod(period.value)}
-              className={`px-3 py-1 rounded-lg text-sm transition-all duration-200 ${
+              className={`px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                 selectedPeriod === period.value
                   ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
                   : "text-gray-400 hover:text-white hover:bg-white/5"
