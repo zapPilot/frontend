@@ -8,3 +8,4 @@ export {
   FadeInScale,
   StaggerContainer,
 } from "./AnimatedContainer";
+export { ErrorBoundary, withErrorBoundary } from "../ErrorBoundary";

@@ -1,20 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Calendar, PieChart, Activity } from "lucide-react";
 import { useState, useMemo, memo } from "react";
-import { GlassCard } from "./ui";
+import { GlassCard, ErrorBoundary } from "./ui";
+import { ChartContainer, ChartControls, ChartMetrics } from "./PortfolioChart";
 import {
-  CHART_PERIODS,
   generatePortfolioHistory,
   calculateDrawdownData,
 } from "../lib/portfolioUtils";
-import {
-  generateSVGPath,
-  generateAreaPath,
-  formatAxisLabel,
-  generateYAxisLabels,
-} from "../lib/chartUtils";
 import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
 
 const PortfolioChartComponent = () => {
@@ -429,4 +422,10 @@ const PortfolioChartComponent = () => {
   );
 };
 
-export const PortfolioChart = memo(PortfolioChartComponent);
+const MemoizedPortfolioChart = memo(PortfolioChartComponent);
+
+export const PortfolioChart = () => (
+  <ErrorBoundary>
+    <MemoizedPortfolioChart />
+  </ErrorBoundary>
+);

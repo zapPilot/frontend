@@ -38,7 +38,9 @@ const AnalyticsTab = dynamic(
 
 const SwapPage = dynamic(
   () =>
-    import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
+    import("@/components/SwapPage/SwapPage").then(mod => ({
+      default: mod.SwapPage,
+    })),
   {
     loading: () => (
       <div className="flex items-center justify-center min-h-96">

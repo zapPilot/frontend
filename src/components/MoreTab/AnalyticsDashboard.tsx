@@ -11,7 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { memo, useMemo } from "react";
-import { GlassCard, APRMetrics } from "../ui";
+import { GlassCard, APRMetrics, ErrorBoundary } from "../ui";
 import {
   getAnalyticsMetrics,
   getPerformanceData,
@@ -429,4 +429,10 @@ const AnalyticsDashboardComponent = () => {
   );
 };
 
-export const AnalyticsDashboard = memo(AnalyticsDashboardComponent);
+const MemoizedAnalyticsDashboard = memo(AnalyticsDashboardComponent);
+
+export const AnalyticsDashboard = () => (
+  <ErrorBoundary>
+    <MemoizedAnalyticsDashboard />
+  </ErrorBoundary>
+);

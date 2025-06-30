@@ -15,7 +15,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useState, useEffect, useCallback, memo, useMemo } from "react";
-import { GlassCard } from "../ui";
+import { GlassCard, ErrorBoundary } from "../ui";
 
 interface IntentStep {
   id: string;
@@ -416,4 +416,10 @@ const IntentProgressModalComponent = ({
   );
 };
 
-export const IntentProgressModal = memo(IntentProgressModalComponent);
+const MemoizedIntentProgressModal = memo(IntentProgressModalComponent);
+
+export const IntentProgressModal = (props: any) => (
+  <ErrorBoundary>
+    <MemoizedIntentProgressModal {...props} />
+  </ErrorBoundary>
+);

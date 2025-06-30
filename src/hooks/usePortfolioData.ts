@@ -10,6 +10,13 @@ import {
   PieChartData,
   PortfolioMetrics,
 } from "../types/portfolio";
+import {
+  PortfolioResponse,
+  PortfolioHistoryResponse,
+  AprMetricsResponse,
+  FeaturedStrategiesResponse,
+  TopPoolsResponse,
+} from "../types/api";
 import { calculatePortfolioMetrics } from "../lib/utils";
 
 interface UsePortfolioDataReturn {
@@ -19,10 +26,10 @@ interface UsePortfolioDataReturn {
   pieChartData: PieChartData[];
 
   // API data
-  portfolioHistory: any[];
-  aprMetrics: any[];
-  featuredStrategies: any[];
-  topPools: any[];
+  portfolioHistory: PortfolioHistoryResponse;
+  aprMetrics: AprMetricsResponse;
+  featuredStrategies: FeaturedStrategiesResponse;
+  topPools: TopPoolsResponse;
 
   // Loading states
   isLoading: boolean;
@@ -48,10 +55,16 @@ export function usePortfolioData(): UsePortfolioDataReturn {
   // State management
   const [walletAddress, setWalletAddress] = useState<string>("");
   const [portfolioData, setPortfolioData] = useState<AssetCategory[]>([]);
-  const [portfolioHistory, setPortfolioHistory] = useState<any[]>([]);
-  const [aprMetrics, setAprMetrics] = useState<any[]>([]);
-  const [featuredStrategies, setFeaturedStrategies] = useState<any[]>([]);
-  const [topPools, setTopPools] = useState<any[]>([]);
+  const [portfolioHistory, setPortfolioHistory] =
+    useState<PortfolioHistoryResponse>([]);
+  const [aprMetrics, setAprMetrics] = useState<AprMetricsResponse>([]);
+  const [featuredStrategies, setFeaturedStrategies] =
+    useState<FeaturedStrategiesResponse>([]);
+  const [topPools, setTopPools] = useState<TopPoolsResponse>({
+    pools: [],
+    total_count: 0,
+    last_updated: "",
+  });
 
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -158,7 +171,13 @@ export function usePortfolioData(): UsePortfolioDataReturn {
 
         // Process pools (always available)
         if (poolsResponse.status === "fulfilled") {
-          setTopPools(poolsResponse.value?.pools || []);
+          setTopPools(
+            poolsResponse.value || {
+              pools: [],
+              total_count: 0,
+              last_updated: "",
+            }
+          );
         }
 
         // Update last refresh timestamp
@@ -179,7 +198,9 @@ export function usePortfolioData(): UsePortfolioDataReturn {
   );
 
   // Transform API response to portfolio data format
-  const transformPortfolioData = (apiData: any): AssetCategory[] => {
+  const transformPortfolioData = (
+    apiData: PortfolioResponse
+  ): AssetCategory[] => {
     // Mock transformation - replace with actual API response mapping
     return [
       {
