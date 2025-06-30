@@ -6,9 +6,11 @@ import {
   Gift,
   Settings,
   Crown,
+  MoreHorizontal,
 } from "lucide-react";
 import { NavItem } from "../types/navigation";
 
+// Main navigation items
 export const NAVIGATION_ITEMS: NavItem[] = [
   {
     id: "wallet",
@@ -28,6 +30,16 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     icon: BarChart3,
     description: "Performance metrics & charts",
   },
+  {
+    id: "more",
+    label: "More",
+    icon: MoreHorizontal,
+    description: "Settings & additional features",
+  },
+] as const;
+
+// Sub-navigation items for More tab
+export const MORE_TAB_ITEMS: NavItem[] = [
   {
     id: "pricing",
     label: "Pricing",

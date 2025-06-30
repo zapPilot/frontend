@@ -1,11 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, ReactNode } from "react";
-import { useAnalytics, ConversionTracking } from "../lib/analytics";
+import {
+  useAnalytics,
+  ConversionTracking,
+  ConversionEvent,
+} from "../lib/analytics";
 
 interface AnalyticsContextType {
   track: (event: string, properties?: Record<string, any>) => void;
-  trackConversion: (event: any) => void;
+  trackConversion: (event: ConversionEvent) => void;
   trackPageView: (page: string, properties?: Record<string, any>) => void;
   trackFeatureUsage: (
     feature: string,
@@ -38,15 +42,21 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
     // Track app initialization
     analytics.track("app_initialized", {
       timestamp: Date.now(),
-      userAgent: navigator.userAgent,
-      screen: {
-        width: window.screen.width,
-        height: window.screen.height,
-      },
-      viewport: {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      },
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
+      screen:
+        typeof window !== "undefined" && window.screen
+          ? {
+              width: window.screen.width,
+              height: window.screen.height,
+            }
+          : { width: 0, height: 0 },
+      viewport:
+        typeof window !== "undefined"
+          ? {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            }
+          : { width: 0, height: 0 },
     });
 
     // Track session start
@@ -54,16 +64,13 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
 
     // Track page visibility changes
     const handleVisibilityChange = () => {
-      if (document.hidden) {
+      if (typeof document !== "undefined" && document.hidden) {
         analytics.track("page_hidden");
       } else {
         analytics.track("page_visible");
       }
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    // Track session end on page unload
     const handleBeforeUnload = () => {
       const engagement = analytics.getUserEngagement();
       analytics.track("session_ended", {
@@ -73,11 +80,25 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
       });
     };
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    // Only add event listeners in browser environment
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+    }
+
+    if (typeof window !== "undefined") {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+    }
 
     return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (typeof document !== "undefined") {
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange
+        );
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      }
     };
   }, [analytics]);
 

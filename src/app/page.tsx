@@ -34,47 +34,7 @@ const AnalyticsTab = dynamic(
   }
 );
 
-const CommunityTab = dynamic(
-  () =>
-    import("@/components/CommunityTab").then(mod => ({
-      default: mod.CommunityTab,
-    })),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
-    ),
-  }
-);
-
-const AirdropTab = dynamic(
-  () =>
-    import("@/components/AirdropTab").then(mod => ({
-      default: mod.AirdropTab,
-    })),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
-    ),
-  }
-);
-
-const SettingsTab = dynamic(
-  () =>
-    import("@/components/SettingsTab").then(mod => ({
-      default: mod.SettingsTab,
-    })),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
-    ),
-  }
-);
+// Removed CommunityTab, AirdropTab, and SettingsTab - now handled in MoreTab
 
 const SwapPage = dynamic(
   () =>
@@ -88,10 +48,10 @@ const SwapPage = dynamic(
   }
 );
 
-const PricingPage = dynamic(
+const MoreTab = dynamic(
   () =>
-    import("@/components/PricingPage").then(mod => ({
-      default: mod.PricingPage,
+    import("@/components/MoreTab").then(mod => ({
+      default: mod.MoreTab,
     })),
   {
     loading: () => (
@@ -147,14 +107,8 @@ export default function DashboardApp() {
         return <InvestTab onInvestClick={handleInvestClick} />;
       case "analytics":
         return <AnalyticsTab />;
-      case "pricing":
-        return <PricingPage />;
-      case "community":
-        return <CommunityTab />;
-      case "airdrop":
-        return <AirdropTab />;
-      case "settings":
-        return <SettingsTab />;
+      case "more":
+        return <MoreTab />;
       default:
         return <WalletPortfolio />;
     }

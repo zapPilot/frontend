@@ -5,4 +5,5 @@ export interface NavItem {
   description: string;
 }
 
-export type TabType = "portfolio" | "invest" | "more";
+export type TabType = "wallet" | "invest" | "analytics" | "more";
+export type MoreTabType = "pricing" | "community" | "airdrop" | "settings";

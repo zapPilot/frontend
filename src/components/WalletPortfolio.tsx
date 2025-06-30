@@ -53,7 +53,7 @@ export function WalletPortfolio({
   const estimatedMonthlyIncome = 1730;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 wallet-portfolio" data-testid="wallet-portfolio">
       {/* Wallet Header */}
       <GlassCard>
         <div className="flex items-center justify-between mb-4">
@@ -62,8 +62,12 @@ export function WalletPortfolio({
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">My Wallet</h1>
-              <p className="text-sm text-gray-400">DeFi Portfolio Overview</p>
+              <h1 className="text-2xl font-bold text-white wallet-title">
+                My Wallet
+              </h1>
+              <p className="text-sm text-gray-400 portfolio-subtitle">
+                DeFi Portfolio Overview
+              </p>
             </div>
           </div>
 

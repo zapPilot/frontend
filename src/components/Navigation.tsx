@@ -192,7 +192,10 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800">
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800"
+        role="navigation"
+      >
         <div className="flex items-center justify-around px-4 py-2">
           {NAVIGATION_ITEMS.map(item => {
             const Icon = item.icon;
@@ -222,7 +225,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             );
           })}
         </div>
-      </div>
+      </nav>
     </>
   );
 };

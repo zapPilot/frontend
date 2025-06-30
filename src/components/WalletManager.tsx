@@ -80,9 +80,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
   const handleCopyAddress = useCallback(async (address: string, id: string) => {
     try {
-      await navigator.clipboard.writeText(address);
-      setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 2000);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(address);
+        setCopiedId(id);
+        setTimeout(() => setCopiedId(null), 2000);
+      }
     } catch {
       // Failed to copy address - silently ignore
     }

@@ -42,9 +42,11 @@ export function WalletConnectButton({
     if (!wallet) return;
 
     try {
-      await navigator.clipboard.writeText(wallet.address);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(wallet.address);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
     } catch {
       // Failed to copy address
     }
@@ -75,7 +77,7 @@ export function WalletConnectButton({
     };
 
     const explorerUrl = explorerUrls[wallet.chainId];
-    if (explorerUrl) {
+    if (explorerUrl && typeof window !== "undefined") {
       window.open(`${explorerUrl}/address/${wallet.address}`, "_blank");
     }
   };

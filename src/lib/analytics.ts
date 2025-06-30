@@ -37,7 +37,9 @@ class AnalyticsService {
   // Initialize user tracking
   setUserId(userId: string) {
     this.userId = userId;
-    localStorage.setItem("analytics_user_id", userId);
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem("analytics_user_id", userId);
+    }
   }
 
   // Track general events
@@ -46,9 +48,9 @@ class AnalyticsService {
       event,
       properties: {
         ...properties,
-        url: window.location.href,
-        referrer: document.referrer,
-        userAgent: navigator.userAgent,
+        url: typeof window !== "undefined" ? window.location.href : "",
+        referrer: typeof document !== "undefined" ? document.referrer : "",
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent : "",
         timestamp: Date.now(),
       },
       timestamp: Date.now(),
@@ -151,6 +153,15 @@ class AnalyticsService {
     averageSessionTime: number;
     topFeatureGates: Array<{ feature: string; views: number }>;
   } {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return {
+        totalSessions: 0,
+        subscriptionViews: 0,
+        conversionRate: 0,
+        averageSessionTime: 0,
+        topFeatureGates: [],
+      };
+    }
     const stored = localStorage.getItem("conversion_metrics");
     if (!stored) {
       return {
@@ -172,7 +183,10 @@ class AnalyticsService {
     featuresUsed: string[];
     lastActivity: number;
   } {
-    const sessionStart = localStorage.getItem("session_start");
+    const sessionStart =
+      typeof window !== "undefined" && window.localStorage
+        ? localStorage.getItem("session_start")
+        : null;
     const currentEvents = this.events.filter(
       e => e.sessionId === this.sessionId
     );
@@ -193,6 +207,11 @@ class AnalyticsService {
 
   // Private methods
   private generateSessionId(): string {
+    // Check if we're in a browser environment
+    if (typeof window === "undefined" || !window.sessionStorage) {
+      return `sess_${Date.now()}_${Math.random().toString(36).substring(2)}`;
+    }
+
     const existing = sessionStorage.getItem("analytics_session_id");
     if (existing) return existing;
 
@@ -204,6 +223,9 @@ class AnalyticsService {
   }
 
   private loadUserId(): void {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
     const stored = localStorage.getItem("analytics_user_id");
     if (stored) {
       this.userId = stored;
@@ -211,6 +233,9 @@ class AnalyticsService {
   }
 
   private persistEvent(event: AnalyticsEvent): void {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
     const stored = localStorage.getItem("analytics_events") || "[]";
     const events = JSON.parse(stored);
     events.push(event);
@@ -224,6 +249,9 @@ class AnalyticsService {
   }
 
   private storeConversionMetrics(event: ConversionEvent): void {
+    if (typeof window === "undefined" || !window.localStorage) {
+      return;
+    }
     const stored = localStorage.getItem("conversion_metrics") || "{}";
     const metrics = JSON.parse(stored);
 

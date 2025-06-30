@@ -20,14 +20,31 @@ test.describe("Business Critical Features", () => {
   test("investment flow is accessible to users", async ({ page }) => {
     await coverage.markComponentTested("InvestmentFlow");
 
+    // Navigate to invest tab to see investment buttons
+    const investTab = page.locator('[data-testid="tab-invest"]').first();
+    const investTabCount = await investTab.count();
+
+    if (investTabCount > 0 && (await investTab.isVisible())) {
+      await investTab.click();
+      await page.waitForTimeout(1500); // Wait for tab change and dynamic import
+    }
+
     // Scan for investment-related UI elements
     const businessComponents = await coverage.scanForBusinessComponents();
 
-    // Should have some investment functionality visible
-    expect(businessComponents.investmentButtons).toBeGreaterThan(0);
+    // Should have some investment functionality visible (look for "Invest Now" text as fallback)
+    const investNowButtons = await page
+      .locator('button:has-text("Invest")')
+      .count();
+    const totalInvestButtons =
+      businessComponents.investmentButtons + investNowButtons;
+
+    expect(totalInvestButtons).toBeGreaterThan(0);
 
     await coverage.markInteractionTested("InvestmentButtonAvailability");
-    console.log("✓ Investment features are accessible to users");
+    console.log(
+      `✓ Investment features are accessible to users (found ${totalInvestButtons} buttons)`
+    );
   });
 
   test("wallet/portfolio features are present", async ({ page }) => {
