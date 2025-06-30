@@ -25,8 +25,8 @@ export function CommunityTab() {
 
       {/* Podcast Section */}
       <PodcastSection
-        spotifyUrl="#" // Replace with your actual Spotify URL
-        appleUrl="#" // Replace with your actual Apple Podcast URL
+        spotifyUrl="https://open.spotify.com/show/1EdeTnCNGEqi2KCNcRvZlZ" // Replace with your actual Spotify URL
+        appleUrl="https://podcasts.apple.com/nl/podcast/from-fed-to-chain-eng/id1822140143"
       />
 
       {/* Social Links */}

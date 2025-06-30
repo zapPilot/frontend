@@ -35,7 +35,7 @@ class APIClient {
 
       return await response.json();
     } catch (error) {
-      console.error("API Request failed:", error);
+      // API Request failed
       throw error;
     }
   }
@@ -142,7 +142,7 @@ class APIClient {
 
   // Market endpoints
   async getMarketData() {
-    return this.request("/api/v1/market/data");
+    return this.request("/api/v1/market/overview");
   }
 
   // Health check

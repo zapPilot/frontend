@@ -2,6 +2,7 @@
 
 import { Navigation } from "@/components/Navigation";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { AnalyticsProvider } from "@/components/AnalyticsProvider";
 import { InvestmentOpportunity } from "@/types/investment";
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
@@ -87,6 +88,20 @@ const SwapPage = dynamic(
   }
 );
 
+const PricingPage = dynamic(
+  () =>
+    import("@/components/PricingPage").then(mod => ({
+      default: mod.PricingPage,
+    })),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center min-h-96">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
+      </div>
+    ),
+  }
+);
+
 export default function DashboardApp() {
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
@@ -132,6 +147,8 @@ export default function DashboardApp() {
         return <InvestTab onInvestClick={handleInvestClick} />;
       case "analytics":
         return <AnalyticsTab />;
+      case "pricing":
+        return <PricingPage />;
       case "community":
         return <CommunityTab />;
       case "airdrop":
@@ -144,25 +161,27 @@ export default function DashboardApp() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
+    <AnalyticsProvider>
+      <div className="min-h-screen bg-gray-950 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
 
-      {/* Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+        {/* Navigation */}
+        <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Main content */}
-      <div className="relative z-10 lg:pl-72">
-        {/* Mobile header spacing */}
-        <div className="lg:hidden h-16" />
+        {/* Main content */}
+        <div className="relative z-10 lg:pl-72">
+          {/* Mobile header spacing */}
+          <div className="lg:hidden h-16" />
 
-        <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
-        </main>
+          <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
+            <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
+          </main>
 
-        {/* Mobile bottom nav spacing */}
-        <div className="lg:hidden h-20" />
+          {/* Mobile bottom nav spacing */}
+          <div className="lg:hidden h-20" />
+        </div>
       </div>
-    </div>
+    </AnalyticsProvider>
   );
 }

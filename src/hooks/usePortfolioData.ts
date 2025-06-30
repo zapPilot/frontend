@@ -170,7 +170,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load portfolio data";
         setError(errorMessage);
-        console.error("Portfolio data loading error:", err);
+        // Portfolio data loading error
       } finally {
         loadingState(false);
       }

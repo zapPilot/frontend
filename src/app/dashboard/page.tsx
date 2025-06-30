@@ -25,16 +25,10 @@ import { GlassCard, GradientButton } from "../../components/ui";
 import { GRADIENTS } from "../../styles/design-tokens";
 
 export default function DashboardPage() {
-  const {
-    subscriptionStatus,
-    currentTier,
-    isLoading: subscriptionLoading,
-  } = useSubscription();
+  const { currentTier } = useSubscription();
 
   const {
     portfolioData,
-    portfolioMetrics,
-    aprMetrics,
     featuredStrategies,
     topPools,
     isLoading,

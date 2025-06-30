@@ -5,6 +5,7 @@ import {
   Users,
   Gift,
   Settings,
+  Crown,
 } from "lucide-react";
 import { NavItem } from "../types/navigation";
 
@@ -26,6 +27,12 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Analytics",
     icon: BarChart3,
     description: "Performance metrics & charts",
+  },
+  {
+    id: "pricing",
+    label: "Pricing",
+    icon: Crown,
+    description: "Subscription plans & billing",
   },
   {
     id: "community",

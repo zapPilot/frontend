@@ -29,7 +29,7 @@ interface PricingPageProps {
   onClose?: () => void;
 }
 
-export function PricingPage({ onClose }: PricingPageProps) {
+export function PricingPage({}: PricingPageProps) {
   const { subscriptionStatus, currentTier, upgrade, isLoading, error } =
     useSubscription();
 
@@ -56,8 +56,8 @@ export function PricingPage({ onClose }: PricingPageProps) {
       setShowPaymentModal(false);
       setSelectedTier(null);
       setSelectedPayment(null);
-    } catch (err) {
-      console.error("Payment failed:", err);
+    } catch {
+      // Payment failed: err
     }
   };
 

@@ -3,7 +3,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { useWallet } from "./useWallet"; // Assume this exists for wallet connection
+// Using local mock wallet hook
 import {
   SubscriptionStatus,
   SubscriptionTier,
@@ -24,7 +24,7 @@ interface UseSubscriptionReturn {
 }
 
 export function useSubscription(): UseSubscriptionReturn {
-  const { address, isConnected } = useWallet();
+  const { address, isConnected } = useMockWallet();
   const [subscriptionStatus, setSubscriptionStatus] =
     useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +113,7 @@ export function useSubscription(): UseSubscriptionReturn {
         );
 
         // Step 2: Initiate blockchain transaction
-        const txHash = await sendPayment(paymentMethod, paymentAmount);
+        const txHash = await sendPayment();
 
         // Step 3: Create payment record
         const payment: PaymentTransaction = {
@@ -160,12 +160,10 @@ export function useSubscription(): UseSubscriptionReturn {
   };
 
   // Helper function to send payment (mock implementation)
-  const sendPayment = async (
-    paymentMethod: PaymentMethod,
-    amount: string
-  ): Promise<string> => {
+  const sendPayment = async (): Promise<string> => {
     // In real implementation, would use web3 library to send transaction
     // This would integrate with ThirdWeb SDK or similar
+    // Parameters: paymentMethod: PaymentMethod, amount: string
 
     // Mock transaction hash
     return `0x${Math.random().toString(16).substring(2)}`;
@@ -220,7 +218,7 @@ export function useSubscription(): UseSubscriptionReturn {
 }
 
 // Helper hook for wallet connection (simplified mock)
-function useWallet() {
+function useMockWallet() {
   const [address, setAddress] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
