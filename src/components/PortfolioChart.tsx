@@ -2,12 +2,21 @@
 
 import { motion } from "framer-motion";
 import { useState, useMemo, memo } from "react";
+import { Calendar, TrendingUp, PieChart, Activity } from "lucide-react";
 import { GlassCard, ErrorBoundary } from "./ui";
-import { ChartContainer, ChartControls, ChartMetrics } from "./PortfolioChart";
+// Chart components available if needed
+// import { ChartContainer, ChartControls, ChartMetrics } from "./PortfolioChart";
 import {
   generatePortfolioHistory,
   calculateDrawdownData,
+  CHART_PERIODS,
 } from "../lib/portfolioUtils";
+import {
+  generateSVGPath,
+  generateAreaPath,
+  generateYAxisLabels,
+  formatAxisLabel,
+} from "../lib/chartUtils";
 import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
 
 const PortfolioChartComponent = () => {
