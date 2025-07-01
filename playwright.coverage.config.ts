@@ -20,18 +20,7 @@ export default defineConfig({
         ...devices['Desktop Chrome'],
         // Enable code coverage collection
         contextOptions: {
-          // Enable coverage collection
-          coverageOptions: {
-            // Include source files
-            include: ['src/**/*.{js,jsx,ts,tsx}'],
-            // Exclude test files and node_modules
-            exclude: [
-              'tests/**',
-              'node_modules/**',
-              '.next/**',
-              'coverage/**'
-            ]
-          }
+          ignoreHTTPSErrors: true,
         }
       },
     },

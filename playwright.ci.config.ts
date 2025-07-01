@@ -70,11 +70,8 @@ export default defineConfig({
   /* Run your local dev server before starting the tests */
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3001',
+    url: 'http://localhost:3000',
     reuseExistingServer: !process.env['CI'],
     timeout: 120 * 1000, // 2 minutes to start
-    /* Don't wait for console.log in CI */
-    stdout: process.env['CI'] ? 'pipe' : 'inherit',
-    stderr: process.env['CI'] ? 'pipe' : 'inherit',
   },
 });
