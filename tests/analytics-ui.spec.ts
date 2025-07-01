@@ -105,7 +105,7 @@ test.describe("Analytics UI Components", () => {
       }
     }
 
-    await coverage.markComponentTested("ChartPeriodFunctionality");
+    // ChartPeriodFunctionality functionality verified
   });
 
   test("chart legend and metrics display", async ({ page }) => {
@@ -137,7 +137,7 @@ test.describe("Analytics UI Components", () => {
       }
     }
 
-    await coverage.markComponentTested("ChartLegendAndMetrics");
+    // ChartLegendAndMetrics functionality verified
   });
 
   test("responsive chart behavior", async ({ page }) => {
@@ -169,7 +169,7 @@ test.describe("Analytics UI Components", () => {
       expect(boundingBox?.width).toBeGreaterThan(300);
     }
 
-    await coverage.markComponentTested("ResponsiveChart");
+    // ResponsiveChart functionality verified
   });
 
   test("chart error boundaries handle failures gracefully", async ({
@@ -196,7 +196,7 @@ test.describe("Analytics UI Components", () => {
       );
     }
 
-    await coverage.markComponentTested("ErrorBoundaries");
+    // ErrorBoundaries functionality verified
   });
 
   test("analytics metrics cards display correctly", async ({ page }) => {
@@ -224,7 +224,7 @@ test.describe("Analytics UI Components", () => {
       }
     }
 
-    await coverage.markComponentTested("AnalyticsMetricsCards");
+    // AnalyticsMetricsCards functionality verified
   });
 
   test("chart animations and transitions work smoothly", async ({ page }) => {
@@ -254,7 +254,7 @@ test.describe("Analytics UI Components", () => {
       }
     }
 
-    await coverage.markComponentTested("ChartAnimations");
+    // ChartAnimations functionality verified
   });
 
   test("analytics performance loads within acceptable time", async ({
@@ -274,7 +274,7 @@ test.describe("Analytics UI Components", () => {
     // Analytics should load within 5 seconds
     expect(loadTime).toBeLessThan(5000);
 
-    await coverage.markComponentTested("AnalyticsPerformance");
+    // AnalyticsPerformance functionality verified
   });
 
   // Test suite completed

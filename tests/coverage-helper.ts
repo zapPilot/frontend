@@ -88,4 +88,18 @@ export class CoverageTracker {
       coverageCount: this.visitedComponents.size + this.interactedElements.size,
     };
   }
+
+  /**
+   * Generate and display final coverage report
+   */
+  async generateReport() {
+    const report = this.getCoverageReport();
+    console.log(`📊 Test Coverage Summary:`);
+    console.log(`   Components tested: ${report.componentsVisited.join(", ")}`);
+    console.log(
+      `   Interactions tested: ${report.interactionsTested.join(", ")}`
+    );
+    console.log(`   Total coverage points: ${report.coverageCount}`);
+    return report;
+  }
 }

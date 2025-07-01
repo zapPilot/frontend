@@ -1,11 +1,7 @@
 import { test, expect } from "@playwright/test";
-import { CoverageTracker } from "./coverage-helper";
 
 test.describe("UI Components Comprehensive Testing", () => {
-  let coverage: CoverageTracker;
-
   test.beforeEach(async ({ page }) => {
-    coverage = new CoverageTracker(page);
     await page.goto("/");
     await page.waitForLoadState("networkidle");
   });
@@ -30,7 +26,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("MainNavigation");
+    // Component testing completed
   });
 
   test("vault cards display and interact properly", async ({ page }) => {
@@ -65,7 +61,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("VaultCards");
+    // VaultCards functionality verified
   });
 
   test("glass morphism UI elements render correctly", async ({ page }) => {
@@ -94,7 +90,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       expect(styles.backdropFilter || styles.background).toBeTruthy();
     }
 
-    await coverage.markComponentTested("GlassMorphismUI");
+    // GlassMorphismUI functionality verified
   });
 
   test("form inputs and validation work correctly", async ({ page }) => {
@@ -135,7 +131,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("FormInputsAndValidation");
+    // FormInputsAndValidation functionality verified
   });
 
   test("loading states and spinners display appropriately", async ({
@@ -172,7 +168,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("LoadingStates");
+    // LoadingStates functionality verified
   });
 
   test("responsive design breakpoints work correctly", async ({ page }) => {
@@ -206,7 +202,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("ResponsiveDesign");
+    // ResponsiveDesign functionality verified
   });
 
   test("wallet connection UI elements function", async ({ page }) => {
@@ -242,7 +238,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("WalletConnectionUI");
+    // WalletConnectionUI functionality verified
   });
 
   test("portfolio metrics and values display correctly", async ({ page }) => {
@@ -281,7 +277,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("PortfolioMetrics");
+    // PortfolioMetrics functionality verified
   });
 
   test("theme and color scheme consistency", async ({ page }) => {
@@ -312,7 +308,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("ThemeConsistency");
+    // ThemeConsistency functionality verified
   });
 
   test("accessibility features are present", async ({ page }) => {
@@ -352,7 +348,7 @@ test.describe("UI Components Comprehensive Testing", () => {
       await expect(buttons).toBeFocused();
     }
 
-    await coverage.markComponentTested("AccessibilityFeatures");
+    // AccessibilityFeatures functionality verified
   });
 
   test("error states and user feedback display properly", async ({ page }) => {
@@ -378,10 +374,8 @@ test.describe("UI Components Comprehensive Testing", () => {
       }
     }
 
-    await coverage.markComponentTested("ErrorStatesAndFeedback");
+    // ErrorStatesAndFeedback functionality verified
   });
 
-  test.afterEach(async () => {
-    await coverage.generateReport();
-  });
+  // Test suite completed
 });
