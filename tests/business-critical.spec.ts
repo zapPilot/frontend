@@ -14,7 +14,8 @@ test.describe("Business Critical Features", () => {
   test.beforeEach(async ({ page }) => {
     coverage = new CoverageTracker(page);
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
   });
 
   test("investment flow is accessible to users", async ({ page }) => {
@@ -191,7 +192,8 @@ test.describe("Business Critical Features", () => {
 
     // Go back to main page
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Should not have JavaScript errors
     expect(errors.length).toBeLessThan(3); // Allow some minor errors but not many

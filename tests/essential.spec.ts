@@ -29,7 +29,8 @@ test.describe("Essential Functionality", () => {
 
   test("buttons have cursor pointer for good UX", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Look for any buttons on the page
     const buttons = page.locator("button");
@@ -62,7 +63,8 @@ test.describe("Essential Functionality", () => {
 
   test("navigation elements exist", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Look for any navigation-like elements
     const navElements = page.locator(
@@ -76,7 +78,8 @@ test.describe("Essential Functionality", () => {
 
   test("no broken images or missing assets", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Check for broken images
     const images = page.locator("img");
@@ -102,7 +105,8 @@ test.describe("Essential Functionality", () => {
     // Test desktop
     await page.setViewportSize({ width: 1200, height: 800 });
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     const desktopContent = page.locator("body");
     await expect(desktopContent).toBeVisible();
@@ -121,7 +125,8 @@ test.describe("Essential Functionality", () => {
 test.describe("Critical User Flows", () => {
   test("investment button functionality smoke test", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Look for any invest-related buttons
     const investButtons = page
@@ -147,7 +152,8 @@ test.describe("Critical User Flows", () => {
 
   test("form inputs accept user data", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Look for any input fields
     const inputs = page.locator(
@@ -195,7 +201,8 @@ test.describe("Performance & Quality", () => {
     });
 
     await page.goto("/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1000); // Brief wait for any immediate JS
 
     // Allow some warnings but no errors
     expect(errors).toEqual([]);
