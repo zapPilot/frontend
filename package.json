@@ -40,7 +40,9 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --debug",
     "test:report": "playwright show-report",
-    "prepare": "husky"
+    "prepare": "husky",
+    "ci:test": "./scripts/test-ci-local.sh",
+    "ci:quick": "./scripts/quick-ci-check.sh"
   },
   "dependencies": {
     "framer-motion": "^12.19.1",
