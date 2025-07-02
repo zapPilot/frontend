@@ -42,7 +42,11 @@
     "test:report": "playwright show-report",
     "prepare": "husky",
     "ci:test": "./scripts/test-ci-local.sh",
-    "ci:quick": "./scripts/quick-ci-check.sh"
+    "ci:quick": "./scripts/quick-ci-check.sh",
+    "eslint:toggle": "./scripts/toggle-eslint.sh",
+    "eslint:on": "./scripts/toggle-eslint.sh on",
+    "eslint:off": "./scripts/toggle-eslint.sh off",
+    "eslint:status": "./scripts/toggle-eslint.sh status"
   },
   "dependencies": {
     "framer-motion": "^12.19.1",

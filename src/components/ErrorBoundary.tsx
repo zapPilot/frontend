@@ -21,7 +21,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     return { hasError: true };
   }
 
-  componentDidCatch(error: Error, errorInfo: any) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // eslint-disable-next-line no-console
     console.error("ErrorBoundary caught an error:", error, errorInfo);
   }
 
@@ -41,10 +42,11 @@ export function withErrorBoundary<P extends object>(
   fallback?: React.ReactNode
 ) {
   const WrappedComponent = (props: P) => {
-    return React.createElement(ErrorBoundary, {
-      fallback,
-      children: React.createElement(Component, props),
-    });
+    return React.createElement(
+      ErrorBoundary,
+      { fallback },
+      React.createElement(Component, props)
+    );
   };
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
