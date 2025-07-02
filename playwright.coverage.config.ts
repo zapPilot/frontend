@@ -1,11 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 
-export default defineConfig({
+const config = {
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 0,
-  workers: process.env['CI'] ? 1 : undefined,
   reporter: 'html',
   
   use: {
@@ -31,4 +30,10 @@ export default defineConfig({
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
   },
-});
+};
+
+if (process.env['CI']) {
+  config.workers = 1;
+}
+
+export default defineConfig(config);
