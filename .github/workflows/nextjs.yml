@@ -5,7 +5,7 @@
 name: Deploy Next.js site to Pages
 
 on:
-  # Runs on pushes to prod branch in prod repo OR main branch in staging repo
+  # Runs on pushes targeting the default branch
   push:
     branches: ["main"]
 
@@ -56,9 +56,11 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
-          # Configure for GitHub Pages with custom domain
-          # REMOVE THIS LINE: static_site_generator: next
-          enablement: true # Keep this, as it enables Pages for the repo if not already enabled
+          # Automatically inject basePath in your Next.js configuration file and disable
+          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
+          #
+          # You may remove this line if you want to manage the configuration yourself.
+          static_site_generator: next
       - name: Restore cache
         uses: actions/cache@v4
         with:
@@ -70,26 +72,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}-
       - name: Install dependencies
-        run: yarn install --production
-      - name: Load Environment Variables
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "${{ secrets.STAGING_ENV_FILE }}" > .env
-      - name: Load Environment Variables
-        if: github.ref == 'refs/heads/prod'
-        run: |
-          echo "${{ secrets.PROD_ENV_FILE }}" > .env
-      - name: Build and Export
-        # Your `yarn build` command automatically triggers 'next build' which handles 'output: export'
-        # if configured in next.config.js. The separate 'yarn export' is redundant if 'output: export' is set.
-        # However, keeping both is fine if your 'export' script specifically handles things.
-        run: |
-          yarn build
-          yarn export # This command is key for generating the 'out' directory
+        run: ${{ steps.detect-package-manager.outputs.manager }} ${{ steps.detect-package-manager.outputs.command }}
+      - name: Build with Next.js
+        run: ${{ steps.detect-package-manager.outputs.runner }} next build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./out # This is correct for static export
+          path: ./out
 
   # Deployment job
   deploy:
