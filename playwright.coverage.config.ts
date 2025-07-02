@@ -9,7 +9,7 @@ const config = {
   
   use: {
     baseURL: 'http://localhost:3000',
-    trace: 'on-first-retry',
+    trace: 'on-first-retry' as const,
   },
 
   projects: [
@@ -30,10 +30,11 @@ const config = {
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env['CI'],
   },
-};
+  workers: process.env['CI'] ? 1 : undefined,
+} as any;
 
-if (process.env['CI']) {
-  config.workers = 1;
+if (!process.env['CI']) {
+  delete config.workers;
 }
 
 export default defineConfig(config);
