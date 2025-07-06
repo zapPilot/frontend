@@ -48,3 +48,7 @@ playwright-report
 test-results
 public/sw.js
 public/workbox-4754cb34.js
+
+# claude
+uploads/
+usage_tracking2.json
