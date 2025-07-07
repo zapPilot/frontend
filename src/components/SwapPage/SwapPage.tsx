@@ -6,6 +6,7 @@ import { useStrategyPortfolio } from "../../hooks/useStrategyPortfolio";
 import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
 import { MOCK_TOKENS } from "../../constants/swap";
+import { mockInvestmentOpportunities } from "../../data/mockInvestments";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation, TabType } from "./TabNavigation";
 import { SwapTab } from "./SwapTab";
@@ -13,6 +14,7 @@ import { PerformanceTab } from "./PerformanceTab";
 import { DetailsTab } from "./DetailsTab";
 import { OptimizeTab } from "./OptimizeTab";
 import { TokenSelectorModal } from "./TokenSelectorModal";
+import { StrategySelectorModal } from "./StrategySelectorModal";
 import { PortfolioOverview } from "../PortfolioOverview";
 
 interface SwapPageProps {
@@ -24,6 +26,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
   const [fromAmount, setFromAmount] = useState("");
   const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [showStrategySelector, setShowStrategySelector] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>(
     strategy.id === "optimize-portfolio" ? "optimize" : "swap"
   );
@@ -40,6 +43,13 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     setShowTokenSelector(false);
   };
 
+  const handleStrategySelect = (selectedStrategy: InvestmentOpportunity) => {
+    // Strategy selection logic - for now just log and close modal
+    // In a real app, this would update the selected strategy state
+    console.log("Strategy selected:", selectedStrategy);
+    setShowStrategySelector(false);
+  };
+
   const renderTabContent = () => {
     switch (activeTab) {
       case "swap":
@@ -50,6 +60,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             fromAmount={fromAmount}
             onFromAmountChange={setFromAmount}
             onTokenSelectorOpen={() => setShowTokenSelector(true)}
+            onStrategySelectorOpen={() => setShowStrategySelector(true)}
           />
         );
       case "allocation":
@@ -101,6 +112,24 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           tokens={MOCK_TOKENS}
           onTokenSelect={handleTokenSelect}
           onClose={() => setShowTokenSelector(false)}
+        />
+      )}
+
+      {showStrategySelector && (
+        <StrategySelectorModal
+          strategies={mockInvestmentOpportunities}
+          onStrategySelect={handleStrategySelect}
+          onClose={() => setShowStrategySelector(false)}
+          title={
+            strategy.navigationContext === "zapOut"
+              ? "Select Position to Exit"
+              : "Select Strategy to Invest"
+          }
+          description={
+            strategy.navigationContext === "zapOut"
+              ? "Choose a vault position to withdraw from"
+              : "Choose a vault strategy to invest in"
+          }
         />
       )}
     </div>

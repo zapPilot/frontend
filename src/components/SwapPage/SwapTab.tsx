@@ -16,6 +16,7 @@ interface SwapTabProps {
   fromAmount: string;
   onFromAmountChange: (amount: string) => void;
   onTokenSelectorOpen: () => void;
+  onStrategySelectorOpen?: () => void;
 }
 
 export function SwapTab({
@@ -24,8 +25,18 @@ export function SwapTab({
   fromAmount,
   onFromAmountChange,
   onTokenSelectorOpen,
+  onStrategySelectorOpen,
 }: SwapTabProps) {
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+
+  // Determine UI behavior based on navigation context
+  // - ZapIn: User came from WalletPortfolio ZapIn button, needs to select strategy
+  // - ZapOut: User came from WalletPortfolio ZapOut button, needs to select position to exit
+  // - Invest: User came from InvestTab, strategy is pre-selected (default behavior)
+  const isZapIn = strategy.navigationContext === "zapIn";
+  const isZapOut = strategy.navigationContext === "zapOut";
+  const isInvest =
+    strategy.navigationContext === "invest" || !strategy.navigationContext;
 
   const estimatedShares = fromAmount
     ? (
@@ -49,7 +60,13 @@ export function SwapTab({
   return (
     <GlassCard testId="swap-tab">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold gradient-text">Swap & Invest</h3>
+        <h3 className="text-xl font-bold gradient-text">
+          {isZapIn
+            ? "ZapIn to Strategy"
+            : isZapOut
+              ? "ZapOut from Strategy"
+              : "Swap & Invest"}
+        </h3>
         <Settings className="w-5 h-5 text-gray-400" />
       </div>
 
@@ -115,30 +132,71 @@ export function SwapTab({
               className="text-sm text-gray-400"
               data-testid="estimated-shares"
             >
-              ~{estimatedShares} shares
+              {isInvest ? `~${estimatedShares} shares` : "Select strategy"}
             </span>
           </div>
-          <div className="flex items-center space-x-3">
-            <div
-              className={`w-8 h-8 rounded-xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}
+
+          {/* Context-aware "To" content */}
+          {isZapIn ? (
+            /* ZapIn: Show strategy selector */
+            <button
+              onClick={onStrategySelectorOpen}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
+              data-testid="strategy-selector-button"
             >
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="font-semibold text-white">{strategy.name}</div>
-              <div className="text-sm text-gray-400">{strategy.category}</div>
-            </div>
-            <div
-              className="text-2xl font-bold text-white"
-              data-testid="estimated-value"
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-white">Select Strategy</div>
+                <div className="text-sm text-gray-400">
+                  Choose vault to invest in
+                </div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+          ) : isZapOut ? (
+            /* ZapOut: Show position selector (placeholder for now) */
+            <button
+              onClick={onStrategySelectorOpen}
+              className="w-full flex items-center space-x-3 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
+              data-testid="position-selector-button"
             >
-              {fromAmount
-                ? (
-                    parseFloat(fromAmount) * SWAP_CONSTANTS.CONVERSION_RATE
-                  ).toFixed(2)
-                : "0.0"}
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1 text-left">
+                <div className="font-semibold text-white">Select Position</div>
+                <div className="text-sm text-gray-400">
+                  Choose vault to exit from
+                </div>
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </button>
+          ) : (
+            /* Default/Invest: Show selected strategy */
+            <div className="flex items-center space-x-3">
+              <div
+                className={`w-8 h-8 rounded-xl bg-gradient-to-r ${strategy.color} flex items-center justify-center`}
+              >
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-white">{strategy.name}</div>
+                <div className="text-sm text-gray-400">{strategy.category}</div>
+              </div>
+              <div
+                className="text-2xl font-bold text-white"
+                data-testid="estimated-value"
+              >
+                {fromAmount
+                  ? (
+                      parseFloat(fromAmount) * SWAP_CONSTANTS.CONVERSION_RATE
+                    ).toFixed(2)
+                  : "0.0"}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Swap Details */}

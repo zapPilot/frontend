@@ -93,8 +93,10 @@ export default function DashboardApp() {
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
 
+  // Navigation handlers with context awareness
+  // Each handler sets the appropriate navigationContext to control SwapPage behavior
   const handleInvestClick = useCallback((strategy: InvestmentOpportunity) => {
-    setSelectedStrategy(strategy);
+    setSelectedStrategy({ ...strategy, navigationContext: "invest" });
   }, []);
 
   const handleBackToInvest = useCallback(() => {
@@ -125,7 +127,7 @@ export default function DashboardApp() {
       strategy => strategy.id === "optimize-portfolio"
     );
     if (optimizeStrategy) {
-      setSelectedStrategy(optimizeStrategy);
+      setSelectedStrategy({ ...optimizeStrategy, navigationContext: "invest" });
     }
   }, []);
 
@@ -135,7 +137,7 @@ export default function DashboardApp() {
       strategy => strategy.id === "zap-in"
     );
     if (zapInStrategy) {
-      setSelectedStrategy(zapInStrategy);
+      setSelectedStrategy({ ...zapInStrategy, navigationContext: "zapIn" });
     }
   }, []);
 
@@ -145,7 +147,7 @@ export default function DashboardApp() {
       strategy => strategy.id === "zap-out"
     );
     if (zapOutStrategy) {
-      setSelectedStrategy(zapOutStrategy);
+      setSelectedStrategy({ ...zapOutStrategy, navigationContext: "zapOut" });
     }
   }, []);
 
