@@ -37,6 +37,14 @@ const eslintConfig = [
     }
   },
   {
+    files: ["tests/**/*", "**/*.test.*", "**/*.spec.*"],
+    rules: {
+      // Disable React hooks rules for test files since they use Playwright's 'use' parameter
+      "react-hooks/rules-of-hooks": "off",
+      "react-hooks/exhaustive-deps": "off"
+    }
+  },
+  {
     ignores: [
       ".next/**",
       "out/**",
