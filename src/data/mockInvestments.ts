@@ -33,6 +33,17 @@ export const mockInvestmentOpportunities: InvestmentOpportunity[] = [
     tvl: "$1.2M",
     color: "from-purple-500 to-pink-600",
   },
+  {
+    id: "optimize-portfolio",
+    name: "Portfolio Optimization",
+    apr: 0,
+    risk: "Low",
+    category: "Optimization",
+    description:
+      "Convert dust tokens and rebalance portfolio for maximum efficiency",
+    tvl: "$0",
+    color: "from-purple-600 to-blue-600",
+  },
 ];
 
 export const mockInvestmentStats: InvestmentStat[] = [

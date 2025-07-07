@@ -3,6 +3,7 @@
 import { Navigation } from "@/components/Navigation";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { InvestmentOpportunity } from "@/types/investment";
+import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 
@@ -118,6 +119,16 @@ export default function DashboardApp() {
     }
   }, [selectedStrategy]);
 
+  const handleOptimizeClick = useCallback(() => {
+    // Find the optimize strategy from mock data
+    const optimizeStrategy = mockInvestmentOpportunities.find(
+      strategy => strategy.id === "optimize-portfolio"
+    );
+    if (optimizeStrategy) {
+      setSelectedStrategy(optimizeStrategy);
+    }
+  }, []);
+
   const renderTabContent = () => {
     if (selectedStrategy) {
       return (
@@ -127,7 +138,12 @@ export default function DashboardApp() {
 
     switch (activeTab) {
       case "wallet":
-        return <WalletPortfolio onAnalyticsClick={handleAnalyticsClick} />;
+        return (
+          <WalletPortfolio
+            onAnalyticsClick={handleAnalyticsClick}
+            onOptimizeClick={handleOptimizeClick}
+          />
+        );
       case "invest":
         return <InvestTab onInvestClick={handleInvestClick} />;
       case "analytics":
@@ -139,7 +155,12 @@ export default function DashboardApp() {
       case "settings":
         return <SettingsTab />;
       default:
-        return <WalletPortfolio />;
+        return (
+          <WalletPortfolio
+            onAnalyticsClick={handleAnalyticsClick}
+            onOptimizeClick={handleOptimizeClick}
+          />
+        );
     }
   };
 

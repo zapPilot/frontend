@@ -11,6 +11,7 @@ import { TabNavigation, TabType } from "./TabNavigation";
 import { SwapTab } from "./SwapTab";
 import { PerformanceTab } from "./PerformanceTab";
 import { DetailsTab } from "./DetailsTab";
+import { OptimizeTab } from "./OptimizeTab";
 import { TokenSelectorModal } from "./TokenSelectorModal";
 import { PortfolioOverview } from "../PortfolioOverview";
 
@@ -23,7 +24,9 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
   const [fromAmount, setFromAmount] = useState("");
   const [showTokenSelector, setShowTokenSelector] = useState(false);
-  const [activeTab, setActiveTab] = useState<TabType>("swap");
+  const [activeTab, setActiveTab] = useState<TabType>(
+    strategy.id === "optimize-portfolio" ? "optimize" : "swap"
+  );
 
   const {
     portfolioData,
@@ -69,6 +72,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             onCategoryToggle={toggleCategoryExpansion}
           />
         );
+      case "optimize":
+        return <OptimizeTab strategy={strategy} />;
       default:
         return null;
     }

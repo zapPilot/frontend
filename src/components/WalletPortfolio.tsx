@@ -24,10 +24,12 @@ import { GlassCard, GradientButton } from "./ui";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: () => void;
+  onOptimizeClick?: () => void;
 }
 
 export function WalletPortfolio({
   onAnalyticsClick,
+  onOptimizeClick,
 }: WalletPortfolioProps = {}) {
   const {
     balanceHidden,
@@ -154,6 +156,7 @@ export function WalletPortfolio({
             gradient={GRADIENTS.PRIMARY}
             shadowColor="purple-500"
             icon={Settings}
+            onClick={onOptimizeClick || (() => {})}
           >
             <span className="text-sm">Optimize</span>
           </GradientButton>

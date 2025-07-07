@@ -5,10 +5,16 @@ import {
   Activity,
   BarChart3,
   PieChart as PieChartIcon,
+  Settings,
   Zap,
 } from "lucide-react";
 
-export type TabType = "swap" | "allocation" | "performance" | "details";
+export type TabType =
+  | "swap"
+  | "allocation"
+  | "performance"
+  | "details"
+  | "optimize";
 
 interface TabNavigationProps {
   activeTab: TabType;
@@ -20,6 +26,7 @@ const tabs = [
   { id: "allocation" as TabType, label: "Allocation", icon: PieChartIcon },
   { id: "performance" as TabType, label: "Performance", icon: BarChart3 },
   { id: "details" as TabType, label: "Details", icon: Activity },
+  { id: "optimize" as TabType, label: "Optimize", icon: Settings },
 ];
 
 export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
@@ -30,7 +37,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
       className="glass-morphism rounded-2xl p-2 border border-gray-800"
       data-testid="tab-navigation"
     >
-      <div className="grid grid-cols-4 gap-1">
+      <div className="grid grid-cols-5 gap-1">
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
