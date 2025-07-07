@@ -41,7 +41,7 @@ export function AssetCategoriesDetail({
           >
             <button
               onClick={() => onCategoryToggle(category.id)}
-              className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-all duration-200 flex items-center justify-between"
+              className="w-full p-4 bg-gray-900/30 hover:bg-gray-900/50 transition-all duration-200 flex items-center justify-between cursor-pointer"
             >
               <div className="flex items-center space-x-4">
                 <div
@@ -126,7 +126,7 @@ export function AssetCategoriesDetail({
                           </div>
                         </div>
 
-                        <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors">
+                        <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">
                           <ExternalLink className="w-4 h-4 text-gray-400" />
                         </button>
                       </motion.div>

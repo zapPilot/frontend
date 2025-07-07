@@ -43,7 +43,7 @@ export function MenuSection({
             transition={{ delay: sectionIndex * 0.1 + itemIndex * 0.05 }}
             whileHover={{ backgroundColor: "rgba(55, 65, 81, 0.3)" }}
             onClick={item.onClick}
-            className="w-full p-4 flex items-center justify-between hover:bg-gray-700/20 transition-all duration-200"
+            className="w-full p-4 flex items-center justify-between hover:bg-gray-700/20 transition-all duration-200 cursor-pointer"
           >
             <div className="flex items-center space-x-3">
               <div className="p-2 rounded-xl bg-gray-800">

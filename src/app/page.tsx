@@ -129,6 +129,26 @@ export default function DashboardApp() {
     }
   }, []);
 
+  const handleZapInClick = useCallback(() => {
+    // Find the ZapIn strategy from mock data
+    const zapInStrategy = mockInvestmentOpportunities.find(
+      strategy => strategy.id === "zap-in"
+    );
+    if (zapInStrategy) {
+      setSelectedStrategy(zapInStrategy);
+    }
+  }, []);
+
+  const handleZapOutClick = useCallback(() => {
+    // Find the ZapOut strategy from mock data
+    const zapOutStrategy = mockInvestmentOpportunities.find(
+      strategy => strategy.id === "zap-out"
+    );
+    if (zapOutStrategy) {
+      setSelectedStrategy(zapOutStrategy);
+    }
+  }, []);
+
   const renderTabContent = () => {
     if (selectedStrategy) {
       return (
@@ -142,6 +162,8 @@ export default function DashboardApp() {
           <WalletPortfolio
             onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
+            onZapInClick={handleZapInClick}
+            onZapOutClick={handleZapOutClick}
           />
         );
       case "invest":
@@ -159,6 +181,8 @@ export default function DashboardApp() {
           <WalletPortfolio
             onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
+            onZapInClick={handleZapInClick}
+            onZapOutClick={handleZapOutClick}
           />
         );
     }

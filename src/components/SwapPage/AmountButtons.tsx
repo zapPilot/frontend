@@ -29,7 +29,7 @@ export function AmountButtons({
         <button
           key={option.label}
           onClick={() => handlePercentageClick(option.value)}
-          className="flex-1 px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-xs font-medium hover:bg-purple-600/30 transition-colors"
+          className="flex-1 px-2 py-1 rounded-lg bg-purple-600/20 text-purple-400 text-xs font-medium hover:bg-purple-600/30 transition-colors cursor-pointer"
           data-testid={`amount-${option.label.toLowerCase()}-button`}
         >
           {option.label}

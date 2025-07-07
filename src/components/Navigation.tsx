@@ -122,7 +122,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
 
             <button
               onClick={toggleMobileMenu}
-              className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
+              className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 cursor-pointer"
             >
               {isMobileMenuOpen ? (
                 <X className="w-5 h-5 text-gray-300" />

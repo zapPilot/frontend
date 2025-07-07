@@ -56,7 +56,7 @@ export function SlippageSelector({
     <div className={`space-y-3 ${className}`}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center justify-between w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 hover:bg-gray-900/70 transition-colors"
+        className="flex items-center justify-between w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 hover:bg-gray-900/70 transition-colors cursor-pointer"
       >
         <div className="flex items-center space-x-3">
           <Settings className="w-4 h-4 text-gray-400" />
@@ -94,7 +94,7 @@ export function SlippageSelector({
                   onChange(option.value);
                   setIsExpanded(false);
                 }}
-                className={`w-full p-3 rounded-lg text-left transition-all duration-200 ${
+                className={`w-full p-3 rounded-lg text-left transition-all duration-200 cursor-pointer ${
                   slippage === option.value
                     ? "bg-purple-500/20 border border-purple-500/50"
                     : "bg-gray-800/50 border border-gray-600 hover:bg-gray-800/70"

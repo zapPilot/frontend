@@ -69,7 +69,7 @@ export function SwapTab({
             <div className="flex items-center space-x-3">
               <button
                 onClick={onTokenSelectorOpen}
-                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer"
                 data-testid="token-selector-button"
               >
                 <div className="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600" />

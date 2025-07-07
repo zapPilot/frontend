@@ -45,7 +45,7 @@ export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               data-testid={`tab-${tab.id}`}
-              className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 ${
+              className={`p-3 rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 cursor-pointer ${
                 activeTab === tab.id
                   ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
                   : "text-gray-400 hover:text-white hover:bg-gray-800/50"

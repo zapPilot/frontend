@@ -44,6 +44,28 @@ export const mockInvestmentOpportunities: InvestmentOpportunity[] = [
     tvl: "$0",
     color: "from-purple-600 to-blue-600",
   },
+  {
+    id: "zap-in",
+    name: "ZapIn Strategy",
+    apr: 0,
+    risk: "Low",
+    category: "Zap",
+    description:
+      "Quickly deposit funds into multiple DeFi protocols with optimal routing",
+    tvl: "$0",
+    color: "from-green-500 to-emerald-600",
+  },
+  {
+    id: "zap-out",
+    name: "ZapOut Strategy",
+    apr: 0,
+    risk: "Low",
+    category: "Zap",
+    description:
+      "Efficiently withdraw and consolidate funds from multiple DeFi positions",
+    tvl: "$0",
+    color: "from-red-500 to-rose-600",
+  },
 ];
 
 export const mockInvestmentStats: InvestmentStat[] = [

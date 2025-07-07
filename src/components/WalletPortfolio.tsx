@@ -25,11 +25,15 @@ import { GlassCard, GradientButton } from "./ui";
 interface WalletPortfolioProps {
   onAnalyticsClick?: () => void;
   onOptimizeClick?: () => void;
+  onZapInClick?: () => void;
+  onZapOutClick?: () => void;
 }
 
 export function WalletPortfolio({
   onAnalyticsClick,
   onOptimizeClick,
+  onZapInClick,
+  onZapOutClick,
 }: WalletPortfolioProps = {}) {
   const {
     balanceHidden,
@@ -140,6 +144,7 @@ export function WalletPortfolio({
             gradient={GRADIENTS.SUCCESS}
             shadowColor="green-500"
             icon={ArrowUpRight}
+            onClick={onZapInClick || (() => {})}
           >
             <span className="text-sm">ZapIn</span>
           </GradientButton>
@@ -148,6 +153,7 @@ export function WalletPortfolio({
             gradient={GRADIENTS.DANGER}
             shadowColor="red-500"
             icon={ArrowDownLeft}
+            onClick={onZapOutClick || (() => {})}
           >
             <span className="text-sm">ZapOut</span>
           </GradientButton>
