@@ -72,9 +72,10 @@ export function OptimizeTab({ strategy }: OptimizeTabProps) {
     } else {
       setIsOptimizing(true);
       // In real app, this would trigger the optimization flow
+      // Extended duration to show progress
       setTimeout(() => {
         setIsOptimizing(false);
-      }, 3000);
+      }, 12000);
     }
   }, [optimizationOptions, uiVariation]);
 
@@ -161,16 +162,23 @@ export function OptimizeTab({ strategy }: OptimizeTabProps) {
           }
         />
 
-        {/* Action Button */}
-        <GradientButton
-          disabled={selectedCount === 0 || isOptimizing}
-          gradient="from-purple-600 to-blue-600"
-          className="w-full py-4"
-          testId="optimize-button"
-          onClick={handleOptimize}
-        >
-          {isOptimizing ? "Optimizing..." : getOptimizeButtonText()}
-        </GradientButton>
+        {/* Action Button or Progress */}
+        {isOptimizing ? (
+          <OptimizationProgress
+            options={optimizationOptions}
+            mockData={mockOptimizationData}
+          />
+        ) : (
+          <GradientButton
+            disabled={selectedCount === 0}
+            gradient="from-purple-600 to-blue-600"
+            className="w-full py-4"
+            testId="optimize-button"
+            onClick={handleOptimize}
+          >
+            {getOptimizeButtonText()}
+          </GradientButton>
+        )}
 
         {/* Additional Info */}
         <div className="flex justify-center space-x-6 text-sm text-gray-400">

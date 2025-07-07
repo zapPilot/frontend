@@ -31,7 +31,9 @@ export function GradientButton({
   const shadowClasses = shadowColor
     ? `hover:shadow-lg hover:shadow-${shadowColor}/25`
     : "";
-  const disabledClasses = disabled ? "opacity-50 cursor-not-allowed" : "";
+  const disabledClasses = disabled
+    ? "opacity-50 cursor-not-allowed"
+    : "cursor-pointer";
 
   const fullClassName = `${baseClasses} ${gradientClasses} ${shadowClasses} ${disabledClasses} ${className}`;
 
