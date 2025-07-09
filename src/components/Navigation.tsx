@@ -95,7 +95,6 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             <SimpleConnectButton
               variant="secondary"
               size="md"
-              showAccountAbstraction={true}
               className="w-full"
             />
           </div>
@@ -137,7 +136,6 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
               <SimpleConnectButton
                 variant="ghost"
                 size="sm"
-                showAccountAbstraction={false}
                 className="hidden sm:block"
               />
 
@@ -215,7 +213,6 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                 <SimpleConnectButton
                   variant="primary"
                   size="md"
-                  showAccountAbstraction={true}
                   className="w-full"
                 />
               </div>

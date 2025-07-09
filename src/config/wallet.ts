@@ -159,8 +159,6 @@ export const WALLET_CONFIG: WalletConfig = {
     enableTestnets: getEnvConfig().enableTestnets,
   },
   features: {
-    enableSmartWallets: true,
-    enableGaslessTransactions: true,
     enableMultiChain: true,
   },
 };
@@ -322,8 +320,6 @@ export const validationUtils = {
  * Feature flags for development
  */
 export const FEATURE_FLAGS = {
-  ENABLE_SMART_WALLETS: WALLET_CONFIG.features.enableSmartWallets,
-  ENABLE_GASLESS_TRANSACTIONS: WALLET_CONFIG.features.enableGaslessTransactions,
   ENABLE_MULTI_CHAIN: WALLET_CONFIG.features.enableMultiChain,
   ENABLE_TESTNETS: WALLET_CONFIG.environment.enableTestnets,
   ENABLE_DEBUG_LOGGING: WALLET_CONFIG.environment.isDevelopment,

@@ -1,12 +1,7 @@
 "use client";
 
-import React, { memo, useState, useCallback } from "react";
-import {
-  ConnectButton,
-  useActiveAccount,
-  useActiveWallet,
-  useDisconnect,
-} from "thirdweb/react";
+import React, { memo } from "react";
+import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import {
   createWallet,
   walletConnect,
@@ -77,35 +72,14 @@ interface SimpleConnectButtonProps {
   className?: string;
   variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
-  showAccountAbstraction?: boolean;
 }
 
 export function SimpleConnectButton({
   className = "",
   variant = "primary",
   size = "md",
-  showAccountAbstraction = false,
 }: SimpleConnectButtonProps) {
   const activeAccount = useActiveAccount();
-  const activeWallet = useActiveWallet();
-  const { disconnect } = useDisconnect();
-  const [aaEnabled, setAaEnabled] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
-
-  const handleToggleAA = useCallback(
-    async (enabled: boolean) => {
-      if (activeWallet) {
-        setIsDisconnecting(true);
-        try {
-          await disconnect(activeWallet);
-        } finally {
-          setIsDisconnecting(false);
-        }
-      }
-      setAaEnabled(enabled);
-    },
-    [activeWallet, disconnect]
-  );
 
   const getButtonTheme = () => {
     switch (variant) {
@@ -135,36 +109,16 @@ export function SimpleConnectButton({
 
   return (
     <div className={`flex flex-col gap-2 ${className}`}>
-      {/* Account Abstraction Toggle */}
-      {showAccountAbstraction && (
-        <div className="flex items-center gap-2 text-sm">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={aaEnabled}
-              onChange={e => handleToggleAA(e.target.checked)}
-              disabled={isDisconnecting}
-              className="rounded border-gray-600 bg-gray-800 text-purple-600 focus:ring-purple-500 focus:ring-offset-gray-900"
-            />
-            <span className="text-gray-300">Account Abstraction</span>
-          </label>
-        </div>
-      )}
-
       {/* Connect Button */}
       <ConnectButton
-        key={aaEnabled ? "aa-mode" : "eoa-mode"}
         client={THIRDWEB_CLIENT}
         autoConnect={true}
         wallets={WALLETS}
         theme={getButtonTheme()}
         chains={SUPPORTED_CHAINS}
-        {...(aaEnabled && {
-          accountAbstraction: { chain: base, sponsorGas: true },
-        })}
         connectModal={{
           size: getSizeConfig() as "compact" | "wide",
-          title: aaEnabled ? "Create Your Smart Wallet" : "Connect Wallet",
+          title: "Connect Wallet",
           titleIcon: "",
           showThirdwebBranding: false,
         }}

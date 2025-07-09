@@ -151,8 +151,6 @@ export interface WalletConfig {
   };
   /** Feature flags */
   features: {
-    enableSmartWallets: boolean;
-    enableGaslessTransactions: boolean;
     enableMultiChain: boolean;
   };
 }
