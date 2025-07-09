@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useState, useCallback, memo } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
+import { WalletButton, ChainSelector } from "./Web3";
 
 interface NavigationProps {
   activeTab: string;
@@ -88,6 +89,25 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             </ul>
           </nav>
 
+          {/* Wallet Controls */}
+          <div className="mt-auto mb-4 space-y-4">
+            {/* Chain Selector */}
+            <ChainSelector
+              variant="compact"
+              showLabel={false}
+              showNetworkStatus={true}
+              className="w-full"
+            />
+
+            {/* Wallet Button */}
+            <WalletButton
+              variant="secondary"
+              size="md"
+              showChainIndicator={false}
+              className="w-full"
+            />
+          </div>
+
           {/* Desktop Status */}
           <div className="mt-auto">
             <div className="glass-morphism rounded-2xl p-4 border border-gray-800">
@@ -120,16 +140,34 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </div>
 
-            <button
-              onClick={toggleMobileMenu}
-              className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 cursor-pointer"
-            >
-              {isMobileMenuOpen ? (
-                <X className="w-5 h-5 text-gray-300" />
-              ) : (
-                <Menu className="w-5 h-5 text-gray-300" />
-              )}
-            </button>
+            <div className="flex items-center space-x-3">
+              {/* Mobile Chain Selector */}
+              <ChainSelector
+                variant="minimal"
+                showLabel={false}
+                showNetworkStatus={false}
+                className="hidden sm:block"
+              />
+
+              {/* Mobile Wallet Button */}
+              <WalletButton
+                variant="ghost"
+                size="sm"
+                showChainIndicator={false}
+                className="hidden sm:block"
+              />
+
+              <button
+                onClick={toggleMobileMenu}
+                className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 cursor-pointer"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-5 h-5 text-gray-300" />
+                ) : (
+                  <Menu className="w-5 h-5 text-gray-300" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -186,6 +224,25 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                   })}
                 </ul>
               </nav>
+
+              {/* Mobile Wallet Controls */}
+              <div className="mt-auto mb-4 space-y-4">
+                {/* Chain Selector */}
+                <ChainSelector
+                  variant="compact"
+                  showLabel={true}
+                  showNetworkStatus={true}
+                  className="w-full"
+                />
+
+                {/* Wallet Button */}
+                <WalletButton
+                  variant="primary"
+                  size="md"
+                  showChainIndicator={false}
+                  className="w-full"
+                />
+              </div>
             </motion.div>
           </motion.div>
         )}

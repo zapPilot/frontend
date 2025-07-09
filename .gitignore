@@ -52,3 +52,8 @@ public/workbox-4754cb34.js
 # claude
 uploads/
 usage_tracking2.json
+
+# log
+dev-webpack-fixed.log
+dev-webpack.log
+dev.log

@@ -124,7 +124,9 @@ export class PageHelper {
     return this.page.waitForFunction(
       sels => {
         return sels.some(sel => {
-          const element = document.querySelector(`[data-testid="${sel}"]`);
+          const element = document.querySelector(
+            `[data-testid="${sel}"]`
+          ) as HTMLElement;
           return element && element.offsetHeight > 0;
         });
       },
