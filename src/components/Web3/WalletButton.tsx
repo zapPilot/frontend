@@ -10,23 +10,23 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Wallet,
-  User,
-  LogOut,
+  AlertCircle,
+  CheckCircle,
+  ChevronDown,
   Copy,
   ExternalLink,
-  ChevronDown,
-  CheckCircle,
-  AlertCircle,
+  LogOut,
   Settings,
+  User,
+  Wallet,
   Zap,
 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
-import { useWallet } from "@/hooks/useWallet";
 import { useChain } from "@/hooks/useChain";
+import { useWallet } from "@/hooks/useWallet";
 
 /**
  * WalletButton component props

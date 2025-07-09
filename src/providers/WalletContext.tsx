@@ -32,6 +32,7 @@ import {
 } from "@/types/wallet";
 
 import { WalletProviderFactory } from "./WalletProviderFactory";
+import { useThirdWebAdapter } from "./adapters/ThirdWebAdapter";
 import { WALLET_CONFIG, chainUtils } from "@/config/wallet";
 
 /**
@@ -171,6 +172,10 @@ export function WalletProvider({
   const eventListenersRef = useRef<
     Map<WalletEventType, Array<(event: WalletEvent) => void>>
   >(new Map());
+
+  // Initialize ThirdWeb adapter when provider type is thirdweb
+  // This ensures hooks are injected into the active adapter instance
+  useThirdWebAdapter();
 
   // Initialize factory
   useEffect(() => {

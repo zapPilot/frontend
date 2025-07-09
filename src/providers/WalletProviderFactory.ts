@@ -79,8 +79,10 @@ export class WalletProviderFactory {
    * Initialize provider registry with available providers
    */
   private initializeProviderRegistry(): void {
-    // Register ThirdWeb provider
-    this.providerRegistry.set("thirdweb", () => new ThirdWebAdapter());
+    // Register ThirdWeb provider - use static instance to ensure proper hook injection
+    this.providerRegistry.set("thirdweb", () =>
+      ThirdWebAdapter.getActiveInstance()
+    );
 
     // Register RainbowKit provider (placeholder for future implementation)
     this.providerRegistry.set("rainbowkit", () => {

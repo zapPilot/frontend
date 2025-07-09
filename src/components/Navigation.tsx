@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useState, useCallback, memo } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
-import { WalletButton, ChainSelector } from "./Web3";
+import { SimpleConnectButton } from "./Web3/SimpleConnectButton";
 
 interface NavigationProps {
   activeTab: string;
@@ -91,19 +91,11 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
 
           {/* Wallet Controls */}
           <div className="mt-auto mb-4 space-y-4">
-            {/* Chain Selector */}
-            <ChainSelector
-              variant="compact"
-              showLabel={false}
-              showNetworkStatus={true}
-              className="w-full"
-            />
-
-            {/* Wallet Button */}
-            <WalletButton
+            {/* Simplified Connect Button */}
+            <SimpleConnectButton
               variant="secondary"
               size="md"
-              showChainIndicator={false}
+              showAccountAbstraction={true}
               className="w-full"
             />
           </div>
@@ -141,19 +133,11 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             </div>
 
             <div className="flex items-center space-x-3">
-              {/* Mobile Chain Selector */}
-              <ChainSelector
-                variant="minimal"
-                showLabel={false}
-                showNetworkStatus={false}
-                className="hidden sm:block"
-              />
-
               {/* Mobile Wallet Button */}
-              <WalletButton
+              <SimpleConnectButton
                 variant="ghost"
                 size="sm"
-                showChainIndicator={false}
+                showAccountAbstraction={false}
                 className="hidden sm:block"
               />
 
@@ -227,19 +211,11 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
 
               {/* Mobile Wallet Controls */}
               <div className="mt-auto mb-4 space-y-4">
-                {/* Chain Selector */}
-                <ChainSelector
-                  variant="compact"
-                  showLabel={true}
-                  showNetworkStatus={true}
-                  className="w-full"
-                />
-
-                {/* Wallet Button */}
-                <WalletButton
+                {/* Simplified Connect Button */}
+                <SimpleConnectButton
                   variant="primary"
                   size="md"
-                  showChainIndicator={false}
+                  showAccountAbstraction={true}
                   className="w-full"
                 />
               </div>

@@ -42,6 +42,10 @@ export class ThirdWebAdapter implements WalletProvider {
   public readonly name: string = "ThirdWeb";
   public isInitialized: boolean = false;
 
+  // Static instance management for bridge pattern
+  private static activeInstance: ThirdWebAdapter | null = null;
+  private static instanceCleanupCallbacks: Array<() => void> = [];
+
   // State management
   private _account: WalletAccount | null = null;
   private _chain: Chain | null = null;
@@ -60,6 +64,68 @@ export class ThirdWebAdapter implements WalletProvider {
 
   constructor() {
     this.isInitialized = true;
+  }
+
+  /**
+   * Get or create the active ThirdWebAdapter instance
+   * This ensures only one instance exists at a time
+   */
+  public static getActiveInstance(): ThirdWebAdapter {
+    if (!ThirdWebAdapter.activeInstance) {
+      ThirdWebAdapter.activeInstance = new ThirdWebAdapter();
+    }
+    return ThirdWebAdapter.activeInstance;
+  }
+
+  /**
+   * Set the active instance (used by React hook)
+   * This ensures the factory returns the same instance that gets hooks injected
+   */
+  public static setActiveInstance(instance: ThirdWebAdapter): void {
+    // Clean up previous instance if exists
+    if (
+      ThirdWebAdapter.activeInstance &&
+      ThirdWebAdapter.activeInstance !== instance
+    ) {
+      ThirdWebAdapter.cleanupInstance();
+    }
+    ThirdWebAdapter.activeInstance = instance;
+  }
+
+  /**
+   * Register cleanup callback for instance lifecycle management
+   */
+  public static registerCleanupCallback(callback: () => void): void {
+    ThirdWebAdapter.instanceCleanupCallbacks.push(callback);
+  }
+
+  /**
+   * Clean up the active instance
+   */
+  public static cleanupInstance(): void {
+    if (ThirdWebAdapter.activeInstance) {
+      // Execute cleanup callbacks
+      ThirdWebAdapter.instanceCleanupCallbacks.forEach(callback => {
+        try {
+          callback();
+        } catch (error) {
+          console.error("Error in ThirdWebAdapter cleanup callback:", error);
+        }
+      });
+
+      // Clear callbacks array
+      ThirdWebAdapter.instanceCleanupCallbacks = [];
+
+      // Clear active instance
+      ThirdWebAdapter.activeInstance = null;
+    }
+  }
+
+  /**
+   * Reset static state (useful for testing)
+   */
+  public static reset(): void {
+    ThirdWebAdapter.cleanupInstance();
   }
 
   /**
@@ -408,9 +474,16 @@ export interface ThirdWebHooks {
  *
  * This hook provides a React-integrated ThirdWeb adapter that automatically
  * syncs with ThirdWeb's React hooks and provides the standardized interface.
+ * Uses static instance management to ensure proper bridge with factory pattern.
  */
 export function useThirdWebAdapter(): ThirdWebAdapter {
-  const [adapter] = useState(() => new ThirdWebAdapter());
+  const [adapter] = useState(() => {
+    // Get existing instance or create new one
+    const instance = ThirdWebAdapter.getActiveInstance();
+    // Register this instance as the active one
+    ThirdWebAdapter.setActiveInstance(instance);
+    return instance;
+  });
 
   // Create ThirdWeb client
   const client = useMemo(() => {
@@ -498,6 +571,27 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
   useEffect(() => {
     adapter.updateChain(chain ? { chainId: chain.id } : undefined);
   }, [adapter, chain]);
+
+  // Register cleanup callback for component unmount
+  useEffect(() => {
+    const cleanup = () => {
+      // Clear hooks reference when component unmounts
+      adapter.injectHooks({
+        account: null,
+        wallet: null,
+        connect: async () => {},
+        disconnect: async () => {},
+        chain: null,
+        switchChain: async () => {},
+        balance: { data: null },
+        connectedWallets: [],
+      } as any);
+    };
+
+    ThirdWebAdapter.registerCleanupCallback(cleanup);
+
+    return cleanup;
+  }, [adapter]);
 
   return adapter;
 }
