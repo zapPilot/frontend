@@ -2,9 +2,17 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { useOnboarding } from "@/providers/OnboardingProvider";
+import {
+  WalletConnectHint,
+  ChainSwitchHint,
+  NavigationHint,
+  MobileNavigationHint,
+} from "./Onboarding";
 
 interface NavigationProps {
   activeTab: string;
@@ -12,6 +20,27 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
+  const { trackNavigation } = useAnalytics();
+  const { markStepCompleted } = useOnboarding();
+
+  const handleTabChange = useCallback(
+    (tab: string) => {
+      const fromTab = activeTab;
+      const isMobile = window.innerWidth < 1024;
+      const method = isMobile ? "bottom-nav" : "sidebar";
+
+      // Track navigation analytics
+      trackNavigation(fromTab, tab, method);
+
+      // Mark navigation milestone for onboarding
+      markStepCompleted("navigation-used");
+
+      // Call the original handler
+      onTabChange(tab);
+    },
+    [activeTab, onTabChange, trackNavigation, markStepCompleted]
+  );
+
   return (
     <>
       {/* Desktop Sidebar */}
@@ -46,7 +75,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                         <motion.button
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
-                          onClick={() => onTabChange(item.id)}
+                          onClick={() => handleTabChange(item.id)}
                           data-testid={`desktop-tab-${item.id}`}
                           className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
                             isActive
@@ -140,7 +169,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
               <motion.button
                 key={item.id}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => onTabChange(item.id)}
+                onClick={() => handleTabChange(item.id)}
                 data-testid={`tab-${item.id}`}
                 className={`flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 ${
                   isActive
@@ -161,6 +190,12 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
           })}
         </div>
       </div>
+
+      {/* Onboarding Hints */}
+      <WalletConnectHint />
+      <ChainSwitchHint />
+      <NavigationHint />
+      <MobileNavigationHint />
     </>
   );
 };

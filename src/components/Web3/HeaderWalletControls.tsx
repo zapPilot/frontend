@@ -4,6 +4,9 @@ import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { ChainSwitcher } from "./ChainSwitcher";
 import { SimpleConnectButton } from "./SimpleConnectButton";
+// Analytics imports ready for future integration:
+// import { useAnalytics } from "@/hooks/useAnalytics";
+// import { useOnboarding } from "@/providers/OnboardingProvider";
 
 type WalletControlsSize = "compact" | "normal" | "full";
 
@@ -18,6 +21,9 @@ const HeaderWalletControlsComponent = ({
   size = "normal",
   isMobile = false,
 }: HeaderWalletControlsProps) => {
+  // Note: Analytics integration ready for when component callbacks are available
+  // const { trackWalletInteraction } = useAnalytics();
+  // const { markStepCompleted } = useOnboarding();
   const getVariant = () => {
     if (size === "compact") return "ghost";
     if (isMobile) return "ghost";
@@ -49,17 +55,21 @@ const HeaderWalletControlsComponent = ({
       className={`flex items-center ${getSpacing()} ${className}`}
     >
       {/* Chain Switcher */}
-      <ChainSwitcher
-        variant="primary"
-        className={`${getChainSwitcherWidth()} transition-all duration-200`}
-      />
+      <div data-testid="chain-switcher">
+        <ChainSwitcher
+          variant="primary"
+          className={`${getChainSwitcherWidth()} transition-all duration-200`}
+        />
+      </div>
 
       {/* Connect Button */}
-      <SimpleConnectButton
-        variant={getVariant()}
-        size={getButtonSize()}
-        className="transition-all duration-200"
-      />
+      <div data-testid="wallet-connect-button">
+        <SimpleConnectButton
+          variant={getVariant()}
+          size={getButtonSize()}
+          className="transition-all duration-200"
+        />
+      </div>
     </motion.div>
   );
 };
