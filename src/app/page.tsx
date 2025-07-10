@@ -203,6 +203,9 @@ export default function DashboardApp() {
         {/* Mobile header spacing */}
         <div className="lg:hidden h-16" />
 
+        {/* Desktop header spacing */}
+        <div className="hidden lg:block h-16" />
+
         <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
           <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
         </main>

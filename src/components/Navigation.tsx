@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import { useState, useCallback, memo } from "react";
+import { memo, useCallback, useState } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
-import { SimpleConnectButton } from "./Web3/SimpleConnectButton";
+import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
 
 interface NavigationProps {
   activeTab: string;
@@ -89,30 +89,15 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             </ul>
           </nav>
 
-          {/* Wallet Controls */}
-          <div className="mt-auto mb-4 space-y-4">
-            {/* Simplified Connect Button */}
-            <SimpleConnectButton
-              variant="secondary"
-              size="md"
-              className="w-full"
-            />
-          </div>
+          {/* Wallet Controls moved to header */}
+        </div>
+      </div>
 
-          {/* Desktop Status */}
-          <div className="mt-auto">
-            <div className="glass-morphism rounded-2xl p-4 border border-gray-800">
-              <div className="flex items-center space-x-2 mb-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-sm font-medium text-green-400">
-                  Intent Engine Online
-                </span>
-              </div>
-              <p className="text-xs text-gray-400">
-                Ready for execution across 20+ networks
-              </p>
-            </div>
-          </div>
+      {/* Desktop Header with Wallet Controls */}
+      <div className="hidden lg:block fixed top-0 left-72 right-0 z-40 glass-morphism border-b border-gray-800">
+        <div className="flex items-center justify-between px-6 py-3">
+          <div className="flex-1"></div>
+          <HeaderWalletControls isMobile={false} className="flex" />
         </div>
       </div>
 
@@ -131,12 +116,11 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
               <span className="text-xl font-bold gradient-text">Zap Pilot</span>
             </div>
 
-            <div className="flex items-center space-x-3">
-              {/* Mobile Wallet Button */}
-              <SimpleConnectButton
-                variant="ghost"
-                size="sm"
-                className="hidden sm:block"
+            <div className="flex items-center space-x-2">
+              {/* Header Wallet Controls */}
+              <HeaderWalletControls
+                isMobile={true}
+                className="hidden sm:flex"
               />
 
               <button
@@ -207,14 +191,9 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                 </ul>
               </nav>
 
-              {/* Mobile Wallet Controls */}
-              <div className="mt-auto mb-4 space-y-4">
-                {/* Simplified Connect Button */}
-                <SimpleConnectButton
-                  variant="primary"
-                  size="md"
-                  className="w-full"
-                />
+              {/* Mobile Wallet Controls in slide-out menu */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <HeaderWalletControls isMobile={true} className="w-full" />
               </div>
             </motion.div>
           </motion.div>
