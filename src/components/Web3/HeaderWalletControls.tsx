@@ -5,35 +5,59 @@ import { motion } from "framer-motion";
 import { ChainSwitcher } from "./ChainSwitcher";
 import { SimpleConnectButton } from "./SimpleConnectButton";
 
+type WalletControlsSize = "compact" | "normal" | "full";
+
 interface HeaderWalletControlsProps {
   className?: string;
+  size?: WalletControlsSize;
   isMobile?: boolean;
 }
 
 const HeaderWalletControlsComponent = ({
   className = "",
+  size = "normal",
   isMobile = false,
 }: HeaderWalletControlsProps) => {
+  const getVariant = () => {
+    if (size === "compact") return "ghost";
+    if (isMobile) return "ghost";
+    return "primary";
+  };
+
+  const getButtonSize = () => {
+    if (size === "compact") return "sm";
+    if (isMobile) return "sm";
+    return "md";
+  };
+
+  const getSpacing = () => {
+    if (size === "compact") return "gap-2";
+    return "gap-3";
+  };
+
+  const getChainSwitcherWidth = () => {
+    if (size === "compact") return "min-w-[100px]";
+    if (isMobile) return "min-w-[120px]";
+    return "min-w-[140px]";
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`flex items-center gap-3 ${className}`}
+      className={`flex items-center ${getSpacing()} ${className}`}
     >
-      {/* Chain Switcher - Always visible on mobile now */}
+      {/* Chain Switcher */}
       <ChainSwitcher
         variant="primary"
-        className={`
-          ${isMobile ? "min-w-[120px]" : "min-w-[140px]"}
-          transition-all duration-200
-        `}
+        className={`${getChainSwitcherWidth()} transition-all duration-200`}
       />
 
       {/* Connect Button */}
       <SimpleConnectButton
-        variant={isMobile ? "ghost" : "primary"}
-        size={isMobile ? "sm" : "md"}
+        variant={getVariant()}
+        size={getButtonSize()}
         className="transition-all duration-200"
       />
     </motion.div>

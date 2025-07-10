@@ -1,9 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
 import Image from "next/image";
-import { memo, useCallback, useState } from "react";
+import { memo } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
 
@@ -13,12 +12,6 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const toggleMobileMenu = useCallback(() => {
-    setIsMobileMenuOpen(prev => !prev);
-  }, []);
-
   return (
     <>
       {/* Desktop Sidebar */}
@@ -117,87 +110,23 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             </div>
 
             <div className="flex items-center space-x-2">
-              {/* Header Wallet Controls */}
+              {/* Mobile Wallet Indicator - Visible on XS screens */}
+              <div className="sm:hidden">
+                <HeaderWalletControls size="compact" isMobile={true} />
+              </div>
+
+              {/* Compact Wallet Controls - Visible on SM+ screens */}
               <HeaderWalletControls
+                size="compact"
                 isMobile={true}
-                className="hidden sm:flex"
+                className="hidden sm:flex md:hidden"
               />
 
-              <button
-                onClick={toggleMobileMenu}
-                className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 cursor-pointer"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-5 h-5 text-gray-300" />
-                ) : (
-                  <Menu className="w-5 h-5 text-gray-300" />
-                )}
-              </button>
+              {/* Full Wallet Controls - Visible on MD+ screens */}
+              <HeaderWalletControls size="normal" className="hidden md:flex" />
             </div>
           </div>
         </div>
-
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-gray-950/80 backdrop-blur-lg lg:hidden"
-            onClick={toggleMobileMenu}
-          >
-            <motion.div
-              initial={{ x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              className="fixed inset-y-0 left-0 z-50 w-64 glass-morphism border-r border-gray-800 p-6"
-              onClick={e => e.stopPropagation()}
-            >
-              <nav className="mt-16">
-                <ul className="space-y-2">
-                  {NAVIGATION_ITEMS.map(item => {
-                    const Icon = item.icon;
-                    const isActive = activeTab === item.id;
-
-                    return (
-                      <li key={item.id}>
-                        <button
-                          onClick={() => {
-                            onTabChange(item.id);
-                            toggleMobileMenu();
-                          }}
-                          data-testid={`mobile-menu-tab-${item.id}`}
-                          className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
-                            isActive
-                              ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30"
-                              : "text-gray-300 hover:text-white hover:bg-white/5"
-                          }`}
-                        >
-                          <Icon
-                            className={`h-5 w-5 shrink-0 ${
-                              isActive ? "text-purple-400" : "text-gray-400"
-                            }`}
-                          />
-                          <div className="text-left">
-                            <div>{item.label}</div>
-                            <div className="text-xs text-gray-400">
-                              {item.description}
-                            </div>
-                          </div>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </nav>
-
-              {/* Mobile Wallet Controls in slide-out menu */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <HeaderWalletControls isMobile={true} className="w-full" />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
       </div>
 
       {/* Mobile Bottom Navigation */}
