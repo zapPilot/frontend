@@ -4,9 +4,6 @@ import React, { memo } from "react";
 import { motion } from "framer-motion";
 import { ChainSwitcher } from "./ChainSwitcher";
 import { SimpleConnectButton } from "./SimpleConnectButton";
-// Analytics imports ready for future integration:
-// import { useAnalytics } from "@/hooks/useAnalytics";
-// import { useOnboarding } from "@/providers/OnboardingProvider";
 
 type WalletControlsSize = "compact" | "normal" | "full";
 
@@ -21,9 +18,6 @@ const HeaderWalletControlsComponent = ({
   size = "normal",
   isMobile = false,
 }: HeaderWalletControlsProps) => {
-  // Note: Analytics integration ready for when component callbacks are available
-  // const { trackWalletInteraction } = useAnalytics();
-  // const { markStepCompleted } = useOnboarding();
   const getVariant = () => {
     if (size === "compact") return "ghost";
     if (isMobile) return "ghost";

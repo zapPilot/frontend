@@ -5,7 +5,6 @@ import Image from "next/image";
 import { memo, useCallback } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
-import { useAnalytics } from "@/hooks/useAnalytics";
 import { useOnboarding } from "@/providers/OnboardingProvider";
 import {
   WalletConnectHint,
@@ -20,25 +19,17 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { trackNavigation } = useAnalytics();
   const { markStepCompleted } = useOnboarding();
 
   const handleTabChange = useCallback(
     (tab: string) => {
-      const fromTab = activeTab;
-      const isMobile = window.innerWidth < 1024;
-      const method = isMobile ? "bottom-nav" : "sidebar";
-
-      // Track navigation analytics
-      trackNavigation(fromTab, tab, method);
-
       // Mark navigation milestone for onboarding
       markStepCompleted("navigation-used");
 
       // Call the original handler
       onTabChange(tab);
     },
-    [activeTab, onTabChange, trackNavigation, markStepCompleted]
+    [onTabChange, markStepCompleted]
   );
 
   return (
