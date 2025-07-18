@@ -2,20 +2,20 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { MOCK_TOKENS } from "../../constants/swap";
+import { mockInvestmentOpportunities } from "../../data/mockInvestments";
 import { useStrategyPortfolio } from "../../hooks/useStrategyPortfolio";
 import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
-import { MOCK_TOKENS } from "../../constants/swap";
-import { mockInvestmentOpportunities } from "../../data/mockInvestments";
-import { SwapPageHeader } from "./SwapPageHeader";
-import { TabNavigation, TabType } from "./TabNavigation";
-import { SwapTab } from "./SwapTab";
-import { PerformanceTab } from "./PerformanceTab";
+import { PortfolioOverview } from "../PortfolioOverview";
 import { DetailsTab } from "./DetailsTab";
 import { OptimizeTab } from "./OptimizeTab";
-import { TokenSelectorModal } from "./TokenSelectorModal";
+import { PerformanceTab } from "./PerformanceTab";
 import { StrategySelectorModal } from "./StrategySelectorModal";
-import { PortfolioOverview } from "../PortfolioOverview";
+import { SwapPageHeader } from "./SwapPageHeader";
+import { SwapTab } from "./SwapTab";
+import { TabNavigation, TabType } from "./TabNavigation";
+import { TokenSelectorModal } from "./TokenSelectorModal";
 
 interface SwapPageProps {
   strategy: InvestmentOpportunity;

@@ -2,10 +2,10 @@
 
 import { Navigation } from "@/components/Navigation";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
-import { InvestmentOpportunity } from "@/types/investment";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
-import { useState, useCallback } from "react";
+import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
+import { useCallback, useState } from "react";
 
 // Dynamic imports for code splitting
 const InvestTab = dynamic(

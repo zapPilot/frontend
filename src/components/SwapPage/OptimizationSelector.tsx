@@ -1,14 +1,29 @@
 "use client";
 
 import { ArrowRightLeft, Coins } from "lucide-react";
+import { formatBalance } from "../../utils/formatters";
+import {
+  calculateTotalTokenValue,
+  getTokenSymbol,
+} from "../../utils/tokenUtils";
+import { TokenImage } from "../shared/TokenImage";
 import { OptimizationOptions } from "./OptimizeTab";
+
+interface DustToken {
+  id: string;
+  symbol: string;
+  optimized_symbol?: string;
+  amount: number;
+  price: number;
+  logo_url?: string;
+}
 
 interface OptimizationSelectorProps {
   options: OptimizationOptions;
   onChange: (options: OptimizationOptions) => void;
+  dustTokens: DustToken[];
+  loadingTokens: boolean;
   mockData: {
-    dustValue: number;
-    dustTokenCount: number;
     rebalanceActions: number;
     chainCount: number;
   };
@@ -17,6 +32,8 @@ interface OptimizationSelectorProps {
 export function OptimizationSelector({
   options,
   onChange,
+  dustTokens,
+  loadingTokens,
   mockData,
 }: OptimizationSelectorProps) {
   const handleToggle = (
@@ -28,6 +45,13 @@ export function OptimizationSelector({
     });
   };
 
+  // Calculate dust token data
+  const dustValue = calculateTotalTokenValue(dustTokens);
+  const dustTokenCount = dustTokens.length;
+  const displayTokens = dustTokens
+    .slice() // create a shallow copy to avoid mutating the original array
+    .sort((a, b) => b.price * b.amount - a.price * a.amount)
+    .slice(0, 3); // Show top 3 tokens by value
   return (
     <div className="space-y-4">
       <h4 className="font-semibold text-white">Choose Optimizations</h4>
@@ -57,20 +81,50 @@ export function OptimizationSelector({
             <div className="flex-1">
               <div className="font-medium text-white">Convert Dust to ETH</div>
               <div className="text-sm text-gray-400">
-                Convert {mockData.dustTokenCount} small token balances worth $
-                {mockData.dustValue}
+                {loadingTokens ? (
+                  "Loading dust tokens..."
+                ) : dustTokenCount > 0 ? (
+                  <>
+                    Convert {dustTokenCount} small token balances worth{" "}
+                    {formatBalance(dustValue)}
+                  </>
+                ) : (
+                  "No dust tokens found"
+                )}
               </div>
               <div className="text-xs text-blue-400 mt-1">
                 Estimated savings: ~$2.50 in gas fees
               </div>
+
+              {/* Token Previews */}
+              {dustTokenCount > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="text-xs text-gray-400">Tokens:</div>
+                  <div className="flex items-center gap-1">
+                    {displayTokens.map(token => (
+                      <div key={token.id} className="flex items-center gap-1">
+                        <TokenImage token={token} size={16} />
+                        <span className="text-xs text-gray-400">
+                          {getTokenSymbol(token)}
+                        </span>
+                      </div>
+                    ))}
+                    {dustTokenCount > 3 && (
+                      <span className="text-xs text-gray-400">
+                        +{dustTokenCount - 3} more
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="text-right">
               <div className="text-lg font-bold text-blue-500">
-                ${mockData.dustValue}
+                {loadingTokens ? "..." : formatBalance(dustValue)}
               </div>
               <div className="text-xs text-gray-400">
-                {mockData.dustTokenCount} tokens
+                {dustTokenCount} tokens
               </div>
             </div>
           </div>
