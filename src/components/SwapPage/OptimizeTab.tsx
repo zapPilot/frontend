@@ -26,6 +26,7 @@ interface DustToken {
   price: number;
   decimals: number;
   logo_url?: string;
+  raw_amount_hex_str?: string;
 }
 
 interface TokenGridProps {
@@ -63,14 +64,14 @@ const TokenGrid = ({
             {deletedTokenIds.size > 0 && (
               <button
                 onClick={onRestoreDeletedTokens}
-                className="text-sm text-green-400 hover:text-green-300 transition-colors"
+                className="text-sm text-green-400 hover:text-green-300 transition-colors cursor-pointer"
               >
                 Restore {deletedTokenIds.size} Deleted
               </button>
             )}
             <button
               onClick={onToggleDetails}
-              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors cursor-pointer"
             >
               {showDetails
                 ? "Show Less"
@@ -92,7 +93,7 @@ const TokenGrid = ({
               >
                 <button
                   onClick={() => onDeleteToken(token.id)}
-                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors duration-200"
+                  className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold transition-colors duration-200 cursor-pointer"
                   title="Remove this token from conversion"
                 >
                   ×
@@ -169,9 +170,9 @@ export function OptimizeTab() {
   const [isOptimizing, setIsOptimizing] = useState(false);
 
   // State for dust tokens
-  const [dustTokens, setDustTokens] = useState([]);
+  const [dustTokens, setDustTokens] = useState<DustToken[]>([]);
   const [loadingTokens, setLoadingTokens] = useState(false);
-  const [tokensError, setTokensError] = useState(null);
+  const [tokensError, setTokensError] = useState<string | null>(null);
 
   // State for TokenGrid functionality
   const [showDetails, setShowDetails] = useState(false);
@@ -224,33 +225,43 @@ export function OptimizeTab() {
   );
 
   // Function to fetch dust tokens
-  const fetchDustTokens = useCallback(async (chainName, accountAddress) => {
-    if (!chainName || !accountAddress) return;
+  const fetchDustTokens = useCallback(
+    async (chainName: string, accountAddress: string) => {
+      if (!chainName || !accountAddress) return;
 
-    setLoadingTokens(true);
-    setTokensError(null);
+      setLoadingTokens(true);
+      setTokensError(null);
 
-    try {
-      const debankChainName = transformToDebankChainName(
-        chainName.toLowerCase()
-      );
-      const tokens = await getTokens(debankChainName, accountAddress);
-      setDustTokens(tokens);
-    } catch (error) {
-      console.error("Error fetching dust tokens:", error);
-      setTokensError(error.message);
-      setDustTokens([]);
-    } finally {
-      setLoadingTokens(false);
-    }
-  }, []);
+      try {
+        const debankChainName = transformToDebankChainName(
+          chainName.toLowerCase()
+        );
+        const tokens = await getTokens(debankChainName, accountAddress);
+        setDustTokens(tokens);
+      } catch (error) {
+        console.error("Error fetching dust tokens:", error);
+        setTokensError(
+          error instanceof Error ? error.message : "Unknown error"
+        );
+        setDustTokens([]);
+      } finally {
+        setLoadingTokens(false);
+      }
+    },
+    []
+  );
 
   // Function to create DustZap intent
   const createDustZapIntent = useCallback(
-    async (userAddress, chainId, dustTokens, slippage) => {
+    async (
+      userAddress: string,
+      chainId: number,
+      dustTokens: DustToken[],
+      slippage: number
+    ) => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_INTENT_ENGINE_URL}/api/v1/intents/dustZap`,
+          `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
           {
             method: "POST",
             headers: {
@@ -419,6 +430,22 @@ export function OptimizeTab() {
     fetchDustTokens,
   ]);
 
+  // Effect to refresh data when wallet address or chain changes
+  useEffect(() => {
+    if (userAddress && chainName && optimizationOptions.convertDust) {
+      // Clear existing data and fetch new data for the new wallet/chain
+      setDustTokens([]);
+      setDeletedTokenIds(new Set());
+      setTokensError(null);
+      fetchDustTokens(chainName, userAddress);
+    }
+  }, [
+    userAddress,
+    chainName,
+    optimizationOptions.convertDust,
+    fetchDustTokens,
+  ]);
+
   // Effect to handle stream completion
   useEffect(() => {
     if (isComplete) {
@@ -494,7 +521,7 @@ export function OptimizeTab() {
 
             {events.length > 0 && (
               <div className="max-h-32 overflow-y-auto space-y-1">
-                {events.slice(-5).map((event, index) => (
+                {events.slice(-5).map((event: any, index: number) => (
                   <div key={index} className="text-xs text-gray-400">
                     {event.type}: {event.message || JSON.stringify(event)}
                   </div>
