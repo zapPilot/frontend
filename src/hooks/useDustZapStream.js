@@ -55,22 +55,23 @@ export const useDustZapStream = () => {
                 setTotalTokens(data.totalTokens || 0);
                 break;
 
-              case "token_processing":
-                setProcessedTokens(data.processedCount || 0);
+              case "token_ready":
+                setProcessedTokens(data.processedTokens || 0);
                 break;
 
-              case "batch_complete":
-                setBatchesCompleted(data.batchNumber || 0);
+              case "token_failed":
+                setProcessedTokens(data.processedTokens || 0);
+                // Could also show failed token info if needed
                 break;
 
-              case "completion":
+              case "complete":
                 setIsComplete(true);
                 setIsStreaming(false);
                 // Don't close connection immediately, let cleanup handle it
                 break;
 
               case "error":
-                setError(data.message || "Unknown streaming error");
+                setError(data.error || "Unknown streaming error");
                 setIsStreaming(false);
                 break;
 

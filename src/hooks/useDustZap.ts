@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
 
 // Types from the original dustZap implementation
@@ -153,6 +153,7 @@ export function useDustZap(
         const dustTokens = await fetchDustTokens(chainName);
         setTokens(dustTokens);
       } catch (err) {
+        console.log("err", err);
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load tokens";
         setError(errorMessage);
