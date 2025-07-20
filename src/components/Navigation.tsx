@@ -2,10 +2,11 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
 import { useOnboarding } from "@/providers/OnboardingProvider";
+import { useFeatureFlag } from "@/providers/FeatureFlagProvider";
 import {
   WalletConnectHint,
   ChainSwitchHint,
@@ -20,6 +21,23 @@ interface NavigationProps {
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
   const { markStepCompleted } = useOnboarding();
+
+  // Feature flag demonstrations
+  const showAdvancedFeatures = useFeatureFlag("ADVANCED_STRATEGIES");
+
+  // Filter navigation items based on feature flags
+  const visibleNavItems = useMemo(() => {
+    return NAVIGATION_ITEMS.filter(item => {
+      // Hide advanced features if flag is disabled
+      if (
+        (item.id === "analytics" || item.id === "community") &&
+        !showAdvancedFeatures
+      ) {
+        return false;
+      }
+      return true;
+    });
+  }, [showAdvancedFeatures]);
 
   const handleTabChange = useCallback(
     (tab: string) => {
@@ -57,7 +75,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
             <ul role="list" className="flex flex-1 flex-col gap-y-7">
               <li>
                 <ul role="list" className="-mx-2 space-y-1">
-                  {NAVIGATION_ITEMS.map(item => {
+                  {visibleNavItems.map(item => {
                     const Icon = item.icon;
                     const isActive = activeTab === item.id;
 
@@ -152,7 +170,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800">
         <div className="flex items-center justify-around px-4 py-2">
-          {NAVIGATION_ITEMS.map(item => {
+          {visibleNavItems.map(item => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
 
