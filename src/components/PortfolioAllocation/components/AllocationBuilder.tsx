@@ -4,12 +4,14 @@ import { motion } from "framer-motion";
 import { ChevronDown, Trash2, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import { useExcludedCategories } from "../ExcludedCategoriesContext";
-import { ProcessedAssetCategory, RebalanceMode } from "../types";
+import { ProcessedAssetCategory, RebalanceMode, OperationMode } from "../types";
 
 interface AllocationBuilderProps {
   processedCategories: ProcessedAssetCategory[];
   rebalanceMode?: RebalanceMode;
-  onZapAction?: (includedCategories: ProcessedAssetCategory[]) => void;
+  onZapAction?: () => void;
+  swapControls?: React.ReactNode;
+  operationMode?: OperationMode;
 }
 
 interface CategoryBarProps {
@@ -344,6 +346,8 @@ export const AllocationBuilder: React.FC<AllocationBuilderProps> = ({
   processedCategories,
   rebalanceMode,
   onZapAction,
+  swapControls,
+  operationMode = "zapIn",
 }) => {
   const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
   const excludedCategories = processedCategories.filter(cat => cat.isExcluded);
@@ -421,19 +425,30 @@ export const AllocationBuilder: React.FC<AllocationBuilderProps> = ({
         </div>
       </div>
 
+      {/* Swap Controls */}
+      {swapControls && <div className="pt-4">{swapControls}</div>}
+
       {/* Action Button */}
       <div className="pt-4">
         <button
-          onClick={() => onZapAction?.(includedCategories)}
+          onClick={() => onZapAction?.()}
           disabled={includedCategories.length === 0}
           className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:from-purple-500 hover:to-blue-500"
           data-testid="zap-action-button"
         >
-          {rebalanceMode?.isEnabled
-            ? `Execute Rebalance Plan (${rebalanceMode.data?.shifts.filter(s => s.action !== "maintain").length || 0} changes)`
-            : includedCategories.length === 0
-              ? "Restore categories to Zap"
-              : `Build Zap with ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`}
+          {operationMode === "rebalance"
+            ? `Execute Rebalance Plan (${rebalanceMode?.data?.shifts.filter(s => s.action !== "maintain").length || 0} changes)`
+            : operationMode === "zapIn"
+              ? includedCategories.length === 0
+                ? "Restore categories to Zap In"
+                : `Build Zap In with ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`
+              : operationMode === "zapOut"
+                ? includedCategories.length === 0
+                  ? "Restore categories to Zap Out"
+                  : `Build Zap Out from ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`
+                : includedCategories.length === 0
+                  ? "Restore categories"
+                  : `Build with ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`}
         </button>
       </div>
     </motion.div>

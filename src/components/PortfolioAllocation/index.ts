@@ -14,4 +14,10 @@ export type {
   CategoryShift,
   RebalanceData,
   RebalanceMode,
+  OperationMode,
+  SwapSettings,
+  OperationConfig,
+  SlippagePreset,
+  SwapValidation,
+  PortfolioSwapAction,
 } from "./types";

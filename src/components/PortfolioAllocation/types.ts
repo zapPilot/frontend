@@ -1,5 +1,7 @@
 // src/components/PortfolioAllocation/types.ts
 
+import { SwapToken } from "../../types/swap";
+
 export interface Protocol {
   id: string;
   name: string;
@@ -73,8 +75,46 @@ export interface RebalanceMode {
   data?: RebalanceData;
 }
 
+// Operation mode types for enhanced swap functionality
+export type OperationMode = "zapIn" | "zapOut" | "rebalance";
+
+export interface SwapSettings {
+  fromToken?: SwapToken; // For zapIn operations
+  toToken?: SwapToken; // For zapOut operations
+  amount: string;
+  slippageTolerance: number; // Percentage (0.1 = 0.1%)
+  priceImpact?: number; // Calculated price impact
+  minimumReceived?: string; // Minimum tokens received after slippage
+}
+
+export interface OperationConfig {
+  mode: OperationMode;
+  swapSettings: SwapSettings;
+  isEnabled: boolean;
+}
+
+export interface SlippagePreset {
+  label: string;
+  value: number; // Percentage
+  isDefault?: boolean;
+}
+
+export interface SwapValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface PortfolioSwapAction {
+  operationMode: OperationMode;
+  includedCategories: ProcessedAssetCategory[];
+  swapSettings: SwapSettings;
+  rebalanceData?: RebalanceData;
+}
+
 export interface PortfolioAllocationContainerProps {
   variationType?: PortfolioVariationType;
   assetCategories: AssetCategory[];
-  onZapAction?: (includedCategories: ProcessedAssetCategory[]) => void;
+  operationMode?: OperationMode;
+  onZapAction?: (action: PortfolioSwapAction) => void;
 }

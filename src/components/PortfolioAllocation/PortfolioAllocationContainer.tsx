@@ -9,6 +9,7 @@ import {
   EnhancedOverview,
   AllocationBuilder,
   DashboardCards,
+  SwapControls,
 } from "./components";
 import {
   AssetCategory,
@@ -17,6 +18,9 @@ import {
   PortfolioAllocationContainerProps,
   RebalanceData,
   CategoryShift,
+  OperationMode,
+  SwapSettings,
+  PortfolioSwapAction,
 } from "./types";
 
 // Generate mock target allocation data for rebalancing demo
@@ -190,10 +194,22 @@ const processAssetCategories = (
 const PortfolioAllocationContent: React.FC<{
   assetCategories: AssetCategory[];
   variationType: string;
-  onZapAction?: (includedCategories: ProcessedAssetCategory[]) => void;
-}> = ({ assetCategories, variationType, onZapAction }) => {
+  operationMode?: OperationMode;
+  onZapAction?: (action: PortfolioSwapAction) => void;
+}> = ({
+  assetCategories,
+  variationType,
+  operationMode = "zapIn",
+  onZapAction,
+}) => {
   const { excludedCategoryIds } = useExcludedCategories();
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
+  const [currentOperationMode, setCurrentOperationMode] =
+    useState<OperationMode>(operationMode);
+  const [swapSettings, setSwapSettings] = useState<SwapSettings>({
+    amount: "",
+    slippageTolerance: 0.5, // Default 0.5%
+  });
 
   const { processedCategories, chartData } = useMemo(() => {
     return processAssetCategories(assetCategories, excludedCategoryIds);
@@ -203,6 +219,22 @@ const PortfolioAllocationContent: React.FC<{
     if (!isRebalanceMode) return undefined;
     return generateRebalanceData(processedCategories);
   }, [isRebalanceMode, processedCategories]);
+
+  // Enhanced zap action handler
+  const handleEnhancedZapAction = () => {
+    const includedCategories = processedCategories.filter(
+      cat => !cat.isExcluded
+    );
+
+    const portfolioSwapAction: PortfolioSwapAction = {
+      operationMode: currentOperationMode,
+      includedCategories,
+      swapSettings,
+      rebalanceData: isRebalanceMode ? rebalanceData : undefined,
+    };
+
+    onZapAction?.(portfolioSwapAction);
+  };
 
   // Remove unused variable warning - includedCategories not needed here
   // const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
@@ -214,6 +246,18 @@ const PortfolioAllocationContent: React.FC<{
       data: rebalanceData,
     };
 
+    const includedCategories = processedCategories.filter(
+      cat => !cat.isExcluded
+    );
+
+    // Common SwapControls props
+    const swapControlsProps = {
+      operationMode: currentOperationMode,
+      swapSettings,
+      onSwapSettingsChange: setSwapSettings,
+      includedCategories,
+    };
+
     switch (variationType) {
       case "enhancedOverview":
         return (
@@ -221,7 +265,9 @@ const PortfolioAllocationContent: React.FC<{
             processedCategories={processedCategories}
             chartData={chartData}
             rebalanceMode={rebalanceMode}
-            onZapAction={onZapAction}
+            onZapAction={handleEnhancedZapAction}
+            swapControls={<SwapControls {...swapControlsProps} />}
+            operationMode={currentOperationMode}
           />
         );
       case "allocationBuilder":
@@ -229,7 +275,9 @@ const PortfolioAllocationContent: React.FC<{
           <AllocationBuilder
             processedCategories={processedCategories}
             rebalanceMode={rebalanceMode}
-            onZapAction={onZapAction}
+            onZapAction={handleEnhancedZapAction}
+            swapControls={<SwapControls {...swapControlsProps} />}
+            operationMode={currentOperationMode}
           />
         );
       case "dashboardCards":
@@ -237,7 +285,9 @@ const PortfolioAllocationContent: React.FC<{
           <DashboardCards
             processedCategories={processedCategories}
             rebalanceMode={rebalanceMode}
-            onZapAction={onZapAction}
+            onZapAction={handleEnhancedZapAction}
+            swapControls={<SwapControls {...swapControlsProps} />}
+            operationMode={currentOperationMode}
           />
         );
       default:
@@ -246,7 +296,9 @@ const PortfolioAllocationContent: React.FC<{
             processedCategories={processedCategories}
             chartData={chartData}
             rebalanceMode={rebalanceMode}
-            onZapAction={onZapAction}
+            onZapAction={handleEnhancedZapAction}
+            swapControls={<SwapControls {...swapControlsProps} />}
+            operationMode={currentOperationMode}
           />
         );
     }
@@ -254,49 +306,105 @@ const PortfolioAllocationContent: React.FC<{
 
   return (
     <div data-testid="portfolio-allocation-container" className="space-y-4">
-      {/* Rebalance Mode Toggle */}
+      {/* Operation Mode Selector */}
       <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
-        <div className="flex items-center justify-between">
+        <div className="space-y-4">
+          {/* Operation Mode Selection */}
           <div>
-            <h4 className="text-sm font-medium text-white">Rebalance Mode</h4>
-            <p className="text-xs text-gray-400 mt-1">
-              Compare current vs. target allocations
-            </p>
+            <h4 className="text-sm font-medium text-white mb-3">
+              Operation Mode
+            </h4>
+            <div className="grid grid-cols-3 gap-2">
+              {(
+                [
+                  {
+                    mode: "zapIn" as OperationMode,
+                    label: "Zap In",
+                    desc: "Token → Portfolio",
+                  },
+                  {
+                    mode: "zapOut" as OperationMode,
+                    label: "Zap Out",
+                    desc: "Portfolio → Token",
+                  },
+                  {
+                    mode: "rebalance" as OperationMode,
+                    label: "Rebalance",
+                    desc: "Optimize Portfolio",
+                  },
+                ] as const
+              ).map(({ mode, label, desc }) => (
+                <button
+                  key={mode}
+                  onClick={() => setCurrentOperationMode(mode)}
+                  className={`p-3 rounded-lg text-left transition-all ${
+                    currentOperationMode === mode
+                      ? "bg-purple-500 text-white"
+                      : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                  }`}
+                >
+                  <div className="font-medium text-sm">{label}</div>
+                  <div className="text-xs opacity-75">{desc}</div>
+                </button>
+              ))}
+            </div>
           </div>
-          <button
-            onClick={() => setIsRebalanceMode(!isRebalanceMode)}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              isRebalanceMode ? "bg-purple-500" : "bg-gray-600"
-            }`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                isRebalanceMode ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
 
-        {isRebalanceMode && rebalanceData && (
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-400">Total Rebalance Value:</span>
-              <span className="text-white font-medium">
-                ${rebalanceData.totalRebalanceValue.toLocaleString()}
-              </span>
+          {/* Rebalance Mode Toggle (only for rebalance operation) */}
+          {currentOperationMode === "rebalance" && (
+            <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+              <div>
+                <h5 className="text-sm font-medium text-white">
+                  Show Rebalance Preview
+                </h5>
+                <p className="text-xs text-gray-400 mt-1">
+                  Compare current vs. target allocations
+                </p>
+              </div>
+              <button
+                onClick={() => setIsRebalanceMode(!isRebalanceMode)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  isRebalanceMode ? "bg-purple-500" : "bg-gray-600"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    isRebalanceMode ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-gray-400">Active Changes:</span>
-              <span className="text-white font-medium">
-                {
-                  rebalanceData.shifts.filter(s => s.action !== "maintain")
-                    .length
-                }{" "}
-                categories
-              </span>
-            </div>
-          </div>
-        )}
+          )}
+
+          {/* Rebalance Summary */}
+          {currentOperationMode === "rebalance" &&
+            isRebalanceMode &&
+            rebalanceData && (
+              <div className="pt-3 border-t border-gray-700">
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">
+                      Total Rebalance Value:
+                    </span>
+                    <span className="text-white font-medium">
+                      ${rebalanceData.totalRebalanceValue.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Active Changes:</span>
+                    <span className="text-white font-medium">
+                      {
+                        rebalanceData.shifts.filter(
+                          s => s.action !== "maintain"
+                        ).length
+                      }{" "}
+                      categories
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+        </div>
       </div>
 
       {renderVariation()}
@@ -307,12 +415,18 @@ const PortfolioAllocationContent: React.FC<{
 // Main container component with provider
 export const PortfolioAllocationContainer: React.FC<
   PortfolioAllocationContainerProps
-> = ({ variationType = "enhancedOverview", assetCategories, onZapAction }) => {
+> = ({
+  variationType = "enhancedOverview",
+  assetCategories,
+  operationMode = "zapIn",
+  onZapAction,
+}) => {
   return (
     <ExcludedCategoriesProvider>
       <PortfolioAllocationContent
         assetCategories={assetCategories}
         variationType={variationType}
+        operationMode={operationMode}
         onZapAction={onZapAction}
       />
     </ExcludedCategoriesProvider>
