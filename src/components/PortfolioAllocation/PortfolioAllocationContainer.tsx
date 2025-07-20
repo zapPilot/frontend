@@ -5,22 +5,17 @@ import {
   ExcludedCategoriesProvider,
   useExcludedCategories,
 } from "./ExcludedCategoriesContext";
-import {
-  EnhancedOverview,
-  AllocationBuilder,
-  DashboardCards,
-  SwapControls,
-} from "./components";
+import { EnhancedOverview, SwapControls } from "./components";
 import {
   AssetCategory,
-  ProcessedAssetCategory,
-  ChartDataPoint,
-  PortfolioAllocationContainerProps,
-  RebalanceData,
   CategoryShift,
+  ChartDataPoint,
   OperationMode,
-  SwapSettings,
+  PortfolioAllocationContainerProps,
   PortfolioSwapAction,
+  ProcessedAssetCategory,
+  RebalanceData,
+  SwapSettings,
 } from "./types";
 
 // Generate mock target allocation data for rebalancing demo
@@ -193,15 +188,9 @@ const processAssetCategories = (
 // Inner component that consumes the context
 const PortfolioAllocationContent: React.FC<{
   assetCategories: AssetCategory[];
-  variationType: string;
   operationMode?: OperationMode;
   onZapAction?: (action: PortfolioSwapAction) => void;
-}> = ({
-  assetCategories,
-  variationType,
-  operationMode = "zapIn",
-  onZapAction,
-}) => {
+}> = ({ assetCategories, operationMode = "zapIn", onZapAction }) => {
   const { excludedCategoryIds } = useExcludedCategories();
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
   const [currentOperationMode, setCurrentOperationMode] =
@@ -257,51 +246,16 @@ const PortfolioAllocationContent: React.FC<{
       onSwapSettingsChange: setSwapSettings,
       includedCategories,
     };
-
-    switch (variationType) {
-      case "enhancedOverview":
-        return (
-          <EnhancedOverview
-            processedCategories={processedCategories}
-            chartData={chartData}
-            rebalanceMode={rebalanceMode}
-            onZapAction={handleEnhancedZapAction}
-            swapControls={<SwapControls {...swapControlsProps} />}
-            operationMode={currentOperationMode}
-          />
-        );
-      case "allocationBuilder":
-        return (
-          <AllocationBuilder
-            processedCategories={processedCategories}
-            rebalanceMode={rebalanceMode}
-            onZapAction={handleEnhancedZapAction}
-            swapControls={<SwapControls {...swapControlsProps} />}
-            operationMode={currentOperationMode}
-          />
-        );
-      case "dashboardCards":
-        return (
-          <DashboardCards
-            processedCategories={processedCategories}
-            rebalanceMode={rebalanceMode}
-            onZapAction={handleEnhancedZapAction}
-            swapControls={<SwapControls {...swapControlsProps} />}
-            operationMode={currentOperationMode}
-          />
-        );
-      default:
-        return (
-          <EnhancedOverview
-            processedCategories={processedCategories}
-            chartData={chartData}
-            rebalanceMode={rebalanceMode}
-            onZapAction={handleEnhancedZapAction}
-            swapControls={<SwapControls {...swapControlsProps} />}
-            operationMode={currentOperationMode}
-          />
-        );
-    }
+    return (
+      <EnhancedOverview
+        processedCategories={processedCategories}
+        chartData={chartData}
+        rebalanceMode={rebalanceMode}
+        onZapAction={handleEnhancedZapAction}
+        swapControls={<SwapControls {...swapControlsProps} />}
+        operationMode={currentOperationMode}
+      />
+    );
   };
 
   return (
@@ -415,17 +369,11 @@ const PortfolioAllocationContent: React.FC<{
 // Main container component with provider
 export const PortfolioAllocationContainer: React.FC<
   PortfolioAllocationContainerProps
-> = ({
-  variationType = "enhancedOverview",
-  assetCategories,
-  operationMode = "zapIn",
-  onZapAction,
-}) => {
+> = ({ assetCategories, operationMode = "zapIn", onZapAction }) => {
   return (
     <ExcludedCategoriesProvider>
       <PortfolioAllocationContent
         assetCategories={assetCategories}
-        variationType={variationType}
         operationMode={operationMode}
         onZapAction={onZapAction}
       />

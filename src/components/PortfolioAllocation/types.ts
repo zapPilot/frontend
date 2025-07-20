@@ -46,10 +46,7 @@ export interface ExcludedCategoriesContextType {
 }
 
 // UI Variation types
-export type PortfolioVariationType =
-  | "enhancedOverview"
-  | "allocationBuilder"
-  | "dashboardCards";
+export type PortfolioVariationType = "enhancedOverview";
 
 // Rebalance mode interfaces
 export interface CategoryShift {

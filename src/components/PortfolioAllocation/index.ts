@@ -1,23 +1,23 @@
-export { PortfolioAllocationContainer } from "./PortfolioAllocationContainer";
 export {
   ExcludedCategoriesProvider,
   useExcludedCategories,
 } from "./ExcludedCategoriesContext";
+export { PortfolioAllocationContainer } from "./PortfolioAllocationContainer";
 export type {
-  Protocol,
   AssetCategory,
-  ProcessedAssetCategory,
+  CategoryShift,
   ChartDataPoint,
   ExcludedCategoriesContextType,
-  PortfolioVariationType,
+  OperationConfig,
+  OperationMode,
   PortfolioAllocationContainerProps,
-  CategoryShift,
+  PortfolioSwapAction,
+  PortfolioVariationType,
+  ProcessedAssetCategory,
+  Protocol,
   RebalanceData,
   RebalanceMode,
-  OperationMode,
-  SwapSettings,
-  OperationConfig,
   SlippagePreset,
+  SwapSettings,
   SwapValidation,
-  PortfolioSwapAction,
 } from "./types";

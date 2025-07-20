@@ -11,14 +11,12 @@ import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
   AssetCategory,
   ProcessedAssetCategory,
-  PortfolioVariationType,
 } from "../PortfolioAllocation/types";
 import { DetailsTab } from "./DetailsTab";
 import { OptimizeTab } from "./OptimizeTab";
 import { PerformanceTab } from "./PerformanceTab";
 import { StrategySelectorModal } from "./StrategySelectorModal";
 import { SwapPageHeader } from "./SwapPageHeader";
-import { SwapTab } from "./SwapTab";
 import { TabNavigation, TabType } from "./TabNavigation";
 import { TokenSelectorModal } from "./TokenSelectorModal";
 
@@ -126,14 +124,12 @@ interface SwapPageProps {
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
-  const [fromAmount, setFromAmount] = useState("");
+  console.log("fromToken", fromToken);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [showStrategySelector, setShowStrategySelector] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>(
-    strategy.id === "optimize-portfolio" ? "optimize" : "swap"
+    strategy.id === "optimize-portfolio" ? "optimize" : "allocation"
   );
-  const [portfolioVariation, setPortfolioVariation] =
-    useState<PortfolioVariationType>("enhancedOverview");
 
   const { portfolioData, expandedCategory, toggleCategoryExpansion } =
     useStrategyPortfolio(strategy.id);
@@ -175,58 +171,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "swap":
-        return (
-          <SwapTab
-            strategy={strategy}
-            fromToken={fromToken}
-            fromAmount={fromAmount}
-            onFromAmountChange={setFromAmount}
-            onTokenSelectorOpen={() => setShowTokenSelector(true)}
-            onStrategySelectorOpen={() => setShowStrategySelector(true)}
-          />
-        );
       case "allocation":
         return (
           <div className="space-y-6">
-            {/* Variation Switcher */}
-            <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">
-                UI Variation
-              </h4>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  {
-                    value: "enhancedOverview" as const,
-                    label: "Enhanced Overview",
-                  },
-                  {
-                    value: "allocationBuilder" as const,
-                    label: "Allocation Builder",
-                  },
-                  {
-                    value: "dashboardCards" as const,
-                    label: "Dashboard Cards",
-                  },
-                ].map(option => (
-                  <button
-                    key={option.value}
-                    onClick={() => setPortfolioVariation(option.value)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      portfolioVariation === option.value
-                        ? "bg-purple-500 text-white"
-                        : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Portfolio Allocation Component */}
             <PortfolioAllocationContainer
-              variationType={portfolioVariation}
               assetCategories={MOCK_ASSET_CATEGORIES}
               onZapAction={handleZapAction}
             />

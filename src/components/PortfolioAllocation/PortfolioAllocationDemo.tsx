@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { PortfolioAllocationContainer } from "./PortfolioAllocationContainer";
 import {
   AssetCategory,
@@ -115,16 +115,6 @@ const VARIATION_OPTIONS: {
     value: "enhancedOverview",
     label: "Enhanced Overview",
     description: "Interactive pie chart with collapsible protocol details",
-  },
-  {
-    value: "allocationBuilder",
-    label: "Allocation Builder",
-    description: "Horizontal bars with drag-to-exclude functionality",
-  },
-  {
-    value: "dashboardCards",
-    label: "Dashboard Cards",
-    description: "Card-based layout with inline protocol visualization",
   },
 ];
 

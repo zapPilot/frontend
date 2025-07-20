@@ -6,7 +6,6 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
   Settings,
-  Zap,
 } from "lucide-react";
 
 export type TabType =
@@ -22,7 +21,6 @@ interface TabNavigationProps {
 }
 
 const tabs = [
-  { id: "swap" as TabType, label: "Swap", icon: Zap },
   { id: "allocation" as TabType, label: "Allocation", icon: PieChartIcon },
   { id: "performance" as TabType, label: "Performance", icon: BarChart3 },
   { id: "details" as TabType, label: "Details", icon: Activity },
