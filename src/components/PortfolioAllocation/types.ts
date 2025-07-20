@@ -49,6 +49,30 @@ export type PortfolioVariationType =
   | "allocationBuilder"
   | "dashboardCards";
 
+// Rebalance mode interfaces
+export interface CategoryShift {
+  categoryId: string;
+  categoryName: string;
+  currentPercentage: number;
+  targetPercentage: number;
+  changeAmount: number; // +/- percentage points
+  changePercentage: number; // percentage of change relative to current
+  action: "increase" | "decrease" | "maintain";
+  actionDescription: string; // "Buy more", "Sell", "Maintain"
+}
+
+export interface RebalanceData {
+  current: ProcessedAssetCategory[];
+  target: ProcessedAssetCategory[];
+  shifts: CategoryShift[];
+  totalRebalanceValue: number; // Total dollar amount being rebalanced
+}
+
+export interface RebalanceMode {
+  isEnabled: boolean;
+  data?: RebalanceData;
+}
+
 export interface PortfolioAllocationContainerProps {
   variationType?: PortfolioVariationType;
   assetCategories: AssetCategory[];

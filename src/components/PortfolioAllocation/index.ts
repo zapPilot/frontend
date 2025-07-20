@@ -11,4 +11,7 @@ export type {
   ExcludedCategoriesContextType,
   PortfolioVariationType,
   PortfolioAllocationContainerProps,
+  CategoryShift,
+  RebalanceData,
+  RebalanceMode,
 } from "./types";
