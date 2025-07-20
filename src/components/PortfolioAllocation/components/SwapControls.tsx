@@ -291,7 +291,9 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
       <div className="grid grid-cols-1 gap-4">
         {modeConfig.showFromToken && (
           <TokenSelector
-            selectedToken={swapSettings.fromToken}
+            {...(swapSettings.fromToken
+              ? { selectedToken: swapSettings.fromToken }
+              : {})}
             onTokenSelect={token => handleTokenChange("fromToken", token)}
             label={modeConfig.fromLabel!}
             placeholder={modeConfig.fromPlaceholder!}
@@ -300,7 +302,9 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
 
         {modeConfig.showToToken && (
           <TokenSelector
-            selectedToken={swapSettings.toToken}
+            {...(swapSettings.toToken
+              ? { selectedToken: swapSettings.toToken }
+              : {})}
             onTokenSelect={token => handleTokenChange("toToken", token)}
             label={modeConfig.toLabel!}
             placeholder={modeConfig.toPlaceholder!}

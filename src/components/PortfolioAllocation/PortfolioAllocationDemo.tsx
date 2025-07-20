@@ -5,8 +5,8 @@ import { useState } from "react";
 import { PortfolioAllocationContainer } from "./PortfolioAllocationContainer";
 import {
   AssetCategory,
+  PortfolioSwapAction,
   PortfolioVariationType,
-  ProcessedAssetCategory,
 } from "./types";
 
 // Mock data for demonstration
@@ -122,11 +122,11 @@ export const PortfolioAllocationDemo: React.FC = () => {
   const [selectedVariation, setSelectedVariation] =
     useState<PortfolioVariationType>("enhancedOverview");
 
-  const handleZapAction = (includedCategories: ProcessedAssetCategory[]) => {
+  const handleZapAction = (action: PortfolioSwapAction) => {
     // eslint-disable-next-line no-console
-    console.log("Zap action triggered with categories:", includedCategories);
+    console.log("Zap action triggered:", action);
     alert(
-      `Zap action triggered with ${includedCategories.length} categories: ${includedCategories.map(cat => cat.name).join(", ")}`
+      `Zap action triggered with ${action.includedCategories.length} categories: ${action.includedCategories.map(cat => cat.name).join(", ")}`
     );
   };
 
@@ -192,6 +192,8 @@ export const PortfolioAllocationDemo: React.FC = () => {
         <PortfolioAllocationContainer
           variationType={selectedVariation}
           assetCategories={MOCK_ASSET_CATEGORIES}
+          operationMode="zapIn"
+          isRebalanceMode={false}
           onZapAction={handleZapAction}
         />
       </motion.div>

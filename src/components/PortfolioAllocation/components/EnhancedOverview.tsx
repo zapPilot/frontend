@@ -417,7 +417,7 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
                 <AssetCategoryRow
                   key={category.id}
                   category={category}
-                  rebalanceMode={rebalanceMode}
+                  {...(rebalanceMode ? { rebalanceMode } : {})}
                 />
               ))}
             </div>

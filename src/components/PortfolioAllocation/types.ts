@@ -113,5 +113,6 @@ export interface PortfolioAllocationContainerProps {
   variationType?: PortfolioVariationType;
   assetCategories: AssetCategory[];
   operationMode?: OperationMode;
+  isRebalanceMode?: boolean;
   onZapAction?: (action: PortfolioSwapAction) => void;
 }
