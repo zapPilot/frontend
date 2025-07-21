@@ -7,10 +7,10 @@ import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
+import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
-import { TokenImage } from "../shared/TokenImage";
 
 export interface OptimizationOptions {
   convertDust: boolean;
@@ -256,10 +256,11 @@ export function OptimizeTab() {
     async (
       userAddress: string,
       chainId: number,
-      dustTokens: DustToken[],
+      filteredDustTokens: DustToken[],
       slippage: number
     ) => {
       try {
+        console.log("filteredDustTokens", filteredDustTokens);
         const response = await fetch(
           `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
           {
@@ -272,7 +273,7 @@ export function OptimizeTab() {
               chainId,
               params: {
                 slippage,
-                dustTokens: dustTokens.map(token => ({
+                dustTokens: filteredDustTokens.map(token => ({
                   address: token.id,
                   symbol: token.optimized_symbol || token.symbol,
                   amount: token.amount,
@@ -298,7 +299,7 @@ export function OptimizeTab() {
         throw error;
       }
     },
-    []
+    [filteredDustTokens]
   );
 
   // TokenGrid handler functions
