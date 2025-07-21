@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Bell, FileText, HelpCircle, Settings, Shield } from "lucide-react";
 import { MenuSection, VersionInfo } from "./SettingsTab/index";
-import { FeatureFlagDemo } from "./FeatureFlag/FeatureFlagDemo";
 
 export function SettingsTab() {
   const menuSections = [
@@ -82,9 +81,6 @@ export function SettingsTab() {
           sectionIndex={sectionIndex}
         />
       ))}
-
-      {/* Feature Flag Demo (Development Only) */}
-      <FeatureFlagDemo />
 
       {/* Version Info */}
       <VersionInfo />
