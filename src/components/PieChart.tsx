@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
 import { PieChartData } from "../types/portfolio";
-import { PORTFOLIO_CONFIG } from "../constants/app";
+import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 
 interface PieChartProps {
   data: PieChartData[];

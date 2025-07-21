@@ -2,8 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
-import { AssetCategory } from "../types/portfolio";
 import { formatCurrency, formatNumber } from "../lib/utils";
+import { AssetCategory } from "../types/portfolio";
 
 interface AssetCategoriesDetailProps {
   portfolioData: AssetCategory[];

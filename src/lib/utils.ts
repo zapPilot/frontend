@@ -1,4 +1,4 @@
-import { PORTFOLIO_CONFIG } from "../constants/app";
+import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 
 /**
  * Format currency values

@@ -17,7 +17,6 @@ import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
-import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
@@ -41,7 +40,6 @@ export function WalletPortfolio({
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-    handleLegendItemClick,
   } = usePortfolio(mockPortfolioData);
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -172,16 +170,10 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={mockPortfolioData}
-        onLegendItemClick={handleLegendItemClick}
-        title="Asset Distribution"
-      />
-
-      {/* Asset Categories Detail */}
-      <AssetCategoriesDetail
-        portfolioData={mockPortfolioData}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
+        title="Asset Distribution"
       />
 
       {/* Wallet Manager Modal */}

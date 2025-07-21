@@ -1,45 +1,47 @@
-// App-wide constants and configuration
+/**
+ * App Configuration
+ *
+ * Application-level constants including app metadata,
+ * environment configuration, and global settings.
+ */
 
+// Application Metadata
 export const APP_CONFIG = {
   name: "Zap Pilot",
   description: "Intent-based DeFi execution engine",
   version: "0.1.0",
+  author: "Zap Pilot Team",
+  repository: "https://github.com/zap-pilot/frontend",
 } as const;
 
-export const PORTFOLIO_CONFIG = {
-  // Chart configuration
-  DEFAULT_PIE_CHART_SIZE: 250,
-  DEFAULT_PIE_CHART_STROKE_WIDTH: 8,
-
-  // Display configuration
-  CURRENCY_LOCALE: "en-US",
-  CURRENCY_CODE: "USD",
-  HIDDEN_BALANCE_PLACEHOLDER: "••••••••",
-  HIDDEN_NUMBER_PLACEHOLDER: "••••",
-
-  // Animation delays
-  ANIMATION_DELAY_STEP: 0.1,
-  CATEGORY_ANIMATION_DURATION: 0.3,
+// Environment Configuration
+export const ENV_CONFIG = {
+  isDevelopment: process.env.NODE_ENV === "development",
+  isProduction: process.env.NODE_ENV === "production",
+  isTest: process.env.NODE_ENV === "test",
 } as const;
 
-export const ASSET_CATEGORIES = {
-  BTC: "btc",
-  ETH: "eth",
-  STABLECOIN: "stablecoin",
-  ALTCOIN: "altcoin",
+// Global App Settings
+export const APP_SETTINGS = {
+  DEFAULT_THEME: "dark",
+  SUPPORTED_LOCALES: ["en-US", "en-GB"] as const,
+  DEFAULT_LOCALE: "en-US",
+  SESSION_TIMEOUT: 30 * 60 * 1000, // 30 minutes in ms
+  AUTO_SAVE_INTERVAL: 5 * 60 * 1000, // 5 minutes in ms
 } as const;
 
-export const RISK_LEVELS = {
-  LOW: "Low",
-  MEDIUM: "Medium",
-  HIGH: "High",
+// Error Messages
+export const ERROR_MESSAGES = {
+  NETWORK_ERROR: "Network connection error. Please try again.",
+  WALLET_NOT_CONNECTED: "Please connect your wallet to continue.",
+  INSUFFICIENT_BALANCE: "Insufficient balance for this transaction.",
+  TRANSACTION_FAILED: "Transaction failed. Please try again.",
+  UNKNOWN_ERROR: "An unexpected error occurred.",
 } as const;
 
-export const ASSET_TYPES = {
-  STAKING: "Staking",
-  LENDING: "Lending",
-  LIQUIDITY_POOL: "Liquidity Pool",
-  HOLDING: "Holding",
-  SAFETY_MODULE: "Safety Module",
-  LIQUID_STAKING: "Liquid Staking",
+// Success Messages
+export const SUCCESS_MESSAGES = {
+  WALLET_CONNECTED: "Wallet connected successfully!",
+  TRANSACTION_COMPLETE: "Transaction completed successfully!",
+  SETTINGS_SAVED: "Settings saved successfully!",
 } as const;

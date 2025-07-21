@@ -317,15 +317,6 @@ export const validationUtils = {
 };
 
 /**
- * Feature flags for development
- */
-export const FEATURE_FLAGS = {
-  ENABLE_MULTI_CHAIN: WALLET_CONFIG.features.enableMultiChain,
-  ENABLE_TESTNETS: WALLET_CONFIG.environment.enableTestnets,
-  ENABLE_DEBUG_LOGGING: WALLET_CONFIG.environment.isDevelopment,
-} as const;
-
-/**
  * Default export
  */
 export default WALLET_CONFIG;
