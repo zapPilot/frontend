@@ -32,7 +32,7 @@ export function SwapTab({
   // Determine UI behavior based on navigation context
   // - ZapIn: User came from WalletPortfolio ZapIn button, needs to select strategy
   // - ZapOut: User came from WalletPortfolio ZapOut button, needs to select position to exit
-  // - Invest: User came from InvestTab, strategy is pre-selected (default behavior)
+  // - Invest: User came from portfolio optimization, strategy is pre-selected (default behavior)
   const isZapIn = strategy.navigationContext === "zapIn";
   const isZapOut = strategy.navigationContext === "zapOut";
   const isInvest =

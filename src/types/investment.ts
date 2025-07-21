@@ -2,7 +2,7 @@ import { RiskLevel } from "./portfolio";
 
 /**
  * Navigation context determines how the SwapPage behaves based on entry point
- * - 'invest': Default behavior, strategy is pre-selected (from InvestTab)
+ * - 'invest': Default behavior, strategy is pre-selected (from portfolio optimization)
  * - 'zapIn': Shows strategy selector, user chooses where to invest
  * - 'zapOut': Shows position selector, user chooses what to exit from
  */
