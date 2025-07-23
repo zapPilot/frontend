@@ -70,6 +70,12 @@ export const useDustZapStream = () => {
                 // Don't close connection immediately, let cleanup handle it
                 break;
 
+              case "stream_complete":
+                setIsComplete(true);
+                setIsStreaming(false);
+                // Graceful completion - don't treat as error
+                break;
+
               case "error":
                 setError(data.error || "Unknown streaming error");
                 setIsStreaming(false);
@@ -86,18 +92,27 @@ export const useDustZapStream = () => {
 
         eventSource.onerror = error => {
           console.error("SSE error:", error);
-          setError("Connection error occurred");
-          setIsStreaming(false);
-          setIsConnected(false);
 
-          // Try to reconnect if not intentionally closed
-          if (eventSource.readyState === EventSource.CLOSED && !isComplete) {
-            console.log("Attempting to reconnect...");
-            setTimeout(() => {
-              if (intentIdRef.current) {
-                startStreaming(intentIdRef.current);
-              }
-            }, 2000);
+          // Only treat as error if not completed normally
+          if (!isComplete) {
+            setError("Connection error occurred");
+            setIsStreaming(false);
+            setIsConnected(false);
+
+            // Try to reconnect if not intentionally closed
+            if (eventSource.readyState === EventSource.CLOSED && !isComplete) {
+              console.log("Attempting to reconnect...");
+              setTimeout(() => {
+                if (intentIdRef.current) {
+                  startStreaming(intentIdRef.current);
+                }
+              }, 2000);
+            }
+          } else {
+            // Stream completed normally, just clean up
+            console.log("SSE connection closed after completion");
+            setIsStreaming(false);
+            setIsConnected(false);
           }
         };
       } catch (error) {

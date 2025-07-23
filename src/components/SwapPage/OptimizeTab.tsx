@@ -281,6 +281,8 @@ export function OptimizeTab() {
                   decimals: token.decimals,
                   raw_amount_hex_str: token.raw_amount_hex_str,
                 })),
+                toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                toTokenDecimals: 18,
               },
             }),
           }
@@ -520,15 +522,81 @@ export function OptimizeTab() {
               </div>
             )}
 
-            {events.length > 0 && (
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {events.slice(-5).map((event: any, index: number) => (
-                  <div key={index} className="text-xs text-gray-400">
-                    {event.type}: {event.message || JSON.stringify(event)}
-                  </div>
-                ))}
+            {/* Trading Loss Summary */}
+            <div className="bg-white rounded-lg p-4 mb-4 border border-gray-100">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 font-medium">
+                  Total Trading Loss:
+                </span>
+                <span className="text-lg font-bold text-red-500">
+                  $
+                  {events
+                    .filter(e => e.type === "token_ready" && e.tradingLoss)
+                    .reduce(
+                      (sum, e) => sum + Math.abs(e.tradingLoss.netLossUSD || 0),
+                      0
+                    )
+                    .toFixed(4)}
+                </span>
               </div>
-            )}
+            </div>
+
+            {/* Scrollable Events List */}
+            <div className="max-h-64 overflow-y-auto space-y-1">
+              {events
+                .filter(event => event.type === "token_ready" && event.provider)
+                .map((event, index) => {
+                  const tradingLoss = event.tradingLoss;
+                  const inputValue = tradingLoss?.inputValueUSD || 0;
+                  const outputValue = tradingLoss?.outputValueUSD || 0;
+                  const netLoss = tradingLoss?.netLossUSD || 0;
+                  const lossPercentage = tradingLoss?.lossPercentage || 0;
+                  const gasCost = event.gasCostUSD || 0;
+
+                  return (
+                    <div
+                      key={index}
+                      className="text-xs text-gray-400 border-l-2 border-blue-500 pl-2"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-blue-300">
+                          <img
+                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol.toLowerCase()}.webp`}
+                            alt={event.tokenSymbol}
+                            className="w-4 h-4"
+                          />{" "}
+                          {event.tokenSymbol || "Token"}
+                        </span>
+                        <span className="text-green-400">
+                          <img
+                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider.toLowerCase()}.webp`}
+                            alt={event.provider}
+                            className="w-4 h-4"
+                          />
+                          {event.provider}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs mt-1">
+                        <span>Input: ${inputValue.toFixed(4)}</span>
+                        <span>Output: ${outputValue.toFixed(4)}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span
+                          className={
+                            netLoss > 0 ? "text-red-400" : "text-green-400"
+                          }
+                        >
+                          Loss: ${netLoss.toFixed(4)} (
+                          {lossPercentage.toFixed(1)}%)
+                        </span>
+                        <span className="text-yellow-400">
+                          Gas: ${gasCost.toFixed(3)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </GlassCard>
       )}
