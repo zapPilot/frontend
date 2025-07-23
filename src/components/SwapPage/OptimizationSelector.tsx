@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRightLeft, Coins } from "lucide-react";
-import { formatBalance } from "../../utils/formatters";
+import { formatSmallCurrency } from "../../utils/formatters";
 import {
   calculateTotalTokenValue,
   getTokenSymbol,
@@ -86,7 +86,7 @@ export function OptimizationSelector({
                 ) : dustTokenCount > 0 ? (
                   <>
                     Convert {dustTokenCount} small token balances worth{" "}
-                    {formatBalance(dustValue)}
+                    {formatSmallCurrency(dustValue)}
                   </>
                 ) : (
                   "No dust tokens found"
@@ -121,7 +121,7 @@ export function OptimizationSelector({
 
             <div className="text-right">
               <div className="text-lg font-bold text-blue-500">
-                {loadingTokens ? "..." : formatBalance(dustValue)}
+                {loadingTokens ? "..." : formatSmallCurrency(dustValue)}
               </div>
               <div className="text-xs text-gray-400">
                 {dustTokenCount} tokens

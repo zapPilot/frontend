@@ -35,3 +35,31 @@ export const formatEthAmount = value => {
   if (value < 1) return `${value.toFixed(4)} ETH`;
   return `${value.toFixed(4)} ETH`;
 };
+
+/**
+ * Format currency with smart handling for very small amounts
+ * @param {number} value - The numerical value to format
+ * @param {number} threshold - Values below this show as "< $threshold" (default: 0.01)
+ * @param {number} thresholdDecimals - Decimal places for threshold display (default: 4)
+ * @param {number} normalDecimals - Decimal places for normal amounts (default: 2)
+ * @returns {string} Formatted currency string
+ */
+export const formatSmallCurrency = (
+  value,
+  threshold = 0.01,
+  thresholdDecimals = 4,
+  normalDecimals = 2
+) => {
+  if (value === 0) return "0";
+
+  const absValue = Math.abs(value);
+  const isNegative = value < 0;
+
+  if (absValue < threshold) {
+    const formatted = `< $${threshold.toFixed(thresholdDecimals)}`;
+    return isNegative ? `-${formatted}` : formatted;
+  }
+
+  const formatted = `$${absValue.toFixed(normalDecimals)}`;
+  return isNegative ? `-${formatted}` : formatted;
+};

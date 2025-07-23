@@ -12,7 +12,7 @@ import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
-import { formatSmallNumber } from "../../utils/formatters";
+import { formatSmallNumber, formatSmallCurrency } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { TokenImage } from "../shared/TokenImage";
@@ -582,14 +582,14 @@ export function OptimizeTab() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <MetricCard
                 label="Input Value"
-                value={`$${totalInputValue.toFixed(2)}`}
+                value={formatSmallCurrency(totalInputValue)}
                 icon={ArrowDown}
                 valueColor="text-blue-400"
                 testId="input-value-metric"
               />
               <MetricCard
                 label="Trading Loss"
-                value={`-$${totalTradingLoss.toFixed(2)} (${totalLossPercentage.toFixed(1)}%)`}
+                value={`${formatSmallCurrency(-totalTradingLoss)} (${totalLossPercentage.toFixed(1)}%)`}
                 icon={TrendingDown}
                 valueColor={
                   totalLossPercentage > 2
@@ -602,35 +602,15 @@ export function OptimizeTab() {
               />
               <MetricCard
                 label="Net Output"
-                value={`$${totalOutputValue.toFixed(2)}`}
+                value={formatSmallCurrency(totalOutputValue)}
                 icon={ArrowUp}
                 valueColor="text-green-400"
                 testId="net-output-metric"
               />
             </div>
 
-            {/* Summary information */}
+            {/* Technical Details Section */}
             <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-gray-300 font-medium">
-                  Conversion Efficiency:
-                </span>
-                <span
-                  className={`text-sm font-semibold ${
-                    totalLossPercentage > 2
-                      ? "text-red-400"
-                      : totalLossPercentage > 0.5
-                        ? "text-yellow-400"
-                        : "text-green-400"
-                  }`}
-                >
-                  {totalInputValue > 0
-                    ? `${((totalOutputValue / totalInputValue) * 100).toFixed(1)}%`
-                    : "0%"}{" "}
-                  efficiency
-                </span>
-              </div>
-
               {/* Technical Details Toggle */}
               <button
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
@@ -696,7 +676,7 @@ export function OptimizeTab() {
                       {/* Simplified info - always visible */}
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-300">
-                          ${inputValue.toFixed(2)} converted
+                          {formatSmallCurrency(inputValue)} converted
                         </span>
                         <span className="text-green-400">✓ Complete</span>
                       </div>
@@ -706,11 +686,11 @@ export function OptimizeTab() {
                         <div className="mt-2 pt-2 border-t border-gray-700/50 space-y-1">
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Input Value:</span>
-                            <span>${inputValue.toFixed(4)}</span>
+                            <span>{formatSmallCurrency(inputValue)}</span>
                           </div>
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Output Value:</span>
-                            <span>${outputValue.toFixed(4)}</span>
+                            <span>{formatSmallCurrency(outputValue)}</span>
                           </div>
                           <div className="flex justify-between text-xs">
                             <span>Trading Loss:</span>
@@ -719,13 +699,14 @@ export function OptimizeTab() {
                                 netLoss > 0 ? "text-red-400" : "text-green-400"
                               }
                             >
-                              ${netLoss.toFixed(4)} ({lossPercentage.toFixed(1)}
+                              {formatSmallCurrency(netLoss)} (
+                              {lossPercentage.toFixed(1)}
                               %)
                             </span>
                           </div>
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Gas Cost:</span>
-                            <span>${gasCost.toFixed(4)}</span>
+                            <span>{formatSmallCurrency(gasCost)}</span>
                           </div>
                         </div>
                       )}
