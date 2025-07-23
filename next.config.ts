@@ -1,6 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'zap-assets-worker.davidtnfsh.workers.dev',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.debank.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   turbopack: {
     rules: {
       "*.svg": {

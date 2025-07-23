@@ -1,16 +1,15 @@
 "use client";
 
-import React, { memo } from "react";
+import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { memo } from "react";
+import { arbitrum, base, optimism } from "thirdweb/chains";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import {
   createWallet,
-  walletConnect,
   inAppWallet,
   Wallet,
+  walletConnect,
 } from "thirdweb/wallets";
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
-import { arbitrum, optimism, base } from "thirdweb/chains";
-import { defineChain } from "thirdweb";
 
 const WALLETS = [
   createWallet("io.metamask"),
@@ -25,7 +24,7 @@ const WALLETS = [
   }),
 ] as Wallet[];
 
-const SUPPORTED_CHAINS = [arbitrum, base, defineChain(1088), optimism];
+const SUPPORTED_CHAINS = [arbitrum, base, optimism];
 
 const AddressDisplay = memo(function AddressDisplay({
   address,

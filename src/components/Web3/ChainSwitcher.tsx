@@ -1,22 +1,16 @@
 "use client";
 
-import React, { memo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown, Loader2, Network } from "lucide-react";
+import Image from "next/image";
+import { memo, useState } from "react";
+import { arbitrum, base, optimism } from "thirdweb/chains";
 import {
   useActiveWalletChain,
   useSwitchActiveWalletChain,
 } from "thirdweb/react";
-import { ChevronDown, Loader2, Network } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { arbitrum, optimism, base } from "thirdweb/chains";
-import { defineChain } from "thirdweb";
-import Image from "next/image";
 
-const SUPPORTED_CHAINS = [
-  arbitrum,
-  base,
-  defineChain(1088), // Metis
-  optimism,
-];
+const SUPPORTED_CHAINS = [arbitrum, base, optimism];
 
 interface ChainSwitcherProps {
   className?: string;
@@ -56,12 +50,15 @@ export const ChainSwitcher = memo(function ChainSwitcher({
 
   const getChainIcon = (chainId: number) => {
     const iconMap: Record<number, string> = {
-      42161: "/chains/arbitrum.svg", // Arbitrum
-      8453: "/chains/base.svg", // Base
-      1088: "/chains/metis.svg", // Metis
-      10: "/chains/optimism.svg", // Optimism
+      42161:
+        "https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/arbitrum.webp",
+      8453: "https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/base.webp", // Base
+      10: "https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/optimism.webp", // Optimism
     };
-    return iconMap[chainId] || "/chains/arbitrum.svg";
+    return (
+      iconMap[chainId] ||
+      "https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/base.webp"
+    );
   };
 
   const getChainName = (chainId: number) => {

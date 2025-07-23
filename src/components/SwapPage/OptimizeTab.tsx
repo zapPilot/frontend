@@ -8,7 +8,9 @@ import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { TokenImage } from "../shared/TokenImage";
+import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { GlassCard, GradientButton } from "../ui";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 
@@ -177,6 +179,9 @@ export function OptimizeTab() {
   // State for TokenGrid functionality
   const [showDetails, setShowDetails] = useState(false);
   const [deletedTokenIds, setDeletedTokenIds] = useState(new Set<string>());
+
+  // State for DustZap Progress technical details
+  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
   // SSE streaming hook
   const {
@@ -522,30 +527,48 @@ export function OptimizeTab() {
               </div>
             )}
 
-            {/* Trading Loss Summary */}
-            <div className="bg-white rounded-lg p-4 mb-4 border border-gray-100">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 font-medium">
-                  Total Trading Loss:
+            {/* Conversion Summary */}
+            <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-gray-300 font-medium">
+                  Total Value Converted:
                 </span>
-                <span className="text-lg font-bold text-red-500">
+                <span className="text-lg font-bold text-green-400">
                   $
                   {events
-                    .filter(e => e.type === "token_ready" && e.tradingLoss)
+                    .filter(
+                      (e: any) => e.type === "token_ready" && e.tradingLoss
+                    )
                     .reduce(
-                      (sum, e) => sum + Math.abs(e.tradingLoss.netLossUSD || 0),
+                      (sum, e: any) =>
+                        sum + (e.tradingLoss?.inputValueUSD || 0),
                       0
                     )
-                    .toFixed(4)}
+                    .toFixed(2)}
                 </span>
               </div>
+
+              {/* Technical Details Toggle */}
+              <button
+                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
+                className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
+              >
+                {showTechnicalDetails ? (
+                  <ChevronUp size={16} />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+                {showTechnicalDetails ? "Hide" : "Show"} Technical Details
+              </button>
             </div>
 
             {/* Scrollable Events List */}
-            <div className="max-h-64 overflow-y-auto space-y-1">
+            <div className="max-h-64 overflow-y-auto space-y-2">
               {events
-                .filter(event => event.type === "token_ready" && event.provider)
-                .map((event, index) => {
+                .filter(
+                  (event: any) => event.type === "token_ready" && event.provider
+                )
+                .map((event: any, index) => {
                   const tradingLoss = event.tradingLoss;
                   const inputValue = tradingLoss?.inputValueUSD || 0;
                   const outputValue = tradingLoss?.outputValueUSD || 0;
@@ -556,43 +579,73 @@ export function OptimizeTab() {
                   return (
                     <div
                       key={index}
-                      className="text-xs text-gray-400 border-l-2 border-blue-500 pl-2"
+                      className="bg-gray-800/30 rounded-lg p-3 border border-gray-700/30"
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-blue-300">
-                          <img
-                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol.toLowerCase()}.webp`}
-                            alt={event.tokenSymbol}
-                            className="w-4 h-4"
-                          />{" "}
-                          {event.tokenSymbol || "Token"}
-                        </span>
-                        <span className="text-green-400">
-                          <img
-                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider.toLowerCase()}.webp`}
-                            alt={event.provider}
-                            className="w-4 h-4"
+                      {/* Main conversion info */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <ImageWithFallback
+                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol?.toLowerCase()}.webp`}
+                            alt={event.tokenSymbol || "Token"}
+                            fallbackType="token"
+                            symbol={event.tokenSymbol}
+                            size={20}
                           />
-                          {event.provider}
-                        </span>
+                          <span className="font-medium text-blue-300 text-sm">
+                            {event.tokenSymbol || "Token"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400">via</span>
+                          <ImageWithFallback
+                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider?.toLowerCase()}.webp`}
+                            alt={event.provider || "Provider"}
+                            fallbackType="project"
+                            symbol={event.provider}
+                            size={16}
+                          />
+                          <span className="text-green-400 text-sm">
+                            {event.provider}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-xs mt-1">
-                        <span>Input: ${inputValue.toFixed(4)}</span>
-                        <span>Output: ${outputValue.toFixed(4)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span
-                          className={
-                            netLoss > 0 ? "text-red-400" : "text-green-400"
-                          }
-                        >
-                          Loss: ${netLoss.toFixed(4)} (
-                          {lossPercentage.toFixed(1)}%)
+
+                      {/* Simplified info - always visible */}
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">
+                          ${inputValue.toFixed(2)} converted
                         </span>
-                        <span className="text-yellow-400">
-                          Gas: ${gasCost.toFixed(3)}
-                        </span>
+                        <span className="text-green-400">✓ Complete</span>
                       </div>
+
+                      {/* Technical details - only when expanded */}
+                      {showTechnicalDetails && (
+                        <div className="mt-2 pt-2 border-t border-gray-700/50 space-y-1">
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <span>Input Value:</span>
+                            <span>${inputValue.toFixed(4)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <span>Output Value:</span>
+                            <span>${outputValue.toFixed(4)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs">
+                            <span>Trading Loss:</span>
+                            <span
+                              className={
+                                netLoss > 0 ? "text-red-400" : "text-green-400"
+                              }
+                            >
+                              ${netLoss.toFixed(4)} ({lossPercentage.toFixed(1)}
+                              %)
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-xs text-gray-400">
+                            <span>Gas Cost:</span>
+                            <span>${gasCost.toFixed(4)}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })}

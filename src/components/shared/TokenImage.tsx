@@ -1,4 +1,5 @@
 import React from "react";
+import { ImageWithFallback } from "./ImageWithFallback";
 
 interface TokenImageProps {
   token: {
@@ -30,24 +31,14 @@ export const TokenImage: React.FC<TokenImageProps> = ({
     return `/tokenPictures/${symbol}.webp`;
   };
 
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // Fallback to a generic token placeholder
-    e.currentTarget.src = "/tokenPictures/usdc.webp";
-  };
-
   return (
-    <div
-      className={`relative flex items-center justify-center rounded-full bg-gray-600 ${className}`}
-      style={{ width: size, height: size }}
-    >
-      <img
-        src={getImageSrc()}
-        alt={getTokenSymbol()}
-        width={size}
-        height={size}
-        className="rounded-full"
-        onError={handleImageError}
-      />
-    </div>
+    <ImageWithFallback
+      src={getImageSrc()}
+      alt={getTokenSymbol()}
+      fallbackType="token"
+      symbol={getTokenSymbol()}
+      size={size}
+      className={className}
+    />
   );
 };
