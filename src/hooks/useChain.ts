@@ -56,8 +56,6 @@ interface UseChainReturn {
   // Chain validation
   isSupported: boolean;
   isPreferred: boolean;
-  isMainnet: boolean;
-  isTestnet: boolean;
 
   // Chain operations
   switchChain: (chainId: number) => Promise<void>;
@@ -67,7 +65,6 @@ interface UseChainReturn {
   // Chain information
   supportedChains: Chain[];
   mainnetChains: Chain[];
-  testnetChains: Chain[];
 
   // Network status
   networkStatus: NetworkStatus;
@@ -80,7 +77,7 @@ interface UseChainReturn {
   formatChainForDisplay: (chainId?: number) => {
     name: string;
     symbol: string;
-    icon?: string;
+    icon: string | undefined;
   };
 
   // Validation methods
@@ -146,10 +143,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
   const chainId = chain?.id || null;
   const isSupported = chainId ? chainUtils.isChainSupported(chainId) : false;
   const isPreferred = chainId === preferredChainId;
-  const isMainnet = chain ? !(chain.isTestnet ?? false) : false;
-  const isTestnet = chain ? (chain.isTestnet ?? false) : false;
   const mainnetChains = chainUtils.getMainnetChains();
-  const testnetChains = chainUtils.getTestnetChains();
 
   // Auto-switch to preferred chain
   useEffect(() => {
@@ -315,7 +309,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
       if (!id) return undefined;
 
       const targetChain = chainUtils.getChainById(id);
-      return targetChain?.icon;
+      return targetChain?.iconUrl;
     },
     [chainId]
   );
@@ -326,7 +320,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
       if (!id) return undefined;
 
       const targetChain = chainUtils.getChainById(id);
-      return targetChain?.blockExplorer;
+      return targetChain?.blockExplorers.default.url;
     },
     [chainId]
   );
@@ -395,7 +389,10 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
   }, []);
 
   const checkNetworkStatus = useCallback(async () => {
-    if (!chain?.rpcUrl) return;
+    if (!chain?.id) return;
+
+    const chainConfig = chainUtils.getChainById(chain.id);
+    if (!chainConfig?.rpcUrls?.default?.http?.[0]) return;
 
     // Cancel previous check
     if (latencyCheckRef.current) {
@@ -407,7 +404,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
 
     try {
       // Simple network check - try to fetch a lightweight endpoint
-      const response = await fetch(chain.rpcUrl, {
+      const response = await fetch(chainConfig.rpcUrls.default.http[0], {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -484,8 +481,6 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
     // Chain validation
     isSupported,
     isPreferred,
-    isMainnet,
-    isTestnet,
 
     // Chain operations
     switchChain,
@@ -495,7 +490,6 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
     // Chain information
     supportedChains,
     mainnetChains,
-    testnetChains,
 
     // Network status
     networkStatus,

@@ -4,13 +4,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Loader2, Network } from "lucide-react";
 import Image from "next/image";
 import { memo, useState } from "react";
-import { arbitrum, base, optimism } from "thirdweb/chains";
 import {
   useActiveWalletChain,
   useSwitchActiveWalletChain,
 } from "thirdweb/react";
 
-const SUPPORTED_CHAINS = [arbitrum, base, optimism];
+// Import from unified chain configuration
+import { getThirdWebChains } from "@/config/chains";
+
+const SUPPORTED_CHAINS = getThirdWebChains();
 
 interface ChainSwitcherProps {
   className?: string;

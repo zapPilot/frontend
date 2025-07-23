@@ -1,5 +1,6 @@
 "use client";
 
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
@@ -7,10 +8,9 @@ import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
-import { TokenImage } from "../shared/TokenImage";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
+import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
-import { ChevronDown, ChevronUp } from "lucide-react";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 
@@ -153,6 +153,7 @@ export function OptimizeTab() {
   // ThirdWeb hooks for wallet connection
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
+  // const { mutate: sendCalls } = useSendAndConfirmCalls();
 
   // Computed wallet values
   const userAddress = activeAccount?.address;
