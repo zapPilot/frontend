@@ -1,6 +1,12 @@
 "use client";
 
-import { ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  TrendingDown,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
@@ -10,7 +16,7 @@ import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { TokenImage } from "../shared/TokenImage";
-import { GlassCard, GradientButton } from "../ui";
+import { GlassCard, GradientButton, MetricCard } from "../ui";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 
@@ -183,6 +189,12 @@ export function OptimizeTab() {
 
   // State for DustZap Progress technical details
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+
+  // State for cumulative trading metrics
+  const [totalInputValue, setTotalInputValue] = useState(0);
+  const [totalOutputValue, setTotalOutputValue] = useState(0);
+  const [totalTradingLoss, setTotalTradingLoss] = useState(0);
+  const [totalLossPercentage, setTotalLossPercentage] = useState(0);
 
   // SSE streaming hook
   const {
@@ -463,6 +475,44 @@ export function OptimizeTab() {
     }
   }, [isComplete, stopStreaming]);
 
+  // Effect to calculate cumulative trading metrics from events
+  useEffect(() => {
+    const completedEvents = events.filter(
+      (event: any) => event.type === "token_ready" && event.tradingLoss
+    );
+
+    if (completedEvents.length === 0) {
+      // Reset totals when no events
+      setTotalInputValue(0);
+      setTotalOutputValue(0);
+      setTotalTradingLoss(0);
+      setTotalLossPercentage(0);
+      return;
+    }
+
+    let inputValue = 0;
+    let outputValue = 0;
+    let tradingLoss = 0;
+
+    completedEvents.forEach((event: any) => {
+      const tradingData = event.tradingLoss;
+      if (tradingData) {
+        inputValue += tradingData.inputValueUSD || 0;
+        outputValue += tradingData.outputValueUSD || 0;
+        tradingLoss += (tradingData.netLossUSD || 0) + (event.gasCostUSD || 0);
+      }
+    });
+
+    setTotalInputValue(inputValue);
+    setTotalOutputValue(outputValue);
+    setTotalTradingLoss(tradingLoss);
+
+    // Calculate loss percentage
+    const lossPercentage =
+      inputValue > 0 ? (tradingLoss / inputValue) * 100 : 0;
+    setTotalLossPercentage(lossPercentage);
+  }, [events]);
+
   const renderCardsVariation = () => (
     <div className="space-y-6" data-testid="optimize-tab-cards">
       <div className="text-center">
@@ -528,24 +578,56 @@ export function OptimizeTab() {
               </div>
             )}
 
-            {/* Conversion Summary */}
+            {/* Trading Metrics Summary - 3-card transparent layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <MetricCard
+                label="Input Value"
+                value={`$${totalInputValue.toFixed(2)}`}
+                icon={ArrowDown}
+                valueColor="text-blue-400"
+                testId="input-value-metric"
+              />
+              <MetricCard
+                label="Trading Loss"
+                value={`-$${totalTradingLoss.toFixed(2)} (${totalLossPercentage.toFixed(1)}%)`}
+                icon={TrendingDown}
+                valueColor={
+                  totalLossPercentage > 2
+                    ? "text-red-400"
+                    : totalLossPercentage > 0.5
+                      ? "text-yellow-400"
+                      : "text-green-400"
+                }
+                testId="trading-loss-metric"
+              />
+              <MetricCard
+                label="Net Output"
+                value={`$${totalOutputValue.toFixed(2)}`}
+                icon={ArrowUp}
+                valueColor="text-green-400"
+                testId="net-output-metric"
+              />
+            </div>
+
+            {/* Summary information */}
             <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-gray-300 font-medium">
-                  Total Value Converted:
+                  Conversion Efficiency:
                 </span>
-                <span className="text-lg font-bold text-green-400">
-                  $
-                  {events
-                    .filter(
-                      (e: any) => e.type === "token_ready" && e.tradingLoss
-                    )
-                    .reduce(
-                      (sum, e: any) =>
-                        sum + (e.tradingLoss?.inputValueUSD || 0),
-                      0
-                    )
-                    .toFixed(2)}
+                <span
+                  className={`text-sm font-semibold ${
+                    totalLossPercentage > 2
+                      ? "text-red-400"
+                      : totalLossPercentage > 0.5
+                        ? "text-yellow-400"
+                        : "text-green-400"
+                  }`}
+                >
+                  {totalInputValue > 0
+                    ? `${((totalOutputValue / totalInputValue) * 100).toFixed(1)}%`
+                    : "0%"}{" "}
+                  efficiency
                 </span>
               </div>
 
