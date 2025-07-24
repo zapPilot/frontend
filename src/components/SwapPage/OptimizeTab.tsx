@@ -1,22 +1,20 @@
 "use client";
 
-import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
-  ChevronUp,
-  TrendingDown,
-} from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import {
+  useActiveAccount,
+  useActiveWalletChain,
+  useSendAndConfirmCalls,
+} from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
-import { formatSmallNumber, formatSmallCurrency } from "../../utils/formatters";
+import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { TokenImage } from "../shared/TokenImage";
-import { GlassCard, GradientButton, MetricCard } from "../ui";
+import { GlassCard, GradientButton } from "../ui";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 
@@ -159,7 +157,7 @@ export function OptimizeTab() {
   // ThirdWeb hooks for wallet connection
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
-  // const { mutate: sendCalls } = useSendAndConfirmCalls();
+  const { mutate: sendCalls } = useSendAndConfirmCalls();
 
   // Computed wallet values
   const userAddress = activeAccount?.address;
@@ -190,11 +188,13 @@ export function OptimizeTab() {
   // State for DustZap Progress technical details
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
 
-  // State for cumulative trading metrics
-  const [totalInputValue, setTotalInputValue] = useState(0);
-  const [totalOutputValue, setTotalOutputValue] = useState(0);
-  const [totalTradingLoss, setTotalTradingLoss] = useState(0);
-  const [totalLossPercentage, setTotalLossPercentage] = useState(0);
+  // State for wallet transaction sending
+  const [accumulatedTransactions, setAccumulatedTransactions] = useState<any[]>(
+    []
+  );
+  const [sendingToWallet, setSendingToWallet] = useState(false);
+  const [walletError, setWalletError] = useState<string | null>(null);
+  const [walletSuccess, setWalletSuccess] = useState(false);
 
   // SSE streaming hook
   const {
@@ -346,6 +346,12 @@ export function OptimizeTab() {
     setIsOptimizing(true);
     clearEvents();
 
+    // Reset wallet transaction states
+    setAccumulatedTransactions([]);
+    setSendingToWallet(false);
+    setWalletError(null);
+    setWalletSuccess(false);
+
     try {
       // If dust conversion is enabled, integrate with dustzap streaming
       if (optimizationOptions.convertDust && filteredDustTokens.length > 0) {
@@ -394,6 +400,15 @@ export function OptimizeTab() {
       return "Connect Wallet to Optimize";
     }
 
+    // Show wallet transaction states
+    if (sendingToWallet) {
+      return "Confirming in Wallet...";
+    }
+
+    if (walletSuccess) {
+      return "✓ Optimization Complete";
+    }
+
     // Show streaming-specific states
     if (isStreaming) {
       if (totalTokens > 0) {
@@ -421,6 +436,8 @@ export function OptimizeTab() {
     totalTokens,
     processedTokens,
     isWalletConnected,
+    sendingToWallet,
+    walletSuccess,
   ]);
 
   const selectedCount = useMemo(() => {
@@ -467,51 +484,99 @@ export function OptimizeTab() {
     fetchDustTokens,
   ]);
 
-  // Effect to handle stream completion
+  // Effect to collect transactions only from complete event
+  useEffect(() => {
+    // Only use the authoritative complete event for wallet transactions
+    const completeEvent = events.find(
+      (event: any) => event.type === "complete"
+    );
+
+    if (completeEvent && completeEvent.transactions) {
+      console.log(
+        `Setting ${completeEvent.transactions.length} transactions from complete event`
+      );
+      setAccumulatedTransactions(completeEvent.transactions);
+    }
+  }, [events]);
+
+  // Effect to send transactions to wallet when stream completes
+  useEffect(() => {
+    const shouldSendToWallet =
+      isComplete &&
+      accumulatedTransactions.length > 0 &&
+      !sendingToWallet &&
+      !walletSuccess &&
+      !walletError;
+
+    if (shouldSendToWallet) {
+      handleSendToWallet();
+    }
+  }, [
+    isComplete,
+    accumulatedTransactions.length,
+    sendingToWallet,
+    walletSuccess,
+    walletError,
+    handleSendToWallet,
+  ]);
+
+  // Function to send accumulated transactions to wallet
+  const handleSendToWallet = useCallback(async () => {
+    if (accumulatedTransactions.length === 0) {
+      console.warn("No transactions to send to wallet");
+      return;
+    }
+
+    setSendingToWallet(true);
+    setWalletError(null);
+
+    try {
+      console.log(
+        `Sending ${accumulatedTransactions.length} transactions to wallet...`
+      );
+
+      // Convert to ThirdWeb calls format
+      const calls = accumulatedTransactions.map(tx => ({
+        to: tx.to,
+        data: tx.data,
+        value: tx.value,
+        gasLimit: tx.gasLimit,
+      }));
+
+      // Send to wallet using ThirdWeb sendCalls
+      await new Promise<void>((resolve, reject) => {
+        sendCalls(
+          { calls, atomicRequired: false },
+          {
+            onSuccess: result => {
+              console.log("Wallet transaction successful:", result);
+              setWalletSuccess(true);
+              setSendingToWallet(false);
+              resolve();
+            },
+            onError: error => {
+              console.error("Wallet transaction failed:", error);
+              setWalletError(error.message || "Transaction failed");
+              setSendingToWallet(false);
+              reject(error);
+            },
+          }
+        );
+      });
+    } catch (error) {
+      console.error("Error sending to wallet:", error);
+      setWalletError(error instanceof Error ? error.message : "Unknown error");
+      setSendingToWallet(false);
+    }
+  }, [accumulatedTransactions, sendCalls]);
+
+  // Effect to handle stream completion (updated)
   useEffect(() => {
     if (isComplete) {
       setIsOptimizing(false);
       stopStreaming();
     }
   }, [isComplete, stopStreaming]);
-
-  // Effect to calculate cumulative trading metrics from events
-  useEffect(() => {
-    const completedEvents = events.filter(
-      (event: any) => event.type === "token_ready" && event.tradingLoss
-    );
-
-    if (completedEvents.length === 0) {
-      // Reset totals when no events
-      setTotalInputValue(0);
-      setTotalOutputValue(0);
-      setTotalTradingLoss(0);
-      setTotalLossPercentage(0);
-      return;
-    }
-
-    let inputValue = 0;
-    let outputValue = 0;
-    let tradingLoss = 0;
-
-    completedEvents.forEach((event: any) => {
-      const tradingData = event.tradingLoss;
-      if (tradingData) {
-        inputValue += tradingData.inputValueUSD || 0;
-        outputValue += tradingData.outputValueUSD || 0;
-        tradingLoss += (tradingData.netLossUSD || 0) + (event.gasCostUSD || 0);
-      }
-    });
-
-    setTotalInputValue(inputValue);
-    setTotalOutputValue(outputValue);
-    setTotalTradingLoss(tradingLoss);
-
-    // Calculate loss percentage
-    const lossPercentage =
-      inputValue > 0 ? (tradingLoss / inputValue) * 100 : 0;
-    setTotalLossPercentage(lossPercentage);
-  }, [events]);
 
   const renderCardsVariation = () => (
     <div className="space-y-6" data-testid="optimize-tab-cards">
@@ -572,45 +637,135 @@ export function OptimizeTab() {
               </div>
             )}
 
-            {(streamError || tokensError) && (
+            {(streamError || tokensError || walletError) && (
               <div className="text-sm text-red-400 bg-red-900/20 p-2 rounded">
-                Error: {streamError || tokensError}
+                Error: {streamError || tokensError || walletError}
+                {walletError && (
+                  <button
+                    onClick={handleSendToWallet}
+                    className="ml-2 text-xs bg-red-600 hover:bg-red-700 px-2 py-1 rounded"
+                    disabled={sendingToWallet}
+                  >
+                    Retry Wallet
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Trading Metrics Summary - 3-card transparent layout */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <MetricCard
-                label="Input Value"
-                value={formatSmallCurrency(totalInputValue)}
-                icon={ArrowDown}
-                valueColor="text-blue-400"
-                testId="input-value-metric"
-              />
-              <MetricCard
-                label="Trading Loss"
-                value={`${formatSmallCurrency(-totalTradingLoss)} (${totalLossPercentage.toFixed(1)}%)`}
-                icon={TrendingDown}
-                valueColor={
-                  totalLossPercentage > 2
-                    ? "text-red-400"
-                    : totalLossPercentage > 0.5
-                      ? "text-yellow-400"
-                      : "text-green-400"
-                }
-                testId="trading-loss-metric"
-              />
-              <MetricCard
-                label="Net Output"
-                value={formatSmallCurrency(totalOutputValue)}
-                icon={ArrowUp}
-                valueColor="text-green-400"
-                testId="net-output-metric"
-              />
-            </div>
+            {/* Wallet Transaction Status */}
+            {(sendingToWallet ||
+              walletSuccess ||
+              accumulatedTransactions.length > 0) && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Wallet Transaction</span>
+                  <span>
+                    {sendingToWallet
+                      ? "Confirming..."
+                      : walletSuccess
+                        ? "Confirmed ✓"
+                        : `${accumulatedTransactions.length} txns ready`}
+                  </span>
+                </div>
 
-            {/* Technical Details Section */}
+                {sendingToWallet && (
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div className="bg-orange-500 h-2 rounded-full animate-pulse w-full" />
+                  </div>
+                )}
+
+                {walletSuccess && (
+                  <div className="text-sm text-green-400 bg-green-900/20 p-2 rounded">
+                    🎉 All transactions confirmed on-chain! Your dust tokens
+                    have been successfully converted.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Enhanced Trading Summary */}
             <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
+              <div className="grid grid-cols-3 gap-4 mb-3">
+                {/* Total Input Value */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-1">Input Value</div>
+                  <div className="font-semibold text-blue-400">
+                    $
+                    {formatSmallNumber(
+                      events
+                        .filter(
+                          (e: any) => e.type === "token_ready" && e.tradingLoss
+                        )
+                        .reduce(
+                          (sum, e: any) =>
+                            sum + (e.tradingLoss?.inputValueUSD || 0),
+                          0
+                        )
+                    )}
+                  </div>
+                </div>
+
+                {/* Total Output Value */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-1">Output Value</div>
+                  <div className="font-semibold text-green-400">
+                    $
+                    {formatSmallNumber(
+                      events
+                        .filter(
+                          (e: any) => e.type === "token_ready" && e.tradingLoss
+                        )
+                        .reduce(
+                          (sum, e: any) =>
+                            sum + (e.tradingLoss?.outputValueUSD || 0),
+                          0
+                        )
+                    )}
+                  </div>
+                </div>
+
+                {/* Trading Impact */}
+                <div className="text-center">
+                  <div className="text-sm text-gray-400 mb-1">
+                    Trading Impact
+                  </div>
+                  {(() => {
+                    const totalTradingLoss = events
+                      .filter(
+                        (e: any) => e.type === "token_ready" && e.tradingLoss
+                      )
+                      .reduce(
+                        (sum, e: any) => sum + (e.tradingLoss?.netLossUSD || 0),
+                        0
+                      );
+                    const isGain = totalTradingLoss < 0; // Negative = gain
+                    const isBreakEven = Math.abs(totalTradingLoss) < 0.01;
+
+                    return (
+                      <div
+                        className={`font-semibold ${
+                          isBreakEven
+                            ? "text-gray-400"
+                            : isGain
+                              ? "text-green-400"
+                              : "text-red-400"
+                        }`}
+                      >
+                        {isGain ? "+" : ""}$
+                        {formatSmallNumber(Math.abs(totalTradingLoss))}
+                        <div className="text-xs mt-1">
+                          {isBreakEven
+                            ? "Break Even"
+                            : isGain
+                              ? "Arbitrage Gain"
+                              : "Trading Loss"}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
               {/* Technical Details Toggle */}
               <button
                 onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
@@ -676,9 +831,34 @@ export function OptimizeTab() {
                       {/* Simplified info - always visible */}
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-300">
-                          {formatSmallCurrency(inputValue)} converted
+                          ${formatSmallNumber(inputValue)} converted
                         </span>
-                        <span className="text-green-400">✓ Complete</span>
+                        {(() => {
+                          const isGain = netLoss < 0; // Negative = gain
+                          const isBreakEven = Math.abs(netLoss) < 0.01;
+
+                          return (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-xs ${
+                                  isBreakEven
+                                    ? "text-gray-400"
+                                    : isGain
+                                      ? "text-green-400"
+                                      : "text-red-400"
+                                }`}
+                              >
+                                {isBreakEven
+                                  ? "Break Even"
+                                  : isGain
+                                    ? "Arbitrage +"
+                                    : "Loss -"}
+                                ${formatSmallNumber(Math.abs(netLoss))}
+                              </span>
+                              <span className="text-green-400">✓</span>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* Technical details - only when expanded */}
@@ -686,27 +866,50 @@ export function OptimizeTab() {
                         <div className="mt-2 pt-2 border-t border-gray-700/50 space-y-1">
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Input Value:</span>
-                            <span>{formatSmallCurrency(inputValue)}</span>
+                            <span>${formatSmallNumber(inputValue)}</span>
                           </div>
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Output Value:</span>
-                            <span>{formatSmallCurrency(outputValue)}</span>
+                            <span>${formatSmallNumber(outputValue)}</span>
                           </div>
                           <div className="flex justify-between text-xs">
-                            <span>Trading Loss:</span>
-                            <span
-                              className={
-                                netLoss > 0 ? "text-red-400" : "text-green-400"
-                              }
-                            >
-                              {formatSmallCurrency(netLoss)} (
-                              {lossPercentage.toFixed(1)}
-                              %)
-                            </span>
+                            {(() => {
+                              const isGain = netLoss < 0; // Negative = gain
+                              const isBreakEven = Math.abs(netLoss) < 0.01;
+
+                              return (
+                                <>
+                                  <span>
+                                    {isBreakEven
+                                      ? "Trading Impact:"
+                                      : isGain
+                                        ? "Arbitrage Gain:"
+                                        : "Trading Loss:"}
+                                  </span>
+                                  <span
+                                    className={
+                                      isBreakEven
+                                        ? "text-gray-400"
+                                        : isGain
+                                          ? "text-green-400"
+                                          : "text-red-400"
+                                    }
+                                  >
+                                    {isGain ? "+" : ""}$
+                                    {formatSmallNumber(Math.abs(netLoss))} (
+                                    {lossPercentage >= 0 ? "" : "+"}
+                                    {formatSmallNumber(
+                                      Math.abs(lossPercentage)
+                                    )}
+                                    %)
+                                  </span>
+                                </>
+                              );
+                            })()}
                           </div>
                           <div className="flex justify-between text-xs text-gray-400">
                             <span>Gas Cost:</span>
-                            <span>{formatSmallCurrency(gasCost)}</span>
+                            <span>${formatSmallNumber(gasCost)}</span>
                           </div>
                         </div>
                       )}
@@ -751,6 +954,7 @@ export function OptimizeTab() {
               selectedCount === 0 ||
               isOptimizing ||
               isStreaming ||
+              sendingToWallet ||
               loadingTokens ||
               !isWalletConnected
             }

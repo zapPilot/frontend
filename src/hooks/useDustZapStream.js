@@ -12,6 +12,10 @@ export const useDustZapStream = () => {
 
   const eventSourceRef = useRef(null);
   const intentIdRef = useRef(null);
+  const isCompleteRef = useRef(false);
+  const reconnectAttemptsRef = useRef(0);
+  const lastEventIdRef = useRef(null);
+  const maxReconnectAttempts = 5;
 
   const startStreaming = useCallback(
     async intentId => {
@@ -31,11 +35,20 @@ export const useDustZapStream = () => {
         setTotalTokens(0);
 
         intentIdRef.current = intentId;
+        isCompleteRef.current = false;
 
-        // Create SSE connection
-        const eventSource = new EventSource(
-          `${process.env.NEXT_PUBLIC_INTENT_ENGINE_URL}/api/dustzap/${intentId}/stream`
-        );
+        // Only reset reconnect attempts and lastEventId for completely new streams
+        if (!lastEventIdRef.current) {
+          reconnectAttemptsRef.current = 0;
+        }
+
+        // Create SSE connection with optional Last-Event-ID for resumption
+        const streamUrl = `${process.env.NEXT_PUBLIC_INTENT_ENGINE_URL}/api/dustzap/${intentId}/stream`;
+        const eventSource = lastEventIdRef.current
+          ? new EventSource(
+              `${streamUrl}?lastEventId=${lastEventIdRef.current}`
+            )
+          : new EventSource(streamUrl);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {
@@ -45,6 +58,11 @@ export const useDustZapStream = () => {
 
         eventSource.onmessage = event => {
           try {
+            // Track last event ID for resumable connections
+            if (event.lastEventId) {
+              lastEventIdRef.current = event.lastEventId;
+            }
+
             const data = JSON.parse(event.data);
             console.log("SSE event received:", data);
 
@@ -66,12 +84,14 @@ export const useDustZapStream = () => {
 
               case "complete":
                 setIsComplete(true);
+                isCompleteRef.current = true;
                 setIsStreaming(false);
                 // Don't close connection immediately, let cleanup handle it
                 break;
 
               case "stream_complete":
                 setIsComplete(true);
+                isCompleteRef.current = true;
                 setIsStreaming(false);
                 // Graceful completion - don't treat as error
                 break;
@@ -93,20 +113,36 @@ export const useDustZapStream = () => {
         eventSource.onerror = error => {
           console.error("SSE error:", error);
 
-          // Only treat as error if not completed normally
-          if (!isComplete) {
+          // Only treat as error if not completed normally (use ref for current state)
+          if (!isCompleteRef.current) {
             setError("Connection error occurred");
             setIsStreaming(false);
             setIsConnected(false);
 
-            // Try to reconnect if not intentionally closed
-            if (eventSource.readyState === EventSource.CLOSED && !isComplete) {
-              console.log("Attempting to reconnect...");
+            // Implement exponential backoff for reconnection
+            if (
+              eventSource.readyState === EventSource.CLOSED &&
+              !isCompleteRef.current &&
+              reconnectAttemptsRef.current < maxReconnectAttempts
+            ) {
+              const backoffDelay = Math.min(
+                1000 * Math.pow(2, reconnectAttemptsRef.current),
+                30000
+              );
+              reconnectAttemptsRef.current += 1;
+
+              console.log(
+                `Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${backoffDelay}ms...`
+              );
+
               setTimeout(() => {
-                if (intentIdRef.current) {
+                if (intentIdRef.current && !isCompleteRef.current) {
                   startStreaming(intentIdRef.current);
                 }
-              }, 2000);
+              }, backoffDelay);
+            } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+              console.error("Max reconnection attempts reached, giving up");
+              setError("Connection failed after multiple attempts");
             }
           } else {
             // Stream completed normally, just clean up
@@ -121,7 +157,7 @@ export const useDustZapStream = () => {
         setIsStreaming(false);
       }
     },
-    [isStreaming, isComplete]
+    [isStreaming]
   );
 
   const stopStreaming = useCallback(() => {
@@ -132,6 +168,9 @@ export const useDustZapStream = () => {
     setIsStreaming(false);
     setIsConnected(false);
     intentIdRef.current = null;
+    isCompleteRef.current = false;
+    reconnectAttemptsRef.current = 0;
+    lastEventIdRef.current = null;
   }, []);
 
   const clearEvents = useCallback(() => {
@@ -141,6 +180,9 @@ export const useDustZapStream = () => {
     setBatchesCompleted(0);
     setTotalTokens(0);
     setIsComplete(false);
+    isCompleteRef.current = false;
+    reconnectAttemptsRef.current = 0;
+    lastEventIdRef.current = null;
   }, []);
 
   // Cleanup on unmount
