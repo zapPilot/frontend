@@ -83,6 +83,12 @@ export const useDustZapStream = () => {
                 break;
 
               case "complete":
+                console.log("🏁 SSE Complete Event Received:", {
+                  eventData: data,
+                  hasTransactions: !!data.transactions,
+                  transactionCount: data.transactions?.length || 0,
+                  timestamp: new Date().toISOString(),
+                });
                 setIsComplete(true);
                 isCompleteRef.current = true;
                 setIsStreaming(false);

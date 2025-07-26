@@ -7,7 +7,9 @@ import {
   useActiveWalletChain,
   useSendAndConfirmCalls,
 } from "thirdweb/react";
+import { useCancellableOperation } from "../../hooks/useCancellableOperation";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
+import { useWalletCapabilities } from "../../hooks/useWalletCapabilities";
 import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
@@ -17,6 +19,7 @@ import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
+import { WalletTransactionProgress } from "./WalletTransactionProgress";
 
 export interface OptimizationOptions {
   convertDust: boolean;
@@ -196,6 +199,29 @@ export function OptimizeTab() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [walletSuccess, setWalletSuccess] = useState(false);
 
+  // Enhanced wallet functionality hooks
+  const {
+    getWalletCapabilities,
+    chunkTransactionsForWallet,
+    detectWalletType,
+  } = useWalletCapabilities();
+  const {
+    startOperation,
+    cancelOperation,
+    updateProgress,
+    completeOperation,
+    errorOperation,
+    operationStatus,
+  } = useCancellableOperation();
+
+  // Enhanced wallet transaction state
+  const [batchProgress, setBatchProgress] = useState<any[]>([]);
+  const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+  const [totalEstimatedTime, setTotalEstimatedTime] = useState<number | null>(
+    null
+  );
+  const [elapsedTime, setElapsedTime] = useState(0);
+
   // SSE streaming hook
   const {
     isStreaming,
@@ -210,6 +236,20 @@ export function OptimizeTab() {
     stopStreaming,
     clearEvents,
   } = useDustZapStream();
+
+  // Debug: Initial state logging
+  useEffect(() => {
+    console.log("🔧 Initial State Check:", {
+      sendingToWallet,
+      walletSuccess,
+      walletError,
+      isOptimizing,
+      isStreaming,
+      isComplete,
+      accumulatedTransactionsLength: accumulatedTransactions.length,
+      timestamp: new Date().toISOString(),
+    });
+  }, []);
 
   // Calculate dust token data (filtered by deleted tokens)
   const filteredDustTokens = useMemo(() => {
@@ -492,15 +532,270 @@ export function OptimizeTab() {
     );
 
     if (completeEvent && completeEvent.transactions) {
-      console.log(
-        `Setting ${completeEvent.transactions.length} transactions from complete event`
-      );
       setAccumulatedTransactions(completeEvent.transactions);
+    } else if (completeEvent) {
+      console.log(
+        "❌ Complete event found but no transactions:",
+        completeEvent
+      );
     }
   }, [events]);
+  // Enhanced function to send accumulated transactions to wallet with all new features
+  const handleSendToWallet = useCallback(
+    async (skipPreview = false) => {
+      console.log("handleSendToWallet");
+      if (accumulatedTransactions.length === 0) {
+        console.warn("No transactions to send to wallet");
+        return;
+      }
 
+      try {
+        // Step 1: Show transaction preview for large batches (unless skipped)
+        if (!skipPreview && accumulatedTransactions.length > 10) {
+          setShowTransactionPreview(true);
+          return; // Wait for user confirmation via modal
+        }
+
+        // Step 2: Initialize operation tracking
+        const operationToken = startOperation(
+          "wallet_transaction",
+          accumulatedTransactions.length,
+          300000 // 5 minute timeout
+        );
+
+        // Step 3: Get wallet capabilities and determine batching strategy
+        const walletCapabilities = await getWalletCapabilities(activeAccount);
+        const walletType = detectWalletType(activeAccount);
+
+        console.log(
+          `Detected wallet: ${walletType}, max batch size: ${walletCapabilities.dynamicBatchSize}`
+        );
+
+        // Step 4: Chunk transactions based on wallet capabilities
+        const transactionBatches = await chunkTransactionsForWallet(
+          accumulatedTransactions,
+          activeAccount
+        );
+
+        // Step 5: Calculate timing estimates
+        const estimatedTimePerBatch =
+          walletCapabilities.estimatedConfirmationTime;
+        const totalEstimatedMs =
+          transactionBatches.length * estimatedTimePerBatch;
+        setTotalEstimatedTime(totalEstimatedMs / 1000);
+
+        // Step 6: Initialize batch progress tracking
+        const initialBatchProgress = transactionBatches.map((batch, index) => ({
+          batchIndex: index,
+          totalBatches: transactionBatches.length,
+          transactionCount: batch.length,
+          status: "pending" as const,
+          estimatedTime: estimatedTimePerBatch / 1000,
+          transactions: batch,
+        }));
+        setBatchProgress(initialBatchProgress);
+
+        // Step 7: Start timing and progress tracking
+        const operationStartTime = Date.now();
+        setSendingToWallet(true);
+        setWalletError(null);
+        setWalletSuccess(false);
+
+        // Step 8: Timer for elapsed time updates
+        const timerInterval = setInterval(() => {
+          if (operationStartTime) {
+            setElapsedTime((Date.now() - operationStartTime) / 1000);
+          }
+        }, 1000);
+
+        let completedTransactionCount = 0;
+
+        try {
+          // Step 9: Process each batch sequentially with enhanced error handling
+          for (
+            let batchIndex = 0;
+            batchIndex < transactionBatches.length;
+            batchIndex++
+          ) {
+            // Check for cancellation
+            operationToken.throwIfCancelled();
+            const batch = transactionBatches[batchIndex];
+            console.log(
+              "batch",
+              batch,
+              "transactionBatches",
+              transactionBatches
+            );
+            const batchStartTime = Date.now();
+
+            // Update current batch index and status
+            setCurrentBatchIndex(batchIndex);
+            setBatchProgress(prev =>
+              prev.map((bp, i) =>
+                i === batchIndex ? { ...bp, status: "processing" } : bp
+              )
+            );
+
+            // Update operation progress
+            updateProgress(
+              completedTransactionCount,
+              accumulatedTransactions.length
+            );
+
+            try {
+              // Convert batch to ThirdWeb calls format
+              const calls = batch.map(tx => ({
+                to: tx.to,
+                ...(tx.data != null && { data: tx.data }),
+                value: tx.value,
+                gasLimit: tx.gasLimit,
+              }));
+              console.log("calls", calls);
+
+              console.log(
+                `Sending batch ${batchIndex + 1}/${transactionBatches.length} (${calls.length} transactions) to ${walletType}...`
+              );
+
+              // Send batch to wallet
+              await new Promise<void>((resolve, reject) => {
+                sendCalls(
+                  { calls, atomicRequired: false },
+                  {
+                    onSuccess: result => {
+                      console.log(
+                        `Batch ${batchIndex + 1} successful:`,
+                        result
+                      );
+                      resolve();
+                    },
+                    onError: error => {
+                      console.error(`Batch ${batchIndex + 1} failed:`, error);
+                      reject(error);
+                    },
+                  }
+                );
+              });
+
+              // Mark batch as completed
+              const batchEndTime = Date.now();
+              const actualBatchTime = (batchEndTime - batchStartTime) / 1000;
+
+              setBatchProgress(prev =>
+                prev.map((bp, i) =>
+                  i === batchIndex
+                    ? {
+                        ...bp,
+                        status: "completed",
+                        actualTime: actualBatchTime,
+                      }
+                    : bp
+                )
+              );
+
+              completedTransactionCount += batch.length;
+              updateProgress(
+                completedTransactionCount,
+                accumulatedTransactions.length
+              );
+
+              // Add delay between batches to prevent overwhelming the wallet
+              if (batchIndex < transactionBatches.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+              }
+            } catch (batchError) {
+              // Handle batch-specific errors
+              console.error(`Batch ${batchIndex + 1} failed:`, batchError);
+
+              setBatchProgress(prev =>
+                prev.map((bp, i) =>
+                  i === batchIndex
+                    ? {
+                        ...bp,
+                        status: "failed",
+                        error: batchError.message || "Unknown error",
+                      }
+                    : bp
+                )
+              );
+
+              console.error(`Batch ${batchIndex + 1} error:`, batchError);
+
+              // For now, continue with next batch (could be made configurable)
+              console.warn(
+                `Continuing with next batch after error in batch ${batchIndex + 1}`
+              );
+            }
+          }
+
+          // Step 10: Check final results
+          const failedBatches = initialBatchProgress.filter(
+            bp => bp.status === "failed"
+          ).length;
+          const successfulBatches = initialBatchProgress.filter(
+            bp => bp.status === "completed"
+          ).length;
+
+          if (successfulBatches > 0) {
+            setWalletSuccess(true);
+            completeOperation({
+              totalBatches: transactionBatches.length,
+              successfulBatches,
+              failedBatches,
+              totalTransactions: accumulatedTransactions.length,
+              completedTransactions: completedTransactionCount,
+            });
+
+            console.log(
+              `✅ Wallet operation completed: ${successfulBatches}/${transactionBatches.length} batches successful`
+            );
+          } else {
+            throw new Error("All transaction batches failed");
+          }
+        } catch (operationError) {
+          console.error("Wallet operation failed:", operationError);
+          setWalletError(operationError.message || "Unknown error");
+          errorOperation(operationError);
+
+          console.error("Wallet operation failed:", operationError);
+        } finally {
+          clearInterval(timerInterval);
+          setSendingToWallet(false);
+        }
+      } catch (error) {
+        console.error("Error in enhanced wallet operation:", error);
+        setWalletError(
+          error instanceof Error ? error.message : "Unknown error"
+        );
+        setSendingToWallet(false);
+
+        console.error("Wallet setup error:", error);
+      }
+    },
+    [
+      accumulatedTransactions,
+      sendCalls,
+      activeAccount,
+      startOperation,
+      getWalletCapabilities,
+      detectWalletType,
+      chunkTransactionsForWallet,
+      updateProgress,
+      completeOperation,
+      errorOperation,
+    ]
+  );
   // Effect to send transactions to wallet when stream completes
   useEffect(() => {
+    console.log("🚀 Wallet Trigger Effect Check:", {
+      isComplete,
+      accumulatedTransactionsLength: accumulatedTransactions.length,
+      sendingToWallet,
+      walletSuccess,
+      walletError,
+      isOptimizing,
+      timestamp: new Date().toISOString(),
+    });
+
     const shouldSendToWallet =
       isComplete &&
       accumulatedTransactions.length > 0 &&
@@ -508,8 +803,21 @@ export function OptimizeTab() {
       !walletSuccess &&
       !walletError;
 
+    console.log("📊 Should send to wallet:", shouldSendToWallet, {
+      breakdown: {
+        isComplete,
+        hasTransactions: accumulatedTransactions.length > 0,
+        notSendingToWallet: !sendingToWallet,
+        notWalletSuccess: !walletSuccess,
+        notWalletError: !walletError,
+      },
+    });
+
     if (shouldSendToWallet) {
+      console.log("🎯 TRIGGERING handleSendToWallet");
       handleSendToWallet();
+    } else {
+      console.log("🚫 NOT triggering handleSendToWallet - conditions not met");
     }
   }, [
     isComplete,
@@ -520,55 +828,11 @@ export function OptimizeTab() {
     handleSendToWallet,
   ]);
 
-  // Function to send accumulated transactions to wallet
-  const handleSendToWallet = useCallback(async () => {
-    if (accumulatedTransactions.length === 0) {
-      console.warn("No transactions to send to wallet");
-      return;
-    }
-
-    setSendingToWallet(true);
-    setWalletError(null);
-
-    try {
-      console.log(
-        `Sending ${accumulatedTransactions.length} transactions to wallet...`
-      );
-
-      // Convert to ThirdWeb calls format
-      const calls = accumulatedTransactions.map(tx => ({
-        to: tx.to,
-        data: tx.data,
-        value: tx.value,
-        gasLimit: tx.gasLimit,
-      }));
-
-      // Send to wallet using ThirdWeb sendCalls
-      await new Promise<void>((resolve, reject) => {
-        sendCalls(
-          { calls, atomicRequired: false },
-          {
-            onSuccess: result => {
-              console.log("Wallet transaction successful:", result);
-              setWalletSuccess(true);
-              setSendingToWallet(false);
-              resolve();
-            },
-            onError: error => {
-              console.error("Wallet transaction failed:", error);
-              setWalletError(error.message || "Transaction failed");
-              setSendingToWallet(false);
-              reject(error);
-            },
-          }
-        );
-      });
-    } catch (error) {
-      console.error("Error sending to wallet:", error);
-      setWalletError(error instanceof Error ? error.message : "Unknown error");
-      setSendingToWallet(false);
-    }
-  }, [accumulatedTransactions, sendCalls]);
+  // Handler for cancelling wallet operation
+  const handleCancelWalletOperation = useCallback(() => {
+    cancelOperation("User cancelled wallet operation");
+    setSendingToWallet(false);
+  }, [cancelOperation]);
 
   // Effect to handle stream completion (updated)
   useEffect(() => {
@@ -652,36 +916,37 @@ export function OptimizeTab() {
               </div>
             )}
 
-            {/* Wallet Transaction Status */}
-            {(sendingToWallet ||
-              walletSuccess ||
-              accumulatedTransactions.length > 0) && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Wallet Transaction</span>
-                  <span>
-                    {sendingToWallet
-                      ? "Confirming..."
-                      : walletSuccess
-                        ? "Confirmed ✓"
-                        : `${accumulatedTransactions.length} txns ready`}
-                  </span>
-                </div>
-
-                {sendingToWallet && (
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div className="bg-orange-500 h-2 rounded-full animate-pulse w-full" />
-                  </div>
-                )}
-
-                {walletSuccess && (
-                  <div className="text-sm text-green-400 bg-green-900/20 p-2 rounded">
-                    🎉 All transactions confirmed on-chain! Your dust tokens
-                    have been successfully converted.
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Enhanced Wallet Transaction Progress */}
+            <WalletTransactionProgress
+              isVisible={
+                sendingToWallet || walletSuccess || batchProgress.length > 0
+              }
+              overallStatus={
+                walletSuccess
+                  ? "completed"
+                  : sendingToWallet
+                    ? "processing"
+                    : walletError
+                      ? "failed"
+                      : operationStatus === "cancelled"
+                        ? "cancelled"
+                        : "idle"
+              }
+              batches={batchProgress}
+              currentBatch={currentBatchIndex}
+              totalTransactions={accumulatedTransactions.length}
+              completedTransactions={batchProgress.reduce(
+                (sum, batch) =>
+                  sum +
+                  (batch.status === "completed" ? batch.transactionCount : 0),
+                0
+              )}
+              estimatedTotalTime={totalEstimatedTime}
+              elapsedTime={elapsedTime}
+              canCancel={sendingToWallet && operationStatus === "running"}
+              onCancel={handleCancelWalletOperation}
+              walletType={detectWalletType(activeAccount)}
+            />
 
             {/* Enhanced Trading Summary */}
             <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
