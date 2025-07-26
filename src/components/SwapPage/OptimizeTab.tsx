@@ -1,7 +1,11 @@
 "use client";
-
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  createThirdwebClient,
+  getContract,
+  prepareContractCall,
+} from "thirdweb";
 import {
   useActiveAccount,
   useActiveWalletChain,
@@ -35,7 +39,7 @@ interface DustToken {
   price: number;
   decimals: number;
   logo_url?: string;
-  raw_amount_hex_str?: string;
+  raw_amount?: string;
 }
 
 interface TokenGridProps {
@@ -46,6 +50,9 @@ interface TokenGridProps {
   deletedTokenIds: Set<string>;
   onRestoreDeletedTokens: () => void;
 }
+const THIRDWEB_CLIENT = createThirdwebClient({
+  clientId: "476d07dc76e77ea27ebcad4cbe24907e",
+});
 
 const TokenGrid = ({
   tokens,
@@ -318,6 +325,11 @@ export function OptimizeTab() {
       slippage: number
     ) => {
       try {
+        console.log("🔍 Creating DustZap intent with filtered tokens:", {
+          totalTokens: filteredDustTokens.length,
+          tokenIds: filteredDustTokens.map(t => t.id),
+          tokenSymbols: filteredDustTokens.map(t => t.symbol),
+        });
         console.log("filteredDustTokens", filteredDustTokens);
         const response = await fetch(
           `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
@@ -337,7 +349,7 @@ export function OptimizeTab() {
                   amount: token.amount,
                   price: token.price,
                   decimals: token.decimals,
-                  raw_amount_hex_str: token.raw_amount_hex_str,
+                  raw_amount: token.raw_amount,
                 })),
                 toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
                 toTokenDecimals: 18,
@@ -359,7 +371,7 @@ export function OptimizeTab() {
         throw error;
       }
     },
-    [filteredDustTokens]
+    [] // Empty dependency array - function doesn't close over external variables
   );
 
   // TokenGrid handler functions
@@ -403,6 +415,25 @@ export function OptimizeTab() {
         }
 
         // Create DustZap intent
+        console.log("🚮 Token filtering status before intent creation:", {
+          totalDustTokens: dustTokens.length,
+          deletedTokenIds: Array.from(deletedTokenIds),
+          filteredDustTokens: filteredDustTokens.length,
+          filteredTokenIds: filteredDustTokens.map(t => t.id),
+          filteredTokenSymbols: filteredDustTokens.map(t => t.symbol),
+        });
+
+        // Safeguard: Ensure no deleted tokens are included
+        const hasDeletedTokens = filteredDustTokens.some(token =>
+          deletedTokenIds.has(token.id)
+        );
+        if (hasDeletedTokens) {
+          console.error(
+            "❌ Deleted tokens found in filtered list! This should not happen."
+          );
+          throw new Error("Deleted tokens found in filtered list");
+        }
+
         const newIntentId = await createDustZapIntent(
           userAddress,
           chainId,
@@ -647,7 +678,7 @@ export function OptimizeTab() {
               const calls = batch.map(tx => ({
                 to: tx.to,
                 ...(tx.data != null && { data: tx.data }),
-                value: tx.value,
+                value: tx.value ? BigInt(tx.value) : 0, // Convert string to bigint for proper ETH value handling
                 gasLimit: tx.gasLimit,
               }));
               console.log("calls", calls);
@@ -660,6 +691,7 @@ export function OptimizeTab() {
               await new Promise<void>((resolve, reject) => {
                 sendCalls(
                   { calls, atomicRequired: false },
+                  // { calls: calls, atomicRequired: false },
                   {
                     onSuccess: result => {
                       console.log(
@@ -1185,7 +1217,36 @@ export function OptimizeTab() {
           </div>
         </GlassCard>
       )}
-
+      <button
+        onClick={() => {
+          const wethContract = getContract({
+            client: THIRDWEB_CLIENT,
+            address: "0x4200000000000000000000000000000000000006",
+            chain: activeChain,
+            abi: [
+              {
+                inputs: [],
+                name: "deposit",
+                outputs: [],
+                stateMutability: "payable",
+                type: "function",
+              },
+            ],
+          });
+          const wrapEthTxn = prepareContractCall({
+            contract: wethContract,
+            method: "deposit",
+            value: 10000000n,
+          });
+          console.log("wrapEthTxn", wrapEthTxn);
+          sendCalls({
+            calls: [wrapEthTxn],
+            atomicRequired: false,
+          });
+        }}
+      >
+        test button
+      </button>
       {/* Token Grid */}
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid

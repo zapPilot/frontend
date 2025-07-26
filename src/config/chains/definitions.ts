@@ -12,37 +12,6 @@ import { BaseChainConfig, ChainEnvironmentConfig } from "./types";
  */
 export const MAINNET_CHAINS: BaseChainConfig[] = [
   {
-    id: 1,
-    name: "Ethereum",
-    symbol: "ETH",
-    isSupported: true,
-    rpcUrls: {
-      default: {
-        http: ["https://mainnet.infura.io/v3/", "https://eth.llamarpc.com"],
-      },
-      public: {
-        http: [
-          "https://ethereum-rpc.publicnode.com",
-          "https://rpc.ankr.com/eth",
-        ],
-      },
-    },
-    blockExplorers: {
-      default: { name: "Etherscan", url: "https://etherscan.io" },
-      etherscan: { name: "Etherscan", url: "https://etherscan.io" },
-    },
-    iconUrl: "/chainPicturesWebp/ethereum.webp",
-    nativeCurrency: {
-      name: "Ether",
-      symbol: "ETH",
-      decimals: 18,
-    },
-    metadata: {
-      blockTime: 12,
-      layer: "L1",
-    },
-  },
-  {
     id: 42161,
     name: "Arbitrum One",
     symbol: "ARB",
