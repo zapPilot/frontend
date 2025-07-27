@@ -183,13 +183,13 @@ export function useWalletTransactions({
                         type: "success",
                         title: `Batch ${batchIndex + 1} Complete`,
                         message: `Transaction submitted successfully`,
-                        link: explorerUrl
-                          ? {
-                              text: "View Transaction",
-                              url: explorerUrl,
-                            }
-                          : undefined,
                         duration: 8000,
+                        ...(explorerUrl && {
+                          link: {
+                            text: "View Transaction",
+                            url: explorerUrl,
+                          },
+                        }),
                       });
                     } else {
                       showToast({
@@ -202,7 +202,7 @@ export function useWalletTransactions({
 
                     resolve();
                   },
-                  onError: error => {
+                  onError: (error: any) => {
                     showToast({
                       type: "error",
                       title: `Batch ${batchIndex + 1} Failed`,

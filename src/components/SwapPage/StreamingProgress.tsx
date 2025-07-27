@@ -1,11 +1,10 @@
 "use client";
 
-import { ImageWithFallback } from "../shared/ImageWithFallback";
-import { formatSmallNumber } from "../../utils/formatters";
 import { getSimpleWalletName } from "../../utils/walletBatching";
 import { GlassCard } from "../ui";
 import { TradingSummary } from "./TradingSummary";
 import { WalletTransactionProgress } from "./WalletTransactionProgress";
+import { EventsList } from "./EventsList";
 
 interface StreamingProgressProps {
   // Streaming state
@@ -123,141 +122,11 @@ export function StreamingProgress({
           onToggleTechnicalDetails={onToggleTechnicalDetails}
         />
 
-        {/* Scrollable Events List */}
-        <div className="max-h-64 overflow-y-auto space-y-2">
-          {events
-            .filter(
-              (event: any) => event.type === "token_ready" && event.provider
-            )
-            .map((event: any, index) => {
-              const tradingLoss = event.tradingLoss;
-              const inputValue = tradingLoss?.inputValueUSD || 0;
-              const outputValue = tradingLoss?.outputValueUSD || 0;
-              const netLoss = tradingLoss?.netLossUSD || 0;
-              const lossPercentage = tradingLoss?.lossPercentage || 0;
-              const gasCost = event.gasCostUSD || 0;
-
-              return (
-                <div
-                  key={index}
-                  className="bg-gray-800/30 rounded-lg p-3 border border-gray-700/30"
-                >
-                  {/* Main conversion info */}
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <ImageWithFallback
-                        src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol?.toLowerCase()}.webp`}
-                        alt={event.tokenSymbol || "Token"}
-                        fallbackType="token"
-                        symbol={event.tokenSymbol}
-                        size={20}
-                      />
-                      <span className="font-medium text-blue-300 text-sm">
-                        {event.tokenSymbol || "Token"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400">via</span>
-                      <ImageWithFallback
-                        src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider?.toLowerCase()}.webp`}
-                        alt={event.provider || "Provider"}
-                        fallbackType="project"
-                        symbol={event.provider}
-                        size={16}
-                      />
-                      <span className="text-green-400 text-sm">
-                        {event.provider}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Simplified info - always visible */}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-300">
-                      ${formatSmallNumber(inputValue)} converted
-                    </span>
-                    {(() => {
-                      const isGain = netLoss < 0; // Negative = gain
-                      const isBreakEven = Math.abs(netLoss) < 0.01;
-
-                      return (
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`text-xs ${
-                              isBreakEven
-                                ? "text-gray-400"
-                                : isGain
-                                  ? "text-green-400"
-                                  : "text-red-400"
-                            }`}
-                          >
-                            {isBreakEven
-                              ? "Break Even"
-                              : isGain
-                                ? "Arbitrage +"
-                                : "Loss -"}
-                            ${formatSmallNumber(Math.abs(netLoss))}
-                          </span>
-                          <span className="text-green-400">✓</span>
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Technical details - only when expanded */}
-                  {showTechnicalDetails && (
-                    <div className="mt-2 pt-2 border-t border-gray-700/50 space-y-1">
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>Input Value:</span>
-                        <span>${formatSmallNumber(inputValue)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>Output Value:</span>
-                        <span>${formatSmallNumber(outputValue)}</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        {(() => {
-                          const isGain = netLoss < 0; // Negative = gain
-                          const isBreakEven = Math.abs(netLoss) < 0.01;
-
-                          return (
-                            <>
-                              <span>
-                                {isBreakEven
-                                  ? "Trading Impact:"
-                                  : isGain
-                                    ? "Arbitrage Gain:"
-                                    : "Trading Loss:"}
-                              </span>
-                              <span
-                                className={
-                                  isBreakEven
-                                    ? "text-gray-400"
-                                    : isGain
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                }
-                              >
-                                {isGain ? "+" : ""}$
-                                {formatSmallNumber(Math.abs(netLoss))} (
-                                {lossPercentage >= 0 ? "" : "+"}
-                                {formatSmallNumber(Math.abs(lossPercentage))}
-                                %)
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>Gas Cost:</span>
-                        <span>${formatSmallNumber(gasCost)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-        </div>
+        {/* Events List */}
+        <EventsList
+          events={events}
+          showTechnicalDetails={showTechnicalDetails}
+        />
       </div>
     </GlassCard>
   );

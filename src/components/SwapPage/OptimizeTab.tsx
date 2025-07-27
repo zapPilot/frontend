@@ -14,6 +14,7 @@ import { GlassCard, GradientButton } from "../ui";
 import { useTokenState } from "./hooks/useTokenState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { useOptimizationData } from "./hooks/useOptimizationData";
+import { useUIState } from "./hooks/useUIState";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 import { StreamingProgress } from "./StreamingProgress";
@@ -199,11 +200,13 @@ export function OptimizeTab() {
     restoreTokens: handleRestoreDeletedTokens,
   } = useTokenState(showToast as any);
 
-  // State for TokenGrid functionality
-  const [showDetails, setShowDetails] = useState(false);
-
-  // State for DustZap Progress technical details
-  const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  // UI state management
+  const {
+    showDetails,
+    showTechnicalDetails,
+    toggleDetails: handleToggleDetails,
+    toggleTechnicalDetails: handleToggleTechnicalDetails,
+  } = useUIState();
 
   // Wallet transaction state management
   const {
@@ -219,7 +222,7 @@ export function OptimizeTab() {
     sendCalls,
     activeAccount,
     activeChain,
-    showToast,
+    showToast: showToast as any,
     getExplorerUrl,
   });
 
@@ -304,10 +307,6 @@ export function OptimizeTab() {
     },
     [showToast] // Add showToast as dependency
   );
-
-  const handleToggleDetails = useCallback(() => {
-    setShowDetails(prev => !prev);
-  }, []);
 
   const handleOptimize = useCallback(async () => {
     if (
@@ -524,9 +523,7 @@ export function OptimizeTab() {
         currentBatchIndex={currentBatchIndex}
         activeAccount={activeAccount}
         showTechnicalDetails={showTechnicalDetails}
-        onToggleTechnicalDetails={() =>
-          setShowTechnicalDetails(!showTechnicalDetails)
-        }
+        onToggleTechnicalDetails={handleToggleTechnicalDetails}
       />
       {/* Token Grid */}
       {optimizationOptions.convertDust && dustTokens.length > 0 && (

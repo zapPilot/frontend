@@ -20,7 +20,7 @@ const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> = {
  */
 export function getWalletBatchConfig(account: any): WalletBatchConfig {
   const walletType = detectSimpleWalletType(account);
-  return WALLET_BATCH_CONFIGS[walletType] || WALLET_BATCH_CONFIGS.default;
+  return WALLET_BATCH_CONFIGS[walletType] ?? WALLET_BATCH_CONFIGS.default;
 }
 
 /**
