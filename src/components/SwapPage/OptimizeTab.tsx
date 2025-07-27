@@ -1,6 +1,6 @@
 "use client";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { prepareTransaction } from "thirdweb";
 import {
   useActiveAccount,
@@ -234,19 +234,12 @@ export function OptimizeTab() {
     clearEvents,
   } = useDustZapStream();
 
-  // Debug: Initial state logging
-  useEffect(() => {
-    console.log("🔧 Initial State Check:", {
-      sendingToWallet,
-      walletSuccess,
-      walletError,
-      isOptimizing,
-      isStreaming,
-      isComplete,
-      accumulatedTransactionsLength: accumulatedTransactions.length,
-      timestamp: new Date().toISOString(),
-    });
-  }, []);
+  // Request state tracking to prevent infinite loops and race conditions
+  const currentRequestRef = useRef<{
+    userAddress: string;
+    chainName: string;
+    abortController: AbortController;
+  } | null>(null);
 
   // Calculate dust token data (filtered by deleted tokens)
   const filteredDustTokens = useMemo(() => {
@@ -279,10 +272,43 @@ export function OptimizeTab() {
     [dustTokenData]
   );
 
-  // Function to fetch dust tokens
+  // Function to fetch dust tokens with request deduplication and cleanup
   const fetchDustTokens = useCallback(
-    async (chainName: string, accountAddress: string) => {
+    async (chainName: string, accountAddress: string, signal?: AbortSignal) => {
       if (!chainName || !accountAddress) return;
+
+      // Check if we already have a request for this wallet+chain combination
+      const currentRequest = currentRequestRef.current;
+      if (
+        currentRequest &&
+        currentRequest.userAddress === accountAddress &&
+        currentRequest.chainName === chainName
+      ) {
+        console.log("Request already in progress for:", {
+          accountAddress,
+          chainName,
+        });
+        return; // Request already in progress, skip
+      }
+
+      // Cancel any existing request
+      if (currentRequest) {
+        currentRequest.abortController.abort();
+      }
+
+      // Create new AbortController for this request
+      const abortController = new AbortController();
+      const combinedSignal =
+        signal && typeof AbortSignal.any === "function"
+          ? AbortSignal.any([signal, abortController.signal])
+          : abortController.signal;
+
+      // Track this request
+      currentRequestRef.current = {
+        userAddress: accountAddress,
+        chainName,
+        abortController,
+      };
 
       setLoadingTokens(true);
       setTokensError(null);
@@ -291,19 +317,39 @@ export function OptimizeTab() {
         const debankChainName = transformToDebankChainName(
           chainName.toLowerCase()
         );
+
+        // Add abort signal to the request (if getTokens supports it)
         const tokens = await getTokens(debankChainName, accountAddress);
+
+        // Check if request was aborted
+        if (combinedSignal.aborted) {
+          return;
+        }
+
         setDustTokens(tokens);
       } catch (error) {
+        // Don't update state if request was aborted
+        if (combinedSignal.aborted) {
+          return;
+        }
+
         console.error("Error fetching dust tokens:", error);
         setTokensError(
           error instanceof Error ? error.message : "Unknown error"
         );
         setDustTokens([]);
       } finally {
-        setLoadingTokens(false);
+        // Only update loading state if this is still the current request
+        if (
+          currentRequestRef.current?.userAddress === accountAddress &&
+          currentRequestRef.current?.chainName === chainName
+        ) {
+          setLoadingTokens(false);
+          currentRequestRef.current = null;
+        }
       }
     },
-    []
+    [] // No dependencies - function is stable
   );
 
   // Function to create DustZap intent
@@ -315,12 +361,6 @@ export function OptimizeTab() {
       slippage: number
     ) => {
       try {
-        console.log("🔍 Creating DustZap intent with filtered tokens:", {
-          totalTokens: filteredDustTokens.length,
-          tokenIds: filteredDustTokens.map(t => t.id),
-          tokenSymbols: filteredDustTokens.map(t => t.symbol),
-        });
-        console.log("filteredDustTokens", filteredDustTokens);
         const response = await fetch(
           `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
           {
@@ -403,15 +443,6 @@ export function OptimizeTab() {
             "Wallet must be connected to perform dust conversion"
           );
         }
-
-        // Create DustZap intent
-        console.log("🚮 Token filtering status before intent creation:", {
-          totalDustTokens: dustTokens.length,
-          deletedTokenIds: Array.from(deletedTokenIds),
-          filteredDustTokens: filteredDustTokens.length,
-          filteredTokenIds: filteredDustTokens.map(t => t.id),
-          filteredTokenSymbols: filteredDustTokens.map(t => t.symbol),
-        });
 
         // Safeguard: Ensure no deleted tokens are included
         const hasDeletedTokens = filteredDustTokens.some(token =>
@@ -508,42 +539,45 @@ export function OptimizeTab() {
     );
   }, [optimizationOptions]);
 
-  // Effect to fetch dust tokens when needed
+  // Simplified effect - fetch tokens once per wallet/chain combination
   useEffect(() => {
-    // Only fetch if wallet is connected and we have the required data
-    if (
-      optimizationOptions.convertDust &&
-      !dustTokens.length &&
-      !loadingTokens &&
-      userAddress &&
-      chainName
-    ) {
-      fetchDustTokens(chainName, userAddress);
+    // Only proceed if we have wallet connection data
+    if (!userAddress || !chainName) {
+      return;
     }
-  }, [
-    optimizationOptions.convertDust,
-    dustTokens.length,
-    loadingTokens,
-    userAddress,
-    chainName,
-    fetchDustTokens,
-  ]);
 
-  // Effect to refresh data when wallet address or chain changes
-  useEffect(() => {
-    if (userAddress && chainName && optimizationOptions.convertDust) {
-      // Clear existing data and fetch new data for the new wallet/chain
-      setDustTokens([]);
-      setDeletedTokenIds(new Set());
-      setTokensError(null);
+    // Only fetch if we don't have tokens for this wallet/chain combination
+    const needsFetch =
+      !dustTokens.length ||
+      currentRequestRef.current?.userAddress !== userAddress ||
+      currentRequestRef.current?.chainName !== chainName;
+
+    if (needsFetch) {
+      // Clear existing data for wallet/chain changes
+      if (
+        currentRequestRef.current?.userAddress !== userAddress ||
+        currentRequestRef.current?.chainName !== chainName
+      ) {
+        setDustTokens([]);
+        setDeletedTokenIds(new Set());
+        setTokensError(null);
+      }
+
+      // Fetch tokens regardless of toggle state - toggle only controls UI visibility
       fetchDustTokens(chainName, userAddress);
     }
-  }, [
-    userAddress,
-    chainName,
-    optimizationOptions.convertDust,
-    fetchDustTokens,
-  ]);
+  }, [userAddress, chainName]); // Only wallet/chain changes trigger fetching
+
+  // Cleanup effect for component unmounting
+  useEffect(() => {
+    return () => {
+      // Cancel any pending requests when component unmounts
+      if (currentRequestRef.current) {
+        currentRequestRef.current.abortController.abort();
+        currentRequestRef.current = null;
+      }
+    };
+  }, []);
 
   // Effect to collect transactions only from complete event
   useEffect(() => {
@@ -555,15 +589,17 @@ export function OptimizeTab() {
     if (completeEvent && completeEvent.transactions) {
       setAccumulatedTransactions(completeEvent.transactions);
     } else if (completeEvent) {
-      console.log(
-        "❌ Complete event found but no transactions:",
-        completeEvent
-      );
+      showToast({
+        type: "errorx",
+        title: "No Transactions Generated",
+        message:
+          "The optimization completed but no transactions were created. This might happen if all tokens were already optimized or if there were no valid conversion paths.",
+        duration: 8000,
+      });
     }
   }, [events]);
   // Simplified function to send accumulated transactions to wallet
   const handleSendToWallet = useCallback(async () => {
-    console.log("handleSendToWallet");
     if (accumulatedTransactions.length === 0) {
       console.warn("No transactions to send to wallet");
       return;
@@ -572,11 +608,6 @@ export function OptimizeTab() {
     try {
       // Get wallet batch configuration (simple dictionary lookup)
       const batchConfig = getWalletBatchConfig(activeAccount);
-      const walletName = getSimpleWalletName(activeAccount);
-
-      console.log(
-        `Using ${walletName} with batch size ${batchConfig.batchSize}`
-      );
 
       // Create transaction batches with optimal size
       const transactionBatches = createTransactionBatches(
@@ -610,9 +641,6 @@ export function OptimizeTab() {
           if (!batch) {
             throw new Error(`Batch ${batchIndex + 1} is undefined`);
           }
-          console.log(
-            `Processing batch ${batchIndex + 1}/${transactionBatches.length} with ${batch.length} transactions`
-          );
 
           // Update current batch index and status
           setCurrentBatchIndex(batchIndex);
@@ -639,11 +667,9 @@ export function OptimizeTab() {
             // Send batch to wallet
             await new Promise<void>((resolve, reject) => {
               sendCalls(
-                { calls: [calls[0]], atomicRequired: false },
+                { calls, atomicRequired: false },
                 {
                   onSuccess: result => {
-                    console.log(`Batch ${batchIndex + 1} successful:`, result);
-
                     // Extract transaction hash
                     const txnHash = result?.receipts?.[0]?.transactionHash;
 
@@ -674,8 +700,6 @@ export function OptimizeTab() {
                     resolve();
                   },
                   onError: error => {
-                    console.error(`Batch ${batchIndex + 1} failed:`, error);
-
                     showToast({
                       type: "error",
                       title: `Batch ${batchIndex + 1} Failed`,
@@ -730,9 +754,6 @@ export function OptimizeTab() {
 
         // All batches succeeded
         setWalletSuccess(true);
-        console.log(
-          `✅ All ${transactionBatches.length} batches completed successfully`
-        );
       } catch (operationError: unknown) {
         console.error("Wallet operation failed:", operationError);
         const errorMessage =
@@ -760,16 +781,6 @@ export function OptimizeTab() {
   ]);
   // Effect to send transactions to wallet when stream completes
   useEffect(() => {
-    console.log("🚀 Wallet Trigger Effect Check:", {
-      isComplete,
-      accumulatedTransactionsLength: accumulatedTransactions.length,
-      sendingToWallet,
-      walletSuccess,
-      walletError,
-      isOptimizing,
-      timestamp: new Date().toISOString(),
-    });
-
     const shouldSendToWallet =
       isComplete &&
       accumulatedTransactions.length > 0 &&
@@ -777,21 +788,8 @@ export function OptimizeTab() {
       !walletSuccess &&
       !walletError;
 
-    console.log("📊 Should send to wallet:", shouldSendToWallet, {
-      breakdown: {
-        isComplete,
-        hasTransactions: accumulatedTransactions.length > 0,
-        notSendingToWallet: !sendingToWallet,
-        notWalletSuccess: !walletSuccess,
-        notWalletError: !walletError,
-      },
-    });
-
     if (shouldSendToWallet) {
-      console.log("🎯 TRIGGERING handleSendToWallet");
       handleSendToWallet();
-    } else {
-      console.log("🚫 NOT triggering handleSendToWallet - conditions not met");
     }
   }, [
     isComplete,
