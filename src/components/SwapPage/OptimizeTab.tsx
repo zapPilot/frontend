@@ -2,11 +2,6 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  createThirdwebClient,
-  getContract,
-  prepareContractCall,
-} from "thirdweb";
-import {
   useActiveAccount,
   useActiveWalletChain,
   useSendAndConfirmCalls,
@@ -24,7 +19,6 @@ import { GlassCard, GradientButton } from "../ui";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
 import { WalletTransactionProgress } from "./WalletTransactionProgress";
-
 export interface OptimizationOptions {
   convertDust: boolean;
   rebalancePortfolio: boolean;
@@ -39,7 +33,7 @@ interface DustToken {
   price: number;
   decimals: number;
   logo_url?: string;
-  raw_amount?: string;
+  raw_amount_hex_str?: string;
 }
 
 interface TokenGridProps {
@@ -50,9 +44,6 @@ interface TokenGridProps {
   deletedTokenIds: Set<string>;
   onRestoreDeletedTokens: () => void;
 }
-const THIRDWEB_CLIENT = createThirdwebClient({
-  clientId: "476d07dc76e77ea27ebcad4cbe24907e",
-});
 
 const TokenGrid = ({
   tokens,
@@ -349,7 +340,7 @@ export function OptimizeTab() {
                   amount: token.amount,
                   price: token.price,
                   decimals: token.decimals,
-                  raw_amount: token.raw_amount,
+                  raw_amount_hex_str: token.raw_amount_hex_str,
                 })),
                 toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
                 toTokenDecimals: 18,
@@ -679,7 +670,7 @@ export function OptimizeTab() {
                 to: tx.to,
                 ...(tx.data != null && { data: tx.data }),
                 value: tx.value ? BigInt(tx.value) : 0, // Convert string to bigint for proper ETH value handling
-                gasLimit: tx.gasLimit,
+                gasLimit: BigInt(tx.gasLimit),
               }));
               console.log("calls", calls);
 
@@ -1217,36 +1208,6 @@ export function OptimizeTab() {
           </div>
         </GlassCard>
       )}
-      <button
-        onClick={() => {
-          const wethContract = getContract({
-            client: THIRDWEB_CLIENT,
-            address: "0x4200000000000000000000000000000000000006",
-            chain: activeChain,
-            abi: [
-              {
-                inputs: [],
-                name: "deposit",
-                outputs: [],
-                stateMutability: "payable",
-                type: "function",
-              },
-            ],
-          });
-          const wrapEthTxn = prepareContractCall({
-            contract: wethContract,
-            method: "deposit",
-            value: 10000000n,
-          });
-          console.log("wrapEthTxn", wrapEthTxn);
-          sendCalls({
-            calls: [wrapEthTxn],
-            atomicRequired: false,
-          });
-        }}
-      >
-        test button
-      </button>
       {/* Token Grid */}
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid
