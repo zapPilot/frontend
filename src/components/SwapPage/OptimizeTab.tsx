@@ -1,6 +1,5 @@
 "use client";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { prepareTransaction } from "thirdweb";
 import {
   useActiveAccount,
@@ -9,22 +8,19 @@ import {
 } from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { useToast } from "../../hooks/useToast";
-import { transformToDebankChainName } from "../../utils/chainHelper";
-import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import {
   createTransactionBatches,
-  getSimpleWalletName,
   getWalletBatchConfig,
 } from "../../utils/walletBatching";
-import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
+import { useTokenState } from "./hooks/useTokenState";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
-import { WalletTransactionProgress } from "./WalletTransactionProgress";
+import { StreamingProgress } from "./StreamingProgress";
 export interface OptimizationOptions {
   convertDust: boolean;
   rebalancePortfolio: boolean;
@@ -195,14 +191,20 @@ export function OptimizeTab() {
   // State for workflow
   const [isOptimizing, setIsOptimizing] = useState(false);
 
-  // State for dust tokens
-  const [dustTokens, setDustTokens] = useState<DustToken[]>([]);
-  const [loadingTokens, setLoadingTokens] = useState(false);
-  const [tokensError, setTokensError] = useState<string | null>(null);
+  // Token state management
+  const {
+    tokens: dustTokens,
+    filteredTokens: filteredDustTokens,
+    isLoading: loadingTokens,
+    error: tokensError,
+    deletedIds: deletedTokenIds,
+    fetchTokens: fetchDustTokens,
+    deleteToken: handleDeleteToken,
+    restoreTokens: handleRestoreDeletedTokens,
+  } = useTokenState(showToast as any);
 
   // State for TokenGrid functionality
   const [showDetails, setShowDetails] = useState(false);
-  const [deletedTokenIds, setDeletedTokenIds] = useState(new Set<string>());
 
   // State for DustZap Progress technical details
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
@@ -234,17 +236,7 @@ export function OptimizeTab() {
     clearEvents,
   } = useDustZapStream();
 
-  // Request state tracking to prevent infinite loops and race conditions
-  const currentRequestRef = useRef<{
-    userAddress: string;
-    chainName: string;
-    abortController: AbortController;
-  } | null>(null);
-
-  // Calculate dust token data (filtered by deleted tokens)
-  const filteredDustTokens = useMemo(() => {
-    return dustTokens.filter(token => !deletedTokenIds.has(token.id));
-  }, [dustTokens, deletedTokenIds]);
+  // Calculate dust token data
 
   const dustTokenData = useMemo(() => {
     if (!filteredDustTokens.length) return { dustValue: 0, dustTokenCount: 0 };
@@ -270,87 +262,6 @@ export function OptimizeTab() {
       estimatedGasSavings: 0.003,
     }),
     [dustTokenData]
-  );
-
-  // Function to fetch dust tokens with request deduplication and cleanup
-  const fetchDustTokens = useCallback(
-    async (chainName: string, accountAddress: string) => {
-      if (!chainName || !accountAddress) return;
-
-      // Check if we already have a request for this wallet+chain combination
-      const currentRequest = currentRequestRef.current;
-      if (
-        currentRequest &&
-        currentRequest.userAddress === accountAddress &&
-        currentRequest.chainName === chainName
-      ) {
-        // Request already in progress, skip (development info)
-        return;
-      }
-
-      // Cancel any existing request
-      if (currentRequest) {
-        currentRequest.abortController.abort();
-      }
-
-      // Create new AbortController for this request
-      const abortController = new AbortController();
-
-      // Track this request
-      currentRequestRef.current = {
-        userAddress: accountAddress,
-        chainName,
-        abortController,
-      };
-
-      setLoadingTokens(true);
-      setTokensError(null);
-
-      try {
-        const debankChainName = transformToDebankChainName(
-          chainName.toLowerCase()
-        );
-
-        // Fetch tokens (note: getTokens doesn't support AbortSignal yet)
-        const tokens = await getTokens(debankChainName, accountAddress);
-
-        // Check if request was aborted during fetch
-        if (abortController.signal.aborted) {
-          return;
-        }
-
-        setDustTokens(tokens);
-      } catch (error) {
-        // Don't update state if request was aborted
-        if (abortController.signal.aborted) {
-          return;
-        }
-
-        // Show user-friendly error notification instead of console.error
-        showToast({
-          type: "error",
-          title: "Failed to Load Tokens",
-          message:
-            "Unable to fetch your token list. Please try reconnecting your wallet.",
-          duration: 6000,
-        });
-
-        setTokensError(
-          error instanceof Error ? error.message : "Unknown error"
-        );
-        setDustTokens([]);
-      } finally {
-        // Only update loading state if this is still the current request
-        if (
-          currentRequestRef.current?.userAddress === accountAddress &&
-          currentRequestRef.current?.chainName === chainName
-        ) {
-          setLoadingTokens(false);
-          currentRequestRef.current = null;
-        }
-      }
-    },
-    [showToast] // Add showToast as dependency
   );
 
   // Function to create DustZap intent
@@ -411,15 +322,6 @@ export function OptimizeTab() {
     },
     [showToast] // Add showToast as dependency
   );
-
-  // TokenGrid handler functions
-  const handleDeleteToken = useCallback((tokenId: string) => {
-    setDeletedTokenIds(prev => new Set([...prev, tokenId]));
-  }, []);
-
-  const handleRestoreDeletedTokens = useCallback(() => {
-    setDeletedTokenIds(new Set());
-  }, []);
 
   const handleToggleDetails = useCallback(() => {
     setShowDetails(prev => !prev);
@@ -569,38 +471,10 @@ export function OptimizeTab() {
       return;
     }
 
-    // Only fetch if we don't have tokens for this wallet/chain combination
-    const needsFetch =
-      !dustTokens.length ||
-      currentRequestRef.current?.userAddress !== userAddress ||
-      currentRequestRef.current?.chainName !== chainName;
-
-    if (needsFetch) {
-      // Clear existing data for wallet/chain changes
-      if (
-        currentRequestRef.current?.userAddress !== userAddress ||
-        currentRequestRef.current?.chainName !== chainName
-      ) {
-        setDustTokens([]);
-        setDeletedTokenIds(new Set());
-        setTokensError(null);
-      }
-
-      // Fetch tokens regardless of toggle state - toggle only controls UI visibility
-      fetchDustTokens(chainName, userAddress);
-    }
-  }, [userAddress, chainName]); // Only wallet/chain changes trigger fetching
-
-  // Cleanup effect for component unmounting
-  useEffect(() => {
-    return () => {
-      // Cancel any pending requests when component unmounts
-      if (currentRequestRef.current) {
-        currentRequestRef.current.abortController.abort();
-        currentRequestRef.current = null;
-      }
-    };
-  }, []);
+    // Fetch tokens regardless of toggle state - toggle only controls UI visibility
+    // The hook handles request deduplication and state management internally
+    fetchDustTokens(chainName, userAddress);
+  }, [userAddress, chainName, fetchDustTokens]); // Only wallet/chain changes trigger fetching
 
   // Effect to collect transactions only from complete event
   useEffect(() => {
@@ -613,7 +487,7 @@ export function OptimizeTab() {
       setAccumulatedTransactions(completeEvent.transactions);
     } else if (completeEvent) {
       showToast({
-        type: "errorx",
+        type: "error",
         title: "No Transactions Generated",
         message:
           "The optimization completed but no transactions were created. This might happen if all tokens were already optimized or if there were no valid conversion paths.",
@@ -857,301 +731,26 @@ export function OptimizeTab() {
       </GlassCard>
 
       {/* Streaming Progress */}
-      {(isStreaming || events.length > 0) && (
-        <GlassCard>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">DustZap Progress</h3>
-              <div className="text-sm text-gray-400">
-                {isStreaming ? "Processing..." : "Complete"}
-              </div>
-            </div>
-
-            {totalTokens > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Token Conversion</span>
-                  <span>
-                    {processedTokens}/{totalTokens}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {batchesCompleted > 0 && (
-              <div className="text-sm text-gray-400">
-                Batches completed: {batchesCompleted}
-              </div>
-            )}
-
-            {(streamError || tokensError || walletError) && (
-              <div className="text-sm text-red-400 bg-red-900/20 p-2 rounded">
-                Error: {streamError || tokensError || walletError}
-              </div>
-            )}
-
-            {/* Enhanced Wallet Transaction Progress */}
-            <WalletTransactionProgress
-              isVisible={
-                sendingToWallet || walletSuccess || batchProgress.length > 0
-              }
-              overallStatus={
-                walletSuccess
-                  ? "completed"
-                  : sendingToWallet
-                    ? "processing"
-                    : walletError
-                      ? "failed"
-                      : "idle"
-              }
-              batches={batchProgress}
-              currentBatch={currentBatchIndex}
-              walletType={getSimpleWalletName(activeAccount)}
-            />
-
-            {/* Enhanced Trading Summary */}
-            <div className="bg-gray-800/50 rounded-lg p-4 mb-4 border border-gray-700/50">
-              <div className="grid grid-cols-3 gap-4 mb-3">
-                {/* Total Input Value */}
-                <div className="text-center">
-                  <div className="text-sm text-gray-400 mb-1">Input Value</div>
-                  <div className="font-semibold text-blue-400">
-                    $
-                    {formatSmallNumber(
-                      events
-                        .filter(
-                          (e: any) => e.type === "token_ready" && e.tradingLoss
-                        )
-                        .reduce(
-                          (sum, e: any) =>
-                            sum + (e.tradingLoss?.inputValueUSD || 0),
-                          0
-                        )
-                    )}
-                  </div>
-                </div>
-
-                {/* Total Output Value */}
-                <div className="text-center">
-                  <div className="text-sm text-gray-400 mb-1">Output Value</div>
-                  <div className="font-semibold text-green-400">
-                    $
-                    {formatSmallNumber(
-                      events
-                        .filter(
-                          (e: any) => e.type === "token_ready" && e.tradingLoss
-                        )
-                        .reduce(
-                          (sum, e: any) =>
-                            sum + (e.tradingLoss?.outputValueUSD || 0),
-                          0
-                        )
-                    )}
-                  </div>
-                </div>
-
-                {/* Trading Impact */}
-                <div className="text-center">
-                  <div className="text-sm text-gray-400 mb-1">
-                    Trading Impact
-                  </div>
-                  {(() => {
-                    const totalTradingLoss = events
-                      .filter(
-                        (e: any) => e.type === "token_ready" && e.tradingLoss
-                      )
-                      .reduce(
-                        (sum, e: any) => sum + (e.tradingLoss?.netLossUSD || 0),
-                        0
-                      );
-                    const isGain = totalTradingLoss < 0; // Negative = gain
-                    const isBreakEven = Math.abs(totalTradingLoss) < 0.01;
-
-                    return (
-                      <div
-                        className={`font-semibold ${
-                          isBreakEven
-                            ? "text-gray-400"
-                            : isGain
-                              ? "text-green-400"
-                              : "text-red-400"
-                        }`}
-                      >
-                        {isGain ? "+" : ""}$
-                        {formatSmallNumber(Math.abs(totalTradingLoss))}
-                        <div className="text-xs mt-1">
-                          {isBreakEven
-                            ? "Break Even"
-                            : isGain
-                              ? "Arbitrage Gain"
-                              : "Trading Loss"}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-              </div>
-
-              {/* Technical Details Toggle */}
-              <button
-                onClick={() => setShowTechnicalDetails(!showTechnicalDetails)}
-                className="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                {showTechnicalDetails ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
-                {showTechnicalDetails ? "Hide" : "Show"} Technical Details
-              </button>
-            </div>
-
-            {/* Scrollable Events List */}
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {events
-                .filter(
-                  (event: any) => event.type === "token_ready" && event.provider
-                )
-                .map((event: any, index) => {
-                  const tradingLoss = event.tradingLoss;
-                  const inputValue = tradingLoss?.inputValueUSD || 0;
-                  const outputValue = tradingLoss?.outputValueUSD || 0;
-                  const netLoss = tradingLoss?.netLossUSD || 0;
-                  const lossPercentage = tradingLoss?.lossPercentage || 0;
-                  const gasCost = event.gasCostUSD || 0;
-
-                  return (
-                    <div
-                      key={index}
-                      className="bg-gray-800/30 rounded-lg p-3 border border-gray-700/30"
-                    >
-                      {/* Main conversion info */}
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <ImageWithFallback
-                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol?.toLowerCase()}.webp`}
-                            alt={event.tokenSymbol || "Token"}
-                            fallbackType="token"
-                            symbol={event.tokenSymbol}
-                            size={20}
-                          />
-                          <span className="font-medium text-blue-300 text-sm">
-                            {event.tokenSymbol || "Token"}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400">via</span>
-                          <ImageWithFallback
-                            src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider?.toLowerCase()}.webp`}
-                            alt={event.provider || "Provider"}
-                            fallbackType="project"
-                            symbol={event.provider}
-                            size={16}
-                          />
-                          <span className="text-green-400 text-sm">
-                            {event.provider}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Simplified info - always visible */}
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-300">
-                          ${formatSmallNumber(inputValue)} converted
-                        </span>
-                        {(() => {
-                          const isGain = netLoss < 0; // Negative = gain
-                          const isBreakEven = Math.abs(netLoss) < 0.01;
-
-                          return (
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`text-xs ${
-                                  isBreakEven
-                                    ? "text-gray-400"
-                                    : isGain
-                                      ? "text-green-400"
-                                      : "text-red-400"
-                                }`}
-                              >
-                                {isBreakEven
-                                  ? "Break Even"
-                                  : isGain
-                                    ? "Arbitrage +"
-                                    : "Loss -"}
-                                ${formatSmallNumber(Math.abs(netLoss))}
-                              </span>
-                              <span className="text-green-400">✓</span>
-                            </div>
-                          );
-                        })()}
-                      </div>
-
-                      {/* Technical details - only when expanded */}
-                      {showTechnicalDetails && (
-                        <div className="mt-2 pt-2 border-t border-gray-700/50 space-y-1">
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Input Value:</span>
-                            <span>${formatSmallNumber(inputValue)}</span>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Output Value:</span>
-                            <span>${formatSmallNumber(outputValue)}</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            {(() => {
-                              const isGain = netLoss < 0; // Negative = gain
-                              const isBreakEven = Math.abs(netLoss) < 0.01;
-
-                              return (
-                                <>
-                                  <span>
-                                    {isBreakEven
-                                      ? "Trading Impact:"
-                                      : isGain
-                                        ? "Arbitrage Gain:"
-                                        : "Trading Loss:"}
-                                  </span>
-                                  <span
-                                    className={
-                                      isBreakEven
-                                        ? "text-gray-400"
-                                        : isGain
-                                          ? "text-green-400"
-                                          : "text-red-400"
-                                    }
-                                  >
-                                    {isGain ? "+" : ""}$
-                                    {formatSmallNumber(Math.abs(netLoss))} (
-                                    {lossPercentage >= 0 ? "" : "+"}
-                                    {formatSmallNumber(
-                                      Math.abs(lossPercentage)
-                                    )}
-                                    %)
-                                  </span>
-                                </>
-                              );
-                            })()}
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Gas Cost:</span>
-                            <span>${formatSmallNumber(gasCost)}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          </div>
-        </GlassCard>
-      )}
+      <StreamingProgress
+        isStreaming={isStreaming}
+        events={events}
+        totalTokens={totalTokens}
+        processedTokens={processedTokens}
+        progress={progress}
+        batchesCompleted={batchesCompleted}
+        streamError={streamError}
+        tokensError={tokensError}
+        walletError={walletError}
+        sendingToWallet={sendingToWallet}
+        walletSuccess={walletSuccess}
+        batchProgress={batchProgress}
+        currentBatchIndex={currentBatchIndex}
+        activeAccount={activeAccount}
+        showTechnicalDetails={showTechnicalDetails}
+        onToggleTechnicalDetails={() =>
+          setShowTechnicalDetails(!showTechnicalDetails)
+        }
+      />
       {/* Token Grid */}
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid
