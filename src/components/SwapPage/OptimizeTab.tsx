@@ -274,7 +274,7 @@ export function OptimizeTab() {
 
   // Function to fetch dust tokens with request deduplication and cleanup
   const fetchDustTokens = useCallback(
-    async (chainName: string, accountAddress: string, signal?: AbortSignal) => {
+    async (chainName: string, accountAddress: string) => {
       if (!chainName || !accountAddress) return;
 
       // Check if we already have a request for this wallet+chain combination
@@ -284,11 +284,8 @@ export function OptimizeTab() {
         currentRequest.userAddress === accountAddress &&
         currentRequest.chainName === chainName
       ) {
-        console.log("Request already in progress for:", {
-          accountAddress,
-          chainName,
-        });
-        return; // Request already in progress, skip
+        // Request already in progress, skip (development info)
+        return;
       }
 
       // Cancel any existing request
@@ -298,10 +295,6 @@ export function OptimizeTab() {
 
       // Create new AbortController for this request
       const abortController = new AbortController();
-      const combinedSignal =
-        signal && typeof AbortSignal.any === "function"
-          ? AbortSignal.any([signal, abortController.signal])
-          : abortController.signal;
 
       // Track this request
       currentRequestRef.current = {
@@ -318,22 +311,30 @@ export function OptimizeTab() {
           chainName.toLowerCase()
         );
 
-        // Add abort signal to the request (if getTokens supports it)
+        // Fetch tokens (note: getTokens doesn't support AbortSignal yet)
         const tokens = await getTokens(debankChainName, accountAddress);
 
-        // Check if request was aborted
-        if (combinedSignal.aborted) {
+        // Check if request was aborted during fetch
+        if (abortController.signal.aborted) {
           return;
         }
 
         setDustTokens(tokens);
       } catch (error) {
         // Don't update state if request was aborted
-        if (combinedSignal.aborted) {
+        if (abortController.signal.aborted) {
           return;
         }
 
-        console.error("Error fetching dust tokens:", error);
+        // Show user-friendly error notification instead of console.error
+        showToast({
+          type: "error",
+          title: "Failed to Load Tokens",
+          message:
+            "Unable to fetch your token list. Please try reconnecting your wallet.",
+          duration: 6000,
+        });
+
         setTokensError(
           error instanceof Error ? error.message : "Unknown error"
         );
@@ -349,7 +350,7 @@ export function OptimizeTab() {
         }
       }
     },
-    [] // No dependencies - function is stable
+    [showToast] // Add showToast as dependency
   );
 
   // Function to create DustZap intent
@@ -397,11 +398,18 @@ export function OptimizeTab() {
         const result = await response.json();
         return result.intentId;
       } catch (error) {
-        console.error("Error creating DustZap intent:", error);
+        // Show user-friendly error notification
+        showToast({
+          type: "error",
+          title: "Optimization Failed",
+          message:
+            "Unable to prepare your optimization. Please check your connection and try again.",
+          duration: 8000,
+        });
         throw error;
       }
     },
-    [] // Empty dependency array - function doesn't close over external variables
+    [showToast] // Add showToast as dependency
   );
 
   // TokenGrid handler functions
@@ -449,9 +457,14 @@ export function OptimizeTab() {
           deletedTokenIds.has(token.id)
         );
         if (hasDeletedTokens) {
-          console.error(
-            "❌ Deleted tokens found in filtered list! This should not happen."
-          );
+          // Show critical error notification
+          showToast({
+            type: "error",
+            title: "Internal Error Detected",
+            message:
+              "A data consistency issue was detected. Please refresh the page and try again.",
+            duration: 10000,
+          });
           throw new Error("Deleted tokens found in filtered list");
         }
 
@@ -471,7 +484,16 @@ export function OptimizeTab() {
         }, 12000);
       }
     } catch (error) {
-      console.error("Error during optimization:", error);
+      // Show general optimization error notification
+      showToast({
+        type: "error",
+        title: "Optimization Failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during optimization.",
+        duration: 8000,
+      });
       setIsOptimizing(false);
     }
   }, [
@@ -482,6 +504,7 @@ export function OptimizeTab() {
     clearEvents,
     userAddress,
     chainId,
+    showToast,
   ]);
 
   const getOptimizeButtonText = useCallback(() => {
