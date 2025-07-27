@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
 import { OnboardingProvider } from "@/providers/OnboardingProvider";
+import { ToastProvider } from "@/hooks/useToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,7 +83,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
       >
         <SimpleWeb3Provider>
-          <OnboardingProvider>{children}</OnboardingProvider>
+          <OnboardingProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </OnboardingProvider>
         </SimpleWeb3Provider>
       </body>
     </html>

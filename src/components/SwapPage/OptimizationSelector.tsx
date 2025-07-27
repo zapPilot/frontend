@@ -171,25 +171,6 @@ export function OptimizationSelector({
           </div>
         </label>
       </div>
-
-      {/* Summary */}
-      {(options.convertDust || options.rebalancePortfolio) && (
-        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30">
-          <div className="text-sm text-gray-300">
-            <span className="font-medium">Selected optimizations:</span>{" "}
-            {options.convertDust && options.rebalancePortfolio
-              ? "Dust conversion + Portfolio rebalancing"
-              : options.convertDust
-                ? "Dust conversion only"
-                : "Portfolio rebalancing only"}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Estimated completion time:{" "}
-            {options.convertDust && options.rebalancePortfolio ? "3-5" : "2-3"}{" "}
-            minutes
-          </div>
-        </div>
-      )}
     </div>
   );
 }
