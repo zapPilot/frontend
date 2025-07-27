@@ -8,11 +8,15 @@ import {
 } from "thirdweb/react";
 import { useCancellableOperation } from "../../hooks/useCancellableOperation";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
-import { useWalletCapabilities } from "../../hooks/useWalletCapabilities";
 import { transformToDebankChainName } from "../../utils/chainHelper";
 import { getTokens } from "../../utils/dustConversion";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
+import {
+  createTransactionBatches,
+  getSimpleWalletName,
+  getWalletBatchConfig,
+} from "../../utils/walletBatching";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
@@ -197,12 +201,7 @@ export function OptimizeTab() {
   const [walletError, setWalletError] = useState<string | null>(null);
   const [walletSuccess, setWalletSuccess] = useState(false);
 
-  // Enhanced wallet functionality hooks
-  const {
-    getWalletCapabilities,
-    chunkTransactionsForWallet,
-    detectWalletType,
-  } = useWalletCapabilities();
+  // Simple wallet batching (replaces complex useWalletCapabilities)
   const {
     startOperation,
     cancelOperation,
@@ -585,23 +584,22 @@ export function OptimizeTab() {
           300000 // 5 minute timeout
         );
 
-        // Step 3: Get wallet capabilities and determine batching strategy
-        const walletCapabilities = await getWalletCapabilities(activeAccount);
-        const walletType = detectWalletType(activeAccount);
+        // Step 3: Get wallet batch configuration (simple dictionary lookup)
+        const batchConfig = getWalletBatchConfig(activeAccount);
+        const walletName = getSimpleWalletName(activeAccount);
 
         console.log(
-          `Detected wallet: ${walletType}, max batch size: ${walletCapabilities.dynamicBatchSize}`
+          `Using ${walletName} with batch size ${batchConfig.batchSize}`
         );
 
-        // Step 4: Chunk transactions based on wallet capabilities
-        const transactionBatches = await chunkTransactionsForWallet(
+        // Step 4: Create transaction batches with optimal size
+        const transactionBatches = createTransactionBatches(
           accumulatedTransactions,
-          activeAccount
+          batchConfig.batchSize
         );
 
         // Step 5: Calculate timing estimates
-        const estimatedTimePerBatch =
-          walletCapabilities.estimatedConfirmationTime;
+        const estimatedTimePerBatch = batchConfig.estimatedTime;
         const totalEstimatedMs =
           transactionBatches.length * estimatedTimePerBatch;
         setTotalEstimatedTime(totalEstimatedMs / 1000);
@@ -675,7 +673,7 @@ export function OptimizeTab() {
               console.log("calls", calls);
 
               console.log(
-                `Sending batch ${batchIndex + 1}/${transactionBatches.length} (${calls.length} transactions) to ${walletType}...`
+                `Sending batch ${batchIndex + 1}/${transactionBatches.length} (${calls.length} transactions) to ${walletName}...`
               );
 
               // Send batch to wallet
@@ -799,9 +797,6 @@ export function OptimizeTab() {
       sendCalls,
       activeAccount,
       startOperation,
-      getWalletCapabilities,
-      detectWalletType,
-      chunkTransactionsForWallet,
       updateProgress,
       completeOperation,
       errorOperation,
@@ -968,7 +963,7 @@ export function OptimizeTab() {
               elapsedTime={elapsedTime}
               canCancel={sendingToWallet && operationStatus === "running"}
               onCancel={handleCancelWalletOperation}
-              walletType={detectWalletType(activeAccount)}
+              walletType={getSimpleWalletName(activeAccount)}
             />
 
             {/* Enhanced Trading Summary */}
