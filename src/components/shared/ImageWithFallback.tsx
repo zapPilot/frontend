@@ -1,5 +1,6 @@
 import { HelpCircle } from "lucide-react";
-import React, { useCallback, useState } from "react";
+import Image from "next/image";
+import React, { useState } from "react";
 
 interface ImageWithFallbackProps {
   src: string;
@@ -18,57 +19,61 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className = "",
   symbol,
 }) => {
-  const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(src);
-  const [hasFallbackAttempted, setHasFallbackAttempted] = useState(false);
+  const [imageState, setImageState] = useState({
+    status: "loading" as "loading" | "fallback" | "error",
+    currentSrc: src,
+    attemptedFallback: false,
+  });
 
   // Reset state when src changes
   React.useEffect(() => {
-    setCurrentSrc(src);
-    setHasError(false);
-    setHasFallbackAttempted(false);
+    setImageState({
+      status: "loading",
+      currentSrc: src,
+      attemptedFallback: false,
+    });
   }, [src]);
 
-  const getFallbackSrc = useCallback(
-    (type: string, symbol?: string): string | null => {
-      const lowerSymbol = symbol?.toLowerCase()?.trim() || "";
+  const getFallbackSrc = (type: string, symbol?: string): string | null => {
+    const lowerSymbol = symbol?.toLowerCase()?.trim() || "";
 
-      // Don't try fallback if no symbol provided
-      if (!lowerSymbol) {
+    // Don't try fallback if no symbol provided
+    if (!lowerSymbol) {
+      return null;
+    }
+
+    switch (type) {
+      case "token":
+        return `https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${lowerSymbol}.webp`;
+      case "chain":
+        return `https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/${lowerSymbol}.webp`;
+      case "project":
+        return `https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${lowerSymbol}.webp`;
+      default:
         return null;
-      }
+    }
+  };
 
-      switch (type) {
-        case "token":
-          return `https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${lowerSymbol}.webp`;
-        case "chain":
-          return `https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/${lowerSymbol}.webp`;
-        case "project":
-          return `https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${lowerSymbol}.webp`;
-        default:
-          return null;
-      }
-    },
-    []
-  );
-
-  const handleImageError = useCallback(() => {
-    if (!hasFallbackAttempted) {
+  const handleImageError = () => {
+    if (!imageState.attemptedFallback) {
       // Try one fallback attempt
       const fallbackSrc = getFallbackSrc(fallbackType, symbol);
-      if (fallbackSrc) {
-        setCurrentSrc(fallbackSrc);
-        setHasFallbackAttempted(true);
+      if (fallbackSrc && fallbackSrc !== imageState.currentSrc) {
+        setImageState({
+          status: "fallback",
+          currentSrc: fallbackSrc,
+          attemptedFallback: true,
+        });
         return;
       }
     }
 
     // All attempts failed, show error state
-    setHasError(true);
-  }, [hasFallbackAttempted, fallbackType, symbol, getFallbackSrc]);
+    setImageState(prev => ({ ...prev, status: "error" }));
+  };
 
   // If image failed, show question mark icon
-  if (hasError) {
+  if (imageState.status === "error") {
     return (
       <div
         className={`flex items-center justify-center rounded-full bg-gray-700 ${className}`}
@@ -82,16 +87,18 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-gray-600 ${className}`}
+      className={`flex items-center justify-center rounded-full bg-gray-600 overflow-hidden ${className}`}
       style={{ width: size, height: size }}
     >
-      <img
-        src={currentSrc}
+      <Image
+        src={imageState.currentSrc}
         alt={alt}
         width={size}
         height={size}
-        className="rounded-full"
+        className="rounded-full object-cover"
+        key={imageState.currentSrc} // Force re-render on src change
         onError={handleImageError}
+        unoptimized // Disable Next.js optimization for external URLs
       />
     </div>
   );
