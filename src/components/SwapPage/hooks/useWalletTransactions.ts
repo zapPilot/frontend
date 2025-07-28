@@ -100,7 +100,6 @@ export function useWalletTransactions({
 
   const sendToWallet = useCallback(async () => {
     if (state.transactions.length === 0) {
-      console.warn("No transactions to send to wallet");
       return;
     }
 
@@ -230,7 +229,6 @@ export function useWalletTransactions({
             }
           } catch (batchError: unknown) {
             // FAIL FAST: If any batch fails, stop immediately
-            console.error(`Batch ${batchIndex + 1} failed:`, batchError);
 
             const errorMessage =
               batchError instanceof Error
@@ -260,7 +258,6 @@ export function useWalletTransactions({
         // All batches succeeded
         setState(prev => ({ ...prev, status: "success" }));
       } catch (operationError: unknown) {
-        console.error("Wallet operation failed:", operationError);
         const errorMessage =
           operationError instanceof Error
             ? operationError.message
@@ -268,7 +265,6 @@ export function useWalletTransactions({
         setState(prev => ({ ...prev, status: "error", error: errorMessage }));
       }
     } catch (error: unknown) {
-      console.error("Error in wallet operation:", error);
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       setState(prev => ({ ...prev, status: "error", error: errorMessage }));

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { formatSmallNumber } from "../../utils/formatters";
+import { ImageWithFallback } from "../shared/ImageWithFallback";
 
 interface EventsListProps {
   events: any[];

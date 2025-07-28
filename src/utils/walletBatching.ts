@@ -7,7 +7,9 @@ interface WalletBatchConfig {
   estimatedTime: number; // milliseconds
 }
 
-const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> = {
+const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> & {
+  default: WalletBatchConfig;
+} = {
   metamask: { batchSize: 15, estimatedTime: 25000 },
   walletconnect: { batchSize: 8, estimatedTime: 35000 },
   coinbase: { batchSize: 12, estimatedTime: 30000 },
