@@ -1,7 +1,8 @@
 "use client";
 
 import { ArrowRightLeft, Coins } from "lucide-react";
-import { formatBalance } from "../../utils/formatters";
+import { memo, useMemo } from "react";
+import { formatSmallCurrency } from "../../utils/formatters";
 import {
   calculateTotalTokenValue,
   getTokenSymbol,
@@ -29,7 +30,7 @@ interface OptimizationSelectorProps {
   };
 }
 
-export function OptimizationSelector({
+export const OptimizationSelector = memo(function OptimizationSelector({
   options,
   onChange,
   dustTokens,
@@ -45,13 +46,21 @@ export function OptimizationSelector({
     });
   };
 
-  // Calculate dust token data
-  const dustValue = calculateTotalTokenValue(dustTokens);
-  const dustTokenCount = dustTokens.length;
-  const displayTokens = dustTokens
-    .slice() // create a shallow copy to avoid mutating the original array
-    .sort((a, b) => b.price * b.amount - a.price * a.amount)
-    .slice(0, 3); // Show top 3 tokens by value
+  // Memoize expensive calculations to avoid recalculating on every render
+  const dustTokenData = useMemo(() => {
+    const dustValue = calculateTotalTokenValue(dustTokens);
+    const dustTokenCount = dustTokens.length;
+    const displayTokens = dustTokens
+      .slice() // create a shallow copy to avoid mutating the original array
+      .sort((a, b) => b.price * b.amount - a.price * a.amount)
+      .slice(0, 3); // Show top 3 tokens by value
+
+    return {
+      dustValue,
+      dustTokenCount,
+      displayTokens,
+    };
+  }, [dustTokens]);
   return (
     <div className="space-y-4">
       <h4 className="font-semibold text-white">Choose Optimizations</h4>
@@ -83,10 +92,10 @@ export function OptimizationSelector({
               <div className="text-sm text-gray-400">
                 {loadingTokens ? (
                   "Loading dust tokens..."
-                ) : dustTokenCount > 0 ? (
+                ) : dustTokenData.dustTokenCount > 0 ? (
                   <>
-                    Convert {dustTokenCount} small token balances worth{" "}
-                    {formatBalance(dustValue)}
+                    Convert {dustTokenData.dustTokenCount} small token balances
+                    worth {formatSmallCurrency(dustTokenData.dustValue)}
                   </>
                 ) : (
                   "No dust tokens found"
@@ -97,11 +106,11 @@ export function OptimizationSelector({
               </div>
 
               {/* Token Previews */}
-              {dustTokenCount > 0 && (
+              {dustTokenData.dustTokenCount > 0 && (
                 <div className="flex items-center gap-2 mt-2">
                   <div className="text-xs text-gray-400">Tokens:</div>
                   <div className="flex items-center gap-1">
-                    {displayTokens.map(token => (
+                    {dustTokenData.displayTokens.map(token => (
                       <div key={token.id} className="flex items-center gap-1">
                         <TokenImage token={token} size={16} />
                         <span className="text-xs text-gray-400">
@@ -109,9 +118,9 @@ export function OptimizationSelector({
                         </span>
                       </div>
                     ))}
-                    {dustTokenCount > 3 && (
+                    {dustTokenData.dustTokenCount > 3 && (
                       <span className="text-xs text-gray-400">
-                        +{dustTokenCount - 3} more
+                        +{dustTokenData.dustTokenCount - 3} more
                       </span>
                     )}
                   </div>
@@ -121,10 +130,12 @@ export function OptimizationSelector({
 
             <div className="text-right">
               <div className="text-lg font-bold text-blue-500">
-                {loadingTokens ? "..." : formatBalance(dustValue)}
+                {loadingTokens
+                  ? "..."
+                  : formatSmallCurrency(dustTokenData.dustValue)}
               </div>
               <div className="text-xs text-gray-400">
-                {dustTokenCount} tokens
+                {dustTokenData.dustTokenCount} tokens
               </div>
             </div>
           </div>
@@ -171,25 +182,6 @@ export function OptimizationSelector({
           </div>
         </label>
       </div>
-
-      {/* Summary */}
-      {(options.convertDust || options.rebalancePortfolio) && (
-        <div className="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-blue-900/20 border border-purple-500/30">
-          <div className="text-sm text-gray-300">
-            <span className="font-medium">Selected optimizations:</span>{" "}
-            {options.convertDust && options.rebalancePortfolio
-              ? "Dust conversion + Portfolio rebalancing"
-              : options.convertDust
-                ? "Dust conversion only"
-                : "Portfolio rebalancing only"}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Estimated completion time:{" "}
-            {options.convertDust && options.rebalancePortfolio ? "3-5" : "2-3"}{" "}
-            minutes
-          </div>
-        </div>
-      )}
     </div>
   );
-}
+});

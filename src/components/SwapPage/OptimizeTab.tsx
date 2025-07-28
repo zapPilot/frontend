@@ -1,17 +1,23 @@
 "use client";
-
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useActiveAccount, useActiveWalletChain } from "thirdweb/react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  useActiveAccount,
+  useActiveWalletChain,
+  useSendAndConfirmCalls,
+} from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
-import { transformToDebankChainName } from "../../utils/chainHelper";
-import { getTokens } from "../../utils/dustConversion";
+import { useToast } from "../../hooks/useToast";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
+import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
+import { useTokenState } from "./hooks/useTokenState";
+import { useWalletTransactions } from "./hooks/useWalletTransactions";
+import { useOptimizationData } from "./hooks/useOptimizationData";
+import { useUIState } from "./hooks/useUIState";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageSelector } from "./SlippageSelector";
-import { TokenImage } from "../shared/TokenImage";
-
+import { StreamingProgress } from "./StreamingProgress";
 export interface OptimizationOptions {
   convertDust: boolean;
   rebalancePortfolio: boolean;
@@ -151,6 +157,19 @@ export function OptimizeTab() {
   // ThirdWeb hooks for wallet connection
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
+  const { mutate: sendCalls } = useSendAndConfirmCalls();
+
+  // Toast notifications
+  const { showToast } = useToast();
+
+  // Helper function to build explorer URL
+  const getExplorerUrl = useCallback(
+    (txnHash: string) => {
+      const baseUrl = activeChain?.blockExplorers?.[0]?.url;
+      return baseUrl ? `${baseUrl}/tx/${txnHash}` : null;
+    },
+    [activeChain]
+  );
 
   // Computed wallet values
   const userAddress = activeAccount?.address;
@@ -169,14 +188,43 @@ export function OptimizeTab() {
   // State for workflow
   const [isOptimizing, setIsOptimizing] = useState(false);
 
-  // State for dust tokens
-  const [dustTokens, setDustTokens] = useState<DustToken[]>([]);
-  const [loadingTokens, setLoadingTokens] = useState(false);
-  const [tokensError, setTokensError] = useState<string | null>(null);
+  // Token state management
+  const {
+    tokens: dustTokens,
+    filteredTokens: filteredDustTokens,
+    isLoading: loadingTokens,
+    error: tokensError,
+    deletedIds: deletedTokenIds,
+    fetchTokens: fetchDustTokens,
+    deleteToken: handleDeleteToken,
+    restoreTokens: handleRestoreDeletedTokens,
+  } = useTokenState(showToast as any);
 
-  // State for TokenGrid functionality
-  const [showDetails, setShowDetails] = useState(false);
-  const [deletedTokenIds, setDeletedTokenIds] = useState(new Set<string>());
+  // UI state management
+  const {
+    showDetails,
+    showTechnicalDetails,
+    toggleDetails: handleToggleDetails,
+    toggleTechnicalDetails: handleToggleTechnicalDetails,
+  } = useUIState();
+
+  // Wallet transaction state management
+  const {
+    error: walletError,
+    batchProgress,
+    currentBatch: currentBatchIndex,
+    isSending: sendingToWallet,
+    isSuccess: walletSuccess,
+    setTransactions: setAccumulatedTransactions,
+    autoSendWhenReady,
+    reset: resetWalletState,
+  } = useWalletTransactions({
+    sendCalls,
+    activeAccount,
+    activeChain,
+    showToast: showToast as any,
+    getExplorerUrl,
+  });
 
   // SSE streaming hook
   const {
@@ -193,70 +241,20 @@ export function OptimizeTab() {
     clearEvents,
   } = useDustZapStream();
 
-  // Calculate dust token data (filtered by deleted tokens)
-  const filteredDustTokens = useMemo(() => {
-    return dustTokens.filter(token => !deletedTokenIds.has(token.id));
-  }, [dustTokens, deletedTokenIds]);
-
-  const dustTokenData = useMemo(() => {
-    if (!filteredDustTokens.length) return { dustValue: 0, dustTokenCount: 0 };
-
-    const dustValue = filteredDustTokens.reduce(
-      (sum, token) => sum + token.amount * token.price,
-      0
-    );
-    return {
-      dustValue,
-      dustTokenCount: filteredDustTokens.length,
-    };
-  }, [filteredDustTokens]);
-
-  // Mock data - in real app this would come from API/hooks
-  const mockOptimizationData = useMemo(
-    () => ({
-      dustValue: dustTokenData.dustValue,
-      dustTokenCount: dustTokenData.dustTokenCount,
-      rebalanceActions: 3,
-      chainCount: 2,
-      totalSavings: 15.2,
-      estimatedGasSavings: 0.003,
-    }),
-    [dustTokenData]
-  );
-
-  // Function to fetch dust tokens
-  const fetchDustTokens = useCallback(
-    async (chainName: string, accountAddress: string) => {
-      if (!chainName || !accountAddress) return;
-
-      setLoadingTokens(true);
-      setTokensError(null);
-
-      try {
-        const debankChainName = transformToDebankChainName(
-          chainName.toLowerCase()
-        );
-        const tokens = await getTokens(debankChainName, accountAddress);
-        setDustTokens(tokens);
-      } catch (error) {
-        console.error("Error fetching dust tokens:", error);
-        setTokensError(
-          error instanceof Error ? error.message : "Unknown error"
-        );
-        setDustTokens([]);
-      } finally {
-        setLoadingTokens(false);
-      }
-    },
-    []
-  );
+  // Optimization data calculations
+  const optimizationData = useOptimizationData({
+    filteredTokens: filteredDustTokens,
+    optimizationOptions,
+    isWalletConnected,
+    isLoading: loadingTokens,
+  });
 
   // Function to create DustZap intent
   const createDustZapIntent = useCallback(
     async (
       userAddress: string,
       chainId: number,
-      dustTokens: DustToken[],
+      filteredDustTokens: DustToken[],
       slippage: number
     ) => {
       try {
@@ -272,7 +270,7 @@ export function OptimizeTab() {
               chainId,
               params: {
                 slippage,
-                dustTokens: dustTokens.map(token => ({
+                dustTokens: filteredDustTokens.map(token => ({
                   address: token.id,
                   symbol: token.optimized_symbol || token.symbol,
                   amount: token.amount,
@@ -280,6 +278,8 @@ export function OptimizeTab() {
                   decimals: token.decimals,
                   raw_amount_hex_str: token.raw_amount_hex_str,
                 })),
+                toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                toTokenDecimals: 18,
               },
             }),
           }
@@ -294,25 +294,19 @@ export function OptimizeTab() {
         const result = await response.json();
         return result.intentId;
       } catch (error) {
-        console.error("Error creating DustZap intent:", error);
+        // Show user-friendly error notification
+        showToast({
+          type: "error",
+          title: "Optimization Failed",
+          message:
+            "Unable to prepare optimization. Please check connection and retry.",
+          duration: 8000,
+        });
         throw error;
       }
     },
-    []
+    [showToast] // Add showToast as dependency
   );
-
-  // TokenGrid handler functions
-  const handleDeleteToken = useCallback((tokenId: string) => {
-    setDeletedTokenIds(prev => new Set([...prev, tokenId]));
-  }, []);
-
-  const handleRestoreDeletedTokens = useCallback(() => {
-    setDeletedTokenIds(new Set());
-  }, []);
-
-  const handleToggleDetails = useCallback(() => {
-    setShowDetails(prev => !prev);
-  }, []);
 
   const handleOptimize = useCallback(async () => {
     if (
@@ -325,6 +319,9 @@ export function OptimizeTab() {
     setIsOptimizing(true);
     clearEvents();
 
+    // Reset wallet transaction states
+    resetWalletState();
+
     try {
       // If dust conversion is enabled, integrate with dustzap streaming
       if (optimizationOptions.convertDust && filteredDustTokens.length > 0) {
@@ -335,7 +332,22 @@ export function OptimizeTab() {
           );
         }
 
-        // Create DustZap intent
+        // Safeguard: Ensure no deleted tokens are included
+        const hasDeletedTokens = filteredDustTokens.some(token =>
+          deletedTokenIds.has(token.id)
+        );
+        if (hasDeletedTokens) {
+          // Show critical error notification
+          showToast({
+            type: "error",
+            title: "Internal Error Detected",
+            message:
+              "Data consistency issue detected. Please refresh and try again.",
+            duration: 10000,
+          });
+          throw new Error("Deleted tokens found in filtered list");
+        }
+
         const newIntentId = await createDustZapIntent(
           userAddress,
           chainId,
@@ -352,7 +364,16 @@ export function OptimizeTab() {
         }, 12000);
       }
     } catch (error) {
-      console.error("Error during optimization:", error);
+      // Show general optimization error notification
+      showToast({
+        type: "error",
+        title: "Optimization Failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during optimization.",
+        duration: 8000,
+      });
       setIsOptimizing(false);
     }
   }, [
@@ -363,6 +384,9 @@ export function OptimizeTab() {
     clearEvents,
     userAddress,
     chainId,
+    showToast,
+    deletedTokenIds,
+    resetWalletState,
   ]);
 
   const getOptimizeButtonText = useCallback(() => {
@@ -371,6 +395,15 @@ export function OptimizeTab() {
     // Show wallet connection requirement
     if (!isWalletConnected) {
       return "Connect Wallet to Optimize";
+    }
+
+    // Show wallet transaction states
+    if (sendingToWallet) {
+      return "Confirming in Wallet...";
+    }
+
+    if (walletSuccess) {
+      return "✓ Optimization Complete";
     }
 
     // Show streaming-specific states
@@ -400,53 +433,47 @@ export function OptimizeTab() {
     totalTokens,
     processedTokens,
     isWalletConnected,
+    sendingToWallet,
+    walletSuccess,
   ]);
 
-  const selectedCount = useMemo(() => {
-    return (
-      (optimizationOptions.convertDust ? 1 : 0) +
-      (optimizationOptions.rebalancePortfolio ? 1 : 0)
-    );
-  }, [optimizationOptions]);
-
-  // Effect to fetch dust tokens when needed
+  // Simplified effect - fetch tokens once per wallet/chain combination
   useEffect(() => {
-    // Only fetch if wallet is connected and we have the required data
-    if (
-      optimizationOptions.convertDust &&
-      !dustTokens.length &&
-      !loadingTokens &&
-      userAddress &&
-      chainName
-    ) {
-      fetchDustTokens(chainName, userAddress);
+    // Only proceed if we have wallet connection data
+    if (!userAddress || !chainName) {
+      return;
     }
-  }, [
-    optimizationOptions.convertDust,
-    dustTokens.length,
-    loadingTokens,
-    userAddress,
-    chainName,
-    fetchDustTokens,
-  ]);
 
-  // Effect to refresh data when wallet address or chain changes
+    // Fetch tokens regardless of toggle state - toggle only controls UI visibility
+    // The hook handles request deduplication and state management internally
+    fetchDustTokens(chainName, userAddress);
+  }, [userAddress, chainName, fetchDustTokens]); // Only wallet/chain changes trigger fetching
+
+  // Effect to collect transactions only from complete event
   useEffect(() => {
-    if (userAddress && chainName && optimizationOptions.convertDust) {
-      // Clear existing data and fetch new data for the new wallet/chain
-      setDustTokens([]);
-      setDeletedTokenIds(new Set());
-      setTokensError(null);
-      fetchDustTokens(chainName, userAddress);
-    }
-  }, [
-    userAddress,
-    chainName,
-    optimizationOptions.convertDust,
-    fetchDustTokens,
-  ]);
+    // Only use the authoritative complete event for wallet transactions
+    const completeEvent = events.find(
+      (event: any) => event.type === "complete"
+    ) as any;
 
-  // Effect to handle stream completion
+    if (completeEvent && completeEvent.transactions) {
+      setAccumulatedTransactions(completeEvent.transactions);
+    } else if (completeEvent) {
+      showToast({
+        type: "error",
+        title: "No Transactions Generated",
+        message:
+          "Optimization completed but no transactions were needed. Tokens may already be optimized or lack valid conversion paths.",
+        duration: 8000,
+      });
+    }
+  }, [events, setAccumulatedTransactions, showToast]);
+  // Effect to send transactions to wallet when stream completes
+  useEffect(() => {
+    autoSendWhenReady(isComplete);
+  }, [isComplete, autoSendWhenReady]);
+
+  // Effect to handle stream completion (updated)
   useEffect(() => {
     if (isComplete) {
       setIsOptimizing(false);
@@ -473,65 +500,31 @@ export function OptimizeTab() {
           dustTokens={dustTokens}
           loadingTokens={loadingTokens}
           mockData={{
-            rebalanceActions: mockOptimizationData.rebalanceActions,
-            chainCount: mockOptimizationData.chainCount,
+            rebalanceActions: optimizationData.rebalanceActions,
+            chainCount: optimizationData.chainCount,
           }}
         />
       </GlassCard>
 
       {/* Streaming Progress */}
-      {(isStreaming || events.length > 0) && (
-        <GlassCard>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">DustZap Progress</h3>
-              <div className="text-sm text-gray-400">
-                {isStreaming ? "Processing..." : "Complete"}
-              </div>
-            </div>
-
-            {totalTokens > 0 && (
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Token Conversion</span>
-                  <span>
-                    {processedTokens}/{totalTokens}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {batchesCompleted > 0 && (
-              <div className="text-sm text-gray-400">
-                Batches completed: {batchesCompleted}
-              </div>
-            )}
-
-            {(streamError || tokensError) && (
-              <div className="text-sm text-red-400 bg-red-900/20 p-2 rounded">
-                Error: {streamError || tokensError}
-              </div>
-            )}
-
-            {events.length > 0 && (
-              <div className="max-h-32 overflow-y-auto space-y-1">
-                {events.slice(-5).map((event: any, index: number) => (
-                  <div key={index} className="text-xs text-gray-400">
-                    {event.type}: {event.message || JSON.stringify(event)}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </GlassCard>
-      )}
-
+      <StreamingProgress
+        isStreaming={isStreaming}
+        events={events}
+        totalTokens={totalTokens}
+        processedTokens={processedTokens}
+        progress={progress}
+        batchesCompleted={batchesCompleted}
+        streamError={streamError}
+        tokensError={tokensError}
+        walletError={walletError}
+        sendingToWallet={sendingToWallet}
+        walletSuccess={walletSuccess}
+        batchProgress={batchProgress}
+        currentBatchIndex={currentBatchIndex}
+        activeAccount={activeAccount}
+        showTechnicalDetails={showTechnicalDetails}
+        onToggleTechnicalDetails={handleToggleTechnicalDetails}
+      />
       {/* Token Grid */}
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid
@@ -562,9 +555,10 @@ export function OptimizeTab() {
 
           <GradientButton
             disabled={
-              selectedCount === 0 ||
+              optimizationData.selectedCount === 0 ||
               isOptimizing ||
               isStreaming ||
+              sendingToWallet ||
               loadingTokens ||
               !isWalletConnected
             }

@@ -4,5 +4,3 @@ export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
 }
-
-export type TabType = "portfolio" | "invest" | "more";

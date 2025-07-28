@@ -125,7 +125,6 @@ interface SwapPageProps {
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
-  console.log("fromToken", fromToken);
   const [showTokenSelector, setShowTokenSelector] = useState(false);
   const [showStrategySelector, setShowStrategySelector] = useState(false);
 
@@ -145,11 +144,10 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     setShowTokenSelector(false);
   };
 
-  const handleStrategySelect = (selectedStrategy: InvestmentOpportunity) => {
+  const handleStrategySelect = () => {
     // Strategy selection logic - for now just log and close modal
     // In a real app, this would update the selected strategy state
-    // eslint-disable-next-line no-console
-    console.log("Strategy selected:", selectedStrategy);
+     
     setShowStrategySelector(false);
   };
 
@@ -170,7 +168,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   const handleZapAction = (action: PortfolioSwapAction) => {
     // eslint-disable-next-line no-console
-    console.log("Zap action triggered:", action);
+    console.log("Zap action triggered:", action, fromToken);
 
     // In a real implementation, this would:
     // 1. Validate user has sufficient balance

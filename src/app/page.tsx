@@ -8,18 +8,6 @@ import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
 // Dynamic imports for code splitting
-const InvestTab = dynamic(
-  () =>
-    import("@/components/InvestTab").then(mod => ({ default: mod.InvestTab })),
-  {
-    loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
-    ),
-  }
-);
-
 const AnalyticsTab = dynamic(
   () =>
     import("@/components/AnalyticsTab").then(mod => ({
@@ -95,11 +83,7 @@ export default function DashboardApp() {
 
   // Navigation handlers with context awareness
   // Each handler sets the appropriate navigationContext to control SwapPage behavior
-  const handleInvestClick = useCallback((strategy: InvestmentOpportunity) => {
-    setSelectedStrategy({ ...strategy, navigationContext: "invest" });
-  }, []);
-
-  const handleBackToInvest = useCallback(() => {
+  const handleBackToPortfolio = useCallback(() => {
     setSelectedStrategy(null);
   }, []);
 
@@ -154,7 +138,7 @@ export default function DashboardApp() {
   const renderTabContent = () => {
     if (selectedStrategy) {
       return (
-        <SwapPage strategy={selectedStrategy} onBack={handleBackToInvest} />
+        <SwapPage strategy={selectedStrategy} onBack={handleBackToPortfolio} />
       );
     }
 
@@ -168,8 +152,6 @@ export default function DashboardApp() {
             onZapOutClick={handleZapOutClick}
           />
         );
-      case "invest":
-        return <InvestTab onInvestClick={handleInvestClick} />;
       case "analytics":
         return <AnalyticsTab />;
       case "community":

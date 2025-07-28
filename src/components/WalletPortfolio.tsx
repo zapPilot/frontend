@@ -16,8 +16,8 @@ import { useCallback, useState } from "react";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
+import { formatSmallCurrency } from "../utils/formatters";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
-import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
@@ -41,7 +41,6 @@ export function WalletPortfolio({
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-    handleLegendItemClick,
   } = usePortfolio(mockPortfolioData);
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -133,7 +132,7 @@ export function WalletPortfolio({
             <p
               className={`text-xl font-semibold ${getChangeColorClasses(portfolioMetrics.totalChangePercentage)}`}
             >
-              ${estimatedMonthlyIncome.toFixed(2)}
+              {formatSmallCurrency(estimatedMonthlyIncome)}
             </p>
           </div>
         </div>
@@ -172,16 +171,10 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={mockPortfolioData}
-        onLegendItemClick={handleLegendItemClick}
-        title="Asset Distribution"
-      />
-
-      {/* Asset Categories Detail */}
-      <AssetCategoriesDetail
-        portfolioData={mockPortfolioData}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
+        title="Asset Distribution"
       />
 
       {/* Wallet Manager Modal */}

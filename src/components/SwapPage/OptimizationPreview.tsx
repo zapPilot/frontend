@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
+import { formatSmallCurrency } from "../../utils/formatters";
 import { OptimizationOptions } from "./OptimizeTab";
 
 interface OptimizationPreviewProps {
@@ -108,7 +109,7 @@ export function OptimizationPreview({
 
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-400">
-                      ${token.value.toFixed(2)}
+                      {formatSmallCurrency(token.value)}
                     </span>
                     <ArrowRight className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-blue-400">ETH</span>
@@ -205,7 +206,9 @@ export function OptimizationPreview({
           <div className="flex justify-between">
             <span className="text-gray-400">Minimum Received:</span>
             <span className="text-white">
-              ${(mockData.dustValue * (1 - options.slippage / 100)).toFixed(2)}{" "}
+              {formatSmallCurrency(
+                mockData.dustValue * (1 - options.slippage / 100)
+              )}{" "}
               ETH
             </span>
           </div>

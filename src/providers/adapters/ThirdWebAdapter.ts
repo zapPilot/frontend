@@ -248,7 +248,7 @@ export class ThirdWebAdapter implements WalletProvider {
       const chainToSwitch = {
         id: chainId,
         name: chainUtils.getChainName(chainId),
-        rpc: chainUtils.getChainById(chainId)?.rpcUrl || "",
+        rpc: chainUtils.getChainById(chainId)?.rpcUrls.default.http[0] || "",
         nativeCurrency: {
           name: chainUtils.getChainSymbol(chainId),
           symbol: chainUtils.getChainSymbol(chainId),

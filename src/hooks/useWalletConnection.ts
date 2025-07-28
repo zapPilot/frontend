@@ -91,20 +91,26 @@ export function useWalletConnection(): WalletConnectionHooks {
  * When switching providers, only these mappings need to change
  */
 
+// Import unified chain configuration
+import {
+  CHAIN_IDS,
+  CHAIN_NAMES as CANONICAL_CHAIN_NAMES,
+} from "@/config/chains";
+
 // Legacy chain ID mappings for backward compatibility
 export const SUPPORTED_CHAINS = {
-  ETHEREUM: 1,
-  ARBITRUM: 42161,
-  BASE: 8453,
-  OPTIMISM: 10,
+  ETHEREUM: CHAIN_IDS.ETHEREUM,
+  ARBITRUM: CHAIN_IDS.ARBITRUM,
+  BASE: CHAIN_IDS.BASE,
+  OPTIMISM: CHAIN_IDS.OPTIMISM,
 } as const;
 
 // Legacy chain display names for backward compatibility
 export const CHAIN_NAMES = {
-  [SUPPORTED_CHAINS.ETHEREUM]: "Ethereum",
-  [SUPPORTED_CHAINS.ARBITRUM]: "Arbitrum",
-  [SUPPORTED_CHAINS.BASE]: "Base",
-  [SUPPORTED_CHAINS.OPTIMISM]: "Optimism",
+  [SUPPORTED_CHAINS.ETHEREUM]: CANONICAL_CHAIN_NAMES[CHAIN_IDS.ETHEREUM],
+  [SUPPORTED_CHAINS.ARBITRUM]: CANONICAL_CHAIN_NAMES[CHAIN_IDS.ARBITRUM],
+  [SUPPORTED_CHAINS.BASE]: CANONICAL_CHAIN_NAMES[CHAIN_IDS.BASE],
+  [SUPPORTED_CHAINS.OPTIMISM]: CANONICAL_CHAIN_NAMES[CHAIN_IDS.OPTIMISM],
 } as const;
 
 export type SupportedChainId =

@@ -41,7 +41,6 @@ export interface Chain {
   /** Block explorer URL */
   blockExplorer?: string;
   /** Whether this is a testnet */
-  isTestnet?: boolean;
 }
 
 /**
@@ -147,7 +146,6 @@ export interface WalletConfig {
   environment: {
     isDevelopment: boolean;
     isProduction: boolean;
-    enableTestnets: boolean;
   };
   /** Feature flags */
   features: {

@@ -1,6 +1,22 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'zap-assets-worker.davidtnfsh.workers.dev',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'static.debank.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+  },
   turbopack: {
     rules: {
       "*.svg": {
@@ -21,7 +37,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://static.debank.com;",
+              "img-src 'self' data: blob: https://static.debank.com https://zap-assets-worker.davidtnfsh.workers.dev;",
               "connect-src 'self' https: http://localhost:3000 http://localhost:3001 http://localhost:3002 http://127.0.0.1:3000 http://127.0.0.1:3001 http://127.0.0.1:3002 ws://localhost:3000 ws://127.0.0.1:3000",
               "frame-src 'none'",
               "object-src 'none'",

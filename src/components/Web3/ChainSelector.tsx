@@ -22,7 +22,6 @@ import {
   Zap,
   Clock,
   Shield,
-  TestTube,
 } from "lucide-react";
 
 import { useWallet } from "@/hooks/useWallet";
@@ -38,7 +37,6 @@ interface ChainSelectorProps {
   variant?: "default" | "compact" | "minimal";
   showLabel?: boolean;
   showNetworkStatus?: boolean;
-  showTestnets?: boolean;
   disabled?: boolean;
   onChainSwitch?: (chain: Chain) => void;
   onError?: (error: Error) => void;
@@ -102,13 +100,6 @@ function ChainOption({
               {chain.name.charAt(0)}
             </span>
           </div>
-
-          {/* Network type indicator */}
-          {chain.isTestnet && (
-            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-yellow-500 flex items-center justify-center">
-              <TestTube className="w-2 h-2 text-white" />
-            </div>
-          )}
         </div>
 
         {/* Chain info */}
@@ -121,9 +112,7 @@ function ChainOption({
               </span>
             )}
           </div>
-          <div className="text-xs text-gray-400">
-            {chain.symbol} • {chain.isTestnet ? "Testnet" : "Mainnet"}
-          </div>
+          <div className="text-xs text-gray-400">{chain.symbol}</div>
         </div>
 
         {/* Network status */}
@@ -206,7 +195,6 @@ export function ChainSelector({
   variant = "default",
   showLabel = true,
   showNetworkStatus = true,
-  showTestnets = false,
   disabled = false,
   onChainSwitch,
   onError,
@@ -229,10 +217,8 @@ export function ChainSelector({
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Filter chains based on showTestnets
-  const availableChains = chain.supportedChains.filter(
-    c => showTestnets || !c.isTestnet
-  );
+  // Get all supported chains
+  const availableChains = chain.supportedChains;
 
   // Handle click outside
   useEffect(() => {
@@ -490,7 +476,6 @@ export function ChainSelector({
                 <div className="p-3 border-t border-gray-700 bg-gray-800/30">
                   <div className="flex items-center justify-between text-xs text-gray-400">
                     <span>
-                      {chain.isTestnet ? "Testnet" : "Mainnet"} •
                       {chain.isSupported ? "Supported" : "Unsupported"}
                     </span>
                     <span>

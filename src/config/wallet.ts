@@ -5,86 +5,30 @@
  * supported chains, and environment-specific settings.
  */
 
-import { WalletConfig, Chain, ProviderType } from "@/types/wallet";
+import { WalletConfig, ProviderType } from "@/types/wallet";
+
+// Import from unified chain configuration
+import {
+  SUPPORTED_CHAINS as CANONICAL_CHAINS,
+  CHAIN_IDS as CANONICAL_CHAIN_IDS,
+  getChainById as getCanonicalChainById,
+  isChainSupported as isCanonicalChainSupported,
+  getChainName as getCanonicalChainName,
+  getChainSymbol as getCanonicalChainSymbol,
+  formatChainForDisplay as formatCanonicalChainForDisplay,
+} from "@/config/chains";
 
 /**
  * Supported blockchain networks
+ * @deprecated Use @/config/chains instead for new code
  */
-export const SUPPORTED_CHAINS: Chain[] = [
-  {
-    id: 1,
-    name: "Ethereum",
-    symbol: "ETH",
-    isSupported: true,
-    icon: "/chains/ethereum.svg",
-    rpcUrl: "https://mainnet.infura.io/v3/",
-    blockExplorer: "https://etherscan.io",
-    isTestnet: false,
-  },
-  {
-    id: 42161,
-    name: "Arbitrum One",
-    symbol: "ARB",
-    isSupported: true,
-    icon: "/chains/arbitrum.svg",
-    rpcUrl: "https://arb1.arbitrum.io/rpc",
-    blockExplorer: "https://arbiscan.io",
-    isTestnet: false,
-  },
-  {
-    id: 8453,
-    name: "Base",
-    symbol: "BASE",
-    isSupported: true,
-    icon: "/chains/base.svg",
-    rpcUrl: "https://mainnet.base.org",
-    blockExplorer: "https://basescan.org",
-    isTestnet: false,
-  },
-  {
-    id: 10,
-    name: "Optimism",
-    symbol: "OP",
-    isSupported: true,
-    icon: "/chains/optimism.svg",
-    rpcUrl: "https://mainnet.optimism.io",
-    blockExplorer: "https://optimistic.etherscan.io",
-    isTestnet: false,
-  },
-  // Testnets (enabled in development)
-  {
-    id: 11155111,
-    name: "Sepolia",
-    symbol: "SEP",
-    isSupported: process.env.NODE_ENV === "development",
-    icon: "/chains/ethereum.svg",
-    rpcUrl: "https://sepolia.infura.io/v3/",
-    blockExplorer: "https://sepolia.etherscan.io",
-    isTestnet: true,
-  },
-  {
-    id: 421614,
-    name: "Arbitrum Sepolia",
-    symbol: "ARB",
-    isSupported: process.env.NODE_ENV === "development",
-    icon: "/chains/arbitrum.svg",
-    rpcUrl: "https://sepolia-rollup.arbitrum.io/rpc",
-    blockExplorer: "https://sepolia.arbiscan.io",
-    isTestnet: true,
-  },
-];
+export const SUPPORTED_CHAINS = CANONICAL_CHAINS;
 
 /**
  * Chain ID mappings for easy reference
+ * @deprecated Use CHAIN_IDS from @/config/chains instead
  */
-export const CHAIN_IDS = {
-  ETHEREUM: 1,
-  ARBITRUM: 42161,
-  BASE: 8453,
-  OPTIMISM: 10,
-  SEPOLIA: 11155111,
-  ARBITRUM_SEPOLIA: 421614,
-} as const;
+export const CHAIN_IDS = CANONICAL_CHAIN_IDS;
 
 /**
  * Default provider configuration
@@ -101,8 +45,6 @@ const getEnvConfig = () => {
   return {
     isDevelopment,
     isProduction,
-    enableTestnets:
-      isDevelopment || process.env["NEXT_PUBLIC_ENABLE_TESTNETS"] === "true",
     thirdwebClientId: process.env["NEXT_PUBLIC_THIRDWEB_CLIENT_ID"] || "",
     walletConnectProjectId:
       process.env["NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID"] || "",
@@ -156,7 +98,6 @@ export const WALLET_CONFIG: WalletConfig = {
   environment: {
     isDevelopment: getEnvConfig().isDevelopment,
     isProduction: getEnvConfig().isProduction,
-    enableTestnets: getEnvConfig().enableTestnets,
   },
   features: {
     enableMultiChain: true,
@@ -165,81 +106,47 @@ export const WALLET_CONFIG: WalletConfig = {
 
 /**
  * Utility functions for chain management
+ * @deprecated Use functions from @/config/chains directly
  */
 export const chainUtils = {
   /**
    * Get chain by ID
    */
-  getChainById: (chainId: number): Chain | undefined => {
-    return SUPPORTED_CHAINS.find(chain => chain.id === chainId);
-  },
+  getChainById: getCanonicalChainById,
 
   /**
    * Check if chain is supported
    */
-  isChainSupported: (chainId: number): boolean => {
-    const chain = chainUtils.getChainById(chainId);
-    return chain ? chain.isSupported : false;
-  },
+  isChainSupported: isCanonicalChainSupported,
 
   /**
    * Get only supported chains
    */
-  getSupportedChains: (): Chain[] => {
+  getSupportedChains: () => {
     return SUPPORTED_CHAINS.filter(chain => chain.isSupported);
   },
 
   /**
    * Get mainnet chains only
    */
-  getMainnetChains: (): Chain[] => {
-    return SUPPORTED_CHAINS.filter(
-      chain => chain.isSupported && !chain.isTestnet
-    );
-  },
-
-  /**
-   * Get testnet chains only
-   */
-  getTestnetChains: (): Chain[] => {
-    return SUPPORTED_CHAINS.filter(
-      chain => chain.isSupported && chain.isTestnet
-    );
+  getMainnetChains: () => {
+    return SUPPORTED_CHAINS.filter(chain => chain.isSupported);
   },
 
   /**
    * Get chain display name
    */
-  getChainName: (chainId: number): string => {
-    const chain = chainUtils.getChainById(chainId);
-    return chain ? chain.name : `Chain ${chainId}`;
-  },
+  getChainName: getCanonicalChainName,
 
   /**
    * Get chain symbol
    */
-  getChainSymbol: (chainId: number): string => {
-    const chain = chainUtils.getChainById(chainId);
-    return chain ? chain.symbol : "UNKNOWN";
-  },
+  getChainSymbol: getCanonicalChainSymbol,
 
   /**
    * Format chain for display
    */
-  formatChainForDisplay: (
-    chainId: number
-  ): { name: string; symbol: string; icon?: string } => {
-    const chain = chainUtils.getChainById(chainId);
-    if (!chain) {
-      return { name: `Chain ${chainId}`, symbol: "UNKNOWN" };
-    }
-
-    return {
-      name: chain.name,
-      symbol: chain.symbol,
-      ...(chain.icon && { icon: chain.icon }),
-    };
-  },
+  formatChainForDisplay: formatCanonicalChainForDisplay,
 };
 
 /**
@@ -315,15 +222,6 @@ export const validationUtils = {
     ].includes(providerType);
   },
 };
-
-/**
- * Feature flags for development
- */
-export const FEATURE_FLAGS = {
-  ENABLE_MULTI_CHAIN: WALLET_CONFIG.features.enableMultiChain,
-  ENABLE_TESTNETS: WALLET_CONFIG.environment.enableTestnets,
-  ENABLE_DEBUG_LOGGING: WALLET_CONFIG.environment.isDevelopment,
-} as const;
 
 /**
  * Default export

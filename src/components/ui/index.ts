@@ -8,3 +8,4 @@ export {
   FadeInScale,
   StaggerContainer,
 } from "./AnimatedContainer";
+export { ImageWithFallback } from "../shared/ImageWithFallback";

@@ -48,7 +48,7 @@ export function WalletConnectButton({
 
     // Use chain utils to get block explorer URL
     const chainConfig = chainUtils.getChainById(chain.id);
-    const explorerUrl = chainConfig?.blockExplorer;
+    const explorerUrl = chainConfig?.blockExplorers.default.url;
 
     if (explorerUrl) {
       window.open(`${explorerUrl}/address/${account.address}`, "_blank");
