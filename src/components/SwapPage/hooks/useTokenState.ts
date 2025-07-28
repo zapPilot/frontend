@@ -118,7 +118,7 @@ export function useTokenState(
             type: "error",
             title: "Failed to Load Tokens",
             message:
-              "Unable to fetch your token list. Please try reconnecting your wallet.",
+              "Unable to fetch token list. Please reconnect your wallet.",
             duration: 6000,
           });
         }

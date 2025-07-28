@@ -299,7 +299,7 @@ export function OptimizeTab() {
           type: "error",
           title: "Optimization Failed",
           message:
-            "Unable to prepare your optimization. Please check your connection and try again.",
+            "Unable to prepare optimization. Please check connection and retry.",
           duration: 8000,
         });
         throw error;
@@ -342,7 +342,7 @@ export function OptimizeTab() {
             type: "error",
             title: "Internal Error Detected",
             message:
-              "A data consistency issue was detected. Please refresh the page and try again.",
+              "Data consistency issue detected. Please refresh and try again.",
             duration: 10000,
           });
           throw new Error("Deleted tokens found in filtered list");
@@ -463,7 +463,7 @@ export function OptimizeTab() {
         type: "error",
         title: "No Transactions Generated",
         message:
-          "The optimization completed but no transactions were created. This might happen if all tokens were already optimized or if there were no valid conversion paths.",
+          "Optimization completed but no transactions were needed. Tokens may already be optimized or lack valid conversion paths.",
         duration: 8000,
       });
     }

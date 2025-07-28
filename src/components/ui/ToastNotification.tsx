@@ -7,7 +7,7 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export interface Toast {
   id: string;
@@ -32,6 +32,13 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
+  const handleClose = useCallback(() => {
+    setIsExiting(true);
+    setTimeout(() => {
+      onClose(toast.id);
+    }, 300);
+  }, [onClose, toast.id]);
+
   useEffect(() => {
     // Animate in
     setIsVisible(true);
@@ -43,14 +50,7 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [toast.duration]);
-
-  const handleClose = () => {
-    setIsExiting(true);
-    setTimeout(() => {
-      onClose(toast.id);
-    }, 300);
-  };
+  }, [toast.duration, handleClose]);
 
   const getIcon = () => {
     switch (toast.type) {
@@ -94,7 +94,7 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
   return (
     <div
       className={`
-        mb-3 w-80 rounded-lg border backdrop-blur-sm transition-all duration-300 ease-out
+        mb-3 w-96 max-w-sm rounded-lg border backdrop-blur-sm transition-all duration-300 ease-out
         ${getBorderColor()} ${getBackgroundColor()}
         ${
           isVisible && !isExiting
@@ -108,21 +108,23 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
           <div className="flex items-start gap-3 flex-1">
             {getIcon()}
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-white text-sm">
+              <h4 className="font-semibold text-white text-sm break-words leading-tight">
                 {toast.title}
               </h4>
               {toast.message && (
-                <p className="text-xs text-gray-300 mt-1">{toast.message}</p>
+                <p className="text-xs text-gray-300 mt-1 break-words leading-relaxed whitespace-normal">
+                  {toast.message}
+                </p>
               )}
               {toast.link && (
                 <a
                   href={toast.link.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                  className="inline-flex items-center gap-1 mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors break-words"
                 >
-                  {toast.link.text}
-                  <ExternalLink size={12} />
+                  <span className="break-all">{toast.link.text}</span>
+                  <ExternalLink size={12} className="flex-shrink-0" />
                 </a>
               )}
             </div>
