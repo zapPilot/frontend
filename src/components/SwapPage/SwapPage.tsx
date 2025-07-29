@@ -2,24 +2,16 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { MOCK_TOKENS } from "../../constants/swap";
-import { mockInvestmentOpportunities } from "../../data/mockInvestments";
-import { useStrategyPortfolio } from "../../hooks/useStrategyPortfolio";
 import { InvestmentOpportunity } from "../../types/investment";
-import { SwapToken } from "../../types/swap";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
   AssetCategory,
   OperationMode,
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
-import { DetailsTab } from "./DetailsTab";
-import { OptimizeTab } from "./OptimizeTab";
-import { PerformanceTab } from "./PerformanceTab";
-import { StrategySelectorModal } from "./StrategySelectorModal";
 import { SwapPageHeader } from "./SwapPageHeader";
-import { SubTabType, TabNavigation } from "./TabNavigation";
-import { TokenSelectorModal } from "./TokenSelectorModal";
+import { TabNavigation } from "./TabNavigation";
+import { RebalanceOptimizationPanel } from "./RebalanceOptimizationPanel";
 
 // Mock asset categories for portfolio allocation
 const MOCK_ASSET_CATEGORIES: AssetCategory[] = [
@@ -124,48 +116,20 @@ interface SwapPageProps {
 }
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
-  const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
-  console.log("fromToken", fromToken);
-  const [showTokenSelector, setShowTokenSelector] = useState(false);
-  const [showStrategySelector, setShowStrategySelector] = useState(false);
-
-  // Dual-state management for hierarchical navigation
+  // Single-layer state management
   const [activeOperationMode, setActiveOperationMode] =
     useState<OperationMode>("zapIn");
-  const [activeSubTab, setActiveSubTab] = useState<SubTabType>(
-    strategy.id === "optimize-portfolio" ? "optimize" : "allocation"
-  );
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
+  const [isOptimizationEnabled, setIsOptimizationEnabled] = useState(false);
 
-  const { portfolioData, expandedCategory, toggleCategoryExpansion } =
-    useStrategyPortfolio(strategy.id);
-
-  const handleTokenSelect = (token: SwapToken) => {
-    setFromToken(token);
-    setShowTokenSelector(false);
-  };
-
-  const handleStrategySelect = (selectedStrategy: InvestmentOpportunity) => {
-    // Strategy selection logic - for now just log and close modal
-    // In a real app, this would update the selected strategy state
-    // eslint-disable-next-line no-console
-    console.log("Strategy selected:", selectedStrategy);
-    setShowStrategySelector(false);
-  };
-
-  // Dual-level navigation handlers
+  // Single-level navigation handler
   const handleOperationModeChange = (mode: OperationMode) => {
     setActiveOperationMode(mode);
-    // Reset subtab to "allocation" when switching operation mode
-    setActiveSubTab("allocation");
-    // Reset rebalance mode when changing operation mode
+    // Reset rebalance and optimization modes when changing operation mode
     if (mode !== "rebalance") {
       setIsRebalanceMode(false);
+      setIsOptimizationEnabled(false);
     }
-  };
-
-  const handleSubTabChange = (tab: SubTabType) => {
-    setActiveSubTab(tab);
   };
 
   const handleZapAction = (action: PortfolioSwapAction) => {
@@ -195,9 +159,10 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const renderTabContent = () => {
     return (
       <div className="space-y-6">
-        {/* Rebalance Mode Toggle (only for rebalance operation) */}
-        {activeOperationMode === "rebalance" &&
-          activeSubTab === "allocation" && (
+        {/* Rebalance Mode Controls (only for rebalance operation) */}
+        {activeOperationMode === "rebalance" && (
+          <div className="space-y-4">
+            {/* Basic Rebalance Toggle */}
             <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -222,37 +187,22 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 </button>
               </div>
             </div>
-          )}
 
-        {/* Render content based on active subtab */}
-        {(() => {
-          switch (activeSubTab) {
-            case "allocation":
-              return (
-                <PortfolioAllocationContainer
-                  assetCategories={MOCK_ASSET_CATEGORIES}
-                  operationMode={activeOperationMode}
-                  isRebalanceMode={isRebalanceMode}
-                  onZapAction={handleZapAction}
-                />
-              );
-            case "performance":
-              return <PerformanceTab />;
-            case "details":
-              return (
-                <DetailsTab
-                  strategy={strategy}
-                  portfolioData={portfolioData}
-                  expandedCategory={expandedCategory}
-                  onCategoryToggle={toggleCategoryExpansion}
-                />
-              );
-            case "optimize":
-              return <OptimizeTab />;
-            default:
-              return null;
-          }
-        })()}
+            {/* Advanced Optimization Panel */}
+            <RebalanceOptimizationPanel
+              isEnabled={isOptimizationEnabled}
+              onToggle={setIsOptimizationEnabled}
+            />
+          </div>
+        )}
+
+        {/* Portfolio Allocation Container */}
+        <PortfolioAllocationContainer
+          assetCategories={MOCK_ASSET_CATEGORIES}
+          operationMode={activeOperationMode}
+          isRebalanceMode={isRebalanceMode}
+          onZapAction={handleZapAction}
+        />
       </div>
     );
   };
@@ -263,13 +213,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
       <TabNavigation
         activeOperationMode={activeOperationMode}
-        activeSubTab={activeSubTab}
         onOperationModeChange={handleOperationModeChange}
-        onSubTabChange={handleSubTabChange}
       />
 
       <motion.div
-        key={`${activeOperationMode}-${activeSubTab}`}
+        key={activeOperationMode}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -278,32 +226,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       >
         {renderTabContent()}
       </motion.div>
-
-      {showTokenSelector && (
-        <TokenSelectorModal
-          tokens={MOCK_TOKENS}
-          onTokenSelect={handleTokenSelect}
-          onClose={() => setShowTokenSelector(false)}
-        />
-      )}
-
-      {showStrategySelector && (
-        <StrategySelectorModal
-          strategies={mockInvestmentOpportunities}
-          onStrategySelect={handleStrategySelect}
-          onClose={() => setShowStrategySelector(false)}
-          title={
-            strategy.navigationContext === "zapOut"
-              ? "Select Position to Exit"
-              : "Select Strategy to Invest"
-          }
-          description={
-            strategy.navigationContext === "zapOut"
-              ? "Choose a vault position to withdraw from"
-              : "Choose a vault strategy to invest in"
-          }
-        />
-      )}
     </div>
   );
 }

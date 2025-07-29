@@ -36,9 +36,6 @@ export function SwapPageHeader({ strategy, onBack }: SwapPageHeaderProps) {
           </p>
         </div>
       </div>
-      <div className="text-sm text-gray-400" data-testid="strategy-tvl">
-        TVL: {strategy.tvl}
-      </div>
     </motion.div>
   );
 }

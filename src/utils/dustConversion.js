@@ -25,7 +25,6 @@ export const getTokens = async (chainName, accountAddress) => {
             token.optimized_symbol.toLowerCase() !== "alp"
         )
         .filter(token => !token.protocol_id.includes("aave"))
-        .filter(token => token.amount * token.price > 0.005)
         .sort((a, b) => b.amount * b.price - a.amount * a.price)
     : [];
   return filteredAndSortedTokens;

@@ -1,11 +1,4 @@
-import {
-  BarChart3,
-  TrendingUp,
-  Wallet,
-  Users,
-  Gift,
-  Settings,
-} from "lucide-react";
+import { BarChart3, Gift, Settings, Users, Wallet } from "lucide-react";
 import { NavItem } from "../types/navigation";
 
 export const NAVIGATION_ITEMS: NavItem[] = [
@@ -14,12 +7,6 @@ export const NAVIGATION_ITEMS: NavItem[] = [
     label: "Portfolio",
     icon: Wallet,
     description: "Your wallet overview",
-  },
-  {
-    id: "invest",
-    label: "Invest",
-    icon: TrendingUp,
-    description: "Investment opportunities",
   },
   {
     id: "analytics",
