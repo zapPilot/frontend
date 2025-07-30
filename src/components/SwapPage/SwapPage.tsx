@@ -2,11 +2,8 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { MOCK_TOKENS } from "../../constants/swap";
-import { mockInvestmentOpportunities } from "../../data/mockInvestments";
 import { useStrategyPortfolio } from "../../hooks/useStrategyPortfolio";
 import { InvestmentOpportunity } from "../../types/investment";
-import { SwapToken } from "../../types/swap";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
   AssetCategory,
@@ -16,10 +13,8 @@ import type {
 import { DetailsTab } from "./DetailsTab";
 import { OptimizeTab } from "./OptimizeTab";
 import { PerformanceTab } from "./PerformanceTab";
-import { StrategySelectorModal } from "./StrategySelectorModal";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { SubTabType, TabNavigation } from "./TabNavigation";
-import { TokenSelectorModal } from "./TokenSelectorModal";
 
 // Mock asset categories for portfolio allocation
 const MOCK_ASSET_CATEGORIES: AssetCategory[] = [
@@ -124,10 +119,6 @@ interface SwapPageProps {
 }
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
-  const [fromToken, setFromToken] = useState<SwapToken>(MOCK_TOKENS[0]!);
-  const [showTokenSelector, setShowTokenSelector] = useState(false);
-  const [showStrategySelector, setShowStrategySelector] = useState(false);
-
   // Dual-state management for hierarchical navigation
   const [activeOperationMode, setActiveOperationMode] =
     useState<OperationMode>("zapIn");
@@ -138,18 +129,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   const { portfolioData, expandedCategory, toggleCategoryExpansion } =
     useStrategyPortfolio(strategy.id);
-
-  const handleTokenSelect = (token: SwapToken) => {
-    setFromToken(token);
-    setShowTokenSelector(false);
-  };
-
-  const handleStrategySelect = () => {
-    // Strategy selection logic - for now just log and close modal
-    // In a real app, this would update the selected strategy state
-     
-    setShowStrategySelector(false);
-  };
 
   // Dual-level navigation handlers
   const handleOperationModeChange = (mode: OperationMode) => {
@@ -168,7 +147,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   const handleZapAction = (action: PortfolioSwapAction) => {
     // eslint-disable-next-line no-console
-    console.log("Zap action triggered:", action, fromToken);
+    console.log("Zap action triggered:", action);
 
     // In a real implementation, this would:
     // 1. Validate user has sufficient balance
@@ -276,32 +255,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       >
         {renderTabContent()}
       </motion.div>
-
-      {showTokenSelector && (
-        <TokenSelectorModal
-          tokens={MOCK_TOKENS}
-          onTokenSelect={handleTokenSelect}
-          onClose={() => setShowTokenSelector(false)}
-        />
-      )}
-
-      {showStrategySelector && (
-        <StrategySelectorModal
-          strategies={mockInvestmentOpportunities}
-          onStrategySelect={handleStrategySelect}
-          onClose={() => setShowStrategySelector(false)}
-          title={
-            strategy.navigationContext === "zapOut"
-              ? "Select Position to Exit"
-              : "Select Strategy to Invest"
-          }
-          description={
-            strategy.navigationContext === "zapOut"
-              ? "Choose a vault position to withdraw from"
-              : "Choose a vault strategy to invest in"
-          }
-        />
-      )}
     </div>
   );
 }
