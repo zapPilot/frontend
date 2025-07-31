@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useStrategyPortfolio } from "../../hooks/useStrategyPortfolio";
 import { InvestmentOpportunity } from "../../types/investment";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
@@ -11,8 +10,6 @@ import type {
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
 import { OptimizeTab } from "./OptimizeTab";
-import { PerformanceMetrics } from "./PerformanceMetrics";
-import { StrategyDetails } from "./StrategyDetails";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
 
@@ -124,9 +121,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     useState<OperationMode>("zapIn");
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
 
-  const { portfolioData, expandedCategory, toggleCategoryExpansion } =
-    useStrategyPortfolio(strategy.id);
-
   // Single-level navigation handler
   const handleOperationModeChange = (mode: OperationMode) => {
     setActiveOperationMode(mode);
@@ -213,17 +207,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               isRebalanceMode={isRebalanceMode}
               onZapAction={handleZapAction}
             />
-
-            {/* Strategy Details */}
-            <StrategyDetails
-              strategy={strategy}
-              portfolioData={portfolioData}
-              expandedCategory={expandedCategory}
-              onCategoryToggle={toggleCategoryExpansion}
-            />
-
-            {/* Performance Metrics */}
-            <PerformanceMetrics />
           </>
         )}
       </div>
