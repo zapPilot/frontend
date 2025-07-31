@@ -1,13 +1,13 @@
 "use client";
 
 import { TrendingUp } from "lucide-react";
-import { PERFORMANCE_MOCK_DATA } from "../../constants/swap";
+import { PERFORMANCE_MOCK_DATA } from "../../constants/trading";
 
-export function PerformanceTab() {
+export function PerformanceMetrics() {
   return (
     <div
       className="glass-morphism rounded-3xl p-6 border border-gray-800"
-      data-testid="performance-tab"
+      data-testid="performance-metrics"
     >
       <h3 className="text-xl font-bold gradient-text mb-6">
         Performance Metrics

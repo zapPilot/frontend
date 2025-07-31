@@ -10,11 +10,11 @@ import type {
   OperationMode,
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
-import { DetailsTab } from "./DetailsTab";
 import { OptimizeTab } from "./OptimizeTab";
-import { PerformanceTab } from "./PerformanceTab";
+import { PerformanceMetrics } from "./PerformanceMetrics";
+import { StrategyDetails } from "./StrategyDetails";
 import { SwapPageHeader } from "./SwapPageHeader";
-import { SubTabType, TabNavigation } from "./TabNavigation";
+import { TabNavigation } from "./TabNavigation";
 
 // Mock asset categories for portfolio allocation
 const MOCK_ASSET_CATEGORIES: AssetCategory[] = [
@@ -119,30 +119,21 @@ interface SwapPageProps {
 }
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
-  // Dual-state management for hierarchical navigation
+  // Simplified single-layer navigation
   const [activeOperationMode, setActiveOperationMode] =
     useState<OperationMode>("zapIn");
-  const [activeSubTab, setActiveSubTab] = useState<SubTabType>(
-    strategy.id === "optimize-portfolio" ? "optimize" : "allocation"
-  );
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
 
   const { portfolioData, expandedCategory, toggleCategoryExpansion } =
     useStrategyPortfolio(strategy.id);
 
-  // Dual-level navigation handlers
+  // Single-level navigation handler
   const handleOperationModeChange = (mode: OperationMode) => {
     setActiveOperationMode(mode);
-    // Reset subtab to "allocation" when switching operation mode
-    setActiveSubTab("allocation");
     // Reset rebalance mode when changing operation mode
     if (mode !== "rebalance") {
       setIsRebalanceMode(false);
     }
-  };
-
-  const handleSubTabChange = (tab: SubTabType) => {
-    setActiveSubTab(tab);
   };
 
   const handleZapAction = (action: PortfolioSwapAction) => {
@@ -172,9 +163,10 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const renderTabContent = () => {
     return (
       <div className="space-y-6">
-        {/* Rebalance Mode Toggle (only for rebalance operation) */}
-        {activeOperationMode === "rebalance" &&
-          activeSubTab === "allocation" && (
+        {/* Rebalance Operation with Optimization */}
+        {activeOperationMode === "rebalance" ? (
+          <>
+            {/* Rebalance Mode Toggle */}
             <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -199,37 +191,41 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 </button>
               </div>
             </div>
-          )}
 
-        {/* Render content based on active subtab */}
-        {(() => {
-          switch (activeSubTab) {
-            case "allocation":
-              return (
-                <PortfolioAllocationContainer
-                  assetCategories={MOCK_ASSET_CATEGORIES}
-                  operationMode={activeOperationMode}
-                  isRebalanceMode={isRebalanceMode}
-                  onZapAction={handleZapAction}
-                />
-              );
-            case "performance":
-              return <PerformanceTab />;
-            case "details":
-              return (
-                <DetailsTab
-                  strategy={strategy}
-                  portfolioData={portfolioData}
-                  expandedCategory={expandedCategory}
-                  onCategoryToggle={toggleCategoryExpansion}
-                />
-              );
-            case "optimize":
-              return <OptimizeTab />;
-            default:
-              return null;
-          }
-        })()}
+            {/* Portfolio Allocation Container */}
+            <PortfolioAllocationContainer
+              assetCategories={MOCK_ASSET_CATEGORIES}
+              operationMode={activeOperationMode}
+              isRebalanceMode={isRebalanceMode}
+              onZapAction={handleZapAction}
+            />
+
+            {/* Integrated Optimization Tools */}
+            <OptimizeTab />
+          </>
+        ) : (
+          /* Zap In/Out Operations */
+          <>
+            {/* Portfolio Allocation Container */}
+            <PortfolioAllocationContainer
+              assetCategories={MOCK_ASSET_CATEGORIES}
+              operationMode={activeOperationMode}
+              isRebalanceMode={isRebalanceMode}
+              onZapAction={handleZapAction}
+            />
+
+            {/* Strategy Details */}
+            <StrategyDetails
+              strategy={strategy}
+              portfolioData={portfolioData}
+              expandedCategory={expandedCategory}
+              onCategoryToggle={toggleCategoryExpansion}
+            />
+
+            {/* Performance Metrics */}
+            <PerformanceMetrics />
+          </>
+        )}
       </div>
     );
   };
@@ -240,13 +236,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
       <TabNavigation
         activeOperationMode={activeOperationMode}
-        activeSubTab={activeSubTab}
         onOperationModeChange={handleOperationModeChange}
-        onSubTabChange={handleSubTabChange}
       />
 
       <motion.div
-        key={`${activeOperationMode}-${activeSubTab}`}
+        key={activeOperationMode}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}

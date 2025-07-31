@@ -6,21 +6,21 @@ import { InvestmentOpportunity } from "../../types/investment";
 import { AssetCategory } from "../../types/portfolio";
 import { AssetCategoriesDetail } from "../AssetCategoriesDetail";
 
-interface DetailsTabProps {
+interface StrategyDetailsProps {
   strategy: InvestmentOpportunity;
   portfolioData: AssetCategory[];
   expandedCategory: string | null;
   onCategoryToggle: (categoryName: string) => void;
 }
 
-export function DetailsTab({
+export function StrategyDetails({
   strategy,
   portfolioData,
   expandedCategory,
   onCategoryToggle,
-}: DetailsTabProps) {
+}: StrategyDetailsProps) {
   return (
-    <div className="space-y-6" data-testid="details-tab">
+    <div className="space-y-6" data-testid="strategy-details">
       <div
         className="glass-morphism rounded-3xl p-6 border border-gray-800"
         data-testid="strategy-overview"
