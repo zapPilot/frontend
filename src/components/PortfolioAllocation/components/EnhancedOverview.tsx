@@ -1,11 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronDown, ChevronUp, X } from "lucide-react";
-import { useState } from "react";
-import { PieChartData } from "../../../types/portfolio";
-import { PieChart } from "../../PieChart";
-import { useExcludedCategories } from "../ExcludedCategoriesContext";
+import { AssetCategoryRow } from "./Categories";
+import { PortfolioCharts } from "./Charts";
+import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 import {
   ChartDataPoint,
   OperationMode,
@@ -20,226 +18,9 @@ interface EnhancedOverviewProps {
   onZapAction?: () => void;
   swapControls?: React.ReactNode;
   operationMode?: OperationMode;
+  excludedCategoryIds: string[];
+  onToggleCategoryExclusion: (categoryId: string) => void;
 }
-
-interface AssetCategoryRowProps {
-  category: ProcessedAssetCategory;
-  rebalanceMode?: RebalanceMode;
-}
-
-const AssetCategoryRow: React.FC<AssetCategoryRowProps> = ({
-  category,
-  rebalanceMode,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { toggleCategoryExclusion, isExcluded } = useExcludedCategories();
-  const excluded = isExcluded(category.id);
-
-  // Get rebalance data for this category
-  const categoryShift = rebalanceMode?.data?.shifts.find(
-    s => s.categoryId === category.id
-  );
-  const targetCategory = rebalanceMode?.data?.target.find(
-    t => t.id === category.id
-  );
-  const isRebalanceMode =
-    rebalanceMode?.isEnabled && categoryShift && targetCategory;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`rounded-2xl border transition-all duration-200 ${
-        excluded
-          ? "border-gray-700/50 bg-gray-900/20"
-          : "border-gray-700 bg-gray-900/30 hover:bg-gray-900/50"
-      }`}
-      data-testid={`category-row-${category.id}`}
-    >
-      <div className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {/* Category Color Indicator */}
-            <div
-              className="w-4 h-4 rounded-full"
-              style={{ backgroundColor: category.color }}
-            />
-
-            {/* Category Name */}
-            <span
-              className={`font-medium ${excluded ? "text-gray-500 line-through" : "text-white"}`}
-            >
-              {category.name}
-            </span>
-
-            {/* Protocol Count */}
-            <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-              {category.protocols.length} protocols
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            {/* Allocation Percentage */}
-            <div className="text-right">
-              {isRebalanceMode ? (
-                // Rebalance Mode: Show Before -> After
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <div className="text-sm text-gray-400">
-                      {category.activeAllocationPercentage.toFixed(1)}%
-                    </div>
-                    <span className="text-gray-500">→</span>
-                    <div
-                      className={`font-bold ${
-                        categoryShift!.action === "increase"
-                          ? "text-green-400"
-                          : categoryShift!.action === "decrease"
-                            ? "text-red-400"
-                            : "text-white"
-                      }`}
-                    >
-                      {targetCategory!.activeAllocationPercentage.toFixed(1)}%
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 text-xs">
-                    <div
-                      className={`${
-                        categoryShift!.action === "increase"
-                          ? "text-green-400"
-                          : categoryShift!.action === "decrease"
-                            ? "text-red-400"
-                            : "text-gray-400"
-                      }`}
-                    >
-                      {categoryShift!.changeAmount > 0 ? "+" : ""}
-                      {categoryShift!.changeAmount.toFixed(1)}%
-                    </div>
-                    <div className="text-gray-500">•</div>
-                    <div className="text-gray-400">
-                      {categoryShift!.actionDescription}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                // Normal Mode: Show Current Allocation
-                <div>
-                  <div
-                    className={`font-bold ${excluded ? "text-gray-500" : "text-white"}`}
-                  >
-                    {excluded
-                      ? "0%"
-                      : `${category.activeAllocationPercentage.toFixed(1)}%`}
-                  </div>
-                  {!excluded && (
-                    <div className="text-sm text-gray-400">
-                      ${category.totalValue.toLocaleString()}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Expand/Collapse Button */}
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1 rounded-lg hover:bg-gray-800 transition-colors"
-              data-testid={`expand-button-${category.id}`}
-            >
-              {isExpanded ? (
-                <ChevronUp className="w-4 h-4 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              )}
-            </button>
-
-            {/* Exclusion Toggle */}
-            <button
-              onClick={() => toggleCategoryExclusion(category.id)}
-              className={`p-2 rounded-lg transition-colors ${
-                excluded
-                  ? "bg-gray-800 hover:bg-gray-700 text-gray-400"
-                  : "bg-red-500/20 hover:bg-red-500/30 text-red-400"
-              }`}
-              title={excluded ? "Include in Zap" : "Exclude from Zap"}
-              data-testid={`toggle-button-${category.id}`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-
-        {/* Expanded Protocol Details */}
-        {isExpanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            className="mt-4 pt-4 border-t border-gray-700/50"
-            data-testid={`protocols-list-${category.id}`}
-          >
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-300 mb-3">
-                Underlying Protocols:
-              </h4>
-              {category.protocols.map(protocol => (
-                <div
-                  key={protocol.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-gray-800/50"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-white">
-                        {protocol.name}
-                      </span>
-                      <span className="text-xs text-gray-400 bg-gray-700 px-2 py-1 rounded">
-                        {protocol.chain}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-300">
-                      {protocol.allocationPercentage.toFixed(1)}%
-                    </div>
-                    {protocol.apy && (
-                      <div className="text-xs text-green-400">
-                        {protocol.apy.toFixed(2)}% APY
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-const ExcludedCategoriesChips: React.FC<{
-  excludedCategories: ProcessedAssetCategory[];
-}> = ({ excludedCategories }) => {
-  const { removeCategoryExclusion } = useExcludedCategories();
-
-  if (excludedCategories.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-2 p-4 rounded-2xl bg-gray-900/20 border border-gray-700/50">
-      <span className="text-sm text-gray-400">Excluded from Zap:</span>
-      {excludedCategories.map(category => (
-        <button
-          key={category.id}
-          onClick={() => removeCategoryExclusion(category.id)}
-          className="flex items-center space-x-1 px-3 py-1 text-xs bg-gray-800 text-gray-300 rounded-full hover:bg-gray-700 transition-colors"
-          data-testid={`excluded-chip-${category.id}`}
-        >
-          <span>{category.name}</span>
-          <X className="w-3 h-3" />
-        </button>
-      ))}
-    </div>
-  );
-};
 
 export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   processedCategories,
@@ -248,6 +29,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   onZapAction,
   swapControls,
   operationMode = "zapIn",
+  excludedCategoryIds,
+  onToggleCategoryExclusion,
 }) => {
   const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
   const excludedCategories = processedCategories.filter(cat => cat.isExcluded);
@@ -286,7 +69,10 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       </div>
 
       {/* Excluded Categories Chips */}
-      <ExcludedCategoriesChips excludedCategories={excludedCategories} />
+      <ExcludedCategoriesChips
+        excludedCategories={excludedCategories}
+        onToggleCategoryExclusion={onToggleCategoryExclusion}
+      />
 
       {/* Main Content Grid */}
       <div
@@ -294,122 +80,24 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       >
         {/* Pie Chart(s) */}
         {rebalanceMode?.isEnabled ? (
-          // Rebalance Mode: Side-by-side pie charts
+          // Rebalance Mode: Side-by-side pie charts with summary
           <div className="space-y-6">
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-8"
-              data-testid="rebalance-pie-charts"
-            >
-              {/* Current Allocation */}
-              <div className="text-center">
-                <h4 className="text-lg font-semibold text-white mb-4">
-                  Current
-                </h4>
-                <div className="flex justify-center">
-                  <PieChart
-                    data={chartData.map(
-                      item =>
-                        ({
-                          label: item.name,
-                          value: Math.round(item.value * 100),
-                          percentage: item.value,
-                          color: item.color,
-                        }) as PieChartData
-                    )}
-                    size={250}
-                    strokeWidth={8}
-                  />
-                </div>
-              </div>
-
-              {/* Target Allocation */}
-              <div className="text-center">
-                <h4 className="text-lg font-semibold text-white mb-4">
-                  After Rebalance
-                </h4>
-                <div className="flex justify-center">
-                  <PieChart
-                    data={targetChartData.map(
-                      item =>
-                        ({
-                          label: item.name,
-                          value: Math.round(item.value * 100),
-                          percentage: item.value,
-                          color: item.color,
-                        }) as PieChartData
-                    )}
-                    size={250}
-                    strokeWidth={8}
-                  />
-                </div>
-              </div>
-            </div>
+            <PortfolioCharts
+              chartData={chartData}
+              targetChartData={targetChartData}
+              isRebalanceMode={true}
+            />
 
             {/* Rebalance Summary */}
             {rebalanceMode.data && (
-              <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
-                <h4 className="text-sm font-medium text-white mb-3">
-                  Rebalance Summary
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-green-400">
-                      {
-                        rebalanceMode.data.shifts.filter(
-                          s => s.action === "increase"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Positions to Increase
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-red-400">
-                      {
-                        rebalanceMode.data.shifts.filter(
-                          s => s.action === "decrease"
-                        ).length
-                      }
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Positions to Decrease
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-white">
-                      ${rebalanceMode.data.totalRebalanceValue.toLocaleString()}
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Total Value to Rebalance
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <RebalanceSummary rebalanceData={rebalanceMode.data} />
             )}
           </div>
         ) : (
           // Normal Mode: Single pie chart with category list
           <>
             {/* Pie Chart */}
-            <div
-              className="flex justify-center"
-              data-testid="pie-chart-container"
-            >
-              <PieChart
-                data={chartData.map(
-                  item =>
-                    ({
-                      label: item.name,
-                      value: Math.round(item.value * 100), // Convert percentage to value for display
-                      percentage: item.value,
-                      color: item.color,
-                    }) as PieChartData
-                )}
-                size={300}
-                strokeWidth={10}
-              />
-            </div>
+            <PortfolioCharts chartData={chartData} />
 
             {/* Category List */}
             <div className="space-y-4" data-testid="allocation-list">
@@ -417,6 +105,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
                 <AssetCategoryRow
                   key={category.id}
                   category={category}
+                  excludedCategoryIds={excludedCategoryIds}
+                  onToggleCategoryExclusion={onToggleCategoryExclusion}
                   {...(rebalanceMode ? { rebalanceMode } : {})}
                 />
               ))}
@@ -432,6 +122,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             <AssetCategoryRow
               key={category.id}
               category={category}
+              excludedCategoryIds={excludedCategoryIds}
+              onToggleCategoryExclusion={onToggleCategoryExclusion}
               rebalanceMode={rebalanceMode}
             />
           ))}

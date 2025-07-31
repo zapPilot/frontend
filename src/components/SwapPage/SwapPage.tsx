@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { InvestmentOpportunity } from "../../types/investment";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
@@ -121,6 +121,17 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     useState<OperationMode>("zapIn");
   const [isRebalanceMode, setIsRebalanceMode] = useState(false);
 
+  // Excluded categories state management
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<string[]>([]);
+
+  const toggleCategoryExclusion = useCallback((categoryId: string) => {
+    setExcludedCategoryIds(prev =>
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  }, []);
+
   // Single-level navigation handler
   const handleOperationModeChange = (mode: OperationMode) => {
     setActiveOperationMode(mode);
@@ -192,6 +203,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               operationMode={activeOperationMode}
               isRebalanceMode={isRebalanceMode}
               onZapAction={handleZapAction}
+              excludedCategoryIds={excludedCategoryIds}
+              onToggleCategoryExclusion={toggleCategoryExclusion}
             />
 
             {/* Integrated Optimization Tools */}
@@ -206,6 +219,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               operationMode={activeOperationMode}
               isRebalanceMode={isRebalanceMode}
               onZapAction={handleZapAction}
+              excludedCategoryIds={excludedCategoryIds}
+              onToggleCategoryExclusion={toggleCategoryExclusion}
             />
           </>
         )}
