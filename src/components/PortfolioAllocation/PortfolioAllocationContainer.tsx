@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { EnhancedOverview, SwapControls } from "./components";
+import { usePortfolioData, useRebalanceData } from "./hooks";
 import {
   PortfolioAllocationContainerProps,
   PortfolioSwapAction,
   SwapSettings,
 } from "./types";
-import { usePortfolioData, useRebalanceData } from "./hooks";
 
 export const PortfolioAllocationContainer: React.FC<
   PortfolioAllocationContainerProps
@@ -47,26 +47,24 @@ export const PortfolioAllocationContainer: React.FC<
     onZapAction?.(portfolioSwapAction);
   };
 
-  // Render the appropriate variation
-  const renderVariation = () => {
-    const rebalanceMode = {
-      isEnabled: isRebalanceMode,
-      ...(rebalanceData ? { data: rebalanceData } : {}),
-    };
+  // Prepare data for EnhancedOverview
+  const rebalanceMode = {
+    isEnabled: isRebalanceMode,
+    ...(rebalanceData ? { data: rebalanceData } : {}),
+  };
 
-    const includedCategories = processedCategories.filter(
-      cat => !cat.isExcluded
-    );
+  const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
 
-    // Common SwapControls props
-    const swapControlsProps = {
-      operationMode,
-      swapSettings,
-      onSwapSettingsChange: setSwapSettings,
-      includedCategories,
-    };
+  // Common SwapControls props
+  const swapControlsProps = {
+    operationMode,
+    swapSettings,
+    onSwapSettingsChange: setSwapSettings,
+    includedCategories,
+  };
 
-    return (
+  return (
+    <div data-testid="portfolio-allocation-container" className="space-y-4">
       <EnhancedOverview
         processedCategories={processedCategories}
         chartData={chartData}
@@ -77,12 +75,6 @@ export const PortfolioAllocationContainer: React.FC<
         excludedCategoryIds={excludedCategoryIds}
         onToggleCategoryExclusion={onToggleCategoryExclusion}
       />
-    );
-  };
-
-  return (
-    <div data-testid="portfolio-allocation-container" className="space-y-4">
-      {renderVariation()}
     </div>
   );
 };

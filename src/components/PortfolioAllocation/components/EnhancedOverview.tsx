@@ -1,15 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AssetCategoryRow } from "./Categories";
-import { PortfolioCharts } from "./Charts";
-import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 import {
   ChartDataPoint,
   OperationMode,
   ProcessedAssetCategory,
   RebalanceMode,
 } from "../types";
+import { CategoryListSection } from "./Categories";
+import { PortfolioCharts } from "./Charts";
+import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
+import { OverviewHeader } from "./Headers";
+import { ActionButton } from "./Actions";
 
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];
@@ -55,18 +57,11 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       data-testid="enhanced-overview"
     >
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold gradient-text">
-          {rebalanceMode?.isEnabled
-            ? "Portfolio Rebalancing"
-            : "Portfolio Allocation"}
-        </h3>
-        <div className="text-sm text-gray-400">
-          {rebalanceMode?.isEnabled
-            ? `${rebalanceMode.data?.shifts.filter(s => s.action !== "maintain").length || 0} changes planned`
-            : `${includedCategories.length} of ${processedCategories.length} categories active`}
-        </div>
-      </div>
+      <OverviewHeader
+        rebalanceMode={rebalanceMode}
+        totalCategories={processedCategories.length}
+        includedCategories={includedCategories.length}
+      />
 
       {/* Excluded Categories Chips */}
       <ExcludedCategoriesChips
@@ -100,62 +95,36 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             <PortfolioCharts chartData={chartData} />
 
             {/* Category List */}
-            <div className="space-y-4" data-testid="allocation-list">
-              {processedCategories.map(category => (
-                <AssetCategoryRow
-                  key={category.id}
-                  category={category}
-                  excludedCategoryIds={excludedCategoryIds}
-                  onToggleCategoryExclusion={onToggleCategoryExclusion}
-                  {...(rebalanceMode ? { rebalanceMode } : {})}
-                />
-              ))}
-            </div>
+            <CategoryListSection
+              categories={processedCategories}
+              excludedCategoryIds={excludedCategoryIds}
+              onToggleCategoryExclusion={onToggleCategoryExclusion}
+              rebalanceMode={rebalanceMode}
+            />
           </>
         )}
       </div>
 
       {/* Category List for Rebalance Mode */}
       {rebalanceMode?.isEnabled && (
-        <div className="space-y-4" data-testid="allocation-list">
-          {processedCategories.map(category => (
-            <AssetCategoryRow
-              key={category.id}
-              category={category}
-              excludedCategoryIds={excludedCategoryIds}
-              onToggleCategoryExclusion={onToggleCategoryExclusion}
-              rebalanceMode={rebalanceMode}
-            />
-          ))}
-        </div>
+        <CategoryListSection
+          categories={processedCategories}
+          excludedCategoryIds={excludedCategoryIds}
+          onToggleCategoryExclusion={onToggleCategoryExclusion}
+          rebalanceMode={rebalanceMode}
+        />
       )}
 
       {/* Swap Controls */}
       {swapControls && <div className="pt-4">{swapControls}</div>}
 
       {/* Action Button */}
-      <div className="pt-4">
-        <button
-          onClick={() => onZapAction?.()}
-          disabled={includedCategories.length === 0}
-          className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:from-purple-500 hover:to-blue-500"
-          data-testid="zap-action-button"
-        >
-          {operationMode === "rebalance"
-            ? `Execute Rebalance (${rebalanceMode?.data?.shifts.filter(s => s.action !== "maintain").length || 0} changes)`
-            : operationMode === "zapIn"
-              ? includedCategories.length === 0
-                ? "Select categories to Zap In"
-                : `Zap In to ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`
-              : operationMode === "zapOut"
-                ? includedCategories.length === 0
-                  ? "Select categories to Zap Out"
-                  : `Zap Out from ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`
-                : includedCategories.length === 0
-                  ? "Select categories"
-                  : `Execute with ${includedCategories.length} categor${includedCategories.length === 1 ? "y" : "ies"}`}
-        </button>
-      </div>
+      <ActionButton
+        operationMode={operationMode}
+        includedCategories={includedCategories}
+        rebalanceMode={rebalanceMode}
+        onAction={onZapAction}
+      />
     </motion.div>
   );
 };

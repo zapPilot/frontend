@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { InvestmentOpportunity } from "../../types/investment";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
@@ -142,9 +142,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   };
 
   const handleZapAction = (action: PortfolioSwapAction) => {
-    // eslint-disable-next-line no-console
-    console.log("Zap action triggered:", action);
-
     // In a real implementation, this would:
     // 1. Validate user has sufficient balance
     // 2. Calculate optimal protocol routing
