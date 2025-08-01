@@ -63,7 +63,9 @@ export function WalletPortfolio({
       <GlassCard>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+            <div
+              className={`w-12 h-12 rounded-2xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
+            >
               <DollarSign className="w-6 h-6 text-white" />
             </div>
             <div>

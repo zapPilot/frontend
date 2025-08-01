@@ -12,6 +12,7 @@ import {
   Check,
 } from "lucide-react";
 import { useState, useCallback, memo } from "react";
+import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "./ui";
 
 interface WalletAddress {
@@ -114,7 +115,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+                <div
+                  className={`w-10 h-10 rounded-xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
+                >
                   <Wallet className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -288,7 +291,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
             ) : (
               <GradientButton
                 onClick={() => setIsAdding(true)}
-                gradient="from-purple-600 to-blue-600"
+                gradient={GRADIENTS.PRIMARY}
                 icon={Plus}
                 className="w-full"
               >

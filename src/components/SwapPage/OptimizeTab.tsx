@@ -10,6 +10,7 @@ import { useToast } from "../../hooks/useToast";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { TokenImage } from "../shared/TokenImage";
+import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "../ui";
 import { useTokenState } from "./hooks/useTokenState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
@@ -562,7 +563,7 @@ export function OptimizeTab() {
               loadingTokens ||
               !isWalletConnected
             }
-            gradient="from-purple-600 to-blue-600"
+            gradient={GRADIENTS.PRIMARY}
             className="w-full py-4"
             onClick={handleOptimize}
           >

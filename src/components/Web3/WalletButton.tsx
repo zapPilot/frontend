@@ -27,6 +27,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useChain } from "@/hooks/useChain";
 import { useWallet } from "@/hooks/useWallet";
+import { GRADIENTS } from "@/constants/design-system";
 
 /**
  * WalletButton component props
@@ -249,8 +250,7 @@ export function WalletButton({
       "flex items-center justify-center space-x-2 font-medium rounded-xl transition-all duration-200 relative overflow-hidden";
 
     const variantStyles = {
-      primary:
-        "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl",
+      primary: `bg-gradient-to-r ${GRADIENTS.PRIMARY} hover:from-purple-700 hover:to-blue-700 text-white shadow-lg hover:shadow-xl`,
       secondary:
         "bg-gray-900/50 hover:bg-gray-800 border border-gray-700 hover:border-gray-600 text-white backdrop-blur-sm",
       ghost: "hover:bg-gray-800 text-gray-300 hover:text-white",
@@ -312,7 +312,9 @@ export function WalletButton({
           className={getButtonStyles()}
         >
           {/* Account avatar */}
-          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+          <div
+            className={`w-6 h-6 rounded-full bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
+          >
             <User className="w-3 h-3 text-white" />
           </div>
 
@@ -367,7 +369,9 @@ export function WalletButton({
               {/* Account header */}
               <div className="p-4 border-b border-gray-700">
                 <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center">
+                  <div
+                    className={`w-12 h-12 rounded-full bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
+                  >
                     <User className="w-6 h-6 text-white" />
                   </div>
                   <div className="flex-1">
@@ -456,7 +460,7 @@ export function WalletButton({
 
       {/* Animated background effect */}
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 opacity-0"
+        className={`absolute inset-0 bg-gradient-to-r ${GRADIENTS.PRIMARY}/20 opacity-0`}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       />

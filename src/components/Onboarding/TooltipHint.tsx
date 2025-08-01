@@ -3,6 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { GRADIENTS } from "@/constants/design-system";
 import { useOnboarding } from "@/providers/OnboardingProvider";
 
 export interface TooltipHintProps {
@@ -222,7 +223,7 @@ export function TooltipHint({
               </button>
               <button
                 onClick={handleAction}
-                className="px-3 py-1.5 text-xs bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium"
+                className={`px-3 py-1.5 text-xs bg-gradient-to-r ${GRADIENTS.PRIMARY} text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium`}
               >
                 Got it!
               </button>

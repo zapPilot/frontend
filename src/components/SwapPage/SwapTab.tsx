@@ -8,6 +8,7 @@ import { SwapToken } from "../../types/swap";
 import { SWAP_CONSTANTS } from "../../constants/swap";
 import { AmountButtons } from "./AmountButtons";
 import { IntentProgressModal } from "./IntentProgressModal";
+import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "../ui";
 
 interface SwapTabProps {
@@ -230,7 +231,7 @@ export function SwapTab({
 
         <GradientButton
           disabled={!fromAmount || parseFloat(fromAmount) <= 0}
-          gradient="from-purple-600 to-blue-600"
+          gradient={GRADIENTS.PRIMARY}
           className="w-full py-4"
           testId="swap-invest-button"
           onClick={handleSwapClick}

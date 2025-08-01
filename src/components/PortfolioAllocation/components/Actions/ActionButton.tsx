@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+import { GRADIENTS } from "@/constants/design-system";
 import {
   OperationMode,
   ProcessedAssetCategory,
@@ -58,7 +59,7 @@ export const ActionButton = memo<ActionButtonProps>(
         <button
           onClick={() => onAction?.()}
           disabled={includedCategories.length === 0}
-          className="w-full py-4 px-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:from-purple-500 hover:to-blue-500"
+          className={`w-full py-4 px-6 bg-gradient-to-r ${GRADIENTS.PRIMARY} text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:from-purple-500 hover:to-blue-500`}
           data-testid="zap-action-button"
         >
           {buttonText}

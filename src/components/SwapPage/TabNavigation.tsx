@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
+import { GRADIENTS } from "@/constants/design-system";
 import { OperationMode } from "../PortfolioAllocation/types";
 
 interface TabNavigationProps {
@@ -56,7 +57,7 @@ export function TabNavigation({
                 data-testid={`operation-${mode.id}`}
                 className={`p-3 rounded-xl transition-all duration-300 flex flex-col items-center justify-center space-y-1 cursor-pointer ${
                   activeOperationMode === mode.id
-                    ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg"
+                    ? `bg-gradient-to-r ${GRADIENTS.PRIMARY} text-white shadow-lg`
                     : "text-gray-400 hover:text-white hover:bg-gray-800/50"
                 }`}
               >

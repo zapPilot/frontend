@@ -11,6 +11,7 @@ import {
   ArrowRight,
   Sparkles,
 } from "lucide-react";
+import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "./ui";
 
 export function AirdropTab() {
@@ -67,7 +68,7 @@ export function AirdropTab() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r from-purple-600 to-blue-600 flex items-center justify-center relative"
+            className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center relative`}
           >
             <Gift className="w-10 h-10 text-white" />
             <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center">
@@ -278,10 +279,7 @@ export function AirdropTab() {
               placeholder="Enter your email"
               className="flex-1 px-4 py-2 bg-gray-800/50 text-white rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
             />
-            <GradientButton
-              gradient="from-purple-600 to-blue-600"
-              className="px-6 py-2"
-            >
+            <GradientButton gradient={GRADIENTS.PRIMARY} className="px-6 py-2">
               Subscribe
             </GradientButton>
           </div>

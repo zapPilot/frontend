@@ -11,6 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { memo, useMemo } from "react";
+import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, APRMetrics } from "../ui";
 import {
   getAnalyticsMetrics,
@@ -243,7 +244,7 @@ const AnalyticsDashboardComponent = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-purple-600 to-blue-600 rounded-full"
+                        className={`h-full bg-gradient-to-r ${GRADIENTS.PRIMARY} rounded-full`}
                         style={{ width: `${asset.allocation * 2.5}%` }}
                       />
                     </div>
