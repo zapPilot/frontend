@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Settings, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import type { SlippagePreset } from "../types";
+import { useSlippage, type SlippagePreset } from "../hooks";
 
 interface SlippageSettingsProps {
   value: number; // Current slippage tolerance (percentage)
@@ -24,31 +24,13 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
   className = "",
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [customValue, setCustomValue] = useState("");
 
-  const isCustomValue = !SLIPPAGE_PRESETS.some(
-    preset => preset.value === value
-  );
-  const isHighSlippage = value > 5;
-  const isVeryHighSlippage = value > 10;
-
-  const handlePresetClick = (presetValue: number) => {
-    onChange(presetValue);
-    setCustomValue("");
-  };
-
-  const handleCustomSubmit = () => {
-    const numValue = parseFloat(customValue);
-    if (!isNaN(numValue) && numValue >= 0 && numValue <= 50) {
-      onChange(numValue);
-    }
-  };
-
-  const handleCustomKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleCustomSubmit();
-    }
-  };
+  const slippage = useSlippage(onChange, {
+    initialValue: value,
+    presets: SLIPPAGE_PRESETS,
+    highSlippageThreshold: 5,
+    veryHighSlippageThreshold: 10,
+  });
 
   return (
     <div className={`relative ${className}`}>
@@ -56,19 +38,19 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all ${
-          isHighSlippage
-            ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-400"
-            : isVeryHighSlippage
-              ? "border-red-500/50 bg-red-500/10 text-red-400"
+          slippage.isVeryHighSlippage
+            ? "border-red-500/50 bg-red-500/10 text-red-400"
+            : slippage.isHighSlippage
+              ? "border-yellow-500/50 bg-yellow-500/10 text-yellow-400"
               : "border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-800"
         }`}
         data-testid="slippage-button"
       >
         <Settings className="w-4 h-4" />
         <span className="text-sm font-medium">
-          {value.toFixed(value < 1 ? 1 : 0)}%
+          {slippage.formatValue(slippage.value)}%
         </span>
-        {isHighSlippage && <AlertTriangle className="w-4 h-4" />}
+        {slippage.isHighSlippage && <AlertTriangle className="w-4 h-4" />}
       </button>
 
       {/* Expanded Settings Panel */}
@@ -93,12 +75,12 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
 
             {/* Preset Buttons */}
             <div className="grid grid-cols-4 gap-2">
-              {SLIPPAGE_PRESETS.map(preset => (
+              {slippage.presets.map(preset => (
                 <button
                   key={preset.value}
-                  onClick={() => handlePresetClick(preset.value)}
+                  onClick={() => slippage.handlePresetClick(preset.value)}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    value === preset.value
+                    slippage.value === preset.value
                       ? "bg-purple-500 text-white"
                       : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                   }`}
@@ -115,10 +97,12 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
               <div className="flex items-center space-x-2">
                 <input
                   type="number"
-                  value={customValue}
-                  onChange={e => setCustomValue(e.target.value)}
-                  onKeyPress={handleCustomKeyPress}
-                  placeholder={isCustomValue ? value.toString() : "1.0"}
+                  value={slippage.customValue}
+                  onChange={e => slippage.setCustomValue(e.target.value)}
+                  onKeyPress={slippage.handleCustomKeyPress}
+                  placeholder={
+                    slippage.isCustomValue ? slippage.value.toString() : "1.0"
+                  }
                   min="0"
                   max="50"
                   step="0.1"
@@ -126,7 +110,7 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
                   data-testid="slippage-custom-input"
                 />
                 <button
-                  onClick={handleCustomSubmit}
+                  onClick={slippage.handleCustomSubmit}
                   className="px-3 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors"
                   data-testid="slippage-custom-submit"
                 >
@@ -136,12 +120,12 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
             </div>
 
             {/* Warning Messages */}
-            {isHighSlippage && (
+            {slippage.warning.type !== "none" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className={`p-3 rounded-lg border ${
-                  isVeryHighSlippage
+                  slippage.warning.color === "red"
                     ? "border-red-500/30 bg-red-500/10"
                     : "border-yellow-500/30 bg-yellow-500/10"
                 }`}
@@ -149,27 +133,29 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
                 <div className="flex items-center space-x-2">
                   <AlertTriangle
                     className={`w-4 h-4 ${
-                      isVeryHighSlippage ? "text-red-400" : "text-yellow-400"
+                      slippage.warning.color === "red"
+                        ? "text-red-400"
+                        : "text-yellow-400"
                     }`}
                   />
                   <span
                     className={`text-xs font-medium ${
-                      isVeryHighSlippage ? "text-red-400" : "text-yellow-400"
+                      slippage.warning.color === "red"
+                        ? "text-red-400"
+                        : "text-yellow-400"
                     }`}
                   >
-                    {isVeryHighSlippage
-                      ? "Very High Slippage"
-                      : "High Slippage"}
+                    {slippage.warning.title}
                   </span>
                 </div>
                 <p
                   className={`text-xs mt-1 ${
-                    isVeryHighSlippage ? "text-red-300" : "text-yellow-300"
+                    slippage.warning.color === "red"
+                      ? "text-red-300"
+                      : "text-yellow-300"
                   }`}
                 >
-                  {isVeryHighSlippage
-                    ? "Your transaction may be frontrun or result in significant losses"
-                    : "You may receive less than expected due to price movement"}
+                  {slippage.warning.message}
                 </p>
               </motion.div>
             )}
@@ -179,7 +165,7 @@ export const SlippageSettings: React.FC<SlippageSettingsProps> = ({
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-400">Current tolerance:</span>
                 <span className="text-white font-medium">
-                  {value.toFixed(value < 1 ? 1 : 0)}%
+                  {slippage.formatValue(slippage.value)}%
                 </span>
               </div>
             </div>

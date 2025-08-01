@@ -81,11 +81,7 @@ export interface OperationConfig {
   isEnabled: boolean;
 }
 
-export interface SlippagePreset {
-  label: string;
-  value: number; // Percentage
-  isDefault?: boolean;
-}
+// SlippagePreset interface is now exported from useSlippage hook
 
 export interface SwapValidation {
   isValid: boolean;

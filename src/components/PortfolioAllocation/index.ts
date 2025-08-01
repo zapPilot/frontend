@@ -12,7 +12,6 @@ export type {
   Protocol,
   RebalanceData,
   RebalanceMode,
-  SlippagePreset,
   SwapSettings,
   SwapValidation,
 } from "./types";
