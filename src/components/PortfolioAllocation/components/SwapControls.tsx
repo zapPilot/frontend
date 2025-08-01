@@ -1,17 +1,17 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRightLeft, Zap, RotateCcw } from "lucide-react";
+import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import type { SwapToken } from "../../../types/swap";
+import { SlippageComponent } from "../../shared/SlippageComponent";
 import type {
   OperationMode,
+  ProcessedAssetCategory,
   SwapSettings,
   SwapValidation,
-  ProcessedAssetCategory,
 } from "../types";
 import { TokenSelector, ValidationMessages } from "./Controls";
-import { SlippageSettings } from "./SlippageSettings";
 
 interface SwapControlsProps {
   operationMode: OperationMode;
@@ -178,9 +178,12 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
         </div>
 
         {/* Slippage Settings */}
-        <SlippageSettings
+        <SlippageComponent
           value={swapSettings.slippageTolerance}
           onChange={handleSlippageChange}
+          context="portfolio"
+          variant="compact"
+          dropdownPosition="left-center"
         />
       </div>
 

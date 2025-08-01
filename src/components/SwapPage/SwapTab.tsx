@@ -7,7 +7,7 @@ import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
 import { SWAP_CONSTANTS } from "../../constants/swap";
 import { AmountButtons } from "./AmountButtons";
-import { IntentProgressModal } from "./IntentProgressModal";
+import { UnifiedProgressModal } from "../shared/UnifiedProgressModal";
 import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "../ui";
 
@@ -243,15 +243,18 @@ export function SwapTab({
       </div>
 
       {/* Intent Progress Modal */}
-      <IntentProgressModal
+      <UnifiedProgressModal
         isOpen={isProgressModalOpen}
         onClose={handleCloseProgressModal}
-        strategy={{
-          name: strategy.name,
-          color: strategy.color,
+        mode="intent"
+        config={{
+          strategy: {
+            name: strategy.name,
+            color: strategy.color,
+          },
+          amount: fromAmount,
+          fromToken: fromToken.symbol,
         }}
-        amount={fromAmount}
-        fromToken={fromToken.symbol}
         showDetailed={true}
       />
     </GlassCard>

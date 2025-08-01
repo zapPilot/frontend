@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import { GRADIENTS } from "@/constants/design-system";
+import { GradientButton } from "@/components/ui/GradientButton";
 import {
   OperationMode,
   ProcessedAssetCategory,
@@ -56,14 +57,15 @@ export const ActionButton = memo<ActionButtonProps>(
 
     return (
       <div className="pt-4">
-        <button
-          onClick={() => onAction?.()}
+        <GradientButton
+          onClick={onAction}
+          gradient={GRADIENTS.PRIMARY}
           disabled={includedCategories.length === 0}
-          className={`w-full py-4 px-6 bg-gradient-to-r ${GRADIENTS.PRIMARY} text-white font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:from-purple-500 hover:to-blue-500`}
-          data-testid="zap-action-button"
+          className="w-full py-4 px-6 hover:from-purple-500 hover:to-blue-500"
+          testId="zap-action-button"
         >
           {buttonText}
-        </button>
+        </GradientButton>
       </div>
     );
   }

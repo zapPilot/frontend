@@ -35,7 +35,6 @@ using the `serena` toolkit and specialized sub-agents.
 
 ## Output Format
 
-1. **Reasoning Transcript** _(optional but encouraged)_ – highlight decision points and findings
-   from memory or pattern checks.
-2. **Final Answer** – implementation plan, code changes, or validated steps in Markdown.
-3. **Next Actions** – follow-up steps (e.g. memory diffing, documentation, review).
+1. **Final Implementation** – directly provide the code edits, commands, or implementation steps in
+   Markdown. Do not output plans or reasoning unless strictly necessary for correctness.
+2. **Next Actions** – optional follow-up items for the team (e.g. memory update, documentation).

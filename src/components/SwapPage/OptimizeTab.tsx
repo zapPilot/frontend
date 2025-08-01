@@ -17,7 +17,7 @@ import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { useOptimizationData } from "./hooks/useOptimizationData";
 import { useUIState } from "./hooks/useUIState";
 import { OptimizationSelector } from "./OptimizationSelector";
-import { SlippageSelector } from "./SlippageSelector";
+import { SlippageComponent } from "../shared/SlippageComponent";
 import { StreamingProgress } from "./StreamingProgress";
 export interface OptimizationOptions {
   convertDust: boolean;
@@ -541,11 +541,13 @@ export function OptimizeTab() {
       {/* Slippage and Execute */}
       <GlassCard>
         <div className="space-y-4">
-          <SlippageSelector
-            slippage={optimizationOptions.slippage}
+          <SlippageComponent
+            value={optimizationOptions.slippage}
             onChange={slippage =>
               setOptimizationOptions(prev => ({ ...prev, slippage }))
             }
+            context="swap"
+            variant="expanded"
           />
 
           {!isWalletConnected && (

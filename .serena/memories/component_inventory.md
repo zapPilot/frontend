@@ -5,7 +5,7 @@
 ### **Button Components**
 
 - **`GradientButton`** - Primary action button with gradient styling and loading states
-- **`ActionButton`** - Specialized button for portfolio actions (zap in/out, rebalance)
+- **`ActionButton`** - ✅ CONSOLIDATED: Now uses GradientButton internally with enhanced animations
 
 ### **Layout Components**
 
@@ -54,7 +54,8 @@
 ### **Control Components**
 
 - **`SwapControls`** - Token selection, amount input, and validation
-- **`SlippageSettings`** - Slippage tolerance configuration with presets
+- **`SlippageComponent`** - ✅ CONSOLIDATED: Unified slippage configuration with context-aware
+  behavior (replaces SlippageSettings + SlippageSelector)
 - **`TokenSelector`** - Token selection dropdown with search
 - **`ValidationMessages`** - Form validation error/warning display
 
@@ -75,15 +76,14 @@
 
 ### **Trading Controls**
 
-- **`SlippageSelector`** - Trading slippage configuration
 - **`AmountButtons`** - Quick percentage amount selection (25%, 50%, 75%, 100%)
 - **`TabNavigation`** - Operation mode switching (swap, optimize)
 
 ### **Progress & Status**
 
-- **`IntentProgressModal`** - Multi-step transaction progress tracking
-- **`StreamingProgress`** - Real-time operation progress display
-- **`OptimizationProgress`** - Portfolio optimization status tracking
+- **`UnifiedProgressModal`** - ✅ CONSOLIDATED: Mode-based progress modal supporting both 'intent'
+  and 'optimization' workflows (replaces IntentProgressModal + OptimizationProgress)
+- **`StreamingProgress`** - Real-time operation progress display with technical details
 - **`WalletTransactionProgress`** - Wallet transaction batch progress
 
 ### **Data Components**
