@@ -12,7 +12,6 @@ export { ChainSwitcher } from "./ChainSwitcher";
 export { HeaderWalletControls } from "./HeaderWalletControls";
 
 // Legacy components for backward compatibility
-export { WalletConnectButton } from "./WalletConnectButton";
 
 // Re-export types for convenience
 export type { WalletAccount, Chain, ProviderType } from "@/types/wallet";

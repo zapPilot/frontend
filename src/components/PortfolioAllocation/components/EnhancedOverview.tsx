@@ -7,6 +7,7 @@ import {
   ProcessedAssetCategory,
   RebalanceMode,
 } from "../types";
+import { useCategoryFilters, useTargetChartData } from "../hooks";
 import { CategoryListSection } from "./Categories";
 import { PortfolioCharts } from "./Charts";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
@@ -34,20 +35,10 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   excludedCategoryIds,
   onToggleCategoryExclusion,
 }) => {
-  const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
-  const excludedCategories = processedCategories.filter(cat => cat.isExcluded);
-
-  // Generate target chart data for rebalance mode
-  const targetChartData =
-    rebalanceMode?.data?.target
-      .filter(cat => !cat.isExcluded)
-      .map(cat => ({
-        name: cat.name,
-        value: cat.activeAllocationPercentage,
-        id: cat.id,
-        color: cat.color,
-        isExcluded: false,
-      })) || [];
+  // Use hooks to extract business logic from UI components
+  const { includedCategories, excludedCategories } =
+    useCategoryFilters(processedCategories);
+  const targetChartData = useTargetChartData(rebalanceMode);
 
   return (
     <motion.div

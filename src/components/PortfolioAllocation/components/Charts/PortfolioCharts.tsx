@@ -1,9 +1,9 @@
 "use client";
 
 import { memo } from "react";
-import { PieChartData } from "../../../../types/portfolio";
 import { PieChart } from "../../../PieChart";
 import { ChartDataPoint } from "../../types";
+import { useChartDataTransforms } from "../../hooks";
 
 interface PortfolioChartsProps {
   chartData: ChartDataPoint[];
@@ -13,6 +13,9 @@ interface PortfolioChartsProps {
 
 export const PortfolioCharts = memo<PortfolioChartsProps>(
   ({ chartData, targetChartData, isRebalanceMode = false }) => {
+    // Use hooks to transform chart data instead of inline transformations
+    const transformedChartData = useChartDataTransforms(chartData);
+    const transformedTargetData = useChartDataTransforms(targetChartData || []);
     if (isRebalanceMode && targetChartData) {
       // Rebalance Mode: Side-by-side pie charts
       return (
@@ -26,15 +29,7 @@ export const PortfolioCharts = memo<PortfolioChartsProps>(
               <h4 className="text-lg font-semibold text-white mb-4">Current</h4>
               <div className="flex justify-center">
                 <PieChart
-                  data={chartData.map(
-                    item =>
-                      ({
-                        label: item.name,
-                        value: Math.round(item.value * 100),
-                        percentage: item.value,
-                        color: item.color,
-                      }) as PieChartData
-                  )}
+                  data={transformedChartData}
                   size={250}
                   strokeWidth={8}
                 />
@@ -48,15 +43,7 @@ export const PortfolioCharts = memo<PortfolioChartsProps>(
               </h4>
               <div className="flex justify-center">
                 <PieChart
-                  data={targetChartData.map(
-                    item =>
-                      ({
-                        label: item.name,
-                        value: Math.round(item.value * 100),
-                        percentage: item.value,
-                        color: item.color,
-                      }) as PieChartData
-                  )}
+                  data={transformedTargetData}
                   size={250}
                   strokeWidth={8}
                 />
@@ -70,19 +57,7 @@ export const PortfolioCharts = memo<PortfolioChartsProps>(
     // Normal Mode: Single pie chart
     return (
       <div className="flex justify-center" data-testid="pie-chart-container">
-        <PieChart
-          data={chartData.map(
-            item =>
-              ({
-                label: item.name,
-                value: Math.round(item.value * 100), // Convert percentage to value for display
-                percentage: item.value,
-                color: item.color,
-              }) as PieChartData
-          )}
-          size={300}
-          strokeWidth={10}
-        />
+        <PieChart data={transformedChartData} size={300} strokeWidth={10} />
       </div>
     );
   }
