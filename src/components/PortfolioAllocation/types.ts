@@ -36,15 +36,6 @@ export interface ChartDataPoint {
   isExcluded?: boolean; // Useful for visual styling in charts
 }
 
-// Context type for clarity
-export interface ExcludedCategoriesContextType {
-  excludedCategoryIds: string[];
-  toggleCategoryExclusion: (categoryId: string) => void;
-  addCategoryExclusion: (categoryId: string) => void;
-  removeCategoryExclusion: (categoryId: string) => void;
-  isExcluded: (categoryId: string) => boolean;
-}
-
 // UI Variation types
 export type PortfolioVariationType = "enhancedOverview";
 
@@ -90,11 +81,7 @@ export interface OperationConfig {
   isEnabled: boolean;
 }
 
-export interface SlippagePreset {
-  label: string;
-  value: number; // Percentage
-  isDefault?: boolean;
-}
+// SlippagePreset interface is now exported from useSlippage hook
 
 export interface SwapValidation {
   isValid: boolean;
@@ -115,4 +102,6 @@ export interface PortfolioAllocationContainerProps {
   operationMode?: OperationMode;
   isRebalanceMode?: boolean;
   onZapAction?: (action: PortfolioSwapAction) => void;
+  excludedCategoryIds: string[];
+  onToggleCategoryExclusion: (categoryId: string) => void;
 }
