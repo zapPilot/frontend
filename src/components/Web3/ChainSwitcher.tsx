@@ -1,5 +1,6 @@
 "use client";
 
+import { useDropdown } from "@/hooks/useDropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Loader2, Network } from "lucide-react";
 import Image from "next/image";
@@ -27,12 +28,12 @@ export const ChainSwitcher = memo(function ChainSwitcher({
 }: ChainSwitcherProps) {
   const activeChain = useActiveWalletChain();
   const switchChain = useSwitchActiveWalletChain();
-  const [isOpen, setIsOpen] = useState(false);
+  const dropdown = useDropdown(false);
   const [isSwitching, setIsSwitching] = useState(false);
 
   const handleChainSwitch = async (chainId: number) => {
     if (chainId === activeChain?.id) {
-      setIsOpen(false);
+      dropdown.close();
       return;
     }
 
@@ -46,7 +47,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
       console.error("Chain switch failed:", error);
     } finally {
       setIsSwitching(false);
-      setIsOpen(false);
+      dropdown.close();
     }
   };
 
@@ -76,7 +77,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
   return (
     <div className={`relative ${className}`}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={dropdown.toggle}
         disabled={disabled || isSwitching}
         className={`
           w-full flex items-center justify-between px-3 py-2 rounded-lg border transition-all duration-200
@@ -103,12 +104,12 @@ export const ChainSwitcher = memo(function ChainSwitcher({
           </span>
         </div>
         <ChevronDown
-          className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`h-4 w-4 transition-transform ${dropdown.isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
       <AnimatePresence>
-        {isOpen && (
+        {dropdown.isOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -142,9 +143,11 @@ export const ChainSwitcher = memo(function ChainSwitcher({
                     {chain.name || `Chain ${chain.id}`}
                   </span>
                   {activeChain?.id === chain.id && (
-                    <span className="ml-auto text-xs text-purple-400 flex items-center gap-1">
-                      <span className="w-2 h-2 bg-purple-400 rounded-full"></span>
-                      Active
+                    <span className="ml-auto flex items-center">
+                      <span
+                        className="w-2 h-2 bg-purple-400 rounded-full"
+                        title="Active"
+                      ></span>
                     </span>
                   )}
                 </button>

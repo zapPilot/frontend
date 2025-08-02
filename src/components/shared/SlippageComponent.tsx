@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 import { Settings, AlertTriangle, ChevronDown } from "lucide-react";
-import { useState } from "react";
 import { useSlippage, type SlippagePreset } from "../PortfolioAllocation/hooks";
+import { useDropdown } from "@/hooks/useDropdown";
 
 interface SlippageComponentProps {
   value: number;
@@ -69,7 +69,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
   context = "portfolio",
   dropdownPosition = "auto",
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const dropdown = useDropdown(false);
   const config = CONTEXT_CONFIGS[context];
 
   const slippage = useSlippage(onChange, {
@@ -113,7 +113,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
       <div className={`relative ${className}`}>
         {/* Slippage Display Button */}
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={dropdown.toggle}
           className={`flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all ${
             slippage.isVeryHighSlippage
               ? "border-red-500/50 bg-red-500/10 text-red-400"
@@ -131,7 +131,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
         </button>
 
         {/* Expanded Settings Panel */}
-        {isExpanded && (
+        {dropdown.isOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -251,10 +251,10 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
         )}
 
         {/* Backdrop to close panel */}
-        {isExpanded && (
+        {dropdown.isOpen && (
           <div
             className="fixed inset-0 z-40"
-            onClick={() => setIsExpanded(false)}
+            onClick={() => dropdown.close()}
           />
         )}
       </div>
@@ -265,7 +265,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
   return (
     <div className={`space-y-3 ${className}`}>
       <button
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={dropdown.toggle}
         className="flex items-center justify-between w-full p-3 rounded-xl bg-gray-900/50 border border-gray-700 hover:bg-gray-900/70 transition-colors cursor-pointer"
       >
         <div className="flex items-center space-x-3">
@@ -286,12 +286,12 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
 
         <ChevronDown
           className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
-            isExpanded ? "rotate-180" : ""
+            dropdown.isOpen ? "rotate-180" : ""
           }`}
         />
       </button>
 
-      {isExpanded && (
+      {dropdown.isOpen && (
         <div className="bg-gray-900/70 p-4 rounded-xl border border-gray-700 space-y-3">
           <div className="text-sm font-medium text-white mb-3">
             Select Slippage Tolerance
@@ -303,7 +303,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
                 key={option.value}
                 onClick={() => {
                   slippage.handlePresetClick(option.value);
-                  setIsExpanded(false);
+                  dropdown.close();
                 }}
                 className={`w-full p-3 rounded-lg text-left transition-all duration-200 cursor-pointer ${
                   slippage.value === option.value

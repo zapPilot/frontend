@@ -17,6 +17,9 @@ export { usePortfolio } from "./usePortfolio";
 export { useStrategyPortfolio } from "./useStrategyPortfolio";
 export { useDustZap } from "./useDustZap";
 
+// UI/Interaction hooks
+export { useDropdown } from "./useDropdown";
+
 // Re-export types for convenience
 export type {
   WalletAccount,

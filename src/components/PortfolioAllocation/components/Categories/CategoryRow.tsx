@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
-import { useState, memo } from "react";
+import { memo } from "react";
+import { useDropdown } from "@/hooks/useDropdown";
 import { ProcessedAssetCategory, RebalanceMode } from "../../types";
 
 interface AssetCategoryRowProps {
@@ -19,7 +20,7 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
     excludedCategoryIds,
     onToggleCategoryExclusion,
   }) => {
-    const [isExpanded, setIsExpanded] = useState(false);
+    const dropdown = useDropdown(false);
     const excluded = excludedCategoryIds.includes(category.id);
 
     // Get rebalance data for this category
@@ -128,11 +129,11 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
 
               {/* Expand/Collapse Button */}
               <button
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={dropdown.toggle}
                 className="p-1 rounded-lg hover:bg-gray-800 transition-colors"
                 data-testid={`expand-button-${category.id}`}
               >
-                {isExpanded ? (
+                {dropdown.isOpen ? (
                   <ChevronUp className="w-4 h-4 text-gray-400" />
                 ) : (
                   <ChevronDown className="w-4 h-4 text-gray-400" />
@@ -156,7 +157,7 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
           </div>
 
           {/* Expanded Protocol Details */}
-          {isExpanded && (
+          {dropdown.isOpen && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}

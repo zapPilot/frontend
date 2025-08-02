@@ -2,7 +2,8 @@
 
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { useState, memo } from "react";
+import { memo } from "react";
+import { useDropdown } from "@/hooks/useDropdown";
 import { MOCK_TOKENS } from "../../../../../constants/swap";
 import type { SwapToken } from "../../../../../types/swap";
 
@@ -15,7 +16,7 @@ interface TokenSelectorProps {
 
 export const TokenSelector = memo<TokenSelectorProps>(
   ({ selectedToken, onTokenSelect, label, placeholder }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    const dropdown = useDropdown(false);
 
     return (
       <div className="relative">
@@ -23,7 +24,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
           {label}
         </label>
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={dropdown.toggle}
           className="w-full flex items-center justify-between p-3 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
           data-testid={`token-selector-${label.toLowerCase().replace(" ", "-")}`}
         >
@@ -52,7 +53,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
         </button>
 
         {/* Token Dropdown */}
-        {isOpen && (
+        {dropdown.isOpen && (
           <>
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -65,7 +66,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                   key={token.symbol}
                   onClick={() => {
                     onTokenSelect(token);
-                    setIsOpen(false);
+                    dropdown.close();
                   }}
                   className="w-full flex items-center space-x-3 p-3 hover:bg-gray-800 transition-colors"
                   data-testid={`token-option-${token.symbol}`}
@@ -97,7 +98,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
             </motion.div>
             <div
               className="fixed inset-0 z-40"
-              onClick={() => setIsOpen(false)}
+              onClick={() => dropdown.close()}
             />
           </>
         )}

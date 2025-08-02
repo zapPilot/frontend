@@ -6,7 +6,6 @@
 
 // Core wallet components
 export { WalletButton } from "./WalletButton";
-export { ChainSelector } from "./ChainSelector";
 export { SimpleConnectButton } from "./SimpleConnectButton";
 export { ChainSwitcher } from "./ChainSwitcher";
 export { HeaderWalletControls } from "./HeaderWalletControls";
