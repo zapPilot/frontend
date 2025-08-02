@@ -10,7 +10,7 @@ import {
 } from "../types";
 import { ActionButton } from "./Actions";
 import { CategoryListSection } from "./Categories";
-import { PortfolioCharts } from "./Charts";
+import { PortfolioCharts, PerformanceTrendChart } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
@@ -54,6 +54,12 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         includedCategories={includedCategories.length}
       />
 
+      {/* Performance Trend Chart - Decision Support */}
+      <PerformanceTrendChart
+        excludedCategoryIds={excludedCategoryIds}
+        className="col-span-full"
+      />
+
       {/* Main Content: Actions Left, Charts Right */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Column: Action Controls */}
@@ -75,7 +81,7 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         </div>
 
         {/* Right Column: Charts */}
-        <div>
+        <div className="bg-slate-800/20 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
           {rebalanceMode?.isEnabled ? (
             <div className="space-y-6">
               <PortfolioCharts

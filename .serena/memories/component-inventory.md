@@ -25,6 +25,8 @@
 - **`PieChart`** + **`PieChartLegend`** - Interactive pie chart with click handlers
 - **`PortfolioChart`** - Multi-tab chart (performance, allocation, drawdown)
 - **`PortfolioCharts`** (in PortfolioAllocation) - Feature-specific chart container
+- **`PerformanceTrendChart`** - ✅ NEW: Historical APR trend chart with category filtering support,
+  SVG-based, mobile-responsive with interactive tooltips
 
 ### **Data Tables**
 
@@ -50,7 +52,8 @@
 ### **Core Portfolio Components**
 
 - **`PortfolioAllocationContainer`** - Main feature container orchestrating portfolio logic
-- **`EnhancedOverview`** - Comprehensive portfolio overview with multiple data views
+- **`EnhancedOverview`** - ✅ ENHANCED: Comprehensive portfolio overview with performance trend
+  chart, premium UI animations, and multi-data views
 
 ### **Control Components**
 
@@ -198,6 +201,7 @@
 - `PortfolioAllocationContainer` - Portfolio feature only
 - `SwapPage` - Trading feature only
 - `ChainSwitcher` - Web3 wallet controls only
+- `PerformanceTrendChart` - EnhancedOverview decision support only
 
 ### **Composition Patterns**
 
@@ -218,9 +222,23 @@
 4. **ChainSwitcher** - Canonical chain switching (eliminated unused ChainSelector - 500 lines
    removed)
 
+### **Recent Additions:**
+
+1. **PerformanceTrendChart** - ✅ NEW (2025): Historical APR visualization for transaction decision
+   support
+   - **Purpose**: Shows historical portfolio performance to aid zapin/zapout/rebalance decisions
+   - **Features**: Category filtering integration, SVG-based custom charts, mobile-responsive design
+   - **Integration**: Seamlessly integrated into EnhancedOverview between header and actions
+   - **Technical**: Uses existing chart utilities (generateSVGPath, generateAreaPath) for
+     consistency
+   - **UX**: Follows decision-making psychology: Current state → Historical context → Action
+     decision
+
 ### **Architecture Benefits:**
 
 - **Reduced Duplication**: Eliminated 4 duplicate components
-- **Improved Consistency**: Unified patterns across features
+- **Improved Consistency**: Unified patterns across features, PerformanceTrendChart uses existing
+  SVG chart patterns
 - **Better Maintainability**: Single source of truth for common functionality
 - **Cleaner Codebase**: 500+ lines of unused code removed
+- **Enhanced Decision Support**: Users now have historical context for financial decisions
