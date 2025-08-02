@@ -81,10 +81,12 @@
 
 ### **Progress & Status**
 
-- **`UnifiedProgressModal`** - ✅ CONSOLIDATED: Mode-based progress modal supporting both 'intent'
-  and 'optimization' workflows (replaces IntentProgressModal + OptimizationProgress)
-- **`StreamingProgress`** - Real-time operation progress display with technical details
-- **`WalletTransactionProgress`** - Wallet transaction batch progress
+- **`UnifiedProgressModal`** - ✅ ACTIVE IN PRODUCTION: Mode-based progress modal supporting
+  'intent' and 'optimization' workflows (replaced IntentProgressModal + OptimizationProgress).
+  Currently used in SwapTab.tsx.
+- **`StreamingProgress`** - Real-time operation progress display with technical details (inline
+  component)
+- **`WalletTransactionProgress`** - Wallet transaction batch progress (inline component)
 
 ### **Data Components**
 

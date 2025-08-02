@@ -1,15 +1,15 @@
 "use client";
 
+import { GRADIENTS } from "@/constants/design-system";
 import { ArrowDown, ChevronDown, Settings, Zap } from "lucide-react";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import { SWAP_CONSTANTS } from "../../constants/swap";
 import { formatCurrency } from "../../lib/utils";
 import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
-import { SWAP_CONSTANTS } from "../../constants/swap";
-import { AmountButtons } from "./AmountButtons";
 import { UnifiedProgressModal } from "../shared/UnifiedProgressModal";
-import { GRADIENTS } from "@/constants/design-system";
 import { GlassCard, GradientButton } from "../ui";
+import { AmountButtons } from "./AmountButtons";
 
 interface SwapTabProps {
   strategy: InvestmentOpportunity;
