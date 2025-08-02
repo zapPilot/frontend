@@ -58,7 +58,7 @@ export const ActionButton = memo<ActionButtonProps>(
     return (
       <div className="pt-4">
         <GradientButton
-          onClick={onAction}
+          {...(onAction && { onClick: onAction })}
           gradient={GRADIENTS.PRIMARY}
           disabled={includedCategories.length === 0}
           className="w-full py-4 px-6 hover:from-purple-500 hover:to-blue-500"

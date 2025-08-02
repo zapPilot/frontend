@@ -1,18 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useCategoryFilters, useTargetChartData } from "../hooks";
 import {
   ChartDataPoint,
   OperationMode,
   ProcessedAssetCategory,
   RebalanceMode,
 } from "../types";
-import { useCategoryFilters, useTargetChartData } from "../hooks";
+import { ActionButton } from "./Actions";
 import { CategoryListSection } from "./Categories";
 import { PortfolioCharts } from "./Charts";
-import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 import { OverviewHeader } from "./Headers";
-import { ActionButton } from "./Actions";
+import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];
@@ -47,74 +47,63 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       className="space-y-6"
       data-testid="enhanced-overview"
     >
-      {/* Header */}
+      {/* Header spans full width */}
       <OverviewHeader
         rebalanceMode={rebalanceMode}
         totalCategories={processedCategories.length}
         includedCategories={includedCategories.length}
       />
 
-      {/* Excluded Categories Chips */}
+      {/* Main Content: Actions Left, Charts Right */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Left Column: Action Controls */}
+        <div className="space-y-6">
+          {swapControls && (
+            <div className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm rounded-xl p-6">
+              <h3 className="text-lg font-semibold mb-4 text-green-400">
+                Quick Action
+              </h3>
+              {swapControls}
+            </div>
+          )}
+          <ActionButton
+            operationMode={operationMode}
+            includedCategories={includedCategories}
+            rebalanceMode={rebalanceMode}
+            onAction={onZapAction}
+          />
+        </div>
+
+        {/* Right Column: Charts */}
+        <div>
+          {rebalanceMode?.isEnabled ? (
+            <div className="space-y-6">
+              <PortfolioCharts
+                chartData={chartData}
+                targetChartData={targetChartData}
+                isRebalanceMode={true}
+              />
+              {rebalanceMode.data && (
+                <RebalanceSummary rebalanceData={rebalanceMode.data} />
+              )}
+            </div>
+          ) : (
+            <PortfolioCharts chartData={chartData} />
+          )}
+        </div>
+      </div>
+
+      {/* Full-width sections below */}
       <ExcludedCategoriesChips
         excludedCategories={excludedCategories}
         onToggleCategoryExclusion={onToggleCategoryExclusion}
       />
 
-      {/* Main Content Grid */}
-      <div
-        className={`grid grid-cols-1 ${rebalanceMode?.isEnabled ? "lg:grid-cols-1" : "lg:grid-cols-2"} gap-8`}
-      >
-        {/* Pie Chart(s) */}
-        {rebalanceMode?.isEnabled ? (
-          // Rebalance Mode: Side-by-side pie charts with summary
-          <div className="space-y-6">
-            <PortfolioCharts
-              chartData={chartData}
-              targetChartData={targetChartData}
-              isRebalanceMode={true}
-            />
-
-            {/* Rebalance Summary */}
-            {rebalanceMode.data && (
-              <RebalanceSummary rebalanceData={rebalanceMode.data} />
-            )}
-          </div>
-        ) : (
-          // Normal Mode: Single pie chart with category list
-          <>
-            {/* Pie Chart */}
-            <PortfolioCharts chartData={chartData} />
-
-            {/* Category List */}
-            <CategoryListSection
-              categories={processedCategories}
-              excludedCategoryIds={excludedCategoryIds}
-              onToggleCategoryExclusion={onToggleCategoryExclusion}
-              rebalanceMode={rebalanceMode}
-            />
-          </>
-        )}
-      </div>
-
-      {/* Category List for Rebalance Mode */}
-      {rebalanceMode?.isEnabled && (
-        <CategoryListSection
-          categories={processedCategories}
-          excludedCategoryIds={excludedCategoryIds}
-          onToggleCategoryExclusion={onToggleCategoryExclusion}
-          rebalanceMode={rebalanceMode}
-        />
-      )}
-
-      {/* Swap Controls */}
-      {swapControls && <div className="pt-4">{swapControls}</div>}
-
-      {/* Action Button */}
-      <ActionButton
-        operationMode={operationMode}
-        includedCategories={includedCategories}
+      <CategoryListSection
+        categories={processedCategories}
+        excludedCategoryIds={excludedCategoryIds}
+        onToggleCategoryExclusion={onToggleCategoryExclusion}
         rebalanceMode={rebalanceMode}
-        onAction={onZapAction}
       />
     </motion.div>
   );
