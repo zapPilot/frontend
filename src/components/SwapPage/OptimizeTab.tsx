@@ -1,4 +1,5 @@
 "use client";
+import { GRADIENTS } from "@/constants/design-system";
 import { useCallback, useEffect, useState } from "react";
 import {
   useActiveAccount,
@@ -9,15 +10,14 @@ import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { useToast } from "../../hooks/useToast";
 import { formatSmallNumber } from "../../utils/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
-import { TokenImage } from "../shared/TokenImage";
-import { GRADIENTS } from "@/constants/design-system";
-import { GlassCard, GradientButton } from "../ui";
-import { useTokenState } from "./hooks/useTokenState";
-import { useWalletTransactions } from "./hooks/useWalletTransactions";
-import { useOptimizationData } from "./hooks/useOptimizationData";
-import { useUIState } from "./hooks/useUIState";
-import { OptimizationSelector } from "./OptimizationSelector";
 import { SlippageComponent } from "../shared/SlippageComponent";
+import { TokenImage } from "../shared/TokenImage";
+import { GlassCard, GradientButton } from "../ui";
+import { useOptimizationData } from "./hooks/useOptimizationData";
+import { useTokenState } from "./hooks/useTokenState";
+import { useUIState } from "./hooks/useUIState";
+import { useWalletTransactions } from "./hooks/useWalletTransactions";
+import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
 export interface OptimizationOptions {
   convertDust: boolean;
@@ -484,15 +484,6 @@ export function OptimizeTab() {
 
   const renderCardsVariation = () => (
     <div className="space-y-6" data-testid="optimize-tab-cards">
-      <div className="text-center">
-        <h3 className="text-2xl font-bold gradient-text mb-2">
-          Portfolio Optimization
-        </h3>
-        <p className="text-gray-400">
-          Choose optimization methods for your portfolio
-        </p>
-      </div>
-
       {/* Optimization Selector */}
       <GlassCard>
         <OptimizationSelector
