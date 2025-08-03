@@ -21,6 +21,82 @@ interface SwapControlsProps {
   className?: string;
 }
 
+// Portfolio-specific components for zapOut/rebalance modes
+interface PortfolioValueDisplayProps {
+  totalPortfolioValue: number;
+  operationMode: OperationMode;
+  onMaxClick: () => void;
+}
+
+const PortfolioValueDisplay: React.FC<PortfolioValueDisplayProps> = ({
+  totalPortfolioValue,
+  operationMode,
+  onMaxClick,
+}) => {
+  if (operationMode !== "zapOut" && operationMode !== "rebalance") {
+    return null;
+  }
+
+  return (
+    <>
+      <span>Portfolio Value: ${totalPortfolioValue.toLocaleString()}</span>
+      <button
+        onClick={onMaxClick}
+        className="text-purple-400 hover:text-purple-300 transition-colors"
+      >
+        Max
+      </button>
+    </>
+  );
+};
+
+interface PortfolioSummaryProps {
+  operationMode: OperationMode;
+  includedCategories: ProcessedAssetCategory[];
+}
+
+const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
+  operationMode,
+  includedCategories,
+}) => {
+  if (operationMode !== "zapOut" && operationMode !== "rebalance") {
+    return null;
+  }
+
+  return (
+    <div className="bg-gray-800/50 rounded-lg p-4">
+      <h4 className="text-sm font-medium text-white mb-3">
+        {operationMode === "zapOut" ? "Converting From" : "Rebalancing"}{" "}
+        Portfolio
+      </h4>
+      <div className="space-y-2">
+        {includedCategories.map(category => (
+          <div
+            key={category.id}
+            className="flex items-center justify-between text-sm"
+          >
+            <div className="flex items-center space-x-2">
+              <div
+                className="w-3 h-3 rounded-full"
+                style={{ backgroundColor: category.color }}
+              />
+              <span className="text-gray-300">{category.name}</span>
+            </div>
+            <div className="text-right">
+              <div className="text-white">
+                ${category.totalValue.toLocaleString()}
+              </div>
+              <div className="text-xs text-gray-400">
+                {category.activeAllocationPercentage.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export const SwapControls: React.FC<SwapControlsProps> = ({
   operationMode,
   swapSettings,
@@ -251,13 +327,10 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
               {swapSettings.fromToken.symbol}
             </span>
           )}
-          {(operationMode === "zapOut" || operationMode === "rebalance") && (
-            <span>
-              Portfolio Value: ${totalPortfolioValue.toLocaleString()}
-            </span>
-          )}
-          <button
-            onClick={() => {
+          <PortfolioValueDisplay
+            totalPortfolioValue={totalPortfolioValue}
+            operationMode={operationMode}
+            onMaxClick={() => {
               if (operationMode === "zapIn" && swapSettings.fromToken) {
                 handleAmountChange(swapSettings.fromToken.balance.toString());
               } else if (
@@ -267,46 +340,27 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
                 handleAmountChange(totalPortfolioValue.toString());
               }
             }}
-            className="text-purple-400 hover:text-purple-300 transition-colors"
-          >
-            Max
-          </button>
+          />
+          {operationMode === "zapIn" && (
+            <button
+              onClick={() => {
+                if (swapSettings.fromToken) {
+                  handleAmountChange(swapSettings.fromToken.balance.toString());
+                }
+              }}
+              className="text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              Max
+            </button>
+          )}
         </div>
       </div>
 
       {/* Portfolio Summary for ZapOut/Rebalance */}
-      {(operationMode === "zapOut" || operationMode === "rebalance") && (
-        <div className="bg-gray-800/50 rounded-lg p-4">
-          <h4 className="text-sm font-medium text-white mb-3">
-            {operationMode === "zapOut" ? "Converting From" : "Rebalancing"}{" "}
-            Portfolio
-          </h4>
-          <div className="space-y-2">
-            {includedCategories.map(category => (
-              <div
-                key={category.id}
-                className="flex items-center justify-between text-sm"
-              >
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
-                  <span className="text-gray-300">{category.name}</span>
-                </div>
-                <div className="text-right">
-                  <div className="text-white">
-                    ${category.totalValue.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {category.activeAllocationPercentage.toFixed(1)}%
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <PortfolioSummary
+        operationMode={operationMode}
+        includedCategories={includedCategories}
+      />
 
       {/* Validation Messages */}
       <ValidationMessages validation={validation} />
