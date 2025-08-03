@@ -57,3 +57,6 @@ usage_tracking2.json
 dev-webpack-fixed.log
 dev-webpack.log
 dev.log
+
+# serena
+.serena/cache

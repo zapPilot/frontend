@@ -10,7 +10,7 @@ import {
 } from "../types";
 import { ActionButton } from "./Actions";
 import { CategoryListSection } from "./Categories";
-import { PortfolioCharts, PerformanceTrendChart } from "./Charts";
+import { PerformanceTrendChart, PortfolioCharts } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
@@ -60,10 +60,10 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         className="col-span-full"
       />
 
-      {/* Main Content: Actions Left, Charts Right */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Main Content: Responsive Layout */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 xl:gap-8">
         {/* Left Column: Action Controls */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {swapControls && (
             <div className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm rounded-xl p-6">
               <h3 className="text-lg font-semibold mb-4 text-green-400">
@@ -81,9 +81,9 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         </div>
 
         {/* Right Column: Charts */}
-        <div className="bg-slate-800/20 backdrop-blur-sm rounded-xl p-6 border border-slate-700/30">
+        <div className="bg-slate-800/20 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-slate-700/30 min-w-0 overflow-hidden">
           {rebalanceMode?.isEnabled ? (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <PortfolioCharts
                 chartData={chartData}
                 targetChartData={targetChartData}

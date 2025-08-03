@@ -1,8 +1,8 @@
 "use client";
 
+import { GRADIENTS } from "@/constants/design-system";
 import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
-import { GRADIENTS } from "@/constants/design-system";
 import { OperationMode } from "../PortfolioAllocation/types";
 
 interface TabNavigationProps {
@@ -26,8 +26,8 @@ const operationModes = [
   },
   {
     id: "rebalance" as OperationMode,
-    label: "Rebalance & Optimize",
-    description: "Optimize Portfolio",
+    label: "Optimize",
+    description: "Rebalance & Optimize Portfolio",
     icon: RotateCcw,
   },
 ];

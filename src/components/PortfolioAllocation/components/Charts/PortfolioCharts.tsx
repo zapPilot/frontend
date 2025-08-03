@@ -16,35 +16,41 @@ export const PortfolioCharts = memo<PortfolioChartsProps>(
     // Use hooks to transform chart data instead of inline transformations
     const transformedChartData = useChartDataTransforms(chartData);
     const transformedTargetData = useChartDataTransforms(targetChartData || []);
+
     if (isRebalanceMode && targetChartData) {
-      // Rebalance Mode: Side-by-side pie charts
+      // Rebalance Mode: Responsive side-by-side pie charts
       return (
-        <div className="space-y-6">
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-8"
-            data-testid="rebalance-pie-charts"
-          >
-            {/* Current Allocation */}
-            <div className="text-center">
-              <h4 className="text-lg font-semibold text-white mb-4">Current</h4>
-              <div className="flex justify-center">
+        <div className="w-full space-y-4">
+          {/* Charts Title */}
+          <h3 className="text-lg font-semibold text-white text-center">
+            Portfolio Comparison
+          </h3>
+
+          {/* Responsive Chart Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+            {/* Current Portfolio Chart */}
+            <div className="flex flex-col items-center space-y-3">
+              <h4 className="text-sm font-medium text-slate-300">
+                Current Portfolio
+              </h4>
+              <div className="w-full max-w-[200px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-[250px] mx-auto">
                 <PieChart
                   data={transformedChartData}
-                  size={250}
+                  size={200} // Base size, will be constrained by max-width
                   strokeWidth={8}
                 />
               </div>
             </div>
 
-            {/* Target Allocation */}
-            <div className="text-center">
-              <h4 className="text-lg font-semibold text-white mb-4">
-                After Rebalance
+            {/* Target Portfolio Chart */}
+            <div className="flex flex-col items-center space-y-3">
+              <h4 className="text-sm font-medium text-slate-300">
+                Target Portfolio
               </h4>
-              <div className="flex justify-center">
+              <div className="w-full max-w-[200px] sm:max-w-[180px] md:max-w-[200px] lg:max-w-[220px] xl:max-w-[250px] mx-auto">
                 <PieChart
                   data={transformedTargetData}
-                  size={250}
+                  size={200} // Base size, will be constrained by max-width
                   strokeWidth={8}
                 />
               </div>
@@ -56,8 +62,20 @@ export const PortfolioCharts = memo<PortfolioChartsProps>(
 
     // Normal Mode: Single pie chart
     return (
-      <div className="flex justify-center" data-testid="pie-chart-container">
-        <PieChart data={transformedChartData} size={300} strokeWidth={10} />
+      <div
+        className="flex flex-col items-center space-y-4"
+        data-testid="pie-chart-container"
+      >
+        <h3 className="text-lg font-semibold text-white">
+          Portfolio Allocation
+        </h3>
+        <div className="w-full max-w-[280px] sm:max-w-[300px] md:max-w-[320px] mx-auto">
+          <PieChart
+            data={transformedChartData}
+            size={280} // Base size, will be constrained by max-width
+            strokeWidth={10}
+          />
+        </div>
       </div>
     );
   }

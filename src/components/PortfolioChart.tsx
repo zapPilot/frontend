@@ -1,21 +1,21 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { TrendingUp, Calendar, PieChart, Activity } from "lucide-react";
-import { useState, useMemo, memo } from "react";
-import { GlassCard } from "./ui";
+import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
+import { memo, useMemo, useState } from "react";
 import {
-  CHART_PERIODS,
-  generatePortfolioHistory,
-  calculateDrawdownData,
-} from "../lib/portfolioUtils";
-import {
-  generateSVGPath,
-  generateAreaPath,
   formatAxisLabel,
+  generateAreaPath,
+  generateSVGPath,
   generateYAxisLabels,
 } from "../lib/chartUtils";
-import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
+import {
+  calculateDrawdownData,
+  CHART_PERIODS,
+  generatePortfolioHistory,
+} from "../lib/portfolioUtils";
+import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
+import { GlassCard } from "./ui";
 
 const PortfolioChartComponent = () => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
