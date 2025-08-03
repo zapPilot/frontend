@@ -16,8 +16,8 @@ import { useCallback, useState } from "react";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
-import { formatSmallCurrency } from "../utils/formatters";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
+import { formatSmallCurrency } from "../utils/formatters";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
@@ -147,7 +147,7 @@ export function WalletPortfolio({
             icon={ArrowUpRight}
             onClick={onZapInClick || (() => {})}
           >
-            <span className="text-sm">ZapIn</span>
+            <span className="text-sm">Zap In</span>
           </GradientButton>
 
           <GradientButton
@@ -156,7 +156,7 @@ export function WalletPortfolio({
             icon={ArrowDownLeft}
             onClick={onZapOutClick || (() => {})}
           >
-            <span className="text-sm">ZapOut</span>
+            <span className="text-sm">Zap Out</span>
           </GradientButton>
 
           <GradientButton

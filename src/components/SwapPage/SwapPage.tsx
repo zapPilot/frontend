@@ -116,10 +116,22 @@ interface SwapPageProps {
 }
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
-  // Simplified single-layer navigation
-  const [activeOperationMode, setActiveOperationMode] =
-    useState<OperationMode>("zapIn");
-  const [isRebalanceMode, setIsRebalanceMode] = useState(false);
+  // Initialize operation mode based on navigation context
+  const getInitialOperationMode = (): OperationMode => {
+    if (strategy.navigationContext === "zapIn") return "zapIn";
+    if (strategy.navigationContext === "zapOut") return "zapOut";
+    if (strategy.navigationContext === "invest") return "rebalance";
+    return "zapIn";
+  };
+
+  const [activeOperationMode, setActiveOperationMode] = useState<OperationMode>(
+    getInitialOperationMode()
+  );
+
+  // Auto-enable rebalance mode when on optimize tab
+  const [isRebalanceMode, setIsRebalanceMode] = useState(
+    getInitialOperationMode() === "rebalance"
+  );
 
   // Excluded categories state management
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<string[]>([]);
@@ -135,10 +147,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   // Single-level navigation handler
   const handleOperationModeChange = (mode: OperationMode) => {
     setActiveOperationMode(mode);
-    // Reset rebalance mode when changing operation mode
-    if (mode !== "rebalance") {
-      setIsRebalanceMode(false);
-    }
+    // Auto-enable rebalance mode for optimize tab, disable for others
+    setIsRebalanceMode(mode === "rebalance");
   };
 
   const handleZapAction = (action: PortfolioSwapAction) => {
@@ -168,32 +178,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         {/* Rebalance Operation with Optimization */}
         {activeOperationMode === "rebalance" ? (
           <>
-            {/* Rebalance Mode Toggle */}
-            <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h5 className="text-sm font-medium text-white">
-                    Show Rebalance Preview
-                  </h5>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Compare current vs. target allocations
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsRebalanceMode(!isRebalanceMode)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    isRebalanceMode ? "bg-purple-500" : "bg-gray-600"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      isRebalanceMode ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-            </div>
-
             {/* Portfolio Allocation Container */}
             <PortfolioAllocationContainer
               assetCategories={MOCK_ASSET_CATEGORIES}
