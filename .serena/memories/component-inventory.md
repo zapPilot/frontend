@@ -62,6 +62,8 @@
   behavior (replaces SlippageSettings + SlippageSelector)
 - **`TokenSelector`** - Token selection dropdown with search
 - **`ValidationMessages`** - Form validation error/warning display
+- **`AmountInput`** - ✅ NEW: Modular amount input with balance display, max buttons, and operation
+  mode support (extracted from SwapControls and ActionCenter)
 
 ### **Display Components**
 
@@ -195,6 +197,7 @@
 - `GradientButton` - Primary action button across features
 - `TokenImage` - Token display in multiple contexts
 - `AnimatedContainer` - Animation wrapper used widely
+- `AmountInput` - ✅ NEW: Reusable amount input across swap and portfolio features
 
 ### **Feature-Specific Components** (Single-use)
 
@@ -221,6 +224,8 @@
 3. **useDropdown** - Common dropdown patterns (5+ components now use shared hook)
 4. **ChainSwitcher** - Canonical chain switching (eliminated unused ChainSelector - 500 lines
    removed)
+5. **AmountInput** - ✅ NEW (2025): Modular amount input component (extracted from SwapControls and
+   ActionCenter duplicates)
 
 ### **Recent Additions:**
 
@@ -234,11 +239,19 @@
    - **UX**: Follows decision-making psychology: Current state → Historical context → Action
      decision
 
+2. **AmountInput** - ✅ NEW (2025): Modular amount input for financial transactions
+   - **Purpose**: Unified amount input across all swap, zap, and rebalance operations
+   - **Features**: Operation mode-aware labels, currency symbol display, balance/portfolio info, max
+     buttons
+   - **Integration**: Extracted from duplicate code in SwapControls.tsx and ActionCenter.tsx
+   - **Technical**: Supports zapIn (token balance), zapOut/rebalance (portfolio value) modes
+   - **UX**: Consistent input experience across all financial operations
+
 ### **Architecture Benefits:**
 
-- **Reduced Duplication**: Eliminated 4 duplicate components
-- **Improved Consistency**: Unified patterns across features, PerformanceTrendChart uses existing
-  SVG chart patterns
+- **Reduced Duplication**: Eliminated 5 duplicate components
+- **Improved Consistency**: Unified patterns across features, consistent financial input experience
 - **Better Maintainability**: Single source of truth for common functionality
-- **Cleaner Codebase**: 500+ lines of unused code removed
+- **Cleaner Codebase**: 650+ lines of duplicate code removed
 - **Enhanced Decision Support**: Users now have historical context for financial decisions
+- **Modular Financial Controls**: Reusable amount input component across all transaction types

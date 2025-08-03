@@ -11,7 +11,7 @@ import type {
   SwapSettings,
   SwapValidation,
 } from "../types";
-import { TokenSelector, ValidationMessages } from "./Controls";
+import { AmountInput, TokenSelector, ValidationMessages } from "./Controls";
 
 interface SwapControlsProps {
   operationMode: OperationMode;
@@ -20,35 +20,6 @@ interface SwapControlsProps {
   includedCategories: ProcessedAssetCategory[];
   className?: string;
 }
-
-// Portfolio-specific components for zapOut/rebalance modes
-interface PortfolioValueDisplayProps {
-  totalPortfolioValue: number;
-  operationMode: OperationMode;
-  onMaxClick: () => void;
-}
-
-const PortfolioValueDisplay: React.FC<PortfolioValueDisplayProps> = ({
-  totalPortfolioValue,
-  operationMode,
-  onMaxClick,
-}) => {
-  if (operationMode !== "zapOut" && operationMode !== "rebalance") {
-    return null;
-  }
-
-  return (
-    <>
-      <span>Portfolio Value: ${totalPortfolioValue.toLocaleString()}</span>
-      <button
-        onClick={onMaxClick}
-        className="text-purple-400 hover:text-purple-300 transition-colors"
-      >
-        Max
-      </button>
-    </>
-  );
-};
 
 interface PortfolioSummaryProps {
   operationMode: OperationMode;
@@ -289,72 +260,13 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
       </div>
 
       {/* Amount Input */}
-      <div className="space-y-2">
-        <label className="block text-xs font-medium text-gray-400">
-          {operationMode === "zapIn"
-            ? "Amount to Zap In"
-            : operationMode === "zapOut"
-              ? "Portfolio Value to Convert"
-              : "Amount to Rebalance"}
-        </label>
-        <div className="relative">
-          <input
-            type="number"
-            value={swapSettings.amount}
-            onChange={e => handleAmountChange(e.target.value)}
-            placeholder="0.0"
-            min="0"
-            step="0.01"
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-500 focus:outline-none focus:border-purple-500"
-            data-testid="amount-input"
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-            {operationMode === "zapIn" && swapSettings.fromToken
-              ? swapSettings.fromToken.symbol
-              : operationMode === "zapOut"
-                ? "USD"
-                : operationMode === "rebalance"
-                  ? "USD"
-                  : ""}
-          </div>
-        </div>
-
-        {/* Balance/Portfolio Info */}
-        <div className="flex justify-between text-xs text-gray-400">
-          {operationMode === "zapIn" && swapSettings.fromToken && (
-            <span>
-              Balance: {swapSettings.fromToken.balance.toFixed(4)}{" "}
-              {swapSettings.fromToken.symbol}
-            </span>
-          )}
-          <PortfolioValueDisplay
-            totalPortfolioValue={totalPortfolioValue}
-            operationMode={operationMode}
-            onMaxClick={() => {
-              if (operationMode === "zapIn" && swapSettings.fromToken) {
-                handleAmountChange(swapSettings.fromToken.balance.toString());
-              } else if (
-                operationMode === "zapOut" ||
-                operationMode === "rebalance"
-              ) {
-                handleAmountChange(totalPortfolioValue.toString());
-              }
-            }}
-          />
-          {operationMode === "zapIn" && (
-            <button
-              onClick={() => {
-                if (swapSettings.fromToken) {
-                  handleAmountChange(swapSettings.fromToken.balance.toString());
-                }
-              }}
-              className="text-purple-400 hover:text-purple-300 transition-colors"
-            >
-              Max
-            </button>
-          )}
-        </div>
-      </div>
+      <AmountInput
+        operationMode={operationMode}
+        amount={swapSettings.amount}
+        onAmountChange={handleAmountChange}
+        fromToken={swapSettings.fromToken}
+        totalPortfolioValue={totalPortfolioValue}
+      />
 
       {/* Portfolio Summary for ZapOut/Rebalance */}
       <PortfolioSummary

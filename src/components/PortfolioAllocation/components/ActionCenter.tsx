@@ -17,7 +17,7 @@ import type {
   SwapSettings,
   SwapValidation,
 } from "../types";
-import { TokenSelector, ValidationMessages } from "./Controls";
+import { TokenSelector, ValidationMessages, AmountInput } from "./Controls";
 
 // Action framework types
 export type ActionType =
@@ -414,62 +414,13 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
               </div>
 
               {/* Amount Input */}
-              <div className="space-y-2">
-                <label className="block text-xs font-medium text-gray-400">
-                  {selectedAction === "zapIn"
-                    ? "Amount to Zap In"
-                    : "Portfolio Value to Convert"}
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    value={swapSettings.amount}
-                    onChange={e => handleAmountChange(e.target.value)}
-                    placeholder="0.0"
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-500 focus:outline-none focus:border-purple-500"
-                    data-testid="amount-input"
-                  />
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-                    {selectedAction === "zapIn" && swapSettings.fromToken
-                      ? swapSettings.fromToken.symbol
-                      : "USD"}
-                  </div>
-                </div>
-
-                {/* Balance/Portfolio Info */}
-                <div className="flex justify-between text-xs text-gray-400">
-                  {selectedAction === "zapIn" && swapSettings.fromToken && (
-                    <span>
-                      Balance: {swapSettings.fromToken.balance.toFixed(4)}{" "}
-                      {swapSettings.fromToken.symbol}
-                    </span>
-                  )}
-                  {selectedAction === "zapOut" && (
-                    <span>
-                      Portfolio Value: ${totalPortfolioValue.toLocaleString()}
-                    </span>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (
-                        selectedAction === "zapIn" &&
-                        swapSettings.fromToken
-                      ) {
-                        handleAmountChange(
-                          swapSettings.fromToken.balance.toString()
-                        );
-                      } else if (selectedAction === "zapOut") {
-                        handleAmountChange(totalPortfolioValue.toString());
-                      }
-                    }}
-                    className="text-purple-400 hover:text-purple-300 transition-colors"
-                  >
-                    Max
-                  </button>
-                </div>
-              </div>
+              <AmountInput
+                operationMode={selectedAction as OperationMode}
+                amount={swapSettings.amount}
+                onAmountChange={handleAmountChange}
+                fromToken={swapSettings.fromToken}
+                totalPortfolioValue={totalPortfolioValue}
+              />
             </>
           )}
 
