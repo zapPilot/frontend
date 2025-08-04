@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import type { SwapToken } from "../../../types/swap";
 import { SlippageComponent } from "../../shared/SlippageComponent";
-import { OptimizationSelector } from "../../SwapPage/OptimizationSelector";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -13,24 +12,6 @@ import type {
   SwapValidation,
 } from "../types";
 import { AmountInput, TokenSelector, ValidationMessages } from "./Controls";
-
-// Types for optimization functionality
-export interface OptimizationOptions {
-  convertDust: boolean;
-  rebalancePortfolio: boolean;
-  slippage?: number;
-}
-
-interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  decimals?: number;
-  logo_url?: string;
-  raw_amount_hex_str?: string;
-}
 
 interface SwapControlsProps {
   operationMode: OperationMode;
@@ -47,17 +28,6 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
   includedCategories,
   className = "",
 }) => {
-  // State for optimization options
-  const [optimizationOptions, setOptimizationOptions] =
-    useState<OptimizationOptions>({
-      convertDust: false,
-      rebalancePortfolio: false,
-      slippage: 30,
-    });
-
-  // Placeholder state for dust tokens (can be connected to real data later)
-  const [dustTokens] = useState<DustToken[]>([]);
-  const [loadingTokens] = useState(false);
   const handleTokenChange = useCallback(
     (field: "fromToken" | "toToken", token: SwapToken) => {
       onSwapSettingsChange({
@@ -249,18 +219,6 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
         onAmountChange={handleAmountChange}
         fromToken={swapSettings.fromToken}
         totalPortfolioValue={totalPortfolioValue}
-      />
-
-      {/* Optimization Selector */}
-      <OptimizationSelector
-        options={optimizationOptions}
-        onChange={setOptimizationOptions}
-        dustTokens={dustTokens}
-        loadingTokens={loadingTokens}
-        mockData={{
-          rebalanceActions: 3,
-          chainCount: 2,
-        }}
       />
 
       {/* Validation Messages */}
