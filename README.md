@@ -99,7 +99,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Design System
 
-Following the All Weather Protocol design language:
+Following the Zap Pilot design language:
 
 - **Colors**: Purple-blue gradients (#8b5cf6 to #3b82f6)
 - **Background**: Dark theme (#0a0a0f)

@@ -21,53 +21,6 @@ interface SwapControlsProps {
   className?: string;
 }
 
-interface PortfolioSummaryProps {
-  operationMode: OperationMode;
-  includedCategories: ProcessedAssetCategory[];
-}
-
-const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
-  operationMode,
-  includedCategories,
-}) => {
-  if (operationMode !== "zapOut" && operationMode !== "rebalance") {
-    return null;
-  }
-
-  return (
-    <div className="bg-gray-800/50 rounded-lg p-4">
-      <h4 className="text-sm font-medium text-white mb-3">
-        {operationMode === "zapOut" ? "Converting From" : "Rebalancing"}{" "}
-        Portfolio
-      </h4>
-      <div className="space-y-2">
-        {includedCategories.map(category => (
-          <div
-            key={category.id}
-            className="flex items-center justify-between text-sm"
-          >
-            <div className="flex items-center space-x-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: category.color }}
-              />
-              <span className="text-gray-300">{category.name}</span>
-            </div>
-            <div className="text-right">
-              <div className="text-white">
-                ${category.totalValue.toLocaleString()}
-              </div>
-              <div className="text-xs text-gray-400">
-                {category.activeAllocationPercentage.toFixed(1)}%
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 export const SwapControls: React.FC<SwapControlsProps> = ({
   operationMode,
   swapSettings,
@@ -266,12 +219,6 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
         onAmountChange={handleAmountChange}
         fromToken={swapSettings.fromToken}
         totalPortfolioValue={totalPortfolioValue}
-      />
-
-      {/* Portfolio Summary for ZapOut/Rebalance */}
-      <PortfolioSummary
-        operationMode={operationMode}
-        includedCategories={includedCategories}
       />
 
       {/* Validation Messages */}
