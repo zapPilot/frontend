@@ -19,6 +19,66 @@ import { useUIState } from "./hooks/useUIState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
+
+// ===== EXTRACTED HOOKS AND INTERFACES =====
+
+// Wallet connection hook interface
+interface UseWalletConnectionStateReturn {
+  activeAccount: any;
+  activeChain: any;
+  sendCalls: any;
+  userAddress: string | undefined;
+  chainId: number | undefined;
+  chainName: string | undefined;
+  isWalletConnected: boolean;
+  getExplorerUrl: (txnHash: string) => string | null;
+}
+
+// Intent creation hook interface
+interface UseIntentCreationReturn {
+  createDustZapIntent: (
+    userAddress: string,
+    chainId: number,
+    filteredDustTokens: DustToken[],
+    slippage: number
+  ) => Promise<string>;
+}
+
+// Optimization workflow hook interface
+interface UseOptimizationWorkflowReturn {
+  handleOptimize: () => Promise<void>;
+}
+
+// Button state hook interface
+interface UseOptimizeButtonStateReturn {
+  buttonText: string;
+}
+
+// Sub-component interfaces
+interface OptimizationControlsProps {
+  optimizationOptions: OptimizationOptions;
+  setOptimizationOptions: (options: OptimizationOptions) => void;
+  dustTokens: DustToken[];
+  loadingTokens: boolean;
+  optimizationData: any;
+}
+
+interface ExecutionPanelProps {
+  optimizationOptions: OptimizationOptions;
+  setOptimizationOptions: (
+    options:
+      | OptimizationOptions
+      | ((prev: OptimizationOptions) => OptimizationOptions)
+  ) => void;
+  isWalletConnected: boolean;
+  optimizationData: any;
+  isOptimizing: boolean;
+  isStreaming: boolean;
+  sendingToWallet: boolean;
+  loadingTokens: boolean;
+  buttonText: string;
+  onOptimize: () => void;
+}
 export interface OptimizationOptions {
   convertDust: boolean;
   rebalancePortfolio: boolean;
@@ -44,6 +104,346 @@ interface TokenGridProps {
   deletedTokenIds: Set<string>;
   onRestoreDeletedTokens: () => void;
 }
+
+// ===== EXTRACTED CUSTOM HOOKS =====
+
+// Hook for wallet connection state management
+const useWalletConnectionState = (): UseWalletConnectionStateReturn => {
+  const activeAccount = useActiveAccount();
+  const activeChain = useActiveWalletChain();
+  const { mutate: sendCalls } = useSendAndConfirmCalls();
+
+  const getExplorerUrl = useCallback(
+    (txnHash: string) => {
+      const baseUrl = activeChain?.blockExplorers?.[0]?.url;
+      return baseUrl ? `${baseUrl}/tx/${txnHash}` : null;
+    },
+    [activeChain]
+  );
+
+  return {
+    activeAccount,
+    activeChain,
+    sendCalls,
+    userAddress: activeAccount?.address,
+    chainId: activeChain?.id,
+    chainName: activeChain?.name,
+    isWalletConnected: !!activeAccount,
+    getExplorerUrl,
+  };
+};
+
+// Hook for intent creation API integration
+const useIntentCreation = (
+  showToast: (toast: {
+    type: string;
+    title: string;
+    message: string;
+    duration?: number;
+  }) => void
+): UseIntentCreationReturn => {
+  const createDustZapIntent = useCallback(
+    async (
+      userAddress: string,
+      chainId: number,
+      filteredDustTokens: DustToken[],
+      slippage: number
+    ) => {
+      try {
+        const response = await fetch(
+          `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userAddress,
+              chainId,
+              params: {
+                slippage,
+                dustTokens: filteredDustTokens.map(token => ({
+                  address: token.id,
+                  symbol: token.optimized_symbol || token.symbol,
+                  amount: token.amount,
+                  price: token.price,
+                  decimals: token.decimals,
+                  raw_amount_hex_str: token.raw_amount_hex_str,
+                })),
+                toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+                toTokenDecimals: 18,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(
+            `Failed to create DustZap intent: ${response.statusText}`
+          );
+        }
+
+        const result = await response.json();
+        return result.intentId;
+      } catch (error) {
+        showToast({
+          type: "error",
+          title: "Optimization Failed",
+          message:
+            "Unable to prepare optimization. Please check connection and retry.",
+          duration: 8000,
+        });
+        throw error;
+      }
+    },
+    [showToast]
+  );
+
+  return { createDustZapIntent };
+};
+
+// Hook for optimization workflow orchestration
+const useOptimizationWorkflow = ({
+  optimizationOptions,
+  filteredDustTokens,
+  userAddress,
+  chainId,
+  deletedTokenIds,
+  createDustZapIntent,
+  startStreaming,
+  clearEvents,
+  resetWalletState,
+  showToast,
+  setIsOptimizing,
+}: {
+  optimizationOptions: OptimizationOptions;
+  filteredDustTokens: DustToken[];
+  userAddress: string | undefined;
+  chainId: number | undefined;
+  deletedTokenIds: Set<string>;
+  createDustZapIntent: UseIntentCreationReturn["createDustZapIntent"];
+  startStreaming: (intentId: string) => Promise<void>;
+  clearEvents: () => void;
+  resetWalletState: () => void;
+  showToast: (toast: any) => void;
+  setIsOptimizing: (isOptimizing: boolean) => void;
+}): UseOptimizationWorkflowReturn => {
+  const handleOptimize = useCallback(async () => {
+    if (
+      !optimizationOptions.convertDust &&
+      !optimizationOptions.rebalancePortfolio
+    ) {
+      return;
+    }
+
+    setIsOptimizing(true);
+    clearEvents();
+    resetWalletState();
+
+    try {
+      if (optimizationOptions.convertDust && filteredDustTokens.length > 0) {
+        if (!userAddress || !chainId) {
+          throw new Error(
+            "Wallet must be connected to perform dust conversion"
+          );
+        }
+
+        const hasDeletedTokens = filteredDustTokens.some(token =>
+          deletedTokenIds.has(token.id)
+        );
+        if (hasDeletedTokens) {
+          showToast({
+            type: "error",
+            title: "Internal Error Detected",
+            message:
+              "Data consistency issue detected. Please refresh and try again.",
+            duration: 10000,
+          });
+          throw new Error("Deleted tokens found in filtered list");
+        }
+
+        const newIntentId = await createDustZapIntent(
+          userAddress,
+          chainId,
+          filteredDustTokens,
+          optimizationOptions.slippage
+        );
+
+        await startStreaming(newIntentId);
+      } else {
+        setTimeout(() => {
+          setIsOptimizing(false);
+        }, 12000);
+      }
+    } catch (error) {
+      showToast({
+        type: "error",
+        title: "Optimization Failed",
+        message:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred during optimization.",
+        duration: 8000,
+      });
+      setIsOptimizing(false);
+    }
+  }, [
+    optimizationOptions,
+    filteredDustTokens,
+    createDustZapIntent,
+    startStreaming,
+    clearEvents,
+    userAddress,
+    chainId,
+    deletedTokenIds,
+    resetWalletState,
+    showToast,
+    setIsOptimizing,
+  ]);
+
+  return { handleOptimize };
+};
+
+// Hook for button state computation
+const useOptimizeButtonState = ({
+  optimizationOptions,
+  isStreaming,
+  isOptimizing,
+  totalTokens,
+  processedTokens,
+  isWalletConnected,
+  sendingToWallet,
+  walletSuccess,
+}: {
+  optimizationOptions: OptimizationOptions;
+  isStreaming: boolean;
+  isOptimizing: boolean;
+  totalTokens: number;
+  processedTokens: number;
+  isWalletConnected: boolean;
+  sendingToWallet: boolean;
+  walletSuccess: boolean;
+}): UseOptimizeButtonStateReturn => {
+  const buttonText = useCallback(() => {
+    const { convertDust, rebalancePortfolio } = optimizationOptions;
+
+    if (!isWalletConnected) {
+      return "Connect Wallet to Optimize";
+    }
+
+    if (sendingToWallet) {
+      return "Confirming in Wallet...";
+    }
+
+    if (walletSuccess) {
+      return "✓ Optimization Complete";
+    }
+
+    if (isStreaming) {
+      if (totalTokens > 0) {
+        return `Converting... (${processedTokens}/${totalTokens})`;
+      }
+      return "Converting...";
+    }
+
+    if (isOptimizing) {
+      return "Optimizing...";
+    }
+
+    if (convertDust && rebalancePortfolio) {
+      return "Optimize Portfolio (Convert + Rebalance)";
+    } else if (convertDust) {
+      return "Convert Dust to ETH";
+    } else if (rebalancePortfolio) {
+      return "Rebalance Portfolio";
+    }
+    return "Select Optimization";
+  }, [
+    optimizationOptions,
+    isStreaming,
+    isOptimizing,
+    totalTokens,
+    processedTokens,
+    isWalletConnected,
+    sendingToWallet,
+    walletSuccess,
+  ])();
+
+  return { buttonText };
+};
+
+// ===== EXTRACTED SUB-COMPONENTS =====
+
+// Optimization controls sub-component
+const OptimizationControls: React.FC<OptimizationControlsProps> = ({
+  optimizationOptions,
+  setOptimizationOptions,
+  dustTokens,
+  loadingTokens,
+  optimizationData,
+}) => (
+  <GlassCard>
+    <OptimizationSelector
+      options={optimizationOptions}
+      onChange={setOptimizationOptions}
+      dustTokens={dustTokens}
+      loadingTokens={loadingTokens}
+      mockData={{
+        rebalanceActions: optimizationData.rebalanceActions,
+        chainCount: optimizationData.chainCount,
+      }}
+    />
+  </GlassCard>
+);
+
+// Execution panel sub-component
+const ExecutionPanel: React.FC<ExecutionPanelProps> = ({
+  optimizationOptions,
+  setOptimizationOptions,
+  isWalletConnected,
+  optimizationData,
+  isOptimizing,
+  isStreaming,
+  sendingToWallet,
+  loadingTokens,
+  buttonText,
+  onOptimize,
+}) => (
+  <GlassCard>
+    <div className="space-y-4">
+      <SlippageComponent
+        value={optimizationOptions.slippage}
+        onChange={slippage =>
+          setOptimizationOptions(prev => ({ ...prev, slippage }))
+        }
+        context="swap"
+        variant="expanded"
+      />
+
+      {!isWalletConnected && (
+        <div className="text-center text-sm text-amber-400 bg-amber-900/20 rounded-lg p-3">
+          Please connect your wallet to enable portfolio optimization
+        </div>
+      )}
+
+      <GradientButton
+        disabled={
+          optimizationData.selectedCount === 0 ||
+          isOptimizing ||
+          isStreaming ||
+          sendingToWallet ||
+          loadingTokens ||
+          !isWalletConnected
+        }
+        gradient={GRADIENTS.PRIMARY}
+        className="w-full py-4"
+        onClick={onOptimize}
+      >
+        {buttonText}
+      </GradientButton>
+    </div>
+  </GlassCard>
+);
 
 const TokenGrid = ({
   tokens,
@@ -155,28 +555,11 @@ const TokenGrid = ({
 };
 
 export function OptimizeTab() {
-  // ThirdWeb hooks for wallet connection
-  const activeAccount = useActiveAccount();
-  const activeChain = useActiveWalletChain();
-  const { mutate: sendCalls } = useSendAndConfirmCalls();
-
   // Toast notifications
   const { showToast } = useToast();
 
-  // Helper function to build explorer URL
-  const getExplorerUrl = useCallback(
-    (txnHash: string) => {
-      const baseUrl = activeChain?.blockExplorers?.[0]?.url;
-      return baseUrl ? `${baseUrl}/tx/${txnHash}` : null;
-    },
-    [activeChain]
-  );
-
-  // Computed wallet values
-  const userAddress = activeAccount?.address;
-  const chainId = activeChain?.id;
-  const chainName = activeChain?.name;
-  const isWalletConnected = !!activeAccount;
+  // Extracted wallet connection hook
+  const walletConnection = useWalletConnectionState();
 
   // State for optimization options
   const [optimizationOptions, setOptimizationOptions] =
@@ -220,11 +603,11 @@ export function OptimizeTab() {
     autoSendWhenReady,
     reset: resetWalletState,
   } = useWalletTransactions({
-    sendCalls,
-    activeAccount,
-    activeChain,
+    sendCalls: walletConnection.sendCalls,
+    activeAccount: walletConnection.activeAccount,
+    activeChain: walletConnection.activeChain,
     showToast: showToast as any,
-    getExplorerUrl,
+    getExplorerUrl: walletConnection.getExplorerUrl,
   });
 
   // SSE streaming hook
@@ -246,209 +629,47 @@ export function OptimizeTab() {
   const optimizationData = useOptimizationData({
     filteredTokens: filteredDustTokens,
     optimizationOptions,
-    isWalletConnected,
+    isWalletConnected: walletConnection.isWalletConnected,
     isLoading: loadingTokens,
   });
 
-  // Function to create DustZap intent
-  const createDustZapIntent = useCallback(
-    async (
-      userAddress: string,
-      chainId: number,
-      filteredDustTokens: DustToken[],
-      slippage: number
-    ) => {
-      try {
-        const response = await fetch(
-          `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              userAddress,
-              chainId,
-              params: {
-                slippage,
-                dustTokens: filteredDustTokens.map(token => ({
-                  address: token.id,
-                  symbol: token.optimized_symbol || token.symbol,
-                  amount: token.amount,
-                  price: token.price,
-                  decimals: token.decimals,
-                  raw_amount_hex_str: token.raw_amount_hex_str,
-                })),
-                toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-                toTokenDecimals: 18,
-              },
-            }),
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `Failed to create DustZap intent: ${response.statusText}`
-          );
-        }
-
-        const result = await response.json();
-        return result.intentId;
-      } catch (error) {
-        // Show user-friendly error notification
-        showToast({
-          type: "error",
-          title: "Optimization Failed",
-          message:
-            "Unable to prepare optimization. Please check connection and retry.",
-          duration: 8000,
-        });
-        throw error;
-      }
-    },
-    [showToast] // Add showToast as dependency
-  );
-
-  const handleOptimize = useCallback(async () => {
-    if (
-      !optimizationOptions.convertDust &&
-      !optimizationOptions.rebalancePortfolio
-    ) {
-      return;
-    }
-
-    setIsOptimizing(true);
-    clearEvents();
-
-    // Reset wallet transaction states
-    resetWalletState();
-
-    try {
-      // If dust conversion is enabled, integrate with dustzap streaming
-      if (optimizationOptions.convertDust && filteredDustTokens.length > 0) {
-        // Validate wallet connection
-        if (!userAddress || !chainId) {
-          throw new Error(
-            "Wallet must be connected to perform dust conversion"
-          );
-        }
-
-        // Safeguard: Ensure no deleted tokens are included
-        const hasDeletedTokens = filteredDustTokens.some(token =>
-          deletedTokenIds.has(token.id)
-        );
-        if (hasDeletedTokens) {
-          // Show critical error notification
-          showToast({
-            type: "error",
-            title: "Internal Error Detected",
-            message:
-              "Data consistency issue detected. Please refresh and try again.",
-            duration: 10000,
-          });
-          throw new Error("Deleted tokens found in filtered list");
-        }
-
-        const newIntentId = await createDustZapIntent(
-          userAddress,
-          chainId,
-          filteredDustTokens,
-          optimizationOptions.slippage
-        );
-
-        // Start streaming
-        await startStreaming(newIntentId);
-      } else {
-        // Fallback to mock optimization for portfolio rebalancing only
-        setTimeout(() => {
-          setIsOptimizing(false);
-        }, 12000);
-      }
-    } catch (error) {
-      // Show general optimization error notification
-      showToast({
-        type: "error",
-        title: "Optimization Failed",
-        message:
-          error instanceof Error
-            ? error.message
-            : "An unexpected error occurred during optimization.",
-        duration: 8000,
-      });
-      setIsOptimizing(false);
-    }
-  }, [
+  // Extracted hooks
+  const { createDustZapIntent } = useIntentCreation(showToast as any);
+  const { handleOptimize } = useOptimizationWorkflow({
     optimizationOptions,
     filteredDustTokens,
+    userAddress: walletConnection.userAddress,
+    chainId: walletConnection.chainId,
+    deletedTokenIds,
     createDustZapIntent,
     startStreaming,
     clearEvents,
-    userAddress,
-    chainId,
-    showToast,
-    deletedTokenIds,
     resetWalletState,
-  ]);
-
-  const getOptimizeButtonText = useCallback(() => {
-    const { convertDust, rebalancePortfolio } = optimizationOptions;
-
-    // Show wallet connection requirement
-    if (!isWalletConnected) {
-      return "Connect Wallet to Optimize";
-    }
-
-    // Show wallet transaction states
-    if (sendingToWallet) {
-      return "Confirming in Wallet...";
-    }
-
-    if (walletSuccess) {
-      return "✓ Optimization Complete";
-    }
-
-    // Show streaming-specific states
-    if (isStreaming) {
-      if (totalTokens > 0) {
-        return `Converting... (${processedTokens}/${totalTokens})`;
-      }
-      return "Converting...";
-    }
-
-    if (isOptimizing) {
-      return "Optimizing...";
-    }
-
-    if (convertDust && rebalancePortfolio) {
-      return "Optimize Portfolio (Convert + Rebalance)";
-    } else if (convertDust) {
-      return "Convert Dust to ETH";
-    } else if (rebalancePortfolio) {
-      return "Rebalance Portfolio";
-    }
-    return "Select Optimization";
-  }, [
+    showToast: showToast as any,
+    setIsOptimizing,
+  });
+  const { buttonText } = useOptimizeButtonState({
     optimizationOptions,
     isStreaming,
     isOptimizing,
     totalTokens,
     processedTokens,
-    isWalletConnected,
+    isWalletConnected: walletConnection.isWalletConnected,
     sendingToWallet,
     walletSuccess,
-  ]);
+  });
 
-  // Simplified effect - fetch tokens once per wallet/chain combination
+  // Data synchronization effects
   useEffect(() => {
-    // Only proceed if we have wallet connection data
-    if (!userAddress || !chainName) {
+    if (!walletConnection.userAddress || !walletConnection.chainName) {
       return;
     }
-
-    // Fetch tokens regardless of toggle state - toggle only controls UI visibility
-    // The hook handles request deduplication and state management internally
-    fetchDustTokens(chainName, userAddress);
-  }, [userAddress, chainName, fetchDustTokens]); // Only wallet/chain changes trigger fetching
+    fetchDustTokens(walletConnection.chainName, walletConnection.userAddress);
+  }, [
+    walletConnection.userAddress,
+    walletConnection.chainName,
+    fetchDustTokens,
+  ]);
 
   // Effect to collect transactions only from complete event
   useEffect(() => {
@@ -482,23 +703,17 @@ export function OptimizeTab() {
     }
   }, [isComplete, stopStreaming]);
 
-  const renderCardsVariation = () => (
+  // Render orchestration - clean component composition
+  return (
     <div className="space-y-6" data-testid="optimize-tab-cards">
-      {/* Optimization Selector */}
-      <GlassCard>
-        <OptimizationSelector
-          options={optimizationOptions}
-          onChange={setOptimizationOptions}
-          dustTokens={dustTokens}
-          loadingTokens={loadingTokens}
-          mockData={{
-            rebalanceActions: optimizationData.rebalanceActions,
-            chainCount: optimizationData.chainCount,
-          }}
-        />
-      </GlassCard>
+      <OptimizationControls
+        optimizationOptions={optimizationOptions}
+        setOptimizationOptions={setOptimizationOptions}
+        dustTokens={dustTokens}
+        loadingTokens={loadingTokens}
+        optimizationData={optimizationData}
+      />
 
-      {/* Streaming Progress */}
       <StreamingProgress
         isStreaming={isStreaming}
         events={events}
@@ -513,11 +728,11 @@ export function OptimizeTab() {
         walletSuccess={walletSuccess}
         batchProgress={batchProgress}
         currentBatchIndex={currentBatchIndex}
-        activeAccount={activeAccount}
+        activeAccount={walletConnection.activeAccount}
         showTechnicalDetails={showTechnicalDetails}
         onToggleTechnicalDetails={handleToggleTechnicalDetails}
       />
-      {/* Token Grid */}
+
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid
           tokens={filteredDustTokens}
@@ -529,43 +744,18 @@ export function OptimizeTab() {
         />
       )}
 
-      {/* Slippage and Execute */}
-      <GlassCard>
-        <div className="space-y-4">
-          <SlippageComponent
-            value={optimizationOptions.slippage}
-            onChange={slippage =>
-              setOptimizationOptions(prev => ({ ...prev, slippage }))
-            }
-            context="swap"
-            variant="expanded"
-          />
-
-          {!isWalletConnected && (
-            <div className="text-center text-sm text-amber-400 bg-amber-900/20 rounded-lg p-3">
-              Please connect your wallet to enable portfolio optimization
-            </div>
-          )}
-
-          <GradientButton
-            disabled={
-              optimizationData.selectedCount === 0 ||
-              isOptimizing ||
-              isStreaming ||
-              sendingToWallet ||
-              loadingTokens ||
-              !isWalletConnected
-            }
-            gradient={GRADIENTS.PRIMARY}
-            className="w-full py-4"
-            onClick={handleOptimize}
-          >
-            {getOptimizeButtonText()}
-          </GradientButton>
-        </div>
-      </GlassCard>
+      <ExecutionPanel
+        optimizationOptions={optimizationOptions}
+        setOptimizationOptions={setOptimizationOptions}
+        isWalletConnected={walletConnection.isWalletConnected}
+        optimizationData={optimizationData}
+        isOptimizing={isOptimizing}
+        isStreaming={isStreaming}
+        sendingToWallet={sendingToWallet}
+        loadingTokens={loadingTokens}
+        buttonText={buttonText}
+        onOptimize={handleOptimize}
+      />
     </div>
   );
-
-  return renderCardsVariation();
 }
