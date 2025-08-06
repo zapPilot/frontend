@@ -3,28 +3,12 @@
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 import { memo } from "react";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
-import {
-  createWallet,
-  inAppWallet,
-  Wallet,
-  walletConnect,
-} from "thirdweb/wallets";
+import { createWallet, Wallet } from "thirdweb/wallets";
 
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 
-const WALLETS = [
-  createWallet("io.metamask"),
-  createWallet("io.rabby"),
-  createWallet("app.phantom"),
-  createWallet("com.coinbase.wallet"),
-  walletConnect(),
-  inAppWallet({
-    auth: {
-      options: ["google", "telegram", "x", "passkey", "facebook", "apple"],
-    },
-  }),
-] as Wallet[];
+const WALLETS = [createWallet("com.ambire")] as Wallet[];
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 
