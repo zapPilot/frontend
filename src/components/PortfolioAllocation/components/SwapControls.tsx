@@ -217,7 +217,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
         operationMode={operationMode}
         amount={swapSettings.amount}
         onAmountChange={handleAmountChange}
-        fromToken={swapSettings.fromToken}
+        {...(swapSettings.fromToken && { fromToken: swapSettings.fromToken })}
         totalPortfolioValue={totalPortfolioValue}
       />
 

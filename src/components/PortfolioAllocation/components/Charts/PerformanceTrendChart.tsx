@@ -72,7 +72,7 @@ const generateHistoricalAPR = (
     const apr = Math.max(0, baseAPR + variation + trendAdjustment);
 
     data.push({
-      date: date.toISOString().split("T")[0],
+      date: date.toISOString().split("T")[0] || date.toISOString(),
       apr: parseFloat(apr.toFixed(2)),
       displayDate:
         i === 0
@@ -165,12 +165,14 @@ export function PerformanceTrendChart({
     );
     if (dataPointIndex >= 0 && dataPointIndex < chartData.length) {
       const dataPoint = chartData[dataPointIndex];
-      setHoveredPoint({
-        x: relativeX,
-        y: event.clientY - svgRect.top,
-        apr: dataPoint.apr,
-        date: dataPoint.displayDate,
-      });
+      if (dataPoint) {
+        setHoveredPoint({
+          x: relativeX,
+          y: event.clientY - svgRect.top,
+          apr: dataPoint.apr,
+          date: dataPoint.displayDate,
+        });
+      }
     }
   };
 

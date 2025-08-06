@@ -4,12 +4,12 @@ import { motion } from "framer-motion";
 import { ArrowRightLeft, Coins, RotateCcw, Settings, Zap } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import type { SwapToken } from "../../../types/swap";
-import { SlippageComponent } from "../../shared/SlippageComponent";
 import { formatSmallCurrency } from "../../../utils/formatters";
 import {
   calculateTotalTokenValue,
   getTokenSymbol,
 } from "../../../utils/tokenUtils";
+import { SlippageComponent } from "../../shared/SlippageComponent";
 import { TokenImage } from "../../shared/TokenImage";
 import type {
   OperationMode,
@@ -17,7 +17,7 @@ import type {
   SwapSettings,
   SwapValidation,
 } from "../types";
-import { TokenSelector, ValidationMessages, AmountInput } from "./Controls";
+import { AmountInput, TokenSelector, ValidationMessages } from "./Controls";
 
 // Action framework types
 export type ActionType =
@@ -418,7 +418,7 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
                 operationMode={selectedAction as OperationMode}
                 amount={swapSettings.amount}
                 onAmountChange={handleAmountChange}
-                fromToken={swapSettings.fromToken}
+                fromToken={swapSettings.fromToken!}
                 totalPortfolioValue={totalPortfolioValue}
               />
             </>
