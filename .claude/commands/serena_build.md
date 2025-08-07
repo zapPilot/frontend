@@ -28,13 +28,17 @@ using the `serena` toolkit and specialized sub-agents.
 
 4. **Implementation Coordination**  
    Use sub-agents via `/agents` to execute tasks as needed.  
-   Only create memory files if you're introducing **a net-new reusable component**.
+   **Memory Creation Policy**: Do NOT create new memory files for task completion, refactor
+   summaries, or project updates. Only create memory files if introducing a genuinely net-new
+   reusable component that doesn't fit existing memory categories.
 
 5. **Selective Memory Update**  
    After implementation:
-   - Update `component_inventory` or `architecture_overview` if and only if a new component is
-     introduced.
-   - Avoid saving analysis files (e.g. refactor results) unless tagged as reusable knowledge.
+   - **UPDATE existing memories only**: Modify `component_inventory` or `architecture_overview` when
+     components are added/changed
+   - **DO NOT create new memories** for: task summaries, refactor results, completion status, or
+     project updates
+   - Focus on maintaining existing project knowledge base rather than expanding it
 
 ## Output Format
 
