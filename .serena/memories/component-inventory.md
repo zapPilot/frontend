@@ -121,14 +121,16 @@
 - **`VersionInfo`** - App version display
 - **`MenuSection`** - Settings menu section with items
 
-## 🌟 Feature-Specific Tabs (`src/components/MoreTab/`)
+## 🌟 Analytics & Community Support (`src/components/MoreTab/`)
 
-### **More Tab Components**
+### **Shared Components**
 
 - **`SocialLinks`** - Social media and external links
 - **`PodcastSection`** - Podcast links and media
 - **`AnalyticsDashboard`** - Advanced analytics visualization
 - **`CommunityStats`** - Community metrics and statistics
+
+These legacy-named components support the Analytics and Community tabs.
 
 ## 🎓 Onboarding (`src/components/Onboarding/`)
 

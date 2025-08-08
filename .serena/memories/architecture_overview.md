@@ -136,3 +136,8 @@ SwapPage/
 3. **Hook-First Design**: Business logic encapsulated in custom hooks
 4. **Type-Driven Development**: TypeScript-first approach with strict typing
 5. **Configuration-Based Flexibility**: Environment and chain configuration externalized
+
+## 🤖 AI Development Aids
+
+- `.serena/` stores project memories and configuration for the Serena agent.
+- `Claude.md` and `.claude/commands/` document workflows for the Claude agent.

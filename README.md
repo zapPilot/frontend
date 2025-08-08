@@ -12,8 +12,8 @@ execution.
 - 🥧 **Asset Categories** - Visual pie chart for BTC, ETH, STABLECOIN, ALTCOIN categories
 - 🔍 **Detailed Analytics** - Expandable asset details with pool information and APR
 - 🔄 **Intent-Based Actions** - ZapIn, ZapOut, and Optimize operations
-- 🚀 **Investment Hub** - Curated DeFi strategies and opportunities
-- ⚙️ **Settings & More** - Comprehensive settings and help section
+- 🧑‍🤝‍🧑 **Community Hub** - Stats, podcasts, and social links
+- ⚙️ **Settings** - Comprehensive preferences and help section
 - 📱 **Mobile Responsive** - Optimized for all screen sizes
 - ⚡ **Performance** - Built with Next.js 15 and Turbopack
 - 🎭 **Animations** - Smooth Framer Motion transitions
@@ -43,7 +43,7 @@ The dashboard displays key portfolio metrics:
 
 - **Desktop**: Left sidebar with detailed navigation
 - **Mobile**: Bottom tab bar with swipe gestures
-- **Three main sections**: Portfolio, Invest, More
+- **Sections**: Portfolio, Analytics, Community, Airdrop, Settings
 
 ### 💼 Portfolio Tab (Wallet Interface)
 
@@ -59,17 +59,24 @@ The dashboard displays key portfolio metrics:
   - APR rates and asset types
   - Pool performance metrics
 
-### 🚀 Invest Tab
+### 📊 Analytics Tab
 
-- **Strategy Discovery**: Curated DeFi investment opportunities
-- **Risk Assessment**: Low, Medium, High risk categorization
-- **Performance Metrics**: APR, TVL, and strategy details
+- **Performance Charts**: Historical portfolio analytics and metrics
+- **Dashboards**: Interactive analytics dashboard components
 
-### ⚙️ More Tab
+### 🧑‍🤝‍🧑 Community Tab
 
-- **Account Settings**: Preferences and configuration
+- **Community Stats**: Ecosystem metrics and engagement
+- **Resources**: Podcast links and social media connections
+
+### 🎁 Airdrop Tab
+
+- **Rewards Overview**: Token reward programs for early users
+
+### ⚙️ Settings Tab
+
+- **Account Preferences**: Configuration options and personalization
 - **Help & Support**: Documentation and community links
-- **About**: App information and social connections
 
 ## Quick Actions
 
@@ -122,3 +129,12 @@ Following the Zap Pilot design language:
 - Safari 14+
 - Mobile Safari 14+
 - Chrome Mobile 88+
+
+## AI Collaboration
+
+This repository includes configuration and guidance for automated agents:
+
+- `.serena/` holds project memories and configuration for the Serena agent.
+- `.claude/` and `Claude.md` document workflows and commands for Anthropic's Claude.
+
+Keep these resources updated as the codebase evolves.
