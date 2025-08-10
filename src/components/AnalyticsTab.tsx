@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AnalyticsDashboard } from "./MoreTab/index";
-import { PortfolioChart } from "./PortfolioChart";
+import { EnhancedPortfolioChart } from "./EnhancedPortfolioChart";
 
 export function AnalyticsTab() {
   return (
@@ -22,7 +22,7 @@ export function AnalyticsTab() {
       </motion.div>
 
       {/* Historical Performance Chart */}
-      <PortfolioChart />
+      <EnhancedPortfolioChart />
 
       {/* Portfolio Analytics Dashboard */}
       <AnalyticsDashboard />

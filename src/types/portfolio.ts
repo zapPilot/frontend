@@ -48,6 +48,13 @@ export interface PortfolioDataPoint {
   value: number;
   change: number;
   benchmark?: number;
+  protocols?: Array<{
+    protocol: string;
+    chain: string;
+    value: number;
+    pnl: number;
+  }>;
+  chainsCount?: number;
 }
 
 export interface AssetAllocationPoint {
