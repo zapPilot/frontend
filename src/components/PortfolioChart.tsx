@@ -38,7 +38,7 @@ const PortfolioChartComponent = () => {
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
     enabled: isConnected && !!userInfo?.userId,
   });
-
+  console.log("apiPortfolioHistory", apiPortfolioHistory);
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     if (apiPortfolioHistory && apiPortfolioHistory.length > 0) {

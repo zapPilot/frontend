@@ -30,7 +30,6 @@ export function usePortfolioTrends({
   const [data, setData] = useState<PortfolioDataPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const fetchPortfolioTrends = useCallback(async () => {
     if (!userId || !enabled) {
       setData([]);

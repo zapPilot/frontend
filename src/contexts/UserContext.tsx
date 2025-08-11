@@ -69,15 +69,12 @@ export function UserProvider({ children }: UserProviderProps) {
     try {
       // First get user by wallet to get userId
       const userResponse = await getUserByWallet(connectedWallet);
-      console.log("userResponse", userResponse);
       // Then get bundle wallets using userId
       const bundleResponse = await getBundleWalletsByPrimary(userResponse.id);
-
       setUserInfo({
-        userId: bundleResponse.user_id,
-        email: bundleResponse.email,
-        primaryWallet: bundleResponse.primary_wallet,
-        bundleWallets: bundleResponse.bundle_wallets || [],
+        userId: bundleResponse.user.id,
+        email: bundleResponse.user.email,
+        primaryWallet: bundleResponse.main_wallet,
         additionalWallets: bundleResponse.additional_wallets || [],
         visibleWallets: bundleResponse.visible_wallets || [],
         totalWallets: bundleResponse.total_wallets || 0,
