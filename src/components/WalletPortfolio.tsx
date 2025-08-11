@@ -12,10 +12,12 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useUser } from "../contexts/UserContext";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
+import { getPortfolioSummary } from "../services/quantEngine";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
 import { formatSmallCurrency } from "../utils/formatters";
 import { PortfolioOverview } from "./PortfolioOverview";
@@ -42,6 +44,40 @@ export function WalletPortfolio({
     toggleBalanceVisibility,
     toggleCategoryExpansion,
   } = usePortfolio(mockPortfolioData);
+
+  const { userInfo } = useUser();
+  const [apiTotalValue, setApiTotalValue] = useState<number | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  console.log("apiError", apiError);
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchSummary = async () => {
+      if (!userInfo?.userId) {
+        setApiTotalValue(null);
+        return;
+      }
+      try {
+        setApiError(null);
+        const summary = await getPortfolioSummary(userInfo.userId);
+        // Try common fields; default to 0 if not found
+        const total = summary.metrics.total_value_usd;
+        if (!cancelled) setApiTotalValue(Number.isFinite(total) ? total : 0);
+      } catch (e) {
+        if (!cancelled) {
+          setApiError(
+            e instanceof Error ? e.message : "Failed to load portfolio summary"
+          );
+          setApiTotalValue(null);
+        }
+      }
+    };
+
+    fetchSummary();
+    return () => {
+      cancelled = true;
+    };
+  }, [userInfo?.userId]);
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
@@ -109,7 +145,10 @@ export function WalletPortfolio({
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
             <p className="text-3xl font-bold text-white">
-              {formatCurrency(portfolioMetrics.totalValue, balanceHidden)}
+              {formatCurrency(
+                apiTotalValue ?? portfolioMetrics.totalValue,
+                balanceHidden
+              )}
             </p>
           </div>
 

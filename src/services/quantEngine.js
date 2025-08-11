@@ -88,6 +88,23 @@ export const getPortfolioTrends = async (userId, days = 30, limit = 100) => {
 };
 
 /**
+ * Get portfolio summary for a user
+ * @param {string} userId - User ID (UUID)
+ * @returns {Promise<Object>} Portfolio summary payload
+ */
+export const getPortfolioSummary = async userId => {
+  const response = await fetch(
+    `${QUANT_ENGINE_URL}/api/v1/portfolio-summary/by-user/${userId}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch portfolio summary: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+/**
  * Transform quant-engine portfolio trends data into PortfolioDataPoint format
  * @param {Array} trendsData - Raw trends data from API
  * @returns {Array} Transformed data for charts
