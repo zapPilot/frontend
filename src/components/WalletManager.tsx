@@ -1,22 +1,22 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  Plus,
-  X,
-  Wallet,
-  Copy,
-  ExternalLink,
-  Edit3,
-  Trash2,
-  Check,
-  RefreshCw,
   AlertTriangle,
+  Check,
+  Copy,
+  Edit3,
+  ExternalLink,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Wallet,
+  X,
 } from "lucide-react";
-import { useState, useCallback, memo, useEffect } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 // useActiveAccount not needed here - using UserContext instead
-import { useUser } from "../contexts/UserContext";
 import { GRADIENTS } from "@/constants/design-system";
+import { useUser } from "../contexts/UserContext";
 import { GlassCard, GradientButton } from "./ui";
 
 // Remove DEMO_WALLET constant - now using real connected wallet
@@ -235,6 +235,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                         : "glass-morphism border-gray-800 hover:border-gray-700"
                     }`}
                   >
+                    {/* {JSON.stringify(wallet)} */}
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
@@ -280,7 +281,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-400">
                           <span className="font-mono">
-                            {formatAddress(wallet.address)}
+                            {formatAddress(wallet?.address || "")}
                           </span>
                           <button
                             onClick={() =>

@@ -30,9 +30,9 @@ export const getUserByWallet = async walletAddress => {
  * @param {string} walletAddress - Primary wallet address
  * @returns {Promise<Array>} Array of bundle wallet addresses
  */
-export const getBundleWalletsByPrimary = async walletAddress => {
+export const getBundleWalletsByPrimary = async userId => {
   const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/bundle-addresses/by-wallet/${walletAddress}`
+    `${QUANT_ENGINE_URL}/api/v1/users/${userId}/bundle-wallets`
   );
 
   if (!response.ok) {

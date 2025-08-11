@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getBundleWalletsByPrimary,
+  getUserByWallet,
   transformBundleWallets,
 } from "../services/quantEngine";
 
@@ -49,8 +50,11 @@ export function useBundleWallets({
     setError(null);
 
     try {
-      // Fetch bundle data from API
-      const bundleData = await getBundleWalletsByPrimary(primaryWallet);
+      // First get user by wallet to get userId
+      const userResponse = await getUserByWallet(primaryWallet);
+
+      // Fetch bundle data from API using userId
+      const bundleData = await getBundleWalletsByPrimary(userResponse.user_id);
 
       // Transform to UI format
       const transformedWallets = transformBundleWallets(bundleData);

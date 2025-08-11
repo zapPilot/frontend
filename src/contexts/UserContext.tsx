@@ -2,14 +2,17 @@
 
 import {
   createContext,
-  useContext,
-  useState,
-  useCallback,
   ReactNode,
+  useCallback,
+  useContext,
   useEffect,
+  useState,
 } from "react";
 import { useActiveAccount } from "thirdweb/react";
-import { getBundleWalletsByPrimary } from "../services/quantEngine";
+import {
+  getBundleWalletsByPrimary,
+  getUserByWallet,
+} from "../services/quantEngine";
 
 interface UserInfo {
   userId: string;
@@ -64,17 +67,21 @@ export function UserProvider({ children }: UserProviderProps) {
     setError(null);
 
     try {
-      const response = await getBundleWalletsByPrimary(connectedWallet);
+      // First get user by wallet to get userId
+      const userResponse = await getUserByWallet(connectedWallet);
+      console.log("userResponse", userResponse);
+      // Then get bundle wallets using userId
+      const bundleResponse = await getBundleWalletsByPrimary(userResponse.id);
 
       setUserInfo({
-        userId: response.user_id,
-        email: response.email,
-        primaryWallet: response.primary_wallet,
-        bundleWallets: response.bundle_wallets || [],
-        additionalWallets: response.additional_wallets || [],
-        visibleWallets: response.visible_wallets || [],
-        totalWallets: response.total_wallets || 0,
-        totalVisibleWallets: response.total_visible_wallets || 0,
+        userId: bundleResponse.user_id,
+        email: bundleResponse.email,
+        primaryWallet: bundleResponse.primary_wallet,
+        bundleWallets: bundleResponse.bundle_wallets || [],
+        additionalWallets: bundleResponse.additional_wallets || [],
+        visibleWallets: bundleResponse.visible_wallets || [],
+        totalWallets: bundleResponse.total_wallets || 0,
+        totalVisibleWallets: bundleResponse.total_visible_wallets || 0,
       });
     } catch (err) {
       const errorMessage =

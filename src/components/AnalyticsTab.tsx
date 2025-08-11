@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { EnhancedPortfolioChart } from "./EnhancedPortfolioChart";
 import { AnalyticsDashboard } from "./MoreTab/index";
+import { PortfolioChart } from "./PortfolioChart";
 
 export function AnalyticsTab() {
   return (
@@ -22,7 +22,7 @@ export function AnalyticsTab() {
       </motion.div>
 
       {/* Historical Performance Chart */}
-      <EnhancedPortfolioChart />
+      <PortfolioChart />
 
       {/* Portfolio Analytics Dashboard */}
       <AnalyticsDashboard />
