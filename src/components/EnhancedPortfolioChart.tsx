@@ -60,11 +60,11 @@ const EnhancedPortfolioChartComponent = () => {
     const latest = portfolioHistory[portfolioHistory.length - 1];
     if (!latest?.protocols || !Array.isArray(latest.protocols)) return [];
 
-    return latest.protocols.map(protocol => ({
+    return latest.protocols.map((protocol, index) => ({
       date: latest.date,
       assets: [
         {
-          name: protocol,
+          name: protocol.protocol || `Protocol-${index}`,
           percentage: 100 / latest.protocols.length, // Equal distribution for demo
           value: latest.totalValue / latest.protocols.length,
         },
@@ -157,15 +157,15 @@ const EnhancedPortfolioChartComponent = () => {
         <div className="flex items-center space-x-1 p-1 glass-morphism rounded-lg">
           {CHART_PERIODS.map(period => (
             <button
-              key={period}
-              onClick={() => setSelectedPeriod(period)}
+              key={period.value}
+              onClick={() => setSelectedPeriod(period.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                selectedPeriod === period
+                selectedPeriod === period.value
                   ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
                   : "text-gray-400 hover:text-white hover:bg-white/10"
               }`}
             >
-              {period}
+              {period.label}
             </button>
           ))}
         </div>
@@ -265,7 +265,7 @@ const EnhancedPortfolioChartComponent = () => {
               {/* Y-axis labels */}
               {yAxisLabels.map((label, index) => (
                 <text
-                  key={index}
+                  key={`y-axis-${index}`}
                   x="30"
                   y={280 - (index * 280) / (yAxisLabels.length - 1)}
                   className="fill-gray-400 text-xs"
@@ -279,7 +279,7 @@ const EnhancedPortfolioChartComponent = () => {
               {/* Grid lines */}
               {yAxisLabels.map((_, index) => (
                 <line
-                  key={index}
+                  key={`grid-line-${index}`}
                   x1="40"
                   y1={280 - (index * 280) / (yAxisLabels.length - 1)}
                   x2="580"
@@ -320,7 +320,7 @@ const EnhancedPortfolioChartComponent = () => {
                 Math.floor(currentChart.length / 2),
                 currentChart.length - 1,
               ].map(index => (
-                <div key={index} className="text-xs text-gray-400">
+                <div key={`x-axis-${index}`} className="text-xs text-gray-400">
                   {new Date(
                     currentChart[index]?.date || new Date()
                   ).toLocaleDateString(undefined, {

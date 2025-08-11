@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AnalyticsDashboard } from "./MoreTab/index";
 import { EnhancedPortfolioChart } from "./EnhancedPortfolioChart";
+import { AnalyticsDashboard } from "./MoreTab/index";
 
 export function AnalyticsTab() {
   return (
