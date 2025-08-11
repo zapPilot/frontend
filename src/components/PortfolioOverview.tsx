@@ -36,7 +36,7 @@ export function PortfolioOverview({
   // Use provided pieChartData or fall back to portfolioData
   const pieChartData: PieChartData[] =
     providedPieChartData ||
-    portfolioData.map(cat => ({
+    (portfolioData || []).map(cat => ({
       label: cat.name,
       value: cat.totalValue,
       percentage: cat.percentage,
@@ -80,7 +80,7 @@ export function PortfolioOverview({
         </div>
         <div className="space-y-4" data-testid="allocation-list">
           <AssetCategoriesDetail
-            portfolioData={portfolioData}
+            portfolioData={portfolioData || []}
             expandedCategory={expandedCategory}
             onCategoryToggle={onCategoryToggle}
             balanceHidden={balanceHidden}
