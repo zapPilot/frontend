@@ -13,7 +13,7 @@ import {
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUser } from "../contexts/UserContext";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
@@ -61,6 +61,19 @@ export function WalletPortfolio({
     }
     return formatCurrency(apiTotalValue, balanceHidden);
   };
+  // Calculate pieChartData based on apiTotalValue when available
+  const pieChartData = useMemo(() => {
+    if (!apiTotalValue || apiTotalValue <= 0) {
+      return undefined; // Let PortfolioOverview fall back to mock data
+    }
+
+    return mockPortfolioData.map(cat => ({
+      label: cat.name,
+      value: (cat.percentage / 100) * apiTotalValue,
+      percentage: cat.percentage,
+      color: cat.color,
+    }));
+  }, [apiTotalValue]);
 
   useEffect(() => {
     let cancelled = false;
@@ -232,10 +245,14 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={mockPortfolioData}
+        pieChartData={pieChartData}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
         title="Asset Distribution"
+        isLoading={isLoading}
+        apiError={apiError}
+        renderBalanceDisplay={renderBalanceDisplay}
       />
 
       {/* Wallet Manager Modal */}
