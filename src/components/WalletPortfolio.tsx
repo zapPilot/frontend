@@ -49,18 +49,31 @@ export function WalletPortfolio({
   const { userInfo, loading: isUserLoading } = useUser();
   const [apiTotalValue, setApiTotalValue] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const isLoading = isUserLoading || isFetching;
+  // Helper function to render balance display with consolidated logic
+  const renderBalanceDisplay = () => {
+    if (isLoading || apiTotalValue === null) {
+      return <Loader className="w-8 h-8 animate-spin text-gray-500" />;
+    }
+    if (apiError) {
+      return <div className="text-sm text-red-500">{apiError}</div>;
+    }
+    return formatCurrency(apiTotalValue, balanceHidden);
+  };
 
   useEffect(() => {
     let cancelled = false;
 
     const fetchSummary = async () => {
       if (!userInfo?.userId) {
+        if (!isUserLoading) {
+          setIsLoading(false);
+        }
+        setApiTotalValue(null);
         return;
       }
-      setIsFetching(true);
+
       setApiError(null);
       try {
         const summary = await getPortfolioSummary(userInfo.userId);
@@ -77,16 +90,12 @@ export function WalletPortfolio({
         }
       } finally {
         if (!cancelled) {
-          setIsFetching(false);
+          setIsLoading(false);
         }
       }
     };
 
-    if (userInfo?.userId) {
-      fetchSummary();
-    } else if (!isUserLoading) {
-      setApiTotalValue(null);
-    }
+    fetchSummary();
 
     return () => {
       cancelled = true;
@@ -159,13 +168,7 @@ export function WalletPortfolio({
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
             <div className="text-3xl font-bold text-white h-10 flex items-center">
-              {isLoading ? (
-                <Loader className="w-8 h-8 animate-spin text-gray-500" />
-              ) : apiError ? (
-                <div className="text-sm text-red-500">{apiError}</div>
-              ) : (
-                formatCurrency(apiTotalValue, balanceHidden)
-              )}
+              {renderBalanceDisplay()}
             </div>
           </div>
 
