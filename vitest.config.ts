@@ -13,7 +13,9 @@ export default defineConfig({
     exclude: ['tests/e2e/**/*'],
     css: false,
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      provider: 'v8',
+      reporter: ['text', 'json-summary', 'html'],
+      include: ['src/**/*.{js,ts,jsx,tsx}'],
       exclude: [
         'node_modules/',
         'tests/setup.ts',
@@ -21,7 +23,20 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.config.*',
         '**/coverage/**',
-      ]
+        '.next/**',
+        'src/types/**',
+        'src/**/*.stories.*',
+        'src/**/*.test.*',
+        'src/**/*.spec.*',
+      ],
+      thresholds: {
+        global: {
+          branches: 70,
+          functions: 70,
+          lines: 70,
+          statements: 70
+        }
+      }
     }
   },
   resolve: {
