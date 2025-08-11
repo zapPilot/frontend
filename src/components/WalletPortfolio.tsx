@@ -7,6 +7,7 @@ import {
   DollarSign,
   Eye,
   EyeOff,
+  Loader,
   Settings,
   TrendingDown,
   TrendingUp,
@@ -45,24 +46,28 @@ export function WalletPortfolio({
     toggleCategoryExpansion,
   } = usePortfolio(mockPortfolioData);
 
-  const { userInfo } = useUser();
+  const { userInfo, loading: isUserLoading } = useUser();
   const [apiTotalValue, setApiTotalValue] = useState<number | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
-  console.log("apiError", apiError);
+  const [isFetching, setIsFetching] = useState(false);
+
+  const isLoading = isUserLoading || isFetching;
+
   useEffect(() => {
     let cancelled = false;
 
     const fetchSummary = async () => {
       if (!userInfo?.userId) {
-        setApiTotalValue(null);
         return;
       }
+      setIsFetching(true);
+      setApiError(null);
       try {
-        setApiError(null);
         const summary = await getPortfolioSummary(userInfo.userId);
-        // Try common fields; default to 0 if not found
         const total = summary.metrics.total_value_usd;
-        if (!cancelled) setApiTotalValue(Number.isFinite(total) ? total : 0);
+        if (!cancelled) {
+          setApiTotalValue(Number.isFinite(total) ? total : 0);
+        }
       } catch (e) {
         if (!cancelled) {
           setApiError(
@@ -70,14 +75,23 @@ export function WalletPortfolio({
           );
           setApiTotalValue(null);
         }
+      } finally {
+        if (!cancelled) {
+          setIsFetching(false);
+        }
       }
     };
 
-    fetchSummary();
+    if (userInfo?.userId) {
+      fetchSummary();
+    } else if (!isUserLoading) {
+      setApiTotalValue(null);
+    }
+
     return () => {
       cancelled = true;
     };
-  }, [userInfo?.userId]);
+  }, [userInfo?.userId, isUserLoading]);
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
@@ -144,12 +158,15 @@ export function WalletPortfolio({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-            <p className="text-3xl font-bold text-white">
-              {formatCurrency(
-                apiTotalValue ?? portfolioMetrics.totalValue,
-                balanceHidden
+            <div className="text-3xl font-bold text-white h-10 flex items-center">
+              {isLoading ? (
+                <Loader className="w-8 h-8 animate-spin text-gray-500" />
+              ) : apiError ? (
+                <div className="text-sm text-red-500">{apiError}</div>
+              ) : (
+                formatCurrency(apiTotalValue, balanceHidden)
               )}
-            </p>
+            </div>
           </div>
 
           <div>
