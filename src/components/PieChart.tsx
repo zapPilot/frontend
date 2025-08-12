@@ -53,9 +53,9 @@ const PieChartComponent = ({
           className="transform -rotate-90"
           viewBox={`0 0 ${size} ${size}`}
         >
-          {chartData.map(item => (
+          {chartData.map((item, index) => (
             <motion.circle
-              key={item.label}
+              key={`pie-${item.label}-${item.percentage}-${index}`}
               cx={size / 2}
               cy={size / 2}
               r={radius}

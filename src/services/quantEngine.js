@@ -90,12 +90,18 @@ export const getPortfolioTrends = async (userId, days = 30, limit = 100) => {
 /**
  * Get portfolio summary for a user
  * @param {string} userId - User ID (UUID)
+ * @param {boolean} includeCategories - Whether to include asset categories
  * @returns {Promise<Object>} Portfolio summary payload
  */
-export const getPortfolioSummary = async userId => {
-  const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/portfolio-summary/by-user/${userId}`
-  );
+export const getPortfolioSummary = async (
+  userId,
+  includeCategories = false
+) => {
+  let url = `${QUANT_ENGINE_URL}/api/v1/portfolio-summary/by-user/${userId}`;
+  if (includeCategories) {
+    url += "?include_categories=true";
+  }
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch portfolio summary: ${response.status}`);

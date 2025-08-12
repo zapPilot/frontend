@@ -73,7 +73,15 @@ vi.mock("lucide-react", () => ({
 
 vi.mock("framer-motion", () => ({
   motion: {
-    div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
+    div: vi.fn(
+      ({
+        children,
+        ...props
+      }: {
+        children: React.ReactNode;
+        [key: string]: any;
+      }) => <div {...props}>{children}</div>
+    ),
   },
 }));
 
@@ -123,7 +131,10 @@ describe("WalletPortfolio", () => {
 
       // Verify the data transformation logic: (percentage / 100) * apiTotalValue
       // Expected values: Stablecoins: 40% * 15000 = 6000, ETH: 35% * 15000 = 5250, BTC: 25% * 15000 = 3750
-      expect(mockGetPortfolioSummary).toHaveBeenCalledWith("test-user-123");
+      expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
+        "test-user-123",
+        true
+      );
     });
 
     it("should return undefined pieChartData when apiTotalValue is null", async () => {
@@ -350,7 +361,10 @@ describe("WalletPortfolio", () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith("test-user-123");
+        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
+          "test-user-123",
+          true
+        );
       });
 
       expect(screen.getByTestId("loading-state")).toHaveTextContent(
@@ -362,7 +376,10 @@ describe("WalletPortfolio", () => {
       const { rerender } = render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith("test-user-123");
+        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
+          "test-user-123",
+          true
+        );
       });
 
       // Change user
@@ -374,7 +391,10 @@ describe("WalletPortfolio", () => {
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith("new-user-456");
+        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
+          "new-user-456",
+          true
+        );
       });
     });
   });

@@ -20,10 +20,24 @@ import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
 import { getPortfolioSummary } from "../services/quantEngine";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
+import type { AssetCategory } from "../types/portfolio";
 import { formatSmallCurrency } from "../utils/formatters";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
+
+// Helper function to get category colors
+const getCategoryColor = (category: string): string => {
+  const colorMap: { [key: string]: string } = {
+    btc: "#F7931A",
+    eth: "#627EEA",
+    stablecoins: "#26A69A",
+    others: "#9C27B0",
+    defi: "#00BCD4",
+    altcoin: "#FF9800",
+  };
+  return colorMap[category.toLowerCase()] || "#757575";
+};
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: () => void;
@@ -48,6 +62,9 @@ export function WalletPortfolio({
 
   const { userInfo, loading: isUserLoading } = useUser();
   const [apiTotalValue, setApiTotalValue] = useState<number | null>(null);
+  const [apiCategoriesData, setApiCategoriesData] = useState<
+    AssetCategory[] | null
+  >(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -61,8 +78,17 @@ export function WalletPortfolio({
     }
     return formatCurrency(apiTotalValue, balanceHidden);
   };
-  // Calculate pieChartData based on apiTotalValue when available
+
+  // Calculate pieChartData based on apiCategoriesData when available
   const pieChartData = useMemo(() => {
+    if (apiCategoriesData && apiCategoriesData.length > 0) {
+      return apiCategoriesData.map(cat => ({
+        label: cat.name,
+        value: cat.totalValue,
+        percentage: cat.percentage,
+        color: cat.color,
+      }));
+    }
     if (!apiTotalValue || apiTotalValue <= 0) {
       return undefined; // Let PortfolioOverview fall back to mock data
     }
@@ -73,7 +99,7 @@ export function WalletPortfolio({
       percentage: cat.percentage,
       color: cat.color,
     }));
-  }, [apiTotalValue]);
+  }, [apiCategoriesData, apiTotalValue]);
 
   useEffect(() => {
     let cancelled = false;
@@ -89,10 +115,43 @@ export function WalletPortfolio({
 
       setApiError(null);
       try {
-        const summary = await getPortfolioSummary(userInfo.userId);
+        const summary = await getPortfolioSummary(userInfo.userId, true);
         const total = summary.metrics.total_value_usd;
+        const apiCategories = summary.categories;
+
         if (!cancelled) {
           setApiTotalValue(Number.isFinite(total) ? total : 0);
+
+          // Transform API categories to match AssetCategory interface
+          if (
+            apiCategories &&
+            Array.isArray(apiCategories) &&
+            apiCategories.length > 0
+          ) {
+            const totalValue = apiCategories.reduce(
+              (sum: number, cat: any) => sum + (cat.total_usd_value || 0),
+              0
+            );
+
+            const transformedCategories: AssetCategory[] = apiCategories.map(
+              (cat: any, index: number) => ({
+                id: cat.category || `category-${index}`,
+                name: cat.category || "Unknown",
+                color: getCategoryColor(cat.category || "others"),
+                totalValue: cat.total_usd_value || 0,
+                percentage:
+                  totalValue > 0
+                    ? ((cat.total_usd_value || 0) / totalValue) * 100
+                    : 0,
+                change24h: 0, // API doesn't provide this, set to 0
+                assets: [], // API doesn't provide detailed assets, set to empty array
+              })
+            );
+
+            setApiCategoriesData(transformedCategories);
+          } else {
+            setApiCategoriesData(null);
+          }
         }
       } catch (e) {
         if (!cancelled) {
@@ -100,6 +159,7 @@ export function WalletPortfolio({
             e instanceof Error ? e.message : "Failed to load portfolio summary"
           );
           setApiTotalValue(null);
+          setApiCategoriesData(null);
         }
       } finally {
         if (!cancelled) {
@@ -244,8 +304,8 @@ export function WalletPortfolio({
 
       {/* Portfolio Overview */}
       <PortfolioOverview
-        portfolioData={mockPortfolioData}
-        pieChartData={pieChartData}
+        portfolioData={apiCategoriesData || mockPortfolioData}
+        {...(pieChartData && { pieChartData })}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}

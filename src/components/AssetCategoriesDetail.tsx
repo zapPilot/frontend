@@ -53,7 +53,7 @@ export function AssetCategoriesDetail({
                     {category.name}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {category.assets.length} assets • {category.percentage}%
+                    {category?.assets?.length} assets • {category.percentage}%
                   </div>
                 </div>
               </div>

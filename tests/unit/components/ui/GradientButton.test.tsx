@@ -1,19 +1,31 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { GradientButton } from "../../../../src/components/ui/GradientButton";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
-    button: vi.fn(({ children, onClick, disabled, ...props }) => (
-      <button
-        onClick={disabled ? undefined : onClick}
-        disabled={disabled}
-        {...props}
-      >
-        {children}
-      </button>
-    )),
+    button: vi.fn(
+      ({
+        children,
+        onClick,
+        disabled,
+        ...props
+      }: {
+        children: React.ReactNode;
+        onClick: () => void;
+        disabled: boolean;
+        [key: string]: any;
+      }) => (
+        <button
+          onClick={disabled ? undefined : onClick}
+          disabled={disabled}
+          {...props}
+        >
+          {children}
+        </button>
+      )
+    ),
   },
 }));
 
