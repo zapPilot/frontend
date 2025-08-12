@@ -158,13 +158,13 @@ export function WalletPortfolio({
                   change24h: 0, // API doesn't provide this, set to 0
                   assets:
                     cat.positions?.map((pos: any) => ({
-                      name: pos.symbol?.toUpperCase() || "Unknown", // Use symbol as name for now
-                      symbol: pos.symbol || "UNK",
-                      protocol: "Unknown", // Placeholder - backend needs to provide this
-                      amount: 0, // Placeholder - backend needs to provide token amount
+                      name: pos.symbol?.toUpperCase(),
+                      symbol: pos.symbol,
+                      protocol: pos.protocol_name,
+                      amount: pos.amount,
                       value: pos.total_usd_value || 0,
                       apr: 0, // Placeholder - backend needs to provide APR
-                      type: "Unknown", // Placeholder - backend needs to provide asset type
+                      type: pos.protocol_type,
                     })) || [],
                 };
               }

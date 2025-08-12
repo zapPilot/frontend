@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { formatCurrency, formatNumber } from "../lib/utils";
 import { AssetCategory } from "../types/portfolio";
+import { ImageWithFallback } from "./shared/ImageWithFallback";
 
 interface AssetCategoriesDetailProps {
   portfolioData: AssetCategory[];
@@ -53,7 +54,8 @@ export function AssetCategoriesDetail({
                     {category.name}
                   </div>
                   <div className="text-sm text-gray-400">
-                    {category?.assets?.length} assets • {category.percentage}%
+                    {category?.assets?.length} assets •{" "}
+                    {category.percentage.toFixed(2)}%
                   </div>
                 </div>
               </div>
@@ -99,9 +101,13 @@ export function AssetCategoriesDetail({
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center">
-                            <span className="text-xs font-bold text-gray-300">
-                              {asset.symbol.slice(0, 2)}
-                            </span>
+                            <ImageWithFallback
+                              src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${asset.symbol?.toLowerCase().replace(/[^a-z0-9]/g, "")}.webp`}
+                              alt={`${asset.symbol || asset.name || "Unknown"} token icon`}
+                              fallbackType="token"
+                              symbol={asset.symbol}
+                              size={20}
+                            />
                           </div>
                           <div>
                             <div className="font-medium text-white">
