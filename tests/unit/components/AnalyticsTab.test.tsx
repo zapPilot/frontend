@@ -1,0 +1,150 @@
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { AnalyticsTab } from "../../../src/components/AnalyticsTab";
+
+// Mock child components
+vi.mock("../../../src/components/MoreTab/index", () => ({
+  AnalyticsDashboard: vi.fn(() => (
+    <div data-testid="analytics-dashboard">Analytics Dashboard</div>
+  )),
+}));
+
+vi.mock("../../../src/components/PortfolioChart", () => ({
+  PortfolioChart: vi.fn(() => (
+    <div data-testid="portfolio-chart">Portfolio Chart</div>
+  )),
+}));
+
+// Mock framer-motion
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
+  },
+}));
+
+describe("AnalyticsTab", () => {
+  describe("UI Layout Structure", () => {
+    it("should render header section with title and description", () => {
+      render(<AnalyticsTab />);
+
+      // Header elements
+      expect(screen.getByText("Portfolio Analytics")).toBeInTheDocument();
+      expect(
+        screen.getByText("Advanced metrics and historical performance analysis")
+      ).toBeInTheDocument();
+    });
+
+    it("should have gradient text styling on title", () => {
+      render(<AnalyticsTab />);
+
+      const title = screen.getByText("Portfolio Analytics");
+      expect(title).toHaveClass("gradient-text");
+      expect(title).toHaveClass("text-3xl", "font-bold");
+    });
+
+    it("should render description with proper styling", () => {
+      render(<AnalyticsTab />);
+
+      const description = screen.getByText(
+        "Advanced metrics and historical performance analysis"
+      );
+      expect(description).toHaveClass("text-gray-400");
+    });
+
+    it("should render PortfolioChart component", () => {
+      render(<AnalyticsTab />);
+
+      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+    });
+
+    it("should render AnalyticsDashboard component", () => {
+      render(<AnalyticsTab />);
+
+      expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
+    });
+
+    it("should have centered header layout", () => {
+      render(<AnalyticsTab />);
+
+      const headerSection = screen.getByText(
+        "Portfolio Analytics"
+      ).parentElement;
+      expect(headerSection).toHaveClass("text-center");
+    });
+
+    it("should render all required child components", () => {
+      render(<AnalyticsTab />);
+
+      // Ensure both child components are present
+      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
+
+      // Verify they have content
+      expect(screen.getByText("Portfolio Chart")).toBeInTheDocument();
+      expect(screen.getByText("Analytics Dashboard")).toBeInTheDocument();
+    });
+
+    it("should maintain component structure without props", () => {
+      // AnalyticsTab doesn't take props, but verify it still renders correctly
+      render(<AnalyticsTab />);
+
+      expect(screen.getByText("Portfolio Analytics")).toBeInTheDocument();
+      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
+    });
+  });
+
+  describe("Animation Structure", () => {
+    it("should render motion.div for header with animation props", () => {
+      render(<AnalyticsTab />);
+
+      // Header should be wrapped in motion.div
+      const header = screen.getByText("Portfolio Analytics").parentElement;
+      expect(header).toBeInTheDocument();
+    });
+
+    it("should render all sections with proper structure", () => {
+      render(<AnalyticsTab />);
+
+      // Main sections should all be present
+      expect(screen.getByText("Portfolio Analytics")).toBeInTheDocument();
+      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
+    });
+  });
+
+  describe("Content Verification", () => {
+    it("should display correct header text", () => {
+      render(<AnalyticsTab />);
+
+      expect(
+        screen.getByRole("heading", { name: "Portfolio Analytics" })
+      ).toBeInTheDocument();
+    });
+
+    it("should display correct description text", () => {
+      render(<AnalyticsTab />);
+
+      expect(
+        screen.getByText("Advanced metrics and historical performance analysis")
+      ).toBeInTheDocument();
+    });
+
+    it("should not render any error states by default", () => {
+      render(<AnalyticsTab />);
+
+      // Should not show any error messages
+      expect(screen.queryByText(/error/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/failed/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/unavailable/i)).not.toBeInTheDocument();
+    });
+
+    it("should not render any loading states by default", () => {
+      render(<AnalyticsTab />);
+
+      // Should not show loading spinners
+      expect(screen.queryByRole("status")).not.toBeInTheDocument();
+      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
+    });
+  });
+});

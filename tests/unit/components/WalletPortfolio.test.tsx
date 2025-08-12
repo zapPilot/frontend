@@ -481,6 +481,111 @@ describe("WalletPortfolio", () => {
     });
   });
 
+  describe("UI Layout Structure", () => {
+    it("should render wallet header icon", () => {
+      render(<WalletPortfolio />);
+
+      // Check for DollarSign icon (mocked as span with text content)
+      expect(screen.getByText("DollarSign")).toBeInTheDocument();
+    });
+
+    it("should render metrics grid sections", () => {
+      render(<WalletPortfolio />);
+
+      // Metrics sections - test labels, not values
+      expect(screen.getByText("Total Balance")).toBeInTheDocument();
+      expect(screen.getByText("Portfolio APR")).toBeInTheDocument();
+      expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
+    });
+
+    it("should render trending icons in APR section", () => {
+      render(<WalletPortfolio />);
+
+      // Should have either TrendingUp or TrendingDown based on portfolio performance
+      const trendingUp = screen.queryByText("TrendingUp");
+      const trendingDown = screen.queryByText("TrendingDown");
+      expect(trendingUp || trendingDown).toBeTruthy();
+    });
+
+    it("should render action buttons grid", () => {
+      render(<WalletPortfolio />);
+
+      // Action buttons - test by text content
+      expect(screen.getByText("Zap In")).toBeInTheDocument();
+      expect(screen.getByText("Zap Out")).toBeInTheDocument();
+      expect(screen.getByText("Optimize")).toBeInTheDocument();
+    });
+
+    it("should render action button icons", () => {
+      render(<WalletPortfolio />);
+
+      // Action button icons
+      expect(screen.getByText("ArrowUpRight")).toBeInTheDocument(); // Zap In
+      expect(screen.getByText("ArrowDownLeft")).toBeInTheDocument(); // Zap Out
+      expect(screen.getByText("Settings")).toBeInTheDocument(); // Optimize
+    });
+
+    it("should render portfolio overview section", () => {
+      render(<WalletPortfolio />);
+
+      // Portfolio section - these are provided by PortfolioOverview component
+      expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
+      expect(screen.getByTestId("pie-chart-data")).toBeInTheDocument();
+      expect(screen.getByTestId("balance-display")).toBeInTheDocument();
+    });
+
+    it("should not show analytics button when callback not provided", () => {
+      render(<WalletPortfolio />);
+
+      expect(
+        screen.queryByRole("button", { name: /view analytics/i })
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText("BarChart3")).not.toBeInTheDocument();
+    });
+
+    it("should show loading spinner in metrics when loading", () => {
+      mockUseUser.mockReturnValue({ userInfo: null, loading: true });
+      render(<WalletPortfolio />);
+
+      // Should show loading state in balance display
+      expect(screen.getByTestId("loading-state")).toHaveTextContent("loading");
+    });
+
+    it("should show error state in portfolio when API fails", async () => {
+      mockGetPortfolioSummary.mockRejectedValue(new Error("API Error"));
+      render(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("error-state")).toHaveTextContent(
+          "API Error"
+        );
+      });
+    });
+
+    it("should render all gradient buttons with proper structure", () => {
+      render(<WalletPortfolio />);
+
+      // Should have 3 gradient buttons
+      const gradientButtons = screen.getAllByTestId("gradient-button");
+      expect(gradientButtons).toHaveLength(3);
+
+      // Each button should contain both icon and text
+      const zapInButton = gradientButtons.find(btn =>
+        btn.textContent?.includes("Zap In")
+      );
+      const zapOutButton = gradientButtons.find(btn =>
+        btn.textContent?.includes("Zap Out")
+      );
+      const optimizeButton = gradientButtons.find(btn =>
+        btn.textContent?.includes("Optimize")
+      );
+
+      expect(zapInButton).toBeInTheDocument();
+      expect(zapOutButton).toBeInTheDocument();
+      expect(optimizeButton).toBeInTheDocument();
+    });
+  });
+
   describe("Cleanup and Memory Leaks", () => {
     it("should handle component unmounting during API call", async () => {
       let resolvePromise: (value: {
