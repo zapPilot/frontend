@@ -129,23 +129,45 @@ export function WalletPortfolio({
             apiCategories.length > 0
           ) {
             const totalValue = apiCategories.reduce(
-              (sum: number, cat: any) => sum + (cat.total_usd_value || 0),
+              (sum: number, cat: any) =>
+                sum +
+                (cat.positions?.reduce(
+                  (catSum: number, pos: any) =>
+                    catSum + (pos.total_usd_value || 0),
+                  0
+                ) || 0),
               0
             );
 
             const transformedCategories: AssetCategory[] = apiCategories.map(
-              (cat: any, index: number) => ({
-                id: cat.category || `category-${index}`,
-                name: cat.category || "Unknown",
-                color: getCategoryColor(cat.category || "others"),
-                totalValue: cat.total_usd_value || 0,
-                percentage:
-                  totalValue > 0
-                    ? ((cat.total_usd_value || 0) / totalValue) * 100
-                    : 0,
-                change24h: 0, // API doesn't provide this, set to 0
-                assets: [], // API doesn't provide detailed assets, set to empty array
-              })
+              (cat: any, index: number) => {
+                const categoryTotal =
+                  cat.positions?.reduce(
+                    (catSum: number, pos: any) =>
+                      catSum + (pos.total_usd_value || 0),
+                    0
+                  ) || 0;
+
+                return {
+                  id: cat.category || `category-${index}`,
+                  name: cat.category || "Unknown",
+                  color: getCategoryColor(cat.category || "others"),
+                  totalValue: categoryTotal,
+                  percentage:
+                    totalValue > 0 ? (categoryTotal / totalValue) * 100 : 0,
+                  change24h: 0, // API doesn't provide this, set to 0
+                  assets:
+                    cat.positions?.map((pos: any) => ({
+                      name: pos.symbol?.toUpperCase() || "Unknown", // Use symbol as name for now
+                      symbol: pos.symbol || "UNK",
+                      protocol: "Unknown", // Placeholder - backend needs to provide this
+                      amount: 0, // Placeholder - backend needs to provide token amount
+                      value: pos.total_usd_value || 0,
+                      apr: 0, // Placeholder - backend needs to provide APR
+                      type: "Unknown", // Placeholder - backend needs to provide asset type
+                    })) || [],
+                };
+              }
             );
 
             setApiCategoriesData(transformedCategories);

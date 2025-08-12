@@ -97,7 +97,7 @@ export const getPortfolioSummary = async (
   userId,
   includeCategories = false
 ) => {
-  let url = `${QUANT_ENGINE_URL}/api/v1/portfolio-summary/by-user/${userId}`;
+  let url = `${QUANT_ENGINE_URL}/api/v1/users/${userId}/portfolio-summary`;
   if (includeCategories) {
     url += "?include_categories=true";
   }
