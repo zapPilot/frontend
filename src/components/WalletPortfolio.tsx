@@ -25,19 +25,7 @@ import { formatSmallCurrency } from "../utils/formatters";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
-
-// Helper function to get category colors
-const getCategoryColor = (category: string): string => {
-  const colorMap: { [key: string]: string } = {
-    btc: "#F7931A",
-    eth: "#627EEA",
-    stablecoins: "#26A69A",
-    others: "#9C27B0",
-    defi: "#00BCD4",
-    altcoin: "#FF9800",
-  };
-  return colorMap[category.toLowerCase()] || "#757575";
-};
+import { getCategoryColor } from "../utils/categoryUtils";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: () => void;
@@ -141,20 +129,15 @@ export function WalletPortfolio({
 
             const transformedCategories: AssetCategory[] = apiCategories.map(
               (cat: any, index: number) => {
-                const categoryTotal =
-                  cat.positions?.reduce(
-                    (catSum: number, pos: any) =>
-                      catSum + (pos.total_usd_value || 0),
-                    0
-                  ) || 0;
-
                 return {
                   id: cat.category || `category-${index}`,
                   name: cat.category || "Unknown",
                   color: getCategoryColor(cat.category || "others"),
-                  totalValue: categoryTotal,
+                  totalValue: cat.total_usd_value,
                   percentage:
-                    totalValue > 0 ? (categoryTotal / totalValue) * 100 : 0,
+                    totalValue > 0
+                      ? (cat.total_usd_value / totalValue) * 100
+                      : 0,
                   change24h: 0, // API doesn't provide this, set to 0
                   assets:
                     cat.positions?.map((pos: any) => ({
@@ -162,7 +145,7 @@ export function WalletPortfolio({
                       symbol: pos.symbol,
                       protocol: pos.protocol_name,
                       amount: pos.amount,
-                      value: pos.total_usd_value || 0,
+                      value: pos.total_usd_value,
                       apr: 0, // Placeholder - backend needs to provide APR
                       type: pos.protocol_type,
                     })) || [],
