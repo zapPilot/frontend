@@ -2,8 +2,7 @@
  * API service for quant-engine integration
  */
 
-const QUANT_ENGINE_URL =
-  process.env.NEXT_PUBLIC_QUANT_ENGINE_URL || "http://localhost:8003";
+const QUANT_ENGINE_URL = process.env.NEXT_PUBLIC_QUANT_ENGINE_URL;
 
 /**
  * Get user information by main wallet address
