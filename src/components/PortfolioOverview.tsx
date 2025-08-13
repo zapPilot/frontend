@@ -10,6 +10,7 @@ import { PieChart } from "./PieChart";
 interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
   pieChartData?: PieChartData[];
+  totalValue?: number; // Optional authoritative total value
   onLegendItemClick?: (item: PieChartData) => void;
   expandedCategory: string | null;
   onCategoryToggle: (categoryId: string) => void;
@@ -26,6 +27,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
     portfolioData,
     pieChartData: providedPieChartData,
+    totalValue,
     expandedCategory,
     onCategoryToggle,
     balanceHidden = false,
@@ -81,6 +83,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   data={pieChartData}
                   size={250}
                   strokeWidth={10}
+                  {...(totalValue !== undefined && { totalValue })}
                   {...(renderBalanceDisplay && { renderBalanceDisplay })}
                 />
               )}
@@ -127,6 +130,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data={pieChartData}
                 size={200}
                 strokeWidth={8}
+                {...(totalValue !== undefined && { totalValue })}
                 {...(renderBalanceDisplay && { renderBalanceDisplay })}
               />
             )}

@@ -296,7 +296,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                             )}
                           </button>
                           <a
-                            href={`https://etherscan.io/address/${wallet.address}`}
+                            href={`https://debank.com/profile/${wallet.address}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-1 hover:bg-white/10 rounded transition-colors"

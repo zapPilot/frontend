@@ -11,6 +11,7 @@ interface PieChartProps {
   size?: number;
   strokeWidth?: number;
   renderBalanceDisplay?: () => React.ReactNode;
+  totalValue?: number; // Optional authoritative total value
 }
 
 const PieChartComponent = ({
@@ -18,6 +19,7 @@ const PieChartComponent = ({
   size = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_SIZE,
   strokeWidth = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_STROKE_WIDTH,
   renderBalanceDisplay,
+  totalValue: providedTotalValue,
 }: PieChartProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -39,10 +41,14 @@ const PieChartComponent = ({
     });
   }, [data, circumference]);
 
-  const totalValue = useMemo(
-    () => data.reduce((sum, item) => sum + item.value, 0),
-    [data]
-  );
+  // Use provided totalValue if available, otherwise calculate from data
+  // This ensures data consistency when totalValue comes from authoritative source
+  const totalValue = useMemo(() => {
+    if (providedTotalValue !== undefined) {
+      return providedTotalValue;
+    }
+    return data.reduce((sum, item) => sum + item.value, 0);
+  }, [providedTotalValue, data]);
 
   return (
     <div className="flex items-center justify-center">
