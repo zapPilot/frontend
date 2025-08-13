@@ -3,29 +3,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
 import { getPortfolioSummary } from "../../../src/services/quantEngine";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
+vi.mock("../../../src/hooks/usePortfolioData");
 vi.mock("../../../src/services/quantEngine");
 vi.mock("../../../src/components/PortfolioOverview", () => ({
-  PortfolioOverview: vi.fn(
-    ({ isLoading, apiError, pieChartData, renderBalanceDisplay }) => (
-      <div data-testid="portfolio-overview">
-        <div data-testid="loading-state">
-          {isLoading ? "loading" : "not-loading"}
-        </div>
-        <div data-testid="error-state">{apiError || "no-error"}</div>
-        <div data-testid="pie-chart-data">
-          {pieChartData ? "has-data" : "no-data"}
-        </div>
-        <div data-testid="balance-display">
-          {renderBalanceDisplay ? "has-render-function" : "no-render-function"}
-        </div>
+  PortfolioOverview: vi.fn(({ isLoading, apiError, pieChartData }) => (
+    <div data-testid="portfolio-overview">
+      <div data-testid="loading-state">
+        {isLoading ? "loading" : "not-loading"}
       </div>
-    )
-  ),
+      <div data-testid="error-state">{apiError || "no-error"}</div>
+      <div data-testid="pie-chart-data">
+        {pieChartData ? "has-data" : "no-data"}
+      </div>
+    </div>
+  )),
 }));
 
 vi.mock("../../../src/components/WalletManager", () => ({
@@ -93,6 +90,7 @@ const mockPortfolioMetrics = { totalValue: 10000 };
 describe("WalletPortfolio", () => {
   const mockUseUser = vi.mocked(useUser);
   const mockUsePortfolio = vi.mocked(usePortfolio);
+  const mockUsePortfolioData = vi.mocked(usePortfolioData);
   const mockGetPortfolioSummary = vi.mocked(getPortfolioSummary);
 
   beforeEach(() => {
@@ -108,6 +106,55 @@ describe("WalletPortfolio", () => {
       portfolioMetrics: mockPortfolioMetrics,
       toggleBalanceVisibility: vi.fn(),
       toggleCategoryExpansion: vi.fn(),
+    });
+
+    mockUsePortfolioData.mockReturnValue({
+      totalValue: 15000,
+      categories: [
+        {
+          name: "BTC",
+          totalValue: 7500,
+          percentage: 50,
+          color: "#F7931A",
+          assets: [],
+        },
+        {
+          name: "ETH",
+          totalValue: 4500,
+          percentage: 30,
+          color: "#627EEA",
+          assets: [],
+        },
+        {
+          name: "Stablecoins",
+          totalValue: 3000,
+          percentage: 20,
+          color: "#26A17B",
+          assets: [],
+        },
+      ],
+      pieChartData: [
+        {
+          label: "BTC",
+          value: 7500,
+          percentage: 50,
+          color: "#F7931A",
+        },
+        {
+          label: "ETH",
+          value: 4500,
+          percentage: 30,
+          color: "#627EEA",
+        },
+        {
+          label: "Stablecoins",
+          value: 3000,
+          percentage: 20,
+          color: "#26A17B",
+        },
+      ],
+      isLoading: false,
+      error: null,
     });
 
     mockGetPortfolioSummary.mockResolvedValue({
@@ -129,17 +176,17 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      // Verify the data transformation logic: (percentage / 100) * apiTotalValue
-      // Expected values: Stablecoins: 40% * 15000 = 6000, ETH: 35% * 15000 = 5250, BTC: 25% * 15000 = 3750
-      expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
-        "test-user-123",
-        true
-      );
+      // Verify that usePortfolioData returns pieChartData
+      expect(mockUsePortfolioData).toHaveBeenCalled();
     });
 
     it("should return undefined pieChartData when apiTotalValue is null", async () => {
-      mockGetPortfolioSummary.mockResolvedValue({
-        metrics: { total_value_usd: null },
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: null,
       });
 
       render(<WalletPortfolio />);
@@ -152,8 +199,12 @@ describe("WalletPortfolio", () => {
     });
 
     it("should return undefined pieChartData when apiTotalValue is zero or negative", async () => {
-      mockGetPortfolioSummary.mockResolvedValue({
-        metrics: { total_value_usd: 0 },
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: 0,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: null,
       });
 
       const { rerender } = render(<WalletPortfolio />);
@@ -165,8 +216,12 @@ describe("WalletPortfolio", () => {
       });
 
       // Test negative value
-      mockGetPortfolioSummary.mockResolvedValue({
-        metrics: { total_value_usd: -100 },
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: -100,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: null,
       });
 
       rerender(<WalletPortfolio />);
@@ -181,19 +236,64 @@ describe("WalletPortfolio", () => {
     it("should recalculate pieChartData when apiTotalValue changes", async () => {
       const { rerender } = render(<WalletPortfolio />);
 
-      // Initial API call
+      // Initial state - has data
       await waitFor(() => {
         expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
           "has-data"
         );
       });
 
-      // Change API response
-      mockGetPortfolioSummary.mockResolvedValue({
-        metrics: { total_value_usd: 20000 },
+      // Change to higher total value with updated pieChartData
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: 20000,
+        categories: [
+          {
+            name: "BTC",
+            totalValue: 10000,
+            percentage: 50,
+            color: "#F7931A",
+            assets: [],
+          },
+          {
+            name: "ETH",
+            totalValue: 6000,
+            percentage: 30,
+            color: "#627EEA",
+            assets: [],
+          },
+          {
+            name: "Stablecoins",
+            totalValue: 4000,
+            percentage: 20,
+            color: "#26A17B",
+            assets: [],
+          },
+        ],
+        pieChartData: [
+          {
+            label: "BTC",
+            value: 10000,
+            percentage: 50,
+            color: "#F7931A",
+          },
+          {
+            label: "ETH",
+            value: 6000,
+            percentage: 30,
+            color: "#627EEA",
+          },
+          {
+            label: "Stablecoins",
+            value: 4000,
+            percentage: 20,
+            color: "#26A17B",
+          },
+        ],
+        isLoading: false,
+        error: null,
       });
 
-      // Force re-render to trigger useEffect
+      // Force re-render to trigger hook update
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
@@ -206,6 +306,14 @@ describe("WalletPortfolio", () => {
 
   describe("Prop Passing to PortfolioOverview", () => {
     it("should pass isLoading=true initially", async () => {
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: true,
+        error: null,
+      });
+
       await act(async () => {
         render(<WalletPortfolio />);
       });
@@ -225,7 +333,13 @@ describe("WalletPortfolio", () => {
 
     it("should pass apiError when API call fails", async () => {
       const errorMessage = "Failed to load portfolio summary";
-      mockGetPortfolioSummary.mockRejectedValue(new Error(errorMessage));
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: errorMessage,
+      });
 
       render(<WalletPortfolio />);
 
@@ -234,16 +348,6 @@ describe("WalletPortfolio", () => {
           errorMessage
         );
       });
-    });
-
-    it("should pass renderBalanceDisplay function", async () => {
-      await act(async () => {
-        render(<WalletPortfolio />);
-      });
-
-      expect(screen.getByTestId("balance-display")).toHaveTextContent(
-        "has-render-function"
-      );
     });
 
     it("should not pass apiTotalValue directly to PortfolioOverview", async () => {
@@ -263,14 +367,27 @@ describe("WalletPortfolio", () => {
         loading: true,
       });
 
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: true,
+        error: null,
+      });
+
       render(<WalletPortfolio />);
 
       expect(screen.getByTestId("loading-state")).toHaveTextContent("loading");
     });
 
     it("should show loading state while API is fetching", () => {
-      // Delay the API response
-      mockGetPortfolioSummary.mockReturnValue(new Promise(() => {}));
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: true,
+        error: null,
+      });
 
       render(<WalletPortfolio />);
 
@@ -281,6 +398,14 @@ describe("WalletPortfolio", () => {
       mockUseUser.mockReturnValue({
         userInfo: null,
         loading: false,
+      });
+
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: null,
       });
 
       render(<WalletPortfolio />);
@@ -296,7 +421,13 @@ describe("WalletPortfolio", () => {
   describe("Error Handling", () => {
     it("should handle API errors gracefully", async () => {
       const errorMessage = "Network error";
-      mockGetPortfolioSummary.mockRejectedValue(new Error(errorMessage));
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: errorMessage,
+      });
 
       render(<WalletPortfolio />);
 
@@ -310,7 +441,13 @@ describe("WalletPortfolio", () => {
     });
 
     it("should handle non-Error rejections", async () => {
-      mockGetPortfolioSummary.mockRejectedValue("String error");
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: "Failed to load portfolio summary",
+      });
 
       render(<WalletPortfolio />);
 
@@ -322,19 +459,15 @@ describe("WalletPortfolio", () => {
     });
 
     it("should clear previous errors on successful API calls", async () => {
-      // Test that a successful API call after a failed one clears the error
-      mockGetPortfolioSummary.mockResolvedValue({
-        metrics: { total_value_usd: 15000 },
-      });
-
+      // Test that a successful response has no error
       render(<WalletPortfolio />);
 
       await waitFor(() => {
         expect(screen.getByTestId("error-state")).toHaveTextContent("no-error");
       });
 
-      // This test verifies that when API calls succeed, no error is shown
-      // The component's logic ensures apiError is set to null on successful API calls
+      // This test verifies that when usePortfolioData succeeds, no error is shown
+      // The default mock returns error: null
     });
   });
 
@@ -345,6 +478,14 @@ describe("WalletPortfolio", () => {
         loading: false,
       });
 
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: null,
+      });
+
       render(<WalletPortfolio />);
 
       await waitFor(() => {
@@ -353,7 +494,6 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(mockGetPortfolioSummary).not.toHaveBeenCalled();
       expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
     });
 
@@ -361,10 +501,7 @@ describe("WalletPortfolio", () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
-          "test-user-123",
-          true
-        );
+        expect(mockUsePortfolioData).toHaveBeenCalled();
       });
 
       expect(screen.getByTestId("loading-state")).toHaveTextContent(
@@ -376,10 +513,7 @@ describe("WalletPortfolio", () => {
       const { rerender } = render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
-          "test-user-123",
-          true
-        );
+        expect(mockUsePortfolioData).toHaveBeenCalled();
       });
 
       // Change user
@@ -391,10 +525,7 @@ describe("WalletPortfolio", () => {
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockGetPortfolioSummary).toHaveBeenCalledWith(
-          "new-user-456",
-          true
-        );
+        expect(mockUsePortfolioData).toHaveBeenCalled();
       });
     });
   });
@@ -427,57 +558,6 @@ describe("WalletPortfolio", () => {
       });
 
       expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
-    });
-  });
-
-  describe("renderBalanceDisplay Function", () => {
-    it("should return loader when loading", () => {
-      mockUseUser.mockReturnValue({
-        userInfo: null,
-        loading: true,
-      });
-
-      render(<WalletPortfolio />);
-
-      // The renderBalanceDisplay function should be passed to PortfolioOverview
-      expect(screen.getByTestId("balance-display")).toHaveTextContent(
-        "has-render-function"
-      );
-    });
-
-    it("should return loader when apiTotalValue is null", async () => {
-      mockUseUser.mockReturnValue({
-        userInfo: null,
-        loading: false,
-      });
-
-      render(<WalletPortfolio />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("loading-state")).toHaveTextContent(
-          "not-loading"
-        );
-      });
-
-      expect(screen.getByTestId("balance-display")).toHaveTextContent(
-        "has-render-function"
-      );
-    });
-
-    it("should return error message when apiError exists", async () => {
-      mockGetPortfolioSummary.mockRejectedValue(new Error("API Error"));
-
-      render(<WalletPortfolio />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("error-state")).toHaveTextContent(
-          "API Error"
-        );
-      });
-
-      expect(screen.getByTestId("balance-display")).toHaveTextContent(
-        "has-render-function"
-      );
     });
   });
 
@@ -531,7 +611,6 @@ describe("WalletPortfolio", () => {
       // Portfolio section - these are provided by PortfolioOverview component
       expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
       expect(screen.getByTestId("pie-chart-data")).toBeInTheDocument();
-      expect(screen.getByTestId("balance-display")).toBeInTheDocument();
     });
 
     it("should not show analytics button when callback not provided", () => {
@@ -552,7 +631,14 @@ describe("WalletPortfolio", () => {
     });
 
     it("should show error state in portfolio when API fails", async () => {
-      mockGetPortfolioSummary.mockRejectedValue(new Error("API Error"));
+      mockUsePortfolioData.mockReturnValue({
+        totalValue: null,
+        categories: null,
+        pieChartData: null,
+        isLoading: false,
+        error: "API Error",
+      });
+
       render(<WalletPortfolio />);
 
       await waitFor(() => {
