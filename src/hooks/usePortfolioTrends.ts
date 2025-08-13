@@ -47,13 +47,15 @@ export function usePortfolioTrends({
       );
 
       // Fetch portfolio trends directly with provided user ID
-      const trendsData = await getPortfolioTrends(userId, days);
+      const trendsDataResp = (await getPortfolioTrends(userId, days)) as any;
       console.log(
-        `Received ${trendsData.length} data points from quant-engine`
+        `Received ${trendsDataResp.length} data points from quant-engine`
       );
 
       // Transform data for charts
-      const transformedData = transformPortfolioTrends(trendsData);
+      const transformedData = transformPortfolioTrends(
+        trendsDataResp.trend_data || []
+      );
       console.log(
         `Transformed to ${transformedData.length} portfolio data points`
       );

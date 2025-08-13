@@ -21,12 +21,15 @@ import { formatCurrency, getChangeColorClasses } from "../lib/utils";
 import { getPortfolioSummary } from "../services/quantEngine";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
 import type { AssetCategory } from "../types/portfolio";
+import { getCategoryColor } from "../utils/categoryUtils";
 import { formatSmallCurrency } from "../utils/formatters";
-import type { ApiPortfolioSummary } from "../utils/portfolioTransformers";
+import {
+  toPieChartData,
+  type ApiPortfolioSummary,
+} from "../utils/portfolioTransformers";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
-import { getCategoryColor } from "../utils/categoryUtils";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: (() => void) | undefined;
@@ -71,23 +74,13 @@ export function WalletPortfolio({
   // Calculate pieChartData based on apiCategoriesData when available
   const pieChartData = useMemo(() => {
     if (apiCategoriesData && apiCategoriesData.length > 0) {
-      return apiCategoriesData.map(cat => ({
-        label: cat.name,
-        value: cat.totalValue,
-        percentage: cat.percentage,
-        color: cat.color,
-      }));
+      return toPieChartData(apiCategoriesData);
     }
     if (!apiTotalValue || apiTotalValue <= 0) {
       return undefined; // Let PortfolioOverview fall back to mock data
     }
 
-    return mockPortfolioData.map(cat => ({
-      label: cat.name,
-      value: (cat.percentage / 100) * apiTotalValue,
-      percentage: cat.percentage,
-      color: cat.color,
-    }));
+    return toPieChartData(mockPortfolioData, apiTotalValue);
   }, [apiCategoriesData, apiTotalValue]);
 
   useEffect(() => {
