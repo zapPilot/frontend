@@ -13,10 +13,10 @@ import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
 
 interface WalletPortfolioProps {
-  onAnalyticsClick?: () => void;
-  onOptimizeClick?: () => void;
-  onZapInClick?: () => void;
-  onZapOutClick?: () => void;
+  onAnalyticsClick?: (() => void) | undefined;
+  onOptimizeClick?: (() => void) | undefined;
+  onZapInClick?: (() => void) | undefined;
+  onZapOutClick?: (() => void) | undefined;
 }
 
 export function WalletPortfolio({

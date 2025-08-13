@@ -3,7 +3,7 @@ import React from "react";
 import { GRADIENTS } from "../../styles/design-tokens";
 
 interface WalletHeaderProps {
-  onAnalyticsClick?: () => void;
+  onAnalyticsClick?: (() => void) | undefined;
   onWalletManagerClick: () => void;
   onToggleBalance: () => void;
   balanceHidden: boolean;

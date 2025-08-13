@@ -14,6 +14,29 @@ import {
   getUserByWallet,
 } from "../services/quantEngine";
 
+interface ApiUserResponse {
+  id: string;
+  user_id?: string;
+}
+
+interface ApiBundleResponse {
+  user: {
+    id: string;
+    email: string;
+  };
+  main_wallet: string;
+  additional_wallets: Array<{
+    wallet_address: string;
+    label: string | null;
+    is_main: boolean;
+    is_visible: boolean;
+    created_at: string;
+  }>;
+  visible_wallets: string[];
+  total_wallets: number;
+  total_visible_wallets: number;
+}
+
 interface UserInfo {
   userId: string;
   email: string;
@@ -68,13 +91,18 @@ export function UserProvider({ children }: UserProviderProps) {
 
     try {
       // First get user by wallet to get userId
-      const userResponse = await getUserByWallet(connectedWallet);
+      const userResponse = (await getUserByWallet(
+        connectedWallet
+      )) as ApiUserResponse;
       // Then get bundle wallets using userId
-      const bundleResponse = await getBundleWalletsByPrimary(userResponse.id);
+      const bundleResponse = (await getBundleWalletsByPrimary(
+        userResponse.id
+      )) as unknown as ApiBundleResponse;
       setUserInfo({
         userId: bundleResponse.user.id,
         email: bundleResponse.user.email,
         primaryWallet: bundleResponse.main_wallet,
+        bundleWallets: bundleResponse.visible_wallets || [],
         additionalWallets: bundleResponse.additional_wallets || [],
         visibleWallets: bundleResponse.visible_wallets || [],
         totalWallets: bundleResponse.total_wallets || 0,

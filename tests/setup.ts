@@ -12,11 +12,25 @@ afterEach(() => {
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
+  root: Element | null = null;
+  rootMargin: string = "";
+  thresholds: ReadonlyArray<number> = [];
+
+  constructor(
+    _callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit
+  ) {
+    this.root = (options?.root as Element) || null;
+    this.rootMargin = options?.rootMargin || "";
+    this.thresholds = Array.isArray(options?.threshold)
+      ? options.threshold
+      : [options?.threshold || 0];
+  }
+
   disconnect() {}
   observe() {}
   unobserve() {}
-};
+} as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -48,7 +62,20 @@ Object.defineProperty(window, "scrollTo", {
 });
 
 // Mock PointerEvent for framer-motion
-global.PointerEvent = class PointerEvent extends Event {
+(global as any).PointerEvent = class PointerEvent extends Event {
+  pointerId: number;
+  width: number;
+  height: number;
+  pressure: number;
+  tangentialPressure: number;
+  tiltX: number;
+  tiltY: number;
+  twist: number;
+  pointerType: string;
+  isPrimary: boolean;
+  altitudeAngle: number = 0;
+  azimuthAngle: number = 0;
+
   constructor(type: string, eventInitDict: any = {}) {
     super(type, eventInitDict);
     this.pointerId = eventInitDict.pointerId || 0;
@@ -62,16 +89,13 @@ global.PointerEvent = class PointerEvent extends Event {
     this.pointerType = eventInitDict.pointerType || "";
     this.isPrimary = eventInitDict.isPrimary || false;
   }
-  pointerId: number;
-  width: number;
-  height: number;
-  pressure: number;
-  tangentialPressure: number;
-  tiltX: number;
-  tiltY: number;
-  twist: number;
-  pointerType: string;
-  isPrimary: boolean;
+
+  getCoalescedEvents() {
+    return [];
+  }
+  getPredictedEvents() {
+    return [];
+  }
 };
 
 // Mock HTMLElement.setPointerCapture and releasePointerCapture

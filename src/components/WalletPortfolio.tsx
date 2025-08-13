@@ -22,16 +22,17 @@ import { getPortfolioSummary } from "../services/quantEngine";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
 import type { AssetCategory } from "../types/portfolio";
 import { formatSmallCurrency } from "../utils/formatters";
+import type { ApiPortfolioSummary } from "../utils/portfolioTransformers";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
 import { getCategoryColor } from "../utils/categoryUtils";
 
 interface WalletPortfolioProps {
-  onAnalyticsClick?: () => void;
-  onOptimizeClick?: () => void;
-  onZapInClick?: () => void;
-  onZapOutClick?: () => void;
+  onAnalyticsClick?: (() => void) | undefined;
+  onOptimizeClick?: (() => void) | undefined;
+  onZapInClick?: (() => void) | undefined;
+  onZapOutClick?: (() => void) | undefined;
 }
 
 export function WalletPortfolio({
@@ -103,7 +104,10 @@ export function WalletPortfolio({
 
       setApiError(null);
       try {
-        const summary = await getPortfolioSummary(userInfo.userId, true);
+        const summary = (await getPortfolioSummary(
+          userInfo.userId,
+          true
+        )) as ApiPortfolioSummary;
         const total = summary.metrics.total_value_usd;
         const apiCategories = summary.categories;
 

@@ -4,9 +4,9 @@ import { GRADIENTS } from "../../styles/design-tokens";
 import { GradientButton } from "../ui";
 
 interface WalletActionsProps {
-  onZapInClick?: () => void;
-  onZapOutClick?: () => void;
-  onOptimizeClick?: () => void;
+  onZapInClick?: (() => void) | undefined;
+  onZapOutClick?: (() => void) | undefined;
+  onOptimizeClick?: (() => void) | undefined;
 }
 
 export const WalletActions = React.memo<WalletActionsProps>(

@@ -5,6 +5,11 @@ import {
   transformBundleWallets,
 } from "../services/quantEngine";
 
+interface ApiUserResponse {
+  id: string;
+  user_id?: string;
+}
+
 interface BundleWallet {
   id: string;
   address: string;
@@ -51,10 +56,14 @@ export function useBundleWallets({
 
     try {
       // First get user by wallet to get userId
-      const userResponse = await getUserByWallet(primaryWallet);
+      const userResponse = (await getUserByWallet(
+        primaryWallet
+      )) as ApiUserResponse;
 
       // Fetch bundle data from API using userId
-      const bundleData = await getBundleWalletsByPrimary(userResponse.user_id);
+      const bundleData = await getBundleWalletsByPrimary(
+        userResponse.user_id || userResponse.id
+      );
 
       // Transform to UI format
       const transformedWallets = transformBundleWallets(bundleData);

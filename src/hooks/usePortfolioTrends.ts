@@ -6,7 +6,7 @@ import {
 import { PortfolioDataPoint } from "../types/portfolio";
 
 interface UsePortfolioTrendsConfig {
-  userId?: string;
+  userId?: string | undefined;
   days?: number;
   enabled?: boolean;
 }
@@ -79,6 +79,6 @@ export function usePortfolioTrends({
     loading,
     error,
     refetch: fetchPortfolioTrends,
-    userId,
+    userId: userId || null,
   };
 }

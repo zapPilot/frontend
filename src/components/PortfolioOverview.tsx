@@ -81,7 +81,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   data={pieChartData}
                   size={250}
                   strokeWidth={10}
-                  renderBalanceDisplay={renderBalanceDisplay}
+                  {...(renderBalanceDisplay && { renderBalanceDisplay })}
                 />
               )}
             </div>
@@ -127,7 +127,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data={pieChartData}
                 size={200}
                 strokeWidth={8}
-                renderBalanceDisplay={renderBalanceDisplay}
+                {...(renderBalanceDisplay && { renderBalanceDisplay })}
               />
             )}
           </div>
