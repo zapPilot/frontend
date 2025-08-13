@@ -64,7 +64,40 @@ export const getGlassMorphismClass = (
 export const getAnimationDelay = (step: number) =>
   ANIMATION_DELAYS.NORMAL * step;
 
+// Scrollbar Styling for Glass Morphism Design
+export const SCROLLBAR = {
+  DEFAULT: {
+    className:
+      "scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent",
+    styles:
+      "scrollbar-width: thin; scrollbar-color: rgb(75 85 99) transparent;",
+  },
+  GLASS: {
+    className:
+      "scrollbar-thin scrollbar-thumb-gray-500/50 scrollbar-track-gray-900/10",
+    styles:
+      "scrollbar-width: thin; scrollbar-color: rgba(107 114 128 / 0.5) rgba(17 24 39 / 0.1);",
+  },
+  PORTFOLIO: {
+    className:
+      "scrollbar-thin scrollbar-thumb-purple-500/50 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/70",
+    styles:
+      "scrollbar-width: thin; scrollbar-color: rgba(168 85 247 / 0.5) transparent;",
+  },
+} as const;
+
+// Custom Scrollable Container Classes
+export const SCROLLABLE_CONTAINER = {
+  BASE: "overflow-y-auto",
+  WITH_FADE:
+    "overflow-y-auto relative before:absolute before:top-0 before:left-0 before:right-0 before:h-4 before:bg-gradient-to-b before:from-gray-900/20 before:to-transparent before:pointer-events-none before:z-10 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-4 after:bg-gradient-to-t after:from-gray-900/20 after:to-transparent after:pointer-events-none after:z-10",
+  PORTFOLIO_DETAILS:
+    "overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-purple-500/50 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/70",
+} as const;
+
 // Type exports for convenience
 export type GradientType = keyof typeof GRADIENTS;
 export type GlassMorphismVariant = keyof typeof GLASS_MORPHISM;
 export type AnimationDelay = keyof typeof ANIMATION_DELAYS;
+export type ScrollbarVariant = keyof typeof SCROLLBAR;
+export type ScrollableContainerVariant = keyof typeof SCROLLABLE_CONTAINER;

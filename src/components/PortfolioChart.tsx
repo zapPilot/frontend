@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
 import { memo, useMemo, useState } from "react";
+import { useUser } from "../contexts/UserContext";
+import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -23,10 +25,49 @@ const PortfolioChartComponent = () => {
     "performance" | "allocation" | "drawdown"
   >("performance");
 
-  // Mock historical data - in real app this would come from API
+  // Get user info from context
+  const { userInfo, isConnected } = useUser();
+
+  // Fetch real portfolio trends data
+  const {
+    data: apiPortfolioHistory,
+    loading: apiLoading,
+    error: apiError,
+  } = usePortfolioTrends({
+    userId: userInfo?.userId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: isConnected && !!userInfo?.userId,
+  });
+  console.log("apiPortfolioHistory", apiPortfolioHistory);
+  // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
-    return generatePortfolioHistory(selectedPeriod);
-  }, [selectedPeriod]);
+    if (apiPortfolioHistory && apiPortfolioHistory.length > 0) {
+      console.log("✅ Using API data from quant-engine:", {
+        dataPoints: apiPortfolioHistory.length,
+        period: selectedPeriod,
+        userId: userInfo?.userId,
+        firstDate: apiPortfolioHistory[0]?.date,
+        lastDate: apiPortfolioHistory[apiPortfolioHistory.length - 1]?.date,
+      });
+      return apiPortfolioHistory;
+    } else {
+      console.log("📊 Using mock data for period:", {
+        period: selectedPeriod,
+        reason: apiError ? `API Error: ${apiError}` : "No API data available",
+        isConnected,
+        hasUserId: !!userInfo?.userId,
+        isLoading: apiLoading,
+      });
+      return generatePortfolioHistory(selectedPeriod);
+    }
+  }, [
+    apiPortfolioHistory,
+    selectedPeriod,
+    apiError,
+    isConnected,
+    userInfo?.userId,
+    apiLoading,
+  ]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
     const days = Math.min(

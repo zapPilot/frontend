@@ -2,19 +2,22 @@
 
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
-import { PieChartData } from "../types/portfolio";
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
+import { formatCurrency } from "../lib/utils";
+import { PieChartData } from "../types/portfolio";
 
 interface PieChartProps {
   data: PieChartData[];
   size?: number;
   strokeWidth?: number;
+  renderBalanceDisplay?: () => React.ReactNode;
 }
 
 const PieChartComponent = ({
   data,
   size = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_SIZE,
   strokeWidth = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_STROKE_WIDTH,
+  renderBalanceDisplay,
 }: PieChartProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -50,9 +53,9 @@ const PieChartComponent = ({
           className="transform -rotate-90"
           viewBox={`0 0 ${size} ${size}`}
         >
-          {chartData.map(item => (
+          {chartData.map((item, index) => (
             <motion.circle
-              key={item.label}
+              key={`pie-${item.label}-${item.percentage}-${index}`}
               cx={size / 2}
               cy={size / 2}
               r={radius}
@@ -85,11 +88,9 @@ const PieChartComponent = ({
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
             <div className="text-2xl font-bold text-white">
-              {totalValue.toLocaleString(PORTFOLIO_CONFIG.CURRENCY_LOCALE, {
-                style: "currency",
-                currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
-                maximumFractionDigits: 0,
-              })}
+              {renderBalanceDisplay
+                ? renderBalanceDisplay()
+                : formatCurrency(totalValue)}
             </div>
             <div className="text-sm text-gray-400">Total Value</div>
           </div>

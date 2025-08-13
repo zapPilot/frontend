@@ -7,26 +7,32 @@ import {
   DollarSign,
   Eye,
   EyeOff,
+  Loader,
   Settings,
   TrendingDown,
   TrendingUp,
   Wallet,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useUser } from "../contexts/UserContext";
 import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { formatCurrency, getChangeColorClasses } from "../lib/utils";
+import { getPortfolioSummary } from "../services/quantEngine";
 import { BUSINESS_CONSTANTS, GRADIENTS } from "../styles/design-tokens";
+import type { AssetCategory } from "../types/portfolio";
 import { formatSmallCurrency } from "../utils/formatters";
+import type { ApiPortfolioSummary } from "../utils/portfolioTransformers";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard, GradientButton } from "./ui";
+import { getCategoryColor } from "../utils/categoryUtils";
 
 interface WalletPortfolioProps {
-  onAnalyticsClick?: () => void;
-  onOptimizeClick?: () => void;
-  onZapInClick?: () => void;
-  onZapOutClick?: () => void;
+  onAnalyticsClick?: (() => void) | undefined;
+  onOptimizeClick?: (() => void) | undefined;
+  onZapInClick?: (() => void) | undefined;
+  onZapOutClick?: (() => void) | undefined;
 }
 
 export function WalletPortfolio({
@@ -42,6 +48,141 @@ export function WalletPortfolio({
     toggleBalanceVisibility,
     toggleCategoryExpansion,
   } = usePortfolio(mockPortfolioData);
+
+  const { userInfo, loading: isUserLoading } = useUser();
+  const [apiTotalValue, setApiTotalValue] = useState<number | null>(null);
+  const [apiCategoriesData, setApiCategoriesData] = useState<
+    AssetCategory[] | null
+  >(null);
+  const [apiError, setApiError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Helper function to render balance display with consolidated logic
+  const renderBalanceDisplay = () => {
+    if (isLoading || apiTotalValue === null) {
+      return <Loader className="w-8 h-8 animate-spin text-gray-500" />;
+    }
+    if (apiError) {
+      return <div className="text-sm text-red-500">{apiError}</div>;
+    }
+    return formatCurrency(apiTotalValue, balanceHidden);
+  };
+
+  // Calculate pieChartData based on apiCategoriesData when available
+  const pieChartData = useMemo(() => {
+    if (apiCategoriesData && apiCategoriesData.length > 0) {
+      return apiCategoriesData.map(cat => ({
+        label: cat.name,
+        value: cat.totalValue,
+        percentage: cat.percentage,
+        color: cat.color,
+      }));
+    }
+    if (!apiTotalValue || apiTotalValue <= 0) {
+      return undefined; // Let PortfolioOverview fall back to mock data
+    }
+
+    return mockPortfolioData.map(cat => ({
+      label: cat.name,
+      value: (cat.percentage / 100) * apiTotalValue,
+      percentage: cat.percentage,
+      color: cat.color,
+    }));
+  }, [apiCategoriesData, apiTotalValue]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchSummary = async () => {
+      if (!userInfo?.userId) {
+        if (!isUserLoading) {
+          setIsLoading(false);
+        }
+        setApiTotalValue(null);
+        return;
+      }
+
+      setApiError(null);
+      try {
+        const summary = (await getPortfolioSummary(
+          userInfo.userId,
+          true
+        )) as ApiPortfolioSummary;
+        const total = summary.metrics.total_value_usd;
+        const apiCategories = summary.categories;
+
+        if (!cancelled) {
+          setApiTotalValue(Number.isFinite(total) ? total : 0);
+
+          // Transform API categories to match AssetCategory interface
+          if (
+            apiCategories &&
+            Array.isArray(apiCategories) &&
+            apiCategories.length > 0
+          ) {
+            const totalValue = apiCategories.reduce(
+              (sum: number, cat: any) =>
+                sum +
+                (cat.positions?.reduce(
+                  (catSum: number, pos: any) =>
+                    catSum + (pos.total_usd_value || 0),
+                  0
+                ) || 0),
+              0
+            );
+
+            const transformedCategories: AssetCategory[] = apiCategories.map(
+              (cat: any, index: number) => {
+                return {
+                  id: cat.category || `category-${index}`,
+                  name: cat.category || "Unknown",
+                  color: getCategoryColor(cat.category || "others"),
+                  totalValue: cat.total_usd_value,
+                  percentage:
+                    totalValue > 0
+                      ? (cat.total_usd_value / totalValue) * 100
+                      : 0,
+                  change24h: 0, // API doesn't provide this, set to 0
+                  assets:
+                    cat.positions?.map((pos: any) => ({
+                      name: pos.symbol?.toUpperCase(),
+                      symbol: pos.symbol,
+                      protocol: pos.protocol_name,
+                      amount: pos.amount,
+                      value: pos.total_usd_value,
+                      apr: 0, // Placeholder - backend needs to provide APR
+                      type: pos.protocol_type,
+                    })) || [],
+                };
+              }
+            );
+
+            setApiCategoriesData(transformedCategories);
+          } else {
+            setApiCategoriesData(null);
+          }
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setApiError(
+            e instanceof Error ? e.message : "Failed to load portfolio summary"
+          );
+          setApiTotalValue(null);
+          setApiCategoriesData(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchSummary();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userInfo?.userId, isUserLoading]);
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
@@ -108,9 +249,9 @@ export function WalletPortfolio({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
             <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-            <p className="text-3xl font-bold text-white">
-              {formatCurrency(portfolioMetrics.totalValue, balanceHidden)}
-            </p>
+            <div className="text-3xl font-bold text-white h-10 flex items-center">
+              {renderBalanceDisplay()}
+            </div>
           </div>
 
           <div>
@@ -172,11 +313,15 @@ export function WalletPortfolio({
 
       {/* Portfolio Overview */}
       <PortfolioOverview
-        portfolioData={mockPortfolioData}
+        portfolioData={apiCategoriesData || mockPortfolioData}
+        {...(pieChartData && { pieChartData })}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
         title="Asset Distribution"
+        isLoading={isLoading}
+        apiError={apiError}
+        renderBalanceDisplay={renderBalanceDisplay}
       />
 
       {/* Wallet Manager Modal */}

@@ -38,7 +38,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://static.debank.com https://zap-assets-worker.davidtnfsh.workers.dev;",
-              "connect-src 'self' https: http://localhost:3000 http://localhost:3001 http://localhost:3002 http://127.0.0.1:3000 http://127.0.0.1:3001 http://127.0.0.1:3002 ws://localhost:3000 ws://127.0.0.1:3000",
+              "connect-src 'self' https: http://localhost:3000 http://localhost:3001 http://localhost:3002 http://127.0.0.1:3000 http://127.0.0.1:3001 http://127.0.0.1:3002 http://localhost:8003 ws://localhost:3000 ws://127.0.0.1:3000",
               "frame-src 'none'",
               "object-src 'none'",
               "base-uri 'self'",

@@ -8,7 +8,10 @@ import { createWallet, Wallet } from "thirdweb/wallets";
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 
-const WALLETS = [createWallet("com.ambire")] as Wallet[];
+const WALLETS = [
+  createWallet("com.ambire"),
+  createWallet("io.metamask"),
+] as Wallet[];
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 
