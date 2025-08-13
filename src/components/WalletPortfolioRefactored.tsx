@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { mockPortfolioData } from "../data/mockPortfolio";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
@@ -40,7 +39,7 @@ export function WalletPortfolio({
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-  } = usePortfolio(apiCategoriesData || mockPortfolioData);
+  } = usePortfolio(apiCategoriesData || []);
 
   const {
     isOpen: isWalletManagerOpen,
@@ -50,7 +49,7 @@ export function WalletPortfolio({
 
   // Memoize portfolio data for performance
   const portfolioData = useMemo(
-    () => apiCategoriesData || mockPortfolioData,
+    () => apiCategoriesData || [],
     [apiCategoriesData]
   );
 
