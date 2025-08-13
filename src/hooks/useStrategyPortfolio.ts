@@ -1,9 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  AssetCategory,
-  PieChartData,
-  PortfolioMetrics,
-} from "../types/portfolio";
+import { AssetCategory, PortfolioMetrics } from "../types/portfolio";
 import { calculatePortfolioMetrics } from "../lib/utils";
 import { strategyPortfolios } from "../data/mockStrategyPortfolios";
 
@@ -25,35 +21,14 @@ export function useStrategyPortfolio(strategyId: string) {
     [portfolioData]
   );
 
-  // Transform data for pie chart
-  const pieChartData: PieChartData[] = useMemo(
-    () =>
-      portfolioData.map(cat => ({
-        label: cat.name,
-        value: cat.totalValue,
-        percentage: cat.percentage,
-        color: cat.color,
-      })),
-    [portfolioData]
-  );
-
   const toggleCategoryExpansion = (categoryId: string) => {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
-  };
-
-  const handleLegendItemClick = (item: PieChartData) => {
-    const category = portfolioData.find(cat => cat.name === item.label);
-    if (category) {
-      toggleCategoryExpansion(category.id);
-    }
   };
 
   return {
     portfolioData,
     expandedCategory,
     portfolioMetrics,
-    pieChartData,
     toggleCategoryExpansion,
-    handleLegendItemClick,
   };
 }

@@ -1,9 +1,5 @@
 import { useState, useMemo } from "react";
-import {
-  AssetCategory,
-  PieChartData,
-  PortfolioMetrics,
-} from "../types/portfolio";
+import { AssetCategory, PortfolioMetrics } from "../types/portfolio";
 import { calculatePortfolioMetrics } from "../lib/utils";
 
 /**
@@ -19,18 +15,6 @@ export function usePortfolio(portfolioData: AssetCategory[]) {
     [portfolioData]
   );
 
-  // Transform data for pie chart
-  const pieChartData: PieChartData[] = useMemo(
-    () =>
-      portfolioData.map(cat => ({
-        label: cat.name,
-        value: cat.totalValue,
-        percentage: cat.percentage,
-        color: cat.color,
-      })),
-    [portfolioData]
-  );
-
   const toggleBalanceVisibility = () => {
     setBalanceHidden(!balanceHidden);
   };
@@ -39,20 +23,11 @@ export function usePortfolio(portfolioData: AssetCategory[]) {
     setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
-  const handleLegendItemClick = (item: PieChartData) => {
-    const category = portfolioData.find(cat => cat.name === item.label);
-    if (category) {
-      toggleCategoryExpansion(category.id);
-    }
-  };
-
   return {
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
-    pieChartData,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-    handleLegendItemClick,
   };
 }

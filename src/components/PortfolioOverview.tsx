@@ -11,7 +11,6 @@ interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
   pieChartData?: PieChartData[];
   totalValue?: number; // Optional authoritative total value
-  onLegendItemClick?: (item: PieChartData) => void;
   expandedCategory: string | null;
   onCategoryToggle: (categoryId: string) => void;
   balanceHidden?: boolean;
