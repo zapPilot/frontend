@@ -1,14 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { vi } from "vitest";
-import { WalletPortfolioRefactored } from "../../../src/components/WalletPortfolioRefactored";
+import { WalletPortfolio as WalletPortfolioRefactored } from "../../../src/components/WalletPortfolioRefactored";
 
 // Mock all the child components
 vi.mock("../../../src/components/wallet/WalletHeader", () => ({
-  WalletHeader: ({ totalBalance, onAnalytics }: any) => (
+  WalletHeader: ({ onAnalyticsClick }: any) => (
     <div data-testid="wallet-header">
-      <div data-testid="total-balance">${totalBalance}</div>
-      {onAnalytics && (
-        <button data-testid="analytics-button" onClick={onAnalytics}>
+      {onAnalyticsClick && (
+        <button data-testid="analytics-button" onClick={onAnalyticsClick}>
           Analytics
         </button>
       )}
@@ -17,11 +16,10 @@ vi.mock("../../../src/components/wallet/WalletHeader", () => ({
 }));
 
 vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: ({ totalBalance, monthlyIncome, apr }: any) => (
+  WalletMetrics: ({ totalValue }: any) => (
     <div data-testid="wallet-metrics">
-      <div data-testid="total-balance-metric">${totalBalance}</div>
-      <div data-testid="monthly-income">${monthlyIncome}</div>
-      <div data-testid="apr">{apr}%</div>
+      <div data-testid="total-balance">${totalValue || 0}</div>
+      <div data-testid="total-balance-metric">${totalValue || 0}</div>
     </div>
   ),
 }));
@@ -47,6 +45,47 @@ vi.mock("../../../src/hooks/usePortfolioData", () => ({
   usePortfolioData: vi.fn(),
 }));
 
+// Mock PortfolioOverview
+vi.mock("../../../src/components/PortfolioOverview", () => ({
+  PortfolioOverview: ({ title }: any) => (
+    <div data-testid="portfolio-overview">
+      <div data-testid="portfolio-title">{title}</div>
+    </div>
+  ),
+}));
+
+// Mock WalletManager
+vi.mock("../../../src/components/WalletManager", () => ({
+  WalletManager: ({ isOpen }: any) =>
+    isOpen ? <div data-testid="wallet-manager">Wallet Manager</div> : null,
+}));
+
+// Mock UI components
+vi.mock("../../../src/components/ui", () => ({
+  GlassCard: ({ children }: any) => (
+    <div data-testid="glass-card">{children}</div>
+  ),
+}));
+
+// Mock hooks
+vi.mock("../../../src/hooks/usePortfolio", () => ({
+  usePortfolio: () => ({
+    balanceHidden: false,
+    expandedCategory: null,
+    portfolioMetrics: { totalChangePercentage: 5.2 },
+    toggleBalanceVisibility: vi.fn(),
+    toggleCategoryExpansion: vi.fn(),
+  }),
+}));
+
+vi.mock("../../../src/hooks/useWalletModal", () => ({
+  useWalletModal: () => ({
+    isOpen: false,
+    openModal: vi.fn(),
+    closeModal: vi.fn(),
+  }),
+}));
+
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
@@ -54,11 +93,9 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
-// Mock wallet modal hook
-vi.mock("../../../src/hooks/useWalletModal", () => ({
-  useWalletModal: () => ({
-    connect: vi.fn(),
-  }),
+// Mock data
+vi.mock("../../../src/data/mockPortfolio", () => ({
+  mockPortfolioData: [],
 }));
 
 import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
@@ -74,7 +111,7 @@ describe("WalletPortfolioRefactored", () => {
   const mockOnOptimize = vi.fn();
 
   const defaultProps = {
-    onAnalytics: mockOnAnalytics,
+    onAnalyticsClick: mockOnAnalytics,
     onZapInClick: mockOnZapIn,
     onZapOutClick: mockOnZapOut,
     onOptimizeClick: mockOnOptimize,
@@ -121,8 +158,7 @@ describe("WalletPortfolioRefactored", () => {
       expect(screen.getByTestId("total-balance-metric")).toHaveTextContent(
         "$125000"
       );
-      expect(screen.getByTestId("monthly-income")).toBeInTheDocument();
-      expect(screen.getByTestId("apr")).toBeInTheDocument();
+      expect(screen.getByTestId("wallet-metrics")).toBeInTheDocument();
     });
 
     it("passes correct props to WalletActions", () => {
@@ -300,7 +336,7 @@ describe("WalletPortfolioRefactored", () => {
 
     it("handles undefined callbacks gracefully", () => {
       const propsWithUndefined = {
-        onAnalytics: undefined,
+        onAnalyticsClick: undefined,
         onZapInClick: undefined,
         onZapOutClick: mockOnZapOut,
         onOptimizeClick: mockOnOptimize,
@@ -352,7 +388,10 @@ describe("WalletPortfolioRefactored", () => {
       );
 
       const newMockOnAnalytics = vi.fn();
-      const newProps = { ...defaultProps, onAnalytics: newMockOnAnalytics };
+      const newProps = {
+        ...defaultProps,
+        onAnalyticsClick: newMockOnAnalytics,
+      };
 
       rerender(<WalletPortfolioRefactored {...newProps} />);
 

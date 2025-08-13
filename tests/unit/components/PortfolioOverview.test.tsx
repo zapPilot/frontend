@@ -127,8 +127,8 @@ describe("PortfolioOverview", () => {
     it("should show PieChart when isLoading=false", () => {
       render(<PortfolioOverview {...defaultProps} isLoading={false} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-      expect(screen.getByTestId("pie-chart-loading")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart-loading")[0]).toHaveTextContent(
         "not-loading"
       );
     });
@@ -136,8 +136,8 @@ describe("PortfolioOverview", () => {
     it("should default to showing PieChart when isLoading prop is not provided", () => {
       render(<PortfolioOverview {...defaultProps} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-      expect(screen.getByTestId("pie-chart-loading")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart-loading")[0]).toHaveTextContent(
         "not-loading"
       );
     });
@@ -150,16 +150,16 @@ describe("PortfolioOverview", () => {
       render(<PortfolioOverview {...defaultProps} apiError={errorMessage} />);
 
       // Should show error message instead of PieChart
-      expect(screen.getByText("Chart Unavailable")).toBeInTheDocument();
-      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(screen.getAllByText("Chart Unavailable")[0]).toBeInTheDocument();
+      expect(screen.getAllByText(errorMessage)[0]).toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
 
     it("should show PieChart when apiError is null", () => {
       render(<PortfolioOverview {...defaultProps} apiError={null} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-      expect(screen.getByTestId("pie-chart-error")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
         "no-error"
       );
     });
@@ -167,8 +167,8 @@ describe("PortfolioOverview", () => {
     it("should show PieChart when apiError prop is not provided", () => {
       render(<PortfolioOverview {...defaultProps} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-      expect(screen.getByTestId("pie-chart-error")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
         "no-error"
       );
     });
@@ -199,16 +199,18 @@ describe("PortfolioOverview", () => {
       );
 
       // Verify that the component uses the provided pieChartData
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("3");
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("3");
 
       // Verify the specific data values from provided pieChartData (not calculated from portfolioData)
-      expect(screen.getByTestId("pie-item-0")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $6000 (40%)"
       );
-      expect(screen.getByTestId("pie-item-1")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
         "ETH: $5250 (35%)"
       );
-      expect(screen.getByTestId("pie-item-2")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
         "BTC: $3750 (25%)"
       );
     });
@@ -216,16 +218,18 @@ describe("PortfolioOverview", () => {
     it("should fall back to portfolioData when pieChartData is undefined", () => {
       render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
 
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("3");
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("3");
 
       // Should use portfolioData values
-      expect(screen.getByTestId("pie-item-0")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $4000 (40%)"
       );
-      expect(screen.getByTestId("pie-item-1")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
         "ETH: $3500 (35%)"
       );
-      expect(screen.getByTestId("pie-item-2")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
         "BTC: $2500 (25%)"
       );
     });
@@ -253,8 +257,10 @@ describe("PortfolioOverview", () => {
       );
 
       // Should use pieChartData, not portfolioData
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("3");
-      expect(screen.getByTestId("pie-item-0")).toHaveTextContent(
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("3");
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $6000 (40%)"
       );
     });
@@ -275,13 +281,13 @@ describe("PortfolioOverview", () => {
 
       // Verify PieChart receives the renderBalanceDisplay function
       // (The function is passed but not called by PortfolioOverview itself)
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
 
     it("should pass undefined renderBalanceDisplay when not provided", () => {
       render(<PortfolioOverview {...defaultProps} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
 
     it("should pass renderBalanceDisplay function correctly to PieChart", () => {
@@ -295,7 +301,7 @@ describe("PortfolioOverview", () => {
       );
 
       // The function should be passed to PieChart, not called by PortfolioOverview
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
 
     it("should handle complex renderBalanceDisplay function", () => {
@@ -314,7 +320,7 @@ describe("PortfolioOverview", () => {
         />
       );
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
   });
 
@@ -322,8 +328,10 @@ describe("PortfolioOverview", () => {
     it("should handle all optional props with default values", () => {
       render(<PortfolioOverview {...defaultProps} />);
 
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
-      expect(screen.getByTestId("asset-categories-detail")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(
+        screen.getAllByTestId("asset-categories-detail")[0]
+      ).toBeInTheDocument();
     });
 
     it("should use custom title when provided", () => {
@@ -355,7 +363,7 @@ describe("PortfolioOverview", () => {
       render(<PortfolioOverview {...defaultProps} balanceHidden={true} />);
 
       // Component should render without issues
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
   });
 
@@ -365,7 +373,9 @@ describe("PortfolioOverview", () => {
         <PortfolioOverview {...defaultProps} expandedCategory="stablecoins" />
       );
 
-      expect(screen.getByTestId("asset-categories-detail")).toBeInTheDocument();
+      expect(
+        screen.getAllByTestId("asset-categories-detail")[0]
+      ).toBeInTheDocument();
     });
 
     it("should call onCategoryToggle when provided", () => {
@@ -380,7 +390,7 @@ describe("PortfolioOverview", () => {
 
       // The actual interaction would need to be triggered through user events
       // This test verifies that the prop is accepted
-      expect(screen.getByTestId("pie-chart")).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
     });
   });
 
@@ -394,13 +404,17 @@ describe("PortfolioOverview", () => {
         />
       );
 
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("0");
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("0");
     });
 
     it("should handle empty pieChartData", () => {
       render(<PortfolioOverview {...defaultProps} pieChartData={[]} />);
 
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("0");
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("0");
     });
 
     it("should handle undefined portfolioData gracefully", () => {
@@ -426,7 +440,9 @@ describe("PortfolioOverview", () => {
         />
       );
 
-      expect(screen.getByTestId("pie-chart-data-count")).toHaveTextContent("0");
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("0");
     });
   });
 
@@ -472,8 +488,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Should show error state regardless of data
-      expect(screen.getByText("Chart Unavailable")).toBeInTheDocument();
-      expect(screen.getByText("Data error")).toBeInTheDocument();
+      expect(screen.getAllByText("Chart Unavailable")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("Data error")[0]).toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
   });
@@ -490,7 +506,7 @@ describe("PortfolioOverview", () => {
       expect(mockPieChartData).toEqual(originalData);
 
       // Verify that the component uses the data as-is
-      expect(screen.getByTestId("pie-item-0")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $6000 (40%)"
       );
     });
@@ -499,13 +515,13 @@ describe("PortfolioOverview", () => {
       render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
 
       // Should transform portfolioData.totalValue to pieChartData.value
-      expect(screen.getByTestId("pie-item-0")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $4000 (40%)"
       );
-      expect(screen.getByTestId("pie-item-1")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
         "ETH: $3500 (35%)"
       );
-      expect(screen.getByTestId("pie-item-2")).toHaveTextContent(
+      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
         "BTC: $2500 (25%)"
       );
     });

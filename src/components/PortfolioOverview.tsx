@@ -58,9 +58,9 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         </div>
 
         {/* Desktop Layout: Sticky PieChart with Scrollable Details */}
-        <div className="hidden lg:flex lg:h-[500px] gap-8">
-          {/* Left Column: Sticky PieChart */}
-          <div className="flex-shrink-0 w-[280px] sticky top-0">
+        <div className="hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8">
+          {/* Left Column: Sticky PieChart (50% width like original) */}
+          <div className="sticky top-0">
             <div
               className="flex justify-center items-start pt-8"
               data-testid="pie-chart-container"
@@ -87,8 +87,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
             </div>
           </div>
 
-          {/* Right Column: Scrollable Details */}
-          <div className="flex-1 min-w-0">
+          {/* Right Column: Scrollable Details (50% width like original) */}
+          <div>
             <div
               className={`${SCROLLABLE_CONTAINER.PORTFOLIO_DETAILS} pr-2`}
               data-testid="allocation-list"

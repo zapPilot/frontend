@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
@@ -81,7 +81,10 @@ describe("usePortfolioData", () => {
         loading: false,
       });
 
-      const { result } = renderHook(() => usePortfolioData());
+      let result: any;
+      act(() => {
+        result = renderHook(() => usePortfolioData()).result;
+      });
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.totalValue).toBeNull();

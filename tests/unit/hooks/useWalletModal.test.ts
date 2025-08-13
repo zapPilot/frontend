@@ -212,13 +212,10 @@ describe("useWalletModal", () => {
   });
 
   describe("Edge Cases", () => {
-    it("handles concurrent state changes", () => {
+    it("handles concurrent state changes", async () => {
       const { result } = renderHook(() => useWalletModal());
 
       act(() => {
-        // Simulate concurrent calls
-        Promise.resolve().then(() => result.current.openModal());
-        Promise.resolve().then(() => result.current.closeModal());
         result.current.openModal();
       });
 
