@@ -1,10 +1,7 @@
 "use client";
 
 import React from "react";
-import { usePortfolio } from "../hooks/usePortfolio";
-import { usePortfolioData } from "../hooks/usePortfolioData";
-import { useWalletModal } from "../hooks/useWalletModal";
-import { toPieChartData } from "../utils/portfolioTransformers";
+import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard } from "./ui";
@@ -25,34 +22,22 @@ export function WalletPortfolio({
   onZapInClick,
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
-  // Custom hooks for data and state management
+  // Consolidated state management - all loading/error logic and transformations in one place
   const {
     totalValue,
-    categories: apiCategoriesData,
+    portfolioData,
+    pieChartData,
     isLoading,
-    error: apiError,
-  } = usePortfolioData();
-
-  const {
+    apiError,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-  } = usePortfolio(apiCategoriesData || []);
-
-  const {
-    isOpen: isWalletManagerOpen,
-    openModal: openWalletManager,
-    closeModal: closeWalletManager,
-  } = useWalletModal();
-
-  // Simple data preparation - no memoization needed for basic operations
-  const portfolioData = apiCategoriesData || [];
-
-  // Transform portfolio data to pie chart data using utility function (single source of truth)
-  // No memoization needed for lightweight transformation with stable dependencies
-  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
+    isWalletManagerOpen,
+    openWalletManager,
+    closeWalletManager,
+  } = useWalletPortfolioState();
 
   return (
     <div className="space-y-6">

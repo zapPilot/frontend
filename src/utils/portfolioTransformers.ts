@@ -65,6 +65,60 @@ export function toPieChartData(
 }
 
 /**
+ * Comprehensive portfolio data preparation utility
+ * Handles all common data transformation patterns in one place
+ */
+export function preparePortfolioData(
+  apiCategoriesData: AssetCategory[] | null,
+  totalValue: number | null
+) {
+  // Safe data preparation - handle null/undefined gracefully
+  const portfolioData = apiCategoriesData || [];
+
+  // Transform to pie chart format - handle null totalValue gracefully
+  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
+
+  return {
+    portfolioData,
+    pieChartData,
+  };
+}
+
+/**
+ * Portfolio state management utilities
+ * Consolidates common state reset patterns
+ */
+export const portfolioStateUtils = {
+  /**
+   * Reset portfolio state to initial/error state
+   * Common pattern for error handling and initialization
+   */
+  resetState: () => ({
+    totalValue: null as number | null,
+    categories: null as AssetCategory[] | null,
+  }),
+
+  /**
+   * Check if portfolio data is in a loading/empty state
+   */
+  isEmpty: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return !categories || categories.length === 0 || !totalValue;
+  },
+
+  /**
+   * Check if portfolio data is valid and ready for display
+   */
+  isValid: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return (
+      categories &&
+      categories.length > 0 &&
+      totalValue !== null &&
+      totalValue > 0
+    );
+  },
+} as const;
+
+/**
  * Transform complete API response to frontend format
  */
 export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
