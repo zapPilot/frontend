@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
@@ -54,36 +54,30 @@ export function WalletPortfolio({
   );
 
   // Memoize PortfolioOverview props to prevent unnecessary re-renders
-  const portfolioOverviewProps = useMemo(() => {
-    const baseProps = {
+  const portfolioOverviewProps: React.ComponentProps<typeof PortfolioOverview> =
+    useMemo(() => {
+      return {
+        portfolioData,
+        expandedCategory,
+        onCategoryToggle: toggleCategoryExpansion,
+        balanceHidden,
+        title: "Asset Distribution" as const,
+        isLoading,
+        apiError,
+        // Use conditional spread to only include props when they have values
+        ...(pieChartData && { pieChartData }),
+        ...(totalValue !== null && { totalValue }),
+      };
+    }, [
       portfolioData,
+      pieChartData,
+      totalValue,
       expandedCategory,
-      onCategoryToggle: toggleCategoryExpansion,
+      toggleCategoryExpansion,
       balanceHidden,
-      title: "Asset Distribution" as const,
       isLoading,
       apiError,
-    };
-
-    // Add optional props conditionally
-    if (pieChartData) {
-      (baseProps as any).pieChartData = pieChartData;
-    }
-    if (totalValue !== null) {
-      (baseProps as any).totalValue = totalValue;
-    }
-
-    return baseProps;
-  }, [
-    portfolioData,
-    pieChartData,
-    totalValue,
-    expandedCategory,
-    toggleCategoryExpansion,
-    balanceHidden,
-    isLoading,
-    apiError,
-  ]);
+    ]);
 
   // Memoize event handlers for consistency
   const handleAnalyticsClick = useCallback(() => {
