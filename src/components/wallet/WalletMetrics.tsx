@@ -1,7 +1,8 @@
 import { Loader, TrendingDown, TrendingUp } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
+import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatSmallCurrency } from "../../utils/formatters";
 
 interface WalletMetricsProps {
@@ -31,9 +32,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return formatCurrency(totalValue, balanceHidden);
     };
 
-    // Mock APR and monthly return data - in real app this would come from API
+    // Calculate portfolio metrics
     const portfolioAPR = BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
-    const estimatedMonthlyIncome = 1730;
+    const estimatedMonthlyIncome = useMemo(() => {
+      return totalValue ? calculateMonthlyIncome(totalValue, portfolioAPR) : 0;
+    }, [totalValue, portfolioAPR]);
 
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

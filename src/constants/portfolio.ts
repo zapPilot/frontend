@@ -78,6 +78,8 @@ export const PORTFOLIO_BUSINESS = {
   SLIPPAGE_RATE: 0.01,
   MIN_INVESTMENT: 10,
   MAX_INVESTMENT: 1000000,
+  // Monthly income calculation constants
+  MONTHLY_CALCULATION_FACTOR: 12, // APR to monthly conversion
 } as const;
 
 // Chart Configuration
@@ -114,6 +116,23 @@ export const getRiskLevelClass = (risk: keyof typeof RISK_LEVELS) =>
 export const getAssetCategoryColor = (
   category: keyof typeof PORTFOLIO_COLORS
 ) => PORTFOLIO_COLORS[category];
+
+/**
+ * Calculate estimated monthly income based on portfolio value and APR
+ * @param portfolioValue - Total portfolio value in USD
+ * @param apr - Annual percentage rate (default: 18.5%)
+ * @returns Estimated monthly income
+ */
+export const calculateMonthlyIncome = (
+  portfolioValue: number,
+  apr: number = PORTFOLIO_BUSINESS.DEFAULT_APR
+): number => {
+  if (portfolioValue <= 0 || apr <= 0) return 0;
+  return (
+    (portfolioValue * (apr / 100)) /
+    PORTFOLIO_BUSINESS.MONTHLY_CALCULATION_FACTOR
+  );
+};
 
 // Type exports for convenience
 export type AssetCategory = keyof typeof ASSET_CATEGORIES;

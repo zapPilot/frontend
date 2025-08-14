@@ -180,7 +180,7 @@ describe("WalletMetrics", () => {
     it("should display formatted monthly income", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$1,730")).toBeInTheDocument();
+      expect(screen.getByText("$156.25")).toBeInTheDocument();
     });
 
     it("should apply color classes based on portfolio performance", () => {
@@ -188,7 +188,7 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={5.2} />
       );
 
-      const incomeText = screen.getByText("$1,730");
+      const incomeText = screen.getByText("$156.25");
       expect(incomeText).toHaveClass(
         "text-xl",
         "font-semibold",
@@ -207,7 +207,7 @@ describe("WalletMetrics", () => {
     it("should handle zero totalValue", () => {
       render(<WalletMetrics {...defaultProps} totalValue={0} />);
 
-      expect(screen.getByText("$0")).toBeInTheDocument();
+      expect(screen.getAllByText("$0")).toHaveLength(2); // Balance and monthly income
     });
 
     it("should handle negative totalValue", () => {

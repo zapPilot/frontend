@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
@@ -53,14 +53,79 @@ export function WalletPortfolio({
     [apiCategoriesData]
   );
 
+  // Memoize PortfolioOverview props to prevent unnecessary re-renders
+  const portfolioOverviewProps = useMemo(() => {
+    const baseProps = {
+      portfolioData,
+      expandedCategory,
+      onCategoryToggle: toggleCategoryExpansion,
+      balanceHidden,
+      title: "Asset Distribution" as const,
+      isLoading,
+      apiError,
+    };
+
+    // Add optional props conditionally
+    if (pieChartData) {
+      (baseProps as any).pieChartData = pieChartData;
+    }
+    if (totalValue !== null) {
+      (baseProps as any).totalValue = totalValue;
+    }
+
+    return baseProps;
+  }, [
+    portfolioData,
+    pieChartData,
+    totalValue,
+    expandedCategory,
+    toggleCategoryExpansion,
+    balanceHidden,
+    isLoading,
+    apiError,
+  ]);
+
+  // Memoize event handlers for consistency
+  const handleAnalyticsClick = useCallback(() => {
+    if (onAnalyticsClick) {
+      onAnalyticsClick();
+    }
+  }, [onAnalyticsClick]);
+
+  const handleWalletManagerClick = useCallback(() => {
+    openWalletManager();
+  }, [openWalletManager]);
+
+  const handleToggleBalance = useCallback(() => {
+    toggleBalanceVisibility();
+  }, [toggleBalanceVisibility]);
+
+  const handleZapInClick = useCallback(() => {
+    if (onZapInClick) {
+      onZapInClick();
+    }
+  }, [onZapInClick]);
+
+  const handleZapOutClick = useCallback(() => {
+    if (onZapOutClick) {
+      onZapOutClick();
+    }
+  }, [onZapOutClick]);
+
+  const handleOptimizeClick = useCallback(() => {
+    if (onOptimizeClick) {
+      onOptimizeClick();
+    }
+  }, [onOptimizeClick]);
+
   return (
     <div className="space-y-6">
       {/* Wallet Header */}
       <GlassCard>
         <WalletHeader
-          onAnalyticsClick={onAnalyticsClick}
-          onWalletManagerClick={openWalletManager}
-          onToggleBalance={toggleBalanceVisibility}
+          onAnalyticsClick={onAnalyticsClick ? handleAnalyticsClick : undefined}
+          onWalletManagerClick={handleWalletManagerClick}
+          onToggleBalance={handleToggleBalance}
           balanceHidden={balanceHidden}
         />
 
@@ -73,24 +138,14 @@ export function WalletPortfolio({
         />
 
         <WalletActions
-          onZapInClick={onZapInClick}
-          onZapOutClick={onZapOutClick}
-          onOptimizeClick={onOptimizeClick}
+          onZapInClick={onZapInClick ? handleZapInClick : undefined}
+          onZapOutClick={onZapOutClick ? handleZapOutClick : undefined}
+          onOptimizeClick={onOptimizeClick ? handleOptimizeClick : undefined}
         />
       </GlassCard>
 
       {/* Portfolio Overview */}
-      <PortfolioOverview
-        portfolioData={portfolioData}
-        {...(pieChartData && { pieChartData })}
-        {...(totalValue !== null && { totalValue })}
-        expandedCategory={expandedCategory}
-        onCategoryToggle={toggleCategoryExpansion}
-        balanceHidden={balanceHidden}
-        title="Asset Distribution"
-        isLoading={isLoading}
-        apiError={apiError}
-      />
+      <PortfolioOverview {...portfolioOverviewProps} />
 
       {/* Wallet Manager Modal */}
       <WalletManager
