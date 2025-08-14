@@ -5,6 +5,7 @@ import {
   createTransactionBatches,
   getWalletBatchConfig,
 } from "../../../utils/walletBatching";
+import { portfolioStateUtils } from "@/utils/portfolioTransformers";
 
 interface BatchProgress {
   batchIndex: number;
@@ -78,7 +79,7 @@ export function useWalletTransactions({
   const isSending = state.status === "sending";
   const isSuccess = state.status === "success";
   const isError = state.status === "error";
-  const hasTransactions = state.transactions.length > 0;
+  const hasTransactions = portfolioStateUtils.hasItems(state.transactions);
 
   const setTransactions = useCallback((transactions: any[]) => {
     setState(prev => ({ ...prev, transactions }));
@@ -99,7 +100,7 @@ export function useWalletTransactions({
   }, []);
 
   const sendToWallet = useCallback(async () => {
-    if (state.transactions.length === 0) {
+    if (portfolioStateUtils.isEmptyArray(state.transactions)) {
       return;
     }
 

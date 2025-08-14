@@ -1,4 +1,5 @@
 import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
+import { portfolioStateUtils } from "@/utils/portfolioTransformers";
 
 export interface SVGPathPoint {
   x: number;
@@ -12,7 +13,7 @@ export const generateSVGPath = (
   height = 300,
   padding = 20
 ): string => {
-  if (data.length === 0) return "";
+  if (portfolioStateUtils.isEmptyArray(data)) return "";
 
   const values = data.map(getValue);
   const minValue = Math.min(...values);
@@ -89,7 +90,7 @@ export const generateAllocationChartData = (
   width = 800,
   height = 300
 ): AllocationChartPoint[] => {
-  if (data.length === 0) return [];
+  if (portfolioStateUtils.isEmptyArray(data)) return [];
 
   const assets = [
     { key: "btc", color: "#f59e0b" },

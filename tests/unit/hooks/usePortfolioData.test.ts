@@ -18,6 +18,16 @@ vi.mock("../../../src/services/quantEngine", () => ({
 // Mock the transformers
 vi.mock("../../../src/utils/portfolioTransformers", () => ({
   transformPortfolioSummary: vi.fn(),
+  portfolioStateUtils: {
+    hasItems: vi.fn(
+      (array: any[] | null | undefined) =>
+        Array.isArray(array) && array.length > 0
+    ),
+    isEmptyArray: vi.fn(
+      (array: any[] | null | undefined) =>
+        !Array.isArray(array) || array.length === 0
+    ),
+  },
 }));
 
 const mockGetPortfolioSummary = getPortfolioSummary as vi.MockedFunction<

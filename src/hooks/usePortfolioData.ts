@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
+import { portfolioStateUtils } from "@/utils/portfolioTransformers";
 import { getPortfolioSummary } from "../services/quantEngine";
 import type { AssetCategory, PieChartData } from "../types/portfolio";
 import { transformPortfolioSummary } from "../utils/portfolioTransformers";
@@ -25,7 +26,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
 
   // Calculate pie chart data from categories
   const pieChartData = useMemo(() => {
-    if (categories && categories.length > 0) {
+    if (portfolioStateUtils.hasItems(categories)) {
       return categories.map(cat => ({
         label: cat.name,
         value: cat.totalValue,
@@ -65,7 +66,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
           setTotalValue(Number.isFinite(apiTotalValue) ? apiTotalValue : 0);
 
           // Transform API response using utility function
-          if (summary.categories && summary.categories.length > 0) {
+          if (portfolioStateUtils.hasItems(summary.categories)) {
             const { categories: transformedCategories } =
               transformPortfolioSummary(summary);
             setCategories(transformedCategories);

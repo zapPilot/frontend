@@ -86,7 +86,7 @@ export function preparePortfolioData(
 
 /**
  * Portfolio state management utilities
- * Consolidates common state reset patterns
+ * Consolidates common state reset and validation patterns
  */
 export const portfolioStateUtils = {
   /**
@@ -115,6 +115,20 @@ export const portfolioStateUtils = {
       totalValue !== null &&
       totalValue > 0
     );
+  },
+
+  /**
+   * Safe array length check - prevents redundant .length === 0 patterns
+   */
+  hasItems: <T>(array: T[] | null | undefined): array is T[] => {
+    return Array.isArray(array) && array.length > 0;
+  },
+
+  /**
+   * Safe empty array check - consolidated null/undefined/empty checking
+   */
+  isEmptyArray: <T>(array: T[] | null | undefined): boolean => {
+    return !Array.isArray(array) || array.length === 0;
   },
 } as const;
 
