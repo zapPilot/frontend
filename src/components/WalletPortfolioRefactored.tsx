@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
@@ -47,16 +47,12 @@ export function WalletPortfolio({
     closeModal: closeWalletManager,
   } = useWalletModal();
 
-  // Memoize portfolio data for performance
-  const portfolioData = useMemo(
-    () => apiCategoriesData || [],
-    [apiCategoriesData]
-  );
+  // Simple data preparation - no memoization needed for basic operations
+  const portfolioData = apiCategoriesData || [];
 
   // Transform portfolio data to pie chart data using utility function (single source of truth)
-  const pieChartData = useMemo(() => {
-    return toPieChartData(portfolioData, totalValue || undefined);
-  }, [portfolioData, totalValue]);
+  // No memoization needed for lightweight transformation with stable dependencies
+  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useMemo } from "react";
+import React from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
@@ -47,83 +47,21 @@ export function WalletPortfolio({
     closeModal: closeWalletManager,
   } = useWalletModal();
 
-  // Memoize portfolio data for performance
-  const portfolioData = useMemo(
-    () => apiCategoriesData || [],
-    [apiCategoriesData]
-  );
+  // Simple data preparation - no memoization needed for basic operations
+  const portfolioData = apiCategoriesData || [];
 
   // Transform portfolio data to pie chart data using utility function (single source of truth)
-  const pieChartData = useMemo(() => {
-    return toPieChartData(portfolioData, totalValue || undefined);
-  }, [portfolioData, totalValue]);
-
-  // Memoize PortfolioOverview props to prevent unnecessary re-renders
-  const portfolioOverviewProps: React.ComponentProps<typeof PortfolioOverview> =
-    useMemo(() => {
-      return {
-        portfolioData, // Keep for AssetCategoriesDetail component
-        pieChartData, // Always provide pieChartData (no longer optional)
-        expandedCategory,
-        onCategoryToggle: toggleCategoryExpansion,
-        balanceHidden,
-        title: "Asset Distribution" as const,
-        isLoading,
-        apiError,
-        ...(totalValue !== null && { totalValue }),
-      };
-    }, [
-      portfolioData,
-      pieChartData,
-      totalValue,
-      expandedCategory,
-      toggleCategoryExpansion,
-      balanceHidden,
-      isLoading,
-      apiError,
-    ]);
-
-  // Memoize event handlers for consistency
-  const handleAnalyticsClick = useCallback(() => {
-    if (onAnalyticsClick) {
-      onAnalyticsClick();
-    }
-  }, [onAnalyticsClick]);
-
-  const handleWalletManagerClick = useCallback(() => {
-    openWalletManager();
-  }, [openWalletManager]);
-
-  const handleToggleBalance = useCallback(() => {
-    toggleBalanceVisibility();
-  }, [toggleBalanceVisibility]);
-
-  const handleZapInClick = useCallback(() => {
-    if (onZapInClick) {
-      onZapInClick();
-    }
-  }, [onZapInClick]);
-
-  const handleZapOutClick = useCallback(() => {
-    if (onZapOutClick) {
-      onZapOutClick();
-    }
-  }, [onZapOutClick]);
-
-  const handleOptimizeClick = useCallback(() => {
-    if (onOptimizeClick) {
-      onOptimizeClick();
-    }
-  }, [onOptimizeClick]);
+  // No memoization needed for lightweight transformation with stable dependencies
+  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
 
   return (
     <div className="space-y-6">
       {/* Wallet Header */}
       <GlassCard>
         <WalletHeader
-          onAnalyticsClick={onAnalyticsClick ? handleAnalyticsClick : undefined}
-          onWalletManagerClick={handleWalletManagerClick}
-          onToggleBalance={handleToggleBalance}
+          onAnalyticsClick={onAnalyticsClick}
+          onWalletManagerClick={openWalletManager}
+          onToggleBalance={toggleBalanceVisibility}
           balanceHidden={balanceHidden}
         />
 
@@ -136,14 +74,24 @@ export function WalletPortfolio({
         />
 
         <WalletActions
-          onZapInClick={onZapInClick ? handleZapInClick : undefined}
-          onZapOutClick={onZapOutClick ? handleZapOutClick : undefined}
-          onOptimizeClick={onOptimizeClick ? handleOptimizeClick : undefined}
+          onZapInClick={onZapInClick}
+          onZapOutClick={onZapOutClick}
+          onOptimizeClick={onOptimizeClick}
         />
       </GlassCard>
 
       {/* Portfolio Overview */}
-      <PortfolioOverview {...portfolioOverviewProps} />
+      <PortfolioOverview
+        portfolioData={portfolioData}
+        pieChartData={pieChartData}
+        expandedCategory={expandedCategory}
+        onCategoryToggle={toggleCategoryExpansion}
+        balanceHidden={balanceHidden}
+        title="Asset Distribution"
+        isLoading={isLoading}
+        apiError={apiError}
+        {...(totalValue !== null && { totalValue })}
+      />
 
       {/* Wallet Manager Modal */}
       <WalletManager
