@@ -2,10 +2,8 @@ import { useEffect, useState, useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
 import { getPortfolioSummary } from "../services/quantEngine";
 import type { AssetCategory, PieChartData } from "../types/portfolio";
-import {
-  transformPortfolioSummary,
-  type ApiPortfolioSummary,
-} from "../utils/portfolioTransformers";
+import { transformPortfolioSummary } from "../utils/portfolioTransformers";
+import { parsePortfolioSummary } from "../schemas/portfolioApi";
 
 export interface UsePortfolioDataReturn {
   totalValue: number | null;
@@ -56,21 +54,18 @@ export function usePortfolioData(): UsePortfolioDataReturn {
       setIsLoading(true);
 
       try {
-        const summary = (await getPortfolioSummary(
-          userInfo.userId,
-          true
-        )) as ApiPortfolioSummary;
+        // Fetch raw API response
+        const rawResponse = await getPortfolioSummary(userInfo.userId, true);
+
+        // Validate and parse API response with Zod
+        const summary = parsePortfolioSummary(rawResponse);
 
         if (!cancelled) {
           const apiTotalValue = summary.metrics.total_value_usd;
           setTotalValue(Number.isFinite(apiTotalValue) ? apiTotalValue : 0);
 
           // Transform API response using utility function
-          if (
-            summary.categories &&
-            Array.isArray(summary.categories) &&
-            summary.categories.length > 0
-          ) {
+          if (summary.categories && summary.categories.length > 0) {
             const { categories: transformedCategories } =
               transformPortfolioSummary(summary);
             setCategories(transformedCategories);
@@ -80,9 +75,20 @@ export function usePortfolioData(): UsePortfolioDataReturn {
         }
       } catch (e) {
         if (!cancelled) {
-          setError(
-            e instanceof Error ? e.message : "Failed to load portfolio summary"
-          );
+          // Enhanced error handling for validation failures
+          let errorMessage = "Failed to load portfolio summary";
+
+          if (e instanceof Error) {
+            // Check if it's a validation error
+            if (e.message.includes("Portfolio API validation failed")) {
+              errorMessage = "Invalid portfolio data received from server";
+              console.error("Portfolio API validation error:", e.message);
+            } else {
+              errorMessage = e.message;
+            }
+          }
+
+          setError(errorMessage);
           setTotalValue(null);
           setCategories(null);
         }

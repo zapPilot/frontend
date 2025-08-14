@@ -34,12 +34,12 @@ describe("usePortfolioData", () => {
   const mockApiResponse = {
     metrics: {
       total_value_usd: 50000,
+      wallets_included: 1,
     },
     categories: [
       {
         category: "btc",
-        total_usd_value: 50000,
-        positions: [{ symbol: "BTC", total_usd_value: 50000, percentage: 100 }],
+        positions: [{ symbol: "BTC", total_usd_value: 50000 }],
       },
     ],
   };
@@ -159,7 +159,7 @@ describe("usePortfolioData", () => {
 
     it("handles empty portfolio data correctly", async () => {
       const emptyApiResponse = {
-        metrics: { total_value_usd: 0 },
+        metrics: { total_value_usd: 0, wallets_included: 0 },
         categories: [],
       };
 
@@ -435,6 +435,7 @@ describe("usePortfolioData", () => {
       const largeValueResponse = {
         metrics: {
           total_value_usd: 999999999999,
+          wallets_included: 5,
         },
         categories: [
           {

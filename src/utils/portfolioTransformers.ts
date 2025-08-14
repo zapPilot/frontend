@@ -1,29 +1,10 @@
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
-
-/**
- * API response types for better type safety
- */
-export interface ApiPortfolioSummary {
-  metrics: {
-    total_value_usd: number;
-    wallets_included: number;
-  };
-  categories: ApiCategory[];
-}
-
-export interface ApiCategory {
-  category: string;
-  positions: ApiPosition[];
-}
-
-export interface ApiPosition {
-  symbol: string;
-  total_usd_value: number;
-  protocol_name?: string;
-  amount?: number;
-  protocol_type?: string;
-}
+import type {
+  ApiPortfolioSummary,
+  ApiCategory,
+  ApiPosition,
+} from "../schemas/portfolioApi";
 
 /**
  * Transform API positions to AssetDetail format
