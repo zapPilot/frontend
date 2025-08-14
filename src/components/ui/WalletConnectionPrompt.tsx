@@ -1,13 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Wallet, TrendingUp, BarChart3, Shield } from "lucide-react";
+import { BarChart3, Shield, TrendingUp, Wallet } from "lucide-react";
 import React from "react";
+import { SimpleConnectButton } from "../Web3/SimpleConnectButton";
 import { EmptyStateCard } from "./EmptyStateCard";
-import { GradientButton } from "./GradientButton";
 
 interface WalletConnectionPromptProps {
-  onConnectClick?: () => void;
   title?: string;
   description?: string;
   showFeatures?: boolean;
@@ -16,7 +15,6 @@ interface WalletConnectionPromptProps {
 
 export const WalletConnectionPrompt = React.memo<WalletConnectionPromptProps>(
   ({
-    onConnectClick,
     title = "Your DeFi Portfolio Awaits",
     description = "Connect your wallet to track assets, view yield opportunities, and optimize your portfolio across multiple protocols.",
     showFeatures = true,
@@ -47,13 +45,10 @@ export const WalletConnectionPrompt = React.memo<WalletConnectionPromptProps>(
           title={title}
           description={description}
           action={
-            <GradientButton
-              onClick={onConnectClick}
-              className="px-8 py-3"
+            <SimpleConnectButton
+              className="w-full max-w-xs"
               size="lg"
-            >
-              Connect Wallet
-            </GradientButton>
+            />
           }
         >
           {showFeatures && (

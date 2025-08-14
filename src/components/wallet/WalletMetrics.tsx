@@ -1,8 +1,8 @@
 import { Loader, TrendingUp } from "lucide-react";
 import React, { useMemo } from "react";
+import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
-import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatSmallCurrency } from "../../utils/formatters";
 
 interface WalletMetricsProps {

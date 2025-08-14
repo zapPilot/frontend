@@ -30,7 +30,9 @@ export const portfolioMetricsSchema = z.object({
   wallets_included: z
     .number()
     .int()
-    .min(0, "Wallets included must be a non-negative integer"),
+    .min(0, "Wallets included must be a non-negative integer")
+    .optional()
+    .default(1),
 });
 
 /**
