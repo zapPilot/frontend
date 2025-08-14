@@ -1,4 +1,4 @@
-import { Loader, TrendingDown, TrendingUp } from "lucide-react";
+import { Loader, TrendingUp } from "lucide-react";
 import React, { useMemo } from "react";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
@@ -23,11 +23,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
   }) => {
     // Helper function to render balance display
     const renderBalanceDisplay = () => {
-      if (isLoading || totalValue === null) {
+      if (isLoading) {
         return <Loader className="w-8 h-8 animate-spin text-gray-500" />;
       }
       if (error) {
         return <div className="text-sm text-red-500">{error}</div>;
+      }
+      if (totalValue === null) {
+        return <div className="text-gray-400 text-lg">Connect Wallet</div>;
       }
       return formatCurrency(totalValue, balanceHidden);
     };
@@ -48,15 +51,13 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">Portfolio APR</p>
+          <p className="text-sm text-gray-400 mb-1">
+            Portfolio APR {totalValue === null ? "(Potential)" : ""}
+          </p>
           <div
-            className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioChangePercentage)}`}
+            className={`flex items-center space-x-2 ${totalValue === null ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
           >
-            {portfolioChangePercentage >= 0 ? (
-              <TrendingUp className="w-4 h-4" />
-            ) : (
-              <TrendingDown className="w-4 h-4" />
-            )}
+            <TrendingUp className="w-4 h-4" />
             <span className="text-xl font-semibold">
               {portfolioAPR.toFixed(2)}%
             </span>
@@ -66,9 +67,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
           <p
-            className={`text-xl font-semibold ${getChangeColorClasses(portfolioChangePercentage)}`}
+            className={`text-xl font-semibold ${totalValue === null ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
           >
-            {formatSmallCurrency(estimatedMonthlyIncome)}
+            {totalValue === null
+              ? "Connect to calculate"
+              : formatSmallCurrency(estimatedMonthlyIncome)}
           </p>
         </div>
       </div>

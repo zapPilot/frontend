@@ -16,7 +16,7 @@ function transformApiPosition(position: ApiPosition): AssetDetail {
     protocol: position.protocol_name || "Unknown",
     amount: position.amount || 0,
     value: position.total_usd_value || 0,
-    apr: 0, // Placeholder - backend needs to provide APR
+    apr: 0, // TODO: Backend needs to provide real APR data - currently shows "APR coming soon" in UI
     type: position.protocol_type || "Unknown",
   };
 }

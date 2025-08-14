@@ -73,6 +73,8 @@ export const PORTFOLIO_CONFIG = {
 
 // Business Constants
 export const PORTFOLIO_BUSINESS = {
+  // Mock business constant: 18.5% is our target portfolio APR across all strategies
+  // This is intentionally a business constant, not derived from API data
   DEFAULT_APR: 18.5,
   AMOUNT_PERCENTAGES: [0.25, 0.5, 0.75, 1.0] as const,
   SLIPPAGE_RATE: 0.01,

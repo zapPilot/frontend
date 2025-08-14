@@ -29,6 +29,8 @@ export function WalletPortfolio({
     pieChartData,
     isLoading,
     apiError,
+    retry,
+    isRetrying,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
@@ -75,6 +77,8 @@ export function WalletPortfolio({
         title="Asset Distribution"
         isLoading={isLoading}
         apiError={apiError}
+        onRetry={retry}
+        isRetrying={isRetrying}
         {...(totalValue !== null && { totalValue })}
       />
 

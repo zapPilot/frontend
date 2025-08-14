@@ -14,6 +14,8 @@ export function useWalletPortfolioState() {
     categories: apiCategoriesData,
     isLoading,
     error: apiError,
+    retry,
+    isRetrying,
   } = usePortfolioData();
 
   // Portfolio UI state management
@@ -45,6 +47,8 @@ export function useWalletPortfolioState() {
     pieChartData,
     isLoading,
     apiError,
+    retry,
+    isRetrying,
 
     // Portfolio UI state
     balanceHidden,

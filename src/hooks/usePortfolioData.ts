@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useUser } from "../contexts/UserContext";
 import { portfolioStateUtils } from "@/utils/portfolioTransformers";
 import { getPortfolioSummary } from "../services/quantEngine";
@@ -12,6 +12,8 @@ export interface UsePortfolioDataReturn {
   pieChartData: PieChartData[] | null;
   isLoading: boolean;
   error: string | null;
+  retry: () => void;
+  isRetrying: boolean;
 }
 
 /**
@@ -23,6 +25,8 @@ export function usePortfolioData(): UsePortfolioDataReturn {
   const [categories, setCategories] = useState<AssetCategory[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [retryTrigger, setRetryTrigger] = useState(0);
 
   // Calculate pie chart data from categories
   const pieChartData = useMemo(() => {
@@ -37,6 +41,15 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     return null;
   }, [categories]);
 
+  // Retry function for failed requests
+  const retry = useCallback(() => {
+    if (!isLoading && !isRetrying) {
+      setIsRetrying(true);
+      setError(null);
+      setRetryTrigger(prev => prev + 1);
+    }
+  }, [isLoading, isRetrying]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -45,6 +58,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
       if (!userInfo?.userId) {
         if (!isUserLoading) {
           setIsLoading(false);
+          setIsRetrying(false);
         }
         setTotalValue(null);
         setCategories(null);
@@ -52,7 +66,9 @@ export function usePortfolioData(): UsePortfolioDataReturn {
       }
 
       setError(null);
-      setIsLoading(true);
+      if (!isRetrying) {
+        setIsLoading(true);
+      }
 
       try {
         // Fetch raw API response
@@ -96,6 +112,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
       } finally {
         if (!cancelled) {
           setIsLoading(false);
+          setIsRetrying(false);
         }
       }
     };
@@ -105,7 +122,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     return () => {
       cancelled = true;
     };
-  }, [userInfo?.userId, isUserLoading]);
+  }, [userInfo?.userId, isUserLoading, retryTrigger, isRetrying]);
 
   return {
     totalValue,
@@ -113,5 +130,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     pieChartData,
     isLoading,
     error,
+    retry,
+    isRetrying,
   };
 }
