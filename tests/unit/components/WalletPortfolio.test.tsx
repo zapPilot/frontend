@@ -180,7 +180,7 @@ describe("WalletPortfolio", () => {
       expect(mockUsePortfolioData).toHaveBeenCalled();
     });
 
-    it("should return undefined pieChartData when apiTotalValue is null", async () => {
+    it("should calculate pieChartData using toPieChartData when apiTotalValue is null", async () => {
       mockUsePortfolioData.mockReturnValue({
         totalValue: null,
         categories: null,
@@ -192,13 +192,14 @@ describe("WalletPortfolio", () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
     });
 
-    it("should return undefined pieChartData when apiTotalValue is zero or negative", async () => {
+    it("should calculate pieChartData using toPieChartData when apiTotalValue is zero or negative", async () => {
       mockUsePortfolioData.mockReturnValue({
         totalValue: 0,
         categories: null,
@@ -210,8 +211,9 @@ describe("WalletPortfolio", () => {
       const { rerender } = render(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
 
@@ -227,8 +229,9 @@ describe("WalletPortfolio", () => {
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getAllByTestId("pie-chart-data")[0]).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
     });
@@ -437,7 +440,10 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
+      // toPieChartData([]) returns empty array, so component always has data (even if empty)
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
+        "has-data"
+      );
     });
 
     it("should handle non-Error rejections", async () => {
@@ -494,7 +500,10 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
+      // toPieChartData([]) returns empty array, so component always has data (even if empty)
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
+        "has-data"
+      );
     });
 
     it("should fetch data when userInfo becomes available", async () => {

@@ -9,7 +9,7 @@ import { PieChart } from "./PieChart";
 
 interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
-  pieChartData?: PieChartData[];
+  pieChartData: PieChartData[]; // Now required - no more fallback logic needed
   totalValue?: number; // Optional authoritative total value
   expandedCategory: string | null;
   onCategoryToggle: (categoryId: string) => void;
@@ -25,7 +25,7 @@ interface PortfolioOverviewProps {
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
     portfolioData,
-    pieChartData: providedPieChartData,
+    pieChartData, // Now required - no more optional fallback
     totalValue,
     expandedCategory,
     onCategoryToggle,
@@ -37,15 +37,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     apiError = null,
     renderBalanceDisplay,
   }) => {
-    // Use provided pieChartData or fall back to portfolioData
-    const pieChartData: PieChartData[] =
-      providedPieChartData ||
-      (portfolioData || []).map(cat => ({
-        label: cat.name,
-        value: cat.totalValue,
-        percentage: cat.percentage,
-        color: cat.color,
-      }));
+    // pieChartData is now always provided - no fallback logic needed
 
     return (
       <motion.div

@@ -4,6 +4,7 @@ import React, { useCallback, useMemo } from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
+import { toPieChartData } from "../utils/portfolioTransformers";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard } from "./ui";
@@ -28,7 +29,6 @@ export function WalletPortfolio({
   const {
     totalValue,
     categories: apiCategoriesData,
-    pieChartData,
     isLoading,
     error: apiError,
   } = usePortfolioData();
@@ -53,19 +53,23 @@ export function WalletPortfolio({
     [apiCategoriesData]
   );
 
+  // Transform portfolio data to pie chart data using utility function (single source of truth)
+  const pieChartData = useMemo(() => {
+    return toPieChartData(portfolioData, totalValue || undefined);
+  }, [portfolioData, totalValue]);
+
   // Memoize PortfolioOverview props to prevent unnecessary re-renders
   const portfolioOverviewProps: React.ComponentProps<typeof PortfolioOverview> =
     useMemo(() => {
       return {
-        portfolioData,
+        portfolioData, // Keep for AssetCategoriesDetail component
+        pieChartData, // Always provide pieChartData (no longer optional)
         expandedCategory,
         onCategoryToggle: toggleCategoryExpansion,
         balanceHidden,
         title: "Asset Distribution" as const,
         isLoading,
         apiError,
-        // Use conditional spread to only include props when they have values
-        ...(pieChartData && { pieChartData }),
         ...(totalValue !== null && { totalValue }),
       };
     }, [

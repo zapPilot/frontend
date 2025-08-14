@@ -4,6 +4,7 @@ import React, { useMemo } from "react";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
 import { useWalletModal } from "../hooks/useWalletModal";
+import { toPieChartData } from "../utils/portfolioTransformers";
 import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
@@ -28,7 +29,6 @@ export function WalletPortfolio({
   const {
     totalValue,
     categories: apiCategoriesData,
-    pieChartData,
     isLoading,
     error: apiError,
   } = usePortfolioData();
@@ -52,6 +52,11 @@ export function WalletPortfolio({
     () => apiCategoriesData || [],
     [apiCategoriesData]
   );
+
+  // Transform portfolio data to pie chart data using utility function (single source of truth)
+  const pieChartData = useMemo(() => {
+    return toPieChartData(portfolioData, totalValue || undefined);
+  }, [portfolioData, totalValue]);
 
   return (
     <div className="space-y-6">
@@ -82,7 +87,7 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={portfolioData}
-        {...(pieChartData && { pieChartData })}
+        pieChartData={pieChartData} // Always provide pieChartData (now required)
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}

@@ -215,25 +215,6 @@ describe("PortfolioOverview", () => {
       );
     });
 
-    it("should fall back to portfolioData when pieChartData is undefined", () => {
-      render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
-
-      expect(
-        screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("3");
-
-      // Should use portfolioData values
-      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $4000 (40%)"
-      );
-      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
-        "ETH: $3500 (35%)"
-      );
-      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
-        "BTC: $2500 (25%)"
-      );
-    });
-
     it("should not perform any internal calculations when pieChartData is provided", () => {
       // Provide portfolioData with different values to ensure they're not used
       const differentPortfolioData: AssetCategory[] = [
@@ -508,21 +489,6 @@ describe("PortfolioOverview", () => {
       // Verify that the component uses the data as-is
       expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $6000 (40%)"
-      );
-    });
-
-    it("should correctly transform portfolioData to pieChartData format when falling back", () => {
-      render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
-
-      // Should transform portfolioData.totalValue to pieChartData.value
-      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $4000 (40%)"
-      );
-      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
-        "ETH: $3500 (35%)"
-      );
-      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
-        "BTC: $2500 (25%)"
       );
     });
   });

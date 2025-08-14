@@ -123,7 +123,7 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                     <div className="p-4 space-y-3">
                       {category.assets.map((asset, assetIndex) => (
                         <motion.div
-                          key={`${asset.symbol}-${asset.protocol}`}
+                          key={`${asset.symbol}-${asset.protocol}-${assetIndex}`}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: assetIndex * 0.1 }}
