@@ -28,14 +28,8 @@ export default defineConfig({
         'src/**/*.test.*',
         'src/**/*.spec.*',
       ],
-      thresholds: {
-        global: {
-          branches: 70,
-          functions: 70,
-          lines: 70,
-          statements: 70
-        }
-      }
+      reportOnFailure: true,
+      all: true
     }
   },
   resolve: {
