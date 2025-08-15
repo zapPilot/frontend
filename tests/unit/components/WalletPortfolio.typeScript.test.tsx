@@ -1,10 +1,33 @@
+import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { WalletPortfolio, WalletPortfolioProps } from "../../../src/components/WalletPortfolio";
+import {
+  WalletPortfolio,
+  WalletPortfolioProps,
+} from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 
 // Mock the hook
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+
+// Mock ThirdWeb hooks
+vi.mock("thirdweb/react", () => ({
+  useActiveAccount: vi.fn(() => null),
+  ConnectButton: vi.fn(({ children, ...props }) => (
+    <button data-testid="connect-button" {...props}>
+      Connect Wallet
+    </button>
+  )),
+}));
+
+// Mock SimpleConnectButton
+vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
+  SimpleConnectButton: vi.fn(({ className, size }) => (
+    <button data-testid="simple-connect-button" className={className}>
+      Connect Wallet
+    </button>
+  )),
+}));
 
 // Mock child components with type-safe props
 vi.mock("../../../src/components/ui/GlassCard", () => ({
@@ -14,69 +37,88 @@ vi.mock("../../../src/components/ui/GlassCard", () => ({
 }));
 
 vi.mock("../../../src/components/wallet/WalletHeader", () => ({
-  WalletHeader: vi.fn(({ 
-    onAnalyticsClick, 
-    onWalletManagerClick, 
-    onToggleBalance, 
-    balanceHidden 
-  }: {
-    onAnalyticsClick?: () => void;
-    onWalletManagerClick: () => void;
-    onToggleBalance: () => void;
-    balanceHidden: boolean;
-  }) => (
-    <div data-testid="wallet-header">
-      {onAnalyticsClick && (
-        <button data-testid="analytics-button" onClick={onAnalyticsClick}>
-          Analytics
+  WalletHeader: vi.fn(
+    ({
+      onAnalyticsClick,
+      onWalletManagerClick,
+      onToggleBalance,
+      balanceHidden,
+    }: {
+      onAnalyticsClick?: () => void;
+      onWalletManagerClick: () => void;
+      onToggleBalance: () => void;
+      balanceHidden: boolean;
+    }) => (
+      <div data-testid="wallet-header">
+        {onAnalyticsClick && (
+          <button data-testid="analytics-button" onClick={onAnalyticsClick}>
+            Analytics
+          </button>
+        )}
+        <button
+          data-testid="wallet-manager-button"
+          onClick={onWalletManagerClick}
+        >
+          Manager
         </button>
-      )}
-      <button data-testid="wallet-manager-button" onClick={onWalletManagerClick}>
-        Manager
-      </button>
-      <button data-testid="toggle-balance" onClick={onToggleBalance}>
-        {balanceHidden ? "Show" : "Hide"}
-      </button>
-    </div>
-  )),
+        <button data-testid="toggle-balance" onClick={onToggleBalance}>
+          {balanceHidden ? "Show" : "Hide"}
+        </button>
+      </div>
+    )
+  ),
 }));
 
 vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(({ 
-    totalValue, 
-    balanceHidden, 
-    isLoading, 
-    error, 
-    portfolioChangePercentage 
-  }: {
-    totalValue: number | null;
-    balanceHidden: boolean;
-    isLoading: boolean;
-    error: string | null;
-    portfolioChangePercentage: number;
-  }) => (
-    <div data-testid="wallet-metrics">
-      <div data-testid="total-value">{totalValue}</div>
-      <div data-testid="balance-hidden">{balanceHidden.toString()}</div>
-      <div data-testid="is-loading">{isLoading.toString()}</div>
-      <div data-testid="error">{error || "null"}</div>
-      <div data-testid="change-percentage">{portfolioChangePercentage}</div>
-    </div>
-  )),
+  WalletMetrics: vi.fn(
+    ({
+      totalValue,
+      balanceHidden,
+      isLoading,
+      error,
+      portfolioChangePercentage,
+    }: {
+      totalValue: number | null;
+      balanceHidden: boolean;
+      isLoading: boolean;
+      error: string | null;
+      portfolioChangePercentage: number;
+    }) => (
+      <div data-testid="wallet-metrics">
+        <div data-testid="total-value">{totalValue}</div>
+        <div data-testid="balance-hidden">{balanceHidden.toString()}</div>
+        <div data-testid="is-loading">{isLoading.toString()}</div>
+        <div data-testid="error">{error || "null"}</div>
+        <div data-testid="change-percentage">{portfolioChangePercentage}</div>
+      </div>
+    )
+  ),
 }));
 
 vi.mock("../../../src/components/wallet/WalletActions", () => ({
-  WalletActions: vi.fn(({ onZapInClick, onZapOutClick, onOptimizeClick }: {
-    onZapInClick?: () => void;
-    onZapOutClick?: () => void;
-    onOptimizeClick?: () => void;
-  }) => (
-    <div data-testid="wallet-actions">
-      <button data-testid="zap-in" onClick={onZapInClick}>Zap In</button>
-      <button data-testid="zap-out" onClick={onZapOutClick}>Zap Out</button>
-      <button data-testid="optimize" onClick={onOptimizeClick}>Optimize</button>
-    </div>
-  )),
+  WalletActions: vi.fn(
+    ({
+      onZapInClick,
+      onZapOutClick,
+      onOptimizeClick,
+    }: {
+      onZapInClick?: () => void;
+      onZapOutClick?: () => void;
+      onOptimizeClick?: () => void;
+    }) => (
+      <div data-testid="wallet-actions">
+        <button data-testid="zap-in" onClick={onZapInClick}>
+          Zap In
+        </button>
+        <button data-testid="zap-out" onClick={onZapOutClick}>
+          Zap Out
+        </button>
+        <button data-testid="optimize" onClick={onOptimizeClick}>
+          Optimize
+        </button>
+      </div>
+    )
+  ),
 }));
 
 vi.mock("../../../src/components/PortfolioOverview", () => ({
@@ -87,19 +129,24 @@ vi.mock("../../../src/components/PortfolioOverview", () => ({
       <div data-testid="portfolio-error">{props.apiError || "null"}</div>
       <div data-testid="portfolio-retrying">{props.isRetrying?.toString()}</div>
       {props.onRetry && (
-        <button data-testid="retry-button" onClick={props.onRetry}>Retry</button>
+        <button data-testid="retry-button" onClick={props.onRetry}>
+          Retry
+        </button>
       )}
     </div>
   )),
 }));
 
 vi.mock("../../../src/components/WalletManager", () => ({
-  WalletManager: vi.fn(({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => 
-    isOpen ? (
-      <div data-testid="wallet-manager">
-        <button data-testid="close-modal" onClick={onClose}>Close</button>
-      </div>
-    ) : null
+  WalletManager: vi.fn(
+    ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
+      isOpen ? (
+        <div data-testid="wallet-manager">
+          <button data-testid="close-modal" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      ) : null
   ),
 }));
 
@@ -339,11 +386,11 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
 
     it("should pass optional callbacks correctly", () => {
       const onAnalyticsClick = vi.fn();
-      
+
       render(<WalletPortfolio onAnalyticsClick={onAnalyticsClick} />);
 
       expect(screen.getByTestId("analytics-button")).toBeInTheDocument();
-      
+
       fireEvent.click(screen.getByTestId("analytics-button"));
       expect(onAnalyticsClick).toHaveBeenCalledTimes(1);
     });
@@ -358,7 +405,9 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
     it("should pass portfolio data with correct structure", () => {
       render(<WalletPortfolio />);
 
-      expect(screen.getByTestId("portfolio-title")).toHaveTextContent("Asset Distribution");
+      expect(screen.getByTestId("portfolio-title")).toHaveTextContent(
+        "Asset Distribution"
+      );
     });
   });
 
@@ -412,7 +461,9 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
 
       render(<WalletPortfolio />);
 
-      expect(screen.getByTestId("error")).toHaveTextContent("Network timeout error");
+      expect(screen.getByTestId("error")).toHaveTextContent(
+        "Network timeout error"
+      );
       expect(screen.getByTestId("is-loading")).toHaveTextContent("false");
     });
 
@@ -428,7 +479,9 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
       render(<WalletPortfolio />);
 
       expect(screen.getByTestId("is-loading")).toHaveTextContent("true");
-      expect(screen.getByTestId("portfolio-retrying")).toHaveTextContent("false");
+      expect(screen.getByTestId("portfolio-retrying")).toHaveTextContent(
+        "false"
+      );
     });
   });
 
@@ -437,7 +490,7 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
       // Test that the component can be used with refs if needed
       const TestWithRef = () => {
         const ref = React.useRef<HTMLDivElement>(null);
-        
+
         return (
           <div ref={ref}>
             <WalletPortfolio />
@@ -489,7 +542,7 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
       };
 
       const { rerender } = render(<WalletPortfolio />);
-      
+
       mockUseWalletPortfolioState.mockReturnValue(loadingState);
       rerender(<WalletPortfolio />);
 
@@ -537,12 +590,14 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
   describe("Conditional Types", () => {
     it("should handle conditional rendering based on prop types", () => {
       // With analytics callback
-      render(<WalletPortfolio onAnalyticsClick={() => {}} />);
+      const { unmount } = render(
+        <WalletPortfolio onAnalyticsClick={() => {}} />
+      );
       expect(screen.getByTestId("analytics-button")).toBeInTheDocument();
+      unmount();
 
       // Without analytics callback
-      const { rerender } = render(<WalletPortfolio />);
-      rerender(<WalletPortfolio />);
+      render(<WalletPortfolio />);
       expect(screen.queryByTestId("analytics-button")).not.toBeInTheDocument();
     });
 
@@ -565,11 +620,15 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
 
   describe("Type Guards and Runtime Checks", () => {
     it("should handle type guards for optional props", () => {
-      const ConditionalWrapper = ({ hasAnalytics }: { hasAnalytics: boolean }) => {
-        const props: WalletPortfolioProps = hasAnalytics 
+      const ConditionalWrapper = ({
+        hasAnalytics,
+      }: {
+        hasAnalytics: boolean;
+      }) => {
+        const props: WalletPortfolioProps = hasAnalytics
           ? { onAnalyticsClick: () => {} }
           : {};
-        
+
         return <WalletPortfolio {...props} />;
       };
 

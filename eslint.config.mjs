@@ -41,7 +41,15 @@ const eslintConfig = [
     rules: {
       // Disable React hooks rules for test files since they use Playwright's 'use' parameter
       "react-hooks/rules-of-hooks": "off",
-      "react-hooks/exhaustive-deps": "off"
+      "react-hooks/exhaustive-deps": "off",
+      // Relax unused vars rule for test files (mock functions often have unused parameters)
+      "@typescript-eslint/no-unused-vars": ["warn", { 
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "ignoreRestSiblings": true 
+      }],
+      // Allow console statements in tests (useful for debugging)
+      "no-console": "off"
     }
   },
   {

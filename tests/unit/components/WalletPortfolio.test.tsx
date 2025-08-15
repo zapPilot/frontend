@@ -82,6 +82,25 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock ThirdWeb hooks
+vi.mock("thirdweb/react", () => ({
+  useActiveAccount: vi.fn(() => null),
+  ConnectButton: vi.fn(({ children, ...props }) => (
+    <button data-testid="connect-button" {...props}>
+      Connect Wallet
+    </button>
+  )),
+}));
+
+// Mock SimpleConnectButton
+vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
+  SimpleConnectButton: vi.fn(({ className, size }) => (
+    <button data-testid="simple-connect-button" className={className}>
+      Connect Wallet
+    </button>
+  )),
+}));
+
 // Mock data is imported from actual mock file
 
 const mockUserInfo = { userId: "test-user-123" };

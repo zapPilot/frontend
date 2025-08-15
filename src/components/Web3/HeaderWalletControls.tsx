@@ -18,12 +18,6 @@ const HeaderWalletControlsComponent = ({
   size = "normal",
   isMobile = false,
 }: HeaderWalletControlsProps) => {
-  const getVariant = () => {
-    if (size === "compact") return "ghost";
-    if (isMobile) return "ghost";
-    return "primary";
-  };
-
   const getButtonSize = () => {
     if (size === "compact") return "sm";
     if (isMobile) return "sm";
@@ -59,7 +53,6 @@ const HeaderWalletControlsComponent = ({
       {/* Connect Button */}
       <div data-testid="wallet-connect-button">
         <SimpleConnectButton
-          variant={getVariant()}
           size={getButtonSize()}
           className="transition-all duration-200"
         />

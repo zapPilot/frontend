@@ -4,6 +4,7 @@ import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { formatSmallCurrency } from "../../utils/formatters";
+import { SimpleConnectButton } from "../Web3/SimpleConnectButton";
 
 interface WalletMetricsProps {
   totalValue: number | null;
@@ -30,7 +31,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         return <div className="text-sm text-red-500">{error}</div>;
       }
       if (totalValue === null) {
-        return <div className="text-gray-400 text-lg">Connect Wallet</div>;
+        return (
+          <div className="flex items-center">
+            <SimpleConnectButton className="text-sm" size="sm" />
+          </div>
+        );
       }
       return formatCurrency(totalValue, balanceHidden);
     };

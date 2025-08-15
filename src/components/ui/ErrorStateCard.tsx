@@ -34,6 +34,7 @@ export const ErrorStateCard = React.memo<ErrorStateCardProps>(
             <GradientButton
               onClick={onRetry}
               disabled={isRetrying}
+              gradient="from-red-500 to-red-600"
               className="px-6 py-2 min-w-[120px]"
             >
               {isRetrying ? (

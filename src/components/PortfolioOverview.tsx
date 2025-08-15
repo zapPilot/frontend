@@ -119,7 +119,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={isLoading}
                   error={apiError}
-                  onRetry={onRetry}
+                  {...(onRetry && { onRetry })}
                   isRetrying={isRetrying}
                 />
               </div>
@@ -165,7 +165,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={isLoading}
                 error={apiError}
-                onRetry={onRetry}
+                {...(onRetry && { onRetry })}
                 isRetrying={isRetrying}
               />
             </div>

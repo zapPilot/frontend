@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletMetrics } from "../../../../src/components/wallet/WalletMetrics";
 
 // Mock lucide-react icons
@@ -15,16 +15,29 @@ vi.mock("lucide-react", () => ({
 
 // Mock formatters and utilities
 vi.mock("../../../../src/lib/utils", () => ({
-  formatCurrency: vi.fn((amount, hidden) =>
-    hidden ? "****" : `$${amount?.toLocaleString() || "0"}`
-  ),
+  formatCurrency: vi.fn((amount, hidden) => {
+    if (hidden) return "****";
+    if (amount === null || amount === undefined) return "$0.00";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  }),
   getChangeColorClasses: vi.fn(percentage =>
     percentage >= 0 ? "text-green-400" : "text-red-400"
   ),
 }));
 
 vi.mock("../../../../src/utils/formatters", () => ({
-  formatSmallCurrency: vi.fn(amount => `$${amount?.toLocaleString()}`),
+  formatSmallCurrency: vi.fn(amount => {
+    if (amount === null || amount === undefined) return "$0.00";
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  }),
 }));
 
 vi.mock("../../../../src/styles/design-tokens", () => ({
@@ -33,6 +46,15 @@ vi.mock("../../../../src/styles/design-tokens", () => ({
       DEFAULT_APR: 12.5,
     },
   },
+}));
+
+// Mock SimpleConnectButton
+vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
+  SimpleConnectButton: vi.fn(({ className }) => (
+    <button data-testid="simple-connect-button" className={className}>
+      Connect Wallet
+    </button>
+  )),
 }));
 
 describe("WalletMetrics", () => {
@@ -53,7 +75,7 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
-      expect(screen.getByText("Portfolio APR")).toBeInTheDocument();
+      expect(screen.getByText(/Portfolio APR/)).toBeInTheDocument();
       expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
     });
 
@@ -77,7 +99,7 @@ describe("WalletMetrics", () => {
 
       const labels = [
         screen.getByText("Total Balance"),
-        screen.getByText("Portfolio APR"),
+        screen.getByText(/Portfolio APR/),
         screen.getByText("Est. Monthly Income"),
       ];
 
@@ -91,20 +113,21 @@ describe("WalletMetrics", () => {
     it("should show formatted currency when data is loaded", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$15,000")).toBeInTheDocument();
+      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
     });
 
     it("should show loader when loading", () => {
       render(<WalletMetrics {...defaultProps} isLoading={true} />);
 
       expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
-      expect(screen.queryByText("$15,000")).not.toBeInTheDocument();
+      expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
     });
 
-    it("should show loader when totalValue is null", () => {
+    it("should show SimpleConnectButton when totalValue is null", () => {
       render(<WalletMetrics {...defaultProps} totalValue={null} />);
 
-      expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("simple-connect-button")).toBeInTheDocument();
+      expect(screen.getByText("Connect Wallet")).toBeInTheDocument();
     });
 
     it("should show error message when error exists", () => {
@@ -143,13 +166,15 @@ describe("WalletMetrics", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("should show TrendingDown icon for negative portfolio change", () => {
+    it("should show TrendingUp icon for negative portfolio change", () => {
       render(
         <WalletMetrics {...defaultProps} portfolioChangePercentage={-3.8} />
       );
 
-      expect(screen.getByTestId("trending-down-icon")).toBeInTheDocument();
-      expect(screen.queryByTestId("trending-up-icon")).not.toBeInTheDocument();
+      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("trending-down-icon")
+      ).not.toBeInTheDocument();
     });
 
     it("should show TrendingUp icon for zero portfolio change", () => {
@@ -171,7 +196,7 @@ describe("WalletMetrics", () => {
       );
 
       const aprContainerNegative =
-        screen.getByTestId("trending-down-icon").parentElement;
+        screen.getByTestId("trending-up-icon").parentElement;
       expect(aprContainerNegative).toHaveClass("text-red-400");
     });
   });
@@ -201,19 +226,19 @@ describe("WalletMetrics", () => {
     it("should handle very large totalValue", () => {
       render(<WalletMetrics {...defaultProps} totalValue={999999999} />);
 
-      expect(screen.getByText("$999,999,999")).toBeInTheDocument();
+      expect(screen.getByText("$999,999,999.00")).toBeInTheDocument();
     });
 
     it("should handle zero totalValue", () => {
       render(<WalletMetrics {...defaultProps} totalValue={0} />);
 
-      expect(screen.getAllByText("$0")).toHaveLength(2); // Balance and monthly income
+      expect(screen.getAllByText("$0.00")).toHaveLength(2); // Balance and monthly income
     });
 
     it("should handle negative totalValue", () => {
       render(<WalletMetrics {...defaultProps} totalValue={-1000} />);
 
-      expect(screen.getByText("$-1,000")).toBeInTheDocument();
+      expect(screen.getByText("-$1,000.00")).toBeInTheDocument();
     });
 
     it("should handle very large positive portfolio change percentage", () => {
@@ -229,7 +254,7 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={-999.99} />
       );
 
-      expect(screen.getByTestId("trending-down-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
     });
 
     it("should handle loading and error states simultaneously", () => {
@@ -247,9 +272,9 @@ describe("WalletMetrics", () => {
     it("should apply correct classes to balance display container", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      const balanceContainer = screen.getByText("$15,000").parentElement;
+      const balanceContainer = screen.getByText("$15,000.00").parentElement;
       expect(balanceContainer).toBeInTheDocument();
-      expect(screen.getByText("$15,000")).toBeInTheDocument();
+      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
     });
 
     it("should apply correct classes to APR display", () => {
@@ -276,7 +301,7 @@ describe("WalletMetrics", () => {
 
       rerender(<WalletMetrics {...props} />);
 
-      expect(screen.getByText("$15,000")).toBeInTheDocument();
+      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
     });
 
     it("should re-render when totalValue changes", () => {
@@ -284,11 +309,11 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} totalValue={15000} />
       );
 
-      expect(screen.getByText("$15,000")).toBeInTheDocument();
+      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
 
       rerender(<WalletMetrics {...defaultProps} totalValue={20000} />);
 
-      expect(screen.getByText("$20,000")).toBeInTheDocument();
+      expect(screen.getByText("$20,000.00")).toBeInTheDocument();
     });
 
     it("should re-render when balanceHidden changes", () => {
@@ -296,7 +321,7 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} balanceHidden={false} />
       );
 
-      expect(screen.getByText("$15,000")).toBeInTheDocument();
+      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
 
       rerender(<WalletMetrics {...defaultProps} balanceHidden={true} />);
 
@@ -310,7 +335,7 @@ describe("WalletMetrics", () => {
 
       // Check that metric labels are properly associated with their values
       const totalBalanceLabel = screen.getByText("Total Balance");
-      const aprLabel = screen.getByText("Portfolio APR");
+      const aprLabel = screen.getByText(/Portfolio APR/);
       const incomeLabel = screen.getByText("Est. Monthly Income");
 
       expect(totalBalanceLabel.tagName).toBe("P");

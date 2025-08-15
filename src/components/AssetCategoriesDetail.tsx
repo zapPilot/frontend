@@ -109,7 +109,7 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
             message={
               error || "Unable to fetch portfolio data. Please try again."
             }
-            onRetry={onRetry}
+            {...(onRetry && { onRetry })}
             isRetrying={isRetrying}
             className="!bg-transparent !border-0 !p-0"
           />
