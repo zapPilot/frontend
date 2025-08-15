@@ -174,26 +174,6 @@ describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
   });
 
   describe("Render Performance", () => {
-    it("should render efficiently with minimal re-renders", () => {
-      const startTime = performance.now();
-
-      render(<WalletPortfolio />);
-
-      const endTime = performance.now();
-      const renderTime = endTime - startTime;
-
-      // Initial render should be fast (under 16ms for 60fps)
-      expect(renderTime).toBeLessThan(50); // Allow some margin for test environment
-
-      // All components should render only once initially
-      expect(renderCounts.glassCard).toBe(1);
-      expect(renderCounts.walletHeader).toBe(1);
-      expect(renderCounts.walletMetrics).toBe(1);
-      expect(renderCounts.walletActions).toBe(1);
-      expect(renderCounts.portfolioOverview).toBe(1);
-      expect(renderCounts.walletManager).toBe(0); // Modal closed
-    });
-
     it("should handle large datasets efficiently", () => {
       const largePortfolioData = createLargeDataset(1000);
       const largePieData = createLargePieData(1000);

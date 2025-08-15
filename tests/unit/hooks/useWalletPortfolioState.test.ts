@@ -29,7 +29,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       assets: [],
     },
     {
-      id: "2", 
+      id: "2",
       name: "ETH",
       totalValue: 6000,
       percentage: 30,
@@ -153,8 +153,12 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       expect(result.current.isLoading).toBe(true);
       expect(result.current.totalValue).toBe(null);
-      expect(result.current.portfolioData).toBe(mockPortfolioDataReturn.portfolioData);
-      expect(result.current.pieChartData).toBe(mockPortfolioDataReturn.pieChartData);
+      expect(result.current.portfolioData).toBe(
+        mockPortfolioDataReturn.portfolioData
+      );
+      expect(result.current.pieChartData).toBe(
+        mockPortfolioDataReturn.pieChartData
+      );
     });
 
     it("should handle retry loading state", () => {
@@ -193,10 +197,18 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       rerender();
 
       // Functions should remain stable
-      expect(result.current.toggleBalanceVisibility).toBe(initialState.toggleBalanceVisibility);
-      expect(result.current.toggleCategoryExpansion).toBe(initialState.toggleCategoryExpansion);
-      expect(result.current.openWalletManager).toBe(initialState.openWalletManager);
-      expect(result.current.closeWalletManager).toBe(initialState.closeWalletManager);
+      expect(result.current.toggleBalanceVisibility).toBe(
+        initialState.toggleBalanceVisibility
+      );
+      expect(result.current.toggleCategoryExpansion).toBe(
+        initialState.toggleCategoryExpansion
+      );
+      expect(result.current.openWalletManager).toBe(
+        initialState.openWalletManager
+      );
+      expect(result.current.closeWalletManager).toBe(
+        initialState.closeWalletManager
+      );
     });
   });
 
@@ -469,7 +481,9 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
   describe("Performance and Memory Management", () => {
     it("should handle rapid hook updates without memory leaks", async () => {
-      const { result, rerender, unmount } = renderHook(() => useWalletPortfolioState());
+      const { result, rerender, unmount } = renderHook(() =>
+        useWalletPortfolioState()
+      );
 
       // Simulate rapid updates
       for (let i = 0; i < 100; i++) {
@@ -504,10 +518,18 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       // Trigger re-render with same mock returns
       rerender();
 
-      expect(result.current.toggleBalanceVisibility).toBe(initialFunctions.toggleBalanceVisibility);
-      expect(result.current.toggleCategoryExpansion).toBe(initialFunctions.toggleCategoryExpansion);
-      expect(result.current.openWalletManager).toBe(initialFunctions.openWalletManager);
-      expect(result.current.closeWalletManager).toBe(initialFunctions.closeWalletManager);
+      expect(result.current.toggleBalanceVisibility).toBe(
+        initialFunctions.toggleBalanceVisibility
+      );
+      expect(result.current.toggleCategoryExpansion).toBe(
+        initialFunctions.toggleCategoryExpansion
+      );
+      expect(result.current.openWalletManager).toBe(
+        initialFunctions.openWalletManager
+      );
+      expect(result.current.closeWalletManager).toBe(
+        initialFunctions.closeWalletManager
+      );
     });
 
     it("should handle concurrent state updates", async () => {
@@ -522,7 +544,9 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       // All functions should have been called
       expect(mockUsePortfolio().toggleBalanceVisibility).toHaveBeenCalled();
-      expect(mockUsePortfolio().toggleCategoryExpansion).toHaveBeenCalledWith("btc");
+      expect(mockUsePortfolio().toggleCategoryExpansion).toHaveBeenCalledWith(
+        "btc"
+      );
       expect(mockUseWalletModal().openModal).toHaveBeenCalled();
     });
   });
@@ -650,7 +674,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
     it("should not cause infinite re-renders", () => {
       let renderCount = 0;
-      
+
       const TestHook = () => {
         renderCount++;
         return useWalletPortfolioState();
@@ -689,7 +713,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
           retry: vi.fn(),
           isRetrying: false,
         });
-        
+
         rerender();
       });
 
