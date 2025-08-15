@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { BarChart3, Shield, TrendingUp, Wallet } from "lucide-react";
 import React from "react";
-import { SimpleConnectButton } from "../Web3/SimpleConnectButton";
 import { EmptyStateCard } from "./EmptyStateCard";
 
 interface WalletConnectionPromptProps {
@@ -44,12 +43,6 @@ export const WalletConnectionPrompt = React.memo<WalletConnectionPromptProps>(
           icon={<Wallet className="w-8 h-8 text-purple-400" />}
           title={title}
           description={description}
-          action={
-            <SimpleConnectButton
-              className="w-full max-w-xs"
-              size="lg"
-            />
-          }
         >
           {showFeatures && (
             <motion.div

@@ -55,6 +55,7 @@ vi.mock("../../../src/components/ui", () => ({
 }));
 
 vi.mock("lucide-react", () => ({
+  AlertCircle: vi.fn(() => <span>AlertCircle</span>),
   ArrowDownLeft: vi.fn(() => <span>ArrowDownLeft</span>),
   ArrowUpRight: vi.fn(() => <span>ArrowUpRight</span>),
   BarChart3: vi.fn(() => <span>BarChart3</span>),

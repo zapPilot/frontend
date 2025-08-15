@@ -13,7 +13,7 @@ interface EmptyStateCardProps {
 }
 
 export const EmptyStateCard = React.memo<EmptyStateCardProps>(
-  ({ icon, title, description, action, className = "", children }) => {
+  ({ icon, title, description, className = "", children }) => {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -38,9 +38,6 @@ export const EmptyStateCard = React.memo<EmptyStateCardProps>(
             {description}
           </p>
         </div>
-
-        {/* Action */}
-        {action && <div className="mt-6 sm:mt-8">{action}</div>}
 
         {/* Additional content */}
         {children && <div className="mt-4 sm:mt-6">{children}</div>}

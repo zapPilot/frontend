@@ -58,6 +58,8 @@ export function WalletPortfolio({
           isLoading={isLoading}
           error={apiError}
           portfolioChangePercentage={portfolioMetrics.totalChangePercentage}
+          onRetry={retry}
+          isRetrying={isRetrying}
         />
 
         <WalletActions

@@ -11,6 +11,9 @@ vi.mock("lucide-react", () => ({
   TrendingDown: vi.fn(() => (
     <span data-testid="trending-down-icon">TrendingDown</span>
   )),
+  AlertCircle: vi.fn(() => (
+    <span data-testid="alert-circle-icon">AlertCircle</span>
+  )),
 }));
 
 // Mock formatters and utilities
@@ -123,22 +126,45 @@ describe("WalletMetrics", () => {
       expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
     });
 
-    it("should show SimpleConnectButton when totalValue is null", () => {
-      render(<WalletMetrics {...defaultProps} totalValue={null} />);
-
-      expect(screen.getByTestId("simple-connect-button")).toBeInTheDocument();
-      expect(screen.getByText("Connect Wallet")).toBeInTheDocument();
-    });
-
     it("should show error message when error exists", () => {
       const errorMessage = "Failed to load data";
       render(<WalletMetrics {...defaultProps} error={errorMessage} />);
 
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
-      expect(screen.getByText(errorMessage)).toHaveClass(
+      expect(screen.getByTestId("alert-circle-icon")).toBeInTheDocument();
+      expect(screen.getByText(errorMessage).parentElement).toHaveClass(
         "text-sm",
-        "text-red-500"
+        "text-red-400"
       );
+    });
+
+    it("should show retry button when error exists and onRetry provided", () => {
+      const onRetry = vi.fn();
+      const errorMessage = "Failed to load data";
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          error={errorMessage}
+          onRetry={onRetry}
+        />
+      );
+
+      const retryButton = screen.getByText("Retry");
+      expect(retryButton).toBeInTheDocument();
+      expect(retryButton).toHaveClass("text-xs", "text-purple-400");
+
+      retryButton.click();
+      expect(onRetry).toHaveBeenCalledTimes(1);
+    });
+
+    it("should show retrying state when isRetrying is true", () => {
+      const onRetry = vi.fn();
+      render(
+        <WalletMetrics {...defaultProps} isRetrying={true} onRetry={onRetry} />
+      );
+
+      expect(screen.getByText("Retrying...")).toBeInTheDocument();
+      expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
     });
 
     it("should show hidden balance placeholder when balanceHidden is true", () => {
@@ -354,7 +380,8 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} error="Connection error" />);
 
       const errorMessage = screen.getByText("Connection error");
-      expect(errorMessage).toHaveClass("text-red-500");
+      expect(errorMessage.parentElement).toHaveClass("text-red-400");
+      expect(screen.getByTestId("alert-circle-icon")).toBeInTheDocument();
     });
   });
 });
