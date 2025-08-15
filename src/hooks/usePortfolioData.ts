@@ -56,12 +56,15 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     const fetchPortfolioData = async () => {
       // Reset state when no user
       if (!userInfo?.userId) {
-        if (!isUserLoading) {
-          // Only stop loading if wallet is actually disconnected
-          // If wallet is connected but userInfo is null, keep loading (API issue)
-          if (!isConnected) {
-            setIsLoading(false);
-            setIsRetrying(false);
+        // Only stop loading if wallet is actually disconnected
+        // If wallet is connected but userInfo is null, keep loading (API issue or initial fetch)
+        if (!isConnected) {
+          setIsLoading(false);
+          setIsRetrying(false);
+        } else {
+          // Wallet is connected but no userInfo - ensure we're in loading state
+          if (!isUserLoading && !isLoading) {
+            setIsLoading(true);
           }
         }
         setTotalValue(null);
