@@ -8,6 +8,7 @@ import { GlassCard } from "./ui";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
+import { formatCurrency } from "../lib/utils";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: (() => void) | undefined;
@@ -40,6 +41,11 @@ export function WalletPortfolio({
     openWalletManager,
     closeWalletManager,
   } = useWalletPortfolioState();
+
+  // Custom balance display renderer for PieChart
+  const renderBalanceDisplay = React.useCallback(() => {
+    return formatCurrency(totalValue || 0, balanceHidden);
+  }, [totalValue, balanceHidden]);
 
   return (
     <div className="space-y-6">
@@ -81,6 +87,7 @@ export function WalletPortfolio({
         apiError={apiError}
         onRetry={retry}
         isRetrying={isRetrying}
+        renderBalanceDisplay={renderBalanceDisplay}
         {...(totalValue !== null && { totalValue })}
       />
 
