@@ -58,6 +58,8 @@ const PieChartComponent = ({
           height={size}
           className="transform -rotate-90"
           viewBox={`0 0 ${size} ${size}`}
+          role="presentation"
+          aria-hidden="true"
         >
           {chartData.map((item, index) => (
             <motion.circle

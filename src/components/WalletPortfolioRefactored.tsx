@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { usePortfolio } from "../hooks/usePortfolio";
-import { usePortfolioData } from "../hooks/usePortfolioData";
-import { useWalletModal } from "../hooks/useWalletModal";
+import React from "react";
+import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
 import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
@@ -24,34 +22,22 @@ export function WalletPortfolio({
   onZapInClick,
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
-  // Custom hooks for data and state management
+  // Consolidated state management - all loading/error logic and transformations in one place
   const {
     totalValue,
-    categories: apiCategoriesData,
+    portfolioData,
     pieChartData,
     isLoading,
-    error: apiError,
-  } = usePortfolioData();
-
-  const {
+    apiError,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-  } = usePortfolio(apiCategoriesData || []);
-
-  const {
-    isOpen: isWalletManagerOpen,
-    openModal: openWalletManager,
-    closeModal: closeWalletManager,
-  } = useWalletModal();
-
-  // Memoize portfolio data for performance
-  const portfolioData = useMemo(
-    () => apiCategoriesData || [],
-    [apiCategoriesData]
-  );
+    isWalletManagerOpen,
+    openWalletManager,
+    closeWalletManager,
+  } = useWalletPortfolioState();
 
   return (
     <div className="space-y-6">
@@ -82,7 +68,7 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={portfolioData}
-        {...(pieChartData && { pieChartData })}
+        pieChartData={pieChartData} // Always provide pieChartData (now required)
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}

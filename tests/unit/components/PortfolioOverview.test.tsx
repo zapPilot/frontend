@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PortfolioOverview } from "../../../src/components/PortfolioOverview";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 
@@ -45,6 +45,35 @@ vi.mock("../../../src/components/AssetCategoriesDetail", () => ({
           </div>
         ))}
     </div>
+  )),
+}));
+
+// Mock WalletConnectionPrompt component
+vi.mock("../../../src/components/ui", () => ({
+  WalletConnectionPrompt: vi.fn(({ title, description }) => (
+    <div data-testid="wallet-connection-prompt">
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+  )),
+}));
+
+// Mock ThirdWeb hooks
+vi.mock("thirdweb/react", () => ({
+  useActiveAccount: vi.fn(() => null),
+  ConnectButton: vi.fn(({ children, ...props }) => (
+    <button data-testid="connect-button" {...props}>
+      Connect Wallet
+    </button>
+  )),
+}));
+
+// Mock SimpleConnectButton
+vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
+  SimpleConnectButton: vi.fn(({ className, size }) => (
+    <button data-testid="simple-connect-button" className={className}>
+      Connect Wallet
+    </button>
   )),
 }));
 
@@ -99,6 +128,7 @@ describe("PortfolioOverview", () => {
 
   const defaultProps = {
     portfolioData: mockPortfolioData,
+    pieChartData: mockPieChartData,
     expandedCategory: null,
     onCategoryToggle: vi.fn(),
   };
@@ -212,25 +242,6 @@ describe("PortfolioOverview", () => {
       );
       expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
         "BTC: $3750 (25%)"
-      );
-    });
-
-    it("should fall back to portfolioData when pieChartData is undefined", () => {
-      render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
-
-      expect(
-        screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("3");
-
-      // Should use portfolioData values
-      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $4000 (40%)"
-      );
-      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
-        "ETH: $3500 (35%)"
-      );
-      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
-        "BTC: $2500 (25%)"
       );
     });
 
@@ -399,22 +410,25 @@ describe("PortfolioOverview", () => {
       render(
         <PortfolioOverview
           portfolioData={[]}
+          pieChartData={[]}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
         />
       );
 
+      // Should show empty state when data is empty
       expect(
-        screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("0");
+        screen.getByTestId("wallet-connection-prompt")
+      ).toBeInTheDocument();
     });
 
     it("should handle empty pieChartData", () => {
       render(<PortfolioOverview {...defaultProps} pieChartData={[]} />);
 
+      // Should show empty state when pieChartData is empty
       expect(
-        screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("0");
+        screen.getByTestId("wallet-connection-prompt")
+      ).toBeInTheDocument();
     });
 
     it("should handle undefined portfolioData gracefully", () => {
@@ -422,12 +436,14 @@ describe("PortfolioOverview", () => {
       render(
         <PortfolioOverview
           portfolioData={undefined as unknown as AssetCategory[]}
+          pieChartData={mockPieChartData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
         />
       );
 
       // Should not crash and should use empty array fallback or show appropriate state
+      expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
     });
 
     it("should prioritize pieChartData over portfolioData when both are empty", () => {
@@ -440,9 +456,10 @@ describe("PortfolioOverview", () => {
         />
       );
 
+      // Should show empty state when both are empty
       expect(
-        screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("0");
+        screen.getByTestId("wallet-connection-prompt")
+      ).toBeInTheDocument();
     });
   });
 
@@ -508,21 +525,6 @@ describe("PortfolioOverview", () => {
       // Verify that the component uses the data as-is
       expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
         "Stablecoins: $6000 (40%)"
-      );
-    });
-
-    it("should correctly transform portfolioData to pieChartData format when falling back", () => {
-      render(<PortfolioOverview {...defaultProps} pieChartData={undefined} />);
-
-      // Should transform portfolioData.totalValue to pieChartData.value
-      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $4000 (40%)"
-      );
-      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
-        "ETH: $3500 (35%)"
-      );
-      expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
-        "BTC: $2500 (25%)"
       );
     });
   });

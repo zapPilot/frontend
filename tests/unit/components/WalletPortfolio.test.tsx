@@ -55,6 +55,7 @@ vi.mock("../../../src/components/ui", () => ({
 }));
 
 vi.mock("lucide-react", () => ({
+  AlertCircle: vi.fn(() => <span>AlertCircle</span>),
   ArrowDownLeft: vi.fn(() => <span>ArrowDownLeft</span>),
   ArrowUpRight: vi.fn(() => <span>ArrowUpRight</span>),
   BarChart3: vi.fn(() => <span>BarChart3</span>),
@@ -80,6 +81,25 @@ vi.mock("framer-motion", () => ({
       }) => <div {...props}>{children}</div>
     ),
   },
+}));
+
+// Mock ThirdWeb hooks
+vi.mock("thirdweb/react", () => ({
+  useActiveAccount: vi.fn(() => null),
+  ConnectButton: vi.fn(({ children, ...props }) => (
+    <button data-testid="connect-button" {...props}>
+      Connect Wallet
+    </button>
+  )),
+}));
+
+// Mock SimpleConnectButton
+vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
+  SimpleConnectButton: vi.fn(({ className, size }) => (
+    <button data-testid="simple-connect-button" className={className}>
+      Connect Wallet
+    </button>
+  )),
 }));
 
 // Mock data is imported from actual mock file
@@ -180,7 +200,7 @@ describe("WalletPortfolio", () => {
       expect(mockUsePortfolioData).toHaveBeenCalled();
     });
 
-    it("should return undefined pieChartData when apiTotalValue is null", async () => {
+    it("should calculate pieChartData using toPieChartData when apiTotalValue is null", async () => {
       mockUsePortfolioData.mockReturnValue({
         totalValue: null,
         categories: null,
@@ -192,13 +212,14 @@ describe("WalletPortfolio", () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
     });
 
-    it("should return undefined pieChartData when apiTotalValue is zero or negative", async () => {
+    it("should calculate pieChartData using toPieChartData when apiTotalValue is zero or negative", async () => {
       mockUsePortfolioData.mockReturnValue({
         totalValue: 0,
         categories: null,
@@ -210,8 +231,9 @@ describe("WalletPortfolio", () => {
       const { rerender } = render(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
 
@@ -227,8 +249,9 @@ describe("WalletPortfolio", () => {
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
+        // toPieChartData([]) returns empty array, so component always has data (even if empty)
         expect(screen.getAllByTestId("pie-chart-data")[0]).toHaveTextContent(
-          "no-data"
+          "has-data"
         );
       });
     });
@@ -437,7 +460,10 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
+      // toPieChartData([]) returns empty array, so component always has data (even if empty)
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
+        "has-data"
+      );
     });
 
     it("should handle non-Error rejections", async () => {
@@ -494,7 +520,10 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
+      // toPieChartData([]) returns empty array, so component always has data (even if empty)
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
+        "has-data"
+      );
     });
 
     it("should fetch data when userInfo becomes available", async () => {

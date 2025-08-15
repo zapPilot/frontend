@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
+import { portfolioStateUtils } from "@/utils/portfolioTransformers";
 
 // Types from the original dustZap implementation
 export interface DustToken {
@@ -175,7 +176,11 @@ export function useDustZap(
 
   // Convert dust tokens to ETH
   const convertDustToETH = useCallback(async (): Promise<void> => {
-    if (!account?.address || !chain || tokens.length === 0) {
+    if (
+      !account?.address ||
+      !chain ||
+      portfolioStateUtils.isEmptyArray(tokens)
+    ) {
       throw new Error("No wallet connected or no tokens to convert");
     }
 

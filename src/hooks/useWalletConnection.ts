@@ -1,10 +1,7 @@
 "use client";
-
-import { useCallback } from "react";
-
 // Import new types and config
-import { WalletConnectionHooks, Chain } from "@/types/wallet";
 import { chainUtils } from "@/config/wallet";
+import { Chain, WalletConnectionHooks } from "@/types/wallet";
 
 // Import new wallet context
 import { useWalletContext } from "@/providers/WalletContext";
@@ -53,10 +50,10 @@ export function useWalletConnection(): WalletConnectionHooks {
     clearError,
   } = walletContext;
 
-  // Get supported chains from context
-  const getSupportedChains = useCallback((): Chain[] => {
+  // Get supported chains from context - no memoization needed for simple data access
+  const getSupportedChains = (): Chain[] => {
     return walletContext.supportedChains;
-  }, [walletContext.supportedChains]);
+  };
 
   return {
     // Account management
@@ -93,8 +90,8 @@ export function useWalletConnection(): WalletConnectionHooks {
 
 // Import unified chain configuration
 import {
-  CHAIN_IDS,
   CHAIN_NAMES as CANONICAL_CHAIN_NAMES,
+  CHAIN_IDS,
 } from "@/config/chains";
 
 // Legacy chain ID mappings for backward compatibility

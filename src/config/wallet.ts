@@ -5,17 +5,17 @@
  * supported chains, and environment-specific settings.
  */
 
-import { WalletConfig, ProviderType } from "@/types/wallet";
+import { ProviderType, WalletConfig } from "@/types/wallet";
 
 // Import from unified chain configuration
 import {
   SUPPORTED_CHAINS as CANONICAL_CHAINS,
   CHAIN_IDS as CANONICAL_CHAIN_IDS,
+  formatChainForDisplay as formatCanonicalChainForDisplay,
   getChainById as getCanonicalChainById,
-  isChainSupported as isCanonicalChainSupported,
   getChainName as getCanonicalChainName,
   getChainSymbol as getCanonicalChainSymbol,
-  formatChainForDisplay as formatCanonicalChainForDisplay,
+  isChainSupported as isCanonicalChainSupported,
 } from "@/config/chains";
 
 /**

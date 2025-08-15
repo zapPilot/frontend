@@ -94,7 +94,7 @@ describe("useWalletModal", () => {
   });
 
   describe("Function Stability", () => {
-    it("maintains stable function references across renders", () => {
+    it("creates new function references across renders (performance optimized)", () => {
       const { result, rerender } = renderHook(() => useWalletModal());
 
       const initialOpenModal = result.current.openModal;
@@ -102,11 +102,12 @@ describe("useWalletModal", () => {
 
       rerender();
 
-      expect(result.current.openModal).toBe(initialOpenModal);
-      expect(result.current.closeModal).toBe(initialCloseModal);
+      // Functions are recreated each render for better performance (no useCallback overhead)
+      expect(result.current.openModal).not.toBe(initialOpenModal);
+      expect(result.current.closeModal).not.toBe(initialCloseModal);
     });
 
-    it("maintains function stability after state changes", () => {
+    it("creates new function references after state changes (performance optimized)", () => {
       const { result } = renderHook(() => useWalletModal());
 
       const initialOpenModal = result.current.openModal;
@@ -116,8 +117,9 @@ describe("useWalletModal", () => {
         result.current.openModal();
       });
 
-      expect(result.current.openModal).toBe(initialOpenModal);
-      expect(result.current.closeModal).toBe(initialCloseModal);
+      // Functions are recreated each render for better performance (no useCallback overhead)
+      expect(result.current.openModal).not.toBe(initialOpenModal);
+      expect(result.current.closeModal).not.toBe(initialCloseModal);
     });
   });
 

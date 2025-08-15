@@ -58,29 +58,14 @@ const DetailsButton = memo(function DetailsButton({
 
 interface SimpleConnectButtonProps {
   className?: string;
-  variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
 }
 
 export function SimpleConnectButton({
   className = "",
-  variant = "primary",
   size = "md",
 }: SimpleConnectButtonProps) {
   const activeAccount = useActiveAccount();
-
-  const getButtonTheme = () => {
-    switch (variant) {
-      case "primary":
-        return "light";
-      case "secondary":
-        return "dark";
-      case "ghost":
-        return "light";
-      default:
-        return "light";
-    }
-  };
 
   const getSizeConfig = () => {
     switch (size) {
@@ -102,7 +87,7 @@ export function SimpleConnectButton({
         client={THIRDWEB_CLIENT}
         autoConnect={true}
         wallets={WALLETS}
-        theme={getButtonTheme()}
+        theme="light"
         chains={SUPPORTED_CHAINS}
         connectModal={{
           size: getSizeConfig() as "compact" | "wide",

@@ -29,18 +29,6 @@ jobs:
       - name: Check Prettier formatting
         run: npm run format:check
 
-      - name: Comment on PR if formatting issues found
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ **Prettier formatting issues found!**\n\nPlease run `npm run format` to fix formatting issues.'
-            })
-
   eslint:
     name: ESLint Analysis
     runs-on: ubuntu-latest
@@ -94,18 +82,6 @@ jobs:
 
       - name: TypeScript type checking
         run: npm run type-check
-
-      - name: Comment on PR if type errors found
-        if: failure() && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: '❌ **TypeScript type errors found!**\n\nPlease run `npm run type-check` locally to see the errors and fix them.'
-            })
 
   code-quality-summary:
     name: Code Quality Summary

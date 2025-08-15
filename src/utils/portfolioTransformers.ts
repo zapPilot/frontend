@@ -1,29 +1,10 @@
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
-
-/**
- * API response types for better type safety
- */
-export interface ApiPortfolioSummary {
-  metrics: {
-    total_value_usd: number;
-    wallets_included: number;
-  };
-  categories: ApiCategory[];
-}
-
-export interface ApiCategory {
-  category: string;
-  positions: ApiPosition[];
-}
-
-export interface ApiPosition {
-  symbol: string;
-  total_usd_value: number;
-  protocol_name?: string;
-  amount?: number;
-  protocol_type?: string;
-}
+import type {
+  ApiPortfolioSummary,
+  ApiCategory,
+  ApiPosition,
+} from "../schemas/portfolioApi";
 
 /**
  * Transform API positions to AssetDetail format
@@ -35,7 +16,7 @@ function transformApiPosition(position: ApiPosition): AssetDetail {
     protocol: position.protocol_name || "Unknown",
     amount: position.amount || 0,
     value: position.total_usd_value || 0,
-    apr: 0, // Placeholder - backend needs to provide APR
+    apr: 0, // TODO: Backend needs to provide real APR data - currently shows "APR coming soon" in UI
     type: position.protocol_type || "Unknown",
   };
 }
@@ -82,6 +63,74 @@ export function toPieChartData(
     color: cat.color,
   }));
 }
+
+/**
+ * Comprehensive portfolio data preparation utility
+ * Handles all common data transformation patterns in one place
+ */
+export function preparePortfolioData(
+  apiCategoriesData: AssetCategory[] | null,
+  totalValue: number | null
+) {
+  // Safe data preparation - handle null/undefined gracefully
+  const portfolioData = apiCategoriesData || [];
+
+  // Transform to pie chart format - handle null totalValue gracefully
+  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
+
+  return {
+    portfolioData,
+    pieChartData,
+  };
+}
+
+/**
+ * Portfolio state management utilities
+ * Consolidates common state reset and validation patterns
+ */
+export const portfolioStateUtils = {
+  /**
+   * Reset portfolio state to initial/error state
+   * Common pattern for error handling and initialization
+   */
+  resetState: () => ({
+    totalValue: null as number | null,
+    categories: null as AssetCategory[] | null,
+  }),
+
+  /**
+   * Check if portfolio data is in a loading/empty state
+   */
+  isEmpty: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return !categories || categories.length === 0 || !totalValue;
+  },
+
+  /**
+   * Check if portfolio data is valid and ready for display
+   */
+  isValid: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return (
+      categories &&
+      categories.length > 0 &&
+      totalValue !== null &&
+      totalValue > 0
+    );
+  },
+
+  /**
+   * Safe array length check - prevents redundant .length === 0 patterns
+   */
+  hasItems: <T>(array: T[] | null | undefined): array is T[] => {
+    return Array.isArray(array) && array.length > 0;
+  },
+
+  /**
+   * Safe empty array check - consolidated null/undefined/empty checking
+   */
+  isEmptyArray: <T>(array: T[] | null | undefined): boolean => {
+    return !Array.isArray(array) || array.length === 0;
+  },
+} as const;
 
 /**
  * Transform complete API response to frontend format

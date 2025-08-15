@@ -1,15 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
-import { usePortfolio } from "../hooks/usePortfolio";
-import { usePortfolioData } from "../hooks/usePortfolioData";
-import { useWalletModal } from "../hooks/useWalletModal";
+import React from "react";
+import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard } from "./ui";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
+import { formatCurrency } from "../lib/utils";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: (() => void) | undefined;
@@ -24,34 +23,29 @@ export function WalletPortfolio({
   onZapInClick,
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
-  // Custom hooks for data and state management
+  // Consolidated state management - all loading/error logic and transformations in one place
   const {
     totalValue,
-    categories: apiCategoriesData,
+    portfolioData,
     pieChartData,
     isLoading,
-    error: apiError,
-  } = usePortfolioData();
-
-  const {
+    apiError,
+    retry,
+    isRetrying,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
     toggleBalanceVisibility,
     toggleCategoryExpansion,
-  } = usePortfolio(apiCategoriesData || []);
+    isWalletManagerOpen,
+    openWalletManager,
+    closeWalletManager,
+  } = useWalletPortfolioState();
 
-  const {
-    isOpen: isWalletManagerOpen,
-    openModal: openWalletManager,
-    closeModal: closeWalletManager,
-  } = useWalletModal();
-
-  // Memoize portfolio data for performance
-  const portfolioData = useMemo(
-    () => apiCategoriesData || [],
-    [apiCategoriesData]
-  );
+  // Custom balance display renderer for PieChart
+  const renderBalanceDisplay = React.useCallback(() => {
+    return formatCurrency(totalValue || 0, balanceHidden);
+  }, [totalValue, balanceHidden]);
 
   return (
     <div className="space-y-6">
@@ -70,6 +64,8 @@ export function WalletPortfolio({
           isLoading={isLoading}
           error={apiError}
           portfolioChangePercentage={portfolioMetrics.totalChangePercentage}
+          onRetry={retry}
+          isRetrying={isRetrying}
         />
 
         <WalletActions
@@ -82,14 +78,17 @@ export function WalletPortfolio({
       {/* Portfolio Overview */}
       <PortfolioOverview
         portfolioData={portfolioData}
-        {...(pieChartData && { pieChartData })}
-        {...(totalValue !== null && { totalValue })}
+        pieChartData={pieChartData}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
         title="Asset Distribution"
         isLoading={isLoading}
         apiError={apiError}
+        onRetry={retry}
+        isRetrying={isRetrying}
+        renderBalanceDisplay={renderBalanceDisplay}
+        {...(totalValue !== null && { totalValue })}
       />
 
       {/* Wallet Manager Modal */}
