@@ -16,7 +16,7 @@ export const getUserByWallet = async walletAddress => {
 
   if (!response.ok) {
     if (response.status === 404) {
-      throw new Error("User not found");
+      throw new Error("USER_NOT_FOUND");
     }
     throw new Error(`Failed to fetch user data: ${response.status}`);
   }

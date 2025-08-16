@@ -71,6 +71,7 @@ export function useBundleWallets({
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch bundle wallets";
+      // Keep USER_NOT_FOUND as-is for special handling in UI
       setError(errorMessage);
       console.error("Bundle wallets fetch error:", err);
 

@@ -20,7 +20,12 @@ export interface UsePortfolioDataReturn {
  * Custom hook for fetching and transforming portfolio data from API
  */
 export function usePortfolioData(): UsePortfolioDataReturn {
-  const { userInfo, loading: isUserLoading, isConnected } = useUser();
+  const {
+    userInfo,
+    loading: isUserLoading,
+    isConnected,
+    error: userError,
+  } = useUser();
   const [totalValue, setTotalValue] = useState<number | null>(null);
   const [categories, setCategories] = useState<AssetCategory[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +61,16 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     const fetchPortfolioData = async () => {
       // Reset state when no user
       if (!userInfo?.userId) {
+        // Special handling for USER_NOT_FOUND - stop loading immediately
+        if (userError === "USER_NOT_FOUND") {
+          setIsLoading(false);
+          setIsRetrying(false);
+          setError(userError);
+          setTotalValue(null);
+          setCategories(null);
+          return;
+        }
+
         // Only stop loading if wallet is actually disconnected
         // If wallet is connected but userInfo is null, keep loading (API issue or initial fetch)
         if (!isConnected) {
@@ -129,7 +144,14 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     return () => {
       cancelled = true;
     };
-  }, [userInfo?.userId, isUserLoading, retryTrigger, isRetrying, isConnected]);
+  }, [
+    userInfo?.userId,
+    isUserLoading,
+    retryTrigger,
+    isRetrying,
+    isConnected,
+    userError,
+  ]);
 
   return {
     totalValue,

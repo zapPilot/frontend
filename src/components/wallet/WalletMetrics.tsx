@@ -15,6 +15,48 @@ interface WalletMetricsProps {
   isRetrying?: boolean;
 }
 
+interface WelcomeNewUserProps {
+  onGetStarted?: () => void;
+}
+
+function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
+  return (
+    <div className="flex flex-col space-y-4 p-6 rounded-lg bg-purple-900/20 border border-purple-600/30 backdrop-blur-sm">
+      <div className="flex items-center space-x-3 text-purple-400">
+        <div className="p-2 bg-purple-600/20 rounded-lg">
+          <div className="w-6 h-6 text-purple-400">✨</div>
+        </div>
+        <div>
+          <h3 className="font-semibold text-lg text-white">
+            Welcome to Zap Pilot!
+          </h3>
+          <p className="text-sm text-purple-300">
+            Ready to start your DeFi journey?
+          </p>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-300 leading-relaxed">
+        Connect your wallet to create your personalized portfolio and explore
+        automated yield strategies across multiple DeFi protocols. Start
+        optimizing your crypto investments today!
+      </p>
+
+      <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <button
+          onClick={onGetStarted}
+          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105"
+        >
+          Get Started
+        </button>
+        <button className="px-4 py-2 border border-purple-500/50 hover:border-purple-400 text-purple-300 hover:text-purple-200 font-medium rounded-lg transition-colors">
+          Learn More
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
     totalValue,
@@ -38,6 +80,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         );
       }
       if (error) {
+        // Special handling for new users (404 errors)
+        if (error === "USER_NOT_FOUND") {
+          return null; // Component will show welcome message below
+        }
+        // Regular error display for other errors
         return (
           <div className="flex flex-col space-y-2">
             <div className="text-sm text-red-400 flex items-center space-x-2">
@@ -70,6 +117,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return totalValue ? calculateMonthlyIncome(totalValue, portfolioAPR) : 0;
     }, [totalValue, portfolioAPR]);
 
+    // Show welcome message for new users
+    if (error === "USER_NOT_FOUND") {
+      return <WelcomeNewUser />;
+    }
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
@@ -83,7 +135,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <p className="text-sm text-gray-400 mb-1">
             Portfolio APR {totalValue === null ? "(Potential)" : ""}
           </p>
-          {isLoading || isRetrying ? (
+          {(isLoading || isRetrying) && error !== "USER_NOT_FOUND" ? (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-gray-700 rounded animate-pulse" />
               <div className="w-16 h-6 bg-gray-700 rounded animate-pulse" />
@@ -102,7 +154,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
         <div>
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
-          {isLoading || isRetrying ? (
+          {(isLoading || isRetrying) && error !== "USER_NOT_FOUND" ? (
             <div className="w-24 h-6 bg-gray-700 rounded animate-pulse" />
           ) : (
             <p

@@ -111,6 +111,7 @@ export function UserProvider({ children }: UserProviderProps) {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch user info";
+      // Keep USER_NOT_FOUND as-is for special handling in UI
       setError(errorMessage);
       setUserInfo(null);
     } finally {
