@@ -75,21 +75,23 @@ export function WalletPortfolio({
         />
       </GlassCard>
 
-      {/* Portfolio Overview */}
-      <PortfolioOverview
-        portfolioData={portfolioData}
-        pieChartData={pieChartData}
-        expandedCategory={expandedCategory}
-        onCategoryToggle={toggleCategoryExpansion}
-        balanceHidden={balanceHidden}
-        title="Asset Distribution"
-        isLoading={isLoading}
-        apiError={apiError}
-        onRetry={retry}
-        isRetrying={isRetrying}
-        renderBalanceDisplay={renderBalanceDisplay}
-        {...(totalValue !== null && { totalValue })}
-      />
+      {/* Portfolio Overview - Hide for new users */}
+      {apiError !== "USER_NOT_FOUND" && (
+        <PortfolioOverview
+          portfolioData={portfolioData}
+          pieChartData={pieChartData}
+          expandedCategory={expandedCategory}
+          onCategoryToggle={toggleCategoryExpansion}
+          balanceHidden={balanceHidden}
+          title="Asset Distribution"
+          isLoading={isLoading}
+          apiError={apiError}
+          onRetry={retry}
+          isRetrying={isRetrying}
+          renderBalanceDisplay={renderBalanceDisplay}
+          {...(totalValue !== null && { totalValue })}
+        />
+      )}
 
       {/* Wallet Manager Modal */}
       <WalletManager

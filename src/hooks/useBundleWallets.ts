@@ -1,14 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  getBundleWalletsByPrimary,
-  getUserByWallet,
-  transformBundleWallets,
-} from "../services/quantEngine";
-
-interface ApiUserResponse {
-  id: string;
-  user_id?: string;
-}
+import { useUser } from "../contexts/UserContext";
 
 interface BundleWallet {
   id: string;
@@ -21,7 +12,6 @@ interface BundleWallet {
 }
 
 interface UseBundleWalletsConfig {
-  primaryWallet?: string;
   enabled?: boolean;
 }
 
@@ -39,15 +29,28 @@ interface UseBundleWalletsReturn {
  * Hook to fetch and manage bundle wallets from quant-engine
  */
 export function useBundleWallets({
-  primaryWallet,
   enabled = true,
 }: UseBundleWalletsConfig = {}): UseBundleWalletsReturn {
+  const {
+    userInfo,
+    loading: userLoading,
+    error: userError,
+    connectedWallet,
+  } = useUser();
   const [wallets, setWallets] = useState<BundleWallet[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchBundleWallets = useCallback(async () => {
-    if (!primaryWallet || !enabled) {
+    // Return early if hook is disabled or no user data available
+    if (!enabled || !userInfo?.userId || userError) {
+      // If we have a USER_NOT_FOUND error, propagate it
+      if (userError === "USER_NOT_FOUND") {
+        setError(userError);
+        setWallets([]);
+        return;
+      }
+      // For other cases, just return without changing state
       return;
     }
 
@@ -55,42 +58,62 @@ export function useBundleWallets({
     setError(null);
 
     try {
-      // First get user by wallet to get userId
-      const userResponse = (await getUserByWallet(
-        primaryWallet
-      )) as ApiUserResponse;
-
-      // Fetch bundle data from API using userId
-      const bundleData = await getBundleWalletsByPrimary(
-        userResponse.user_id || userResponse.id
-      );
-
-      // Transform to UI format
-      const transformedWallets = transformBundleWallets(bundleData);
-      setWallets(transformedWallets);
+      // Use the existing bundle wallets data from UserContext if available
+      if (userInfo.bundleWallets && userInfo.bundleWallets.length > 0) {
+        // Transform existing user data to match the expected format
+        const transformedWallets = userInfo.bundleWallets.map(
+          (address, index) => ({
+            id: `wallet-${index}`,
+            address,
+            label:
+              address === userInfo.primaryWallet
+                ? "Main Wallet"
+                : `Wallet ${index + 1}`,
+            isActive: index === 0, // First wallet is active by default
+            isMain: address === userInfo.primaryWallet,
+            isVisible: true,
+            createdAt: null,
+          })
+        );
+        setWallets(transformedWallets);
+      } else {
+        // Fallback to single wallet if no bundle data
+        setWallets([
+          {
+            id: "main-wallet",
+            address: userInfo.primaryWallet,
+            label: "Main Wallet",
+            isActive: true,
+            isMain: true,
+            isVisible: true,
+            createdAt: null,
+          },
+        ]);
+      }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch bundle wallets";
-      // Keep USER_NOT_FOUND as-is for special handling in UI
+        err instanceof Error ? err.message : "Failed to process bundle wallets";
       setError(errorMessage);
-      console.error("Bundle wallets fetch error:", err);
+      console.error("Bundle wallets processing error:", err);
 
-      // Fallback to mock data on error
-      setWallets([
-        {
-          id: "fallback-1",
-          address: primaryWallet,
-          label: "Main Wallet",
-          isActive: true,
-          isMain: true,
-          isVisible: true,
-          createdAt: null,
-        },
-      ]);
+      // Fallback to single wallet on error
+      if (connectedWallet) {
+        setWallets([
+          {
+            id: "fallback-1",
+            address: connectedWallet,
+            label: "Main Wallet",
+            isActive: true,
+            isMain: true,
+            isVisible: true,
+            createdAt: null,
+          },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [primaryWallet, enabled]);
+  }, [enabled, userInfo, userError, connectedWallet]);
 
   const setActiveWallet = useCallback((walletId: string) => {
     setWallets(prev =>
@@ -101,7 +124,7 @@ export function useBundleWallets({
     );
   }, []);
 
-  // Auto-fetch on mount and dependency changes
+  // Auto-fetch when user data is available or changes
   useEffect(() => {
     fetchBundleWallets();
   }, [fetchBundleWallets]);
@@ -112,8 +135,8 @@ export function useBundleWallets({
 
   return {
     wallets: wallets.filter(w => w.isVisible), // Only return visible wallets
-    loading,
-    error,
+    loading: loading || userLoading, // Include user loading state
+    error: error || userError, // Include user errors
     refetch: fetchBundleWallets,
     totalWallets,
     visibleWallets,
