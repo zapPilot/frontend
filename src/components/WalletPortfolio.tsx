@@ -2,10 +2,9 @@
 
 import React from "react";
 import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
-import { formatCurrency } from "../lib/utils";
+import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
-import { GlassCard } from "./ui";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
@@ -24,43 +23,12 @@ export function WalletPortfolio({
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
   // Consolidated state management - all loading/error logic and transformations in one place
-  let portfolioState;
-  try {
-    portfolioState = useWalletPortfolioState();
-  } catch (error) {
-    // Let React error boundary handle the error
-    throw error;
-  }
-
-  // Custom balance display renderer for PieChart - must be declared before early return
-  const renderBalanceDisplay = React.useCallback(() => {
-    return formatCurrency(
-      portfolioState?.totalValue || 0,
-      portfolioState?.balanceHidden || false
-    );
-  }, [portfolioState?.totalValue, portfolioState?.balanceHidden]);
-
-  // Handle case where hook returns undefined (for tests)
-  if (!portfolioState) {
-    return (
-      <div className="space-y-6">
-        <GlassCard>
-          <div className="p-6 text-center">
-            <p className="text-gray-400">Portfolio state not available</p>
-          </div>
-        </GlassCard>
-      </div>
-    );
-  }
-
   const {
     totalValue,
     portfolioData,
     pieChartData,
     isLoading,
     apiError,
-    retry,
-    isRetrying,
     isConnected,
     balanceHidden,
     expandedCategory,
@@ -70,7 +38,7 @@ export function WalletPortfolio({
     isWalletManagerOpen,
     openWalletManager,
     closeWalletManager,
-  } = portfolioState;
+  } = useWalletPortfolioState();
 
   return (
     <div className="space-y-6">
@@ -91,8 +59,6 @@ export function WalletPortfolio({
           portfolioChangePercentage={
             portfolioMetrics?.totalChangePercentage || 0
           }
-          onRetry={retry}
-          isRetrying={isRetrying}
           isConnected={isConnected}
         />
 
@@ -103,24 +69,18 @@ export function WalletPortfolio({
         />
       </GlassCard>
 
-      {/* Portfolio Overview - Hide for new users */}
-      {apiError !== "USER_NOT_FOUND" && (
-        <PortfolioOverview
-          portfolioData={portfolioData}
-          pieChartData={pieChartData}
-          expandedCategory={expandedCategory}
-          onCategoryToggle={toggleCategoryExpansion}
-          balanceHidden={balanceHidden}
-          title="Asset Distribution"
-          isLoading={isLoading}
-          apiError={apiError}
-          onRetry={retry}
-          isRetrying={isRetrying}
-          renderBalanceDisplay={renderBalanceDisplay}
-          isConnected={isConnected}
-          {...(totalValue !== null && { totalValue })}
-        />
-      )}
+      {/* Portfolio Overview */}
+      <PortfolioOverview
+        portfolioData={portfolioData}
+        pieChartData={pieChartData} // Always provide pieChartData (now required)
+        expandedCategory={expandedCategory}
+        onCategoryToggle={toggleCategoryExpansion}
+        balanceHidden={balanceHidden}
+        title="Asset Distribution"
+        isLoading={isLoading}
+        apiError={apiError}
+        isConnected={isConnected}
+      />
 
       {/* Wallet Manager Modal */}
       <WalletManager

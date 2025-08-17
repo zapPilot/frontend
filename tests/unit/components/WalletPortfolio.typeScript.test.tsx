@@ -1,5 +1,5 @@
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   WalletPortfolio,
@@ -479,9 +479,6 @@ describe("WalletPortfolio - TypeScript Integration and Prop Validation Tests", (
       render(<WalletPortfolio />);
 
       expect(screen.getByTestId("is-loading")).toHaveTextContent("true");
-      expect(screen.getByTestId("portfolio-retrying")).toHaveTextContent(
-        "false"
-      );
     });
   });
 

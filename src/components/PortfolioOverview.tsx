@@ -46,7 +46,11 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   }) => {
     // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
     const showLoadingState =
-      isLoading || isRetrying || (isConnected && !portfolioData && !apiError);
+      isLoading ||
+      isRetrying ||
+      (isConnected &&
+        (!portfolioData || portfolioData.length === 0) &&
+        !apiError);
 
     // Check if we should show empty state (no data and not loading/error)
     const showEmptyState =
