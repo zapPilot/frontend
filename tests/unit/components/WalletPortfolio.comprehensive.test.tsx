@@ -119,7 +119,9 @@ vi.mock("../../../src/components/PortfolioOverview", () => ({
           {balanceHidden ? "hidden" : "visible"}
         </div>
         <div data-testid="total-value-prop">
-          {totalValue !== undefined ? totalValue : "undefined"}
+          {totalValue !== undefined && totalValue !== null
+            ? totalValue
+            : "undefined"}
         </div>
         {onRetry && (
           <button data-testid="retry-button" onClick={onRetry}>
@@ -187,6 +189,7 @@ describe("WalletPortfolio - Comprehensive Integration Tests", () => {
     apiError: null,
     retry: vi.fn(),
     isRetrying: false,
+    isConnected: true,
     balanceHidden: false,
     expandedCategory: null,
     portfolioMetrics: { totalChangePercentage: 5.2 },

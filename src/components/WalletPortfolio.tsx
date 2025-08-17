@@ -29,6 +29,8 @@ export function WalletPortfolio({
     pieChartData,
     isLoading,
     apiError,
+    retry,
+    isRetrying,
     isConnected,
     balanceHidden,
     expandedCategory,
@@ -73,12 +75,15 @@ export function WalletPortfolio({
       <PortfolioOverview
         portfolioData={portfolioData}
         pieChartData={pieChartData} // Always provide pieChartData (now required)
+        totalValue={totalValue}
         expandedCategory={expandedCategory}
         onCategoryToggle={toggleCategoryExpansion}
         balanceHidden={balanceHidden}
         title="Asset Distribution"
         isLoading={isLoading}
         apiError={apiError}
+        onRetry={retry}
+        isRetrying={isRetrying}
         isConnected={isConnected}
       />
 

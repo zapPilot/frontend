@@ -11,7 +11,7 @@ import { WalletConnectionPrompt } from "./ui";
 interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
   pieChartData: PieChartData[]; // Now required - no more fallback logic needed
-  totalValue?: number; // Optional authoritative total value
+  totalValue?: number | null; // Optional authoritative total value, can be null
   expandedCategory: string | null;
   onCategoryToggle: (categoryId: string) => void;
   balanceHidden?: boolean;
@@ -107,7 +107,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                     data={pieChartData}
                     size={250}
                     strokeWidth={10}
-                    {...(totalValue !== undefined && { totalValue })}
+                    {...(totalValue !== undefined &&
+                      totalValue !== null && { totalValue })}
                     {...(renderBalanceDisplay && { renderBalanceDisplay })}
                   />
                 )}
@@ -160,7 +161,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   data={pieChartData}
                   size={200}
                   strokeWidth={8}
-                  {...(totalValue !== undefined && { totalValue })}
+                  {...(totalValue !== undefined &&
+                    totalValue !== null && { totalValue })}
                   {...(renderBalanceDisplay && { renderBalanceDisplay })}
                 />
               )}

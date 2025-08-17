@@ -10,11 +10,15 @@ vi.mock("framer-motion", () => ({
         children,
         onClick,
         disabled,
+        whileHover,
+        whileTap,
         ...props
       }: {
         children: React.ReactNode;
         onClick: () => void;
         disabled: boolean;
+        whileHover?: any;
+        whileTap?: any;
         [key: string]: any;
       }) => (
         <button
