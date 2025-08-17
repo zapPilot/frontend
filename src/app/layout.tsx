@@ -5,6 +5,7 @@ import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
 import { OnboardingProvider } from "@/providers/OnboardingProvider";
 import { ToastProvider } from "@/hooks/useToast";
 import { UserProvider } from "@/contexts/UserContext";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,13 +84,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
       >
-        <SimpleWeb3Provider>
-          <UserProvider>
-            <OnboardingProvider>
-              <ToastProvider>{children}</ToastProvider>
-            </OnboardingProvider>
-          </UserProvider>
-        </SimpleWeb3Provider>
+        <QueryProvider>
+          <SimpleWeb3Provider>
+            <UserProvider>
+              <OnboardingProvider>
+                <ToastProvider>{children}</ToastProvider>
+              </OnboardingProvider>
+            </UserProvider>
+          </SimpleWeb3Provider>
+        </QueryProvider>
       </body>
     </html>
   );

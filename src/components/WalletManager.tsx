@@ -28,14 +28,8 @@ interface WalletManagerProps {
 
 const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   // Get user info from context (includes wallet connection and user data)
-  const {
-    userInfo,
-    loading,
-    error,
-    isConnected,
-    connectedWallet,
-    fetchUserInfo,
-  } = useUser();
+  const { userInfo, loading, error, isConnected, connectedWallet, refetch } =
+    useUser();
 
   // Transform userInfo into format expected by the component
   const wallets = userInfo
@@ -77,11 +71,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     if (!isOpen || !isConnected) return;
 
     const interval = setInterval(() => {
-      fetchUserInfo();
+      refetch();
     }, 30000); // Refresh every 30 seconds
 
     return () => clearInterval(interval);
-  }, [isOpen, isConnected, fetchUserInfo]);
+  }, [isOpen, isConnected, refetch]);
 
   // Utility function to format wallet address
   const formatAddress = useCallback((address: string) => {
@@ -100,9 +94,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       // TODO: Implement setting active wallet via API
       console.log("Setting active wallet:", walletId);
       // For now, just refresh user info to get updated state
-      fetchUserInfo();
+      refetch();
     },
-    [fetchUserInfo]
+    [refetch]
   );
 
   // Handle editing label
@@ -178,7 +172,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={fetchUserInfo}
+                  onClick={refetch}
                   disabled={loading}
                   className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 disabled:opacity-50"
                   title="Refresh Bundle"
@@ -212,7 +206,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                 <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
                 <p className="text-red-400 text-sm mb-3">{error}</p>
                 <button
-                  onClick={fetchUserInfo}
+                  onClick={refetch}
                   className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors"
                 >
                   Retry

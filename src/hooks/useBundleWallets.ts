@@ -42,15 +42,25 @@ export function useBundleWallets({
   const [error, setError] = useState<string | null>(null);
 
   const fetchBundleWallets = useCallback(async () => {
-    // Return early if hook is disabled or no user data available
-    if (!enabled || !userInfo?.userId || userError) {
-      // If we have a USER_NOT_FOUND error, propagate it
-      if (userError === "USER_NOT_FOUND") {
-        setError(userError);
-        setWallets([]);
-        return;
-      }
-      // For other cases, just return without changing state
+    // Return early if hook is disabled
+    if (!enabled) {
+      return;
+    }
+
+    // Handle USER_NOT_FOUND scenarios
+    if (userError === "USER_NOT_FOUND") {
+      setError(userError);
+      setWallets([]);
+      setLoading(false);
+      return;
+    }
+
+    // Return early if no user data available
+    if (!userInfo?.userId) {
+      // Clear data when no user info
+      setWallets([]);
+      setError(null);
+      setLoading(false);
       return;
     }
 

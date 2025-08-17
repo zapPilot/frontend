@@ -1,58 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
-import { useActiveAccount } from "thirdweb/react";
-import {
-  getBundleWalletsByPrimary,
-  getUserByWallet,
-} from "../services/quantEngine";
+import { createContext, ReactNode, useContext } from "react";
+import { useCurrentUser, type UserInfo } from "../hooks/queries/useUserQuery";
 
-interface ApiUserResponse {
-  id: string;
-  user_id?: string;
-}
-
-interface ApiBundleResponse {
-  user: {
-    id: string;
-    email: string;
-  };
-  main_wallet: string;
-  additional_wallets: Array<{
-    wallet_address: string;
-    label: string | null;
-    is_main: boolean;
-    is_visible: boolean;
-    created_at: string;
-  }>;
-  visible_wallets: string[];
-  total_wallets: number;
-  total_visible_wallets: number;
-}
-
-interface UserInfo {
-  userId: string;
-  email: string;
-  primaryWallet: string;
-  bundleWallets: string[];
-  additionalWallets: Array<{
-    wallet_address: string;
-    label: string | null;
-    is_main: boolean;
-    is_visible: boolean;
-    created_at: string;
-  }>;
-  visibleWallets: string[];
-  totalWallets: number;
-  totalVisibleWallets: number;
-}
+// Types are now imported from useUserQuery hook
 
 interface UserContextType {
   userInfo: UserInfo | null;
@@ -60,8 +11,7 @@ interface UserContextType {
   error: string | null;
   isConnected: boolean;
   connectedWallet: string | null;
-  fetchUserInfo: () => Promise<void>;
-  clearUserInfo: () => void;
+  refetch: () => void;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -71,67 +21,15 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const activeAccount = useActiveAccount();
-  const connectedWallet = activeAccount?.address || null;
-  const isConnected = !!connectedWallet;
-
-  const fetchUserInfo = useCallback(async () => {
-    if (!connectedWallet) {
-      setUserInfo(null);
-      setError("No wallet connected");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // First get user by wallet to get userId
-      const userResponse = (await getUserByWallet(
-        connectedWallet
-      )) as ApiUserResponse;
-      // Then get bundle wallets using userId
-      const bundleResponse = (await getBundleWalletsByPrimary(
-        userResponse.id
-      )) as unknown as ApiBundleResponse;
-      setUserInfo({
-        userId: bundleResponse.user.id,
-        email: bundleResponse.user.email,
-        primaryWallet: bundleResponse.main_wallet,
-        bundleWallets: bundleResponse.visible_wallets || [],
-        additionalWallets: bundleResponse.additional_wallets || [],
-        visibleWallets: bundleResponse.visible_wallets || [],
-        totalWallets: bundleResponse.total_wallets || 0,
-        totalVisibleWallets: bundleResponse.total_visible_wallets || 0,
-      });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch user info";
-      // Keep USER_NOT_FOUND as-is for special handling in UI
-      setError(errorMessage);
-      setUserInfo(null);
-    } finally {
-      setLoading(false);
-    }
-  }, [connectedWallet]);
-
-  const clearUserInfo = useCallback(() => {
-    setUserInfo(null);
-    setError(null);
-  }, []);
-
-  // Auto-fetch user info when wallet connects/changes
-  useEffect(() => {
-    if (connectedWallet) {
-      fetchUserInfo();
-    } else {
-      clearUserInfo();
-    }
-  }, [connectedWallet, fetchUserInfo, clearUserInfo]);
+  // Use React Query hook for all user data management
+  const {
+    userInfo,
+    isLoading: loading,
+    error,
+    isConnected,
+    connectedWallet,
+    refetch,
+  } = useCurrentUser();
 
   const value: UserContextType = {
     userInfo,
@@ -139,8 +37,7 @@ export function UserProvider({ children }: UserProviderProps) {
     error,
     isConnected,
     connectedWallet,
-    fetchUserInfo,
-    clearUserInfo,
+    refetch,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
