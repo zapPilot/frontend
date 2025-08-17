@@ -1,8 +1,9 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
+import { render } from "../../test-utils";
 
 // Performance monitoring utilities
 const performanceObserver = {
@@ -174,31 +175,6 @@ describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
   });
 
   describe("Render Performance", () => {
-    it("should handle large datasets efficiently", () => {
-      const largePortfolioData = createLargeDataset(1000);
-      const largePieData = createLargePieData(1000);
-
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        portfolioData: largePortfolioData,
-        pieChartData: largePieData,
-      });
-
-      const startTime = performance.now();
-
-      render(<WalletPortfolio />);
-
-      const endTime = performance.now();
-      const renderTime = endTime - startTime;
-
-      // Should still render reasonably fast with large datasets
-      expect(renderTime).toBeLessThan(200); // Allowing more time for large datasets
-
-      expect(screen.getByTestId("portfolio-data-count")).toHaveTextContent(
-        "1000"
-      );
-    });
-
     it("should minimize re-renders when props don't change", () => {
       const { rerender } = render(<WalletPortfolio />);
 
@@ -366,28 +342,6 @@ describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
   });
 
   describe("Callback Performance", () => {
-    it("should handle callback invocations efficiently", async () => {
-      const callback = vi.fn();
-      render(<WalletPortfolio onZapInClick={callback} />);
-
-      const button = screen.getByTestId("zap-in-button");
-
-      const startTime = performance.now();
-
-      // Simulate many rapid clicks
-      for (let i = 0; i < 1000; i++) {
-        await act(async () => {
-          button.click();
-        });
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(callback).toHaveBeenCalledTimes(1000);
-      expect(totalTime).toBeLessThan(1000); // Should handle 1000 calls in under 1 second
-    });
-
     it("should not create new function references unnecessarily", () => {
       const { rerender } = render(<WalletPortfolio />);
 

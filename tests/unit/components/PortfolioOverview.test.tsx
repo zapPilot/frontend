@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { render } from "../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PortfolioOverview } from "../../../src/components/PortfolioOverview";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";

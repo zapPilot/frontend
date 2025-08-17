@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { render } from "../../test-utils";
 import { vi } from "vitest";
 import { WalletPortfolio as WalletPortfolioRefactored } from "../../../src/components/WalletPortfolioRefactored";
 

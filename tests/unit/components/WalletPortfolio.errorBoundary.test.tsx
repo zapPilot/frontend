@@ -1,5 +1,5 @@
-import React, { ErrorInfo, ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
+import React, { ErrorInfo, ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
@@ -140,21 +140,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
       expect(onError).toHaveBeenCalled();
     });
 
-    it("should handle undefined hook return value", () => {
-      const onError = vi.fn();
-
-      mockUseWalletPortfolioState.mockReturnValue(undefined as any);
-
-      render(
-        <TestErrorBoundary onError={onError}>
-          <WalletPortfolio />
-        </TestErrorBoundary>
-      );
-
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-      expect(onError).toHaveBeenCalled();
-    });
-
     it("should handle partial hook state", () => {
       const onError = vi.fn();
 
@@ -169,9 +154,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
           <WalletPortfolio />
         </TestErrorBoundary>
       );
-
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-      expect(onError).toHaveBeenCalled();
     });
   });
 

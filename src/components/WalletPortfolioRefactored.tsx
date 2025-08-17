@@ -79,6 +79,7 @@ export function WalletPortfolio({
         title="Asset Distribution"
         isLoading={isLoading}
         apiError={apiError}
+        isConnected={isConnected}
       />
 
       {/* Wallet Manager Modal */}

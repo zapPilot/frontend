@@ -2,13 +2,13 @@
 
 import React from "react";
 import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
+import { formatCurrency } from "../lib/utils";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
 import { GlassCard } from "./ui";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
-import { formatCurrency } from "../lib/utils";
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: (() => void) | undefined;
@@ -117,6 +117,7 @@ export function WalletPortfolio({
           onRetry={retry}
           isRetrying={isRetrying}
           renderBalanceDisplay={renderBalanceDisplay}
+          isConnected={isConnected}
           {...(totalValue !== null && { totalValue })}
         />
       )}

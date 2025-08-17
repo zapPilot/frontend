@@ -23,6 +23,7 @@ interface PortfolioOverviewProps {
   renderBalanceDisplay?: () => React.ReactNode;
   onRetry?: () => void;
   isRetrying?: boolean;
+  isConnected?: boolean;
 }
 
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
@@ -41,10 +42,15 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     renderBalanceDisplay,
     onRetry,
     isRetrying = false,
+    isConnected = false,
   }) => {
+    // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
+    const showLoadingState =
+      isLoading || isRetrying || (isConnected && !portfolioData && !apiError);
+
     // Check if we should show empty state (no data and not loading/error)
     const showEmptyState =
-      !isLoading &&
+      !showLoadingState &&
       !apiError &&
       (!portfolioData ||
         portfolioData.length === 0 ||
@@ -81,7 +87,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 className="flex justify-center items-start pt-8"
                 data-testid="pie-chart-container"
               >
-                {isLoading ? (
+                {showLoadingState ? (
                   <div className="flex items-center justify-center h-[250px] w-[250px]">
                     <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div>
                   </div>
@@ -117,7 +123,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   balanceHidden={balanceHidden}
                   title=""
                   className="!bg-transparent !border-0 !p-0"
-                  isLoading={isLoading}
+                  isLoading={showLoadingState}
                   error={apiError}
                   {...(onRetry && { onRetry })}
                   isRetrying={isRetrying}
@@ -134,7 +140,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               className="flex justify-center items-center"
               data-testid="pie-chart-container-mobile"
             >
-              {isLoading ? (
+              {showLoadingState ? (
                 <div className="flex items-center justify-center h-[200px] w-[200px]">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
                 </div>
@@ -163,7 +169,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 balanceHidden={balanceHidden}
                 title=""
                 className="!bg-transparent !border-0 !p-0"
-                isLoading={isLoading}
+                isLoading={showLoadingState}
                 error={apiError}
                 {...(onRetry && { onRetry })}
                 isRetrying={isRetrying}

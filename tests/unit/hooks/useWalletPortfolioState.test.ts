@@ -1,4 +1,5 @@
-import { act, renderHook } from "@testing-library/react";
+import { act } from "@testing-library/react";
+import { renderHook } from "../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioData } from "../../../src/hooks/usePortfolioData";

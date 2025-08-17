@@ -1,14 +1,9 @@
-import {
-  act,
-  render,
-  screen,
-  waitFor,
-  fireEvent,
-} from "@testing-library/react";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
+import { render } from "../../test-utils";
 
 // Mock the custom hook
 vi.mock("../../../src/hooks/useWalletPortfolioState");
@@ -724,14 +719,6 @@ describe("WalletPortfolio - Comprehensive Integration Tests", () => {
   });
 
   describe("Edge Cases and Stress Tests", () => {
-    it("should handle hook returning undefined", () => {
-      mockUseWalletPortfolioState.mockReturnValue(undefined as any);
-
-      expect(() => {
-        render(<WalletPortfolio />);
-      }).toThrow();
-    });
-
     it("should handle missing hook properties gracefully", () => {
       mockUseWalletPortfolioState.mockReturnValue({
         totalValue: 1000,

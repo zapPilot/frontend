@@ -2,6 +2,16 @@ import { expect, afterEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
+// Mock React Query's error boundary logging to avoid console noise during tests
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual("@tanstack/react-query");
+  return {
+    ...actual,
+    // Silence QueryErrorResetBoundary console errors during testing
+    useQueryErrorResetBoundary: () => ({ reset: vi.fn() }),
+  };
+});
+
 // Extend Vitest's expect with testing-library matchers
 expect.extend(matchers);
 
