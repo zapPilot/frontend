@@ -16,6 +16,7 @@ export function useWalletPortfolioState() {
     error: apiError,
     retry,
     isRetrying,
+    isConnected,
   } = usePortfolioData();
 
   // Portfolio UI state management
@@ -49,6 +50,7 @@ export function useWalletPortfolioState() {
     apiError,
     retry,
     isRetrying,
+    isConnected,
 
     // Portfolio UI state
     balanceHidden,

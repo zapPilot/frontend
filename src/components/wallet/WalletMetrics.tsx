@@ -13,6 +13,7 @@ interface WalletMetricsProps {
   portfolioChangePercentage: number;
   onRetry?: () => void;
   isRetrying?: boolean;
+  isConnected: boolean;
 }
 
 interface WelcomeNewUserProps {
@@ -66,10 +67,17 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     portfolioChangePercentage,
     onRetry,
     isRetrying,
+    isConnected,
   }) => {
     // Helper function to render balance display
     const renderBalanceDisplay = () => {
-      if (isLoading || isRetrying) {
+      // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
+      const showLoader =
+        isLoading ||
+        isRetrying ||
+        (isConnected && totalValue === null && !error);
+
+      if (showLoader) {
         return (
           <div className="flex items-center space-x-2">
             <Loader className="w-6 h-6 animate-spin text-purple-400" />
@@ -135,7 +143,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <p className="text-sm text-gray-400 mb-1">
             Portfolio APR {totalValue === null ? "(Potential)" : ""}
           </p>
-          {(isLoading || isRetrying) && error !== "USER_NOT_FOUND" ? (
+          {(isLoading ||
+            isRetrying ||
+            (isConnected && totalValue === null && !error)) &&
+          error !== "USER_NOT_FOUND" ? (
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-gray-700 rounded animate-pulse" />
               <div className="w-16 h-6 bg-gray-700 rounded animate-pulse" />
@@ -154,7 +165,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
         <div>
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
-          {(isLoading || isRetrying) && error !== "USER_NOT_FOUND" ? (
+          {(isLoading ||
+            isRetrying ||
+            (isConnected && totalValue === null && !error)) &&
+          error !== "USER_NOT_FOUND" ? (
             <div className="w-24 h-6 bg-gray-700 rounded animate-pulse" />
           ) : (
             <p

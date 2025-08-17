@@ -29,6 +29,7 @@ export function WalletPortfolio({
     pieChartData,
     isLoading,
     apiError,
+    isConnected,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
@@ -55,7 +56,10 @@ export function WalletPortfolio({
           balanceHidden={balanceHidden}
           isLoading={isLoading}
           error={apiError}
-          portfolioChangePercentage={portfolioMetrics.totalChangePercentage}
+          portfolioChangePercentage={
+            portfolioMetrics?.totalChangePercentage || 0
+          }
+          isConnected={isConnected}
         />
 
         <WalletActions

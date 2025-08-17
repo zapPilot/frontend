@@ -24,6 +24,35 @@ export function WalletPortfolio({
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
   // Consolidated state management - all loading/error logic and transformations in one place
+  let portfolioState;
+  try {
+    portfolioState = useWalletPortfolioState();
+  } catch (error) {
+    // Let React error boundary handle the error
+    throw error;
+  }
+
+  // Custom balance display renderer for PieChart - must be declared before early return
+  const renderBalanceDisplay = React.useCallback(() => {
+    return formatCurrency(
+      portfolioState?.totalValue || 0,
+      portfolioState?.balanceHidden || false
+    );
+  }, [portfolioState?.totalValue, portfolioState?.balanceHidden]);
+
+  // Handle case where hook returns undefined (for tests)
+  if (!portfolioState) {
+    return (
+      <div className="space-y-6">
+        <GlassCard>
+          <div className="p-6 text-center">
+            <p className="text-gray-400">Portfolio state not available</p>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
+
   const {
     totalValue,
     portfolioData,
@@ -32,6 +61,7 @@ export function WalletPortfolio({
     apiError,
     retry,
     isRetrying,
+    isConnected,
     balanceHidden,
     expandedCategory,
     portfolioMetrics,
@@ -40,12 +70,7 @@ export function WalletPortfolio({
     isWalletManagerOpen,
     openWalletManager,
     closeWalletManager,
-  } = useWalletPortfolioState();
-
-  // Custom balance display renderer for PieChart
-  const renderBalanceDisplay = React.useCallback(() => {
-    return formatCurrency(totalValue || 0, balanceHidden);
-  }, [totalValue, balanceHidden]);
+  } = portfolioState;
 
   return (
     <div className="space-y-6">
@@ -63,9 +88,12 @@ export function WalletPortfolio({
           balanceHidden={balanceHidden}
           isLoading={isLoading}
           error={apiError}
-          portfolioChangePercentage={portfolioMetrics.totalChangePercentage}
+          portfolioChangePercentage={
+            portfolioMetrics?.totalChangePercentage || 0
+          }
           onRetry={retry}
           isRetrying={isRetrying}
+          isConnected={isConnected}
         />
 
         <WalletActions

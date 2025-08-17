@@ -1,6 +1,6 @@
 import { useUser } from "../contexts/UserContext";
-import { usePortfolioData as usePortfolioDataQuery } from "./queries/usePortfolioQuery";
 import type { AssetCategory, PieChartData } from "../types/portfolio";
+import { usePortfolioData as usePortfolioDataQuery } from "./queries/usePortfolioQuery";
 
 export interface UsePortfolioDataReturn {
   totalValue: number | null;
@@ -10,13 +10,14 @@ export interface UsePortfolioDataReturn {
   error: string | null;
   retry: () => void;
   isRetrying: boolean;
+  isConnected: boolean;
 }
 
 /**
  * Custom hook for fetching and transforming portfolio data from API
  */
 export function usePortfolioData(): UsePortfolioDataReturn {
-  const { userInfo, error: userError } = useUser();
+  const { userInfo, error: userError, isConnected } = useUser();
 
   // Use React Query hook for portfolio data
   const portfolioQuery = usePortfolioDataQuery(userInfo?.userId);
@@ -31,6 +32,7 @@ export function usePortfolioData(): UsePortfolioDataReturn {
       error: userError,
       retry: () => {}, // No-op for USER_NOT_FOUND
       isRetrying: false,
+      isConnected,
     };
   }
 
@@ -42,5 +44,6 @@ export function usePortfolioData(): UsePortfolioDataReturn {
     error: portfolioQuery.error,
     retry: portfolioQuery.refetch,
     isRetrying: portfolioQuery.isRefetching,
+    isConnected,
   };
 }
