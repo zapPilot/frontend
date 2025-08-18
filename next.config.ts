@@ -17,13 +17,24 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  turbopack: {
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
+  // Narrow webpack dev watcher scope to reduce memory/CPU (webpack-only)
+  webpackDevMiddleware(config) {
+    config.watchOptions = {
+      ...(config.watchOptions || {}),
+      ignored: [
+        "**/.git/**",
+        "**/.next/**",
+        "**/node_modules/**",
+        "**/coverage/**",
+        "**/.turbo/**",
+        "**/.cache/**",
+        "**/playwright-report/**",
+        "**/test-results/**",
+        "**/out/**",
+        "**/uploads/**",
+      ],
+    } as any;
+    return config;
   },
   async headers() {
     const isDev = process.env.NODE_ENV === "development";

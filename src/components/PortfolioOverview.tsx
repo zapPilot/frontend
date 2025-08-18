@@ -1,13 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import React, { useMemo } from "react";
+import { ArrowDownLeft, TrendingUp } from "lucide-react";
+import React, { useMemo, useState } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { AssetCategory, PieChartData } from "../types/portfolio";
-import { transformForDisplay } from "../utils/borrowingUtils";
+import { transformPositionsForDisplay } from "../utils/borrowingUtils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
+
+type TabType = "assets" | "borrowing";
 
 interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
@@ -45,7 +48,16 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     isRetrying = false,
     isConnected = false,
   }) => {
-    // Calculate borrowing data for display
+    // Tab state management
+    const [activeTab, setActiveTab] = useState<TabType>("assets");
+
+    // Transform portfolio data to separate positions into assets and borrowing
+    const { assetsForDisplay, borrowingPositions, hasBorrowing } = useMemo(
+      () => transformPositionsForDisplay(portfolioData || []),
+      [portfolioData]
+    );
+
+    // Calculate borrowing data for display (for PieChart)
     const borrowingData = useMemo(() => {
       if (!portfolioData || portfolioData.length === 0) {
         return {
@@ -56,7 +68,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           hasBorrowing: false,
         };
       }
-      return transformForDisplay(portfolioData);
+      return transformPositionsForDisplay(portfolioData);
     }, [portfolioData]);
 
     // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
@@ -83,8 +95,139 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         className={`glass-morphism rounded-3xl p-6 border border-gray-800 ${className}`}
         data-testid={testId || "portfolio-overview"}
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold gradient-text">{title}</h3>
+        {/* Header with responsive tab navigation */}
+        <div className="mb-6">
+          {/* Desktop: Title and tabs on same row */}
+          <div className="hidden sm:flex items-center justify-between">
+            <h3 className="text-xl font-bold gradient-text">{title}</h3>
+
+            {hasBorrowing && (
+              <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg">
+                <button
+                  id="assets-tab"
+                  onClick={() => setActiveTab("assets")}
+                  role="tab"
+                  aria-selected={activeTab === "assets"}
+                  aria-controls="assets-tabpanel"
+                  className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+                    activeTab === "assets"
+                      ? "bg-blue-600 text-white shadow-lg transform scale-105"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                  }`}
+                >
+                  <TrendingUp
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      activeTab === "assets" ? "scale-110" : ""
+                    }`}
+                  />
+                  <span>Assets</span>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                      activeTab === "assets"
+                        ? "bg-blue-800 text-blue-100"
+                        : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {assetsForDisplay.length}
+                  </span>
+                </button>
+                <button
+                  id="borrowing-tab"
+                  onClick={() => setActiveTab("borrowing")}
+                  role="tab"
+                  aria-selected={activeTab === "borrowing"}
+                  aria-controls="borrowing-tabpanel"
+                  className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                    activeTab === "borrowing"
+                      ? "bg-orange-600 text-white shadow-lg transform scale-105"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                  }`}
+                >
+                  <ArrowDownLeft
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      activeTab === "borrowing" ? "scale-110" : ""
+                    }`}
+                  />
+                  <span>Borrowing</span>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                      activeTab === "borrowing"
+                        ? "bg-orange-800 text-orange-100"
+                        : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {borrowingPositions.length}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile: Title and tabs stacked */}
+          <div className="sm:hidden space-y-4">
+            <h3 className="text-xl font-bold gradient-text">{title}</h3>
+
+            {hasBorrowing && (
+              <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg">
+                <button
+                  id="assets-tab-mobile"
+                  onClick={() => setActiveTab("assets")}
+                  role="tab"
+                  aria-selected={activeTab === "assets"}
+                  aria-controls="assets-tabpanel"
+                  className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+                    activeTab === "assets"
+                      ? "bg-blue-600 text-white shadow-lg transform scale-105"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                  }`}
+                >
+                  <TrendingUp
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      activeTab === "assets" ? "scale-110" : ""
+                    }`}
+                  />
+                  <span>Assets</span>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                      activeTab === "assets"
+                        ? "bg-blue-800 text-blue-100"
+                        : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {assetsForDisplay.length}
+                  </span>
+                </button>
+                <button
+                  id="borrowing-tab-mobile"
+                  onClick={() => setActiveTab("borrowing")}
+                  role="tab"
+                  aria-selected={activeTab === "borrowing"}
+                  aria-controls="borrowing-tabpanel"
+                  className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                    activeTab === "borrowing"
+                      ? "bg-orange-600 text-white shadow-lg transform scale-105"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                  }`}
+                >
+                  <ArrowDownLeft
+                    className={`w-4 h-4 transition-transform duration-300 ${
+                      activeTab === "borrowing" ? "scale-110" : ""
+                    }`}
+                  />
+                  <span>Borrowing</span>
+                  <span
+                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                      activeTab === "borrowing"
+                        ? "bg-orange-800 text-orange-100"
+                        : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    {borrowingPositions.length}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Empty State */}
@@ -119,12 +262,11 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   </div>
                 ) : (
                   <PieChart
-                    data={borrowingData.assetsPieData}
+                    data={pieChartData}
                     size={250}
                     strokeWidth={10}
-                    totalValue={borrowingData.netValue}
                     totalBorrowing={borrowingData.totalBorrowing}
-                    showNetValue={true}
+                    showNetValue={borrowingData.hasBorrowing}
                     {...(renderBalanceDisplay && { renderBalanceDisplay })}
                   />
                 )}
@@ -147,6 +289,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   error={apiError}
                   {...(onRetry && { onRetry })}
                   isRetrying={isRetrying}
+                  activeTab={activeTab}
                 />
               </div>
             </div>
@@ -173,12 +316,11 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 </div>
               ) : (
                 <PieChart
-                  data={borrowingData.assetsPieData}
+                  data={pieChartData}
                   size={200}
                   strokeWidth={8}
-                  totalValue={borrowingData.netValue}
                   totalBorrowing={borrowingData.totalBorrowing}
-                  showNetValue={true}
+                  showNetValue={borrowingData.hasBorrowing}
                   {...(renderBalanceDisplay && { renderBalanceDisplay })}
                 />
               )}
@@ -194,6 +336,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 error={apiError}
                 {...(onRetry && { onRetry })}
                 isRetrying={isRetrying}
+                activeTab={activeTab}
               />
             </div>
           </div>

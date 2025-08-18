@@ -1,14 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  ArrowDownLeft,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
-  TrendingUp,
-} from "lucide-react";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { formatCurrency, formatNumber } from "../lib/utils";
 import { AssetCategory, AssetDetail } from "../types/portfolio";
 import {
@@ -28,6 +22,7 @@ interface AssetCategoriesDetailProps {
   error?: string | null;
   onRetry?: () => void;
   isRetrying?: boolean;
+  activeTab?: TabType;
 }
 
 type TabType = "assets" | "borrowing";
@@ -43,27 +38,15 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
     error = null,
     onRetry,
     isRetrying = false,
+    activeTab = "assets",
   }) => {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const [activeTab, setActiveTab] = useState<TabType>("assets");
 
     // Transform portfolio data to separate positions into assets and borrowing
-    const { assetsForDisplay, borrowingPositions, hasBorrowing } = useMemo(
+    const { assetsForDisplay, borrowingPositions } = useMemo(
       () => transformPositionsForDisplay(portfolioData),
       [portfolioData]
     );
-
-    // Get dynamic title based on active tab
-    const tabTitle = useMemo(() => {
-      switch (activeTab) {
-        case "assets":
-          return "Assets";
-        case "borrowing":
-          return "Borrowing";
-        default:
-          return "Portfolio Details";
-      }
-    }, [activeTab]);
 
     // Skeleton loading component for categories
     const CategorySkeleton = () => (
@@ -121,10 +104,10 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: index * 0.1 }}
-          className="flex items-center justify-between p-3 rounded-xl bg-red-900/20 hover:bg-red-900/30 transition-all duration-200 border border-red-500/30"
+          className="flex items-center justify-between p-4 rounded-xl bg-orange-900/20 hover:bg-orange-900/30 transition-all duration-200 border border-orange-500/30"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-red-800/30 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-orange-800/30 flex items-center justify-center">
               <ImageWithFallback
                 src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${position.symbol?.toLowerCase().replace(/[^a-z0-9]/g, "")}.webp`}
                 alt={`${position.symbol || position.name || "Unknown"} token icon`}
@@ -134,27 +117,33 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
               />
             </div>
             <div>
-              <div className="font-medium text-red-300">{position.name}</div>
-              <div className="text-sm text-red-400/70">
+              <div className="font-medium text-orange-300">{position.name}</div>
+              <div className="text-sm text-orange-400/70">
                 {position.protocol} • {position.type}
               </div>
             </div>
           </div>
 
           <div className="text-right">
-            <div className="font-semibold text-red-300">
+            <div className="font-semibold text-orange-300">
+              <span className="sr-only">Borrowed amount: </span>
               {formatBorrowingAmount(position.value)}
             </div>
-            <div className="text-sm text-red-400/70">
+            <div className="text-sm text-orange-400/70">
               -{formatNumber(position.amount, balanceHidden)} {position.symbol}
             </div>
-            <div className="text-sm text-red-400/70">
-              {position.apr > 0 ? `${position.apr}% APR` : "APR coming soon"}
+            <div className="text-sm text-orange-400/70">
+              {position.apr > 0
+                ? `${position.apr}% Borrow Rate`
+                : "Rate pending"}
             </div>
           </div>
 
-          <button className="p-2 rounded-lg hover:bg-red-800/30 transition-colors cursor-pointer">
-            <ExternalLink className="w-4 h-4 text-red-400" />
+          <button
+            className="p-2 rounded-lg hover:bg-orange-800/30 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
+            aria-label={`View ${position.name} on ${position.protocol}`}
+          >
+            <ExternalLink className="w-4 h-4 text-orange-400" />
           </button>
         </motion.div>
       ),
@@ -168,44 +157,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
         animate={{ opacity: 1, y: 0 }}
         className={`glass-morphism rounded-3xl p-6 border border-gray-800 ${className}`}
       >
-        {/* Tab Navigation */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold gradient-text">{tabTitle}</h2>
-
-          {hasBorrowing && (
-            <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700">
-              <button
-                onClick={() => setActiveTab("assets")}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === "assets"
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
-                }`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span>Category</span>
-                <span className="bg-gray-700 text-xs px-1.5 py-0.5 rounded">
-                  {assetsForDisplay.length}
-                </span>
-              </button>
-              <button
-                onClick={() => setActiveTab("borrowing")}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeTab === "borrowing"
-                    ? "bg-red-600 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800"
-                }`}
-              >
-                <ArrowDownLeft className="w-4 h-4" />
-                <span>Borrowing</span>
-                <span className="bg-gray-700 text-xs px-1.5 py-0.5 rounded">
-                  {borrowingPositions.length}
-                </span>
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-4">
@@ -233,7 +184,12 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
           <div className="space-y-4">
             {/* Assets Tab */}
             {activeTab === "assets" && (
-              <div className="space-y-4">
+              <div
+                className="space-y-4"
+                role="tabpanel"
+                id="assets-tabpanel"
+                aria-labelledby="assets-tab"
+              >
                 {assetsForDisplay.length > 0 ? (
                   assetsForDisplay.map((category, categoryIndex) => (
                     <motion.div
@@ -347,7 +303,10 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                                     </div>
                                   </div>
 
-                                  <button className="p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer">
+                                  <button
+                                    className="p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                                    aria-label={`View ${asset.name} on ${asset.protocol}`}
+                                  >
                                     <ExternalLink className="w-4 h-4 text-gray-400" />
                                   </button>
                                 </motion.div>
@@ -368,7 +327,12 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
 
             {/* Borrowing Tab */}
             {activeTab === "borrowing" && (
-              <div className="space-y-4">
+              <div
+                className="space-y-4"
+                role="tabpanel"
+                id="borrowing-tabpanel"
+                aria-labelledby="borrowing-tab"
+              >
                 {borrowingPositions.length > 0 ? (
                   borrowingPositions.map((position, index) =>
                     renderBorrowingPosition(position, index)
