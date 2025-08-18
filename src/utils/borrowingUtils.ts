@@ -1,4 +1,8 @@
-import type { AssetCategory, PieChartData } from "../types/portfolio";
+import type {
+  AssetCategory,
+  AssetDetail,
+  PieChartData,
+} from "../types/portfolio";
 
 export interface PortfolioSeparation {
   assets: AssetCategory[];
@@ -13,6 +17,15 @@ export interface BorrowingDisplayData {
   borrowingItems: AssetCategory[];
   netValue: number;
   totalBorrowing: number;
+  hasBorrowing: boolean;
+}
+
+export interface PositionSeparationData {
+  assetsForDisplay: AssetCategory[];
+  borrowingPositions: AssetDetail[];
+  totalAssets: number;
+  totalBorrowing: number;
+  netValue: number;
   hasBorrowing: boolean;
 }
 
@@ -130,4 +143,101 @@ export function hasSignificantBorrowing(
   const BORROWING_THRESHOLD = 0.01; // 1% threshold
   if (totalAssets <= 0) return false;
   return totalBorrowing / totalAssets > BORROWING_THRESHOLD;
+}
+
+/**
+ * Separate individual positions into assets and borrowing at the position level
+ * This extracts negative AssetDetail positions as individual borrowing items
+ */
+export function separatePositionsAndBorrowing(
+  categories: AssetCategory[]
+): PositionSeparationData {
+  const assetsForDisplay: AssetCategory[] = [];
+  const borrowingPositions: AssetDetail[] = [];
+  let totalAssets = 0;
+  let totalBorrowing = 0;
+
+  categories.forEach(category => {
+    const assetPositions: AssetDetail[] = [];
+    let categoryAssetValue = 0;
+
+    // Process each asset position within the category
+    category.assets.forEach(asset => {
+      if (asset.value >= 0) {
+        // Positive position - keep as asset
+        assetPositions.push(asset);
+        categoryAssetValue += asset.value;
+        totalAssets += asset.value;
+      } else {
+        // Negative position - extract as borrowing
+        const borrowingPosition: AssetDetail = {
+          ...asset,
+          value: Math.abs(asset.value), // Make positive for display
+          amount: Math.abs(asset.amount), // Make positive for display
+        };
+        borrowingPositions.push(borrowingPosition);
+        totalBorrowing += Math.abs(asset.value);
+      }
+    });
+
+    // Only include category in assets if it has positive positions
+    if (assetPositions.length > 0) {
+      const assetCategory: AssetCategory = {
+        ...category,
+        assets: assetPositions,
+        totalValue: categoryAssetValue,
+        percentage: 0, // Will be recalculated below
+      };
+      assetsForDisplay.push(assetCategory);
+    }
+  });
+
+  // Recalculate percentages for asset categories based on total assets only
+  if (totalAssets > 0) {
+    assetsForDisplay.forEach(category => {
+      category.percentage = (category.totalValue / totalAssets) * 100;
+    });
+  }
+
+  return {
+    assetsForDisplay,
+    borrowingPositions,
+    totalAssets,
+    totalBorrowing,
+    netValue: totalAssets - totalBorrowing,
+    hasBorrowing: borrowingPositions.length > 0,
+  };
+}
+
+/**
+ * Transform position-level data for display with borrowing context
+ */
+export function transformPositionsForDisplay(categories: AssetCategory[]): {
+  assetsPieData: PieChartData[];
+  assetsForDisplay: AssetCategory[];
+  borrowingPositions: AssetDetail[];
+  netValue: number;
+  totalBorrowing: number;
+  hasBorrowing: boolean;
+} {
+  const positionData = separatePositionsAndBorrowing(categories);
+
+  // Create pie chart data from asset categories only
+  const assetsPieData: PieChartData[] = positionData.assetsForDisplay.map(
+    category => ({
+      label: category.name,
+      value: category.totalValue,
+      percentage: category.percentage,
+      color: category.color,
+    })
+  );
+
+  return {
+    assetsPieData,
+    assetsForDisplay: positionData.assetsForDisplay,
+    borrowingPositions: positionData.borrowingPositions,
+    netValue: positionData.netValue,
+    totalBorrowing: positionData.totalBorrowing,
+    hasBorrowing: positionData.hasBorrowing,
+  };
 }

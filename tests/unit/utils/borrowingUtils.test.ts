@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
-import type { AssetCategory } from "../../../src/types/portfolio";
+import type { AssetCategory, AssetDetail } from "../../../src/types/portfolio";
 import {
   separateAssetsAndBorrowing,
   transformForDisplay,
   formatBorrowingAmount,
   getBorrowingPercentage,
   hasSignificantBorrowing,
+  separatePositionsAndBorrowing,
+  transformPositionsForDisplay,
 } from "../../../src/utils/borrowingUtils";
 
 describe("borrowingUtils", () => {
@@ -118,6 +120,198 @@ describe("borrowingUtils", () => {
 
     it("should handle zero assets", () => {
       expect(hasSignificantBorrowing(1000, 0)).toBe(false);
+    });
+  });
+
+  // Position-level borrowing tests
+  const mockCategoriesWithMixedPositions: AssetCategory[] = [
+    {
+      id: "defi",
+      name: "DeFi",
+      color: "#8b5cf6",
+      totalValue: 1000, // Category net value (3000 assets - 2000 borrowed)
+      percentage: 50,
+      change24h: -1.5,
+      assets: [
+        {
+          name: "USDC",
+          symbol: "USDC",
+          protocol: "Compound",
+          amount: 2000,
+          value: 2000, // Positive asset
+          apr: 3.5,
+          type: "lending",
+        },
+        {
+          name: "ETH",
+          symbol: "ETH",
+          protocol: "Aave",
+          amount: 1,
+          value: 1000, // Positive asset
+          apr: 2.1,
+          type: "lending",
+        },
+        {
+          name: "WBTC",
+          symbol: "WBTC",
+          protocol: "Compound",
+          amount: -0.05,
+          value: -2000, // Negative position (borrowed)
+          apr: 8.2,
+          type: "borrowing",
+        },
+      ],
+    },
+    {
+      id: "stablecoin",
+      name: "Stablecoin",
+      color: "#22c55e",
+      totalValue: 1500,
+      percentage: 75,
+      change24h: 0.1,
+      assets: [
+        {
+          name: "DAI",
+          symbol: "DAI",
+          protocol: "MakerDAO",
+          amount: 1500,
+          value: 1500, // All positive
+          apr: 1.8,
+          type: "lending",
+        },
+      ],
+    },
+  ];
+
+  describe("separatePositionsAndBorrowing", () => {
+    it("should extract negative positions as individual borrowing items", () => {
+      const result = separatePositionsAndBorrowing(
+        mockCategoriesWithMixedPositions
+      );
+
+      expect(result.assetsForDisplay).toHaveLength(2); // Both categories have positive positions
+      expect(result.borrowingPositions).toHaveLength(1); // One borrowed position
+      expect(result.totalAssets).toBe(4500); // 2000 + 1000 + 1500
+      expect(result.totalBorrowing).toBe(2000); // abs(-2000)
+      expect(result.netValue).toBe(2500); // 4500 - 2000
+      expect(result.hasBorrowing).toBe(true);
+    });
+
+    it("should recalculate category values after removing borrowed positions", () => {
+      const result = separatePositionsAndBorrowing(
+        mockCategoriesWithMixedPositions
+      );
+
+      const defiCategory = result.assetsForDisplay.find(
+        cat => cat.id === "defi"
+      );
+      expect(defiCategory?.totalValue).toBe(3000); // Only positive positions: 2000 + 1000
+      expect(defiCategory?.assets).toHaveLength(2); // Only USDC and ETH
+      expect(defiCategory?.percentage).toBeCloseTo(66.67, 2); // 3000/4500 * 100, rounded to 2 decimals
+    });
+
+    it("should make borrowing position values positive for display", () => {
+      const result = separatePositionsAndBorrowing(
+        mockCategoriesWithMixedPositions
+      );
+
+      const borrowedPosition = result.borrowingPositions[0];
+      expect(borrowedPosition.value).toBe(2000); // Made positive from -2000
+      expect(borrowedPosition.amount).toBe(0.05); // Made positive from -0.05
+      expect(borrowedPosition.symbol).toBe("WBTC");
+    });
+
+    it("should handle categories with only positive positions", () => {
+      const positiveOnlyCategories: AssetCategory[] = [
+        {
+          id: "test",
+          name: "Test",
+          color: "#000000",
+          totalValue: 1000,
+          percentage: 100,
+          change24h: 0,
+          assets: [
+            {
+              name: "ETH",
+              symbol: "ETH",
+              protocol: "Test",
+              amount: 1,
+              value: 1000,
+              apr: 0,
+              type: "lending",
+            },
+          ],
+        },
+      ];
+
+      const result = separatePositionsAndBorrowing(positiveOnlyCategories);
+      expect(result.borrowingPositions).toHaveLength(0);
+      expect(result.hasBorrowing).toBe(false);
+      expect(result.assetsForDisplay).toHaveLength(1);
+    });
+
+    it("should exclude categories that have no positive positions", () => {
+      const borrowingOnlyCategories: AssetCategory[] = [
+        {
+          id: "borrowed",
+          name: "Borrowed Only",
+          color: "#ff0000",
+          totalValue: -1000,
+          percentage: -100,
+          change24h: 0,
+          assets: [
+            {
+              name: "ETH",
+              symbol: "ETH",
+              protocol: "Aave",
+              amount: -1,
+              value: -1000,
+              apr: 5.0,
+              type: "borrowing",
+            },
+          ],
+        },
+      ];
+
+      const result = separatePositionsAndBorrowing(borrowingOnlyCategories);
+      expect(result.assetsForDisplay).toHaveLength(0); // No categories with positive positions
+      expect(result.borrowingPositions).toHaveLength(1); // One borrowed position
+    });
+  });
+
+  describe("transformPositionsForDisplay", () => {
+    it("should create proper position-level display data", () => {
+      const result = transformPositionsForDisplay(
+        mockCategoriesWithMixedPositions
+      );
+
+      expect(result.assetsPieData).toHaveLength(2); // Two categories with assets
+      expect(result.borrowingPositions).toHaveLength(1); // One borrowed position
+      expect(result.netValue).toBe(2500);
+      expect(result.totalBorrowing).toBe(2000);
+      expect(result.hasBorrowing).toBe(true);
+    });
+
+    it("should create pie chart data from asset categories only", () => {
+      const result = transformPositionsForDisplay(
+        mockCategoriesWithMixedPositions
+      );
+
+      const defiPieData = result.assetsPieData.find(
+        data => data.label === "DeFi"
+      );
+      expect(defiPieData?.value).toBe(3000); // Only positive positions
+      expect(defiPieData?.percentage).toBeCloseTo(66.67, 2); // Recalculated percentage
+    });
+
+    it("should handle empty portfolio", () => {
+      const result = transformPositionsForDisplay([]);
+
+      expect(result.assetsPieData).toHaveLength(0);
+      expect(result.borrowingPositions).toHaveLength(0);
+      expect(result.netValue).toBe(0);
+      expect(result.totalBorrowing).toBe(0);
+      expect(result.hasBorrowing).toBe(false);
     });
   });
 });
