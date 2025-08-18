@@ -161,7 +161,12 @@ describe("PieChart", () => {
       expect(screen.getByText("••••••••")).toBeInTheDocument();
     });
 
-    it("should always show 'Total Value' label regardless of balance visibility", () => {
+    it("should always show 'Total Value' label when using default balance display", () => {
+      render(<PieChart {...defaultProps} />);
+      expect(screen.getByText("Total Value")).toBeInTheDocument();
+    });
+
+    it("should use custom renderer when renderBalanceDisplay is provided", () => {
       const hiddenRenderer = vi.fn(() => "••••••••");
       const propsWithHiddenRenderer = {
         ...defaultProps,
@@ -170,7 +175,10 @@ describe("PieChart", () => {
 
       render(<PieChart {...propsWithHiddenRenderer} />);
 
-      expect(screen.getByText("Total Value")).toBeInTheDocument();
+      expect(hiddenRenderer).toHaveBeenCalled();
+      expect(screen.getByText("••••••••")).toBeInTheDocument();
+      // Custom renderer replaces default content, so "Total Value" should not appear
+      expect(screen.queryByText("Total Value")).not.toBeInTheDocument();
     });
   });
 

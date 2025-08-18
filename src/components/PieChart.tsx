@@ -12,6 +12,8 @@ interface PieChartProps {
   strokeWidth?: number;
   renderBalanceDisplay?: () => React.ReactNode;
   totalValue?: number; // Optional authoritative total value
+  totalBorrowing?: number; // Amount being borrowed
+  showNetValue?: boolean; // Whether to show net vs gross value
 }
 
 const PieChartComponent = ({
@@ -20,6 +22,8 @@ const PieChartComponent = ({
   strokeWidth = PORTFOLIO_CONFIG.DEFAULT_PIE_CHART_STROKE_WIDTH,
   renderBalanceDisplay,
   totalValue: providedTotalValue,
+  totalBorrowing = 0,
+  showNetValue = true,
 }: PieChartProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -41,14 +45,22 @@ const PieChartComponent = ({
     });
   }, [data, circumference]);
 
-  // Use provided totalValue if available, otherwise calculate from data
-  // This ensures data consistency when totalValue comes from authoritative source
-  const totalValue = useMemo(() => {
-    if (providedTotalValue !== undefined) {
-      return providedTotalValue;
-    }
-    return data.reduce((sum, item) => sum + item.value, 0);
-  }, [providedTotalValue, data]);
+  // Calculate values for display
+  const calculatedValues = useMemo(() => {
+    const calculatedTotal = data.reduce((sum, item) => sum + item.value, 0);
+    const displayTotal =
+      providedTotalValue !== undefined ? providedTotalValue : calculatedTotal;
+    const netValue = showNetValue
+      ? displayTotal - totalBorrowing
+      : displayTotal;
+    const hasBorrowing = totalBorrowing > 0;
+
+    return {
+      displayTotal,
+      netValue,
+      hasBorrowing,
+    };
+  }, [providedTotalValue, data, totalBorrowing, showNetValue]);
 
   return (
     <div className="flex items-center justify-center">
@@ -95,12 +107,16 @@ const PieChartComponent = ({
         {/* Center content */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-2xl font-bold text-white">
-              {renderBalanceDisplay
-                ? renderBalanceDisplay()
-                : formatCurrency(totalValue)}
-            </div>
-            <div className="text-sm text-gray-400">Total Value</div>
+            {renderBalanceDisplay ? (
+              renderBalanceDisplay()
+            ) : (
+              <>
+                <div className="text-2xl font-bold text-white">
+                  {formatCurrency(calculatedValues.netValue)}
+                </div>
+                <div className="text-sm text-gray-400">Total Value</div>
+              </>
+            )}
           </div>
         </div>
       </div>
