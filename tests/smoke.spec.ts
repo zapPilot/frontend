@@ -175,7 +175,6 @@ test.describe("Basic Functionality Validation", () => {
 
     // For now, just log errors but don't fail the test
     if (criticalErrors.length > 0) {
-      // eslint-disable-next-line no-console
       console.log(
         "Console errors found (not failing test):",
         criticalErrors.slice(0, 5)

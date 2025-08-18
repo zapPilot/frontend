@@ -1,8 +1,9 @@
 /**
  * API service for quant-engine integration
+ * Migrated to use unified API client for consistent error handling
  */
 
-const QUANT_ENGINE_URL = process.env.NEXT_PUBLIC_QUANT_ENGINE_URL;
+import { apiClient, APIError } from "../lib/api-client";
 
 /**
  * Get user information by main wallet address
@@ -10,38 +11,32 @@ const QUANT_ENGINE_URL = process.env.NEXT_PUBLIC_QUANT_ENGINE_URL;
  * @returns {Promise<Object>} User information
  */
 export const getUserByWallet = async walletAddress => {
-  const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/users/by-wallet/${walletAddress}`
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
-      throw new Error("USER_NOT_FOUND");
+  try {
+    return await apiClient.get(`/api/v1/users/by-wallet/${walletAddress}`);
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) {
+      const userNotFoundError = new Error("USER_NOT_FOUND");
+      userNotFoundError.name = "USER_NOT_FOUND";
+      throw userNotFoundError;
     }
-    throw new Error(`Failed to fetch user data: ${response.status}`);
+    throw error;
   }
-
-  return response.json();
 };
 
 /**
  * Get bundle wallet addresses by primary wallet
- * @param {string} walletAddress - Primary wallet address
+ * @param {string} userId - User ID (UUID)
  * @returns {Promise<Array>} Array of bundle wallet addresses
  */
 export const getBundleWalletsByPrimary = async userId => {
-  const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/users/${userId}/bundle-wallets`
-  );
-
-  if (!response.ok) {
-    if (response.status === 404) {
+  try {
+    return await apiClient.get(`/api/v1/users/${userId}/bundle-wallets`);
+  } catch (error) {
+    if (error instanceof APIError && error.status === 404) {
       throw new Error("Bundle wallets not found");
     }
-    throw new Error(`Failed to fetch bundle wallets: ${response.status}`);
+    throw error;
   }
-
-  return response.json();
 };
 
 /**
@@ -56,15 +51,14 @@ export const getPortfolioSnapshots = async (
   limit = 100,
   offset = 0
 ) => {
-  const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/portfolio-snapshots/by-user/${userId}?limit=${limit}&offset=${offset}`
+  const params = new URLSearchParams({
+    limit: limit.toString(),
+    offset: offset.toString(),
+  });
+
+  return await apiClient.get(
+    `/api/v1/portfolio-snapshots/by-user/${userId}?${params}`
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch portfolio snapshots: ${response.status}`);
-  }
-
-  return response.json();
 };
 
 /**
@@ -75,15 +69,14 @@ export const getPortfolioSnapshots = async (
  * @returns {Promise<Array>} Array of portfolio trend data
  */
 export const getPortfolioTrends = async (userId, days = 30, limit = 100) => {
-  const response = await fetch(
-    `${QUANT_ENGINE_URL}/api/v1/portfolio-trends/by-user/${userId}?days=${days}&limit=${limit}`
+  const params = new URLSearchParams({
+    days: days.toString(),
+    limit: limit.toString(),
+  });
+
+  return await apiClient.get(
+    `/api/v1/portfolio-trends/by-user/${userId}?${params}`
   );
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch portfolio trends: ${response.status}`);
-  }
-
-  return response.json();
 };
 
 /**
@@ -96,17 +89,15 @@ export const getPortfolioSummary = async (
   userId,
   includeCategories = false
 ) => {
-  let url = `${QUANT_ENGINE_URL}/api/v1/users/${userId}/portfolio-summary`;
+  const params = new URLSearchParams();
   if (includeCategories) {
-    url += "?include_categories=true";
-  }
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch portfolio summary: ${response.status}`);
+    params.set("include_categories", "true");
   }
 
-  return response.json();
+  const endpoint = `/api/v1/users/${userId}/portfolio-summary`;
+  const url = params.toString() ? `${endpoint}?${params}` : endpoint;
+
+  return await apiClient.get(url);
 };
 
 /**

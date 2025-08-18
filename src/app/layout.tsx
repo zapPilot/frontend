@@ -6,6 +6,7 @@ import { OnboardingProvider } from "@/providers/OnboardingProvider";
 import { ToastProvider } from "@/hooks/useToast";
 import { UserProvider } from "@/contexts/UserContext";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -84,15 +85,19 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-950 text-white`}
       >
-        <QueryProvider>
-          <SimpleWeb3Provider>
-            <UserProvider>
-              <OnboardingProvider>
-                <ToastProvider>{children}</ToastProvider>
-              </OnboardingProvider>
-            </UserProvider>
-          </SimpleWeb3Provider>
-        </QueryProvider>
+        <ErrorBoundary>
+          <QueryProvider>
+            <SimpleWeb3Provider>
+              <UserProvider>
+                <OnboardingProvider>
+                  <ErrorBoundary resetKeys={["user-context"]}>
+                    <ToastProvider>{children}</ToastProvider>
+                  </ErrorBoundary>
+                </OnboardingProvider>
+              </UserProvider>
+            </SimpleWeb3Provider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
