@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
     ],
   },
   // Narrow webpack dev watcher scope to reduce memory/CPU (webpack-only)
-  webpackDevMiddleware(config) {
+  webpackDevMiddleware(config: any) {
     config.watchOptions = {
       ...(config.watchOptions || {}),
       ignored: [

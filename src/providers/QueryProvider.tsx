@@ -11,7 +11,7 @@ interface QueryProviderProps {
 
 const enableDevtools =
   process.env.NODE_ENV === "development" &&
-  process.env.NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS === "1";
+  process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"] === "1";
 
 export function QueryProvider({ children }: QueryProviderProps) {
   return (
