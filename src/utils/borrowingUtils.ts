@@ -31,6 +31,7 @@ export interface PositionSeparationData {
 
 /**
  * Separate portfolio categories into assets (positive) and borrowing (negative)
+ * Updated to handle both legacy mixed structure and new separated structure
  */
 export function separateAssetsAndBorrowing(
   categories: AssetCategory[]
@@ -50,6 +51,11 @@ export function separateAssetsAndBorrowing(
         ...category,
         totalValue: Math.abs(category.totalValue), // Make positive for display
         percentage: Math.abs(category.percentage), // Make positive for display
+        assets: category.assets.map(asset => ({
+          ...asset,
+          value: Math.abs(asset.value), // Make positive for display
+          amount: Math.abs(asset.amount), // Make positive for display
+        })),
       };
       borrowing.push(borrowingCategory);
       totalBorrowing += Math.abs(category.totalValue);
@@ -63,11 +69,11 @@ export function separateAssetsAndBorrowing(
     });
   }
 
-  // Calculate percentages for borrowing based on total portfolio value
-  const totalPortfolioValue = totalAssets + totalBorrowing;
-  if (totalPortfolioValue > 0) {
+  // Calculate percentages for borrowing based on total borrowing value
+  // This ensures borrowing percentages add up to 100% within borrowing context
+  if (totalBorrowing > 0) {
     borrowing.forEach(debt => {
-      debt.percentage = (debt.totalValue / totalPortfolioValue) * 100;
+      debt.percentage = (debt.totalValue / totalBorrowing) * 100;
     });
   }
 
@@ -143,6 +149,42 @@ export function hasSignificantBorrowing(
   const BORROWING_THRESHOLD = 0.01; // 1% threshold
   if (totalAssets <= 0) return false;
   return totalBorrowing / totalAssets > BORROWING_THRESHOLD;
+}
+
+/**
+ * Debug utility to log borrowing calculation details
+ * Helps identify where weight calculations might be going wrong
+ */
+export function debugBorrowingCalculation(
+  categories: AssetCategory[],
+  context = "Unknown"
+): void {
+  if (process.env.NODE_ENV === "development") {
+    const separation = separateAssetsAndBorrowing(categories);
+
+    console.group(`🔍 Borrowing Debug [${context}]`);
+    console.log("Input Categories:", categories.length);
+    console.log("Total Assets:", separation.totalAssets);
+    console.log("Total Borrowing:", separation.totalBorrowing);
+    console.log("Net Value:", separation.netValue);
+    console.log(
+      "Asset Categories:",
+      separation.assets.map(a => ({
+        name: a.name,
+        value: a.totalValue,
+        percentage: a.percentage,
+      }))
+    );
+    console.log(
+      "Borrowing Categories:",
+      separation.borrowing.map(b => ({
+        name: b.name,
+        value: b.totalValue,
+        percentage: b.percentage,
+      }))
+    );
+    console.groupEnd();
+  }
 }
 
 /**
@@ -239,5 +281,76 @@ export function transformPositionsForDisplay(categories: AssetCategory[]): {
     netValue: positionData.netValue,
     totalBorrowing: positionData.totalBorrowing,
     hasBorrowing: positionData.hasBorrowing,
+  };
+}
+
+/**
+ * Validate pie chart weight calculations
+ * Ensures percentages add up correctly and values are consistent
+ */
+export function validatePieChartWeights(
+  pieData: PieChartData[],
+  context = "Unknown"
+): {
+  isValid: boolean;
+  totalPercentage: number;
+  totalValue: number;
+  issues: string[];
+} {
+  const issues: string[] = [];
+  const totalPercentage = pieData.reduce(
+    (sum, item) => sum + item.percentage,
+    0
+  );
+  const totalValue = pieData.reduce((sum, item) => sum + item.value, 0);
+
+  // Check percentage sum (should be close to 100%)
+  if (Math.abs(totalPercentage - 100) > 0.1) {
+    issues.push(
+      `Percentages don't add up to 100% (${totalPercentage.toFixed(2)}%)`
+    );
+  }
+
+  // Check for negative values
+  pieData.forEach(item => {
+    if (item.value < 0) {
+      issues.push(`Negative value found: ${item.label} = ${item.value}`);
+    }
+    if (item.percentage < 0) {
+      issues.push(
+        `Negative percentage found: ${item.label} = ${item.percentage}%`
+      );
+    }
+  });
+
+  // Check for missing colors
+  pieData.forEach(item => {
+    if (!item.color) {
+      issues.push(`Missing color for: ${item.label}`);
+    }
+  });
+
+  const isValid = issues.length === 0;
+
+  if (
+    process.env.NODE_ENV === "development" &&
+    (!isValid || context.includes("debug"))
+  ) {
+    console.group(`⚖️ Pie Chart Weight Validation [${context}]`);
+    console.log("Is Valid:", isValid);
+    console.log("Total Percentage:", totalPercentage.toFixed(2) + "%");
+    console.log("Total Value:", totalValue);
+    if (issues.length > 0) {
+      console.warn("Issues:", issues);
+    }
+    console.log("Data:", pieData);
+    console.groupEnd();
+  }
+
+  return {
+    isValid,
+    totalPercentage,
+    totalValue,
+    issues,
   };
 }

@@ -6,6 +6,8 @@ import type {
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
 import {
   transformForDisplay,
+  debugBorrowingCalculation,
+  validatePieChartWeights,
   type BorrowingDisplayData,
 } from "./borrowingUtils";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
@@ -94,7 +96,8 @@ export function preparePortfolioData(
  */
 export function preparePortfolioDataWithBorrowing(
   apiCategoriesData: AssetCategory[] | null,
-  _totalValue: number | null // eslint-disable-line @typescript-eslint/no-unused-vars -- Kept for API consistency
+  _totalValue: number | null,
+  debugContext?: string
 ): {
   portfolioData: AssetCategory[];
   pieChartData: {
@@ -108,11 +111,21 @@ export function preparePortfolioDataWithBorrowing(
   // Safe data preparation - handle null/undefined gracefully
   const portfolioData = apiCategoriesData || [];
 
+  // Debug input data if in development
+  if (debugContext && portfolioData.length > 0) {
+    debugBorrowingCalculation(portfolioData, debugContext);
+  }
+
   // Get borrowing-aware display data
   const borrowingData = transformForDisplay(portfolioData);
 
   // Create pie chart data from assets only (positive values)
   const pieChartData = borrowingData.assetsPieData;
+
+  // Validate pie chart weights
+  if (debugContext && pieChartData.length > 0) {
+    validatePieChartWeights(pieChartData, debugContext);
+  }
 
   return {
     portfolioData,
@@ -171,13 +184,71 @@ export const portfolioStateUtils = {
 
 /**
  * Transform complete API response to frontend format
+ * Handles both legacy categories structure and new asset_positions/borrowing_positions structure
  */
 export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
   totalValue: number;
   categories: AssetCategory[];
 } {
-  const totalValue =
-    apiResponse.categories?.reduce(
+  let categories: AssetCategory[] = [];
+  let totalValue = 0;
+
+  // Handle new separated structure
+  if (apiResponse.asset_positions && apiResponse.borrowing_positions) {
+    // Calculate total value from assets only (positive values)
+    const assetValue = apiResponse.asset_positions.reduce(
+      (sum, cat) =>
+        sum +
+        (cat.positions?.reduce(
+          (catSum, pos) => catSum + Math.max(0, pos.total_usd_value || 0),
+          0
+        ) || 0),
+      0
+    );
+
+    // Calculate total borrowing value (should be positive in the new structure)
+    const borrowingValue = apiResponse.borrowing_positions.reduce(
+      (sum, cat) =>
+        sum +
+        (cat.positions?.reduce(
+          (catSum, pos) => catSum + Math.abs(pos.total_usd_value || 0),
+          0
+        ) || 0),
+      0
+    );
+
+    // Net value for percentage calculations
+    totalValue = assetValue;
+
+    // Transform asset positions
+    const assetCategories = apiResponse.asset_positions.map((cat, index) =>
+      transformApiCategory(cat, index, assetValue)
+    );
+
+    // Transform borrowing positions (mark them as negative for internal processing)
+    const borrowingCategories = apiResponse.borrowing_positions.map(
+      (cat, index) => {
+        const category = transformApiCategory(
+          cat,
+          index + assetCategories.length,
+          borrowingValue
+        );
+        // Mark as negative values for internal borrowing logic
+        category.totalValue = -Math.abs(category.totalValue);
+        category.assets = category.assets.map(asset => ({
+          ...asset,
+          value: -Math.abs(asset.value),
+          amount: asset.amount, // Keep amount positive for display
+        }));
+        return category;
+      }
+    );
+
+    categories = [...assetCategories, ...borrowingCategories];
+  }
+  // Handle legacy structure
+  else if (apiResponse.categories) {
+    totalValue = apiResponse.categories.reduce(
       (sum, cat) =>
         sum +
         (cat.positions?.reduce(
@@ -185,12 +256,12 @@ export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
           0
         ) || 0),
       0
-    ) || 0;
+    );
 
-  const categories =
-    apiResponse.categories?.map((cat, index) =>
+    categories = apiResponse.categories.map((cat, index) =>
       transformApiCategory(cat, index, totalValue)
-    ) || [];
+    );
+  }
 
   return {
     totalValue,

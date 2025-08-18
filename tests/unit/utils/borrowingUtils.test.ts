@@ -1,13 +1,15 @@
 import { describe, expect, it } from "vitest";
-import type { AssetCategory, AssetDetail } from "../../../src/types/portfolio";
+import type { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import {
-  separateAssetsAndBorrowing,
-  transformForDisplay,
+  debugBorrowingCalculation,
   formatBorrowingAmount,
   getBorrowingPercentage,
   hasSignificantBorrowing,
+  separateAssetsAndBorrowing,
   separatePositionsAndBorrowing,
+  transformForDisplay,
   transformPositionsForDisplay,
+  validatePieChartWeights,
 } from "../../../src/utils/borrowingUtils";
 
 describe("borrowingUtils", () => {
@@ -63,7 +65,30 @@ describe("borrowingUtils", () => {
       const result = separateAssetsAndBorrowing(mockAssetCategories);
 
       expect(result.borrowing[0].totalValue).toBe(2000); // Made positive
-      expect(result.borrowing[0].percentage).toBe(20); // Made positive
+      expect(result.borrowing[0].percentage).toBe(100); // 100% of borrowing (2000/2000)
+    });
+
+    it("should calculate borrowing percentages based on total borrowing", () => {
+      const categoriesWithMultipleBorrowings: AssetCategory[] = [
+        ...mockAssetCategories,
+        {
+          id: "borrowed-btc",
+          name: "BTC Borrowed",
+          color: "#f97316",
+          totalValue: -1000, // Another borrowed asset
+          percentage: -10,
+          change24h: 0,
+          assets: [],
+        },
+      ];
+
+      const result = separateAssetsAndBorrowing(
+        categoriesWithMultipleBorrowings
+      );
+
+      expect(result.totalBorrowing).toBe(3000); // 2000 + 1000
+      expect(result.borrowing[0].percentage).toBeCloseTo(66.67, 2); // 2000/3000 * 100
+      expect(result.borrowing[1].percentage).toBeCloseTo(33.33, 2); // 1000/3000 * 100
     });
   });
 
@@ -312,6 +337,194 @@ describe("borrowingUtils", () => {
       expect(result.netValue).toBe(0);
       expect(result.totalBorrowing).toBe(0);
       expect(result.hasBorrowing).toBe(false);
+    });
+  });
+
+  describe("validatePieChartWeights", () => {
+    const validPieData: PieChartData[] = [
+      { label: "ETH", value: 5000, percentage: 50, color: "#627eea" },
+      { label: "BTC", value: 3000, percentage: 30, color: "#f7931a" },
+      { label: "USDC", value: 2000, percentage: 20, color: "#2775ca" },
+    ];
+
+    it("should validate correct pie chart data", () => {
+      const result = validatePieChartWeights(validPieData);
+
+      expect(result.isValid).toBe(true);
+      expect(result.totalPercentage).toBe(100);
+      expect(result.totalValue).toBe(10000);
+      expect(result.issues).toHaveLength(0);
+    });
+
+    it("should detect incorrect percentage totals", () => {
+      const invalidPercentageData: PieChartData[] = [
+        { label: "ETH", value: 5000, percentage: 60, color: "#627eea" }, // Wrong percentage
+        { label: "BTC", value: 3000, percentage: 30, color: "#f7931a" },
+        { label: "USDC", value: 2000, percentage: 20, color: "#2775ca" },
+      ];
+
+      const result = validatePieChartWeights(invalidPercentageData);
+
+      expect(result.isValid).toBe(false);
+      expect(result.totalPercentage).toBe(110);
+      expect(
+        result.issues.some(issue => issue.includes("don't add up to 100%"))
+      ).toBe(true);
+    });
+
+    it("should detect negative values", () => {
+      const negativeValueData: PieChartData[] = [
+        { label: "ETH", value: -1000, percentage: -10, color: "#627eea" },
+        { label: "BTC", value: 3000, percentage: 30, color: "#f7931a" },
+      ];
+
+      const result = validatePieChartWeights(negativeValueData);
+
+      expect(result.isValid).toBe(false);
+      expect(
+        result.issues.some(issue => issue.includes("Negative value found"))
+      ).toBe(true);
+      expect(
+        result.issues.some(issue => issue.includes("Negative percentage found"))
+      ).toBe(true);
+    });
+
+    it("should detect missing colors", () => {
+      const missingColorData: PieChartData[] = [
+        { label: "ETH", value: 5000, percentage: 50, color: "" },
+        { label: "BTC", value: 5000, percentage: 50, color: "#f7931a" },
+      ];
+
+      const result = validatePieChartWeights(missingColorData);
+
+      expect(result.isValid).toBe(false);
+      expect(
+        result.issues.some(issue => issue.includes("Missing color for: ETH"))
+      ).toBe(true);
+    });
+
+    it("should handle empty data", () => {
+      const result = validatePieChartWeights([]);
+
+      expect(result.isValid).toBe(false);
+      expect(result.totalPercentage).toBe(0);
+      expect(result.totalValue).toBe(0);
+    });
+  });
+
+  describe("debugBorrowingCalculation", () => {
+    it("should not throw errors when called", () => {
+      // Test that debug function doesn't crash
+      expect(() => {
+        debugBorrowingCalculation(mockAssetCategories, "test");
+      }).not.toThrow();
+    });
+
+    it("should handle empty categories", () => {
+      expect(() => {
+        debugBorrowingCalculation([], "empty-test");
+      }).not.toThrow();
+    });
+  });
+
+  describe("New API structure compatibility", () => {
+    // Test the borrowing utilities work correctly with the new separated API structure
+    const mockSeparatedAssetCategories: AssetCategory[] = [
+      {
+        id: "stablecoin",
+        name: "Stablecoin",
+        color: "#22c55e",
+        totalValue: 5000,
+        percentage: 62.5,
+        change24h: 1.2,
+        assets: [
+          {
+            name: "USDC",
+            symbol: "USDC",
+            protocol: "Compound",
+            amount: 5000,
+            value: 5000,
+            apr: 3.5,
+            type: "lending",
+          },
+        ],
+      },
+      {
+        id: "defi",
+        name: "DeFi",
+        color: "#8b5cf6",
+        totalValue: 3000,
+        percentage: 37.5,
+        change24h: -2.1,
+        assets: [
+          {
+            name: "ETH",
+            symbol: "ETH",
+            protocol: "Aave",
+            amount: 1,
+            value: 3000,
+            apr: 2.1,
+            type: "lending",
+          },
+        ],
+      },
+    ];
+
+    const mockSeparatedBorrowingCategories: AssetCategory[] = [
+      {
+        id: "borrowed-eth",
+        name: "ETH Borrowed",
+        color: "#ef4444",
+        totalValue: -2000, // Marked as negative for internal processing
+        percentage: 100,
+        change24h: 0,
+        assets: [
+          {
+            name: "ETH",
+            symbol: "ETH",
+            protocol: "Aave",
+            amount: 0.5, // Keep amount positive for display
+            value: -2000, // Negative for borrowing
+            apr: 8.2,
+            type: "borrowing",
+          },
+        ],
+      },
+    ];
+
+    it("should handle pre-separated assets correctly", () => {
+      const combinedCategories = [
+        ...mockSeparatedAssetCategories,
+        ...mockSeparatedBorrowingCategories,
+      ];
+
+      const result = separateAssetsAndBorrowing(combinedCategories);
+
+      expect(result.assets).toHaveLength(2);
+      expect(result.borrowing).toHaveLength(1);
+      expect(result.totalAssets).toBe(8000);
+      expect(result.totalBorrowing).toBe(2000);
+      expect(result.netValue).toBe(6000);
+    });
+
+    it("should create valid pie chart data from pre-separated data", () => {
+      const combinedCategories = [
+        ...mockSeparatedAssetCategories,
+        ...mockSeparatedBorrowingCategories,
+      ];
+
+      const result = transformForDisplay(combinedCategories);
+
+      // Pie chart should only show assets (positive values)
+      expect(result.assetsPieData).toHaveLength(2);
+      expect(result.assetsPieData.every(item => item.value > 0)).toBe(true);
+      expect(result.assetsPieData.every(item => item.percentage > 0)).toBe(
+        true
+      );
+
+      // Validate the pie chart data
+      const validation = validatePieChartWeights(result.assetsPieData);
+      expect(validation.isValid).toBe(true);
     });
   });
 });

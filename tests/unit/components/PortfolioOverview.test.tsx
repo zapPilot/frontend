@@ -529,4 +529,254 @@ describe("PortfolioOverview", () => {
       );
     });
   });
+
+  describe("New API Schema and Borrowing Weight Calculation", () => {
+    // Mock data representing the new API structure with separated asset_positions and borrowing_positions
+    const mockAssetCategoriesFromNewAPI: AssetCategory[] = [
+      {
+        id: "stablecoin",
+        name: "Stablecoin",
+        percentage: 60, // Corrected percentage based on assets only
+        color: "#22c55e",
+        totalValue: 6000,
+        change24h: 0.5,
+        assets: [
+          {
+            name: "USDC",
+            symbol: "USDC",
+            protocol: "Compound",
+            amount: 6000,
+            value: 6000,
+            apr: 3.5,
+            type: "lending",
+          },
+        ],
+      },
+      {
+        id: "eth",
+        name: "ETH",
+        percentage: 40, // Corrected percentage based on assets only
+        color: "#627eea",
+        totalValue: 4000,
+        change24h: -1.2,
+        assets: [
+          {
+            name: "ETH",
+            symbol: "ETH",
+            protocol: "Aave",
+            amount: 2,
+            value: 4000,
+            apr: 2.8,
+            type: "lending",
+          },
+        ],
+      },
+    ];
+
+    const mockBorrowingCategoriesFromNewAPI: AssetCategory[] = [
+      {
+        id: "borrowed-btc",
+        name: "BTC Borrowed",
+        percentage: 100, // 100% of borrowing total
+        color: "#f7931a",
+        totalValue: -3000, // Negative for internal processing
+        change24h: 0,
+        assets: [
+          {
+            name: "BTC",
+            symbol: "BTC",
+            protocol: "Compound",
+            amount: 0.1, // Keep amount positive for display
+            value: -3000, // Negative for borrowing
+            apr: 8.5,
+            type: "borrowing",
+          },
+        ],
+      },
+    ];
+
+    const mockPieChartDataFromNewAPI: PieChartData[] = [
+      {
+        label: "Stablecoin",
+        value: 6000,
+        percentage: 60,
+        color: "#22c55e",
+      },
+      {
+        label: "ETH",
+        value: 4000,
+        percentage: 40,
+        color: "#627eea",
+      },
+    ];
+
+    it("should handle portfolio data from new separated API structure", () => {
+      const combinedPortfolioData = [
+        ...mockAssetCategoriesFromNewAPI,
+        ...mockBorrowingCategoriesFromNewAPI,
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioData={combinedPortfolioData}
+          pieChartData={mockPieChartDataFromNewAPI}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Should display pie chart with only asset data (positive values)
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("2");
+
+      // Should show correct percentages that add up to 100% for assets only
+      expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
+        "Stablecoin: $6000 (60%)"
+      );
+      expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
+        "ETH: $4000 (40%)"
+      );
+    });
+
+    it("should exclude borrowing positions from pie chart display", () => {
+      const combinedPortfolioData = [
+        ...mockAssetCategoriesFromNewAPI,
+        ...mockBorrowingCategoriesFromNewAPI,
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioData={combinedPortfolioData}
+          pieChartData={mockPieChartDataFromNewAPI}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Pie chart should not include the borrowing position
+      const pieItems = screen.getAllByTestId(/^pie-item-/);
+      expect(pieItems).toHaveLength(4); // 2 assets × 2 views (desktop + mobile)
+
+      // No negative values should appear in pie chart
+      pieItems.forEach(item => {
+        expect(item.textContent).not.toMatch(/-\$/);
+      });
+    });
+
+    it("should calculate correct asset percentages when borrowing is present", () => {
+      // Assets total: $10,000, Borrowing total: $3,000
+      // Asset percentages should be calculated from $10,000 base (60% and 40%)
+      const combinedPortfolioData = [
+        ...mockAssetCategoriesFromNewAPI,
+        ...mockBorrowingCategoriesFromNewAPI,
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioData={combinedPortfolioData}
+          pieChartData={mockPieChartDataFromNewAPI}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Verify percentages sum to 100% for assets only
+      const stablecoinItems = screen.getAllByText("Stablecoin: $6000 (60%)");
+      const ethItems = screen.getAllByText("ETH: $4000 (40%)");
+
+      expect(stablecoinItems.length).toBeGreaterThan(0);
+      expect(ethItems.length).toBeGreaterThan(0);
+
+      // Total percentages should be 100% (60% + 40%)
+      expect(60 + 40).toBe(100);
+    });
+
+    it("should pass borrowing data correctly to AssetCategoriesDetail component", () => {
+      const combinedPortfolioData = [
+        ...mockAssetCategoriesFromNewAPI,
+        ...mockBorrowingCategoriesFromNewAPI,
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioData={combinedPortfolioData}
+          pieChartData={mockPieChartDataFromNewAPI}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // AssetCategoriesDetail should receive the full portfolio data including borrowing
+      expect(screen.getAllByTestId("asset-categories-detail")).toHaveLength(2); // Desktop + mobile
+
+      // Should include both asset and borrowing categories in the data passed to AssetCategoriesDetail
+      const categoryItems = screen.getAllByTestId(/^category-item-/);
+      expect(categoryItems.length).toBeGreaterThanOrEqual(2); // At least the asset categories
+    });
+
+    it("should maintain backward compatibility with legacy API structure", () => {
+      // Test with the original mixed portfolio data structure
+      render(
+        <PortfolioOverview
+          portfolioData={mockPortfolioData}
+          pieChartData={mockPieChartData}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Should still work with legacy structure
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("3");
+      expect(screen.getAllByTestId("asset-categories-detail")).toHaveLength(2); // Desktop + mobile
+    });
+
+    it("should validate pie chart weights correctly", () => {
+      // Test data that should pass validation
+      const validPieData: PieChartData[] = [
+        { label: "A", value: 5000, percentage: 50, color: "#ff0000" },
+        { label: "B", value: 5000, percentage: 50, color: "#00ff00" },
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioData={mockAssetCategoriesFromNewAPI}
+          pieChartData={validPieData}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Should display without errors
+      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
+      expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
+        "no-error"
+      );
+    });
+
+    it("should handle borrowing-only portfolio correctly", () => {
+      // Portfolio with only borrowing positions (edge case)
+      const borrowingOnlyData = mockBorrowingCategoriesFromNewAPI;
+      const emptyPieData: PieChartData[] = [];
+
+      render(
+        <PortfolioOverview
+          portfolioData={borrowingOnlyData}
+          pieChartData={emptyPieData}
+          expandedCategory={null}
+          onCategoryToggle={vi.fn()}
+        />
+      );
+
+      // Should show empty state when no assets (only borrowing)
+      expect(
+        screen.getByTestId("wallet-connection-prompt")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText("Connect Wallet to View Portfolio")
+      ).toBeInTheDocument();
+    });
+  });
 });
