@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useMemo } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { AssetCategory, PieChartData } from "../types/portfolio";
+import { transformForDisplay } from "../utils/borrowingUtils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
@@ -11,7 +12,7 @@ import { WalletConnectionPrompt } from "./ui";
 interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
   pieChartData: PieChartData[]; // Now required - no more fallback logic needed
-  totalValue?: number | null; // Optional authoritative total value, can be null
+  totalValue?: number | null; // Optional authoritative total value, can be null (kept for backward compatibility)
   expandedCategory: string | null;
   onCategoryToggle: (categoryId: string) => void;
   balanceHidden?: boolean;
@@ -30,7 +31,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
     portfolioData,
     pieChartData, // Now required - no more optional fallback
-    totalValue,
+    totalValue: _totalValue, // eslint-disable-line @typescript-eslint/no-unused-vars -- Kept for backward compatibility
     expandedCategory,
     onCategoryToggle,
     balanceHidden = false,
@@ -44,6 +45,20 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     isRetrying = false,
     isConnected = false,
   }) => {
+    // Calculate borrowing data for display
+    const borrowingData = useMemo(() => {
+      if (!portfolioData || portfolioData.length === 0) {
+        return {
+          assetsPieData: [],
+          borrowingItems: [],
+          netValue: 0,
+          totalBorrowing: 0,
+          hasBorrowing: false,
+        };
+      }
+      return transformForDisplay(portfolioData);
+    }, [portfolioData]);
+
     // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
     const showLoadingState =
       isLoading ||
@@ -104,11 +119,12 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   </div>
                 ) : (
                   <PieChart
-                    data={pieChartData}
+                    data={borrowingData.assetsPieData}
                     size={250}
                     strokeWidth={10}
-                    {...(totalValue !== undefined &&
-                      totalValue !== null && { totalValue })}
+                    totalValue={borrowingData.netValue}
+                    totalBorrowing={borrowingData.totalBorrowing}
+                    showNetValue={true}
                     {...(renderBalanceDisplay && { renderBalanceDisplay })}
                   />
                 )}
@@ -126,7 +142,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   expandedCategory={expandedCategory}
                   onCategoryToggle={onCategoryToggle}
                   balanceHidden={balanceHidden}
-                  title=""
+                  title="Assets"
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={showLoadingState}
                   error={apiError}
@@ -158,11 +174,12 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 </div>
               ) : (
                 <PieChart
-                  data={pieChartData}
+                  data={borrowingData.assetsPieData}
                   size={200}
                   strokeWidth={8}
-                  {...(totalValue !== undefined &&
-                    totalValue !== null && { totalValue })}
+                  totalValue={borrowingData.netValue}
+                  totalBorrowing={borrowingData.totalBorrowing}
+                  showNetValue={true}
                   {...(renderBalanceDisplay && { renderBalanceDisplay })}
                 />
               )}
@@ -173,7 +190,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 expandedCategory={expandedCategory}
                 onCategoryToggle={onCategoryToggle}
                 balanceHidden={balanceHidden}
-                title=""
+                title="Assets"
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={showLoadingState}
                 error={apiError}

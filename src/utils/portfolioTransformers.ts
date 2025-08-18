@@ -1,10 +1,14 @@
-import type { AssetCategory, AssetDetail } from "../types/portfolio";
-import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
 import type {
-  ApiPortfolioSummary,
   ApiCategory,
+  ApiPortfolioSummary,
   ApiPosition,
 } from "../schemas/portfolioApi";
+import type { AssetCategory, AssetDetail } from "../types/portfolio";
+import {
+  transformForDisplay,
+  type BorrowingDisplayData,
+} from "./borrowingUtils";
+import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
 
 /**
  * Transform API positions to AssetDetail format
@@ -81,6 +85,39 @@ export function preparePortfolioData(
   return {
     portfolioData,
     pieChartData,
+  };
+}
+
+/**
+ * Enhanced portfolio data preparation with borrowing support
+ * Separates assets from borrowing and provides all display data
+ */
+export function preparePortfolioDataWithBorrowing(
+  apiCategoriesData: AssetCategory[] | null,
+  _totalValue: number | null // eslint-disable-line @typescript-eslint/no-unused-vars -- Kept for API consistency
+): {
+  portfolioData: AssetCategory[];
+  pieChartData: {
+    label: string;
+    value: number;
+    percentage: number;
+    color: string;
+  }[];
+  borrowingData: BorrowingDisplayData;
+} {
+  // Safe data preparation - handle null/undefined gracefully
+  const portfolioData = apiCategoriesData || [];
+
+  // Get borrowing-aware display data
+  const borrowingData = transformForDisplay(portfolioData);
+
+  // Create pie chart data from assets only (positive values)
+  const pieChartData = borrowingData.assetsPieData;
+
+  return {
+    portfolioData,
+    pieChartData,
+    borrowingData,
   };
 }
 

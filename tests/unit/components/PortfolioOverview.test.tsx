@@ -1,8 +1,8 @@
 import { screen } from "@testing-library/react";
-import { render } from "../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PortfolioOverview } from "../../../src/components/PortfolioOverview";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
+import { render } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("framer-motion", () => ({
@@ -236,13 +236,13 @@ describe("PortfolioOverview", () => {
 
       // Verify the specific data values from provided pieChartData (not calculated from portfolioData)
       expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $6000 (40%)"
+        "Stablecoins: $4000 (40%)"
       );
       expect(screen.getAllByTestId("pie-item-1")[0]).toHaveTextContent(
-        "ETH: $5250 (35%)"
+        "ETH: $3500 (35%)"
       );
       expect(screen.getAllByTestId("pie-item-2")[0]).toHaveTextContent(
-        "BTC: $3750 (25%)"
+        "BTC: $2500 (25%)"
       );
     });
 
@@ -271,9 +271,9 @@ describe("PortfolioOverview", () => {
       // Should use pieChartData, not portfolioData
       expect(
         screen.getAllByTestId("pie-chart-data-count")[0]
-      ).toHaveTextContent("3");
+      ).toHaveTextContent("1");
       expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $6000 (40%)"
+        "Different: $99999 (100%)"
       );
     });
   });
@@ -525,7 +525,7 @@ describe("PortfolioOverview", () => {
 
       // Verify that the component uses the data as-is
       expect(screen.getAllByTestId("pie-item-0")[0]).toHaveTextContent(
-        "Stablecoins: $6000 (40%)"
+        "Stablecoins: $4000 (40%)"
       );
     });
   });
