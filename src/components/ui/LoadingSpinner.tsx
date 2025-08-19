@@ -17,6 +17,7 @@ export interface LoadingSpinnerProps {
   label?: string;
   "aria-label"?: string;
   "aria-hidden"?: boolean | "true" | "false";
+  variant?: "default" | "dots" | "pulse";
 }
 
 const sizeClasses = {
@@ -28,7 +29,7 @@ const sizeClasses = {
 };
 
 const colorClasses = {
-  primary: "text-blue-600",
+  primary: "text-purple-500", // Match the existing purple theme
   secondary: "text-gray-600",
   blue: "text-blue-600",
   white: "text-white",
@@ -40,7 +41,7 @@ const colorClasses = {
 };
 
 /**
- * Consistent loading spinner component
+ * Consistent loading spinner component with multiple variants
  */
 export function LoadingSpinner({
   size = "md",
@@ -49,10 +50,63 @@ export function LoadingSpinner({
   label = "Loading",
   "aria-label": ariaLabel,
   "aria-hidden": ariaHidden,
+  variant = "default",
 }: LoadingSpinnerProps) {
   const finalAriaLabel = ariaLabel || label;
   const isHidden = ariaHidden === true || ariaHidden === "true";
 
+  // Render different variants
+  if (variant === "dots") {
+    return (
+      <div
+        className={`inline-flex items-center space-x-1 ${className}`}
+        {...(!isHidden && { role: "status", "aria-label": finalAriaLabel })}
+        {...(isHidden && { "aria-hidden": ariaHidden })}
+      >
+        {[0, 1, 2].map(i => (
+          <motion.div
+            key={i}
+            className={`${sizeClasses[size]
+              .replace("w-", "w-")
+              .replace("h-", "h-")
+              .replace(/(\d+)/, match =>
+                String(Number(match) / 2)
+              )} ${colorClasses[color]} bg-current rounded-full`}
+            animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
+            transition={{
+              duration: 0.8,
+              repeat: Infinity,
+              delay: i * 0.2,
+            }}
+          />
+        ))}
+        <span className="sr-only">{label}</span>
+      </div>
+    );
+  }
+
+  if (variant === "pulse") {
+    return (
+      <div
+        className={`inline-flex items-center ${sizeClasses[size]} ${className}`}
+        {...(!isHidden && { role: "status", "aria-label": finalAriaLabel })}
+        {...(isHidden && { "aria-hidden": ariaHidden })}
+      >
+        <motion.div
+          className={`${sizeClasses[size]} ${colorClasses[color]} bg-current rounded-full`}
+          animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+          transition={{
+            duration: 1,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <span className="sr-only">{label}</span>
+      </div>
+    );
+  }
+
+  // Default spinner variant
   return (
     <div
       className={`inline-flex items-center ${sizeClasses[size]} ${className}`}

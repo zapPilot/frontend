@@ -4,6 +4,7 @@ import { Navigation } from "@/components/Navigation";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
+import { LoadingState } from "@/components/ui/LoadingState";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
@@ -15,9 +16,12 @@ const AnalyticsTab = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
+      <LoadingState
+        variant="spinner"
+        size="lg"
+        message="Loading Analytics..."
+        className="min-h-96"
+      />
     ),
   }
 );
@@ -29,9 +33,12 @@ const CommunityTab = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
+      <LoadingState
+        variant="spinner"
+        size="lg"
+        message="Loading Community..."
+        className="min-h-96"
+      />
     ),
   }
 );
@@ -43,9 +50,12 @@ const AirdropTab = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
+      <LoadingState
+        variant="spinner"
+        size="lg"
+        message="Loading Airdrop..."
+        className="min-h-96"
+      />
     ),
   }
 );
@@ -57,9 +67,12 @@ const SettingsTab = dynamic(
     })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
+      <LoadingState
+        variant="spinner"
+        size="lg"
+        message="Loading Settings..."
+        className="min-h-96"
+      />
     ),
   }
 );
@@ -69,9 +82,12 @@ const SwapPage = dynamic(
     import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
   {
     loading: () => (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-      </div>
+      <LoadingState
+        variant="spinner"
+        size="lg"
+        message="Loading Swap Interface..."
+        className="min-h-96"
+      />
     ),
   }
 );
