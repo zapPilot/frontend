@@ -9,6 +9,7 @@ import { transformPositionsForDisplay } from "../utils/borrowingUtils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
 
 type TabType = "assets" | "borrowing";
 
@@ -251,7 +252,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               >
                 {showLoadingState ? (
                   <div className="flex items-center justify-center h-[250px] w-[250px]">
-                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-500"></div>
+                    <LoadingSpinner size="xl" color="primary" />
                   </div>
                 ) : apiError ? (
                   <div className="flex items-center justify-center h-[250px] w-[250px]">
@@ -305,7 +306,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
             >
               {showLoadingState ? (
                 <div className="flex items-center justify-center h-[200px] w-[200px]">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                  <LoadingSpinner size="lg" color="primary" />
                 </div>
               ) : apiError ? (
                 <div className="flex items-center justify-center h-[200px] w-[200px]">

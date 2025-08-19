@@ -1,9 +1,11 @@
-import { AlertCircle, Loader, TrendingUp } from "lucide-react";
+import { AlertCircle, TrendingUp } from "lucide-react";
 import React, { useMemo } from "react";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { formatSmallCurrency } from "../../utils/formatters";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { WalletMetricsSkeleton } from "../ui/LoadingState";
 
 interface WalletMetricsProps {
   totalValue: number | null;
@@ -80,8 +82,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       if (showLoader) {
         return (
           <div className="flex items-center space-x-2">
-            <Loader className="w-6 h-6 animate-spin text-purple-400" />
-            <span className="text-lg text-gray-400 animate-pulse">
+            <LoadingSpinner size="md" color="primary" />
+            <span className="text-lg text-gray-400">
               {isRetrying ? "Retrying..." : "Loading..."}
             </span>
           </div>
@@ -147,10 +149,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             isRetrying ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gray-700 rounded animate-pulse" />
-              <div className="w-16 h-6 bg-gray-700 rounded animate-pulse" />
-            </div>
+            <WalletMetricsSkeleton showValue={true} showPercentage={false} />
           ) : (
             <div
               className={`flex items-center space-x-2 ${totalValue === null ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
@@ -169,7 +168,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             isRetrying ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
-            <div className="w-24 h-6 bg-gray-700 rounded animate-pulse" />
+            <WalletMetricsSkeleton
+              showValue={true}
+              showPercentage={false}
+              className="w-24"
+            />
           ) : (
             <p
               className={`text-xl font-semibold ${totalValue === null ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}

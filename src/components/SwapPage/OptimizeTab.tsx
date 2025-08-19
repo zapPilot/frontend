@@ -19,6 +19,7 @@ import { useUIState } from "./hooks/useUIState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
+import { createApiClient, handleAPIError } from "../../lib/api-client";
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
@@ -150,47 +151,34 @@ const useIntentCreation = (
       slippage: number
     ) => {
       try {
-        const response = await fetch(
-          `${process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"]}/api/v1/intents/dustZap`,
+        const result = await createApiClient.intentEngine.post(
+          "/api/v1/intents/dustZap",
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
+            userAddress,
+            chainId,
+            params: {
+              slippage,
+              dustTokens: filteredDustTokens.map(token => ({
+                address: token.id,
+                symbol: token.optimized_symbol || token.symbol,
+                amount: token.amount,
+                price: token.price,
+                decimals: token.decimals,
+                raw_amount_hex_str: token.raw_amount_hex_str,
+              })),
+              toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              toTokenDecimals: 18,
             },
-            body: JSON.stringify({
-              userAddress,
-              chainId,
-              params: {
-                slippage,
-                dustTokens: filteredDustTokens.map(token => ({
-                  address: token.id,
-                  symbol: token.optimized_symbol || token.symbol,
-                  amount: token.amount,
-                  price: token.price,
-                  decimals: token.decimals,
-                  raw_amount_hex_str: token.raw_amount_hex_str,
-                })),
-                toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-                toTokenDecimals: 18,
-              },
-            }),
           }
         );
 
-        if (!response.ok) {
-          throw new Error(
-            `Failed to create DustZap intent: ${response.statusText}`
-          );
-        }
-
-        const result = await response.json();
         return result.intentId;
       } catch (error) {
+        const errorMessage = handleAPIError(error);
         showToast({
           type: "error",
           title: "Optimization Failed",
-          message:
-            "Unable to prepare optimization. Please check connection and retry.",
+          message: `Unable to prepare optimization: ${errorMessage}`,
           duration: 8000,
         });
         throw error;

@@ -59,6 +59,19 @@ vi.mock("../../../src/components/ui", () => ({
   ),
 }));
 
+// Mock LoadingSpinner and LoadingState components used by WalletMetrics
+vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
+  LoadingSpinner: vi.fn(() => (
+    <span data-testid="loading-spinner">Loading...</span>
+  )),
+}));
+
+vi.mock("../../../src/components/ui/LoadingState", () => ({
+  WalletMetricsSkeleton: vi.fn(() => (
+    <div data-testid="wallet-metrics-skeleton">Loading skeleton...</div>
+  )),
+}));
+
 vi.mock("lucide-react", () => ({
   AlertCircle: vi.fn(() => <span>AlertCircle</span>),
   ArrowDownLeft: vi.fn(() => <span>ArrowDownLeft</span>),

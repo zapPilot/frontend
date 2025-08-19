@@ -8,7 +8,6 @@ import {
   Edit3,
   ExternalLink,
   Plus,
-  RefreshCw,
   Trash2,
   Wallet,
   X,
@@ -18,6 +17,8 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "../contexts/UserContext";
 import { GlassCard, GradientButton } from "./ui";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { RefreshButton } from "./ui/LoadingState";
 
 // Remove DEMO_WALLET constant - now using real connected wallet
 
@@ -171,16 +172,12 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <button
+                <RefreshButton
+                  isLoading={loading}
                   onClick={refetch}
-                  disabled={loading}
-                  className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 disabled:opacity-50"
+                  size="md"
                   title="Refresh Bundle"
-                >
-                  <RefreshCw
-                    className={`w-4 h-4 text-gray-300 ${loading ? "animate-spin" : ""}`}
-                  />
-                </button>
+                />
                 <button
                   onClick={onClose}
                   className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
@@ -193,7 +190,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
             {/* Loading State */}
             {loading && (
               <div className="text-center py-8">
-                <div className="animate-spin w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                <div className="flex justify-center mb-3">
+                  <LoadingSpinner size="md" color="primary" />
+                </div>
                 <p className="text-gray-400 text-sm">
                   Loading bundle wallets...
                 </p>
