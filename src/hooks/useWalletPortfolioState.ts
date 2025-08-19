@@ -1,7 +1,7 @@
 import { usePortfolio } from "./usePortfolio";
 import { usePortfolioData } from "./usePortfolioData";
 import { useWalletModal } from "./useWalletModal";
-import { preparePortfolioData } from "../utils/portfolioTransformers";
+import { preparePortfolioDataWithBorrowing } from "../utils/portfolioTransformers";
 
 /**
  * Custom hook that consolidates all wallet portfolio state and data transformations
@@ -35,10 +35,11 @@ export function useWalletPortfolioState() {
     closeModal: closeWalletManager,
   } = useWalletModal();
 
-  // Consolidated data preparation - all transformation logic in utils layer
-  const { portfolioData, pieChartData } = preparePortfolioData(
+  // Consolidated data preparation - use borrowing-aware transformation to ensure pie chart only shows assets
+  const { portfolioData, pieChartData } = preparePortfolioDataWithBorrowing(
     apiCategoriesData,
-    totalValue
+    totalValue,
+    "useWalletPortfolioState"
   );
 
   return {

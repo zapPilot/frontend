@@ -6,7 +6,7 @@ import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
-import { preparePortfolioData } from "../../../src/utils/portfolioTransformers";
+import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
 
 // Mock all dependencies
 vi.mock("../../../src/hooks/usePortfolioData");
@@ -18,7 +18,9 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
   const mockUsePortfolioData = vi.mocked(usePortfolioData);
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseWalletModal = vi.mocked(useWalletModal);
-  const mockPreparePortfolioData = vi.mocked(preparePortfolioData);
+  const mockPreparePortfolioDataWithBorrowing = vi.mocked(
+    preparePortfolioDataWithBorrowing
+  );
 
   const mockApiCategoriesData: AssetCategory[] = [
     {
@@ -76,7 +78,9 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       closeModal: vi.fn(),
     });
 
-    mockPreparePortfolioData.mockReturnValue(mockPortfolioDataReturn);
+    mockPreparePortfolioDataWithBorrowing.mockReturnValue(
+      mockPortfolioDataReturn
+    );
   });
 
   describe("Hook Integration and Data Flow", () => {
@@ -113,12 +117,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       expect(mockUsePortfolio).toHaveBeenCalledWith(mockApiCategoriesData);
     });
 
-    it("should call preparePortfolioData with correct parameters", () => {
+    it("should call preparePortfolioDataWithBorrowing with correct parameters", () => {
       renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith(
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
         mockApiCategoriesData,
-        16000
+        16000,
+        "useWalletPortfolioState"
       );
     });
 
@@ -135,7 +140,11 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       renderHook(() => useWalletPortfolioState());
 
       expect(mockUsePortfolio).toHaveBeenCalledWith([]);
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith(null, null);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
+        null,
+        null,
+        "useWalletPortfolioState"
+      );
     });
   });
 
@@ -285,10 +294,11 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     it("should pass correct data to preparePortfolioData", () => {
       renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledTimes(1);
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith(
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(1);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
         mockApiCategoriesData,
-        16000
+        16000,
+        "useWalletPortfolioState"
       );
     });
 
@@ -304,7 +314,11 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith(null, null);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
+        null,
+        null,
+        "useWalletPortfolioState"
+      );
     });
 
     it("should handle empty categories data", () => {
@@ -319,13 +333,17 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith([], 0);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
+        [],
+        0,
+        "useWalletPortfolioState"
+      );
     });
 
     it("should re-calculate when data changes", () => {
       const { rerender } = renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledTimes(1);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(1);
 
       // Change data
       const newCategoriesData: AssetCategory[] = [
@@ -350,15 +368,16 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       rerender();
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledTimes(2);
-      expect(mockPreparePortfolioData).toHaveBeenLastCalledWith(
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(2);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenLastCalledWith(
         newCategoriesData,
-        5000
+        5000,
+        "useWalletPortfolioState"
       );
     });
 
     it("should handle preparePortfolioData errors gracefully", () => {
-      mockPreparePortfolioData.mockImplementation(() => {
+      mockPreparePortfolioDataWithBorrowing.mockImplementation(() => {
         throw new Error("Transform error");
       });
 
@@ -618,9 +637,10 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       const { result } = renderHook(() => useWalletPortfolioState());
 
       expect(result.current.totalValue).toBe(Number.MAX_SAFE_INTEGER);
-      expect(mockPreparePortfolioData).toHaveBeenCalledWith(
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
         mockApiCategoriesData,
-        Number.MAX_SAFE_INTEGER
+        Number.MAX_SAFE_INTEGER,
+        "useWalletPortfolioState"
       );
     });
 
@@ -655,7 +675,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     it("should re-run when usePortfolioData dependencies change", () => {
       const { rerender } = renderHook(() => useWalletPortfolioState());
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledTimes(1);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(1);
 
       // Change usePortfolioData return value
       mockUsePortfolioData.mockReturnValue({
@@ -669,7 +689,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       rerender();
 
-      expect(mockPreparePortfolioData).toHaveBeenCalledTimes(2);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(2);
       expect(mockUsePortfolio).toHaveBeenCalledWith([]);
     });
 

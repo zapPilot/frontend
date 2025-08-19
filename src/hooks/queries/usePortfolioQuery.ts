@@ -4,6 +4,7 @@ import { parsePortfolioSummary } from "../../schemas/portfolioApi";
 import {
   transformPortfolioSummary,
   portfolioStateUtils,
+  preparePortfolioDataWithBorrowing,
 } from "../../utils/portfolioTransformers";
 import { queryKeys } from "../../lib/queryClient";
 import type { AssetCategory, PieChartData } from "../../types/portfolio";
@@ -37,10 +38,13 @@ export function usePortfolioSummary(userId: string | null | undefined) {
       // Transform API response using utility function
       const result = transformPortfolioSummary(summary);
 
+      // Get final total value with proper handling of net vs gross
+      const totalValue = Number.isFinite(summary.metrics.total_value_usd)
+        ? summary.metrics.total_value_usd
+        : 0;
+
       return {
-        totalValue: Number.isFinite(summary.metrics.total_value_usd)
-          ? summary.metrics.total_value_usd
-          : 0,
+        totalValue,
         categories: portfolioStateUtils.hasItems(result.categories)
           ? result.categories
           : null,
@@ -75,15 +79,16 @@ export function usePortfolioData(
 ): UsePortfolioQueryReturn {
   const portfolioQuery = usePortfolioSummary(userId);
 
-  // Calculate pie chart data from categories (memoized for performance)
+  // Calculate pie chart data from categories with borrowing separation (memoized for performance)
   const pieChartData = useMemo(() => {
     if (portfolioStateUtils.hasItems(portfolioQuery.data?.categories)) {
-      return portfolioQuery.data!.categories.map(cat => ({
-        label: cat.name,
-        value: cat.totalValue,
-        percentage: cat.percentage,
-        color: cat.color,
-      }));
+      // Use borrowing-aware data preparation for accurate pie chart weights
+      const processedData = preparePortfolioDataWithBorrowing(
+        portfolioQuery.data!.categories,
+        portfolioQuery.data!.totalValue,
+        "usePortfolioData-pieChart"
+      );
+      return processedData.pieChartData;
     }
     return null;
   }, [portfolioQuery.data]);
