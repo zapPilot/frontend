@@ -53,6 +53,13 @@ export function LoadingButton({
   className = "",
   disabled,
   style,
+  onDrag, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onDragEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onDragStart, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationStart, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationIteration, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onTransitionEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
   ...props
 }: LoadingButtonProps) {
   const isDisabled = disabled || isLoading;
@@ -129,6 +136,13 @@ export function LoadingIconButton({
   className = "",
   "aria-label": ariaLabel,
   style,
+  onDrag, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onDragEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onDragStart, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationStart, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onAnimationIteration, // eslint-disable-line @typescript-eslint/no-unused-vars
+  onTransitionEnd, // eslint-disable-line @typescript-eslint/no-unused-vars
   ...props
 }: {
   icon: React.ReactNode;
