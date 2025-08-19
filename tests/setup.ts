@@ -1,4 +1,4 @@
-import { expect, afterEach, vi } from "vitest";
+import { expect, afterEach, beforeEach, vi } from "vitest";
 import { cleanup } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
 
@@ -18,6 +18,26 @@ expect.extend(matchers);
 // Clean up after each test case
 afterEach(() => {
   cleanup();
+});
+
+// Suppress React error boundary logging during tests
+const originalError = console.error;
+beforeEach(() => {
+  console.error = (...args: any[]) => {
+    if (
+      typeof args[0] === "string" &&
+      (args[0].includes("Error: Component render error") ||
+        args[0].includes("The above error occurred in the") ||
+        args[0].includes("React will try to recreate this component tree"))
+    ) {
+      return;
+    }
+    originalError.call(console, ...args);
+  };
+});
+
+afterEach(() => {
+  console.error = originalError;
 });
 
 // Mock IntersectionObserver

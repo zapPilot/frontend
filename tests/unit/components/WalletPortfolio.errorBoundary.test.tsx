@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React, { ErrorInfo, ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 
@@ -96,8 +96,19 @@ class TestErrorBoundary extends React.Component<
 describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
 
+  // Store original console methods
+  let originalConsoleError: typeof console.error;
+  let originalConsoleWarn: typeof console.warn;
+
   beforeEach(() => {
+    // Complete mock reset to ensure clean state
     vi.clearAllMocks();
+
+    // Suppress console errors during error boundary tests
+    originalConsoleError = console.error;
+    originalConsoleWarn = console.warn;
+    console.error = vi.fn();
+    console.warn = vi.fn();
 
     // Default working state
     mockUseWalletPortfolioState.mockReturnValue({
@@ -106,6 +117,8 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
       pieChartData: [],
       isLoading: false,
       apiError: null,
+      retry: vi.fn(),
+      isRetrying: false,
       isConnected: true,
       balanceHidden: false,
       expandedCategory: null,
@@ -116,6 +129,12 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
       openWalletManager: vi.fn(),
       closeWalletManager: vi.fn(),
     });
+  });
+
+  afterEach(() => {
+    // Restore original console methods
+    console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
   });
 
   describe("Component-Level Error Handling", () => {
@@ -143,17 +162,18 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
     it("should handle partial hook state", () => {
       const onError = vi.fn();
 
-      mockUseWalletPortfolioState.mockReturnValue({
-        totalValue: 15000,
-        portfolioData: [],
-        // Missing required properties to test graceful degradation
-      } as any);
+      // Return undefined to simulate hook returning undefined/null
+      mockUseWalletPortfolioState.mockReturnValue(undefined as any);
 
       render(
         <TestErrorBoundary onError={onError}>
           <WalletPortfolio />
         </TestErrorBoundary>
       );
+
+      // Should catch the error when hook returns undefined
+      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
+      expect(onError).toHaveBeenCalled();
     });
   });
 
@@ -203,6 +223,8 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
         pieChartData: [],
         isLoading: false,
         apiError: "API connection failed",
+        retry: vi.fn(),
+        isRetrying: false,
         isConnected: true,
         balanceHidden: false,
         expandedCategory: null,
@@ -246,6 +268,8 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
         pieChartData: [],
         isLoading: false,
         apiError: null,
+        retry: vi.fn(),
+        isRetrying: false,
         isConnected: true,
         balanceHidden: false,
         expandedCategory: null,
