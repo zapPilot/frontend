@@ -16,6 +16,13 @@ vi.mock("lucide-react", () => ({
   )),
 }));
 
+// Mock LoadingSpinner component
+vi.mock("../../../../src/components/ui/LoadingSpinner", () => ({
+  LoadingSpinner: vi.fn(() => (
+    <span data-testid="loader-icon">Loading...</span>
+  )),
+}));
+
 // Mock formatters and utilities
 vi.mock("../../../../src/lib/utils", () => ({
   formatCurrency: vi.fn((amount, hidden) => {

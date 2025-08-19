@@ -1,5 +1,5 @@
-import React from "react";
 import { motion, MotionStyle } from "framer-motion";
+import React from "react";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export interface LoadingButtonProps
@@ -86,10 +86,16 @@ export function LoadingButton({
     </div>
   );
 
+  const motionProps = !isDisabled
+    ? {
+        whileHover: { scale: 1.02 },
+        whileTap: { scale: 0.98 },
+      }
+    : {};
+
   return (
     <motion.button
-      whileHover={!isDisabled ? { scale: 1.02 } : undefined}
-      whileTap={!isDisabled ? { scale: 0.98 } : undefined}
+      {...motionProps}
       className={`
         ${variantClasses[variant]}
         ${sizeClasses[size]}
@@ -138,10 +144,17 @@ export function LoadingIconButton({
     lg: { button: "p-3", spinner: "md" as const },
   };
 
+  const iconMotionProps =
+    !props.disabled && !isLoading
+      ? {
+          whileHover: { scale: 1.05 },
+          whileTap: { scale: 0.95 },
+        }
+      : {};
+
   return (
     <motion.button
-      whileHover={!props.disabled && !isLoading ? { scale: 1.05 } : {}}
-      whileTap={!props.disabled && !isLoading ? { scale: 0.95 } : {}}
+      {...iconMotionProps}
       className={`
         ${variantClasses[variant]}
         ${sizeMap[size].button}

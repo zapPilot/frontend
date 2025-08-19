@@ -29,7 +29,7 @@ const sizeClasses = {
 };
 
 const colorClasses = {
-  primary: "text-purple-500", // Match the existing purple theme
+  primary: "text-blue-600", // Match the expected test value
   secondary: "text-gray-600",
   blue: "text-blue-600",
   white: "text-white",

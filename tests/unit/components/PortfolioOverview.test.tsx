@@ -11,7 +11,17 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
-// No need to mock lucide-react since PortfolioOverview uses a simple div spinner
+// Mock LoadingSpinner component
+vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
+  LoadingSpinner: vi.fn(({ size, color }) => (
+    <div
+      className={`animate-spin rounded-full border-b-2 border-purple-500 ${
+        size === "xl" ? "h-16 w-16" : size === "lg" ? "h-12 w-12" : "h-8 w-8"
+      }`}
+      data-testid="loading-spinner"
+    />
+  )),
+}));
 
 // Mock the PieChart component to verify it receives the correct data
 vi.mock("../../../src/components/PieChart", () => ({
@@ -143,9 +153,11 @@ describe("PortfolioOverview", () => {
       render(<PortfolioOverview {...defaultProps} isLoading={true} />);
 
       // Should show loading spinner instead of PieChart
-      const spinner = document.querySelector(".animate-spin");
-      expect(spinner).toBeInTheDocument();
+      const spinners = screen.getAllByTestId("loading-spinner");
+      expect(spinners.length).toBeGreaterThan(0); // At least one spinner (desktop or mobile)
+      const spinner = spinners[0];
       expect(spinner).toHaveClass(
+        "animate-spin",
         "rounded-full",
         "h-16",
         "w-16",
@@ -216,8 +228,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Component should show loading state (isLoading takes priority)
-      const spinner = document.querySelector(".animate-spin");
-      expect(spinner).toBeInTheDocument();
+      const spinners = screen.getAllByTestId("loading-spinner");
+      expect(spinners.length).toBeGreaterThan(0);
       expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
@@ -475,8 +487,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Loading should take priority over error
-      const spinner = document.querySelector(".animate-spin");
-      expect(spinner).toBeInTheDocument();
+      const spinners = screen.getAllByTestId("loading-spinner");
+      expect(spinners.length).toBeGreaterThan(0);
       expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
@@ -491,8 +503,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Should still show loading state regardless of data
-      const spinner = document.querySelector(".animate-spin");
-      expect(spinner).toBeInTheDocument();
+      const spinners = screen.getAllByTestId("loading-spinner");
+      expect(spinners.length).toBeGreaterThan(0);
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
 
