@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import {
-  debugBorrowingCalculation,
   formatBorrowingAmount,
   getBorrowingPercentage,
   hasSignificantBorrowing,
@@ -409,21 +408,6 @@ describe("borrowingUtils", () => {
       expect(result.isValid).toBe(false);
       expect(result.totalPercentage).toBe(0);
       expect(result.totalValue).toBe(0);
-    });
-  });
-
-  describe("debugBorrowingCalculation", () => {
-    it("should not throw errors when called", () => {
-      // Test that debug function doesn't crash
-      expect(() => {
-        debugBorrowingCalculation(mockAssetCategories, "test");
-      }).not.toThrow();
-    });
-
-    it("should handle empty categories", () => {
-      expect(() => {
-        debugBorrowingCalculation([], "empty-test");
-      }).not.toThrow();
     });
   });
 

@@ -6,7 +6,6 @@ import type {
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
 import {
   transformForDisplay,
-  debugBorrowingCalculation,
   validatePieChartWeights,
   type BorrowingDisplayData,
 } from "./borrowingUtils";
@@ -110,11 +109,6 @@ export function preparePortfolioDataWithBorrowing(
 } {
   // Safe data preparation - handle null/undefined gracefully
   const portfolioData = apiCategoriesData || [];
-
-  // Debug input data if in development
-  if (debugContext && portfolioData.length > 0) {
-    debugBorrowingCalculation(portfolioData, debugContext);
-  }
 
   // Get borrowing-aware display data
   const borrowingData = transformForDisplay(portfolioData);

@@ -64,8 +64,8 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https: http://localhost:* http://127.0.0.1:*",
               // Connect sources - restrict to necessary APIs
               isDev
-                ? "connect-src 'self' https: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* https://vitals.vercel-analytics.com"
-                : "connect-src 'self' https://api.debank.com https://static.debank.com https://zap-assets-worker.davidtnfsh.workers.dev https://vitals.vercel-analytics.com wss:",
+                ? "connect-src 'self' https: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* wss://relay.walletconnect.org wss://relay.walletconnect.com https://vitals.vercel-analytics.com"
+                : "connect-src 'self' https://api.debank.com https://static.debank.com https://zap-assets-worker.davidtnfsh.workers.dev https://vitals.vercel-analytics.com wss://relay.walletconnect.org wss://relay.walletconnect.com wss:",
               // Frame sources - allow Web3 wallet connections and trusted domains
               "frame-src 'self' https://verify.walletconnect.com https://verify.walletconnect.org https://*.walletconnect.com",
               // Worker sources for service workers and web workers
@@ -74,7 +74,6 @@ const nextConfig: NextConfig = {
               "media-src 'self' blob: data:",
               // Object and embed restrictions
               "object-src 'none'",
-              "embed-src 'none'",
               // Base and form restrictions
               "base-uri 'self'",
               "form-action 'self'",

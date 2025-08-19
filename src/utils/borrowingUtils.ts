@@ -152,42 +152,6 @@ export function hasSignificantBorrowing(
 }
 
 /**
- * Debug utility to log borrowing calculation details
- * Helps identify where weight calculations might be going wrong
- */
-export function debugBorrowingCalculation(
-  categories: AssetCategory[],
-  context = "Unknown"
-): void {
-  if (process.env.NODE_ENV === "development") {
-    const separation = separateAssetsAndBorrowing(categories);
-
-    console.group(`🔍 Borrowing Debug [${context}]`);
-    console.log("Input Categories:", categories.length);
-    console.log("Total Assets:", separation.totalAssets);
-    console.log("Total Borrowing:", separation.totalBorrowing);
-    console.log("Net Value:", separation.netValue);
-    console.log(
-      "Asset Categories:",
-      separation.assets.map(a => ({
-        name: a.name,
-        value: a.totalValue,
-        percentage: a.percentage,
-      }))
-    );
-    console.log(
-      "Borrowing Categories:",
-      separation.borrowing.map(b => ({
-        name: b.name,
-        value: b.totalValue,
-        percentage: b.percentage,
-      }))
-    );
-    console.groupEnd();
-  }
-}
-
-/**
  * Separate individual positions into assets and borrowing at the position level
  * This extracts negative AssetDetail positions as individual borrowing items
  */
