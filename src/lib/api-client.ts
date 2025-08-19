@@ -12,6 +12,14 @@ const API_CONFIG = {
   retryDelay: 1000,
 } as const;
 
+// Multiple endpoint configuration for different services
+const API_ENDPOINTS = {
+  quantEngine: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "",
+  intentEngine: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "",
+  backendApi: process.env["NEXT_PUBLIC_API_URL"] || "",
+  debank: process.env["NEXT_PUBLIC_DEBANK_API_URL"] || "",
+} as const;
+
 // Standard API error types
 export class APIError extends Error {
   constructor(
@@ -74,7 +82,7 @@ class APIClient {
    */
   private async makeRequest<T = any>(
     endpoint: string,
-    config: RequestConfig = {},
+    config: RequestConfig & { baseURL?: string } = {},
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
     const {
@@ -85,9 +93,10 @@ class APIClient {
       retries = this.defaultRetries,
       retryDelay = this.defaultRetryDelay,
       signal,
+      baseURL,
     } = config;
 
-    const url = `${this.baseURL}${endpoint}`;
+    const url = `${baseURL || this.baseURL}${endpoint}`;
 
     // Create abort controller for timeout if no signal provided
     const controller = new AbortController();
@@ -208,7 +217,7 @@ class APIClient {
   // Public API methods
   async get<T = any>(
     endpoint: string,
-    config?: Omit<RequestConfig, "method" | "body">,
+    config?: Omit<RequestConfig, "method" | "body"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
     return this.makeRequest(
@@ -221,7 +230,7 @@ class APIClient {
   async post<T = any>(
     endpoint: string,
     body?: any,
-    config?: Omit<RequestConfig, "method">,
+    config?: Omit<RequestConfig, "method"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
     return this.makeRequest(
@@ -259,7 +268,7 @@ class APIClient {
 
   async delete<T = any>(
     endpoint: string,
-    config?: Omit<RequestConfig, "method" | "body">,
+    config?: Omit<RequestConfig, "method" | "body"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
     return this.makeRequest(
@@ -268,10 +277,134 @@ class APIClient {
       transformer
     );
   }
+
+  /**
+   * Make a raw HTTP request to any URL (not just API endpoints)
+   * Useful for RPC calls, third-party APIs, etc.
+   */
+  async request<T = any>(
+    url: string,
+    config: RequestConfig = {},
+    transformer?: ResponseTransformer<T>
+  ): Promise<T> {
+    return this.makeRequest("", { ...config, baseURL: url }, transformer);
+  }
 }
 
 // Create singleton instance
 export const apiClient = new APIClient(API_CONFIG);
+
+// Convenience functions for different API endpoints
+export const createApiClient = {
+  /**
+   * Make request to Quant Engine API
+   */
+  quantEngine: {
+    get: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.quantEngine },
+        transformer
+      ),
+    post: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.post(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.quantEngine },
+        transformer
+      ),
+  },
+  /**
+   * Make request to Intent Engine API
+   */
+  intentEngine: {
+    get: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
+    post: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.post(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
+  },
+  /**
+   * Make request to Backend API
+   */
+  backendApi: {
+    get: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+    post: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.post(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+  },
+  /**
+   * Make request to Debank API
+   */
+  debank: {
+    get: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.debank },
+        transformer
+      ),
+    post: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.post(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.debank },
+        transformer
+      ),
+  },
+};
 
 // Query client configuration with error handling
 export const queryClient = new QueryClient({

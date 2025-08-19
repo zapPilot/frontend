@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { useWalletContext } from "@/providers/WalletContext";
 import { chainUtils } from "@/config/wallet";
 import type { Chain, WalletError } from "@/types/wallet";
+import { apiClient, handleAPIError } from "@/lib/api-client";
 
 /**
  * Chain hook configuration
@@ -403,23 +404,20 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
     const startTime = Date.now();
 
     try {
-      // Simple network check - try to fetch a lightweight endpoint
-      const response = await fetch(chainConfig.rpcUrls.default.http[0], {
+      // Simple network check - try to fetch a lightweight endpoint using the unified API client
+      await apiClient.request(chainConfig.rpcUrls.default.http[0], {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+        body: {
           jsonrpc: "2.0",
           method: "eth_blockNumber",
           params: [],
           id: 1,
-        }),
+        },
         signal: latencyCheckRef.current.signal,
       });
 
       const latency = Date.now() - startTime;
-      const isOnline = response.ok;
+      const isOnline = true; // If we reach here, the request was successful
 
       setNetworkStatus(prev => ({
         ...prev,
@@ -440,16 +438,19 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
         return; // Request was aborted
       }
 
+      const latency = Date.now() - startTime;
+      const errorMessage = handleAPIError(error);
+
       setNetworkStatus(prev => ({
         ...prev,
         isOnline: false,
-        latency: null,
+        latency,
         lastChecked: Date.now(),
         isStable: false,
         consecutiveFailures: prev.consecutiveFailures + 1,
       }));
 
-      log("Network status check failed", { error });
+      log("Network status check failed", { error, errorMessage });
     }
   }, [chain]);
 
