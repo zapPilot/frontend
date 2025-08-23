@@ -6,6 +6,7 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { usePortfolioAPR } from "../../../src/hooks/queries/useAPRQuery";
 import { getPortfolioSummary } from "../../../src/services/quantEngine";
 import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
 
@@ -14,6 +15,7 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/usePortfolioData");
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+vi.mock("../../../src/hooks/queries/useAPRQuery");
 vi.mock("../../../src/services/quantEngine");
 vi.mock("../../../src/utils/portfolioTransformers");
 vi.mock("../../../src/components/PortfolioOverview", () => ({
@@ -253,6 +255,7 @@ describe("WalletPortfolio", () => {
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUsePortfolioData = vi.mocked(usePortfolioData);
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
+  const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
   const mockGetPortfolioSummary = vi.mocked(getPortfolioSummary);
   const mockPreparePortfolioDataWithBorrowing = vi.mocked(
     preparePortfolioDataWithBorrowing
@@ -263,6 +266,24 @@ describe("WalletPortfolio", () => {
     mockUseUser.mockReturnValue({
       userInfo: mockUserInfo,
       loading: false,
+    });
+
+    // Mock the APR hook with default values
+    mockUsePortfolioAPR.mockReturnValue({
+      data: {
+        portfolio_summary: {
+          total_asset_value_usd: 15000,
+          weighted_apr: 0.045, // 4.5% APR
+        },
+        pool_details: [],
+      },
+      portfolioAPR: 0.045,
+      estimatedMonthlyIncome: 56.25, // 15000 * 0.045 / 12
+      poolDetails: [],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      isRefetching: false,
     });
 
     // Mock the new consolidated hook

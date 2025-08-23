@@ -9,7 +9,7 @@ import { transformPositionsForDisplay } from "../utils/borrowingUtils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { PieChartLoading } from "./ui/UnifiedLoading";
 
 type TabType = "assets" | "borrowing";
 
@@ -251,9 +251,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data-testid="pie-chart-container"
               >
                 {showLoadingState ? (
-                  <div className="flex items-center justify-center h-[250px] w-[250px]">
-                    <LoadingSpinner size="xl" color="primary" />
-                  </div>
+                  <PieChartLoading size={250} className="h-[250px] w-[250px]" />
                 ) : apiError ? (
                   <div className="flex items-center justify-center h-[250px] w-[250px]">
                     <div className="text-center text-red-500">
@@ -305,9 +303,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               data-testid="pie-chart-container-mobile"
             >
               {showLoadingState ? (
-                <div className="flex items-center justify-center h-[200px] w-[200px]">
-                  <LoadingSpinner size="lg" color="primary" />
-                </div>
+                <PieChartLoading size={200} className="h-[200px] w-[200px]" />
               ) : apiError ? (
                 <div className="flex items-center justify-center h-[200px] w-[200px]">
                   <div className="text-center text-red-500">

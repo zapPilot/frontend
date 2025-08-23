@@ -1,6 +1,12 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AnalyticsTab } from "../../../src/components/AnalyticsTab";
+import { useUser } from "../../../src/contexts/UserContext";
+import { usePortfolioAPR } from "../../../src/hooks/queries/useAPRQuery";
+
+// Mock dependencies
+vi.mock("../../../src/contexts/UserContext");
+vi.mock("../../../src/hooks/queries/useAPRQuery");
 
 // Mock child components
 vi.mock("../../../src/components/MoreTab/index", () => ({
@@ -22,7 +28,41 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock PoolPerformanceTable
+vi.mock("../../../src/components/PoolAnalytics", () => ({
+  PoolPerformanceTable: vi.fn(() => (
+    <div data-testid="pool-performance-table">Pool Performance Table</div>
+  )),
+}));
+
 describe("AnalyticsTab", () => {
+  const mockUseUser = vi.mocked(useUser);
+  const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Setup default mocks
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      login: vi.fn(),
+      logout: vi.fn(),
+    });
+
+    mockUsePortfolioAPR.mockReturnValue({
+      poolDetails: [],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      portfolioAPR: 0.125,
+      estimatedMonthlyIncome: 1000,
+      isRefetching: false,
+    });
+  });
   describe("UI Layout Structure", () => {
     it("should render header section with title and description", () => {
       render(<AnalyticsTab />);

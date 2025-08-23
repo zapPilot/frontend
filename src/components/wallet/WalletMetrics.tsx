@@ -5,7 +5,7 @@ import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { formatSmallCurrency } from "../../utils/formatters";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { BalanceLoading } from "../ui/UnifiedLoading";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 
 interface WalletMetricsProps {
@@ -92,7 +92,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       if (showLoader) {
         return (
           <div className="flex items-center space-x-2">
-            <LoadingSpinner size="md" color="primary" />
+            <BalanceLoading size="default" className="" />
             <span className="text-lg text-gray-400">
               {isRetrying ? "Retrying..." : "Loading..."}
             </span>

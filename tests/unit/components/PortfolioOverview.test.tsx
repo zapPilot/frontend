@@ -152,18 +152,11 @@ describe("PortfolioOverview", () => {
     it("should show loading spinner in pie chart area when isLoading=true", () => {
       render(<PortfolioOverview {...defaultProps} isLoading={true} />);
 
-      // Should show loading spinner instead of PieChart
-      const spinners = screen.getAllByTestId("loading-spinner");
-      expect(spinners.length).toBeGreaterThan(0); // At least one spinner (desktop or mobile)
-      const spinner = spinners[0];
-      expect(spinner).toHaveClass(
-        "animate-spin",
-        "rounded-full",
-        "h-16",
-        "w-16",
-        "border-b-2",
-        "border-purple-500"
-      );
+      // Should show pie chart loading instead of PieChart
+      const loadingElements = screen.getAllByTestId("pie-chart-loading");
+      expect(loadingElements.length).toBeGreaterThan(0); // At least one loading element (desktop or mobile)
+      const loadingElement = loadingElements[0];
+      expect(loadingElement).toHaveAttribute("aria-label", "Loading chart");
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
 
@@ -228,8 +221,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Component should show loading state (isLoading takes priority)
-      const spinners = screen.getAllByTestId("loading-spinner");
-      expect(spinners.length).toBeGreaterThan(0);
+      const loadingElements = screen.getAllByTestId("pie-chart-loading");
+      expect(loadingElements.length).toBeGreaterThan(0);
       expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
@@ -487,8 +480,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Loading should take priority over error
-      const spinners = screen.getAllByTestId("loading-spinner");
-      expect(spinners.length).toBeGreaterThan(0);
+      const loadingElements = screen.getAllByTestId("pie-chart-loading");
+      expect(loadingElements.length).toBeGreaterThan(0);
       expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
@@ -503,8 +496,8 @@ describe("PortfolioOverview", () => {
       );
 
       // Should still show loading state regardless of data
-      const spinners = screen.getAllByTestId("loading-spinner");
-      expect(spinners.length).toBeGreaterThan(0);
+      const loadingElements = screen.getAllByTestId("pie-chart-loading");
+      expect(loadingElements.length).toBeGreaterThan(0);
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
 

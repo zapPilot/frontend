@@ -10,7 +10,7 @@ import React, { useMemo, useState } from "react";
 import type { PoolDetail } from "../../hooks/queries/useAPRQuery";
 import { formatCurrency } from "../../lib/utils";
 import { GlassCard } from "../ui";
-import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { UnifiedLoading } from "../ui/UnifiedLoading";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -129,7 +129,10 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
     return (
       <GlassCard>
         <div className="flex items-center justify-center p-8">
-          <LoadingSpinner size="lg" color="primary" />
+          <UnifiedLoading
+            variant="skeleton-card"
+            aria-label="Loading pool performance data"
+          />
           <span className="ml-3 text-gray-400">Loading pool analytics...</span>
         </div>
       </GlassCard>

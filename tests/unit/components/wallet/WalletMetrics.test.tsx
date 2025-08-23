@@ -53,9 +53,37 @@ vi.mock("../../../../src/utils/formatters", () => ({
 vi.mock("../../../../src/styles/design-tokens", () => ({
   BUSINESS_CONSTANTS: {
     PORTFOLIO: {
-      DEFAULT_APR: 12.5,
+      DEFAULT_APR: 0.125, // 12.5% as decimal to match portfolioAPR format
     },
   },
+}));
+
+// Mock portfolio calculations
+vi.mock("../../../../src/constants/portfolio", () => ({
+  calculateMonthlyIncome: vi.fn((totalValue, aprDecimal) => {
+    if (!totalValue || totalValue === 0) return 0;
+    return (totalValue * aprDecimal) / 12; // aprDecimal is already in decimal format (0.125 for 12.5%)
+  }),
+}));
+
+// Mock the usePortfolioAPR hook
+vi.mock("../../../../src/hooks/queries/useAPRQuery", () => ({
+  usePortfolioAPR: vi.fn(userId => ({
+    data: {
+      portfolio_summary: {
+        total_asset_value_usd: 15000,
+        weighted_apr: 0.125, // 12.5% APR as decimal (API format)
+      },
+      pool_details: [],
+    },
+    portfolioAPR: 0.125, // Return as decimal for display calculation (will be multiplied by 100)
+    estimatedMonthlyIncome: null, // Let component calculate based on totalValue prop
+    poolDetails: [],
+    isLoading: false,
+    error: null,
+    refetch: vi.fn(),
+    isRefetching: false,
+  })),
 }));
 
 // Mock SimpleConnectButton

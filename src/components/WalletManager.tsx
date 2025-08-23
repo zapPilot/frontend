@@ -17,7 +17,7 @@ import { memo, useCallback, useEffect, useState } from "react";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "../contexts/UserContext";
 import { GlassCard, GradientButton } from "./ui";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { UnifiedLoading } from "./ui/UnifiedLoading";
 import { RefreshButton } from "./ui/LoadingState";
 
 // Remove DEMO_WALLET constant - now using real connected wallet
@@ -191,7 +191,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
             {loading && (
               <div className="text-center py-8">
                 <div className="flex justify-center mb-3">
-                  <LoadingSpinner size="md" color="primary" />
+                  <UnifiedLoading
+                    variant="skeleton-inline"
+                    width="8rem"
+                    aria-label="Loading wallet data"
+                  />
                 </div>
                 <p className="text-gray-400 text-sm">
                   Loading bundle wallets...
