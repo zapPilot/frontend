@@ -39,5 +39,6 @@ export const queryKeys = {
     all: ["portfolio"] as const,
     summary: (userId: string) => ["portfolio", "summary", userId] as const,
     analytics: (userId: string) => ["portfolio", "analytics", userId] as const,
+    apr: (userId: string) => ["portfolio", "apr", userId] as const,
   },
 } as const;

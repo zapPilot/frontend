@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useWalletPortfolioState } from "../hooks/useWalletPortfolioState";
+import { useUser } from "../contexts/UserContext";
 import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { WalletManager } from "./WalletManager";
@@ -22,6 +23,9 @@ export function WalletPortfolio({
   onZapInClick,
   onZapOutClick,
 }: WalletPortfolioProps = {}) {
+  // Get user data for APR calculations
+  const { userInfo } = useUser();
+
   // Consolidated state management - all loading/error logic and transformations in one place
   const {
     totalValue,
@@ -62,6 +66,7 @@ export function WalletPortfolio({
             portfolioMetrics?.totalChangePercentage || 0
           }
           isConnected={isConnected}
+          userId={userInfo?.userId || null}
         />
 
         <WalletActions

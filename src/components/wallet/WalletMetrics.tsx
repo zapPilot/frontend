@@ -1,5 +1,6 @@
 import { AlertCircle, TrendingUp } from "lucide-react";
-import React, { useMemo } from "react";
+import React from "react";
+import { usePortfolioAPR } from "../../hooks/queries/useAPRQuery";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
@@ -16,6 +17,7 @@ interface WalletMetricsProps {
   onRetry?: () => void;
   isRetrying?: boolean;
   isConnected: boolean;
+  userId?: string | null;
 }
 
 interface WelcomeNewUserProps {
@@ -70,7 +72,15 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     onRetry,
     isRetrying,
     isConnected,
+    userId,
   }) => {
+    // Fetch real APR data
+    const {
+      portfolioAPR,
+      estimatedMonthlyIncome,
+      isLoading: aprIsLoading,
+    } = usePortfolioAPR(userId);
+
     // Helper function to render balance display
     const renderBalanceDisplay = () => {
       // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
@@ -121,11 +131,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return formatCurrency(totalValue, balanceHidden);
     };
 
-    // Calculate portfolio metrics
-    const portfolioAPR = BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
-    const estimatedMonthlyIncome = useMemo(() => {
-      return totalValue ? calculateMonthlyIncome(totalValue, portfolioAPR) : 0;
-    }, [totalValue, portfolioAPR]);
+    // Use real APR data or fall back to default
+    const displayAPR = portfolioAPR ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
+    const displayMonthlyIncome =
+      estimatedMonthlyIncome ??
+      (totalValue ? calculateMonthlyIncome(totalValue, displayAPR) : 0);
 
     // Show welcome message for new users
     if (error === "USER_NOT_FOUND") {
@@ -147,6 +157,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           </p>
           {(isLoading ||
             isRetrying ||
+            aprIsLoading ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
@@ -156,7 +167,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             >
               <TrendingUp className="w-4 h-4" />
               <span className="text-xl font-semibold">
-                {portfolioAPR.toFixed(2)}%
+                {(displayAPR * 100).toFixed(2)}%
               </span>
             </div>
           )}
@@ -166,6 +177,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
           {(isLoading ||
             isRetrying ||
+            aprIsLoading ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton
@@ -179,7 +191,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             >
               {totalValue === null
                 ? "Connect to calculate"
-                : formatSmallCurrency(estimatedMonthlyIncome)}
+                : formatSmallCurrency(displayMonthlyIncome)}
             </p>
           )}
         </div>

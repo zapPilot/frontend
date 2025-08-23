@@ -99,6 +99,15 @@ export const getPortfolioSummary = async (
 
   return await apiClient.get(url);
 };
+/**
+ * Get portfolio APR summary with pool details
+ * @param {string} userId - User ID (UUID)
+ * @returns {Promise} API response with weighted APR and pool details
+ */
+export const getPortfolioAPR = async userId => {
+  const endpoint = `/api/v1/apr/portfolio/${userId}/summary`;
+  return await apiClient.get(endpoint);
+};
 
 /**
  * Transform quant-engine portfolio trends data into PortfolioDataPoint format

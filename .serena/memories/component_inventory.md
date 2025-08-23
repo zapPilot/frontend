@@ -111,7 +111,8 @@
 
 ### **Tab Components**
 
-- **`AnalyticsTab`** - Analytics and metrics dashboard
+- **`AnalyticsTab`** - ✅ ENHANCED: Analytics and metrics dashboard with integrated pool performance
+  analytics
 - **`AirdropTab`** - Token airdrop information and eligibility
 - **`CommunityTab`** - Community links and engagement
 - **`SettingsTab`** - Application settings and configuration
@@ -120,6 +121,20 @@
 
 - **`VersionInfo`** - App version display
 - **`MenuSection`** - Settings menu section with items
+
+## 📊 Pool Analytics (`src/components/PoolAnalytics/`)
+
+### **Pool Performance Components** ✅ NEW (2025)
+
+- **`PoolPerformanceTable`** - ✅ NEW: Comprehensive pool analytics table with sorting, filtering,
+  and underperforming pool identification
+  - **Purpose**: Display detailed pool performance metrics from APR API endpoint
+  - **Features**: Sortable columns (APR, value, contribution, protocol), mobile-responsive cards,
+    visual status indicators
+  - **Integration**: Integrated into AnalyticsTab for pool-level performance analysis
+  - **Technical**: Uses real APR data from `/api/v1/apr/portfolio/{userId}/summary` endpoint
+  - **UX**: Color-coded performance indicators (green=good, yellow=underperforming, red=poor), chain
+    badges, asset symbols
 
 ## 🌟 Analytics & Community Support (`src/components/MoreTab/`)
 
@@ -149,7 +164,8 @@ These legacy-named components support the Analytics and Community tabs.
 
 ### **Portfolio Display**
 
-- **`WalletPortfolio`** - Main portfolio overview with balance controls
+- **`WalletPortfolio`** - ✅ ENHANCED: Main portfolio overview with balance controls and integrated
+  APR data
 - **`PortfolioOverview`** - Portfolio summary with category expansion
 - **`WalletManager`** - Multi-wallet management interface
 
@@ -168,6 +184,16 @@ These legacy-named components support the Analytics and Community tabs.
 - **`useStrategyPortfolio`** - Strategy-specific portfolio logic
 - **`useDustZap`** - Dust token conversion functionality
 - **`useDustZapStream`** - Streaming dust conversion
+
+### **APR & Analytics Hooks** ✅ NEW (2025)
+
+- **`usePortfolioAPR`** - ✅ NEW: Real-time APR data fetching with pool details
+  - **Purpose**: Fetch portfolio APR summary and individual pool performance data
+  - **Features**: React Query integration, automatic refetching, error handling, loading states
+  - **Integration**: Used in WalletMetrics for accurate Portfolio APR display and AnalyticsTab for
+    pool analytics
+  - **Technical**: Connects to `/api/v1/apr/portfolio/{userId}/summary` endpoint with caching and
+    retry logic
 
 ### **Feature-Specific Hooks**
 
@@ -207,6 +233,7 @@ These legacy-named components support the Analytics and Community tabs.
 - `SwapPage` - Trading feature only
 - `ChainSwitcher` - Web3 wallet controls only
 - `PerformanceTrendChart` - EnhancedOverview decision support only
+- `PoolPerformanceTable` - AnalyticsTab pool analytics only
 
 ### **Composition Patterns**
 
@@ -249,6 +276,43 @@ These legacy-named components support the Analytics and Community tabs.
    - **Technical**: Supports zapIn (token balance), zapOut/rebalance (portfolio value) modes
    - **UX**: Consistent input experience across all financial operations
 
+3. **PoolPerformanceTable** - ✅ NEW (2025): Pool-level performance analytics with real APR data
+   - **Purpose**: Display and analyze individual pool performance metrics to identify
+     underperforming positions
+   - **Features**: Real-time APR data, sortable table, mobile-responsive cards, visual performance
+     indicators, chain/protocol identification
+   - **Integration**: Integrated into AnalyticsTab alongside existing performance charts
+   - **Technical**: Uses new APR API endpoint with React Query integration for caching and real-time
+     updates
+   - **UX**: Color-coded performance states, detailed pool information, contribution percentage
+     analysis
+
+4. **usePortfolioAPR Hook** - ✅ NEW (2025): Real APR data integration replacing hardcoded values
+   - **Purpose**: Fetch accurate portfolio-wide APR and individual pool performance data
+   - **Features**: React Query integration, automatic caching, error handling, monthly income
+     calculations
+   - **Integration**: Used in WalletMetrics for accurate Portfolio APR display and AnalyticsTab for
+     pool analytics
+   - **Technical**: Connects to `/api/v1/apr/portfolio/{userId}/summary` endpoint with optimized
+     query strategies
+   - **UX**: Real-time APR updates, accurate estimated monthly income, loading states
+
+### **API Integration Enhancements:**
+
+1. **WalletMetrics APR Enhancement** - ✅ ENHANCED (2025): Real APR data integration
+   - **Change**: Replaced hardcoded `BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR` with live API data
+   - **Features**: Real Portfolio APR display, accurate Est. Monthly Income calculations, fallback
+     to default APR when API unavailable
+   - **Integration**: Seamless integration with existing loading/error states
+   - **UX**: More accurate financial projections based on actual pool performance
+
+2. **AnalyticsTab Pool Analytics** - ✅ ENHANCED (2025): Added pool-level performance analysis
+   - **Change**: Added comprehensive pool performance section with detailed analytics
+   - **Features**: Pool performance table, underperforming pool identification, sortable metrics,
+     mobile-responsive design
+   - **Integration**: Integrated alongside existing portfolio charts and analytics dashboard
+   - **UX**: Enhanced decision-making capabilities with pool-level insights
+
 ### **Architecture Benefits:**
 
 - **Reduced Duplication**: Eliminated 5 duplicate components
@@ -257,3 +321,5 @@ These legacy-named components support the Analytics and Community tabs.
 - **Cleaner Codebase**: 650+ lines of duplicate code removed
 - **Enhanced Decision Support**: Users now have historical context for financial decisions
 - **Modular Financial Controls**: Reusable amount input component across all transaction types
+- **Real APR Data**: Accurate portfolio performance metrics replacing static calculations
+- **Pool-Level Analytics**: Granular performance insights for optimization decisions
