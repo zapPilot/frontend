@@ -3,9 +3,11 @@ import React, { ErrorInfo, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../../src/contexts/UserContext";
 
-// Mock the hook
+// Mock dependencies
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+vi.mock("../../../src/contexts/UserContext");
 
 // Mock all the child components that WalletPortfolio uses
 vi.mock("../../../src/components/ui/GlassCard", () => ({
@@ -95,6 +97,7 @@ class TestErrorBoundary extends React.Component<
 
 describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
+  const mockUseUser = vi.mocked(useUser);
 
   // Store original console methods
   let originalConsoleError: typeof console.error;
@@ -128,6 +131,20 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests", () => {
       isWalletManagerOpen: false,
       openWalletManager: vi.fn(),
       closeWalletManager: vi.fn(),
+    });
+
+    // Setup UserContext mock
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      loading: false,
+      error: null,
+      isConnected: true,
+      connectedWallet: "0x1234567890abcdef",
+      refetch: vi.fn(),
     });
   });
 

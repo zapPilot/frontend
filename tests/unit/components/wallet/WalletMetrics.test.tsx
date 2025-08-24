@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletMetrics } from "../../../../src/components/wallet/WalletMetrics";
+import { usePortfolioAPR } from "../../../../src/hooks/queries/useAPRQuery";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -95,17 +96,34 @@ vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
   )),
 }));
 
+// Mock APR query hook
+vi.mock("../../../../src/hooks/queries/useAPRQuery");
+
 describe("WalletMetrics", () => {
+  const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
   const defaultProps = {
     totalValue: 15000,
     balanceHidden: false,
     isLoading: false,
     error: null,
     portfolioChangePercentage: 5.2,
+    isConnected: true,
+    userId: "test-user-id",
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Setup APR hook mock
+    mockUsePortfolioAPR.mockReturnValue({
+      poolDetails: [],
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      portfolioAPR: 0.125,
+      estimatedMonthlyIncome: 1000,
+      isRefetching: false,
+    });
   });
 
   describe("UI Structure and Layout", () => {
@@ -157,7 +175,7 @@ describe("WalletMetrics", () => {
     it("should show loader when loading", () => {
       render(<WalletMetrics {...defaultProps} isLoading={true} />);
 
-      expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
       expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
     });
 
@@ -199,7 +217,7 @@ describe("WalletMetrics", () => {
       );
 
       expect(screen.getByText("Retrying...")).toBeInTheDocument();
-      expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
     });
 
     it("should show hidden balance placeholder when balanceHidden is true", () => {
@@ -266,7 +284,7 @@ describe("WalletMetrics", () => {
     it("should display formatted monthly income", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$156.25")).toBeInTheDocument();
+      expect(screen.getByText("$1,000.00")).toBeInTheDocument();
     });
 
     it("should apply color classes based on portfolio performance", () => {
@@ -274,7 +292,7 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={5.2} />
       );
 
-      const incomeText = screen.getByText("$156.25");
+      const incomeText = screen.getByText("$1,000.00");
       expect(incomeText).toHaveClass(
         "text-xl",
         "font-semibold",
@@ -293,7 +311,8 @@ describe("WalletMetrics", () => {
     it("should handle zero totalValue", () => {
       render(<WalletMetrics {...defaultProps} totalValue={0} />);
 
-      expect(screen.getAllByText("$0.00")).toHaveLength(2); // Balance and monthly income
+      expect(screen.getByText("$0.00")).toBeInTheDocument(); // Balance
+      expect(screen.getByText("$1,000.00")).toBeInTheDocument(); // Monthly income from mock
     });
 
     it("should handle negative totalValue", () => {
@@ -324,7 +343,7 @@ describe("WalletMetrics", () => {
       );
 
       // Loading takes precedence over error
-      expect(screen.getByTestId("loader-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
       expect(screen.queryByText("Some error")).not.toBeInTheDocument();
     });
   });
@@ -407,7 +426,7 @@ describe("WalletMetrics", () => {
     it("should handle loader accessibility", () => {
       render(<WalletMetrics {...defaultProps} isLoading={true} />);
 
-      const loader = screen.getByTestId("loader-icon");
+      const loader = screen.getByTestId("balance-loading");
       expect(loader).toBeInTheDocument();
     });
 

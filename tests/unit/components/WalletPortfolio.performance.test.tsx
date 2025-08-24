@@ -2,6 +2,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../../src/contexts/UserContext";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import { render } from "../../test-utils";
 
@@ -18,8 +19,9 @@ global.PerformanceObserver = vi.fn().mockImplementation(callback => {
   return performanceObserver;
 });
 
-// Mock the hook
+// Mock dependencies
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+vi.mock("../../../src/contexts/UserContext");
 
 // Mock ThirdWeb hooks
 vi.mock("thirdweb/react", () => ({
@@ -113,6 +115,7 @@ vi.mock("../../../src/components/WalletManager", () => ({
 
 describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
+  const mockUseUser = vi.mocked(useUser);
 
   const createLargeDataset = (size: number): AssetCategory[] => {
     return Array.from({ length: size }, (_, i) => ({
@@ -172,6 +175,20 @@ describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
       walletManager: 0,
     };
     mockUseWalletPortfolioState.mockReturnValue(defaultMockState);
+
+    // Setup UserContext mock
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      loading: false,
+      error: null,
+      isConnected: true,
+      connectedWallet: "0x1234567890abcdef",
+      refetch: vi.fn(),
+    });
   });
 
   describe("Render Performance", () => {

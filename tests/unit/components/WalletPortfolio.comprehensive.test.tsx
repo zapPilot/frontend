@@ -2,11 +2,13 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../../src/contexts/UserContext";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import { render } from "../../test-utils";
 
-// Mock the custom hook
+// Mock dependencies
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+vi.mock("../../../src/contexts/UserContext");
 
 // Mock child components
 vi.mock("../../../src/components/ui/GlassCard", () => ({
@@ -156,6 +158,7 @@ vi.mock("../../../src/components/WalletManager", () => ({
 
 describe("WalletPortfolio - Comprehensive Integration Tests", () => {
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
+  const mockUseUser = vi.mocked(useUser);
 
   const mockPortfolioData: AssetCategory[] = [
     {
@@ -203,6 +206,20 @@ describe("WalletPortfolio - Comprehensive Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseWalletPortfolioState.mockReturnValue(defaultMockState);
+
+    // Setup UserContext mock
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      loading: false,
+      error: null,
+      isConnected: true,
+      connectedWallet: "0x1234567890abcdef",
+      refetch: vi.fn(),
+    });
   });
 
   afterEach(() => {

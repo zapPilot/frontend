@@ -3,10 +3,12 @@ import { render } from "../test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../src/contexts/UserContext";
 
 // Mock dependencies
 vi.mock("../../src/hooks/useWalletPortfolioState");
 vi.mock("../../src/services/quantEngine");
+vi.mock("../../src/contexts/UserContext");
 
 // Mock framer-motion for simpler testing
 vi.mock("framer-motion", () => ({
@@ -146,6 +148,7 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
 const mockUseWalletPortfolioState = useWalletPortfolioState as ReturnType<
   typeof vi.fn
 >;
+const mockUseUser = vi.mocked(useUser);
 
 // Mock data defined inline
 const mockUserInfo = {
@@ -214,6 +217,20 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
   beforeEach(() => {
     // Default mock implementation for useWalletPortfolioState
     mockUseWalletPortfolioState.mockReturnValue(createMockState());
+
+    // Setup UserContext mock
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      loading: false,
+      error: null,
+      isConnected: true,
+      connectedWallet: "0x1234567890abcdef",
+      refetch: vi.fn(),
+    });
   });
 
   afterEach(() => {

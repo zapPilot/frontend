@@ -2,9 +2,11 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../../src/contexts/UserContext";
 
-// Mock the hook
+// Mock dependencies
 vi.mock("../../../src/hooks/useWalletPortfolioState");
+vi.mock("../../../src/contexts/UserContext");
 
 // Mock ThirdWeb hooks
 vi.mock("thirdweb/react", () => ({
@@ -272,6 +274,7 @@ vi.mock("../../../src/components/WalletManager", () => ({
 
 describe("WalletPortfolio - Accessibility and Keyboard Navigation Tests", () => {
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
+  const mockUseUser = vi.mocked(useUser);
 
   const defaultMockState = {
     totalValue: 15000,
@@ -293,6 +296,20 @@ describe("WalletPortfolio - Accessibility and Keyboard Navigation Tests", () => 
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseWalletPortfolioState.mockReturnValue(defaultMockState);
+
+    // Setup UserContext mock
+    mockUseUser.mockReturnValue({
+      userInfo: {
+        userId: "test-user-id",
+        email: "test@example.com",
+        name: "Test User",
+      },
+      loading: false,
+      error: null,
+      isConnected: true,
+      connectedWallet: "0x1234567890abcdef",
+      refetch: vi.fn(),
+    });
   });
 
   describe("Semantic HTML Structure", () => {
