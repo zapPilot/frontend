@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
-import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
+import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
 import { usePortfolioAPR } from "../../../src/hooks/queries/useAPRQuery";
 import { getPortfolioSummary } from "../../../src/services/quantEngine";
@@ -13,7 +13,7 @@ import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioT
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
-vi.mock("../../../src/hooks/usePortfolioData");
+vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/useWalletPortfolioState");
 vi.mock("../../../src/hooks/queries/useAPRQuery");
 vi.mock("../../../src/services/quantEngine");
@@ -253,7 +253,7 @@ const mockNewApiResponse = {
 describe("WalletPortfolio", () => {
   const mockUseUser = vi.mocked(useUser);
   const mockUsePortfolio = vi.mocked(usePortfolio);
-  const mockUsePortfolioData = vi.mocked(usePortfolioData);
+  const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
   const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
   const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
   const mockGetPortfolioSummary = vi.mocked(getPortfolioSummary);

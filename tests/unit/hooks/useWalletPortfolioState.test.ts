@@ -2,20 +2,23 @@ import { act } from "@testing-library/react";
 import { renderHook } from "../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
-import { usePortfolioData } from "../../../src/hooks/usePortfolioData";
+import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
+import { useUser } from "../../../src/contexts/UserContext";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
 
 // Mock all dependencies
-vi.mock("../../../src/hooks/usePortfolioData");
+vi.mock("../../../src/contexts/UserContext");
+vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolioTransformers");
 
 describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () => {
-  const mockUsePortfolioData = vi.mocked(usePortfolioData);
+  const mockUseUser = vi.mocked(useUser);
+  const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseWalletModal = vi.mocked(useWalletModal);
   const mockPreparePortfolioDataWithBorrowing = vi.mocked(
@@ -55,13 +58,18 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     vi.clearAllMocks();
 
     // Default mock implementations
-    mockUsePortfolioData.mockReturnValue({
+    mockUseUser.mockReturnValue({
+      userInfo: { userId: "test-user-id" },
+      isConnected: true,
+      error: null,
+    });
+    mockUsePortfolioDisplayData.mockReturnValue({
       totalValue: 16000,
       categories: mockApiCategoriesData,
       isLoading: false,
       error: null,
-      retry: vi.fn(),
-      isRetrying: false,
+      refetch: vi.fn(),
+      isRefetching: false,
     });
 
     mockUsePortfolio.mockReturnValue({
@@ -96,6 +104,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
         apiError: null,
         retry: expect.any(Function),
         isRetrying: false,
+        isConnected: true,
 
         // Portfolio UI state
         balanceHidden: false,
@@ -128,13 +137,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should handle null apiCategoriesData gracefully", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: true,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       renderHook(() => useWalletPortfolioState());
@@ -149,14 +158,14 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
   });
 
   describe("Loading States Integration", () => {
-    it("should handle loading state from usePortfolioData", () => {
-      mockUsePortfolioData.mockReturnValue({
+    it("should handle loading state from usePortfolioDisplayData", () => {
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: true,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       const { result } = renderHook(() => useWalletPortfolioState());
@@ -173,13 +182,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
     it("should handle retry loading state", () => {
       const mockRetry = vi.fn();
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 16000,
         categories: mockApiCategoriesData,
         isLoading: false,
         error: null,
-        retry: mockRetry,
-        isRetrying: true,
+        refetch: mockRetry,
+        isRefetching: true,
       });
 
       const { result } = renderHook(() => useWalletPortfolioState());
@@ -195,13 +204,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       const initialState = result.current;
 
       // Simulate transition to loading
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: true,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       rerender();
@@ -223,15 +232,15 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
   });
 
   describe("Error States Integration", () => {
-    it("should handle API errors from usePortfolioData", () => {
+    it("should handle API errors from usePortfolioDisplayData", () => {
       const errorMessage = "Failed to fetch portfolio data";
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: false,
         error: errorMessage,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       const { result } = renderHook(() => useWalletPortfolioState());
@@ -242,13 +251,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
     it("should clear error state when data loads successfully", async () => {
       // Start with error state
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: false,
         error: "API Error",
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       const { result, rerender } = renderHook(() => useWalletPortfolioState());
@@ -256,13 +265,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       expect(result.current.apiError).toBe("API Error");
 
       // Simulate successful data load
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 16000,
         categories: mockApiCategoriesData,
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       rerender();
@@ -273,13 +282,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
     it("should handle error during retry", () => {
       const mockRetry = vi.fn();
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: false,
         error: "Retry failed",
-        retry: mockRetry,
-        isRetrying: true,
+        refetch: mockRetry,
+        isRefetching: true,
       });
 
       const { result } = renderHook(() => useWalletPortfolioState());
@@ -303,13 +312,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should handle preparePortfolioData with null inputs", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       renderHook(() => useWalletPortfolioState());
@@ -322,13 +331,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should handle empty categories data", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 0,
         categories: [],
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       renderHook(() => useWalletPortfolioState());
@@ -357,13 +366,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
         },
       ];
 
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 5000,
         categories: newCategoriesData,
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       rerender();
@@ -442,13 +451,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should pass empty array to usePortfolio when categories is null", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: true,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       renderHook(() => useWalletPortfolioState());
@@ -507,13 +516,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       // Simulate rapid updates
       for (let i = 0; i < 100; i++) {
-        mockUsePortfolioData.mockReturnValue({
+        mockUsePortfolioDisplayData.mockReturnValue({
           totalValue: i * 1000,
           categories: mockApiCategoriesData,
           isLoading: false,
           error: null,
-          retry: vi.fn(),
-          isRetrying: false,
+          refetch: vi.fn(),
+          isRefetching: false,
         });
         rerender();
       }
@@ -572,8 +581,8 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
   });
 
   describe("Edge Cases and Error Handling", () => {
-    it("should handle usePortfolioData throwing error", () => {
-      mockUsePortfolioData.mockImplementation(() => {
+    it("should handle usePortfolioDisplayData throwing error", () => {
+      mockUsePortfolioDisplayData.mockImplementation(() => {
         throw new Error("Portfolio data hook error");
       });
 
@@ -603,7 +612,7 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should handle missing properties in hook returns", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         // Missing some required properties
         totalValue: 1000,
       } as any);
@@ -625,13 +634,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
     });
 
     it("should handle extreme data values", () => {
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: Number.MAX_SAFE_INTEGER,
         categories: mockApiCategoriesData,
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       const { result } = renderHook(() => useWalletPortfolioState());
@@ -655,13 +664,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       };
       circularData.self = circularData; // Create circular reference
 
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 1000,
         categories: [circularData],
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       // Should not crash despite circular reference
@@ -672,19 +681,19 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
   });
 
   describe("Hook Dependencies and Re-renders", () => {
-    it("should re-run when usePortfolioData dependencies change", () => {
+    it("should re-run when usePortfolioDisplayData dependencies change", () => {
       const { rerender } = renderHook(() => useWalletPortfolioState());
 
       expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(1);
 
-      // Change usePortfolioData return value
-      mockUsePortfolioData.mockReturnValue({
+      // Change usePortfolioDisplayData return value
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: 20000,
         categories: [],
         isLoading: false,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       rerender();
@@ -711,13 +720,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
       const { result, rerender } = renderHook(() => useWalletPortfolioState());
 
       // Simulate async data loading
-      mockUsePortfolioData.mockReturnValue({
+      mockUsePortfolioDisplayData.mockReturnValue({
         totalValue: null,
         categories: null,
         isLoading: true,
         error: null,
-        retry: vi.fn(),
-        isRetrying: false,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
       rerender();
@@ -726,13 +735,13 @@ describe("useWalletPortfolioState - Comprehensive Hook Integration Tests", () =>
 
       // Simulate data arrival
       await act(async () => {
-        mockUsePortfolioData.mockReturnValue({
+        mockUsePortfolioDisplayData.mockReturnValue({
           totalValue: 25000,
           categories: mockApiCategoriesData,
           isLoading: false,
           error: null,
-          retry: vi.fn(),
-          isRetrying: false,
+          refetch: vi.fn(),
+          isRefetching: false,
         });
 
         rerender();

@@ -1,23 +1,25 @@
 import { usePortfolio } from "./usePortfolio";
-import { usePortfolioData } from "./usePortfolioData";
+import { usePortfolioDisplayData } from "./queries/usePortfolioQuery";
 import { useWalletModal } from "./useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../utils/portfolioTransformers";
+import { useUser } from "../contexts/UserContext";
 
 /**
  * Custom hook that consolidates all wallet portfolio state and data transformations
  * Reduces duplication between WalletPortfolio and WalletPortfolioRefactored components
  */
 export function useWalletPortfolioState() {
+  const { userInfo, isConnected } = useUser();
+
   // Data fetching and API state
   const {
     totalValue,
     categories: apiCategoriesData,
     isLoading,
     error: apiError,
-    retry,
-    isRetrying,
-    isConnected,
-  } = usePortfolioData();
+    refetch: retry,
+    isRefetching: isRetrying,
+  } = usePortfolioDisplayData(userInfo?.userId);
 
   // Portfolio UI state management
   const {

@@ -74,7 +74,7 @@ export function usePortfolioSummary(userId: string | null | undefined) {
 }
 
 // Combined hook that provides the same interface as the old usePortfolioData
-export function usePortfolioData(
+export function usePortfolioDisplayData(
   userId: string | null | undefined
 ): UsePortfolioQueryReturn {
   const portfolioQuery = usePortfolioSummary(userId);
@@ -86,7 +86,7 @@ export function usePortfolioData(
       const processedData = preparePortfolioDataWithBorrowing(
         portfolioQuery.data!.categories,
         portfolioQuery.data!.totalValue,
-        "usePortfolioData-pieChart"
+        "usePortfolioDisplayData-pieChart"
       );
       return processedData.pieChartData;
     }
