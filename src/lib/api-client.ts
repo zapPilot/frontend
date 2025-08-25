@@ -17,6 +17,7 @@ const API_ENDPOINTS = {
   quantEngine: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "",
   intentEngine: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "",
   backendApi: process.env["NEXT_PUBLIC_API_URL"] || "",
+  accountApi: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "",
   debank: process.env["NEXT_PUBLIC_DEBANK_API_URL"] || "",
 } as const;
 
@@ -374,6 +375,18 @@ export const createApiClient = {
         endpoint,
         body,
         { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+  },
+  accountApi: {
+    get: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.accountApi },
         transformer
       ),
   },
