@@ -5,7 +5,7 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
+import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
 // Mock dependencies
@@ -13,7 +13,7 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/useWalletModal");
-vi.mock("../../../src/utils/portfolioTransformers");
+vi.mock("../../../src/utils/portfolio.utils");
 vi.mock("../../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(({ isLoading, apiError, pieChartData }) => (
     <div data-testid="portfolio-overview">

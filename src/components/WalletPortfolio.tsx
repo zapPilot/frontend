@@ -5,7 +5,7 @@ import { useUser } from "../contexts/UserContext";
 import { usePortfolioDisplayData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../utils/portfolioTransformers";
+import { preparePortfolioDataWithBorrowing } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";

@@ -4,15 +4,13 @@ import type {
   ApiPosition,
 } from "../schemas/portfolioApi";
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
-import {
-  transformForDisplay,
-  validatePieChartWeights,
-  type BorrowingDisplayData,
-} from "./borrowingUtils";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
 
 /**
- * Transform API positions to AssetDetail format
+ * Transform API position to AssetDetail format
+ *
+ * Converts raw API position data to the standardized AssetDetail interface
+ * used throughout the frontend for consistent data handling.
  */
 function transformApiPosition(position: ApiPosition): AssetDetail {
   return {
@@ -28,6 +26,9 @@ function transformApiPosition(position: ApiPosition): AssetDetail {
 
 /**
  * Transform API category to AssetCategory format
+ *
+ * Converts API category data to the frontend AssetCategory format with
+ * proper color assignment, display names, and percentage calculations.
  */
 function transformApiCategory(
   apiCategory: ApiCategory,
@@ -52,133 +53,14 @@ function transformApiCategory(
 }
 
 /**
- * Transform data to pie chart format for visualization
- */
-export function toPieChartData(
-  data: AssetCategory[],
-  totalValue?: number
-): { label: string; value: number; percentage: number; color: string }[] {
-  return data.map(cat => ({
-    label: cat.name,
-    value:
-      totalValue && cat.percentage
-        ? (cat.percentage / 100) * totalValue
-        : cat.totalValue,
-    percentage: cat.percentage,
-    color: cat.color,
-  }));
-}
-
-/**
- * Comprehensive portfolio data preparation utility
- * Handles all common data transformation patterns in one place
- */
-export function preparePortfolioData(
-  apiCategoriesData: AssetCategory[] | null,
-  totalValue: number | null
-) {
-  // Safe data preparation - handle null/undefined gracefully
-  const portfolioData = apiCategoriesData || [];
-
-  // Transform to pie chart format - handle null totalValue gracefully
-  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
-
-  return {
-    portfolioData,
-    pieChartData,
-  };
-}
-
-/**
- * Enhanced portfolio data preparation with borrowing support
- * Separates assets from borrowing and provides all display data
- */
-export function preparePortfolioDataWithBorrowing(
-  apiCategoriesData: AssetCategory[] | null,
-  _totalValue: number | null,
-  debugContext?: string
-): {
-  portfolioData: AssetCategory[];
-  pieChartData: {
-    label: string;
-    value: number;
-    percentage: number;
-    color: string;
-  }[];
-  borrowingData: BorrowingDisplayData;
-} {
-  // Safe data preparation - handle null/undefined gracefully
-  const portfolioData = apiCategoriesData || [];
-
-  // Get borrowing-aware display data
-  const borrowingData = transformForDisplay(portfolioData);
-
-  // Create pie chart data from assets only (positive values)
-  const pieChartData = borrowingData.assetsPieData;
-
-  // Validate pie chart weights
-  if (debugContext && pieChartData.length > 0) {
-    validatePieChartWeights(pieChartData, debugContext);
-  }
-
-  return {
-    portfolioData,
-    pieChartData,
-    borrowingData,
-  };
-}
-
-/**
- * Portfolio state management utilities
- * Consolidates common state reset and validation patterns
- */
-export const portfolioStateUtils = {
-  /**
-   * Reset portfolio state to initial/error state
-   * Common pattern for error handling and initialization
-   */
-  resetState: () => ({
-    totalValue: null as number | null,
-    categories: null as AssetCategory[] | null,
-  }),
-
-  /**
-   * Check if portfolio data is in a loading/empty state
-   */
-  isEmpty: (categories: AssetCategory[] | null, totalValue: number | null) => {
-    return !categories || categories.length === 0 || !totalValue;
-  },
-
-  /**
-   * Check if portfolio data is valid and ready for display
-   */
-  isValid: (categories: AssetCategory[] | null, totalValue: number | null) => {
-    return (
-      categories &&
-      categories.length > 0 &&
-      totalValue !== null &&
-      totalValue > 0
-    );
-  },
-
-  /**
-   * Safe array length check - prevents redundant .length === 0 patterns
-   */
-  hasItems: <T>(array: T[] | null | undefined): array is T[] => {
-    return Array.isArray(array) && array.length > 0;
-  },
-
-  /**
-   * Safe empty array check - consolidated null/undefined/empty checking
-   */
-  isEmptyArray: <T>(array: T[] | null | undefined): boolean => {
-    return !Array.isArray(array) || array.length === 0;
-  },
-} as const;
-
-/**
  * Transform complete API response to frontend format
- * Handles both legacy categories structure and new asset_positions/borrowing_positions structure
+ *
+ * Handles both legacy categories structure and new asset_positions/borrowing_positions structure.
+ * This is the main transformation function that processes the entire API response into
+ * the format expected by the frontend components.
+ *
+ * @param apiResponse - Raw API response from the portfolio service
+ * @returns Transformed data with totalValue and categories for frontend consumption
  */
 export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
   totalValue: number;

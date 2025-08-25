@@ -5,7 +5,7 @@ import {
   createTransactionBatches,
   getWalletBatchConfig,
 } from "../../../utils/walletBatching";
-import { portfolioStateUtils } from "@/utils/portfolioTransformers";
+import { portfolioStateUtils } from "@/utils/portfolio.utils";
 
 interface BatchProgress {
   batchIndex: number;
