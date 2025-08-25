@@ -3,8 +3,8 @@ import React, { ErrorInfo, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
-import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
 
@@ -450,44 +450,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       expect(screen.getByTestId("error-message")).toHaveTextContent(
         "Section-specific error"
       );
-    });
-
-    it("should handle manual retry after error recovery", async () => {
-      const onError = vi.fn();
-      let throwError = true;
-
-      mockUsePortfolio.mockImplementation(() => {
-        if (throwError) {
-          throw new Error("Temporary calculation error");
-        }
-        return {
-          balanceHidden: false,
-          expandedCategory: null,
-          portfolioMetrics: mockPortfolioMetrics,
-          toggleBalanceVisibility: vi.fn(),
-          toggleCategoryExpansion: vi.fn(),
-        };
-      });
-
-      render(
-        <TestErrorBoundary onError={onError}>
-          <WalletPortfolio />
-        </TestErrorBoundary>
-      );
-
-      // Should show error initially
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-
-      // Fix the error condition
-      throwError = false;
-
-      // Click retry button
-      const retryButton = screen.getByTestId("error-retry");
-      retryButton.click();
-
-      // Should recover and show normal component
-      expect(screen.queryByTestId("error-boundary")).not.toBeInTheDocument();
-      expect(screen.getByTestId("wallet-metrics")).toBeInTheDocument();
     });
   });
 

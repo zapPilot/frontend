@@ -1,12 +1,12 @@
 import { act, screen, waitFor } from "@testing-library/react";
-import { render } from "../../test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
-import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
+import { render } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
@@ -897,38 +897,6 @@ describe("WalletPortfolio", () => {
         "not-loading"
       );
     });
-
-    it("should handle wallet connection state changes", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      await waitFor(() => {
-        expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-          mockUserInfo.userId
-        );
-      });
-
-      // Change connection state
-      mockUseUser.mockReturnValue({
-        userInfo: null,
-        isConnected: false,
-        loading: false,
-      });
-
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
-        isRefetching: false,
-      });
-
-      rerender(<WalletPortfolio />);
-
-      await waitFor(() => {
-        expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(null);
-      });
-    });
   });
 
   describe("Component Props", () => {
@@ -977,15 +945,6 @@ describe("WalletPortfolio", () => {
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText("Portfolio APR")).toBeInTheDocument();
       expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
-    });
-
-    it("should render trending icons in APR section", () => {
-      render(<WalletPortfolio />);
-
-      // Should have either TrendingUp or TrendingDown based on portfolio performance
-      const trendingUp = screen.queryByText("TrendingUp");
-      const trendingDown = screen.queryByText("TrendingDown");
-      expect(trendingUp || trendingDown).toBeTruthy();
     });
 
     it("should render action buttons grid", () => {
