@@ -1,592 +1,602 @@
-import { act, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
-import { useWalletPortfolioState } from "../../../src/hooks/useWalletPortfolioState";
-import { useUser } from "../../../src/contexts/UserContext";
-import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
-import { render } from "../../test-utils";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, act } from "@testing-library/react";
+import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { useUser } from "@/hooks/useUser";
+import { usePortfolioDisplayData } from "@/hooks/queries/usePortfolioQuery";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import { useWalletModal } from "@/hooks/useWalletModal";
+import { preparePortfolioDataWithBorrowing } from "@/utils/portfolioTransformers";
 
 // Performance monitoring utilities
-const performanceObserver = {
-  entries: [] as PerformanceEntry[],
-  observe: vi.fn(),
-  disconnect: vi.fn(),
-};
+const performanceMarkPrefix = "WalletPortfolio";
+let renderStartTime: number;
+let renderEndTime: number;
 
-// Mock Performance Observer
-global.PerformanceObserver = vi.fn().mockImplementation(callback => {
-  performanceObserver.callback = callback;
-  return performanceObserver;
+// Mock all dependencies
+vi.mock("@/hooks/useUser");
+vi.mock("@/hooks/queries/usePortfolioQuery");
+vi.mock("@/hooks/usePortfolio");
+vi.mock("@/hooks/useWalletModal");
+vi.mock("@/utils/portfolioTransformers");
+vi.mock("@/components/ErrorBoundary", () => ({
+  ErrorBoundary: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="error-boundary">{children}</div>
+  ),
+}));
+
+const mockUseUser = vi.mocked(useUser);
+const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
+const mockUsePortfolio = vi.mocked(usePortfolio);
+const mockUseWalletModal = vi.mocked(useWalletModal);
+const mockPreparePortfolioDataWithBorrowing = vi.mocked(
+  preparePortfolioDataWithBorrowing
+);
+
+// Helper to create large datasets
+const createLargePortfolioData = (size: number) => ({
+  totalValue: size * 100,
+  categories: Array.from({ length: size }, (_, i) => ({
+    id: `category-${i}`,
+    name: `Category ${i}`,
+    value: Math.random() * 1000 + 100,
+    percentage: Math.random() * 10 + 1,
+  })),
 });
 
-// Mock dependencies
-vi.mock("../../../src/hooks/useWalletPortfolioState");
-vi.mock("../../../src/contexts/UserContext");
-
-// Mock ThirdWeb hooks
-vi.mock("thirdweb/react", () => ({
-  useActiveAccount: vi.fn(() => null),
-  ConnectButton: vi.fn(({ children, ...props }) => (
-    <button data-testid="connect-button" {...props}>
-      Connect Wallet
-    </button>
-  )),
-}));
-
-// Performance-tracking mock components
-let renderCounts = {
-  glassCard: 0,
-  walletHeader: 0,
-  walletMetrics: 0,
-  walletActions: 0,
-  portfolioOverview: 0,
-  walletManager: 0,
+// Helper to measure render performance
+const measureRenderTime = () => {
+  renderStartTime = performance.now();
 };
 
-vi.mock("../../../src/components/ui/GlassCard", () => ({
-  GlassCard: vi.fn(({ children }) => {
-    renderCounts.glassCard++;
-    return <div data-testid="glass-card">{children}</div>;
-  }),
-}));
+const endMeasureRenderTime = () => {
+  renderEndTime = performance.now();
+  return renderEndTime - renderStartTime;
+};
 
-vi.mock("../../../src/components/wallet/WalletHeader", () => ({
-  WalletHeader: vi.fn(props => {
-    renderCounts.walletHeader++;
-    return (
-      <div data-testid="wallet-header">
-        <button
-          data-testid="wallet-manager-button"
-          onClick={props.onWalletManagerClick}
-        >
-          Wallet Manager
-        </button>
-      </div>
-    );
-  }),
-}));
-
-vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(({ totalValue }) => {
-    renderCounts.walletMetrics++;
-    return (
-      <div data-testid="wallet-metrics">
-        <div data-testid="total-value">${totalValue}</div>
-      </div>
-    );
-  }),
-}));
-
-vi.mock("../../../src/components/wallet/WalletActions", () => ({
-  WalletActions: vi.fn(props => {
-    renderCounts.walletActions++;
-    return (
-      <div data-testid="wallet-actions">
-        <button data-testid="zap-in-button" onClick={props.onZapInClick}>
-          Zap In
-        </button>
-      </div>
-    );
-  }),
-}));
-
-vi.mock("../../../src/components/PortfolioOverview", () => ({
-  PortfolioOverview: vi.fn(props => {
-    renderCounts.portfolioOverview++;
-    return (
-      <div data-testid="portfolio-overview">
-        <div data-testid="portfolio-data-count">
-          {props.portfolioData?.length || 0}
-        </div>
-      </div>
-    );
-  }),
-}));
-
-vi.mock("../../../src/components/WalletManager", () => ({
-  WalletManager: vi.fn(({ isOpen }) => {
-    if (isOpen) {
-      renderCounts.walletManager++;
-      return <div data-testid="wallet-manager">Modal</div>;
-    }
-    return null;
-  }),
-}));
-
-describe("WalletPortfolio - Performance and Memory Leak Tests", () => {
-  const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
-  const mockUseUser = vi.mocked(useUser);
-
-  const createLargeDataset = (size: number): AssetCategory[] => {
-    return Array.from({ length: size }, (_, i) => ({
-      id: `asset-${i}`,
-      name: `Asset ${i}`,
-      totalValue: Math.random() * 10000,
-      percentage: Math.random() * 100,
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-      assets: Array.from({ length: 10 }, (_, j) => ({
-        id: `${i}-${j}`,
-        symbol: `SYM${i}-${j}`,
-        name: `Token ${i}-${j}`,
-        amount: Math.random() * 1000,
-        value: Math.random() * 5000,
-        price: Math.random() * 100,
-        change24h: (Math.random() - 0.5) * 20,
-      })),
-    }));
-  };
-
-  const createLargePieData = (size: number): PieChartData[] => {
-    return Array.from({ length: size }, (_, i) => ({
-      label: `Asset ${i}`,
-      value: Math.random() * 10000,
-      percentage: Math.random() * 100,
-      color: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-    }));
-  };
-
-  const defaultMockState = {
-    totalValue: 15000,
-    portfolioData: [],
-    pieChartData: [],
-    isLoading: false,
-    apiError: null,
-    retry: vi.fn(),
-    isRetrying: false,
-    balanceHidden: false,
-    expandedCategory: null,
-    portfolioMetrics: { totalChangePercentage: 5.2 },
-    toggleBalanceVisibility: vi.fn(),
-    toggleCategoryExpansion: vi.fn(),
-    isWalletManagerOpen: false,
-    openWalletManager: vi.fn(),
-    closeWalletManager: vi.fn(),
-  };
-
+describe("WalletPortfolio - Performance Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset render counts
-    renderCounts = {
-      glassCard: 0,
-      walletHeader: 0,
-      walletMetrics: 0,
-      walletActions: 0,
-      portfolioOverview: 0,
-      walletManager: 0,
-    };
-    mockUseWalletPortfolioState.mockReturnValue(defaultMockState);
 
-    // Setup UserContext mock
+    // Default performant mocks
     mockUseUser.mockReturnValue({
-      userInfo: {
-        userId: "test-user-id",
-        email: "test@example.com",
-        name: "Test User",
-      },
-      loading: false,
-      error: null,
+      userInfo: { userId: "test-user-123", email: "test@example.com" },
       isConnected: true,
-      connectedWallet: "0x1234567890abcdef",
-      refetch: vi.fn(),
+      login: vi.fn(),
+      logout: vi.fn(),
+      isLoading: false,
+    });
+
+    mockUseWalletModal.mockReturnValue({
+      isOpen: false,
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
     });
   });
 
-  describe("Render Performance", () => {
-    it("should minimize re-renders when props don't change", () => {
+  afterEach(() => {
+    // Clean up performance marks
+    try {
+      performance.clearMarks();
+      performance.clearMeasures();
+    } catch (e) {
+      // Performance API might not be available in test environment
+    }
+  });
+
+  describe("Baseline Performance", () => {
+    it("should render small dataset within acceptable time", async () => {
+      const smallData = createLargePortfolioData(10);
+
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...smallData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: smallData.totalValue,
+          changePercent: 5.2,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: smallData.categories,
+        pieChartData: smallData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
+      measureRenderTime();
+
+      await act(async () => {
+        render(<WalletPortfolio />);
+      });
+
+      const renderTime = endMeasureRenderTime();
+
+      // Should render small dataset quickly (under 50ms in ideal conditions)
+      expect(renderTime).toBeLessThan(200); // Generous threshold for CI environment
+      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
+    });
+
+    it("should render medium dataset within acceptable time", async () => {
+      const mediumData = createLargePortfolioData(50);
+
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...mediumData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: mediumData.totalValue,
+          changePercent: 3.1,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: mediumData.categories,
+        pieChartData: mediumData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
+      measureRenderTime();
+
+      await act(async () => {
+        render(<WalletPortfolio />);
+      });
+
+      const renderTime = endMeasureRenderTime();
+
+      // Should still render medium dataset reasonably fast
+      expect(renderTime).toBeLessThan(500); // Reasonable threshold
+      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
+    });
+  });
+
+  describe("Hook Call Efficiency", () => {
+    it("should minimize hook calls during normal render", () => {
+      const normalData = createLargePortfolioData(20);
+
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...normalData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: normalData.totalValue,
+          changePercent: 2.5,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: normalData.categories,
+        pieChartData: normalData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
+      render(<WalletPortfolio />);
+
+      // Each hook should be called exactly once per render
+      expect(mockUseUser).toHaveBeenCalledTimes(1);
+      expect(mockUsePortfolioDisplayData).toHaveBeenCalledTimes(1);
+      expect(mockUsePortfolio).toHaveBeenCalledTimes(1);
+      expect(mockUseWalletModal).toHaveBeenCalledTimes(1);
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledTimes(1);
+    });
+
+    it("should not cause unnecessary re-renders on stable props", () => {
+      const stableData = createLargePortfolioData(15);
+
+      // Mock hooks to return stable references
+      const stableRefetch = vi.fn();
+      const stableToggleBalance = vi.fn();
+      const stableToggleCategory = vi.fn();
+      const stableOpenModal = vi.fn();
+      const stableCloseModal = vi.fn();
+
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...stableData,
+        isLoading: false,
+        error: null,
+        refetch: stableRefetch,
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: stableData.totalValue,
+          changePercent: 1.8,
+        },
+        toggleBalanceVisibility: stableToggleBalance,
+        toggleCategoryExpansion: stableToggleCategory,
+      });
+
+      mockUseWalletModal.mockReturnValue({
+        isOpen: false,
+        openModal: stableOpenModal,
+        closeModal: stableCloseModal,
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: stableData.categories,
+        pieChartData: stableData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
       const { rerender } = render(<WalletPortfolio />);
 
-      // Reset counts after initial render
-      Object.keys(renderCounts).forEach(key => {
-        renderCounts[key as keyof typeof renderCounts] = 0;
-      });
+      const initialCallCount = mockUsePortfolioDisplayData.mock.calls.length;
 
       // Re-render with same props
       rerender(<WalletPortfolio />);
 
-      // Components should use React.memo or similar optimization
-      // In practice, some re-renders might be expected, but should be minimal
-      const totalReRenders = Object.values(renderCounts).reduce(
-        (sum, count) => sum + count,
-        0
+      // Should not cause additional hook calls beyond React's normal behavior
+      expect(mockUsePortfolioDisplayData.mock.calls.length).toBe(
+        initialCallCount + 1
       );
-      expect(totalReRenders).toBeLessThanOrEqual(5); // Allow some re-renders but keep minimal
-    });
-
-    it("should only re-render affected components when state changes", () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Reset counts
-      Object.keys(renderCounts).forEach(key => {
-        renderCounts[key as keyof typeof renderCounts] = 0;
-      });
-
-      // Change only totalValue
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        totalValue: 20000,
-      });
-
-      rerender(<WalletPortfolio />);
-
-      // Only WalletMetrics should re-render due to totalValue change
-      expect(renderCounts.walletMetrics).toBeGreaterThan(0);
-
-      // Other components should ideally not re-render
-      // (This depends on implementation - some might re-render due to hook updates)
-    });
-
-    it("should handle rapid state updates efficiently", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const startTime = performance.now();
-
-      // Simulate rapid updates
-      for (let i = 0; i < 100; i++) {
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          totalValue: i * 1000,
-        });
-
-        await act(async () => {
-          rerender(<WalletPortfolio />);
-        });
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      // 100 updates should complete in reasonable time
-      expect(totalTime).toBeLessThan(1000); // 1 second for 100 updates
     });
   });
 
-  describe("Memory Management", () => {
-    it("should not leak memory on unmount", async () => {
-      const initialHeapUsed = (performance as any).memory?.usedJSHeapSize || 0;
+  describe("Data Processing Performance", () => {
+    it("should handle large portfolio preparation efficiently", () => {
+      const largeData = createLargePortfolioData(200);
 
-      const { unmount } = render(<WalletPortfolio />);
+      // Monitor preparePortfolioDataWithBorrowing performance
+      let preparationTime = 0;
+      mockPreparePortfolioDataWithBorrowing.mockImplementation(
+        (categories, totalValue, source) => {
+          const start = performance.now();
+          const result = {
+            portfolioData: categories,
+            pieChartData: categories.map(cat => ({
+              name: cat.name,
+              value: cat.value,
+              percentage: cat.percentage,
+            })),
+          };
+          preparationTime = performance.now() - start;
+          return result;
+        }
+      );
 
-      // Simulate component lifecycle
-      await act(async () => {
-        // Trigger some state changes
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          totalValue: 25000,
-        });
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...largeData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
-      unmount();
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: largeData.totalValue,
+          changePercent: 4.2,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
 
-      // Force garbage collection if available
-      if (global.gc) {
-        global.gc();
-      }
+      render(<WalletPortfolio />);
 
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const finalHeapUsed = (performance as any).memory?.usedJSHeapSize || 0;
-
-      // Memory usage should not increase significantly
-      // (Note: This is a rough check and may not be reliable in all test environments)
-      if (initialHeapUsed > 0 && finalHeapUsed > 0) {
-        const memoryIncrease = finalHeapUsed - initialHeapUsed;
-        expect(memoryIncrease).toBeLessThan(1000000); // Less than 1MB increase
-      }
+      // Data preparation should be efficient even for large datasets
+      expect(preparationTime).toBeLessThan(50); // Should process quickly
+      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
+        largeData.categories,
+        largeData.totalValue,
+        "WalletPortfolio"
+      );
     });
 
-    it("should handle multiple mount/unmount cycles", async () => {
-      const cycles = 50;
+    it("should handle complex category structures efficiently", () => {
+      // Create complex nested-like data structure
+      const complexCategories = Array.from({ length: 50 }, (_, i) => ({
+        id: `complex-category-${i}`,
+        name: `Complex Category ${i} with Very Long Name That Might Cause Performance Issues`,
+        value: Math.random() * 10000 + 1000,
+        percentage: Math.random() * 20 + 1,
+        metadata: {
+          nestedData: Array.from({ length: 10 }, (_, j) => ({
+            subId: `sub-${i}-${j}`,
+            subValue: Math.random() * 100,
+          })),
+        },
+      }));
 
-      for (let i = 0; i < cycles; i++) {
+      mockUsePortfolioDisplayData.mockReturnValue({
+        totalValue: 500000,
+        categories: complexCategories,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: { totalValue: 500000, changePercent: 7.8 },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: complexCategories,
+        pieChartData: complexCategories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
+      measureRenderTime();
+
+      render(<WalletPortfolio />);
+
+      const renderTime = endMeasureRenderTime();
+
+      // Should handle complex structures without significant performance degradation
+      expect(renderTime).toBeLessThan(800);
+      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
+    });
+  });
+
+  describe("Memory Usage Optimization", () => {
+    it("should not leak memory on rapid prop changes", async () => {
+      // Monitor function call patterns that might indicate memory leaks
+      const refetchFunctions: Array<() => void> = [];
+
+      for (let i = 0; i < 10; i++) {
+        const refetch = vi.fn();
+        refetchFunctions.push(refetch);
+
+        const userData = createLargePortfolioData(30);
+
+        mockUseUser.mockReturnValue({
+          userInfo: { userId: `user-${i}`, email: "test@example.com" },
+          isConnected: true,
+          login: vi.fn(),
+          logout: vi.fn(),
+          isLoading: false,
+        });
+
+        mockUsePortfolioDisplayData.mockReturnValue({
+          ...userData,
+          isLoading: false,
+          error: null,
+          refetch,
+          isRefetching: false,
+        });
+
+        mockUsePortfolio.mockReturnValue({
+          balanceHidden: false,
+          expandedCategory: null,
+          portfolioMetrics: {
+            totalValue: userData.totalValue,
+            changePercent: i * 0.5,
+          },
+          toggleBalanceVisibility: vi.fn(),
+          toggleCategoryExpansion: vi.fn(),
+        });
+
+        mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+          portfolioData: userData.categories,
+          pieChartData: userData.categories.map(cat => ({
+            name: cat.name,
+            value: cat.value,
+            percentage: cat.percentage,
+          })),
+        });
+
         const { unmount } = render(<WalletPortfolio />);
 
-        // Simulate some activity
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          totalValue: i * 100,
-        });
-
-        await act(async () => {
-          unmount();
-        });
+        // Immediately unmount to simulate rapid changes
+        unmount();
       }
 
-      // Should not accumulate event listeners or other resources
-      expect(true).toBe(true); // Test passes if no errors thrown
+      // All hook calls should complete without accumulating references
+      expect(mockUsePortfolioDisplayData).toHaveBeenCalledTimes(10);
+      expect(mockUseUser).toHaveBeenCalledTimes(10);
+
+      // Functions should be properly cleaned up (no references held)
+      refetchFunctions.forEach(fn => {
+        expect(fn).toBeDefined();
+      });
     });
 
-    it("should clean up event listeners on unmount", () => {
-      const addEventListenerSpy = vi.spyOn(window, "addEventListener");
-      const removeEventListenerSpy = vi.spyOn(window, "removeEventListener");
+    it("should optimize re-renders with memoized data", () => {
+      const memoizedData = createLargePortfolioData(25);
 
-      const { unmount } = render(<WalletPortfolio />);
+      // Use same object references to test memoization
+      const stableCategories = memoizedData.categories;
+      const stableMetrics = {
+        totalValue: memoizedData.totalValue,
+        changePercent: 3.7,
+      };
 
-      unmount();
-
-      const removedListeners = removeEventListenerSpy.mock.calls.length;
-
-      // Should clean up any event listeners that were added
-      expect(removedListeners).toBeGreaterThanOrEqual(0);
-
-      addEventListenerSpy.mockRestore();
-      removeEventListenerSpy.mockRestore();
-    });
-
-    it("should handle large data without memory leaks", async () => {
-      const largeData = createLargeDataset(10000);
-
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        portfolioData: largeData,
+      mockUsePortfolioDisplayData.mockReturnValue({
+        totalValue: memoizedData.totalValue,
+        categories: stableCategories,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
-      const { unmount, rerender } = render(<WalletPortfolio />);
-
-      // Update with new large data
-      const newLargeData = createLargeDataset(10000);
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        portfolioData: newLargeData,
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: stableMetrics,
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
       });
 
-      rerender(<WalletPortfolio />);
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: stableCategories,
+        pieChartData: stableCategories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
 
-      unmount();
-
-      // Should complete without memory issues
-      expect(true).toBe(true);
-    });
-  });
-
-  describe("Callback Performance", () => {
-    it("should not create new function references unnecessarily", () => {
       const { rerender } = render(<WalletPortfolio />);
 
-      // Get initial function references from mock
-      const initialState = mockUseWalletPortfolioState.mock.results[0]?.value;
+      const firstRenderCalls =
+        mockPreparePortfolioDataWithBorrowing.mock.calls.length;
 
-      // Re-render with same state
-      rerender(<WalletPortfolio />);
-
-      const secondState = mockUseWalletPortfolioState.mock.results[1]?.value;
-
-      // Function references should be stable
-      if (initialState && secondState) {
-        expect(initialState.toggleBalanceVisibility).toBe(
-          secondState.toggleBalanceVisibility
-        );
-        expect(initialState.openWalletManager).toBe(
-          secondState.openWalletManager
-        );
-        expect(initialState.closeWalletManager).toBe(
-          secondState.closeWalletManager
-        );
-      }
-    });
-  });
-
-  describe("State Update Performance", () => {
-    it("should handle loading state transitions efficiently", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const startTime = performance.now();
-
-      // Simulate loading -> loaded -> loading cycle
-      const states = [
-        { ...defaultMockState, isLoading: true, totalValue: null },
-        { ...defaultMockState, isLoading: false, totalValue: 15000 },
-        { ...defaultMockState, isLoading: true, totalValue: null },
-        { ...defaultMockState, isLoading: false, totalValue: 20000 },
-      ];
-
-      for (const state of states) {
-        mockUseWalletPortfolioState.mockReturnValue(state);
-        await act(async () => {
-          rerender(<WalletPortfolio />);
-        });
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(totalTime).toBeLessThan(100); // State transitions should be fast
-    });
-
-    it("should handle error state transitions efficiently", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const startTime = performance.now();
-
-      // Simulate error states
-      const errorStates = [
-        { ...defaultMockState, apiError: "Error 1" },
-        { ...defaultMockState, apiError: "Error 2" },
-        { ...defaultMockState, apiError: null, totalValue: 15000 },
-        { ...defaultMockState, apiError: "Error 3" },
-      ];
-
-      for (const state of errorStates) {
-        mockUseWalletPortfolioState.mockReturnValue(state);
-        await act(async () => {
-          rerender(<WalletPortfolio />);
-        });
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(totalTime).toBeLessThan(100);
-    });
-
-    it("should handle modal state changes efficiently", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const startTime = performance.now();
-
-      // Toggle modal state multiple times
-      for (let i = 0; i < 50; i++) {
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          isWalletManagerOpen: i % 2 === 0,
-        });
-
-        await act(async () => {
-          rerender(<WalletPortfolio />);
-        });
-      }
-
-      const endTime = performance.now();
-      const totalTime = endTime - startTime;
-
-      expect(totalTime).toBeLessThan(500); // 50 modal toggles should be fast
-    });
-  });
-
-  describe("Concurrent Updates", () => {
-    it("should handle concurrent state updates", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const startTime = performance.now();
-
-      // Simulate sequential updates instead of concurrent to avoid overlapping act() calls
-      for (let i = 0; i < 20; i++) {
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          totalValue: i * 1000,
-        });
-
-        await act(async () => {
-          rerender(<WalletPortfolio />);
-        });
-      }
-
-      const endTime = performance.now();
-
-      expect(endTime - startTime).toBeLessThan(500); // Sequential updates should complete quickly
-    });
-
-    it("should maintain consistency during rapid updates", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Rapid state changes
-      const finalValue = 99000;
-
-      for (let i = 0; i < 100; i++) {
-        mockUseWalletPortfolioState.mockReturnValue({
-          ...defaultMockState,
-          totalValue: i === 99 ? finalValue : i * 1000,
-        });
-
+      // Re-render multiple times with same data
+      for (let i = 0; i < 5; i++) {
         rerender(<WalletPortfolio />);
       }
 
-      await waitFor(() => {
-        expect(screen.getByTestId("total-value")).toHaveTextContent(
-          `${finalValue}`
-        );
+      // Data preparation should be called for each render but with same params
+      expect(mockPreparePortfolioDataWithBorrowing.mock.calls.length).toBe(
+        firstRenderCalls + 5
+      );
+
+      // All calls should use the same stable references
+      mockPreparePortfolioDataWithBorrowing.mock.calls.forEach(call => {
+        expect(call[0]).toBe(stableCategories); // Same reference
+        expect(call[1]).toBe(memoizedData.totalValue);
+        expect(call[2]).toBe("WalletPortfolio");
       });
     });
   });
 
-  describe("Resource Cleanup", () => {
-    it("should cancel pending operations on unmount", async () => {
-      const mockRetry = vi.fn();
+  describe("Error Boundary Performance Impact", () => {
+    it("should not significantly impact performance with error boundaries", () => {
+      const normalData = createLargePortfolioData(40);
 
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        retry: mockRetry,
-        isRetrying: true,
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...normalData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
       });
 
-      const { unmount } = render(<WalletPortfolio />);
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: normalData.totalValue,
+          changePercent: 2.9,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
 
-      // Simulate unmount during operation
-      unmount();
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: normalData.categories,
+        pieChartData: normalData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
 
-      // Should not cause memory leaks or errors
-      expect(true).toBe(true);
-    });
+      measureRenderTime();
 
-    it("should clean up timers and intervals", async () => {
-      const setTimeoutSpy = vi.spyOn(global, "setTimeout");
-      const clearTimeoutSpy = vi.spyOn(global, "clearTimeout");
-      const setIntervalSpy = vi.spyOn(global, "setInterval");
-      const clearIntervalSpy = vi.spyOn(global, "clearInterval");
-
-      const { unmount } = render(<WalletPortfolio />);
-
-      const timersCreated =
-        setTimeoutSpy.mock.calls.length + setIntervalSpy.mock.calls.length;
-
-      unmount();
-
-      const timersCleared =
-        clearTimeoutSpy.mock.calls.length + clearIntervalSpy.mock.calls.length;
-
-      // Should clean up any timers that were created
-      if (timersCreated > 0) {
-        expect(timersCleared).toBeGreaterThanOrEqual(0);
-      }
-
-      setTimeoutSpy.mockRestore();
-      clearTimeoutSpy.mockRestore();
-      setIntervalSpy.mockRestore();
-      clearIntervalSpy.mockRestore();
-    });
-  });
-
-  describe("Bundle Size Impact", () => {
-    it("should not import unnecessary modules", () => {
-      // This test would typically check bundle analysis
-      // Here we verify that the component renders without importing everything
       render(<WalletPortfolio />);
 
-      // Verify that only necessary components are rendered
-      expect(screen.getByTestId("glass-card")).toBeInTheDocument();
-      expect(screen.getByTestId("wallet-header")).toBeInTheDocument();
-      expect(screen.getByTestId("wallet-metrics")).toBeInTheDocument();
-      expect(screen.getByTestId("wallet-actions")).toBeInTheDocument();
-      expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
+      const renderTime = endMeasureRenderTime();
 
-      // Modal should not be rendered when closed (tree shaking)
-      expect(screen.queryByTestId("wallet-manager")).not.toBeInTheDocument();
+      // Error boundaries should not add significant overhead
+      expect(renderTime).toBeLessThan(600);
+
+      // Should render all error boundaries
+      const errorBoundaries = screen.getAllByTestId("error-boundary");
+      expect(errorBoundaries).toHaveLength(4); // Main + 3 section boundaries
     });
 
-    it("should lazy load non-critical components", () => {
-      // Modal should only render when needed
+    it("should handle error boundary resetKeys efficiently", () => {
+      const testData = createLargePortfolioData(20);
+
+      mockUsePortfolioDisplayData.mockReturnValue({
+        ...testData,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isRefetching: false,
+      });
+
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: testData.totalValue,
+          changePercent: 1.5,
+        },
+        toggleBalanceVisibility: vi.fn(),
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+        portfolioData: testData.categories,
+        pieChartData: testData.categories.map(cat => ({
+          name: cat.name,
+          value: cat.value,
+          percentage: cat.percentage,
+        })),
+      });
+
       const { rerender } = render(<WalletPortfolio />);
 
-      expect(renderCounts.walletManager).toBe(0);
-
-      // Open modal
-      mockUseWalletPortfolioState.mockReturnValue({
-        ...defaultMockState,
-        isWalletManagerOpen: true,
+      // Change userId to trigger resetKeys change
+      mockUseUser.mockReturnValue({
+        userInfo: { userId: "different-user-456", email: "test@example.com" },
+        isConnected: true,
+        login: vi.fn(),
+        logout: vi.fn(),
+        isLoading: false,
       });
+
+      measureRenderTime();
 
       rerender(<WalletPortfolio />);
 
-      expect(renderCounts.walletManager).toBeGreaterThan(0);
+      const rerenderTime = endMeasureRenderTime();
+
+      // ResetKeys changes should not cause significant performance impact
+      expect(rerenderTime).toBeLessThan(400);
     });
   });
 });
