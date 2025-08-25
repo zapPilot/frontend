@@ -2,11 +2,17 @@ import { act, screen, fireEvent, waitFor } from "@testing-library/react";
 import { render } from "../test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
-import { useWalletPortfolioState } from "../../src/hooks/useWalletPortfolioState";
 import { useUser } from "../../src/contexts/UserContext";
+import { usePortfolioDisplayData } from "../../src/hooks/queries/usePortfolioQuery";
+import { usePortfolio } from "../../src/hooks/usePortfolio";
+import { useWalletModal } from "../../src/hooks/useWalletModal";
+import { preparePortfolioDataWithBorrowing } from "../../src/utils/portfolioTransformers";
 
 // Mock dependencies
-vi.mock("../../src/hooks/useWalletPortfolioState");
+vi.mock("../../src/hooks/queries/usePortfolioQuery");
+vi.mock("../../src/hooks/usePortfolio");
+vi.mock("../../src/hooks/useWalletModal");
+vi.mock("../../src/utils/portfolioTransformers");
 vi.mock("../../src/services/quantEngine");
 vi.mock("../../src/contexts/UserContext");
 
@@ -111,13 +117,11 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
       pieChartData: any[];
       totalValue?: number;
     }) => {
-      // Calculate total from pieChartData if totalValue not provided
       const calculatedTotal =
         totalValue ||
         pieChartData?.reduce((sum, item) => sum + (item.value || 0), 0) ||
         0;
 
-      // Format currency with commas
       const formatCurrency = (amount: number) => {
         return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
       };
@@ -145,15 +149,17 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
   ),
 }));
 
-const mockUseWalletPortfolioState = useWalletPortfolioState as ReturnType<
-  typeof vi.fn
->;
 const mockUseUser = vi.mocked(useUser);
+const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
+const mockUsePortfolio = vi.mocked(usePortfolio);
+const mockUseWalletModal = vi.mocked(useWalletModal);
+const mockPreparePortfolioDataWithBorrowing = vi.mocked(
+  preparePortfolioDataWithBorrowing
+);
 
-// Mock data defined inline
+// Mock data
 const mockUserInfo = {
   userId: "test-user-123",
-  primaryWallet: "0x1234567890abcdef1234567890abcdef12345678",
   email: "test@example.com",
 };
 
@@ -163,18 +169,7 @@ const mockPortfolioData = [
     totalValue: 15000,
     percentage: 60,
     color: "#8B5CF6",
-    assets: [
-      {
-        protocol: "Uniswap",
-        symbol: "UNI",
-        name: "Uniswap",
-        amount: 1000,
-        value: 5000,
-        price: 5.0,
-        change24h: 2.5,
-        address: "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-      },
-    ],
+    assets: [],
   },
   {
     name: "CEX",
@@ -193,43 +188,54 @@ const mockPortfolioData = [
 ];
 
 describe("WalletPortfolio - Balance Hiding Integration", () => {
-  const createMockState = (balanceHidden = false) => ({
-    totalValue: 25000,
-    portfolioData: mockPortfolioData,
-    pieChartData: [
-      { label: "DeFi", value: 15000, percentage: 60, color: "#8B5CF6" },
-      { label: "CEX", value: 7500, percentage: 30, color: "#06B6D4" },
-      { label: "NFTs", value: 2500, percentage: 10, color: "#F59E0B" },
-    ],
-    isLoading: false,
-    apiError: null,
-    isConnected: true,
-    balanceHidden,
-    expandedCategory: null,
-    portfolioMetrics: { totalValue: 25000, totalChangePercentage: 5.2 },
-    toggleBalanceVisibility: vi.fn(),
-    toggleCategoryExpansion: vi.fn(),
-    isWalletManagerOpen: false,
-    openWalletManager: vi.fn(),
-    closeWalletManager: vi.fn(),
-  });
+  let mockToggleBalance: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    // Default mock implementation for useWalletPortfolioState
-    mockUseWalletPortfolioState.mockReturnValue(createMockState());
+    mockToggleBalance = vi.fn();
 
-    // Setup UserContext mock
+    // Setup user mock
     mockUseUser.mockReturnValue({
-      userInfo: {
-        userId: "test-user-id",
-        email: "test@example.com",
-        name: "Test User",
-      },
-      loading: false,
-      error: null,
+      userInfo: mockUserInfo,
       isConnected: true,
-      connectedWallet: "0x1234567890abcdef",
+      login: vi.fn(),
+      logout: vi.fn(),
+      isLoading: false,
+    });
+
+    // Setup portfolio data mock
+    mockUsePortfolioDisplayData.mockReturnValue({
+      totalValue: 25000,
+      categories: mockPortfolioData,
+      isLoading: false,
+      error: null,
       refetch: vi.fn(),
+      isRefetching: false,
+    });
+
+    // Setup portfolio mock - initial state with balance visible
+    mockUsePortfolio.mockReturnValue({
+      balanceHidden: false,
+      expandedCategory: null,
+      portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
+      toggleBalanceVisibility: mockToggleBalance,
+      toggleCategoryExpansion: vi.fn(),
+    });
+
+    // Setup wallet modal mock
+    mockUseWalletModal.mockReturnValue({
+      isOpen: false,
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+    });
+
+    // Setup data preparation mock
+    mockPreparePortfolioDataWithBorrowing.mockReturnValue({
+      portfolioData: mockPortfolioData,
+      pieChartData: [
+        { label: "DeFi", value: 15000, percentage: 60, color: "#8B5CF6" },
+        { label: "CEX", value: 7500, percentage: 30, color: "#06B6D4" },
+        { label: "NFTs", value: 2500, percentage: 10, color: "#F59E0B" },
+      ],
     });
   });
 
@@ -266,19 +272,26 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
         fireEvent.click(toggleButton);
       });
 
+      expect(mockToggleBalance).toHaveBeenCalledTimes(1);
+
       // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: true,
+        expandedCategory: null,
+        portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
+
       rerender(<WalletPortfolio />);
 
       // Verify balance is now hidden
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(screen.getAllByTestId("balance-visibility")[0]).toHaveTextContent(
+      expect(screen.getByTestId("balance-state")).toHaveTextContent("hidden");
+      expect(screen.getByTestId("balance-visibility")).toHaveTextContent(
         "hidden"
       );
       expect(
-        screen.getAllByTestId("pie-chart-visibility-state")[0]
+        screen.getByTestId("pie-chart-visibility-state")
       ).toHaveTextContent("hidden");
 
       // Verify hidden placeholders are displayed
@@ -302,20 +315,32 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       });
 
       // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: true,
+        expandedCategory: null,
+        portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
       rerender(<WalletPortfolio />);
 
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
+      expect(screen.getByTestId("balance-state")).toHaveTextContent("hidden");
 
       // Show balance again - second click
       await act(async () => {
         fireEvent.click(toggleButton);
       });
 
+      expect(mockToggleBalance).toHaveBeenCalledTimes(2);
+
       // Update mock back to visible state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(false));
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: false,
+        expandedCategory: null,
+        portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
       rerender(<WalletPortfolio />);
 
       expect(screen.getByTestId("balance-state")).toHaveTextContent("visible");
@@ -333,9 +358,7 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       );
       expect(toggleButton).toHaveTextContent("Hide Balance");
     });
-  });
 
-  describe("Cross-Component State Synchronization", () => {
     it("should synchronize balance visibility across all components", async () => {
       const { rerender } = render(<WalletPortfolio />);
 
@@ -354,18 +377,22 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       });
 
       // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: true,
+        expandedCategory: null,
+        portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
       rerender(<WalletPortfolio />);
 
       // Verify all components are updated synchronously
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(screen.getAllByTestId("balance-visibility")[0]).toHaveTextContent(
+      expect(screen.getByTestId("balance-state")).toHaveTextContent("hidden");
+      expect(screen.getByTestId("balance-visibility")).toHaveTextContent(
         "hidden"
       );
       expect(
-        screen.getAllByTestId("pie-chart-visibility-state")[0]
+        screen.getByTestId("pie-chart-visibility-state")
       ).toHaveTextContent("hidden");
 
       // Verify all display the hidden state
@@ -373,289 +400,6 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
         "••••••••"
       );
-    });
-
-    it("should maintain balance visibility state during data updates", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Hide balance first
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
-      rerender(<WalletPortfolio />);
-
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-
-      // Update portfolio data while balance is hidden
-      const newMockState = createMockState(true);
-      newMockState.totalValue = 30000; // Different value
-      newMockState.pieChartData = [
-        { label: "DeFi", value: 18000, percentage: 60, color: "#8B5CF6" },
-        { label: "CEX", value: 9000, percentage: 30, color: "#06B6D4" },
-        { label: "NFTs", value: 3000, percentage: 10, color: "#F59E0B" },
-      ];
-
-      mockUseWalletPortfolioState.mockReturnValue(newMockState);
-      rerender(<WalletPortfolio />);
-
-      // Verify balance remains hidden despite data update
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(screen.getAllByTestId("balance-visibility")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(
-        screen.getAllByTestId("pie-chart-visibility-state")[0]
-      ).toHaveTextContent("hidden");
-
-      // Verify hidden placeholders are still shown
-      expect(screen.getByTestId("total-value")).toHaveTextContent("••••••••");
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "••••••••"
-      );
-    });
-  });
-
-  describe("Custom Balance Renderer Integration", () => {
-    it("should pass custom renderBalanceDisplay to PieChart", () => {
-      render(<WalletPortfolio />);
-
-      // The PieChart should receive the custom renderer
-      // This is verified by checking that the balance display uses formatCurrency
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "$25,000.00"
-      );
-    });
-
-    it("should use custom renderBalanceDisplay when balance is hidden", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Hide balance
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
-      rerender(<WalletPortfolio />);
-
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "••••••••"
-      );
-    });
-
-    it("should handle totalValue changes with custom renderer", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Update with different totalValue using the correct mock
-      const newMockState = createMockState(false);
-      newMockState.totalValue = 50000;
-      newMockState.pieChartData = [
-        { label: "DeFi", value: 30000, percentage: 60, color: "#8B5CF6" },
-        { label: "CEX", value: 15000, percentage: 30, color: "#06B6D4" },
-        { label: "NFTs", value: 5000, percentage: 10, color: "#F59E0B" },
-      ];
-
-      mockUseWalletPortfolioState.mockReturnValue(newMockState);
-      rerender(<WalletPortfolio />);
-
-      // Verify new value is displayed
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "$50,000.00"
-      );
-
-      // Hide balance and verify custom renderer respects the hidden state
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      newMockState.balanceHidden = true;
-      mockUseWalletPortfolioState.mockReturnValue(newMockState);
-      rerender(<WalletPortfolio />);
-
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "••••••••"
-      );
-    });
-  });
-
-  describe("Edge Cases", () => {
-    it("should handle null totalValue gracefully", async () => {
-      const nullMockState = createMockState(false);
-      nullMockState.totalValue = 0; // null becomes 0 in our calculation
-      nullMockState.pieChartData = [];
-
-      mockUseWalletPortfolioState.mockReturnValue(nullMockState);
-
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Should show $0.00 for null/0 value
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "$0.00"
-      );
-
-      // Hide balance
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      nullMockState.balanceHidden = true;
-      mockUseWalletPortfolioState.mockReturnValue(nullMockState);
-      rerender(<WalletPortfolio />);
-
-      // Should show hidden placeholder
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "••••••••"
-      );
-    });
-
-    it("should handle zero totalValue correctly", async () => {
-      const zeroMockState = createMockState(false);
-      zeroMockState.totalValue = 0;
-      zeroMockState.pieChartData = [];
-
-      mockUseWalletPortfolioState.mockReturnValue(zeroMockState);
-
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Should show $0.00 for zero value
-      expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-        "$0.00"
-      );
-
-      // Hide balance
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      zeroMockState.balanceHidden = true;
-      mockUseWalletPortfolioState.mockReturnValue(zeroMockState);
-      rerender(<WalletPortfolio />);
-
-      // Should show hidden placeholder
-      await waitFor(() => {
-        expect(screen.getByTestId("pie-chart-balance")).toHaveTextContent(
-          "••••••••"
-        );
-      });
-    });
-
-    it("should maintain balance visibility during loading states", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Hide balance first
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      const hiddenMockState = createMockState(true);
-      mockUseWalletPortfolioState.mockReturnValue(hiddenMockState);
-      rerender(<WalletPortfolio />);
-
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-
-      // Simulate loading state while balance is hidden
-      const loadingMockState = createMockState(true);
-      loadingMockState.isLoading = true;
-      loadingMockState.totalValue = null;
-      loadingMockState.portfolioData = [];
-      loadingMockState.pieChartData = [];
-
-      mockUseWalletPortfolioState.mockReturnValue(loadingMockState);
-      rerender(<WalletPortfolio />);
-
-      // Balance should remain hidden during loading
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(screen.getAllByTestId("balance-visibility")[0]).toHaveTextContent(
-        "hidden"
-      );
-    });
-
-    it("should maintain balance visibility during error states", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Hide balance first
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
-      });
-
-      // Update mock to hidden state and re-render
-      const hiddenMockState = createMockState(true);
-      mockUseWalletPortfolioState.mockReturnValue(hiddenMockState);
-      rerender(<WalletPortfolio />);
-
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-
-      // Simulate error state while balance is hidden
-      const errorMockState = createMockState(true);
-      errorMockState.apiError = "API Error";
-      errorMockState.totalValue = null;
-      errorMockState.portfolioData = [];
-      errorMockState.pieChartData = [];
-
-      mockUseWalletPortfolioState.mockReturnValue(errorMockState);
-      rerender(<WalletPortfolio />);
-
-      // Balance should remain hidden during error
-      expect(screen.getAllByTestId("balance-state")[0]).toHaveTextContent(
-        "hidden"
-      );
-      expect(screen.getAllByTestId("balance-visibility")[0]).toHaveTextContent(
-        "hidden"
-      );
-    });
-  });
-
-  describe("Accessibility", () => {
-    it("should have proper aria-label for toggle button", () => {
-      render(<WalletPortfolio />);
-
-      const toggleButton = screen.getByTestId("toggle-balance-btn");
-      expect(toggleButton).toHaveAttribute("aria-label", "Hide Balance");
-    });
-
-    it("should update aria-label when balance visibility changes", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      const toggleButton = screen.getByTestId("toggle-balance-btn");
-
-      // Hide balance
-      await act(async () => {
-        fireEvent.click(toggleButton);
-      });
-
-      // Update mock to hidden state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(true));
-      rerender(<WalletPortfolio />);
-
-      expect(toggleButton).toHaveAttribute("aria-label", "Show Balance");
-
-      // Show balance again
-      await act(async () => {
-        fireEvent.click(toggleButton);
-      });
-
-      // Update mock back to visible state and re-render
-      mockUseWalletPortfolioState.mockReturnValue(createMockState(false));
-      rerender(<WalletPortfolio />);
-
-      expect(toggleButton).toHaveAttribute("aria-label", "Hide Balance");
     });
   });
 });

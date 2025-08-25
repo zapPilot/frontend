@@ -178,12 +178,19 @@ These legacy-named components support the Analytics and Community tabs.
 - **`useWalletConnection`** - Connection lifecycle management
 - **`useWalletEvents`** - Wallet event monitoring
 
-### **Portfolio Hooks**
+### **Portfolio Hooks** ✅ CLEANED UP (2025)
 
 - **`usePortfolio`** - Portfolio data and calculations
 - **`useStrategyPortfolio`** - Strategy-specific portfolio logic
 - **`useDustZap`** - Dust token conversion functionality
 - **`useDustZapStream`** - Streaming dust conversion
+- **`useWalletPortfolioState`** - ✅ UPDATED: Consolidates wallet portfolio state with simplified
+  data dependencies
+
+### **Query Hooks (`src/hooks/queries/`)**
+
+- **`usePortfolioQuery`** - Contains `usePortfolioDisplayData` (renamed from duplicate
+  `usePortfolioData`) and related portfolio query hooks
 
 ### **APR & Analytics Hooks** ✅ NEW (2025)
 
@@ -255,6 +262,13 @@ These legacy-named components support the Analytics and Community tabs.
    removed)
 5. **AmountInput** - ✅ NEW (2025): Modular amount input component (extracted from SwapControls and
    ActionCenter duplicates)
+6. **usePortfolioData Hook Cleanup** - ✅ COMPLETED (2025): Eliminated duplicate hook names
+   - **Issue**: Two different `usePortfolioData` hooks causing confusion
+   - **Solution**: Removed wrapper hook `src/hooks/usePortfolioData.ts`, renamed query hook to
+     `usePortfolioDisplayData`
+   - **Benefits**: Clearer architecture, explicit data dependencies, reduced confusion
+   - **Impact**: Updated `useWalletPortfolioState` to use `usePortfolioDisplayData` directly with
+     `useUser` context
 
 ### **Recent Additions:**
 
@@ -315,11 +329,13 @@ These legacy-named components support the Analytics and Community tabs.
 
 ### **Architecture Benefits:**
 
-- **Reduced Duplication**: Eliminated 5 duplicate components
+- **Reduced Duplication**: Eliminated 6 duplicate components/hooks
 - **Improved Consistency**: Unified patterns across features, consistent financial input experience
 - **Better Maintainability**: Single source of truth for common functionality
-- **Cleaner Codebase**: 650+ lines of duplicate code removed
+- **Cleaner Codebase**: 700+ lines of duplicate code removed
 - **Enhanced Decision Support**: Users now have historical context for financial decisions
 - **Modular Financial Controls**: Reusable amount input component across all transaction types
 - **Real APR Data**: Accurate portfolio performance metrics replacing static calculations
 - **Pool-Level Analytics**: Granular performance insights for optimization decisions
+- **Simplified Hook Architecture**: Clear data flow with explicit dependencies and no naming
+  confusion
