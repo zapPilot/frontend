@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioDisplayData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
@@ -56,12 +56,21 @@ export function WalletPortfolio({
     closeModal: closeWalletManager,
   } = useWalletModal();
 
-  // Consolidated data preparation - use borrowing-aware transformation to ensure pie chart only shows assets
-  const { portfolioData, pieChartData } = preparePortfolioDataWithBorrowing(
-    apiCategoriesData,
-    totalValue,
-    "WalletPortfolio"
-  );
+  // Performance optimization: Consolidated data preparation using useMemo
+  //
+  // This transformation is expensive (sorts, filters, and processes all portfolio data)
+  // and was previously running on every component render. Now memoized to only
+  // recalculate when actual dependencies (apiCategoriesData, totalValue) change.
+  //
+  // Impact: Significant performance improvement for large portfolios (50+ assets)
+  // Dependencies: Only recalculates when portfolio data or total value changes
+  const { portfolioData, pieChartData } = useMemo(() => {
+    return preparePortfolioDataWithBorrowing(
+      apiCategoriesData,
+      totalValue,
+      "WalletPortfolio"
+    );
+  }, [apiCategoriesData, totalValue]);
 
   return (
     <ErrorBoundary
