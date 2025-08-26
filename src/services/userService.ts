@@ -3,19 +3,18 @@
  * Provides wallet bundle management and user profile operations
  */
 
-import { APIError, createApiClient, handleAPIError } from "../lib/api-client";
+import { handleAPIError } from "../lib/api-client";
+import { accountApiClient, AccountApiError } from "../lib/clients";
 import {
-  AddWalletDto,
   AddWalletResponse,
   ConnectWalletResponse,
   ServiceResponse,
-  UpdateEmailDto,
   UpdateEmailResponse,
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
 
-const accountEngineApi = createApiClient.accountApi;
+// Using the new service-specific AccountApiClient
 
 /**
  * Connect wallet and create/retrieve user
@@ -25,9 +24,7 @@ export const connectWallet = async (
   wallet: string
 ): Promise<ServiceResponse<ConnectWalletResponse>> => {
   try {
-    const data = await accountEngineApi.get<ConnectWalletResponse>(
-      `/users/connect-wallet?wallet=${encodeURIComponent(wallet)}`
-    );
+    const data = await accountApiClient.connectWallet(wallet);
 
     return {
       data,
@@ -35,7 +32,7 @@ export const connectWallet = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -48,9 +45,7 @@ export const getUserProfile = async (
   userId: string
 ): Promise<ServiceResponse<UserProfileResponse>> => {
   try {
-    const data = await accountEngineApi.get<UserProfileResponse>(
-      `/users/${userId}`
-    );
+    const data = await accountApiClient.getUserProfile(userId);
 
     return {
       data,
@@ -58,7 +53,7 @@ export const getUserProfile = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -72,9 +67,7 @@ export const getUserWallets = async (
   userId: string
 ): Promise<ServiceResponse<UserCryptoWallet[]>> => {
   try {
-    const data = await accountEngineApi.get<UserCryptoWallet[]>(
-      `/users/${userId}/wallets`
-    );
+    const data = await accountApiClient.getUserWallets(userId);
 
     return {
       data,
@@ -82,7 +75,7 @@ export const getUserWallets = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -98,9 +91,10 @@ export const addWalletToBundle = async (
   label?: string
 ): Promise<ServiceResponse<AddWalletResponse>> => {
   try {
-    const data = await accountEngineApi.post<AddWalletResponse>(
-      `/users/${userId}/wallets`,
-      { wallet, label } as AddWalletDto
+    const data = await accountApiClient.addWalletToBundle(
+      userId,
+      wallet,
+      label
     );
 
     return {
@@ -109,7 +103,7 @@ export const addWalletToBundle = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -124,8 +118,9 @@ export const removeWalletFromBundle = async (
   walletId: string
 ): Promise<ServiceResponse<{ message: string }>> => {
   try {
-    const data = await accountEngineApi.delete<{ message: string }>(
-      `/users/${userId}/wallets/${walletId}`
+    const data = await accountApiClient.removeWalletFromBundle(
+      userId,
+      walletId
     );
 
     return {
@@ -134,7 +129,7 @@ export const removeWalletFromBundle = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -148,10 +143,7 @@ export const updateUserEmail = async (
   email: string
 ): Promise<ServiceResponse<UpdateEmailResponse>> => {
   try {
-    const data = await accountEngineApi.put<UpdateEmailResponse>(
-      `/users/${userId}/email`,
-      { email } as UpdateEmailDto
-    );
+    const data = await accountApiClient.updateUserEmail(userId, email);
 
     return {
       data,
@@ -159,7 +151,7 @@ export const updateUserEmail = async (
     };
   } catch (error) {
     return {
-      error: handleAPIError(error),
+      error: handleWalletError(error),
       success: false,
     };
   }
@@ -204,29 +196,13 @@ export const getMainWallet = (
  * Error handling specific to wallet operations
  */
 export const handleWalletError = (error: unknown): string => {
-  if (error instanceof APIError) {
-    switch (error.status) {
-      case 400:
-        if (error.message.includes("42 characters")) {
-          return "Invalid wallet address format. Address must be 42 characters long.";
-        }
-        if (error.message.includes("main wallet")) {
-          return "Cannot remove the main wallet from your bundle.";
-        }
-        break;
-      case 404:
-        return "User or wallet not found.";
-      case 409:
-        if (error.message.includes("already exists")) {
-          return "This wallet is already in your bundle.";
-        }
-        if (error.message.includes("email")) {
-          return "This email address is already in use.";
-        }
-        break;
-    }
+  // Use service-specific error handling first
+  if (error instanceof AccountApiError) {
+    // AccountApiClient already provides enhanced error messages
+    return error.message;
   }
 
+  // Fallback to generic error handling
   return handleAPIError(error);
 };
 
