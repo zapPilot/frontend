@@ -1,6 +1,7 @@
 "use client";
 
 import { useDropdown } from "@/hooks/useDropdown";
+import { debugLog } from "@/utils/debug";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Loader2, Network } from "lucide-react";
 import Image from "next/image";
@@ -44,7 +45,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
         await switchChain(targetChain);
       }
     } catch (error) {
-      console.error("Chain switch failed:", error);
+      debugLog.error("Chain switch failed:", error);
     } finally {
       setIsSwitching(false);
       dropdown.close();

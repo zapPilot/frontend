@@ -6,6 +6,7 @@ import { usePortfolioDisplayData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { useWalletModal } from "../hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../utils/portfolio.utils";
+import { debugLog } from "../utils/debug";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { GlassCard } from "./ui";
 import { PortfolioOverview } from "./PortfolioOverview";
@@ -74,7 +75,7 @@ export function WalletPortfolio({
 
   return (
     <ErrorBoundary
-      onError={error => console.error("WalletPortfolio Error:", error)}
+      onError={error => debugLog.error("WalletPortfolio Error:", error)}
       resetKeys={[
         userInfo?.userId || "no-user",
         isConnected ? "connected" : "disconnected",
@@ -83,7 +84,7 @@ export function WalletPortfolio({
       <div className="space-y-6">
         {/* Wallet Header */}
         <ErrorBoundary
-          onError={error => console.error("WalletHeader Error:", error)}
+          onError={error => debugLog.error("WalletHeader Error:", error)}
         >
           <GlassCard>
             <WalletHeader
@@ -115,7 +116,7 @@ export function WalletPortfolio({
 
         {/* Portfolio Overview */}
         <ErrorBoundary
-          onError={error => console.error("PortfolioOverview Error:", error)}
+          onError={error => debugLog.error("PortfolioOverview Error:", error)}
         >
           <PortfolioOverview
             portfolioData={portfolioData}
@@ -135,7 +136,7 @@ export function WalletPortfolio({
 
         {/* Wallet Manager Modal */}
         <ErrorBoundary
-          onError={error => console.error("WalletManager Error:", error)}
+          onError={error => debugLog.error("WalletManager Error:", error)}
         >
           <WalletManager
             isOpen={isWalletManagerOpen}

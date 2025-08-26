@@ -31,9 +31,43 @@ export const toThirdWebChains: ChainListAdapter<ThirdWebChain> = configs => {
 };
 
 /**
+ * Wagmi chain interface
+ */
+interface WagmiChain {
+  id: number;
+  name: string;
+  network: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  rpcUrls: {
+    default: {
+      http: string[];
+      webSocket?: string[];
+    };
+    public: {
+      http: string[];
+      webSocket?: string[];
+    };
+  };
+  blockExplorers: {
+    default: {
+      name: string;
+      url: string;
+    };
+    etherscan?: {
+      name: string;
+      url: string;
+    };
+  };
+}
+
+/**
  * Convert canonical chain config to Wagmi-compatible format
  */
-export const toWagmiChain: ChainAdapter<any> = config => {
+export const toWagmiChain: ChainAdapter<WagmiChain> = config => {
   return {
     id: config.id,
     name: config.name,
@@ -54,7 +88,7 @@ export const toWagmiChain: ChainAdapter<any> = config => {
 /**
  * Convert list of canonical chains to Wagmi format
  */
-export const toWagmiChains: ChainListAdapter<any> = configs => {
+export const toWagmiChains: ChainListAdapter<WagmiChain> = configs => {
   return configs.map(toWagmiChain);
 };
 

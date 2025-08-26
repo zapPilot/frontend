@@ -3,6 +3,7 @@ import type {
   AssetDetail,
   PieChartData,
 } from "../types/portfolio";
+import { debugLog } from "./debug";
 
 export interface PortfolioSeparation {
   assets: AssetCategory[];
@@ -300,15 +301,14 @@ export function validatePieChartWeights(
     process.env.NODE_ENV === "development" &&
     (!isValid || context.includes("debug"))
   ) {
-    console.group(`⚖️ Pie Chart Weight Validation [${context}]`);
-    console.log("Is Valid:", isValid);
-    console.log("Total Percentage:", totalPercentage.toFixed(2) + "%");
-    console.log("Total Value:", totalValue);
+    debugLog.info(`⚖️ Pie Chart Weight Validation [${context}]`);
+    debugLog.info("Is Valid:", isValid);
+    debugLog.info("Total Percentage:", totalPercentage.toFixed(2) + "%");
+    debugLog.info("Total Value:", totalValue);
     if (issues.length > 0) {
-      console.warn("Issues:", issues);
+      debugLog.warn("Issues:", issues);
     }
-    console.log("Data:", pieData);
-    console.groupEnd();
+    debugLog.info("Data:", pieData);
   }
 
   return {

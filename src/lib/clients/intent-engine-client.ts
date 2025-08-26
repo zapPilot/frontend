@@ -6,7 +6,12 @@
 import { BaseApiClient, APIError } from "./base-client";
 
 export class IntentEngineError extends APIError {
-  constructor(message: string, status: number, code?: string, details?: any) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: unknown
+  ) {
     super(message, status, code, details);
     this.name = "IntentEngineError";
   }
@@ -73,9 +78,15 @@ export class IntentEngineClient extends BaseApiClient {
    */
   protected override createServiceError(
     status: number,
-    errorData: any
+    errorData: unknown
   ): IntentEngineError {
-    let message = errorData.message;
+    // Type guard for error data
+    const isErrorObject = (data: unknown): data is { message?: string } => {
+      return typeof data === "object" && data !== null;
+    };
+
+    const errorObj = isErrorObject(errorData) ? errorData : {};
+    let message = errorObj.message || "Unknown error occurred";
 
     switch (status) {
       case 400:

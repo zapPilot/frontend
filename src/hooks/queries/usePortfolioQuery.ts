@@ -9,6 +9,7 @@ import {
   portfolioStateUtils,
   preparePortfolioDataWithBorrowing,
 } from "../../utils/portfolio.utils";
+import { debugLog } from "../../utils/debug";
 
 export interface UsePortfolioQueryReturn {
   totalValue: number | null;
@@ -122,10 +123,10 @@ export function useRefreshPortfolio() {
     },
     onSuccess: () => {
       // Could add success toast here if needed
-      console.log("Portfolio refreshed successfully");
+      debugLog.info("Portfolio refreshed successfully");
     },
     onError: error => {
-      console.error("Failed to refresh portfolio:", error);
+      debugLog.error("Failed to refresh portfolio:", error);
     },
   });
 }

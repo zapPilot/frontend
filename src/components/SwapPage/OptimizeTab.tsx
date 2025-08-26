@@ -6,6 +6,8 @@ import {
   useActiveWalletChain,
   useSendAndConfirmCalls,
 } from "thirdweb/react";
+import type { Account } from "thirdweb/wallets";
+import type { Chain } from "thirdweb/chains";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { useToast } from "../../hooks/useToast";
 import { formatSmallNumber } from "../../utils/formatters";
@@ -23,11 +25,19 @@ import { createApiClient, handleAPIError } from "../../lib/api-client";
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
+// Toast interface for better typing
+interface ToastProps {
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  duration?: number;
+}
+
 // Wallet connection hook interface
 interface UseWalletConnectionStateReturn {
-  activeAccount: any;
-  activeChain: any;
-  sendCalls: any;
+  activeAccount: Account | undefined;
+  activeChain: Chain | undefined;
+  sendCalls: (calls: unknown[]) => Promise<{ transactionHash?: string }>;
   userAddress: string | undefined;
   chainId: number | undefined;
   chainName: string | undefined;
@@ -55,13 +65,23 @@ interface UseOptimizeButtonStateReturn {
   buttonText: string;
 }
 
+// Optimization data interface
+interface OptimizationData {
+  totalDustValue?: number;
+  totalTokens?: number;
+  estimatedGasCost?: number;
+  conversionRate?: number;
+  targetToken?: string;
+  slippageTolerance?: number;
+}
+
 // Sub-component interfaces
 interface OptimizationControlsProps {
   optimizationOptions: OptimizationOptions;
   setOptimizationOptions: (options: OptimizationOptions) => void;
   dustTokens: DustToken[];
   loadingTokens: boolean;
-  optimizationData: any;
+  optimizationData: OptimizationData | null;
 }
 
 interface ExecutionPanelProps {
@@ -72,7 +92,7 @@ interface ExecutionPanelProps {
       | ((prev: OptimizationOptions) => OptimizationOptions)
   ) => void;
   isWalletConnected: boolean;
-  optimizationData: any;
+  optimizationData: OptimizationData | null;
   isOptimizing: boolean;
   isStreaming: boolean;
   sendingToWallet: boolean;
@@ -136,12 +156,7 @@ const useWalletConnectionState = (): UseWalletConnectionStateReturn => {
 
 // Hook for intent creation API integration
 const useIntentCreation = (
-  showToast: (toast: {
-    type: string;
-    title: string;
-    message: string;
-    duration?: number;
-  }) => void
+  showToast: (toast: ToastProps) => void
 ): UseIntentCreationReturn => {
   const createDustZapIntent = useCallback(
     async (
@@ -213,7 +228,7 @@ const useOptimizationWorkflow = ({
   startStreaming: (intentId: string) => Promise<void>;
   clearEvents: () => void;
   resetWalletState: () => void;
-  showToast: (toast: any) => void;
+  showToast: (toast: ToastProps) => void;
   setIsOptimizing: (isOptimizing: boolean) => void;
 }): UseOptimizationWorkflowReturn => {
   const handleOptimize = useCallback(async () => {
@@ -570,7 +585,7 @@ export function OptimizeTab() {
     fetchTokens: fetchDustTokens,
     deleteToken: handleDeleteToken,
     restoreTokens: handleRestoreDeletedTokens,
-  } = useTokenState(showToast as any);
+  } = useTokenState(showToast);
 
   // UI state management
   const {
@@ -594,7 +609,7 @@ export function OptimizeTab() {
     sendCalls: walletConnection.sendCalls,
     activeAccount: walletConnection.activeAccount,
     activeChain: walletConnection.activeChain,
-    showToast: showToast as any,
+    showToast,
     getExplorerUrl: walletConnection.getExplorerUrl,
   });
 
@@ -622,7 +637,7 @@ export function OptimizeTab() {
   });
 
   // Extracted hooks
-  const { createDustZapIntent } = useIntentCreation(showToast as any);
+  const { createDustZapIntent } = useIntentCreation(showToast);
   const { handleOptimize } = useOptimizationWorkflow({
     optimizationOptions,
     filteredDustTokens,
@@ -633,7 +648,7 @@ export function OptimizeTab() {
     startStreaming,
     clearEvents,
     resetWalletState,
-    showToast: showToast as any,
+    showToast,
     setIsOptimizing,
   });
   const { buttonText } = useOptimizeButtonState({
@@ -662,9 +677,18 @@ export function OptimizeTab() {
   // Effect to collect transactions only from complete event
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
+    // Type for stream events
+    interface StreamEvent {
+      type: string;
+      data?: {
+        walletTransactions?: unknown[];
+        transactionHash?: string;
+      };
+    }
+
     const completeEvent = events.find(
-      (event: any) => event.type === "complete"
-    ) as any;
+      (event: StreamEvent) => event.type === "complete"
+    ) as StreamEvent | undefined;
 
     if (completeEvent && completeEvent.transactions) {
       setAccumulatedTransactions(completeEvent.transactions);

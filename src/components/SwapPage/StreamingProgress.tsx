@@ -5,11 +5,38 @@ import { GlassCard } from "../ui";
 import { TradingSummary } from "./TradingSummary";
 import { WalletTransactionProgress } from "./WalletTransactionProgress";
 import { EventsList } from "./EventsList";
+import type { Account } from "thirdweb/wallets";
+
+/**
+ * Event data structure for streaming events
+ */
+interface StreamingEvent {
+  type: string;
+  tokenSymbol?: string;
+  provider?: string;
+  tradingLoss?: {
+    inputValueUSD: number;
+    outputValueUSD: number;
+    netLossUSD: number;
+    lossPercentage: number;
+  };
+  gasCostUSD?: number;
+}
+
+/**
+ * Batch progress information for wallet transactions
+ */
+interface BatchProgress {
+  index: number;
+  status: "pending" | "processing" | "completed" | "failed";
+  transactionHash?: string;
+  error?: string;
+}
 
 interface StreamingProgressProps {
   // Streaming state
   isStreaming: boolean;
-  events: any[];
+  events: StreamingEvent[];
   totalTokens: number;
   processedTokens: number;
   progress: number;
@@ -23,9 +50,9 @@ interface StreamingProgressProps {
   // Wallet transaction state
   sendingToWallet: boolean;
   walletSuccess: boolean;
-  batchProgress: any[];
+  batchProgress: BatchProgress[];
   currentBatchIndex: number;
-  activeAccount: any;
+  activeAccount: Account | undefined;
 
   // UI state
   showTechnicalDetails: boolean;

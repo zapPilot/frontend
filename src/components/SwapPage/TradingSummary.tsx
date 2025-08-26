@@ -4,8 +4,21 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo } from "react";
 import { formatSmallNumber } from "../../utils/formatters";
 
+/**
+ * Trading event structure
+ */
+interface TradingEvent {
+  type: string;
+  tradingLoss?: {
+    inputValueUSD: number;
+    outputValueUSD: number;
+    netLossUSD: number;
+    lossPercentage: number;
+  };
+}
+
 interface TradingSummaryProps {
-  events: any[];
+  events: TradingEvent[];
   showTechnicalDetails: boolean;
   onToggleTechnicalDetails: () => void;
 }
@@ -26,21 +39,21 @@ export function TradingSummary({
   // Memoize expensive calculations to avoid recalculating on every render
   const tradingData = useMemo((): TradingData => {
     const validEvents = events.filter(
-      (e: any) => e.type === "token_ready" && e.tradingLoss
+      (e: TradingEvent) => e.type === "token_ready" && e.tradingLoss
     );
 
     const inputValue = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.inputValueUSD || 0),
+      (sum, e: TradingEvent) => sum + (e.tradingLoss?.inputValueUSD || 0),
       0
     );
 
     const outputValue = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.outputValueUSD || 0),
+      (sum, e: TradingEvent) => sum + (e.tradingLoss?.outputValueUSD || 0),
       0
     );
 
     const tradingLoss = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.netLossUSD || 0),
+      (sum, e: TradingEvent) => sum + (e.tradingLoss?.netLossUSD || 0),
       0
     );
 

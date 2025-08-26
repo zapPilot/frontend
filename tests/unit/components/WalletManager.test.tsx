@@ -1,7 +1,10 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
+import * as userService from "../../../src/services/userService";
+import { UserCryptoWallet } from "../../../src/types/user.types";
+import { render } from "../../test-utils";
 
 // Mock UserContext
 const UserContext = {
@@ -15,9 +18,6 @@ vi.mock("../../../src/contexts/UserContext", () => ({
   UserContext,
   useUser: () => ({}),
 }));
-import * as userService from "../../../src/services/userService";
-import { UserCryptoWallet } from "../../../src/types/user.types";
-import { render } from "../../test-utils";
 
 // Mock external dependencies
 vi.mock("framer-motion", () => ({
@@ -780,17 +780,6 @@ describe("WalletManager", () => {
         expect(screen.getByText("2")).toBeInTheDocument(); // Should show 2 wallets
         expect(screen.getByText("Visible:")).toBeInTheDocument();
         expect(screen.getByText("Primary Wallet:")).toBeInTheDocument();
-      });
-    });
-
-    it("shows connection status in summary", async () => {
-      renderWalletManager();
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/Connected to account-engine/)
-        ).toBeInTheDocument();
-        expect(screen.getByText(/User ID: user-123/)).toBeInTheDocument();
       });
     });
 

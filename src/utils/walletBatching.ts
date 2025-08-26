@@ -2,6 +2,17 @@
  * Simple wallet batching utility - replaces complex useWalletCapabilities
  */
 
+import type { Account } from "thirdweb/wallets";
+
+/**
+ * Wallet account interface for compatibility
+ */
+interface WalletAccount {
+  wallet?: {
+    id?: string;
+  };
+}
+
 interface WalletBatchConfig {
   batchSize: number;
   estimatedTime: number; // milliseconds
@@ -20,7 +31,9 @@ const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> & {
 /**
  * Get wallet batch configuration based on wallet type
  */
-export function getWalletBatchConfig(account: any): WalletBatchConfig {
+export function getWalletBatchConfig(
+  account: Account | WalletAccount | undefined
+): WalletBatchConfig {
   const walletType = detectSimpleWalletType(account);
   return WALLET_BATCH_CONFIGS[walletType] ?? WALLET_BATCH_CONFIGS.default;
 }
@@ -28,15 +41,22 @@ export function getWalletBatchConfig(account: any): WalletBatchConfig {
 /**
  * Simple wallet type detection
  */
-function detectSimpleWalletType(account: any): string {
-  if (!account?.wallet?.id) return "default";
+function detectSimpleWalletType(
+  account: Account | WalletAccount | undefined
+): string {
+  // Handle different account types
+  const walletId =
+    (account as WalletAccount)?.wallet?.id ||
+    ((account as Account)?.address ? "metamask" : undefined); // fallback for Account type
 
-  const walletId = account.wallet.id.toLowerCase();
+  if (!walletId) return "default";
 
-  if (walletId.includes("metamask")) return "metamask";
-  if (walletId.includes("walletconnect")) return "walletconnect";
-  if (walletId.includes("coinbase")) return "coinbase";
-  if (walletId.includes("rainbow")) return "rainbow";
+  const lowercaseWalletId = walletId.toLowerCase();
+
+  if (lowercaseWalletId.includes("metamask")) return "metamask";
+  if (lowercaseWalletId.includes("walletconnect")) return "walletconnect";
+  if (lowercaseWalletId.includes("coinbase")) return "coinbase";
+  if (lowercaseWalletId.includes("rainbow")) return "rainbow";
 
   return "default";
 }
@@ -44,7 +64,9 @@ function detectSimpleWalletType(account: any): string {
 /**
  * Get simple wallet name for display
  */
-export function getSimpleWalletName(account: any): string {
+export function getSimpleWalletName(
+  account: Account | WalletAccount | undefined
+): string {
   const walletType = detectSimpleWalletType(account);
 
   switch (walletType) {

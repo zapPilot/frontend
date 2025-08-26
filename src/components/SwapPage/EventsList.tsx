@@ -4,8 +4,29 @@ import { useMemo } from "react";
 import { formatSmallNumber } from "../../utils/formatters";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 
+/**
+ * Trading loss information for an event
+ */
+interface TradingLoss {
+  inputValueUSD: number;
+  outputValueUSD: number;
+  netLossUSD: number;
+  lossPercentage: number;
+}
+
+/**
+ * Event data structure for token conversion events
+ */
+interface TokenEvent {
+  type: string;
+  provider?: string;
+  tokenSymbol?: string;
+  tradingLoss?: TradingLoss;
+  gasCostUSD?: number;
+}
+
 interface EventsListProps {
-  events: any[];
+  events: TokenEvent[];
   showTechnicalDetails: boolean;
 }
 
@@ -49,7 +70,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
   // Memoize event filtering to avoid recalculating on every render
   const filteredEvents = useMemo(() => {
     return events.filter(
-      (event: any) => event.type === "token_ready" && event.provider
+      (event: TokenEvent) => event.type === "token_ready" && event.provider
     );
   }, [events]);
 
@@ -60,7 +81,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
 
   return (
     <div className="max-h-64 overflow-y-auto space-y-2">
-      {filteredEvents.map((event: any, index) => {
+      {filteredEvents.map((event: TokenEvent, index) => {
         const tradingLoss = event.tradingLoss;
         const inputValue = tradingLoss?.inputValueUSD || 0;
         const outputValue = tradingLoss?.outputValueUSD || 0;
@@ -83,7 +104,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
                   src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol?.toLowerCase()}.webp`}
                   alt={event.tokenSymbol || "Token"}
                   fallbackType="token"
-                  symbol={event.tokenSymbol}
+                  symbol={event.tokenSymbol || ""}
                   size={20}
                 />
                 <span className="font-medium text-blue-300 text-sm">
@@ -96,7 +117,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
                   src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${event.provider?.toLowerCase()}.webp`}
                   alt={event.provider || "Provider"}
                   fallbackType="project"
-                  symbol={event.provider}
+                  symbol={event.provider || ""}
                   size={16}
                 />
                 <span className="text-green-400 text-sm">{event.provider}</span>

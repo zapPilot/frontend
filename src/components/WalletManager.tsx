@@ -1,5 +1,7 @@
 "use client";
 
+import { GRADIENTS } from "@/constants/design-system";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -13,22 +15,20 @@ import {
   X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "../contexts/UserContext";
-import { GlassCard, GradientButton } from "./ui";
-import { RefreshButton } from "./ui/LoadingState";
-import { UnifiedLoading } from "./ui/UnifiedLoading";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
 import {
-  getUserWallets,
   addWalletToBundle,
-  removeWalletFromBundle,
-  validateWalletAddress,
-  transformWalletData,
+  getUserWallets,
   handleWalletError,
+  removeWalletFromBundle,
+  transformWalletData,
+  validateWalletAddress,
   WalletData,
 } from "../services/userService";
+import { GlassCard, GradientButton } from "./ui";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { RefreshButton } from "./ui/LoadingState";
+import { UnifiedLoading } from "./ui/UnifiedLoading";
 
 interface WalletManagerProps {
   isOpen: boolean;
@@ -72,24 +72,6 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const [newWallet, setNewWallet] = useState({ address: "", label: "" });
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  // Load wallets when component opens or user changes
-  useEffect(() => {
-    if (isOpen && userId && isConnected) {
-      loadWallets();
-    }
-  }, [isOpen, userId, isConnected]);
-
-  // Auto-refresh data periodically
-  useEffect(() => {
-    if (!isOpen || !isConnected || !userId) return;
-
-    const interval = setInterval(() => {
-      loadWallets(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [isOpen, isConnected, userId]);
-
   // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
@@ -117,6 +99,24 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     },
     [userId]
   );
+
+  // Load wallets when component opens or user changes
+  useEffect(() => {
+    if (isOpen && userId && isConnected) {
+      loadWallets();
+    }
+  }, [isOpen, userId, isConnected, loadWallets]);
+
+  // Auto-refresh data periodically
+  useEffect(() => {
+    if (!isOpen || !isConnected || !userId) return;
+
+    const interval = setInterval(() => {
+      loadWallets(true); // Silent refresh
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, isConnected, userId, loadWallets]);
 
   // Utility function to format wallet address
   const formatAddress = useCallback((address: string) => {
@@ -654,16 +654,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                 {!isConnected && (
                   <div className="mt-3 p-2 bg-yellow-600/10 border border-yellow-600/20 rounded-lg">
                     <p className="text-xs text-yellow-300">
-                      💡 Connect a wallet to view your bundle wallets from the
-                      account-engine.
-                    </p>
-                  </div>
-                )}
-                {isConnected && userId && (
-                  <div className="mt-3 p-2 bg-green-600/10 border border-green-600/20 rounded-lg">
-                    <p className="text-xs text-green-300">
-                      ✅ Connected to account-engine (User ID:{" "}
-                      {userId.slice(0, 8)}...)
+                      💡 Connect a wallet to view your bundle wallets
                     </p>
                   </div>
                 )}

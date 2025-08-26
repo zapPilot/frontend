@@ -34,6 +34,7 @@ import {
 import { WalletProviderFactory } from "./WalletProviderFactory";
 import { useThirdWebAdapter } from "./adapters/ThirdWebAdapter";
 import { WALLET_CONFIG, chainUtils } from "@/config/wallet";
+import { debugLog } from "../utils/debug";
 
 /**
  * Wallet Context State
@@ -177,6 +178,99 @@ export function WalletProvider({
   // This ensures hooks are injected into the active adapter instance
   useThirdWebAdapter();
 
+  // Debug logging
+  const log = useCallback(
+    (message: string, data?: unknown) => {
+      if (enableDebug) {
+        debugLog.info(`[WalletContext] ${message}`, data || "");
+      }
+    },
+    [enableDebug]
+  );
+
+  // Error handling
+  const handleError = useCallback(
+    (error: WalletError) => {
+      setState(prev => ({
+        ...prev,
+        error,
+        lastError: error,
+      }));
+
+      onError?.(error);
+      log("Error occurred", { error });
+    },
+    [onError, log]
+  );
+
+  // Event system
+  const emitEvent = useCallback((type: WalletEventType, payload: unknown) => {
+    const event: WalletEvent = {
+      type,
+      payload,
+      timestamp: Date.now(),
+    };
+
+    setState(prev => ({
+      ...prev,
+      events: [...prev.events.slice(-99), event], // Keep last 100 events
+      lastEvent: event,
+    }));
+
+    // Notify event listeners
+    const listeners = eventListenersRef.current.get(type) || [];
+    listeners.forEach(listener => {
+      try {
+        listener(event);
+      } catch (error) {
+        debugLog.error("Error in event listener:", error);
+      }
+    });
+  }, []);
+
+  // Setup provider event listeners
+  const setupProviderEventListeners = useCallback(
+    (provider: WalletProvider) => {
+      // Account change listener
+      provider.onAccountChanged(account => {
+        setState(prev => ({
+          ...prev,
+          account,
+          isConnected: account?.isConnected || false,
+          connectionStatus: account?.isConnected
+            ? WalletConnectionStatus.CONNECTED
+            : WalletConnectionStatus.DISCONNECTED,
+        }));
+
+        onAccountChange?.(account);
+        emitEvent(WalletEventType.ACCOUNT_CHANGED, account);
+      });
+
+      // Chain change listener
+      provider.onChainChanged(chain => {
+        setState(prev => ({ ...prev, chain }));
+        onChainChange?.(chain);
+        emitEvent(WalletEventType.CHAIN_CHANGED, chain);
+      });
+
+      // Connection status listener
+      provider.onConnectionChanged(isConnected => {
+        setState(prev => ({
+          ...prev,
+          isConnected,
+          connectionStatus: isConnected
+            ? WalletConnectionStatus.CONNECTED
+            : WalletConnectionStatus.DISCONNECTED,
+          isConnecting: false,
+          isDisconnecting: false,
+        }));
+
+        emitEvent(WalletEventType.CONNECTION_CHANGED, isConnected);
+      });
+    },
+    [onAccountChange, onChainChange, emitEvent]
+  );
+
   // Initialize factory
   useEffect(() => {
     if (!factoryRef.current) {
@@ -186,13 +280,6 @@ export function WalletProvider({
       });
     }
   }, [defaultProvider, enableDebug]);
-
-  // Initialize default provider
-  useEffect(() => {
-    if (factoryRef.current && !state.provider) {
-      initializeProvider(defaultProvider);
-    }
-  }, [defaultProvider, state.provider]);
 
   // Provider initialization
   const initializeProvider = useCallback(
@@ -244,51 +331,17 @@ export function WalletProvider({
         });
       }
     },
-    [onProviderChange]
+    [onProviderChange, handleError, log, setupProviderEventListeners]
   );
 
-  // Setup provider event listeners
-  const setupProviderEventListeners = useCallback(
-    (provider: WalletProvider) => {
-      // Account change listener
-      provider.onAccountChanged(account => {
-        setState(prev => ({
-          ...prev,
-          account,
-          isConnected: account?.isConnected || false,
-          connectionStatus: account?.isConnected
-            ? WalletConnectionStatus.CONNECTED
-            : WalletConnectionStatus.DISCONNECTED,
-        }));
+  // Setup provider event listeners (already defined above)
 
-        onAccountChange?.(account);
-        emitEvent(WalletEventType.ACCOUNT_CHANGED, account);
-      });
-
-      // Chain change listener
-      provider.onChainChanged(chain => {
-        setState(prev => ({ ...prev, chain }));
-        onChainChange?.(chain);
-        emitEvent(WalletEventType.CHAIN_CHANGED, chain);
-      });
-
-      // Connection status listener
-      provider.onConnectionChanged(isConnected => {
-        setState(prev => ({
-          ...prev,
-          isConnected,
-          connectionStatus: isConnected
-            ? WalletConnectionStatus.CONNECTED
-            : WalletConnectionStatus.DISCONNECTED,
-          isConnecting: false,
-          isDisconnecting: false,
-        }));
-
-        emitEvent(WalletEventType.CONNECTION_CHANGED, isConnected);
-      });
-    },
-    [onAccountChange, onChainChange]
-  );
+  // Initialize default provider
+  useEffect(() => {
+    if (factoryRef.current && !state.provider) {
+      initializeProvider(defaultProvider);
+    }
+  }, [defaultProvider, state.provider, initializeProvider]);
 
   // Actions
   const switchProvider = useCallback(
@@ -344,7 +397,14 @@ export function WalletProvider({
         throw walletError;
       }
     },
-    [state.providerType, setupProviderEventListeners, onProviderChange]
+    [
+      state.providerType,
+      setupProviderEventListeners,
+      onProviderChange,
+      emitEvent,
+      handleError,
+      log,
+    ]
   );
 
   const connect = useCallback(async () => {
@@ -385,7 +445,7 @@ export function WalletProvider({
       handleError(walletError);
       throw walletError;
     }
-  }, [state.provider]);
+  }, [state.provider, handleError, log]);
 
   const disconnect = useCallback(async () => {
     if (!state.provider) {
@@ -424,7 +484,7 @@ export function WalletProvider({
       handleError(walletError);
       throw walletError;
     }
-  }, [state.provider]);
+  }, [state.provider, handleError, log]);
 
   const switchChain = useCallback(
     async (chainId: number) => {
@@ -452,7 +512,7 @@ export function WalletProvider({
         throw walletError;
       }
     },
-    [state.provider]
+    [state.provider, handleError, log]
   );
 
   const signMessage = useCallback(
@@ -487,7 +547,7 @@ export function WalletProvider({
         throw walletError;
       }
     },
-    [state.provider]
+    [state.provider, handleError]
   );
 
   const signTypedData = useCallback(
@@ -526,23 +586,10 @@ export function WalletProvider({
         throw walletError;
       }
     },
-    [state.provider]
+    [state.provider, handleError]
   );
 
-  // Error handling
-  const handleError = useCallback(
-    (error: WalletError) => {
-      setState(prev => ({
-        ...prev,
-        error,
-        lastError: error,
-      }));
-
-      onError?.(error);
-      log("Error occurred", { error });
-    },
-    [onError]
-  );
+  // Error handling (already defined above)
 
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null }));
@@ -552,30 +599,7 @@ export function WalletProvider({
     setState(prev => ({ ...prev, error: null, lastError: null }));
   }, []);
 
-  // Event system
-  const emitEvent = useCallback((type: WalletEventType, payload: unknown) => {
-    const event: WalletEvent = {
-      type,
-      payload,
-      timestamp: Date.now(),
-    };
-
-    setState(prev => ({
-      ...prev,
-      events: [...prev.events.slice(-99), event], // Keep last 100 events
-      lastEvent: event,
-    }));
-
-    // Notify event listeners
-    const listeners = eventListenersRef.current.get(type) || [];
-    listeners.forEach(listener => {
-      try {
-        listener(event);
-      } catch (error) {
-        console.error("Error in event listener:", error);
-      }
-    });
-  }, []);
+  // Event system (already defined above)
 
   const addEventListener = useCallback(
     (type: WalletEventType, listener: (event: WalletEvent) => void) => {
@@ -694,15 +718,7 @@ export function WalletProvider({
     };
   }, []);
 
-  // Debug logging
-  const log = useCallback(
-    (message: string, data?: unknown) => {
-      if (enableDebug) {
-        console.log(`[WalletContext] ${message}`, data || "");
-      }
-    },
-    [enableDebug]
-  );
+  // Debug logging (already defined above)
 
   return (
     <WalletContext.Provider value={contextValue}>

@@ -3,6 +3,7 @@
 import React, { ReactNode } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { debugLog } from "../../utils/debug";
 
 interface AsyncErrorBoundaryProps {
   children: ReactNode;
@@ -25,9 +26,9 @@ export function AsyncErrorBoundary({
     <QueryErrorResetBoundary>
       {({ reset }) => (
         <ErrorBoundary
-          onError={(error, errorInfo) => {
+          onError={error => {
             onError?.(error);
-            console.error("AsyncErrorBoundary caught error:", error, errorInfo);
+            debugLog.error("AsyncErrorBoundary caught error:", error);
           }}
           resetKeys={resetKeys || []}
           resetOnPropsChange={true}

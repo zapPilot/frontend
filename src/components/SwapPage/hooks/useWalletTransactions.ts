@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
 import { prepareTransaction } from "thirdweb";
+import type { Account } from "thirdweb/wallets";
+import type { Chain } from "thirdweb/chains";
 import THIRDWEB_CLIENT from "../../../utils/thirdweb";
 import {
   createTransactionBatches,
@@ -7,40 +9,84 @@ import {
 } from "../../../utils/walletBatching";
 import { portfolioStateUtils } from "@/utils/portfolio.utils";
 
+/**
+ * Wallet transaction data structure
+ */
+interface WalletTransaction {
+  to: string;
+  data: string;
+  value?: string;
+  gas?: string;
+  gasPrice?: string;
+}
+
+/**
+ * Toast notification structure
+ */
+interface ToastNotification {
+  type: "success" | "error" | "warning" | "info";
+  title: string;
+  message: string;
+  duration?: number;
+  link?: {
+    text: string;
+    url: string;
+  };
+}
+
+/**
+ * Batch progress tracking
+ */
 interface BatchProgress {
   batchIndex: number;
   totalBatches: number;
   transactionCount: number;
   status: "pending" | "processing" | "completed" | "failed";
-  transactions: any[];
+  transactions: WalletTransaction[];
   error?: string;
 }
 
+/**
+ * Wallet transaction state
+ */
 interface WalletTransactionState {
-  transactions: any[];
+  transactions: WalletTransaction[];
   status: "idle" | "sending" | "success" | "error";
   error: string | null;
   batchProgress: BatchProgress[];
   currentBatch: number;
 }
 
+/**
+ * ThirdWeb send calls result
+ */
+interface SendCallsResult {
+  transactionHash?: string;
+  result?: unknown;
+}
+
+/**
+ * ThirdWeb send calls function type
+ */
+type SendCallsFunction = (
+  calls: unknown[],
+  options?: {
+    onSuccess?: (result: SendCallsResult) => void;
+    onError?: (error: Error) => void;
+  }
+) => Promise<SendCallsResult>;
+
 interface UseWalletTransactionsProps {
-  sendCalls: any; // thirdweb useSendAndConfirmCalls mutate function
-  activeAccount: any;
-  activeChain: any;
-  showToast: (toast: {
-    type: string;
-    title: string;
-    message: string;
-    duration?: number;
-    link?: { text: string; url: string };
-  }) => void;
+  sendCalls: SendCallsFunction;
+  activeAccount: Account | undefined;
+  activeChain: Chain | undefined;
+  showToast: (toast: ToastNotification) => void;
   getExplorerUrl: (txHash: string) => string | null;
 }
 
 interface UseWalletTransactionsReturn {
   // State
-  transactions: any[];
+  transactions: WalletTransaction[];
   status: "idle" | "sending" | "success" | "error";
   error: string | null;
   batchProgress: BatchProgress[];
@@ -53,7 +99,7 @@ interface UseWalletTransactionsReturn {
   hasTransactions: boolean;
 
   // Actions
-  setTransactions: (transactions: any[]) => void;
+  setTransactions: (transactions: WalletTransaction[]) => void;
   sendToWallet: () => Promise<void>;
   autoSendWhenReady: (isComplete: boolean) => void;
   reset: () => void;
@@ -81,7 +127,7 @@ export function useWalletTransactions({
   const isError = state.status === "error";
   const hasTransactions = portfolioStateUtils.hasItems(state.transactions);
 
-  const setTransactions = useCallback((transactions: any[]) => {
+  const setTransactions = useCallback((transactions: WalletTransaction[]) => {
     setState(prev => ({ ...prev, transactions }));
   }, []);
 
@@ -172,7 +218,7 @@ export function useWalletTransactions({
               sendCalls(
                 { calls, atomicRequired: false },
                 {
-                  onSuccess: (result: any) => {
+                  onSuccess: (result: SendCallsResult) => {
                     // Extract transaction hash
                     const txnHash = result?.receipts?.[0]?.transactionHash;
 
@@ -202,7 +248,7 @@ export function useWalletTransactions({
 
                     resolve();
                   },
-                  onError: (error: any) => {
+                  onError: (error: Error) => {
                     showToast({
                       type: "error",
                       title: `Batch ${batchIndex + 1} Failed`,

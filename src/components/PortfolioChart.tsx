@@ -5,6 +5,7 @@ import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
 import { memo, useMemo, useState } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
+import { debugLog } from "../utils/debug";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -38,11 +39,10 @@ const PortfolioChartComponent = () => {
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
     enabled: isConnected && !!userInfo?.userId,
   });
-  console.log("apiPortfolioHistory", apiPortfolioHistory);
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     if (apiPortfolioHistory && apiPortfolioHistory.length > 0) {
-      console.log("✅ Using API data from analytics-engine:", {
+      debugLog.info("✅ Using API data from analytics-engine:", {
         dataPoints: apiPortfolioHistory.length,
         period: selectedPeriod,
         userId: userInfo?.userId,
@@ -51,7 +51,7 @@ const PortfolioChartComponent = () => {
       });
       return apiPortfolioHistory;
     } else {
-      console.log("📊 Using mock data for period:", {
+      debugLog.info("📊 Using mock data for period:", {
         period: selectedPeriod,
         reason: apiError ? `API Error: ${apiError}` : "No API data available",
         isConnected,

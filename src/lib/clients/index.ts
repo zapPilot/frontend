@@ -51,6 +51,16 @@ export type {
   DebankProtocolPosition,
 } from "./debank-api-client";
 
+// Import clients directly for internal use
+import { accountApiClient, AccountApiError } from "./account-api-client";
+import { intentEngineClient, IntentEngineError } from "./intent-engine-client";
+import {
+  analyticsEngineClient,
+  AnalyticsEngineError,
+} from "./analytics-engine-client";
+import { backendApiClient, BackendApiError } from "./backend-api-client";
+import { debankApiClient, DebankApiError } from "./debank-api-client";
+
 /**
  * Client Configuration
  * Environment-based client configurations
@@ -92,13 +102,6 @@ export const CLIENT_CONFIG = {
  * Utility functions for client management
  */
 export const createClientInstances = () => {
-  // Import clients dynamically to avoid circular dependencies
-  const { accountApiClient } = require("./account-api-client");
-  const { intentEngineClient } = require("./intent-engine-client");
-  const { analyticsEngineClient } = require("./analytics-engine-client");
-  const { backendApiClient } = require("./backend-api-client");
-  const { debankApiClient } = require("./debank-api-client");
-
   return {
     account: accountApiClient,
     intent: intentEngineClient,
@@ -109,31 +112,49 @@ export const createClientInstances = () => {
 };
 
 /**
+ * Health check result type
+ */
+interface HealthCheckResult {
+  status: string;
+}
+
+interface ServiceHealthResult {
+  status: string;
+  error?: string;
+}
+
+/**
  * Health check all services
  */
-export const checkAllServicesHealth = async () => {
+export const checkAllServicesHealth = async (): Promise<
+  Record<string, ServiceHealthResult>
+> => {
   const clients = createClientInstances();
-  const results: Record<string, { status: string; error?: string }> = {};
+  const results: Record<string, ServiceHealthResult> = {};
 
   await Promise.allSettled([
     clients.account.healthCheck().then(
-      (result: any) => (results["account"] = { status: result.status }),
-      (error: any) =>
+      (result: HealthCheckResult) =>
+        (results["account"] = { status: result.status }),
+      (error: Error) =>
         (results["account"] = { status: "error", error: error.message })
     ),
     clients.intent.healthCheck().then(
-      (result: any) => (results["intent"] = { status: result.status }),
-      (error: any) =>
+      (result: HealthCheckResult) =>
+        (results["intent"] = { status: result.status }),
+      (error: Error) =>
         (results["intent"] = { status: "error", error: error.message })
     ),
     clients.analytics.healthCheck().then(
-      (result: any) => (results["analytics"] = { status: result.status }),
-      (error: any) =>
+      (result: HealthCheckResult) =>
+        (results["analytics"] = { status: result.status }),
+      (error: Error) =>
         (results["analytics"] = { status: "error", error: error.message })
     ),
     clients.backend.healthCheck().then(
-      (result: any) => (results["backend"] = { status: result.status }),
-      (error: any) =>
+      (result: HealthCheckResult) =>
+        (results["backend"] = { status: result.status }),
+      (error: Error) =>
         (results["backend"] = { status: "error", error: error.message })
     ),
   ]);
@@ -150,23 +171,18 @@ export const legacyApiClient = {
    * @deprecated Use accountApiClient instead
    */
   get connectWallet() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.connectWallet.bind(accountApiClient);
   },
   get getUserProfile() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.getUserProfile.bind(accountApiClient);
   },
   get getUserWallets() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.getUserWallets.bind(accountApiClient);
   },
   get addWalletToBundle() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.addWalletToBundle.bind(accountApiClient);
   },
   get removeWalletFromBundle() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.removeWalletFromBundle.bind(accountApiClient);
   },
 
@@ -174,13 +190,11 @@ export const legacyApiClient = {
    * @deprecated Use analyticsEngineClient instead
    */
   get getPortfolioSummary() {
-    const { analyticsEngineClient } = require("./analytics-engine-client");
     return analyticsEngineClient.getPortfolioSummary.bind(
       analyticsEngineClient
     );
   },
   get getPortfolioAPR() {
-    const { analyticsEngineClient } = require("./analytics-engine-client");
     return analyticsEngineClient.getPortfolioAPR.bind(analyticsEngineClient);
   },
 
@@ -188,11 +202,9 @@ export const legacyApiClient = {
    * @deprecated Use intentEngineClient instead
    */
   get executeSwap() {
-    const { intentEngineClient } = require("./intent-engine-client");
     return intentEngineClient.executeSwap.bind(intentEngineClient);
   },
   get getIntentStatus() {
-    const { intentEngineClient } = require("./intent-engine-client");
     return intentEngineClient.getIntentStatus.bind(intentEngineClient);
   },
 
@@ -200,11 +212,9 @@ export const legacyApiClient = {
    * @deprecated Use backendApiClient instead
    */
   get sendDiscordAlert() {
-    const { backendApiClient } = require("./backend-api-client");
     return backendApiClient.sendDiscordAlert.bind(backendApiClient);
   },
   get generatePortfolioReport() {
-    const { backendApiClient } = require("./backend-api-client");
     return backendApiClient.generatePortfolioReport.bind(backendApiClient);
   },
 };
@@ -227,27 +237,26 @@ export const getClient = (type: ClientType) => {
 /**
  * Error type guards for better error handling
  */
-export const isAccountApiError = (error: unknown) => {
-  const { AccountApiError } = require("./account-api-client");
+export const isAccountApiError = (error: unknown): error is AccountApiError => {
   return error instanceof AccountApiError;
 };
 
-export const isIntentEngineError = (error: unknown) => {
-  const { IntentEngineError } = require("./intent-engine-client");
+export const isIntentEngineError = (
+  error: unknown
+): error is IntentEngineError => {
   return error instanceof IntentEngineError;
 };
 
-export const isAnalyticsEngineError = (error: unknown) => {
-  const { AnalyticsEngineError } = require("./analytics-engine-client");
+export const isAnalyticsEngineError = (
+  error: unknown
+): error is AnalyticsEngineError => {
   return error instanceof AnalyticsEngineError;
 };
 
-export const isBackendApiError = (error: unknown) => {
-  const { BackendApiError } = require("./backend-api-client");
+export const isBackendApiError = (error: unknown): error is BackendApiError => {
   return error instanceof BackendApiError;
 };
 
-export const isDebankApiError = (error: unknown) => {
-  const { DebankApiError } = require("./debank-api-client");
+export const isDebankApiError = (error: unknown): error is DebankApiError => {
   return error instanceof DebankApiError;
 };
