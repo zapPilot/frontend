@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
-import { portfolioStateUtils } from "@/utils/portfolioTransformers";
+import { portfolioStateUtils } from "@/utils/portfolio.utils";
 
 // Types from the original dustZap implementation
 export interface DustToken {

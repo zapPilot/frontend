@@ -1,10 +1,10 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
-import {
-  getUserByWallet,
-  getBundleWalletsByPrimary,
-} from "../../services/quantEngine";
 import { queryKeys } from "../../lib/queryClient";
+import {
+  getBundleWalletsByPrimary,
+  getUserByWallet,
+} from "../../services/analyticsEngine";
 
 interface ApiUserResponse {
   id: string;

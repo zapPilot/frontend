@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { transformToDebankChainName } from "../../../utils/chainHelper";
 import { getTokens } from "../../../utils/dustConversion";
 
@@ -58,9 +58,16 @@ export function useTokenState(
     abortController: AbortController;
   } | null>(null);
 
-  // Filtered tokens (excluding deleted ones)
-  const filteredTokens = state.data.filter(
-    token => !state.deletedIds.has(token.id)
+  // Performance optimization: Filter tokens using useMemo
+  //
+  // Previously filtered tokens on every render, which can be expensive for large token lists.
+  // Now memoized to only recalculate when token data or deleted IDs change.
+  //
+  // Impact: Prevents unnecessary filtering operations on every component render
+  // Dependencies: state.data (token list), state.deletedIds (deleted token set)
+  const filteredTokens = useMemo(
+    () => state.data.filter(token => !state.deletedIds.has(token.id)),
+    [state.data, state.deletedIds]
   );
 
   const fetchTokens = useCallback(

@@ -6,14 +6,14 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolioTransformers";
+import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolio.utils";
 
 // Mock dependencies for decomposed architecture
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/useWalletModal");
-vi.mock("../../../src/utils/portfolioTransformers");
+vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components to test error boundaries at different levels
 vi.mock("../../../src/components/ui/GlassCard", () => ({

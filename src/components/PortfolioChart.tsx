@@ -42,7 +42,7 @@ const PortfolioChartComponent = () => {
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     if (apiPortfolioHistory && apiPortfolioHistory.length > 0) {
-      console.log("✅ Using API data from quant-engine:", {
+      console.log("✅ Using API data from analytics-engine:", {
         dataPoints: apiPortfolioHistory.length,
         period: selectedPeriod,
         userId: userInfo?.userId,
