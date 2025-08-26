@@ -6,6 +6,7 @@ import {
   handleWalletError,
 } from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
+import { AccountApiError } from "../../../src/lib/clients";
 
 // Mock the API client module
 vi.mock("../../../src/lib/api-client", () => ({
@@ -30,6 +31,26 @@ vi.mock("../../../src/lib/api-client", () => ({
   },
   handleAPIError: vi.fn().mockReturnValue("Mock API error"),
 }));
+
+// Mock the clients module to provide AccountApiError
+vi.mock("../../../src/lib/clients", () => {
+  class MockAccountApiError extends Error {
+    constructor(
+      message: string,
+      public status: number,
+      public code?: string,
+      public details?: any
+    ) {
+      super(message);
+      this.name = "AccountApiError";
+    }
+  }
+
+  return {
+    AccountApiError: MockAccountApiError,
+    accountApiClient: {},
+  };
+});
 
 describe("userService - Pure Functions", () => {
   beforeEach(() => {
@@ -240,23 +261,20 @@ describe("userService - Pure Functions", () => {
   });
 
   describe("handleWalletError", () => {
-    // Import APIError for testing
-    const { APIError } = require("../../../src/lib/api-client");
-
-    it("handles specific wallet validation errors", () => {
-      const validationError = new APIError(
-        "Wallet address must be 42 characters",
+    it("handles AccountApiError by returning its message directly", () => {
+      const accountError = new AccountApiError(
+        "Invalid wallet address format. Address must be 42 characters long.",
         400
       );
-      const result = handleWalletError(validationError);
+      const result = handleWalletError(accountError);
       expect(result).toBe(
         "Invalid wallet address format. Address must be 42 characters long."
       );
     });
 
     it("handles main wallet removal error", () => {
-      const mainWalletError = new APIError(
-        "Cannot remove main wallet from bundle",
+      const mainWalletError = new AccountApiError(
+        "Cannot remove the main wallet from your bundle.",
         400
       );
       const result = handleWalletError(mainWalletError);
@@ -264,14 +282,17 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles user/wallet not found error", () => {
-      const notFoundError = new APIError("User not found", 404);
+      const notFoundError = new AccountApiError(
+        "User or wallet not found.",
+        404
+      );
       const result = handleWalletError(notFoundError);
       expect(result).toBe("User or wallet not found.");
     });
 
     it("handles duplicate wallet error", () => {
-      const duplicateError = new APIError(
-        "Wallet already exists in bundle",
+      const duplicateError = new AccountApiError(
+        "This wallet is already in your bundle.",
         409
       );
       const result = handleWalletError(duplicateError);
@@ -279,14 +300,16 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles duplicate email error", () => {
-      const emailError = new APIError("Email address already in use", 409);
+      const emailError = new AccountApiError(
+        "This email address is already in use.",
+        409
+      );
       const result = handleWalletError(emailError);
       expect(result).toBe("This email address is already in use.");
     });
 
-    it("falls back to generic error handling for non-wallet errors", () => {
+    it("falls back to generic error handling for non-AccountApiError", () => {
       const genericError = new Error("Network connection failed");
-
       const result = handleWalletError(genericError);
       expect(result).toBe("Mock API error");
     });

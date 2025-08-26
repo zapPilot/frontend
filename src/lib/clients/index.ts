@@ -2,19 +2,28 @@
  * Service-Specific API Clients
  * Centralized exports for all API clients
  */
-
 // Base client and common types
-export { BaseApiClient } from "./base-client";
+export {
+  APIError,
+  BaseApiClient,
+  NetworkError,
+  TimeoutError,
+} from "./base-client";
 export type { ServiceConfig, ServiceErrorConfig } from "./base-client";
-export { APIError, NetworkError, TimeoutError } from "./base-client";
 
 // Account API Client (User & Wallet Management - Port 3004)
-export { AccountApiClient, AccountApiError } from "./account-api-client";
-export { accountApiClient } from "./account-api-client";
+export {
+  AccountApiClient,
+  accountApiClient,
+  AccountApiError,
+} from "./account-api-client";
 
 // Intent Engine Client (Transaction Execution - Port 3002)
-export { IntentEngineClient, IntentEngineError } from "./intent-engine-client";
-export { intentEngineClient } from "./intent-engine-client";
+export {
+  IntentEngineClient,
+  intentEngineClient,
+  IntentEngineError,
+} from "./intent-engine-client";
 export type {
   ExecutionIntent,
   ExecutionResult,
@@ -24,32 +33,48 @@ export type {
 // Analytics Engine Client (Portfolio Analysis - Port 8001)
 export {
   AnalyticsEngineClient,
+  analyticsEngineClient,
   AnalyticsEngineError,
 } from "./analytics-engine-client";
-export { analyticsEngineClient } from "./analytics-engine-client";
 export type {
+  PoolPerformance,
   PortfolioSummary,
   RebalanceRecommendations,
-  PoolPerformance,
 } from "./analytics-engine-client";
 
 // Backend API Client (Notifications & Reporting - Port 3001)
-export { BackendApiClient, BackendApiError } from "./backend-api-client";
-export { backendApiClient } from "./backend-api-client";
+export {
+  BackendApiClient,
+  backendApiClient,
+  BackendApiError,
+} from "./backend-api-client";
 export type {
-  NotificationSettings,
   DiscordAlert,
   EmailReport,
+  NotificationSettings,
 } from "./backend-api-client";
 
 // DeBank API Client (External DeFi Data)
-export { DebankApiClient, DebankApiError } from "./debank-api-client";
-export { debankApiClient } from "./debank-api-client";
+export {
+  DebankApiClient,
+  debankApiClient,
+  DebankApiError,
+} from "./debank-api-client";
 export type {
   DebankPortfolioItem,
-  DebankTokenBalance,
   DebankProtocolPosition,
+  DebankTokenBalance,
 } from "./debank-api-client";
+
+// Import client instances and error classes for internal use
+import { accountApiClient, AccountApiError } from "./account-api-client";
+import { intentEngineClient, IntentEngineError } from "./intent-engine-client";
+import {
+  analyticsEngineClient,
+  AnalyticsEngineError,
+} from "./analytics-engine-client";
+import { backendApiClient, BackendApiError } from "./backend-api-client";
+import { debankApiClient, DebankApiError } from "./debank-api-client";
 
 /**
  * Client Configuration
@@ -92,13 +117,6 @@ export const CLIENT_CONFIG = {
  * Utility functions for client management
  */
 export const createClientInstances = () => {
-  // Import clients dynamically to avoid circular dependencies
-  const { accountApiClient } = require("./account-api-client");
-  const { intentEngineClient } = require("./intent-engine-client");
-  const { analyticsEngineClient } = require("./analytics-engine-client");
-  const { backendApiClient } = require("./backend-api-client");
-  const { debankApiClient } = require("./debank-api-client");
-
   return {
     account: accountApiClient,
     intent: intentEngineClient,
@@ -150,23 +168,18 @@ export const legacyApiClient = {
    * @deprecated Use accountApiClient instead
    */
   get connectWallet() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.connectWallet.bind(accountApiClient);
   },
   get getUserProfile() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.getUserProfile.bind(accountApiClient);
   },
   get getUserWallets() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.getUserWallets.bind(accountApiClient);
   },
   get addWalletToBundle() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.addWalletToBundle.bind(accountApiClient);
   },
   get removeWalletFromBundle() {
-    const { accountApiClient } = require("./account-api-client");
     return accountApiClient.removeWalletFromBundle.bind(accountApiClient);
   },
 
@@ -174,13 +187,11 @@ export const legacyApiClient = {
    * @deprecated Use analyticsEngineClient instead
    */
   get getPortfolioSummary() {
-    const { analyticsEngineClient } = require("./analytics-engine-client");
     return analyticsEngineClient.getPortfolioSummary.bind(
       analyticsEngineClient
     );
   },
   get getPortfolioAPR() {
-    const { analyticsEngineClient } = require("./analytics-engine-client");
     return analyticsEngineClient.getPortfolioAPR.bind(analyticsEngineClient);
   },
 
@@ -188,11 +199,9 @@ export const legacyApiClient = {
    * @deprecated Use intentEngineClient instead
    */
   get executeSwap() {
-    const { intentEngineClient } = require("./intent-engine-client");
     return intentEngineClient.executeSwap.bind(intentEngineClient);
   },
   get getIntentStatus() {
-    const { intentEngineClient } = require("./intent-engine-client");
     return intentEngineClient.getIntentStatus.bind(intentEngineClient);
   },
 
@@ -200,11 +209,9 @@ export const legacyApiClient = {
    * @deprecated Use backendApiClient instead
    */
   get sendDiscordAlert() {
-    const { backendApiClient } = require("./backend-api-client");
     return backendApiClient.sendDiscordAlert.bind(backendApiClient);
   },
   get generatePortfolioReport() {
-    const { backendApiClient } = require("./backend-api-client");
     return backendApiClient.generatePortfolioReport.bind(backendApiClient);
   },
 };
@@ -228,26 +235,21 @@ export const getClient = (type: ClientType) => {
  * Error type guards for better error handling
  */
 export const isAccountApiError = (error: unknown) => {
-  const { AccountApiError } = require("./account-api-client");
   return error instanceof AccountApiError;
 };
 
 export const isIntentEngineError = (error: unknown) => {
-  const { IntentEngineError } = require("./intent-engine-client");
   return error instanceof IntentEngineError;
 };
 
 export const isAnalyticsEngineError = (error: unknown) => {
-  const { AnalyticsEngineError } = require("./analytics-engine-client");
   return error instanceof AnalyticsEngineError;
 };
 
 export const isBackendApiError = (error: unknown) => {
-  const { BackendApiError } = require("./backend-api-client");
   return error instanceof BackendApiError;
 };
 
 export const isDebankApiError = (error: unknown) => {
-  const { DebankApiError } = require("./debank-api-client");
   return error instanceof DebankApiError;
 };
