@@ -14,6 +14,11 @@ export default defineConfig({
     // Resource optimization settings (applied when using safe mode via CLI)
     testTimeout: 30000, // 30 second timeout to prevent hanging
     hookTimeout: 10000, // 10 second hook timeout
+    // Better React 18+ support
+    env: {
+      IS_REACT_ACT_ENVIRONMENT: 'true',
+      NODE_ENV: 'test'
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],

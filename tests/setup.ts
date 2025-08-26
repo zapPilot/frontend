@@ -1,6 +1,31 @@
 import { expect, afterEach, beforeEach, vi } from "vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+
+// Configure React Testing Library to work better with React 18+
+configure({
+  // Increase default timeout for async operations
+  asyncTimeout: 5000,
+});
+
+// Configure global React environment for act() support
+global.IS_REACT_ACT_ENVIRONMENT = true;
+
+// Mock console.error to suppress act() warnings in tests
+const originalConsoleError = console.error;
+beforeEach(() => {
+  console.error = (...args: any[]) => {
+    const message = args[0];
+    if (
+      typeof message === "string" &&
+      (message.includes("not configured to support act") ||
+        message.includes("Warning: ReactDOM.render is no longer supported"))
+    ) {
+      return;
+    }
+    originalConsoleError.call(console, ...args);
+  };
+});
 
 // Mock React Query's error boundary logging to avoid console noise during tests
 vi.mock("@tanstack/react-query", async () => {
@@ -20,24 +45,8 @@ afterEach(() => {
   cleanup();
 });
 
-// Suppress React error boundary logging during tests
-const originalError = console.error;
-beforeEach(() => {
-  console.error = (...args: any[]) => {
-    if (
-      typeof args[0] === "string" &&
-      (args[0].includes("Error: Component render error") ||
-        args[0].includes("The above error occurred in the") ||
-        args[0].includes("React will try to recreate this component tree"))
-    ) {
-      return;
-    }
-    originalError.call(console, ...args);
-  };
-});
-
 afterEach(() => {
-  console.error = originalError;
+  console.error = originalConsoleError;
 });
 
 // Mock IntersectionObserver
