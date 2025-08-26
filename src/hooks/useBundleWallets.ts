@@ -26,7 +26,7 @@ interface UseBundleWalletsReturn {
 }
 
 /**
- * Hook to fetch and manage bundle wallets from quant-engine
+ * Hook to fetch and manage bundle wallets from analytics-engine
  */
 export function useBundleWallets({
   enabled = true,

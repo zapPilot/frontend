@@ -6,7 +6,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 // Base API configuration
 const API_CONFIG = {
-  baseURL: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "",
+  baseURL: process.env["NEXT_PUBLIC_ANALYTICS_ENGINE_URL"] || "",
   timeout: 10000,
   retries: 3,
   retryDelay: 1000,
@@ -14,7 +14,7 @@ const API_CONFIG = {
 
 // Multiple endpoint configuration for different services
 const API_ENDPOINTS = {
-  quantEngine: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "",
+  analyticsEngine: process.env["NEXT_PUBLIC_ANALYTICS_ENGINE_URL"] || "",
   intentEngine: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "",
   backendApi: process.env["NEXT_PUBLIC_API_URL"] || "",
   accountApi: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "",
@@ -244,7 +244,7 @@ class APIClient {
   async put<T = any>(
     endpoint: string,
     body?: any,
-    config?: Omit<RequestConfig, "method">,
+    config?: Omit<RequestConfig, "method"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
     return this.makeRequest(
@@ -300,7 +300,7 @@ export const createApiClient = {
   /**
    * Make request to Quant Engine API
    */
-  quantEngine: {
+  analyticsEngine: {
     get: <T = any>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
@@ -308,7 +308,7 @@ export const createApiClient = {
     ) =>
       apiClient.get(
         endpoint,
-        { ...config, baseURL: API_ENDPOINTS.quantEngine },
+        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
         transformer
       ),
     post: <T = any>(
@@ -320,7 +320,7 @@ export const createApiClient = {
       apiClient.post(
         endpoint,
         body,
-        { ...config, baseURL: API_ENDPOINTS.quantEngine },
+        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
         transformer
       ),
   },
@@ -385,6 +385,40 @@ export const createApiClient = {
       transformer?: ResponseTransformer<T>
     ) =>
       apiClient.get(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.accountApi },
+        transformer
+      ),
+    post: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.post(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.accountApi },
+        transformer
+      ),
+    put: <T = any>(
+      endpoint: string,
+      body?: any,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.put(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.accountApi },
+        transformer
+      ),
+    delete: <T = any>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.delete(
         endpoint,
         { ...config, baseURL: API_ENDPOINTS.accountApi },
         transformer

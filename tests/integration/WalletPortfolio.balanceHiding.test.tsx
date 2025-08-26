@@ -1,5 +1,4 @@
-import { act, screen, fireEvent, waitFor } from "@testing-library/react";
-import { render } from "../test-utils";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
@@ -7,13 +6,14 @@ import { usePortfolioDisplayData } from "../../src/hooks/queries/usePortfolioQue
 import { usePortfolio } from "../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../../src/utils/portfolio.utils";
+import { render } from "../test-utils";
 
 // Mock dependencies
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/useWalletModal");
 vi.mock("../../src/utils/portfolio.utils");
-vi.mock("../../src/services/quantEngine");
+vi.mock("../../src/services/analyticsEngine");
 vi.mock("../../src/contexts/UserContext");
 
 // Mock framer-motion for simpler testing

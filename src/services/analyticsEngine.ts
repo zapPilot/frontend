@@ -1,5 +1,5 @@
 /**
- * API service for quant-engine integration
+ * API service for analytics-engine integration
  * Migrated to use unified API client for consistent error handling
  */
 
@@ -235,7 +235,7 @@ export const getPortfolioAPR = async (
 };
 
 /**
- * Transform quant-engine portfolio trends data into PortfolioDataPoint format
+ * Transform analytics-engine portfolio trends data into PortfolioDataPoint format
  */
 export const transformPortfolioTrends = (
   trendsData: PortfolioTrend[]

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getPortfolioTrends,
   transformPortfolioTrends,
-} from "../services/quantEngine";
+} from "../services/analyticsEngine";
 import { PortfolioDataPoint } from "../types/portfolio";
 
 interface UsePortfolioTrendsConfig {
@@ -20,7 +20,7 @@ interface UsePortfolioTrendsReturn {
 }
 
 /**
- * Hook to fetch and transform portfolio trends from quant-engine
+ * Hook to fetch and transform portfolio trends from analytics-engine
  */
 export function usePortfolioTrends({
   userId,
@@ -49,7 +49,7 @@ export function usePortfolioTrends({
       // Fetch portfolio trends directly with provided user ID
       const trendsDataResp = (await getPortfolioTrends(userId, days)) as any;
       console.log(
-        `Received ${trendsDataResp.length} data points from quant-engine`
+        `Received ${trendsDataResp.length} data points from analytics-engine`
       );
 
       // Transform data for charts

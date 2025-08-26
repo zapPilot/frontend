@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getPortfolioAPR } from "../../services/quantEngine";
 import { queryKeys } from "../../lib/queryClient";
+import { getPortfolioAPR } from "../../services/analyticsEngine";
 
 export interface PoolDetail {
   snapshot_id: string;

@@ -3,11 +3,10 @@
  * Provides wallet bundle management and user profile operations
  */
 
-import { apiClient, APIError, createApiClient, handleAPIError } from "../lib/api-client";
+import { APIError, createApiClient, handleAPIError } from "../lib/api-client";
 import {
   AddWalletDto,
   AddWalletResponse,
-  ConnectWalletDto,
   ConnectWalletResponse,
   ServiceResponse,
   UpdateEmailDto,
@@ -25,12 +24,11 @@ const accountEngineApi = createApiClient.accountApi;
 export const connectWallet = async (
   wallet: string
 ): Promise<ServiceResponse<ConnectWalletResponse>> => {
-  try { 
+  try {
     const data = await accountEngineApi.get<ConnectWalletResponse>(
-      "/users/connect-wallet",
-      { wallet } as ConnectWalletDto
+      `/users/connect-wallet?wallet=${encodeURIComponent(wallet)}`
     );
-    
+
     return {
       data,
       success: true,
@@ -53,7 +51,7 @@ export const getUserProfile = async (
     const data = await accountEngineApi.get<UserProfileResponse>(
       `/users/${userId}`
     );
-    
+
     return {
       data,
       success: true,
@@ -77,7 +75,7 @@ export const getUserWallets = async (
     const data = await accountEngineApi.get<UserCryptoWallet[]>(
       `/users/${userId}/wallets`
     );
-    
+
     return {
       data,
       success: true,
@@ -104,7 +102,7 @@ export const addWalletToBundle = async (
       `/users/${userId}/wallets`,
       { wallet, label } as AddWalletDto
     );
-    
+
     return {
       data,
       success: true,
@@ -126,13 +124,10 @@ export const removeWalletFromBundle = async (
   walletId: string
 ): Promise<ServiceResponse<{ message: string }>> => {
   try {
-    const baseURL = process.env["NEXT_PUBLIC_API_URL"] || "";
-    const url = `${baseURL}/users/${userId}/wallets/${walletId}`;
-    const data = await apiClient.request<{ message: string }>(
-      url,
-      { method: "DELETE" }
+    const data = await accountEngineApi.delete<{ message: string }>(
+      `/users/${userId}/wallets/${walletId}`
     );
-    
+
     return {
       data,
       success: true,
@@ -153,16 +148,11 @@ export const updateUserEmail = async (
   email: string
 ): Promise<ServiceResponse<UpdateEmailResponse>> => {
   try {
-    const baseURL = process.env["NEXT_PUBLIC_API_URL"] || "";
-    const url = `${baseURL}/users/${userId}/email`;
-    const data = await apiClient.request<UpdateEmailResponse>(
-      url,
-      {
-        method: "PUT",
-        body: { email } as UpdateEmailDto
-      }
+    const data = await accountEngineApi.put<UpdateEmailResponse>(
+      `/users/${userId}/email`,
+      { email } as UpdateEmailDto
     );
-    
+
     return {
       data,
       success: true,
@@ -192,7 +182,8 @@ export const transformWalletData = (wallets: UserCryptoWallet[]) => {
   return wallets.map(wallet => ({
     id: wallet.id,
     address: wallet.wallet,
-    label: wallet.label || (wallet.is_main ? "Primary Wallet" : "Additional Wallet"),
+    label:
+      wallet.label || (wallet.is_main ? "Primary Wallet" : "Additional Wallet"),
     isMain: wallet.is_main,
     isActive: wallet.is_main, // Only main wallet is considered active for now
     isVisible: wallet.is_visible,
@@ -203,7 +194,9 @@ export const transformWalletData = (wallets: UserCryptoWallet[]) => {
 /**
  * Get main wallet address from wallet list
  */
-export const getMainWallet = (wallets: UserCryptoWallet[]): UserCryptoWallet | null => {
+export const getMainWallet = (
+  wallets: UserCryptoWallet[]
+): UserCryptoWallet | null => {
   return wallets.find(wallet => wallet.is_main) || null;
 };
 
@@ -233,7 +226,7 @@ export const handleWalletError = (error: unknown): string => {
         break;
     }
   }
-  
+
   return handleAPIError(error);
 };
 
