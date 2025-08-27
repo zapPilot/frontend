@@ -27,7 +27,7 @@
  * =====================================
  */
 
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 describe("API Client Architecture Analysis", () => {
   describe("Current Architecture Assessment", () => {
@@ -153,9 +153,6 @@ describe("API Client Architecture Analysis", () => {
         ): Promise<PortfolioTrend[]>;
         getPortfolioAPR(userId: string): Promise<PortfolioAPRResponse>;
 
-        // User operations
-        getUserByWallet(wallet: string): Promise<UserResponse>;
-        getBundleWallets(userId: string): Promise<BundleWalletsResponse>;
       }
 
       // Each client interface is focused on its specific domain
@@ -553,8 +550,6 @@ interface IAnalyticsEngineClient {
   getPortfolioSummary(userId: string): Promise<PortfolioSummaryResponse>;
   getPortfolioTrends(userId: string, days?: number): Promise<PortfolioTrend[]>;
   getPortfolioAPR(userId: string): Promise<PortfolioAPRResponse>;
-  getUserByWallet(wallet: string): Promise<UserResponse>;
-  getBundleWallets(userId: string): Promise<BundleWalletsResponse>;
 }
 
 interface IBackendApiClient {}

@@ -3,7 +3,7 @@
  * Migrated to use unified API client for consistent error handling
  */
 
-import { apiClient, APIError } from "../lib/api-client";
+import { apiClient } from "../lib/api-client";
 import { PortfolioDataPoint } from "../types/portfolio";
 
 // API Response Types
@@ -129,44 +129,6 @@ export interface ProtocolData {
   value: number;
   pnl: number;
 }
-
-/**
- * Get user information by main wallet address
- */
-export const getUserByWallet = async (
-  walletAddress: string
-): Promise<UserResponse> => {
-  try {
-    return await apiClient.get<UserResponse>(
-      `/api/v1/users/by-wallet/${walletAddress}`
-    );
-  } catch (error) {
-    if (error instanceof APIError && error.status === 404) {
-      const userNotFoundError = new Error("USER_NOT_FOUND");
-      userNotFoundError.name = "USER_NOT_FOUND";
-      throw userNotFoundError;
-    }
-    throw error;
-  }
-};
-
-/**
- * Get bundle wallet addresses by primary wallet
- */
-export const getBundleWalletsByPrimary = async (
-  userId: string
-): Promise<BundleWalletsResponse> => {
-  try {
-    return await apiClient.get<BundleWalletsResponse>(
-      `/api/v1/users/${userId}/bundle-wallets`
-    );
-  } catch (error) {
-    if (error instanceof APIError && error.status === 404) {
-      throw new Error("Bundle wallets not found");
-    }
-    throw error;
-  }
-};
 
 /**
  * Get portfolio snapshots for a user

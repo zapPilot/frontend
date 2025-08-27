@@ -1,7 +1,11 @@
 /**
  * Service-Specific API Clients
- * Centralized exports for all API clients
+ * DEPRECATED: Client classes have been migrated to service functions in src/services/
+ * 
+ * This file maintains only the base client and DeBank client (external service)
+ * All other API operations should use service functions instead
  */
+
 // Base client and common types
 export {
   APIError,
@@ -11,50 +15,7 @@ export {
 } from "./base-client";
 export type { ServiceConfig, ServiceErrorConfig } from "./base-client";
 
-// Account API Client (User & Wallet Management - Port 3004)
-export {
-  AccountApiClient,
-  accountApiClient,
-  AccountApiError,
-} from "./account-api-client";
-
-// Intent Engine Client (Transaction Execution - Port 3002)
-export {
-  IntentEngineClient,
-  intentEngineClient,
-  IntentEngineError,
-} from "./intent-engine-client";
-export type {
-  ExecutionIntent,
-  ExecutionResult,
-  IntentStatus,
-} from "./intent-engine-client";
-
-// Analytics Engine Client (Portfolio Analysis - Port 8001)
-export {
-  AnalyticsEngineClient,
-  analyticsEngineClient,
-  AnalyticsEngineError,
-} from "./analytics-engine-client";
-export type {
-  PoolPerformance,
-  PortfolioSummary,
-  RebalanceRecommendations,
-} from "./analytics-engine-client";
-
-// Backend API Client (Notifications & Reporting - Port 3001)
-export {
-  BackendApiClient,
-  backendApiClient,
-  BackendApiError,
-} from "./backend-api-client";
-export type {
-  DiscordAlert,
-  EmailReport,
-  NotificationSettings,
-} from "./backend-api-client";
-
-// DeBank API Client (External DeFi Data)
+// DeBank API Client (External DeFi Data) - Keeping this as it's an external service
 export {
   DebankApiClient,
   debankApiClient,
@@ -66,36 +27,25 @@ export type {
   DebankTokenBalance,
 } from "./debank-api-client";
 
-// Import client instances and error classes for internal use
-import { accountApiClient, AccountApiError } from "./account-api-client";
-import {
-  analyticsEngineClient,
-  AnalyticsEngineError,
-} from "./analytics-engine-client";
-import { backendApiClient, BackendApiError } from "./backend-api-client";
+// Import client instances for backward compatibility
 import { debankApiClient, DebankApiError } from "./debank-api-client";
-import { intentEngineClient, IntentEngineError } from "./intent-engine-client";
 
 /**
- * Client Configuration
- * Environment-based client configurations
+ * Configuration for service functions (moved from client configs)
  */
-export const CLIENT_CONFIG = {
+export const SERVICE_CONFIG = {
   ACCOUNT_API: {
-    baseURL:
-      process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "http://127.0.0.1:3004",
+    baseURL: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "http://127.0.0.1:3004",
     timeout: 8000,
     retries: 2,
   },
   INTENT_ENGINE: {
-    baseURL:
-      process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "http://127.0.0.1:3002",
+    baseURL: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "http://127.0.0.1:3002",
     timeout: 30000,
     retries: 1,
   },
   ANALYTICS_ENGINE: {
-    baseURL:
-      process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "http://localhost:8001",
+    baseURL: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "http://localhost:8001",
     timeout: 15000,
     retries: 2,
   },
@@ -114,60 +64,30 @@ export const CLIENT_CONFIG = {
 } as const;
 
 /**
- * Utility functions for client management
+ * Remaining client instances (only external services)
  */
 export const createClientInstances = () => {
   return {
-    account: accountApiClient,
-    intent: intentEngineClient,
-    analytics: analyticsEngineClient,
-    backend: backendApiClient,
     debank: debankApiClient,
   };
 };
 
 /**
- * Health check all services
+ * Health check for remaining client services
  */
 export const checkAllServicesHealth = async () => {
-  const clients = createClientInstances();
   const results: Record<string, { status: string; error?: string }> = {};
 
-  await Promise.allSettled([
-    clients.account.healthCheck().then(
-      (result: any) => (results["account"] = { status: result.status }),
-      (error: any) =>
-        (results["account"] = { status: "error", error: error.message })
-    ),
-    clients.intent.healthCheck().then(
-      (result: any) => (results["intent"] = { status: result.status }),
-      (error: any) =>
-        (results["intent"] = { status: "error", error: error.message })
-    ),
-    clients.analytics.healthCheck().then(
-      (result: any) => (results["analytics"] = { status: result.status }),
-      (error: any) =>
-        (results["analytics"] = { status: "error", error: error.message })
-    ),
-    clients.backend.healthCheck().then(
-      (result: any) => (results["backend"] = { status: result.status }),
-      (error: any) =>
-        (results["backend"] = { status: "error", error: error.message })
-    ),
-  ]);
+  // DeBank API doesn't have a health check endpoint, so we'll just mark it as available
+  results["debank"] = { status: "available" };
 
   return results;
 };
 
 /**
- * Type-safe client selector
+ * Type-safe client selector (only for remaining clients)
  */
-export type ClientType =
-  | "account"
-  | "intent"
-  | "analytics"
-  | "backend"
-  | "debank";
+export type ClientType = "debank";
 
 export const getClient = (type: ClientType) => {
   const clients = createClientInstances();
@@ -175,24 +95,8 @@ export const getClient = (type: ClientType) => {
 };
 
 /**
- * Error type guards for better error handling
+ * Error type guards for remaining clients
  */
-export const isAccountApiError = (error: unknown) => {
-  return error instanceof AccountApiError;
-};
-
-export const isIntentEngineError = (error: unknown) => {
-  return error instanceof IntentEngineError;
-};
-
-export const isAnalyticsEngineError = (error: unknown) => {
-  return error instanceof AnalyticsEngineError;
-};
-
-export const isBackendApiError = (error: unknown) => {
-  return error instanceof BackendApiError;
-};
-
 export const isDebankApiError = (error: unknown) => {
   return error instanceof DebankApiError;
 };

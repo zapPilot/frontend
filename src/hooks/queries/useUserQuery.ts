@@ -1,26 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
-import { getBundleWalletsByPrimary } from "../../services/analyticsEngine";
-import { accountApiClient } from "../../lib/clients/account-api-client";
+// Switched from analytics-engine bundle API to account API
+import { connectWallet, getUserWallets } from "../../services/accountService";
+import type { UserCryptoWallet } from "../../types/user.types";
 
-interface ApiBundleResponse {
-  user: {
-    id: string;
-    email: string;
-  };
-  main_wallet: string;
-  additional_wallets: Array<{
-    wallet_address: string;
-    label: string | null;
-    is_main: boolean;
-
-    created_at: string;
-  }>;
-  visible_wallets: string[];
-  total_wallets: number;
-  total_visible_wallets: number;
-}
+// Removed ApiBundleResponse in favor of account API wallets
 
 export interface UserInfo {
   userId: string;
@@ -49,24 +34,40 @@ export function useUserByWallet(walletAddress: string | null) {
       }
 
       // Connect wallet to create/retrieve user
-      const connectResponse =
-        await accountApiClient.connectWallet(walletAddress);
+      const connectResponse = await connectWallet(walletAddress);
 
-      // Get bundle wallets data
-      const bundleResponse = (await getBundleWalletsByPrimary(
+      // Fetch user wallets from account API
+      const wallets: UserCryptoWallet[] = await getUserWallets(
         connectResponse.user_id
-      )) as unknown as ApiBundleResponse;
+      );
 
-      // Transform to consistent format
+      // Derive fields compatible with previous structure
+      const primaryWallet =
+        wallets.find(w => w.is_main)?.wallet ||
+        wallets[0]?.wallet ||
+        walletAddress;
+
+      const bundleWallets =
+        wallets.length > 0 ? wallets.map(w => w.wallet) : [walletAddress];
+
+      const additionalWallets = wallets
+        .filter(w => !w.is_main)
+        .map(w => ({
+          wallet_address: w.wallet,
+          label: w.label ?? null,
+          is_main: w.is_main,
+          created_at: w.created_at,
+        }));
+
       return {
-        userId: bundleResponse.user.id,
-        email: bundleResponse.user.email,
-        primaryWallet: bundleResponse.main_wallet,
-        bundleWallets: bundleResponse.visible_wallets || [],
-        additionalWallets: bundleResponse.additional_wallets || [],
-        visibleWallets: bundleResponse.visible_wallets || [],
-        totalWallets: bundleResponse.total_wallets || 0,
-        totalVisibleWallets: bundleResponse.total_visible_wallets || 0,
+        userId: connectResponse.user_id,
+        email: "", // Email not provided by getUserWallets; can be populated via getUserProfile if needed
+        primaryWallet,
+        bundleWallets,
+        additionalWallets,
+        visibleWallets: bundleWallets,
+        totalWallets: bundleWallets.length,
+        totalVisibleWallets: bundleWallets.length,
       };
     },
     enabled: !!walletAddress, // Only run when wallet address is available
