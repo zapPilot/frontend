@@ -7,7 +7,7 @@ name: Deploy Next.js site to Pages
 on:
   # Runs when other workflows complete successfully
   workflow_run:
-    workflows: ["Code Quality", "Dependency Review"]
+    workflows: ["Code Quality"]
     branches: ["main"]
     types:
       - completed
