@@ -19,7 +19,6 @@ export interface AdditionalWallet {
   wallet_address: string;
   label?: string;
   is_main?: boolean;
-  is_visible?: boolean;
   created_at?: string;
 }
 
@@ -121,7 +120,6 @@ export interface WalletAddress {
   label: string;
   isActive: boolean;
   isMain: boolean;
-  isVisible: boolean;
   createdAt: string | null;
 }
 
@@ -315,7 +313,7 @@ export const transformBundleWallets = (
     label: "Main Wallet",
     isActive: true,
     isMain: true,
-    isVisible: true,
+
     createdAt: null,
   });
 
@@ -327,7 +325,6 @@ export const transformBundleWallets = (
       label: wallet.label || `Wallet ${index + 2}`, // Auto-generate labels
       isActive: false,
       isMain: wallet.is_main ?? false,
-      isVisible: wallet.is_visible ?? true, // Default to visible
       createdAt: wallet.created_at ?? null,
     });
   });

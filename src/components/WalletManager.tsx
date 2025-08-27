@@ -1,5 +1,7 @@
 "use client";
 
+import { GRADIENTS } from "@/constants/design-system";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -13,22 +15,20 @@ import {
   X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "../contexts/UserContext";
-import { GlassCard, GradientButton } from "./ui";
-import { RefreshButton } from "./ui/LoadingState";
-import { UnifiedLoading } from "./ui/UnifiedLoading";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
 import {
-  getUserWallets,
   addWalletToBundle,
-  removeWalletFromBundle,
-  validateWalletAddress,
-  transformWalletData,
+  getUserWallets,
   handleWalletError,
+  removeWalletFromBundle,
+  transformWalletData,
+  validateWalletAddress,
   WalletData,
 } from "../services/userService";
+import { GlassCard, GradientButton } from "./ui";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { RefreshButton } from "./ui/LoadingState";
+import { UnifiedLoading } from "./ui/UnifiedLoading";
 
 interface WalletManagerProps {
   isOpen: boolean;
@@ -634,12 +634,6 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                     <span className="text-gray-400">Total Wallets:</span>
                     <span className="text-white ml-2 font-medium">
                       {wallets.length}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Visible:</span>
-                    <span className="text-green-400 ml-2 font-medium">
-                      {wallets.filter(w => w.isVisible).length}
                     </span>
                   </div>
                   <div className="col-span-2">

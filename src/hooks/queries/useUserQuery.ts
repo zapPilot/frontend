@@ -21,7 +21,7 @@ interface ApiBundleResponse {
     wallet_address: string;
     label: string | null;
     is_main: boolean;
-    is_visible: boolean;
+
     created_at: string;
   }>;
   visible_wallets: string[];
@@ -38,7 +38,7 @@ export interface UserInfo {
     wallet_address: string;
     label: string | null;
     is_main: boolean;
-    is_visible: boolean;
+
     created_at: string;
   }>;
   visibleWallets: string[];

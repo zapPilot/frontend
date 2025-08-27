@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
 import { GRADIENTS } from "@/constants/design-system";
 import { useOnboarding } from "@/providers/OnboardingProvider";
+import { AnimatePresence, motion } from "framer-motion";
+import { X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface TooltipHintProps {
   hintId: string;

@@ -1,7 +1,10 @@
-import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
+import * as userService from "../../../src/services/userService";
+import { UserCryptoWallet } from "../../../src/types/user.types";
+import { render } from "../../test-utils";
 
 // Mock UserContext with a mockable useUser hook
 let mockUserContextValue = {
@@ -26,9 +29,6 @@ vi.mock("../../../src/contexts/UserContext", () => {
     useUser: () => mockUserContextValue,
   };
 });
-import * as userService from "../../../src/services/userService";
-import { UserCryptoWallet } from "../../../src/types/user.types";
-import { render } from "../../test-utils";
 
 // Mock external dependencies
 vi.mock("framer-motion", () => ({
@@ -121,7 +121,7 @@ describe("WalletManager", () => {
       wallet: "0x1234567890123456789012345678901234567890",
       is_main: true,
       label: "Primary Wallet",
-      is_visible: true,
+
       created_at: "2024-01-01T00:00:00Z",
     },
     {
@@ -130,7 +130,7 @@ describe("WalletManager", () => {
       wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
       is_main: false,
       label: "Trading Wallet",
-      is_visible: true,
+
       created_at: "2024-01-02T00:00:00Z",
     },
   ];
@@ -142,7 +142,7 @@ describe("WalletManager", () => {
       label: "Primary Wallet",
       isMain: true,
       isActive: true,
-      isVisible: true,
+
       createdAt: "2024-01-01T00:00:00Z",
     },
     {
@@ -151,7 +151,7 @@ describe("WalletManager", () => {
       label: "Trading Wallet",
       isMain: false,
       isActive: false,
-      isVisible: true,
+
       createdAt: "2024-01-02T00:00:00Z",
     },
   ];
@@ -952,8 +952,7 @@ describe("WalletManager", () => {
       await waitFor(() => {
         expect(screen.getByText("Bundle Summary")).toBeInTheDocument();
         expect(screen.getByText("Total Wallets:")).toBeInTheDocument();
-        expect(screen.getAllByText("2")).toHaveLength(2); // Should show 2 for both Total and Visible
-        expect(screen.getByText("Visible:")).toBeInTheDocument();
+        expect(screen.getAllByText("2")).toHaveLength(1); // Should show 2 for both Total
         expect(screen.getByText("Primary Wallet:")).toBeInTheDocument();
       });
     });

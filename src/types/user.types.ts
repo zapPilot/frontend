@@ -13,7 +13,7 @@ export interface UserCryptoWallet {
   wallet: string;
   is_main: boolean;
   label?: string;
-  is_visible: boolean;
+
   created_at: string;
 }
 

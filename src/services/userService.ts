@@ -178,7 +178,6 @@ export const transformWalletData = (wallets: UserCryptoWallet[]) => {
       wallet.label || (wallet.is_main ? "Primary Wallet" : "Additional Wallet"),
     isMain: wallet.is_main,
     isActive: wallet.is_main, // Only main wallet is considered active for now
-    isVisible: wallet.is_visible,
     createdAt: wallet.created_at,
   }));
 };

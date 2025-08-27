@@ -3,7 +3,7 @@
  * Handles external DeFi data aggregation and portfolio tracking
  */
 
-import { BaseApiClient, APIError } from "./base-client";
+import { APIError, BaseApiClient } from "./base-client";
 
 export class DebankApiError extends APIError {
   constructor(message: string, status: number, code?: string, details?: any) {
@@ -311,7 +311,7 @@ export class DebankApiClient extends BaseApiClient {
     logo_url: string;
     has_supported_portfolio: boolean;
     tvl: number;
-    is_visible: boolean;
+
     tag_ids: string[];
   }> {
     return this.get<{
@@ -322,7 +322,7 @@ export class DebankApiClient extends BaseApiClient {
       logo_url: string;
       has_supported_portfolio: boolean;
       tvl: number;
-      is_visible: boolean;
+
       tag_ids: string[];
     }>("/v1/protocol", { id: protocolId });
   }
@@ -364,7 +364,7 @@ export class DebankApiClient extends BaseApiClient {
       logo_url: string;
       has_supported_portfolio: boolean;
       tvl: number;
-      is_visible: boolean;
+
       tag_ids: string[];
     }>
   > {
@@ -377,7 +377,7 @@ export class DebankApiClient extends BaseApiClient {
         logo_url: string;
         has_supported_portfolio: boolean;
         tvl: number;
-        is_visible: boolean;
+
         tag_ids: string[];
       }>
     >("/v1/protocol/list");

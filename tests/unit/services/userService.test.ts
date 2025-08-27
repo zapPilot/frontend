@@ -23,24 +23,24 @@ vi.mock("../../../src/lib/clients", () => ({
 
 // Import types and functions after mocking
 import type {
-  ConnectWalletResponse,
-  UserProfileResponse,
-  UserCryptoWallet,
   AddWalletResponse,
+  ConnectWalletResponse,
   UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
 } from "../../../src/types/user.types";
 
 import {
+  addWalletToBundle,
   connectWallet,
+  getMainWallet,
   getUserProfile,
   getUserWallets,
-  addWalletToBundle,
+  handleWalletError,
   removeWalletFromBundle,
+  transformWalletData,
   updateUserEmail,
   validateWalletAddress,
-  transformWalletData,
-  getMainWallet,
-  handleWalletError,
 } from "../../../src/services/userService";
 
 // Import the api-client module to get the mocked function
@@ -155,7 +155,7 @@ describe("userService", () => {
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: true,
           label: "Primary Wallet",
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
       ],
@@ -204,7 +204,7 @@ describe("userService", () => {
         wallet: "0x1234567890123456789012345678901234567890",
         is_main: true,
         label: "Primary Wallet",
-        is_visible: true,
+
         created_at: "2024-01-01T00:00:00Z",
       },
       {
@@ -213,7 +213,7 @@ describe("userService", () => {
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         is_main: false,
         label: "Trading Wallet",
-        is_visible: true,
+
         created_at: "2024-01-02T00:00:00Z",
       },
     ];
@@ -428,7 +428,7 @@ describe("userService", () => {
         wallet: "0x1234567890123456789012345678901234567890",
         is_main: true,
         label: "My Main Wallet",
-        is_visible: true,
+
         created_at: "2024-01-01T00:00:00Z",
       },
       {
@@ -436,7 +436,7 @@ describe("userService", () => {
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         is_main: false,
-        is_visible: true,
+
         created_at: "2024-01-02T00:00:00Z",
       },
     ];
@@ -451,7 +451,7 @@ describe("userService", () => {
           label: "My Main Wallet",
           isMain: true,
           isActive: true,
-          isVisible: true,
+
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
@@ -460,7 +460,7 @@ describe("userService", () => {
           label: "Additional Wallet",
           isMain: false,
           isActive: false,
-          isVisible: true,
+
           createdAt: "2024-01-02T00:00:00Z",
         },
       ]);
@@ -480,7 +480,7 @@ describe("userService", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: false,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
         {
@@ -489,7 +489,7 @@ describe("userService", () => {
           wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
           is_main: true,
           label: "Main Wallet",
-          is_visible: true,
+
           created_at: "2024-01-02T00:00:00Z",
         },
       ];
@@ -505,7 +505,7 @@ describe("userService", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: false,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
       ];

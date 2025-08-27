@@ -7,7 +7,6 @@ interface BundleWallet {
   label: string;
   isActive: boolean;
   isMain: boolean;
-  isVisible: boolean;
   createdAt: string | null;
 }
 
@@ -81,7 +80,7 @@ export function useBundleWallets({
                 : `Wallet ${index + 1}`,
             isActive: index === 0, // First wallet is active by default
             isMain: address === userInfo.primaryWallet,
-            isVisible: true,
+
             createdAt: null,
           })
         );
@@ -95,7 +94,7 @@ export function useBundleWallets({
             label: "Main Wallet",
             isActive: true,
             isMain: true,
-            isVisible: true,
+
             createdAt: null,
           },
         ]);
@@ -115,7 +114,7 @@ export function useBundleWallets({
             label: "Main Wallet",
             isActive: true,
             isMain: true,
-            isVisible: true,
+
             createdAt: null,
           },
         ]);
@@ -141,10 +140,10 @@ export function useBundleWallets({
 
   // Calculate metrics
   const totalWallets = wallets.length;
-  const visibleWallets = wallets.filter(w => w.isVisible).length;
+  const visibleWallets = wallets.length;
 
   return {
-    wallets: wallets.filter(w => w.isVisible), // Only return visible wallets
+    wallets, // Only return visible wallets
     loading: loading || userLoading, // Include user loading state
     error: error || userError, // Include user errors
     refetch: fetchBundleWallets,

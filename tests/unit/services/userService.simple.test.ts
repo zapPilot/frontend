@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AccountApiError } from "../../../src/lib/clients";
 import {
-  validateWalletAddress,
-  transformWalletData,
   getMainWallet,
   handleWalletError,
+  transformWalletData,
+  validateWalletAddress,
 } from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
-import { AccountApiError } from "../../../src/lib/clients";
 
 // Mock the API client module
 vi.mock("../../../src/lib/api-client", () => ({
@@ -107,7 +107,7 @@ describe("userService - Pure Functions", () => {
         wallet: "0x1234567890123456789012345678901234567890",
         is_main: true,
         label: "My Main Wallet",
-        is_visible: true,
+
         created_at: "2024-01-01T00:00:00Z",
       },
       {
@@ -115,7 +115,7 @@ describe("userService - Pure Functions", () => {
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         is_main: false,
-        is_visible: true,
+
         created_at: "2024-01-02T00:00:00Z",
       },
       {
@@ -124,7 +124,6 @@ describe("userService - Pure Functions", () => {
         wallet: "0x9876543210987654321098765432109876543210",
         is_main: false,
         label: "Trading Wallet",
-        is_visible: false,
         created_at: "2024-01-03T00:00:00Z",
       },
     ];
@@ -139,7 +138,7 @@ describe("userService - Pure Functions", () => {
           label: "My Main Wallet",
           isMain: true,
           isActive: true,
-          isVisible: true,
+
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
@@ -148,7 +147,7 @@ describe("userService - Pure Functions", () => {
           label: "Additional Wallet",
           isMain: false,
           isActive: false,
-          isVisible: true,
+
           createdAt: "2024-01-02T00:00:00Z",
         },
         {
@@ -157,7 +156,6 @@ describe("userService - Pure Functions", () => {
           label: "Trading Wallet",
           isMain: false,
           isActive: false,
-          isVisible: false,
           createdAt: "2024-01-03T00:00:00Z",
         },
       ]);
@@ -170,7 +168,7 @@ describe("userService - Pure Functions", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: true,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
       ];
@@ -196,7 +194,7 @@ describe("userService - Pure Functions", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: false,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
         {
@@ -205,7 +203,7 @@ describe("userService - Pure Functions", () => {
           wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
           is_main: true,
           label: "Main Wallet",
-          is_visible: true,
+
           created_at: "2024-01-02T00:00:00Z",
         },
       ];
@@ -221,7 +219,7 @@ describe("userService - Pure Functions", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: false,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
       ];
@@ -242,7 +240,7 @@ describe("userService - Pure Functions", () => {
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: true,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
         {
@@ -250,7 +248,7 @@ describe("userService - Pure Functions", () => {
           user_id: "user-123",
           wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
           is_main: true,
-          is_visible: true,
+
           created_at: "2024-01-02T00:00:00Z",
         },
       ];
@@ -345,7 +343,7 @@ describe("userService - Pure Functions", () => {
           wallet: "0x1234567890123456789012345678901234567890",
           is_main: true,
           label: "Test Wallet",
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         },
       ];
@@ -375,7 +373,7 @@ describe("userService - Pure Functions", () => {
           user_id: "",
           wallet: "",
           is_main: false,
-          is_visible: true,
+
           created_at: "",
         },
       ] as UserCryptoWallet[];
@@ -401,7 +399,7 @@ describe("userService - Pure Functions", () => {
           wallet: `0x${"1".repeat(40)}`,
           is_main: i === 0,
           label: `Wallet ${i}`,
-          is_visible: true,
+
           created_at: "2024-01-01T00:00:00Z",
         })
       );
