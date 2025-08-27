@@ -68,13 +68,13 @@ export type {
 
 // Import client instances and error classes for internal use
 import { accountApiClient, AccountApiError } from "./account-api-client";
-import { intentEngineClient, IntentEngineError } from "./intent-engine-client";
 import {
   analyticsEngineClient,
   AnalyticsEngineError,
 } from "./analytics-engine-client";
 import { backendApiClient, BackendApiError } from "./backend-api-client";
 import { debankApiClient, DebankApiError } from "./debank-api-client";
+import { intentEngineClient, IntentEngineError } from "./intent-engine-client";
 
 /**
  * Client Configuration
@@ -157,63 +157,6 @@ export const checkAllServicesHealth = async () => {
   ]);
 
   return results;
-};
-
-/**
- * Migration helpers for backward compatibility
- * @deprecated Use service-specific clients instead
- */
-export const legacyApiClient = {
-  /**
-   * @deprecated Use accountApiClient instead
-   */
-  get connectWallet() {
-    return accountApiClient.connectWallet.bind(accountApiClient);
-  },
-  get getUserProfile() {
-    return accountApiClient.getUserProfile.bind(accountApiClient);
-  },
-  get getUserWallets() {
-    return accountApiClient.getUserWallets.bind(accountApiClient);
-  },
-  get addWalletToBundle() {
-    return accountApiClient.addWalletToBundle.bind(accountApiClient);
-  },
-  get removeWalletFromBundle() {
-    return accountApiClient.removeWalletFromBundle.bind(accountApiClient);
-  },
-
-  /**
-   * @deprecated Use analyticsEngineClient instead
-   */
-  get getPortfolioSummary() {
-    return analyticsEngineClient.getPortfolioSummary.bind(
-      analyticsEngineClient
-    );
-  },
-  get getPortfolioAPR() {
-    return analyticsEngineClient.getPortfolioAPR.bind(analyticsEngineClient);
-  },
-
-  /**
-   * @deprecated Use intentEngineClient instead
-   */
-  get executeSwap() {
-    return intentEngineClient.executeSwap.bind(intentEngineClient);
-  },
-  get getIntentStatus() {
-    return intentEngineClient.getIntentStatus.bind(intentEngineClient);
-  },
-
-  /**
-   * @deprecated Use backendApiClient instead
-   */
-  get sendDiscordAlert() {
-    return backendApiClient.sendDiscordAlert.bind(backendApiClient);
-  },
-  get generatePortfolioReport() {
-    return backendApiClient.generatePortfolioReport.bind(backendApiClient);
-  },
 };
 
 /**

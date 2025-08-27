@@ -3,14 +3,14 @@
  * Handles user management and wallet operations (port 3004)
  */
 
-import { BaseApiClient, APIError } from "./base-client";
 import type {
-  ConnectWalletResponse,
-  UserProfileResponse,
-  UserCryptoWallet,
   AddWalletResponse,
+  ConnectWalletResponse,
   UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
 } from "../../types/user.types";
+import { APIError, BaseApiClient } from "./base-client";
 
 export class AccountApiError extends APIError {
   constructor(message: string, status: number, code?: string, details?: any) {
