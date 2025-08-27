@@ -1,15 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
-import {
-  getBundleWalletsByPrimary,
-  getUserByWallet,
-} from "../../services/analyticsEngine";
-
-interface ApiUserResponse {
-  id: string;
-  user_id?: string;
-}
+import { getBundleWalletsByPrimary } from "../../services/analyticsEngine";
+import { accountApiClient } from "../../lib/clients/account-api-client";
 
 interface ApiBundleResponse {
   user: {
@@ -55,14 +48,13 @@ export function useUserByWallet(walletAddress: string | null) {
         throw new Error("No wallet address provided");
       }
 
-      // Get user basic info
-      const userResponse = (await getUserByWallet(
-        walletAddress
-      )) as ApiUserResponse;
+      // Connect wallet to create/retrieve user
+      const connectResponse =
+        await accountApiClient.connectWallet(walletAddress);
 
       // Get bundle wallets data
       const bundleResponse = (await getBundleWalletsByPrimary(
-        userResponse.id
+        connectResponse.user_id
       )) as unknown as ApiBundleResponse;
 
       // Transform to consistent format

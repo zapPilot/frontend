@@ -82,7 +82,7 @@ export class AccountApiClient extends BaseApiClient {
    * Connect wallet and create/retrieve user
    */
   async connectWallet(walletAddress: string): Promise<ConnectWalletResponse> {
-    return this.get<ConnectWalletResponse>("/users/connect-wallet", {
+    return this.post<ConnectWalletResponse>("/users/connect-wallet", {
       wallet: walletAddress,
     });
   }
