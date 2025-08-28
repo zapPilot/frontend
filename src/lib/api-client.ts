@@ -344,6 +344,28 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.intentEngine },
         transformer
       ),
+    put: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.put(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
+    delete: <T = unknown>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.delete(
+        endpoint,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
   },
   /**
    * Make request to Backend API
@@ -368,6 +390,28 @@ export const createApiClient = {
       apiClient.post(
         endpoint,
         body,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+    put: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.put(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+    delete: <T = unknown>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.delete(
+        endpoint,
         { ...config, baseURL: API_ENDPOINTS.backendApi },
         transformer
       ),

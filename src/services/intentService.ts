@@ -4,17 +4,7 @@
  * Replaces IntentEngineClient with simpler service function approach
  */
 
-import { apiClient } from "../lib/api-client";
-
-// Configuration
-const INTENT_ENGINE_CONFIG = {
-  baseURL: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "http://127.0.0.1:3002",
-  timeout: 30000,
-  retries: 1,
-  headers: {
-    "X-Service": "intent-engine",
-  },
-};
+import { createApiClient } from "../lib/api-client";
 
 /**
  * Intent Engine interfaces
@@ -96,17 +86,12 @@ const createIntentServiceError = (error: any): IntentServiceError => {
       break;
   }
 
-  return new IntentServiceError(
-    message,
-    status,
-    error.code,
-    error.details
-  );
+  return new IntentServiceError(message, status, error.code, error.details);
 };
 
 // Get configured client
 const getIntentEngineClient = () => {
-  return apiClient;
+  return createApiClient.intentEngine;
 };
 
 // Intent Execution Operations
@@ -119,13 +104,10 @@ export const executeSwap = async (
 ): Promise<ExecutionResult> => {
   try {
     const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/swap`,
-      {
-        ...intent,
-        type: "swap",
-      }
-    );
+    return await client.post<ExecutionResult>("/intents/swap", {
+      ...intent,
+      type: "swap",
+    });
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -139,13 +121,10 @@ export const executeZapIn = async (
 ): Promise<ExecutionResult> => {
   try {
     const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/zapIn`,
-      {
-        ...intent,
-        type: "zapIn",
-      }
-    );
+    return await client.post<ExecutionResult>(`/intents/zapIn`, {
+      ...intent,
+      type: "zapIn",
+    });
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -159,13 +138,10 @@ export const executeZapOut = async (
 ): Promise<ExecutionResult> => {
   try {
     const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/zapOut`,
-      {
-        ...intent,
-        type: "zapOut",
-      }
-    );
+    return await client.post<ExecutionResult>(`/intents/zapOut`, {
+      ...intent,
+      type: "zapOut",
+    });
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -179,13 +155,10 @@ export const executeRebalance = async (
 ): Promise<ExecutionResult> => {
   try {
     const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/rebalance`,
-      {
-        ...intent,
-        type: "rebalance",
-      }
-    );
+    return await client.post<ExecutionResult>(`/intents/rebalance`, {
+      ...intent,
+      type: "rebalance",
+    });
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -199,13 +172,10 @@ export const executeOptimization = async (
 ): Promise<ExecutionResult> => {
   try {
     const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/optimize`,
-      {
-        ...intent,
-        type: "optimize",
-      }
-    );
+    return await client.post<ExecutionResult>(`/intents/optimize`, {
+      ...intent,
+      type: "optimize",
+    });
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -216,12 +186,12 @@ export const executeOptimization = async (
 /**
  * Get intent execution status
  */
-export const getIntentStatus = async (intentId: string): Promise<IntentStatus> => {
+export const getIntentStatus = async (
+  intentId: string
+): Promise<IntentStatus> => {
   try {
     const client = getIntentEngineClient();
-    return await client.get<IntentStatus>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/${intentId}/status`
-    );
+    return await client.get<IntentStatus>(`/intents/${intentId}/status`);
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -236,7 +206,7 @@ export const cancelIntent = async (
   try {
     const client = getIntentEngineClient();
     return await client.delete<{ message: string; refunded?: boolean }>(
-      `${INTENT_ENGINE_CONFIG.baseURL}/intents/${intentId}`
+      `/intents/${intentId}`
     );
   } catch (error) {
     throw createIntentServiceError(error);
@@ -262,12 +232,12 @@ export const getUserIntentHistory = async (
       limit: limit.toString(),
       offset: offset.toString(),
     });
-    
+
     return await client.get<{
       intents: ExecutionResult[];
       total: number;
       hasMore: boolean;
-    }>(`${INTENT_ENGINE_CONFIG.baseURL}/intents/history?${params}`);
+    }>(`/intents/history?${params}`);
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -293,7 +263,7 @@ export const getExecutionQuote = async (
       estimatedTime: number;
       priceImpact: number;
       route?: Array<{ protocol: string; percentage: number }>;
-    }>(`${INTENT_ENGINE_CONFIG.baseURL}/intents/quote`, intent);
+    }>(`/intents/quote`, intent);
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -302,7 +272,9 @@ export const getExecutionQuote = async (
 /**
  * Get supported tokens for the chain
  */
-export const getSupportedTokens = async (chainId: number): Promise<
+export const getSupportedTokens = async (
+  chainId: number
+): Promise<
   Array<{
     address: string;
     symbol: string;
@@ -316,7 +288,7 @@ export const getSupportedTokens = async (chainId: number): Promise<
     const params = new URLSearchParams({
       chainId: chainId.toString(),
     });
-    
+
     return await client.get<
       Array<{
         address: string;
@@ -325,7 +297,7 @@ export const getSupportedTokens = async (chainId: number): Promise<
         decimals: number;
         logoURI?: string;
       }>
-    >(`${INTENT_ENGINE_CONFIG.baseURL}/tokens?${params}`);
+    >(`/tokens?${params}`);
   } catch (error) {
     throw createIntentServiceError(error);
   }
@@ -345,7 +317,7 @@ export const checkIntentServiceHealth = async (): Promise<{
       status: string;
       timestamp: string;
       processingQueue: number;
-    }>(`${INTENT_ENGINE_CONFIG.baseURL}/health`);
+    }>(`/health`);
   } catch (error) {
     throw createIntentServiceError(error);
   }

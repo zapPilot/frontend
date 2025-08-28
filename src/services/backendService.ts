@@ -4,17 +4,7 @@
  * Replaces BackendApiClient with simpler service function approach
  */
 
-import { apiClient } from "../lib/api-client";
-
-// Configuration
-const BACKEND_API_CONFIG = {
-  baseURL: process.env["NEXT_PUBLIC_API_URL"] || "http://127.0.0.1:3001",
-  timeout: 12000,
-  retries: 3,
-  headers: {
-    "X-Service": "backend-api",
-  },
-};
+import { createApiClient } from "../lib/api-client";
 
 /**
  * Backend interfaces
@@ -95,17 +85,12 @@ const createBackendServiceError = (error: any): BackendServiceError => {
       break;
   }
 
-  return new BackendServiceError(
-    message,
-    status,
-    error.code,
-    error.details
-  );
+  return new BackendServiceError(message, status, error.code, error.details);
 };
 
 // Get configured client
 const getBackendApiClient = () => {
-  return apiClient;
+  return createApiClient.backendApi;
 };
 
 // Notification Operations
@@ -119,7 +104,7 @@ export const sendDiscordAlert = async (
   try {
     const client = getBackendApiClient();
     return await client.post<{ success: boolean; messageId?: string }>(
-      `${BACKEND_API_CONFIG.baseURL}/notifications/discord`,
+      `/notifications/discord`,
       alert
     );
   } catch (error) {
@@ -139,7 +124,7 @@ export const sendEmailNotification = async (
   try {
     const client = getBackendApiClient();
     return await client.post<{ success: boolean; messageId?: string }>(
-      `${BACKEND_API_CONFIG.baseURL}/notifications/email`,
+      `/notifications/email`,
       {
         email,
         subject,
@@ -161,7 +146,7 @@ export const getNotificationSettings = async (
   try {
     const client = getBackendApiClient();
     return await client.get<NotificationSettings>(
-      `${BACKEND_API_CONFIG.baseURL}/notifications/settings/${userId}`
+      `/notifications/settings/${userId}`
     );
   } catch (error) {
     throw createBackendServiceError(error);
@@ -178,7 +163,7 @@ export const updateNotificationSettings = async (
   try {
     const client = getBackendApiClient();
     return await client.put<NotificationSettings>(
-      `${BACKEND_API_CONFIG.baseURL}/notifications/settings/${userId}`,
+      `/notifications/settings/${userId}`,
       settings
     );
   } catch (error) {
@@ -206,7 +191,7 @@ export const generatePortfolioReport = async (
     if (endDate) params.set("endDate", endDate);
 
     return await client.post<EmailReport>(
-      `${BACKEND_API_CONFIG.baseURL}/reports/portfolio/${userId}?${params}`,
+      `/reports/portfolio/${userId}?${params}`,
       {}
     );
   } catch (error) {
@@ -237,7 +222,7 @@ export const getReportHistory = async (
       reports: EmailReport[];
       total: number;
       hasMore: boolean;
-    }>(`${BACKEND_API_CONFIG.baseURL}/reports/history/${userId}?${params}`);
+    }>(`/reports/history/${userId}?${params}`);
   } catch (error) {
     throw createBackendServiceError(error);
   }
@@ -255,7 +240,7 @@ export const scheduleReport = async (
   try {
     const client = getBackendApiClient();
     return await client.post<{ success: boolean; nextRun?: string }>(
-      `${BACKEND_API_CONFIG.baseURL}/reports/schedule/${userId}`,
+      `/reports/schedule/${userId}`,
       {
         reportType,
         enabled,
@@ -279,7 +264,7 @@ export const exportPortfolioCSV = async (
   try {
     const client = getBackendApiClient();
     return await client.post<{ downloadUrl: string; expiresAt: string }>(
-      `${BACKEND_API_CONFIG.baseURL}/export/portfolio/${userId}`,
+      `/export/portfolio/${userId}`,
       {
         format,
       }
@@ -303,11 +288,14 @@ export const exportTransactionHistory = async (
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
 
-    const url = params.toString() 
-      ? `${BACKEND_API_CONFIG.baseURL}/export/transactions/${userId}?${params}`
-      : `${BACKEND_API_CONFIG.baseURL}/export/transactions/${userId}`;
+    const url = params.toString()
+      ? `/export/transactions/${userId}?${params}`
+      : `/export/transactions/${userId}`;
 
-    return await client.post<{ downloadUrl: string; expiresAt: string }>(url, {});
+    return await client.post<{ downloadUrl: string; expiresAt: string }>(
+      url,
+      {}
+    );
   } catch (error) {
     throw createBackendServiceError(error);
   }
@@ -328,7 +316,7 @@ export const logSystemEvent = async (event: {
   try {
     const client = getBackendApiClient();
     return await client.post<{ success: boolean; logId?: string }>(
-      `${BACKEND_API_CONFIG.baseURL}/logs/system`,
+      `/logs/system`,
       event
     );
   } catch (error) {
@@ -378,7 +366,7 @@ export const getSystemLogs = async (
       }>;
       total: number;
       hasMore: boolean;
-    }>(`${BACKEND_API_CONFIG.baseURL}/logs/system?${params}`);
+    }>(`/logs/system?${params}`);
   } catch (error) {
     throw createBackendServiceError(error);
   }
@@ -406,7 +394,7 @@ export const checkBackendServiceHealth = async (): Promise<{
         email: boolean;
         database: boolean;
       };
-    }>(`${BACKEND_API_CONFIG.baseURL}/health`);
+    }>(`/health`);
   } catch (error) {
     throw createBackendServiceError(error);
   }
@@ -442,7 +430,7 @@ export const getUsageStats = async (
         requests: number;
         avgResponseTime: number;
       }>;
-    }>(`${BACKEND_API_CONFIG.baseURL}/stats/usage?${params}`);
+    }>(`/stats/usage?${params}`);
   } catch (error) {
     throw createBackendServiceError(error);
   }
