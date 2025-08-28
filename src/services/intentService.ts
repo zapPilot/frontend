@@ -165,23 +165,6 @@ export const executeRebalance = async (
 };
 
 /**
- * Execute portfolio optimization
- */
-export const executeOptimization = async (
-  intent: Omit<ExecutionIntent, "type" | "fromToken" | "toToken">
-): Promise<ExecutionResult> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(`/intents/optimize`, {
-      ...intent,
-      type: "optimize",
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
-
-/**
  * Dust token conversion interface for intent service
  */
 export interface DustTokenParams {
@@ -235,22 +218,6 @@ export const getIntentStatus = async (
 };
 
 /**
- * Cancel pending intent
- */
-export const cancelIntent = async (
-  intentId: string
-): Promise<{ message: string; refunded?: boolean }> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.delete<{ message: string; refunded?: boolean }>(
-      `/intents/${intentId}`
-    );
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
-
-/**
  * Get user's intent history
  */
 export const getUserIntentHistory = async (
@@ -281,64 +248,6 @@ export const getUserIntentHistory = async (
 };
 
 // Utility Operations
-
-/**
- * Get execution quote/estimate
- */
-export const getExecutionQuote = async (
-  intent: Omit<ExecutionIntent, "walletAddress">
-): Promise<{
-  estimatedGas: string;
-  estimatedTime: number;
-  priceImpact: number;
-  route?: Array<{ protocol: string; percentage: number }>;
-}> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<{
-      estimatedGas: string;
-      estimatedTime: number;
-      priceImpact: number;
-      route?: Array<{ protocol: string; percentage: number }>;
-    }>(`/intents/quote`, intent);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
-
-/**
- * Get supported tokens for the chain
- */
-export const getSupportedTokens = async (
-  chainId: number
-): Promise<
-  Array<{
-    address: string;
-    symbol: string;
-    name: string;
-    decimals: number;
-    logoURI?: string;
-  }>
-> => {
-  try {
-    const client = getIntentEngineClient();
-    const params = new URLSearchParams({
-      chainId: chainId.toString(),
-    });
-
-    return await client.get<
-      Array<{
-        address: string;
-        symbol: string;
-        name: string;
-        decimals: number;
-        logoURI?: string;
-      }>
-    >(`/tokens?${params}`);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
 
 /**
  * Health check

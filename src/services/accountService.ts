@@ -297,11 +297,3 @@ export const getUserTokens = async (
     throw createAccountServiceError(error);
   }
 };
-
-/**
- * Validate wallet address format client-side before API call
- */
-export const validateWalletAddress = (address: string): boolean => {
-  const ethRegex = /^0x[a-fA-F0-9]{40}$/;
-  return ethRegex.test(address);
-};
