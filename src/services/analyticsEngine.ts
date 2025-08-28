@@ -1,9 +1,9 @@
 /**
  * API service for analytics-engine integration
- * Migrated to use unified API client for consistent error handling
+ * Uses service-specific API client for consistent error handling
  */
 
-import { apiClient, APIError } from "../lib/api-client";
+import { createApiClient } from "../lib/api-client";
 import { PortfolioDataPoint } from "../types/portfolio";
 
 // API Response Types
@@ -130,61 +130,21 @@ export interface ProtocolData {
   pnl: number;
 }
 
-/**
- * Get user information by main wallet address
- */
-export const getUserByWallet = async (
-  walletAddress: string
-): Promise<UserResponse> => {
-  try {
-    return await apiClient.get<UserResponse>(
-      `/api/v1/users/by-wallet/${walletAddress}`
-    );
-  } catch (error) {
-    if (error instanceof APIError && error.status === 404) {
-      const userNotFoundError = new Error("USER_NOT_FOUND");
-      userNotFoundError.name = "USER_NOT_FOUND";
-      throw userNotFoundError;
-    }
-    throw error;
-  }
-};
-
-/**
- * Get bundle wallet addresses by primary wallet
- */
-export const getBundleWalletsByPrimary = async (
-  userId: string
-): Promise<BundleWalletsResponse> => {
-  try {
-    return await apiClient.get<BundleWalletsResponse>(
-      `/api/v1/users/${userId}/bundle-wallets`
-    );
-  } catch (error) {
-    if (error instanceof APIError && error.status === 404) {
-      throw new Error("Bundle wallets not found");
-    }
-    throw error;
-  }
-};
-
-/**
- * Get portfolio snapshots for a user
- */
-export const getPortfolioSnapshots = async (
-  userId: string,
-  limit: number = 100,
-  offset: number = 0
-): Promise<PortfolioSnapshot[]> => {
-  const params = new URLSearchParams({
-    limit: limit.toString(),
-    offset: offset.toString(),
-  });
-
-  return await apiClient.get<PortfolioSnapshot[]>(
-    `/api/v1/portfolio-snapshots/by-user/${userId}?${params}`
-  );
-};
+export interface PortfolioTrendsResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  trend_data: PortfolioTrend[];
+  summary: {
+    total_change_usd: number;
+    total_change_percentage: number;
+    best_day?: PortfolioTrend;
+    worst_day?: PortfolioTrend;
+  };
+}
 
 /**
  * Get portfolio trends for a user
@@ -193,13 +153,13 @@ export const getPortfolioTrends = async (
   userId: string,
   days: number = 30,
   limit: number = 100
-): Promise<PortfolioTrend[]> => {
+): Promise<PortfolioTrendsResponse> => {
   const params = new URLSearchParams({
     days: days.toString(),
     limit: limit.toString(),
   });
-
-  return await apiClient.get<PortfolioTrend[]>(
+  console.log("getPortfolioTrends", userId, days, limit);
+  return await createApiClient.analyticsEngine.get<PortfolioTrendsResponse>(
     `/api/v1/portfolio-trends/by-user/${userId}?${params}`
   );
 };
@@ -219,7 +179,9 @@ export const getPortfolioSummary = async (
   const endpoint = `/api/v1/users/${userId}/portfolio-summary`;
   const url = params.toString() ? `${endpoint}?${params}` : endpoint;
 
-  return await apiClient.get<PortfolioSummaryResponse>(url);
+  return await createApiClient.analyticsEngine.get<PortfolioSummaryResponse>(
+    url
+  );
 };
 
 /**
@@ -229,7 +191,9 @@ export const getPortfolioAPR = async (
   userId: string
 ): Promise<PortfolioAPRResponse> => {
   const endpoint = `/api/v1/apr/portfolio/${userId}/summary`;
-  return await apiClient.get<PortfolioAPRResponse>(endpoint);
+  return await createApiClient.analyticsEngine.get<PortfolioAPRResponse>(
+    endpoint
+  );
 };
 
 /**

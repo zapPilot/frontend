@@ -4,7 +4,15 @@
  */
 
 import { handleAPIError } from "../lib/api-client";
-import { accountApiClient, AccountApiError } from "../lib/clients";
+import {
+  connectWallet as connectWalletService,
+  getUserProfile as getUserProfileService,
+  getUserWallets as getUserWalletsService,
+  addWalletToBundle as addWalletToBundleService,
+  removeWalletFromBundle as removeWalletFromBundleService,
+  updateUserEmail as updateUserEmailService,
+  AccountServiceError,
+} from "./accountService";
 import {
   AddWalletResponse,
   ConnectWalletResponse,
@@ -24,7 +32,7 @@ export const connectWallet = async (
   wallet: string
 ): Promise<ServiceResponse<ConnectWalletResponse>> => {
   try {
-    const data = await accountApiClient.connectWallet(wallet);
+    const data = await connectWalletService(wallet);
 
     return {
       data,
@@ -45,7 +53,7 @@ export const getUserProfile = async (
   userId: string
 ): Promise<ServiceResponse<UserProfileResponse>> => {
   try {
-    const data = await accountApiClient.getUserProfile(userId);
+    const data = await getUserProfileService(userId);
 
     return {
       data,
@@ -67,7 +75,7 @@ export const getUserWallets = async (
   userId: string
 ): Promise<ServiceResponse<UserCryptoWallet[]>> => {
   try {
-    const data = await accountApiClient.getUserWallets(userId);
+    const data = await getUserWalletsService(userId);
 
     return {
       data,
@@ -91,11 +99,7 @@ export const addWalletToBundle = async (
   label?: string
 ): Promise<ServiceResponse<AddWalletResponse>> => {
   try {
-    const data = await accountApiClient.addWalletToBundle(
-      userId,
-      wallet,
-      label
-    );
+    const data = await addWalletToBundleService(userId, wallet, label);
 
     return {
       data,
@@ -118,10 +122,7 @@ export const removeWalletFromBundle = async (
   walletId: string
 ): Promise<ServiceResponse<{ message: string }>> => {
   try {
-    const data = await accountApiClient.removeWalletFromBundle(
-      userId,
-      walletId
-    );
+    const data = await removeWalletFromBundleService(userId, walletId);
 
     return {
       data,
@@ -143,7 +144,7 @@ export const updateUserEmail = async (
   email: string
 ): Promise<ServiceResponse<UpdateEmailResponse>> => {
   try {
-    const data = await accountApiClient.updateUserEmail(userId, email);
+    const data = await updateUserEmailService(userId, email);
 
     return {
       data,
@@ -196,8 +197,8 @@ export const getMainWallet = (
  */
 export const handleWalletError = (error: unknown): string => {
   // Use service-specific error handling first
-  if (error instanceof AccountApiError) {
-    // AccountApiClient already provides enhanced error messages
+  if (error instanceof AccountServiceError) {
+    // AccountService already provides enhanced error messages
     return error.message;
   }
 

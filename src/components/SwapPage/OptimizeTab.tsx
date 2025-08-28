@@ -20,20 +20,17 @@ import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
 import { createApiClient, handleAPIError } from "../../lib/api-client";
+import {
+  WalletConnectionState,
+  DustToken,
+  OptimizationOptions,
+  OptimizationData,
+  CompleteEventData,
+} from "../../types/optimize";
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
-// Wallet connection hook interface
-interface UseWalletConnectionStateReturn {
-  activeAccount: any;
-  activeChain: any;
-  sendCalls: any;
-  userAddress: string | undefined;
-  chainId: number | undefined;
-  chainName: string | undefined;
-  isWalletConnected: boolean;
-  getExplorerUrl: (txnHash: string) => string | null;
-}
+// Wallet connection hook interface - using WalletConnectionState directly
 
 // Intent creation hook interface
 interface UseIntentCreationReturn {
@@ -61,7 +58,7 @@ interface OptimizationControlsProps {
   setOptimizationOptions: (options: OptimizationOptions) => void;
   dustTokens: DustToken[];
   loadingTokens: boolean;
-  optimizationData: any;
+  optimizationData: OptimizationData;
 }
 
 interface ExecutionPanelProps {
@@ -72,7 +69,7 @@ interface ExecutionPanelProps {
       | ((prev: OptimizationOptions) => OptimizationOptions)
   ) => void;
   isWalletConnected: boolean;
-  optimizationData: any;
+  optimizationData: OptimizationData;
   isOptimizing: boolean;
   isStreaming: boolean;
   sendingToWallet: boolean;
@@ -80,22 +77,7 @@ interface ExecutionPanelProps {
   buttonText: string;
   onOptimize: () => void;
 }
-export interface OptimizationOptions {
-  convertDust: boolean;
-  rebalancePortfolio: boolean;
-  slippage: number;
-}
-
-interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  decimals: number;
-  logo_url?: string;
-  raw_amount_hex_str?: string;
-}
+// Remove local declarations - use imported types from ../types/optimize
 
 interface TokenGridProps {
   tokens: DustToken[];
@@ -109,7 +91,7 @@ interface TokenGridProps {
 // ===== EXTRACTED CUSTOM HOOKS =====
 
 // Hook for wallet connection state management
-const useWalletConnectionState = (): UseWalletConnectionStateReturn => {
+const useWalletConnectionState = (): WalletConnectionState => {
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
   const { mutate: sendCalls } = useSendAndConfirmCalls();
@@ -123,9 +105,45 @@ const useWalletConnectionState = (): UseWalletConnectionStateReturn => {
   );
 
   return {
-    activeAccount,
-    activeChain,
-    sendCalls,
+    activeAccount: activeAccount
+      ? {
+          address: activeAccount.address,
+          status: "connected" as const,
+        }
+      : null,
+    activeChain: activeChain
+      ? {
+          id: activeChain.id,
+          name: activeChain.name || "Unknown Chain",
+          nativeCurrency: {
+            symbol: activeChain.nativeCurrency?.symbol || "ETH",
+            name: activeChain.nativeCurrency?.name || "Ethereum",
+            decimals: activeChain.nativeCurrency?.decimals || 18,
+          },
+          rpcUrls: {
+            default: {
+              http: activeChain.rpc
+                ? [activeChain.rpc]
+                : ["https://mainnet.infura.io/v3/"],
+            },
+          },
+          ...(activeChain.blockExplorers && {
+            blockExplorers: {
+              default: {
+                name: activeChain.blockExplorers[0]?.name || "Explorer",
+                url: activeChain.blockExplorers[0]?.url || "",
+              },
+            },
+          }),
+        }
+      : null,
+    sendCalls: async calls => {
+      const result = await sendCalls({ calls } as any);
+      return {
+        transactionHash: (result as any)?.transactionHash || "",
+        status: "success" as const,
+      };
+    },
     userAddress: activeAccount?.address,
     chainId: activeChain?.id,
     chainName: activeChain?.name,
@@ -134,14 +152,18 @@ const useWalletConnectionState = (): UseWalletConnectionStateReturn => {
   };
 };
 
+// Toast function type
+type ToastFunction = (toast: {
+  type: "success" | "error" | "info";
+  title: string;
+  message: string;
+  duration?: number;
+  link?: { text: string; url: string };
+}) => void;
+
 // Hook for intent creation API integration
 const useIntentCreation = (
-  showToast: (toast: {
-    type: string;
-    title: string;
-    message: string;
-    duration?: number;
-  }) => void
+  showToast: ToastFunction
 ): UseIntentCreationReturn => {
   const createDustZapIntent = useCallback(
     async (
@@ -151,26 +173,25 @@ const useIntentCreation = (
       slippage: number
     ) => {
       try {
-        const result = await createApiClient.intentEngine.post(
-          "/api/v1/intents/dustZap",
-          {
-            userAddress,
-            chainId,
-            params: {
-              slippage,
-              dustTokens: filteredDustTokens.map(token => ({
-                address: token.id,
-                symbol: token.optimized_symbol || token.symbol,
-                amount: token.amount,
-                price: token.price,
-                decimals: token.decimals,
-                raw_amount_hex_str: token.raw_amount_hex_str,
-              })),
-              toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-              toTokenDecimals: 18,
-            },
-          }
-        );
+        const result = await createApiClient.intentEngine.post<{
+          intentId: string;
+        }>("/api/v1/intents/dustZap", {
+          userAddress,
+          chainId,
+          params: {
+            slippage,
+            dustTokens: filteredDustTokens.map(token => ({
+              address: token.id,
+              symbol: token.optimized_symbol || token.symbol,
+              amount: token.amount,
+              price: token.price,
+              decimals: token.decimals,
+              raw_amount_hex_str: token.raw_amount_hex_str,
+            })),
+            toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            toTokenDecimals: 18,
+          },
+        });
 
         return result.intentId;
       } catch (error) {
@@ -213,7 +234,7 @@ const useOptimizationWorkflow = ({
   startStreaming: (intentId: string) => Promise<void>;
   clearEvents: () => void;
   resetWalletState: () => void;
-  showToast: (toast: any) => void;
+  showToast: ToastFunction;
   setIsOptimizing: (isOptimizing: boolean) => void;
 }): UseOptimizationWorkflowReturn => {
   const handleOptimize = useCallback(async () => {
@@ -570,7 +591,12 @@ export function OptimizeTab() {
     fetchTokens: fetchDustTokens,
     deleteToken: handleDeleteToken,
     restoreTokens: handleRestoreDeletedTokens,
-  } = useTokenState(showToast as any);
+  } = useTokenState(toast =>
+    showToast({
+      ...toast,
+      type: toast.type as "success" | "error" | "info",
+    })
+  );
 
   // UI state management
   const {
@@ -592,9 +618,31 @@ export function OptimizeTab() {
     reset: resetWalletState,
   } = useWalletTransactions({
     sendCalls: walletConnection.sendCalls,
-    activeAccount: walletConnection.activeAccount,
-    activeChain: walletConnection.activeChain,
-    showToast: showToast as any,
+    activeAccount: walletConnection.activeAccount || {
+      address: "",
+      status: "disconnected" as const,
+    },
+    activeChain: walletConnection.activeChain
+      ? {
+          id: walletConnection.activeChain.id,
+          name: walletConnection.activeChain.name,
+          nativeCurrency: walletConnection.activeChain.nativeCurrency,
+          rpcUrls: walletConnection.activeChain.rpcUrls,
+          ...(walletConnection.activeChain.blockExplorers && {
+            blockExplorers: walletConnection.activeChain.blockExplorers,
+          }),
+          rpc:
+            walletConnection.activeChain.rpcUrls.default.http[0] ||
+            "https://mainnet.infura.io/v3/",
+        }
+      : {
+          id: 1,
+          name: "Ethereum",
+          nativeCurrency: { symbol: "ETH", name: "Ethereum", decimals: 18 },
+          rpcUrls: { default: { http: ["https://mainnet.infura.io/v3/"] } },
+          rpc: "https://mainnet.infura.io/v3/",
+        },
+    showToast,
     getExplorerUrl: walletConnection.getExplorerUrl,
   });
 
@@ -633,7 +681,7 @@ export function OptimizeTab() {
     startStreaming,
     clearEvents,
     resetWalletState,
-    showToast: showToast as any,
+    showToast,
     setIsOptimizing,
   });
   const { buttonText } = useOptimizeButtonState({
@@ -662,12 +710,19 @@ export function OptimizeTab() {
   // Effect to collect transactions only from complete event
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
-    const completeEvent = events.find(
+    const completeEvent = (events as any[]).find(
       (event: any) => event.type === "complete"
-    ) as any;
+    );
 
-    if (completeEvent && completeEvent.transactions) {
-      setAccumulatedTransactions(completeEvent.transactions);
+    if (
+      completeEvent &&
+      completeEvent.data &&
+      "transactions" in completeEvent.data
+    ) {
+      const eventData = completeEvent.data as CompleteEventData;
+      if (eventData.transactions) {
+        setAccumulatedTransactions(eventData.transactions);
+      }
     } else if (completeEvent) {
       showToast({
         type: "error",
@@ -702,24 +757,26 @@ export function OptimizeTab() {
         optimizationData={optimizationData}
       />
 
-      <StreamingProgress
-        isStreaming={isStreaming}
-        events={events}
-        totalTokens={totalTokens}
-        processedTokens={processedTokens}
-        progress={progress}
-        batchesCompleted={batchesCompleted}
-        streamError={streamError}
-        tokensError={tokensError}
-        walletError={walletError}
-        sendingToWallet={sendingToWallet}
-        walletSuccess={walletSuccess}
-        batchProgress={batchProgress}
-        currentBatchIndex={currentBatchIndex}
-        activeAccount={walletConnection.activeAccount}
-        showTechnicalDetails={showTechnicalDetails}
-        onToggleTechnicalDetails={handleToggleTechnicalDetails}
-      />
+      {walletConnection.activeAccount && (
+        <StreamingProgress
+          isStreaming={isStreaming}
+          events={events}
+          totalTokens={totalTokens}
+          processedTokens={processedTokens}
+          progress={progress}
+          batchesCompleted={batchesCompleted}
+          streamError={streamError}
+          tokensError={tokensError}
+          walletError={walletError}
+          sendingToWallet={sendingToWallet}
+          walletSuccess={walletSuccess}
+          batchProgress={batchProgress}
+          currentBatchIndex={currentBatchIndex}
+          activeAccount={walletConnection.activeAccount}
+          showTechnicalDetails={showTechnicalDetails}
+          onToggleTechnicalDetails={handleToggleTechnicalDetails}
+        />
+      )}
 
       {optimizationOptions.convertDust && dustTokens.length > 0 && (
         <TokenGrid

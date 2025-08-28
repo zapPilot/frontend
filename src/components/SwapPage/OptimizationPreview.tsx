@@ -8,7 +8,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { formatSmallCurrency } from "../../utils/formatters";
-import { OptimizationOptions } from "./OptimizeTab";
+import { OptimizationOptions } from "../../types/optimize";
 
 interface OptimizationPreviewProps {
   options: OptimizationOptions;

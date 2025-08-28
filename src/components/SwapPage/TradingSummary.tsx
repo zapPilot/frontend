@@ -3,9 +3,10 @@
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo } from "react";
 import { formatSmallNumber } from "../../utils/formatters";
+import { SwapEvent } from "../../types/api";
 
 interface TradingSummaryProps {
-  events: any[];
+  events: SwapEvent[];
   showTechnicalDetails: boolean;
   onToggleTechnicalDetails: () => void;
 }
@@ -26,21 +27,21 @@ export function TradingSummary({
   // Memoize expensive calculations to avoid recalculating on every render
   const tradingData = useMemo((): TradingData => {
     const validEvents = events.filter(
-      (e: any) => e.type === "token_ready" && e.tradingLoss
+      e => e.type === "token_ready" && e.tradingLoss
     );
 
     const inputValue = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.inputValueUSD || 0),
+      (sum, e) => sum + (e.tradingLoss?.inputValueUSD || 0),
       0
     );
 
     const outputValue = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.outputValueUSD || 0),
+      (sum, e) => sum + (e.tradingLoss?.outputValueUSD || 0),
       0
     );
 
     const tradingLoss = validEvents.reduce(
-      (sum, e: any) => sum + (e.tradingLoss?.netLossUSD || 0),
+      (sum, e) => sum + (e.tradingLoss?.netLossUSD || 0),
       0
     );
 

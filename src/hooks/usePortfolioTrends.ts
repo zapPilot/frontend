@@ -42,22 +42,11 @@ export function usePortfolioTrends({
     setError(null);
 
     try {
-      console.log(
-        `Fetching portfolio trends for user ID: ${userId} (${days} days)`
-      );
-
       // Fetch portfolio trends directly with provided user ID
-      const trendsDataResp = (await getPortfolioTrends(userId, days)) as any;
-      console.log(
-        `Received ${trendsDataResp.length} data points from analytics-engine`
-      );
-
+      const trendsData = (await getPortfolioTrends(userId, days))?.trend_data;
       // Transform data for charts
       const transformedData = transformPortfolioTrends(
-        trendsDataResp.trend_data || []
-      );
-      console.log(
-        `Transformed to ${transformedData.length} portfolio data points`
+        Array.isArray(trendsData) ? trendsData : []
       );
       setData(transformedData);
     } catch (err) {

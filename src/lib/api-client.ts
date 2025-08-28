@@ -3,6 +3,7 @@
  */
 
 import { QueryClient } from "@tanstack/react-query";
+import { RequestOptions, ResponseTransformer } from "../types/api";
 
 // Base API configuration
 const API_CONFIG = {
@@ -27,7 +28,7 @@ export class APIError extends Error {
     message: string,
     public status: number,
     public code?: string,
-    public details?: any
+    public details?: Record<string, unknown>
   ) {
     super(message);
     this.name = "APIError";
@@ -49,18 +50,11 @@ export class TimeoutError extends Error {
 }
 
 // Request configuration interface
-interface RequestConfig {
+interface RequestConfig extends Omit<RequestOptions, "method"> {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  headers?: Record<string, string>;
-  body?: any;
-  timeout?: number;
-  retries?: number;
+  body?: unknown;
   retryDelay?: number;
-  signal?: AbortSignal;
 }
-
-// Response transformer type
-type ResponseTransformer<T = any> = (data: any) => T;
 
 /**
  * Core API client class
@@ -81,7 +75,7 @@ class APIClient {
   /**
    * Make HTTP request with retry logic and error handling
    */
-  private async makeRequest<T = any>(
+  private async makeRequest<T = unknown>(
     endpoint: string,
     config: RequestConfig & { baseURL?: string } = {},
     transformer?: ResponseTransformer<T>
@@ -175,7 +169,7 @@ class APIClient {
   private async parseErrorResponse(response: Response): Promise<{
     message: string;
     code?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }> {
     try {
       const data = await response.json();
@@ -194,7 +188,7 @@ class APIClient {
   /**
    * Determine if request should be retried
    */
-  private shouldRetry(error: any): boolean {
+  private shouldRetry(error: unknown): boolean {
     // Don't retry client errors (4xx) or specific API errors
     if (
       error instanceof APIError &&
@@ -216,7 +210,7 @@ class APIClient {
   }
 
   // Public API methods
-  async get<T = any>(
+  async get<T = unknown>(
     endpoint: string,
     config?: Omit<RequestConfig, "method" | "body"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
@@ -228,9 +222,9 @@ class APIClient {
     );
   }
 
-  async post<T = any>(
+  async post<T = unknown>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     config?: Omit<RequestConfig, "method"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
@@ -241,9 +235,9 @@ class APIClient {
     );
   }
 
-  async put<T = any>(
+  async put<T = unknown>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     config?: Omit<RequestConfig, "method"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
@@ -254,9 +248,9 @@ class APIClient {
     );
   }
 
-  async patch<T = any>(
+  async patch<T = unknown>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     config?: Omit<RequestConfig, "method">,
     transformer?: ResponseTransformer<T>
   ): Promise<T> {
@@ -267,7 +261,7 @@ class APIClient {
     );
   }
 
-  async delete<T = any>(
+  async delete<T = unknown>(
     endpoint: string,
     config?: Omit<RequestConfig, "method" | "body"> & { baseURL?: string },
     transformer?: ResponseTransformer<T>
@@ -283,7 +277,7 @@ class APIClient {
    * Make a raw HTTP request to any URL (not just API endpoints)
    * Useful for RPC calls, third-party APIs, etc.
    */
-  async request<T = any>(
+  async request<T = unknown>(
     url: string,
     config: RequestConfig = {},
     transformer?: ResponseTransformer<T>
@@ -301,7 +295,7 @@ export const createApiClient = {
    * Make request to Quant Engine API
    */
   analyticsEngine: {
-    get: <T = any>(
+    get: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -311,9 +305,9 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
         transformer
       ),
-    post: <T = any>(
+    post: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
@@ -328,7 +322,7 @@ export const createApiClient = {
    * Make request to Intent Engine API
    */
   intentEngine: {
-    get: <T = any>(
+    get: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -338,15 +332,37 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.intentEngine },
         transformer
       ),
-    post: <T = any>(
+    post: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
       apiClient.post(
         endpoint,
         body,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
+    put: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.put(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.intentEngine },
+        transformer
+      ),
+    delete: <T = unknown>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.delete(
+        endpoint,
         { ...config, baseURL: API_ENDPOINTS.intentEngine },
         transformer
       ),
@@ -355,7 +371,7 @@ export const createApiClient = {
    * Make request to Backend API
    */
   backendApi: {
-    get: <T = any>(
+    get: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -365,21 +381,43 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.backendApi },
         transformer
       ),
-    post: <T = any>(
+    post: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
       apiClient.post(
         endpoint,
         body,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+    put: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: Omit<RequestConfig, "method">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.put(
+        endpoint,
+        body,
+        { ...config, baseURL: API_ENDPOINTS.backendApi },
+        transformer
+      ),
+    delete: <T = unknown>(
+      endpoint: string,
+      config?: Omit<RequestConfig, "method" | "body">,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      apiClient.delete(
+        endpoint,
         { ...config, baseURL: API_ENDPOINTS.backendApi },
         transformer
       ),
   },
   accountApi: {
-    get: <T = any>(
+    get: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -389,9 +427,9 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.accountApi },
         transformer
       ),
-    post: <T = any>(
+    post: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
@@ -401,9 +439,9 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.accountApi },
         transformer
       ),
-    put: <T = any>(
+    put: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
@@ -413,7 +451,7 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.accountApi },
         transformer
       ),
-    delete: <T = any>(
+    delete: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -428,7 +466,7 @@ export const createApiClient = {
    * Make request to Debank API
    */
   debank: {
-    get: <T = any>(
+    get: <T = unknown>(
       endpoint: string,
       config?: Omit<RequestConfig, "method" | "body">,
       transformer?: ResponseTransformer<T>
@@ -438,9 +476,9 @@ export const createApiClient = {
         { ...config, baseURL: API_ENDPOINTS.debank },
         transformer
       ),
-    post: <T = any>(
+    post: <T = unknown>(
       endpoint: string,
-      body?: any,
+      body?: unknown,
       config?: Omit<RequestConfig, "method">,
       transformer?: ResponseTransformer<T>
     ) =>
@@ -485,9 +523,9 @@ export const queryClient = new QueryClient({
 // Helper function to create query keys with standardized structure
 export const createQueryKey = (
   domain: string,
-  params?: Record<string, any>
+  params?: Record<string, unknown>
 ) => {
-  const key: (string | Record<string, any>)[] = [domain];
+  const key: (string | Record<string, unknown>)[] = [domain];
   if (params) {
     key.push(params);
   }

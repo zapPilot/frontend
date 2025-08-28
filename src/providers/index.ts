@@ -60,7 +60,7 @@ export { useWalletConnection as useWallet } from "./WalletContext";
 /**
  * Default exports for common patterns
  */
-export default {
+export const ProviderExports = {
   Web3Provider,
   WalletProvider,
   useWalletConnection,
@@ -70,3 +70,5 @@ export default {
   WALLET_CONFIG,
   CHAIN_IDS,
 };
+
+export default ProviderExports;

@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { AccountApiError } from "../../../src/lib/clients";
 import {
   getMainWallet,
   handleWalletError,
@@ -10,6 +9,12 @@ import { UserCryptoWallet } from "../../../src/types/user.types";
 
 // Mock the API client module
 vi.mock("../../../src/lib/api-client", () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
   createApiClient: {
     accountApi: {
       get: vi.fn(),
@@ -32,9 +37,9 @@ vi.mock("../../../src/lib/api-client", () => ({
   handleAPIError: vi.fn().mockReturnValue("Mock API error"),
 }));
 
-// Mock the clients module to provide AccountApiError
-vi.mock("../../../src/lib/clients", () => {
-  class MockAccountApiError extends Error {
+// Mock the account service module to provide AccountServiceError
+vi.mock("../../../src/services/accountService", () => {
+  class MockAccountServiceError extends Error {
     constructor(
       message: string,
       public status: number,
@@ -42,15 +47,23 @@ vi.mock("../../../src/lib/clients", () => {
       public details?: any
     ) {
       super(message);
-      this.name = "AccountApiError";
+      this.name = "AccountServiceError";
     }
   }
 
   return {
-    AccountApiError: MockAccountApiError,
-    accountApiClient: {},
+    AccountServiceError: MockAccountServiceError,
+    connectWallet: vi.fn(),
+    getUserProfile: vi.fn(),
+    getUserWallets: vi.fn(),
+    addWalletToBundle: vi.fn(),
+    removeWalletFromBundle: vi.fn(),
+    updateUserEmail: vi.fn(),
   };
 });
+
+// Import AccountServiceError after mocking
+import { AccountServiceError } from "../../../src/services/accountService";
 
 describe("userService - Pure Functions", () => {
   beforeEach(() => {
@@ -259,8 +272,8 @@ describe("userService - Pure Functions", () => {
   });
 
   describe("handleWalletError", () => {
-    it("handles AccountApiError by returning its message directly", () => {
-      const accountError = new AccountApiError(
+    it("handles AccountServiceError by returning its message directly", () => {
+      const accountError = new AccountServiceError(
         "Invalid wallet address format. Address must be 42 characters long.",
         400
       );
@@ -271,7 +284,7 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles main wallet removal error", () => {
-      const mainWalletError = new AccountApiError(
+      const mainWalletError = new AccountServiceError(
         "Cannot remove the main wallet from your bundle.",
         400
       );
@@ -280,7 +293,7 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles user/wallet not found error", () => {
-      const notFoundError = new AccountApiError(
+      const notFoundError = new AccountServiceError(
         "User or wallet not found.",
         404
       );
@@ -289,7 +302,7 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles duplicate wallet error", () => {
-      const duplicateError = new AccountApiError(
+      const duplicateError = new AccountServiceError(
         "This wallet is already in your bundle.",
         409
       );
@@ -298,7 +311,7 @@ describe("userService - Pure Functions", () => {
     });
 
     it("handles duplicate email error", () => {
-      const emailError = new AccountApiError(
+      const emailError = new AccountServiceError(
         "This email address is already in use.",
         409
       );

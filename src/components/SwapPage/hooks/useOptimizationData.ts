@@ -1,38 +1,9 @@
 import { useMemo } from "react";
-
-interface OptimizationOptions {
-  convertDust: boolean;
-  rebalancePortfolio: boolean;
-  slippage: number;
-}
-
-interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  decimals: number;
-  logo_url?: string;
-  raw_amount_hex_str?: string;
-}
-
-interface OptimizationData {
-  // Dust token calculations
-  dustValue: number;
-  dustTokenCount: number;
-
-  // Optimization metrics
-  rebalanceActions: number;
-  chainCount: number;
-  totalSavings: number;
-  estimatedGasSavings: number;
-
-  // UI helpers
-  selectedCount: number;
-  hasValidTokens: boolean;
-  canOptimize: boolean;
-}
+import {
+  DustToken,
+  OptimizationOptions,
+  OptimizationData,
+} from "../../../types/optimize";
 
 interface UseOptimizationDataProps {
   filteredTokens: DustToken[];

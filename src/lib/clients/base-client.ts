@@ -10,7 +10,7 @@ export { APIError, NetworkError, TimeoutError } from "../api-client";
 interface RequestConfig {
   method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   headers?: Record<string, string>;
-  body?: any;
+  body?: unknown;
   timeout?: number;
   retries?: number;
   retryDelay?: number;
@@ -30,7 +30,7 @@ export interface ServiceConfig {
 export interface ServiceErrorConfig {
   retryable: boolean;
   statusCodes: number[];
-  errorTransform?: (error: any) => string;
+  errorTransform?: (error: Error) => string;
 }
 
 /**
@@ -56,7 +56,7 @@ export abstract class BaseApiClient {
     endpoint: string,
     options: {
       method?: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-      body?: any;
+      body?: unknown;
       headers?: Record<string, string>;
       timeout?: number;
       retries?: number;
@@ -149,7 +149,7 @@ export abstract class BaseApiClient {
   protected async parseErrorResponse(response: Response): Promise<{
     message: string;
     code?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }> {
     try {
       const data = await response.json();
@@ -168,19 +168,22 @@ export abstract class BaseApiClient {
   /**
    * Create service-specific error (can be overridden)
    */
-  protected createServiceError(status: number, errorData: any): Error {
+  protected createServiceError(
+    status: number,
+    errorData: Record<string, unknown>
+  ): Error {
     return new APIError(
-      errorData.message,
+      (errorData["message"] as string) || "Unknown error",
       status,
-      errorData.code,
-      errorData.details
+      errorData["code"] as string,
+      errorData["details"] as Record<string, unknown>
     );
   }
 
   /**
    * Transform response data (can be overridden by services)
    */
-  protected transformResponse?<T>(data: any): T;
+  protected transformResponse?<T>(data: unknown): T;
 
   /**
    * Delay helper for retries
@@ -204,7 +207,7 @@ export abstract class BaseApiClient {
 
   protected async post<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     options: Omit<Parameters<typeof this.request>[1], "method" | "body"> = {}
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "POST", body });
@@ -212,7 +215,7 @@ export abstract class BaseApiClient {
 
   protected async put<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     options: Omit<Parameters<typeof this.request>[1], "method" | "body"> = {}
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "PUT", body });
@@ -227,7 +230,7 @@ export abstract class BaseApiClient {
 
   protected async patch<T>(
     endpoint: string,
-    body?: any,
+    body?: unknown,
     options: Omit<Parameters<typeof this.request>[1], "method" | "body"> = {}
   ): Promise<T> {
     return this.request<T>(endpoint, { ...options, method: "PATCH", body });
