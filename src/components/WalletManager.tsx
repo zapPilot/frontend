@@ -16,12 +16,15 @@ import {
 } from "lucide-react";
 import { memo, useCallback, useEffect, useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { useToast } from "../hooks/useToast";
 import {
   addWalletToBundle,
+  getUserProfile,
   getUserWallets,
   handleWalletError,
   removeWalletFromBundle,
   transformWalletData,
+  updateUserEmail,
   validateWalletAddress,
   WalletData,
 } from "../services/userService";
@@ -45,12 +48,14 @@ interface WalletOperations {
   adding: OperationState;
   removing: { [walletId: string]: OperationState };
   editing: { [walletId: string]: OperationState };
+  subscribing: OperationState;
 }
 
 const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const queryClient = useQueryClient();
   const { userInfo, loading, error, isConnected, connectedWallet, refetch } =
     useUser();
+  const { showToast } = useToast();
 
   // Component state
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -58,6 +63,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     adding: { isLoading: false, error: null },
     removing: {},
     editing: {},
+    subscribing: { isLoading: false, error: null },
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -71,6 +77,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [newWallet, setNewWallet] = useState({ address: "", label: "" });
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [subscribedEmail, setSubscribedEmail] = useState<string | null>(null);
+  const [isEditingSubscription, setIsEditingSubscription] = useState(false);
 
   // Load wallets when component opens or user changes
   useEffect(() => {
@@ -89,6 +98,25 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
     return () => clearInterval(interval);
   }, [isOpen, isConnected, userId]);
+
+  // Load user profile to determine existing subscription email
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!isOpen || !userId) return;
+      try {
+        const profile = await getUserProfile(userId);
+        if (profile.success && profile.data?.user?.email) {
+          setSubscribedEmail(profile.data.user.email);
+          setEmail(profile.data.user.email);
+        } else {
+          setSubscribedEmail(null);
+        }
+      } catch {
+        // Ignore profile fetch errors in this context
+      }
+    };
+    loadProfile();
+  }, [isOpen, userId]);
 
   // Load wallets from API
   const loadWallets = useCallback(
@@ -287,6 +315,45 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       }));
     }
   }, [userId, newWallet, loadWallets, queryClient, refetch]);
+
+  const handleSubscribe = useCallback(async () => {
+    if (!userId || !email) {
+      setOperations(prev => ({
+        ...prev,
+        subscribing: {
+          isLoading: false,
+          error: "Please enter a valid email address.",
+        },
+      }));
+      return;
+    }
+
+    setOperations(prev => ({
+      ...prev,
+      subscribing: { isLoading: true, error: null },
+    }));
+
+    try {
+      await updateUserEmail(userId, email);
+      setOperations(prev => ({
+        ...prev,
+        subscribing: { isLoading: false, error: null },
+      }));
+      setSubscribedEmail(email);
+      setIsEditingSubscription(false);
+      showToast({
+        type: "success",
+        title: "Subscription updated",
+        message: `You'll receive weekly PnL reports at ${email}.`,
+      });
+    } catch (error) {
+      const errorMessage = handleWalletError(error);
+      setOperations(prev => ({
+        ...prev,
+        subscribing: { isLoading: false, error: errorMessage },
+      }));
+    }
+  }, [userId, email, showToast]);
 
   // Handle copy to clipboard
   const handleCopyAddress = useCallback(
@@ -623,43 +690,79 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </>
             )}
 
-            {/* Enhanced Summary */}
-            {!loading && !isRefreshing && !error && (
-              <div className="p-4 glass-morphism rounded-xl">
+            {/* PnL Subscription */}
+            {!loading && !isRefreshing && !error && isConnected && userId && (
+              <div className="p-4 glass-morphism rounded-xl mb-4">
                 <h3 className="text-sm font-medium text-gray-300 mb-3">
-                  Bundle Summary
+                  Weekly PnL Reports
                 </h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-400">Total Wallets:</span>
-                    <span className="text-white ml-2 font-medium">
-                      {wallets.length}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-gray-400">Primary Wallet:</span>
-                    <span className="text-purple-300 ml-2 font-medium font-mono text-xs">
-                      {wallets.find(w => w.isMain)?.address
-                        ? formatAddress(wallets.find(w => w.isMain)!.address)
-                        : "None"}
-                    </span>
-                  </div>
-                </div>
-                {!isConnected && (
-                  <div className="mt-3 p-2 bg-yellow-600/10 border border-yellow-600/20 rounded-lg">
-                    <p className="text-xs text-yellow-300">
-                      💡 Connect a wallet to view your bundle wallets from the
-                      account-engine.
+                {subscribedEmail && !isEditingSubscription ? (
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-300">
+                      ✅ You&apos;re subscribed to weekly PnL reports
+                      <span className="text-gray-400"> at </span>
+                      <span className="text-white font-medium">
+                        {subscribedEmail}
+                      </span>
+                      .
                     </p>
+                    <button
+                      onClick={() => {
+                        setIsEditingSubscription(true);
+                        setEmail(subscribedEmail);
+                      }}
+                      className="px-3 py-1.5 text-xs rounded-lg glass-morphism hover:bg-white/10 transition-colors"
+                    >
+                      ✏️ Update email
+                    </button>
                   </div>
-                )}
-                {isConnected && userId && (
-                  <div className="mt-3 p-2 bg-green-600/10 border border-green-600/20 rounded-lg">
-                    <p className="text-xs text-green-300">
-                      ✅ Connected to account-engine (User ID:{" "}
-                      {userId.slice(0, 8)}...)
-                    </p>
-                  </div>
+                ) : (
+                  <>
+                    <div className="flex space-x-2">
+                      <input
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
+                      />
+                      <GradientButton
+                        onClick={handleSubscribe}
+                        gradient="from-blue-600 to-cyan-600"
+                        disabled={operations.subscribing.isLoading}
+                      >
+                        {operations.subscribing.isLoading ? (
+                          <LoadingSpinner size="sm" color="white" />
+                        ) : subscribedEmail ? (
+                          "Save"
+                        ) : (
+                          "Subscribe"
+                        )}
+                      </GradientButton>
+                      {subscribedEmail && (
+                        <button
+                          onClick={() => {
+                            setIsEditingSubscription(false);
+                            setEmail(subscribedEmail);
+                            setOperations(prev => ({
+                              ...prev,
+                              subscribing: { isLoading: false, error: null },
+                            }));
+                          }}
+                          className="px-3 py-2 text-xs glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
+                    {operations.subscribing.error && (
+                      <div className="mt-2 p-2 bg-red-600/10 border border-red-600/20 rounded-lg">
+                        <p className="text-xs text-red-300">
+                          {operations.subscribing.error}
+                        </p>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

@@ -6,6 +6,7 @@ import {
   RenderHookOptions,
 } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
+import { ToastProvider } from "../src/hooks/useToast";
 
 /**
  * Create a new QueryClient for each test to ensure test isolation
@@ -50,7 +51,9 @@ function AllTheProviders({ children }: AllTheProvidersProps) {
   const queryClient = createTestQueryClient();
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>{children}</ToastProvider>
+    </QueryClientProvider>
   );
 }
 

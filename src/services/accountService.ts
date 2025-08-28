@@ -4,6 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import { httpUtils } from "../lib/http-utils";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
@@ -11,7 +12,6 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
-import { httpUtils } from "../lib/http-utils";
 
 /**
  * Account Service Error Details
