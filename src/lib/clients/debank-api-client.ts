@@ -6,7 +6,12 @@
 import { APIError, BaseApiClient } from "./base-client";
 
 export class DebankApiError extends APIError {
-  constructor(message: string, status: number, code?: string, details?: any) {
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: Record<string, unknown>
+  ) {
     super(message, status, code, details);
     this.name = "DebankApiError";
   }
@@ -110,9 +115,10 @@ export class DebankApiClient extends BaseApiClient {
    */
   protected override createServiceError(
     status: number,
-    errorData: any
+    errorData: Record<string, unknown>
   ): DebankApiError {
-    let message = errorData.message || errorData.error_msg;
+    let message =
+      errorData["message"] || errorData["error_msg"] || "Unknown error";
 
     switch (status) {
       case 400:
@@ -136,7 +142,12 @@ export class DebankApiClient extends BaseApiClient {
         break;
     }
 
-    return new DebankApiError(message, status, errorData.error_code, errorData);
+    return new DebankApiError(
+      message as string,
+      status,
+      errorData["error_code"] as string,
+      errorData
+    );
   }
 
   // Portfolio Data Operations

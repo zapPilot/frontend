@@ -47,14 +47,14 @@ export function usePortfolioTrends({
       );
 
       // Fetch portfolio trends directly with provided user ID
-      const trendsDataResp = (await getPortfolioTrends(userId, days)) as any;
+      const trendsData = await getPortfolioTrends(userId, days);
       console.log(
-        `Received ${trendsDataResp.length} data points from analytics-engine`
+        `Received ${Array.isArray(trendsData) ? trendsData.length : 0} data points from analytics-engine`
       );
 
       // Transform data for charts
       const transformedData = transformPortfolioTrends(
-        trendsDataResp.trend_data || []
+        Array.isArray(trendsData) ? trendsData : []
       );
       console.log(
         `Transformed to ${transformedData.length} portfolio data points`

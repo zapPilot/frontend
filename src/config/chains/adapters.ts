@@ -6,7 +6,12 @@
  */
 
 import type { Chain as ThirdWebChain } from "thirdweb/chains";
-import { BaseChainConfig, ChainAdapter, ChainListAdapter } from "./types";
+import {
+  BaseChainConfig,
+  ChainAdapter,
+  ChainListAdapter,
+  WagmiChainConfig,
+} from "./types";
 
 /**
  * Convert canonical chain config to ThirdWeb chain format
@@ -33,7 +38,7 @@ export const toThirdWebChains: ChainListAdapter<ThirdWebChain> = configs => {
 /**
  * Convert canonical chain config to Wagmi-compatible format
  */
-export const toWagmiChain: ChainAdapter<any> = config => {
+export const toWagmiChain: ChainAdapter<WagmiChainConfig> = config => {
   return {
     id: config.id,
     name: config.name,
@@ -54,7 +59,7 @@ export const toWagmiChain: ChainAdapter<any> = config => {
 /**
  * Convert list of canonical chains to Wagmi format
  */
-export const toWagmiChains: ChainListAdapter<any> = configs => {
+export const toWagmiChains: ChainListAdapter<WagmiChainConfig> = configs => {
   return configs.map(toWagmiChain);
 };
 

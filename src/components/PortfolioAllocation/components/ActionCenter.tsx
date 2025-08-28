@@ -11,6 +11,7 @@ import {
 } from "../../../utils/tokenUtils";
 import { SlippageComponent } from "../../shared/SlippageComponent";
 import { TokenImage } from "../../shared/TokenImage";
+import { OptimizationOptions, DustToken } from "../../../types/optimize";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -35,21 +36,6 @@ export interface ActionDefinition {
   complexity: "simple" | "advanced";
   color: string;
   bgColor: string;
-}
-
-export interface OptimizationOptions {
-  convertDust: boolean;
-  rebalancePortfolio: boolean;
-  slippage: number;
-}
-
-export interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  logo_url?: string;
 }
 
 interface ActionCenterProps {

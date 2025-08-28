@@ -3,17 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
 import { portfolioStateUtils } from "@/utils/portfolio.utils";
-
-// Types from the original dustZap implementation
-export interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  logo_url?: string;
-  chain_id: string;
-}
+import { DustToken } from "../types/optimize";
 
 export interface DustConversionMessage {
   fromToken: string;
@@ -87,19 +77,33 @@ const fetchDustTokens = async (chainName: string): Promise<DustToken[]> => {
     const mockTokens: DustToken[] = [
       {
         id: "arb_0x1234",
+        chain: chainName || "ethereum",
+        name: "Dust Token 1",
         symbol: "DUST1",
-        amount: 0.0001,
-        price: 1200,
+        decimals: 18,
         logo_url: "/token-logos/generic.png",
-        chain_id: chainName,
+        price: 1200,
+        is_verified: false,
+        is_core: false,
+        is_wallet: false,
+        time_at: Date.now(),
+        amount: 0.0001,
+        isSelected: false,
       },
       {
         id: "arb_0x5678",
+        chain: chainName || "ethereum",
+        name: "Dust Token 2",
         symbol: "DUST2",
-        amount: 0.05,
-        price: 2.4,
+        decimals: 18,
         logo_url: "/token-logos/generic.png",
-        chain_id: chainName,
+        price: 2.4,
+        is_verified: false,
+        is_core: false,
+        is_wallet: false,
+        time_at: Date.now(),
+        amount: 0.05,
+        isSelected: false,
       },
       // Add more mock tokens...
     ];

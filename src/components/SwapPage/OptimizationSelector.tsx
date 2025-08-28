@@ -8,16 +8,7 @@ import {
   getTokenSymbol,
 } from "../../utils/tokenUtils";
 import { TokenImage } from "../shared/TokenImage";
-import { OptimizationOptions } from "./OptimizeTab";
-
-interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  logo_url?: string;
-}
+import { OptimizationOptions, DustToken } from "../../types/optimize";
 
 interface OptimizationSelectorProps {
   options: OptimizationOptions;

@@ -11,23 +11,17 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
-import { apiClient } from "../lib/api-client";
+import { createApiClient } from "../lib/api-client";
 
-// Configuration
-const ACCOUNT_API_CONFIG = {
-  baseURL: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "http://127.0.0.1:3004",
-  timeout: 8000,
-  retries: 2,
-  headers: {
-    "X-Service": "account-api",
-  },
-};
-
-// Configure apiClient for account service if needed
-const getAccountApiClient = () => {
-  // Use existing apiClient with account-specific configuration
-  return apiClient;
-};
+/**
+ * Account Service Error Details
+ */
+interface AccountServiceErrorDetails {
+  field?: string;
+  value?: unknown;
+  constraint?: string;
+  [key: string]: unknown;
+}
 
 /**
  * Account Service Error
@@ -37,7 +31,7 @@ export class AccountServiceError extends Error {
     message: string,
     public status: number,
     public code?: string,
-    public details?: any
+    public details?: AccountServiceErrorDetails
   ) {
     super(message);
     this.name = "AccountServiceError";
@@ -45,11 +39,32 @@ export class AccountServiceError extends Error {
 }
 
 /**
+ * API Error Response Structure
+ */
+interface ApiErrorResponse {
+  status?: number;
+  message?: string;
+  code?: string;
+  details?: AccountServiceErrorDetails;
+  response?: {
+    status?: number;
+  };
+}
+
+/**
+ * Type guard for API error response
+ */
+function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
+  return error !== null && typeof error === "object";
+}
+
+/**
  * Create enhanced error messages for common account API errors
  */
-const createAccountServiceError = (error: any): AccountServiceError => {
-  const status = error.status || error.response?.status || 500;
-  let message = error.message || "Account service error";
+const createAccountServiceError = (error: unknown): AccountServiceError => {
+  const apiError = isApiErrorResponse(error) ? error : {};
+  const status = apiError.status || apiError.response?.status || 500;
+  let message = apiError.message || "Account service error";
 
   // Enhance error messages based on status codes
   switch (status) {
@@ -74,11 +89,16 @@ const createAccountServiceError = (error: any): AccountServiceError => {
       break;
   }
 
+  const errorData =
+    error && typeof error === "object"
+      ? (error as Record<string, unknown>)
+      : {};
+
   return new AccountServiceError(
     message,
     status,
-    error.code,
-    error.details
+    errorData["code"] as string,
+    errorData["details"] as Record<string, unknown>
   );
 };
 
@@ -91,13 +111,13 @@ export const connectWallet = async (
   walletAddress: string
 ): Promise<ConnectWalletResponse> => {
   try {
-    const client = getAccountApiClient();
-    const response = await client.post<ConnectWalletResponse>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/connect-wallet`,
-      {
-        wallet: walletAddress,
-      }
-    );
+    const response =
+      await createApiClient.accountApi.post<ConnectWalletResponse>(
+        "/users/connect-wallet",
+        {
+          wallet: walletAddress,
+        }
+      );
     return response;
   } catch (error) {
     throw createAccountServiceError(error);
@@ -111,9 +131,8 @@ export const getUserProfile = async (
   userId: string
 ): Promise<UserProfileResponse> => {
   try {
-    const client = getAccountApiClient();
-    return await client.get<UserProfileResponse>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}`
+    return await createApiClient.accountApi.get<UserProfileResponse>(
+      `/users/${userId}`
     );
   } catch (error) {
     throw createAccountServiceError(error);
@@ -128,9 +147,8 @@ export const updateUserEmail = async (
   email: string
 ): Promise<UpdateEmailResponse> => {
   try {
-    const client = getAccountApiClient();
-    return await client.put<UpdateEmailResponse>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}/email`,
+    return await createApiClient.accountApi.put<UpdateEmailResponse>(
+      `/users/${userId}/email`,
       { email }
     );
   } catch (error) {
@@ -147,9 +165,8 @@ export const getUserWallets = async (
   userId: string
 ): Promise<UserCryptoWallet[]> => {
   try {
-    const client = getAccountApiClient();
-    return await client.get<UserCryptoWallet[]>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}/wallets`
+    return await createApiClient.accountApi.get<UserCryptoWallet[]>(
+      `/users/${userId}/wallets`
     );
   } catch (error) {
     throw createAccountServiceError(error);
@@ -165,9 +182,8 @@ export const addWalletToBundle = async (
   label?: string
 ): Promise<AddWalletResponse> => {
   try {
-    const client = getAccountApiClient();
-    return await client.post<AddWalletResponse>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}/wallets`,
+    return await createApiClient.accountApi.post<AddWalletResponse>(
+      `/users/${userId}/wallets`,
       {
         wallet: walletAddress,
         label,
@@ -186,9 +202,8 @@ export const removeWalletFromBundle = async (
   walletId: string
 ): Promise<{ message: string }> => {
   try {
-    const client = getAccountApiClient();
-    return await client.delete<{ message: string }>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}/wallets/${walletId}`
+    return await createApiClient.accountApi.delete<{ message: string }>(
+      `/users/${userId}/wallets/${walletId}`
     );
   } catch (error) {
     throw createAccountServiceError(error);
@@ -204,9 +219,8 @@ export const updateWalletLabel = async (
   label: string
 ): Promise<{ message: string }> => {
   try {
-    const client = getAccountApiClient();
-    return await client.put<{ message: string }>(
-      `${ACCOUNT_API_CONFIG.baseURL}/users/${userId}/wallets/${walletId}`,
+    return await createApiClient.accountApi.put<{ message: string }>(
+      `/users/${userId}/wallets/${walletId}`,
       {
         label,
       }
@@ -226,10 +240,10 @@ export const checkAccountServiceHealth = async (): Promise<{
   timestamp: string;
 }> => {
   try {
-    const client = getAccountApiClient();
-    return await client.get<{ status: string; timestamp: string }>(
-      `${ACCOUNT_API_CONFIG.baseURL}/health`
-    );
+    return await createApiClient.accountApi.get<{
+      status: string;
+      timestamp: string;
+    }>("/health");
   } catch (error) {
     throw createAccountServiceError(error);
   }

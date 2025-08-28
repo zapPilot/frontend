@@ -1,17 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { transformToDebankChainName } from "../../../utils/chainHelper";
 import { getTokens } from "../../../utils/dustConversion";
-
-interface DustToken {
-  id: string;
-  symbol: string;
-  optimized_symbol?: string;
-  amount: number;
-  price: number;
-  decimals: number;
-  logo_url?: string;
-  raw_amount_hex_str?: string;
-}
+import { DustToken } from "../../../types/optimize";
 
 interface TokenState {
   data: DustToken[];

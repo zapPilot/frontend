@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { formatSmallNumber } from "../../utils/formatters";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
+import { SwapEvent } from "../../types/api";
 
 interface EventsListProps {
-  events: any[];
+  events: SwapEvent[];
   showTechnicalDetails: boolean;
 }
 
@@ -49,7 +50,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
   // Memoize event filtering to avoid recalculating on every render
   const filteredEvents = useMemo(() => {
     return events.filter(
-      (event: any) => event.type === "token_ready" && event.provider
+      event => event.type === "token_ready" && event.provider
     );
   }, [events]);
 
@@ -60,7 +61,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
 
   return (
     <div className="max-h-64 overflow-y-auto space-y-2">
-      {filteredEvents.map((event: any, index) => {
+      {filteredEvents.map((event, index) => {
         const tradingLoss = event.tradingLoss;
         const inputValue = tradingLoss?.inputValueUSD || 0;
         const outputValue = tradingLoss?.outputValueUSD || 0;
@@ -83,7 +84,7 @@ export function EventsList({ events, showTechnicalDetails }: EventsListProps) {
                   src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${event.tokenSymbol?.toLowerCase()}.webp`}
                   alt={event.tokenSymbol || "Token"}
                   fallbackType="token"
-                  symbol={event.tokenSymbol}
+                  symbol={event.tokenSymbol || "Token"}
                   size={20}
                 />
                 <span className="font-medium text-blue-300 text-sm">

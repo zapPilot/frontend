@@ -81,6 +81,28 @@ export interface ThirdWebChainConfig {
 }
 
 /**
+ * Wagmi-compatible chain format
+ */
+export interface WagmiChainConfig {
+  id: number;
+  name: string;
+  network: string;
+  nativeCurrency: {
+    name: string;
+    symbol: string;
+    decimals: number;
+  };
+  rpcUrls: {
+    default: { http: string[] };
+    public: { http: string[] };
+  };
+  blockExplorers: {
+    default: { name: string; url: string };
+    etherscan: { name: string; url: string };
+  };
+}
+
+/**
  * Chain registry type for ID-based lookups
  */
 export type ChainRegistry = Record<number, BaseChainConfig>;

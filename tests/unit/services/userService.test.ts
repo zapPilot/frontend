@@ -1,22 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../src/lib/api-client", () => ({
+  apiClient: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
   handleAPIError: vi.fn(),
 }));
 
-vi.mock("../../../src/lib/clients", () => ({
-  accountApiClient: {
-    connectWallet: vi.fn(),
-    getUserProfile: vi.fn(),
-    getUserWallets: vi.fn(),
-    addWalletToBundle: vi.fn(),
-    removeWalletFromBundle: vi.fn(),
-    updateUserEmail: vi.fn(),
-  },
-  AccountApiError: class MockAccountApiError extends Error {
+// Mock the account service instead of clients
+vi.mock("../../../src/services/accountService", () => ({
+  connectWallet: vi.fn(),
+  getUserProfile: vi.fn(),
+  getUserWallets: vi.fn(),
+  addWalletToBundle: vi.fn(),
+  removeWalletFromBundle: vi.fn(),
+  updateUserEmail: vi.fn(),
+  AccountServiceError: class MockAccountServiceError extends Error {
     constructor(message: string) {
       super(message);
-      this.name = "AccountApiError";
+      this.name = "AccountServiceError";
     }
   },
 }));
@@ -43,11 +48,27 @@ import {
   validateWalletAddress,
 } from "../../../src/services/userService";
 
-// Import the api-client module to get the mocked function
+// Import the mocked modules
 import { handleAPIError } from "../../../src/lib/api-client";
-import { AccountApiError, accountApiClient } from "../../../src/lib/clients";
+import {
+  connectWallet as connectWalletService,
+  getUserProfile as getUserProfileService,
+  getUserWallets as getUserWalletsService,
+  addWalletToBundle as addWalletToBundleService,
+  removeWalletFromBundle as removeWalletFromBundleService,
+  updateUserEmail as updateUserEmailService,
+  AccountServiceError,
+} from "../../../src/services/accountService";
+
 const mockHandleAPIError = vi.mocked(handleAPIError);
-const mockAccountApiClient = vi.mocked(accountApiClient);
+const mockConnectWalletService = vi.mocked(connectWalletService);
+const mockGetUserProfileService = vi.mocked(getUserProfileService);
+const mockGetUserWalletsService = vi.mocked(getUserWalletsService);
+const mockAddWalletToBundleService = vi.mocked(addWalletToBundleService);
+const mockRemoveWalletFromBundleService = vi.mocked(
+  removeWalletFromBundleService
+);
+const mockUpdateUserEmailService = vi.mocked(updateUserEmailService);
 
 // API Error for testing
 class APIError extends Error {
@@ -75,7 +96,7 @@ describe("userService", () => {
     };
 
     it("successfully connects wallet for existing user", async () => {
-      mockAccountApiClient.connectWallet.mockResolvedValue(mockResponse);
+      mockConnectWalletService.mockResolvedValue(mockResponse);
 
       const result = await connectWallet(
         "0x1234567890123456789012345678901234567890"
@@ -85,7 +106,7 @@ describe("userService", () => {
         data: mockResponse,
         success: true,
       });
-      expect(mockAccountApiClient.connectWallet).toHaveBeenCalledWith(
+      expect(mockConnectWalletService).toHaveBeenCalledWith(
         "0x1234567890123456789012345678901234567890"
       );
     });
@@ -95,7 +116,7 @@ describe("userService", () => {
         user_id: "user-456",
         is_new_user: true,
       };
-      mockAccountApiClient.connectWallet.mockResolvedValue(newUserResponse);
+      mockConnectWalletService.mockResolvedValue(newUserResponse);
 
       const result = await connectWallet(
         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
@@ -105,14 +126,14 @@ describe("userService", () => {
         data: newUserResponse,
         success: true,
       });
-      expect(mockAccountApiClient.connectWallet).toHaveBeenCalledWith(
+      expect(mockConnectWalletService).toHaveBeenCalledWith(
         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
       );
     });
 
     it("handles API errors correctly", async () => {
-      const apiError = new AccountApiError("User not found");
-      mockAccountApiClient.connectWallet.mockRejectedValue(apiError);
+      const apiError = new AccountServiceError("User not found", 404);
+      mockConnectWalletService.mockRejectedValue(apiError);
 
       const result = await connectWallet(
         "0x1234567890123456789012345678901234567890"
@@ -126,7 +147,7 @@ describe("userService", () => {
 
     it("handles network errors correctly", async () => {
       const networkError = new Error("Network connection failed");
-      mockAccountApiClient.connectWallet.mockRejectedValue(networkError);
+      mockConnectWalletService.mockRejectedValue(networkError);
       mockHandleAPIError.mockReturnValue("Network connection failed");
 
       const result = await connectWallet(
@@ -170,7 +191,7 @@ describe("userService", () => {
     };
 
     it("successfully retrieves user profile", async () => {
-      mockAccountApiClient.getUserProfile.mockResolvedValue(mockUserProfile);
+      mockGetUserProfileService.mockResolvedValue(mockUserProfile);
 
       const result = await getUserProfile("user-123");
 
@@ -178,14 +199,12 @@ describe("userService", () => {
         data: mockUserProfile,
         success: true,
       });
-      expect(mockAccountApiClient.getUserProfile).toHaveBeenCalledWith(
-        "user-123"
-      );
+      expect(mockGetUserProfileService).toHaveBeenCalledWith("user-123");
     });
 
     it("handles missing user error", async () => {
-      const apiError = new AccountApiError("User not found");
-      mockAccountApiClient.getUserProfile.mockRejectedValue(apiError);
+      const apiError = new AccountServiceError("User not found", 404);
+      mockGetUserProfileService.mockRejectedValue(apiError);
 
       const result = await getUserProfile("nonexistent-user");
 
@@ -219,7 +238,7 @@ describe("userService", () => {
     ];
 
     it("successfully retrieves user wallets", async () => {
-      mockAccountApiClient.getUserWallets.mockResolvedValue(mockWallets);
+      mockGetUserWalletsService.mockResolvedValue(mockWallets);
 
       const result = await getUserWallets("user-123");
 
@@ -227,13 +246,11 @@ describe("userService", () => {
         data: mockWallets,
         success: true,
       });
-      expect(mockAccountApiClient.getUserWallets).toHaveBeenCalledWith(
-        "user-123"
-      );
+      expect(mockGetUserWalletsService).toHaveBeenCalledWith("user-123");
     });
 
     it("handles empty wallet list", async () => {
-      mockAccountApiClient.getUserWallets.mockResolvedValue([]);
+      mockGetUserWalletsService.mockResolvedValue([]);
 
       const result = await getUserWallets("user-123");
 
@@ -251,7 +268,7 @@ describe("userService", () => {
     };
 
     it("successfully adds wallet with label", async () => {
-      mockAccountApiClient.addWalletToBundle.mockResolvedValue(mockAddResponse);
+      mockAddWalletToBundleService.mockResolvedValue(mockAddResponse);
 
       const result = await addWalletToBundle(
         "user-123",
@@ -263,7 +280,7 @@ describe("userService", () => {
         data: mockAddResponse,
         success: true,
       });
-      expect(mockAccountApiClient.addWalletToBundle).toHaveBeenCalledWith(
+      expect(mockAddWalletToBundleService).toHaveBeenCalledWith(
         "user-123",
         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         "Trading Wallet"
@@ -271,7 +288,7 @@ describe("userService", () => {
     });
 
     it("successfully adds wallet without label", async () => {
-      mockAccountApiClient.addWalletToBundle.mockResolvedValue(mockAddResponse);
+      mockAddWalletToBundleService.mockResolvedValue(mockAddResponse);
 
       const result = await addWalletToBundle(
         "user-123",
@@ -282,7 +299,7 @@ describe("userService", () => {
         data: mockAddResponse,
         success: true,
       });
-      expect(mockAccountApiClient.addWalletToBundle).toHaveBeenCalledWith(
+      expect(mockAddWalletToBundleService).toHaveBeenCalledWith(
         "user-123",
         "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         undefined
@@ -290,10 +307,11 @@ describe("userService", () => {
     });
 
     it("handles duplicate wallet error", async () => {
-      const duplicateError = new AccountApiError(
-        "Wallet already exists in bundle"
+      const duplicateError = new AccountServiceError(
+        "Wallet already exists in bundle",
+        409
       );
-      mockAccountApiClient.addWalletToBundle.mockRejectedValue(duplicateError);
+      mockAddWalletToBundleService.mockRejectedValue(duplicateError);
 
       const result = await addWalletToBundle(
         "user-123",
@@ -311,9 +329,7 @@ describe("userService", () => {
     const mockRemoveResponse = { message: "Wallet removed successfully" };
 
     it("successfully removes wallet", async () => {
-      mockAccountApiClient.removeWalletFromBundle.mockResolvedValue(
-        mockRemoveResponse
-      );
+      mockRemoveWalletFromBundleService.mockResolvedValue(mockRemoveResponse);
 
       const result = await removeWalletFromBundle("user-123", "wallet-2");
 
@@ -321,17 +337,18 @@ describe("userService", () => {
         data: mockRemoveResponse,
         success: true,
       });
-      expect(mockAccountApiClient.removeWalletFromBundle).toHaveBeenCalledWith(
+      expect(mockRemoveWalletFromBundleService).toHaveBeenCalledWith(
         "user-123",
         "wallet-2"
       );
     });
 
     it("handles attempt to remove main wallet", async () => {
-      const mainWalletError = new AccountApiError("Cannot remove main wallet");
-      mockAccountApiClient.removeWalletFromBundle.mockRejectedValue(
-        mainWalletError
+      const mainWalletError = new AccountServiceError(
+        "Cannot remove main wallet",
+        400
       );
+      mockRemoveWalletFromBundleService.mockRejectedValue(mainWalletError);
 
       const result = await removeWalletFromBundle("user-123", "wallet-1");
 
@@ -349,7 +366,7 @@ describe("userService", () => {
     };
 
     it("successfully updates email", async () => {
-      mockAccountApiClient.updateUserEmail.mockResolvedValue(mockEmailResponse);
+      mockUpdateUserEmailService.mockResolvedValue(mockEmailResponse);
 
       const result = await updateUserEmail("user-123", "newemail@example.com");
 
@@ -357,17 +374,18 @@ describe("userService", () => {
         data: mockEmailResponse,
         success: true,
       });
-      expect(mockAccountApiClient.updateUserEmail).toHaveBeenCalledWith(
+      expect(mockUpdateUserEmailService).toHaveBeenCalledWith(
         "user-123",
         "newemail@example.com"
       );
     });
 
     it("handles duplicate email error", async () => {
-      const duplicateEmailError = new AccountApiError("Email already in use");
-      mockAccountApiClient.updateUserEmail.mockRejectedValue(
-        duplicateEmailError
+      const duplicateEmailError = new AccountServiceError(
+        "Email already in use",
+        409
       );
+      mockUpdateUserEmailService.mockRejectedValue(duplicateEmailError);
 
       const result = await updateUserEmail("user-123", "existing@example.com");
 
@@ -521,8 +539,11 @@ describe("userService", () => {
   });
 
   describe("handleWalletError", () => {
-    it("handles AccountApiError by returning message directly", () => {
-      const accountError = new AccountApiError("Invalid wallet address");
+    it("handles AccountServiceError by returning message directly", () => {
+      const accountError = new AccountServiceError(
+        "Invalid wallet address",
+        400
+      );
       const result = handleWalletError(accountError);
       expect(result).toBe("Invalid wallet address");
     });
