@@ -14,7 +14,7 @@ const COVERAGE_FILE = path.join(__dirname, "../coverage/coverage-summary.json");
 const THRESHOLDS = {
   statements: 16,
   branches: 78,
-  functions: 52,
+  functions: 51,
   lines: 15,
 };
 

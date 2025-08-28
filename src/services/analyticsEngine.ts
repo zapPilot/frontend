@@ -1,9 +1,9 @@
 /**
  * API service for analytics-engine integration
- * Uses service-specific API client for consistent error handling
+ * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import { createApiClient } from "../lib/api-client";
+import { httpUtils } from "../lib/http-utils";
 import { PortfolioDataPoint } from "../types/portfolio";
 
 // API Response Types
@@ -158,8 +158,7 @@ export const getPortfolioTrends = async (
     days: days.toString(),
     limit: limit.toString(),
   });
-  console.log("getPortfolioTrends", userId, days, limit);
-  return await createApiClient.analyticsEngine.get<PortfolioTrendsResponse>(
+  return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
     `/api/v1/portfolio-trends/by-user/${userId}?${params}`
   );
 };
@@ -179,9 +178,7 @@ export const getPortfolioSummary = async (
   const endpoint = `/api/v1/users/${userId}/portfolio-summary`;
   const url = params.toString() ? `${endpoint}?${params}` : endpoint;
 
-  return await createApiClient.analyticsEngine.get<PortfolioSummaryResponse>(
-    url
-  );
+  return await httpUtils.analyticsEngine.get<PortfolioSummaryResponse>(url);
 };
 
 /**
@@ -191,9 +188,7 @@ export const getPortfolioAPR = async (
   userId: string
 ): Promise<PortfolioAPRResponse> => {
   const endpoint = `/api/v1/apr/portfolio/${userId}/summary`;
-  return await createApiClient.analyticsEngine.get<PortfolioAPRResponse>(
-    endpoint
-  );
+  return await httpUtils.analyticsEngine.get<PortfolioAPRResponse>(endpoint);
 };
 
 /**

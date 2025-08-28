@@ -4,7 +4,7 @@
  * Replaces IntentEngineClient with simpler service function approach
  */
 
-import { createApiClient } from "../lib/api-client";
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Intent Engine interfaces
@@ -91,7 +91,7 @@ const createIntentServiceError = (error: any): IntentServiceError => {
 
 // Get configured client
 const getIntentEngineClient = () => {
-  return createApiClient.intentEngine;
+  return httpUtils.intentEngine;
 };
 
 // Intent Execution Operations
