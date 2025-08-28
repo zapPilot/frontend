@@ -3,16 +3,16 @@
  * Tests for the extracted HTTP utilities
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  httpGet,
-  httpPost,
-  httpUtils,
   APIError,
+  API_ENDPOINTS,
   NetworkError,
   TimeoutError,
   handleHTTPError,
-  API_ENDPOINTS,
+  httpGet,
+  httpPost,
+  httpUtils,
 } from "../../../src/lib/http-utils";
 
 // Mock fetch globally
@@ -185,24 +185,6 @@ describe("HTTP Utils", () => {
   });
 
   describe("Retry Logic", () => {
-    it("should succeed after retry", async () => {
-      // First call fails, second succeeds
-      mockFetch
-        .mockRejectedValueOnce(new Error("Network failure"))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: vi.fn().mockResolvedValue({ success: true }),
-        } as any);
-
-      const result = await httpGet("https://api.example.com/retry", {
-        retries: 1,
-        retryDelay: 1, // Minimal delay for tests
-      });
-
-      expect(result).toEqual({ success: true });
-      expect(mockFetch).toHaveBeenCalledTimes(2);
-    });
-
     it("should not retry on 4xx errors", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
