@@ -4,7 +4,7 @@
  * Replaces BackendApiClient with simpler service function approach
  */
 
-import { createApiClient } from "../lib/api-client";
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Backend interfaces
@@ -90,7 +90,7 @@ const createBackendServiceError = (error: any): BackendServiceError => {
 
 // Get configured client
 const getBackendApiClient = () => {
-  return createApiClient.backendApi;
+  return httpUtils.backendApi;
 };
 
 // Notification Operations

@@ -15,7 +15,8 @@ Zap Pilot is a sophisticated DeFi frontend application with a layered, feature-b
 #### 2. **Business Logic Layer** (`src/hooks/`, `src/lib/`, `src/utils/`, `src/services/`)
 
 - **Custom Hooks**: Encapsulate complex business logic and state management
-- **Service Functions**: ✅ **STANDARDIZED (2025)**: All API operations now use service functions instead of client classes
+- **Service Functions**: ✅ **STANDARDIZED (2025)**: All API operations now use service functions
+  instead of client classes
 - **Utility Libraries**: Portfolio calculations, chart generation, formatting
 - **Web3 Integration**: Wallet connectivity, chain management, transaction handling
 
@@ -76,13 +77,14 @@ SwapPage/
 ```
 src/services/
 ├── accountService.ts     # User & wallet management (replaces accountApiClient)
-├── intentService.ts      # Transaction execution (replaces intentEngineClient)  
+├── intentService.ts      # Transaction execution (replaces intentEngineClient)
 ├── backendService.ts     # Notifications & reporting (replaces backendApiClient)
 ├── analyticsEngine.ts    # Portfolio analytics (existing, enhanced)
 └── userService.ts        # User data transformations (enhanced wrapper)
 ```
 
 ### **Service Function Benefits:**
+
 - **Consistency**: Single architectural pattern across all APIs
 - **Simplicity**: Easier to test, mock, and understand than client classes
 - **React Query Integration**: Better compatibility with existing query patterns
@@ -90,6 +92,7 @@ src/services/
 - **Error Handling**: Structured errors where needed, simpler patterns where sufficient
 
 ### **Remaining Client Classes** (External Services Only):
+
 - **DeBank API Client**: External service, complex authentication, kept as client class
 
 ### **State Management Pattern**
@@ -135,7 +138,7 @@ src/services/
 ### **Internal Services** ✅ **UPDATED (2025)**
 
 - **Account Service**: User and wallet management via service functions
-- **Intent Service**: Transaction execution via service functions  
+- **Intent Service**: Transaction execution via service functions
 - **Backend Service**: Notifications and reporting via service functions
 - **Analytics Engine**: Portfolio calculations via service functions
 - **Wallet Management**: Address formatting, transaction batching
@@ -162,7 +165,8 @@ src/services/
 
 ## 🔍 Key Architectural Decisions - **UPDATED (2025)**
 
-1. **Service Function Standardization**: ✅ **NEW** - Migrated from mixed client classes/service functions to standardized service function pattern
+1. **Service Function Standardization**: ✅ **NEW** - Migrated from mixed client classes/service
+   functions to standardized service function pattern
 2. **Feature-Based Organization**: Groups related functionality together
 3. **Composition Over Inheritance**: React component composition patterns
 4. **Hook-First Design**: Business logic encapsulated in custom hooks
@@ -173,18 +177,22 @@ src/services/
 ## 🧹 **Architecture Cleanup (2025)**
 
 ### **Dead Code Elimination:**
+
 - ✅ **Removed**: `analytics-engine-client.ts` (367 lines of unused code)
 - ✅ **Removed**: `account-api-client.ts`, `intent-engine-client.ts`, `backend-api-client.ts`
 - ✅ **Cleaned**: `src/lib/clients/index.ts` exports and imports
 
 ### **Standardization Benefits:**
-- **Single Pattern**: Developers no longer need to choose between client classes vs service functions
+
+- **Single Pattern**: Developers no longer need to choose between client classes vs service
+  functions
 - **Consistency**: All internal APIs use the same approach
 - **Maintenance**: Reduced cognitive overhead and code duplication
 - **Testing**: Unified mocking and testing strategies
 - **Bundle Size**: Eliminated class overhead for simple API operations
 
 ### **Migration Results:**
+
 - **~1000 lines** of duplicate/unused code removed
 - **TypeScript Compilation**: ✅ Clean, no errors
 - **Functionality**: ✅ Preserved, all features working

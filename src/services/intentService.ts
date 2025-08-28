@@ -4,7 +4,7 @@
  * Replaces IntentEngineClient with simpler service function approach
  */
 
-import { createApiClient } from "../lib/api-client";
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Intent Engine interfaces
@@ -91,7 +91,7 @@ const createIntentServiceError = (error: any): IntentServiceError => {
 
 // Get configured client
 const getIntentEngineClient = () => {
-  return createApiClient.intentEngine;
+  return httpUtils.intentEngine;
 };
 
 // Intent Execution Operations
@@ -175,6 +175,43 @@ export const executeOptimization = async (
     return await client.post<ExecutionResult>(`/intents/optimize`, {
       ...intent,
       type: "optimize",
+    });
+  } catch (error) {
+    throw createIntentServiceError(error);
+  }
+};
+
+/**
+ * Dust token conversion interface for intent service
+ */
+export interface DustTokenParams {
+  address: string;
+  symbol: string;
+  amount: number;
+  price: number;
+  decimals: number;
+  raw_amount_hex_str: string;
+}
+
+/**
+ * Execute dust token conversion to ETH
+ */
+export const executeDustZap = async (
+  userAddress: string,
+  chainId: number,
+  params: {
+    slippage: number;
+    dustTokens: DustTokenParams[];
+    toTokenAddress: string;
+    toTokenDecimals: number;
+  }
+): Promise<{ intentId: string }> => {
+  try {
+    const client = getIntentEngineClient();
+    return await client.post<{ intentId: string }>("/api/v1/intents/dustZap", {
+      userAddress,
+      chainId,
+      params,
     });
   } catch (error) {
     throw createIntentServiceError(error);

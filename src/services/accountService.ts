@@ -11,7 +11,7 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
-import { createApiClient } from "../lib/api-client";
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Account Service Error Details
@@ -111,13 +111,12 @@ export const connectWallet = async (
   walletAddress: string
 ): Promise<ConnectWalletResponse> => {
   try {
-    const response =
-      await createApiClient.accountApi.post<ConnectWalletResponse>(
-        "/users/connect-wallet",
-        {
-          wallet: walletAddress,
-        }
-      );
+    const response = await httpUtils.accountApi.post<ConnectWalletResponse>(
+      "/users/connect-wallet",
+      {
+        wallet: walletAddress,
+      }
+    );
     return response;
   } catch (error) {
     throw createAccountServiceError(error);
@@ -131,7 +130,7 @@ export const getUserProfile = async (
   userId: string
 ): Promise<UserProfileResponse> => {
   try {
-    return await createApiClient.accountApi.get<UserProfileResponse>(
+    return await httpUtils.accountApi.get<UserProfileResponse>(
       `/users/${userId}`
     );
   } catch (error) {
@@ -147,7 +146,7 @@ export const updateUserEmail = async (
   email: string
 ): Promise<UpdateEmailResponse> => {
   try {
-    return await createApiClient.accountApi.put<UpdateEmailResponse>(
+    return await httpUtils.accountApi.put<UpdateEmailResponse>(
       `/users/${userId}/email`,
       { email }
     );
@@ -165,7 +164,7 @@ export const getUserWallets = async (
   userId: string
 ): Promise<UserCryptoWallet[]> => {
   try {
-    return await createApiClient.accountApi.get<UserCryptoWallet[]>(
+    return await httpUtils.accountApi.get<UserCryptoWallet[]>(
       `/users/${userId}/wallets`
     );
   } catch (error) {
@@ -182,7 +181,7 @@ export const addWalletToBundle = async (
   label?: string
 ): Promise<AddWalletResponse> => {
   try {
-    return await createApiClient.accountApi.post<AddWalletResponse>(
+    return await httpUtils.accountApi.post<AddWalletResponse>(
       `/users/${userId}/wallets`,
       {
         wallet: walletAddress,
@@ -202,7 +201,7 @@ export const removeWalletFromBundle = async (
   walletId: string
 ): Promise<{ message: string }> => {
   try {
-    return await createApiClient.accountApi.delete<{ message: string }>(
+    return await httpUtils.accountApi.delete<{ message: string }>(
       `/users/${userId}/wallets/${walletId}`
     );
   } catch (error) {
@@ -219,7 +218,7 @@ export const updateWalletLabel = async (
   label: string
 ): Promise<{ message: string }> => {
   try {
-    return await createApiClient.accountApi.put<{ message: string }>(
+    return await httpUtils.accountApi.put<{ message: string }>(
       `/users/${userId}/wallets/${walletId}`,
       {
         label,
@@ -240,10 +239,60 @@ export const checkAccountServiceHealth = async (): Promise<{
   timestamp: string;
 }> => {
   try {
-    return await createApiClient.accountApi.get<{
+    return await httpUtils.accountApi.get<{
       status: string;
       timestamp: string;
     }>("/health");
+  } catch (error) {
+    throw createAccountServiceError(error);
+  }
+};
+
+/**
+ * Get user tokens for a specific chain
+ */
+export const getUserTokens = async (
+  accountAddress: string,
+  chainName: string
+): Promise<
+  Array<{
+    id: string;
+    chain: string;
+    name: string;
+    symbol: string;
+    display_symbol: string;
+    optimized_symbol: string;
+    decimals: number;
+    logo_url: string;
+    protocol_id: string;
+    price: number;
+    is_verified: boolean;
+    is_core: boolean;
+    is_wallet: boolean;
+    time_at: number;
+    amount: number;
+  }>
+> => {
+  try {
+    return await httpUtils.backendApi.get<
+      Array<{
+        id: string;
+        chain: string;
+        name: string;
+        symbol: string;
+        display_symbol: string;
+        optimized_symbol: string;
+        decimals: number;
+        logo_url: string;
+        protocol_id: string;
+        price: number;
+        is_verified: boolean;
+        is_core: boolean;
+        is_wallet: boolean;
+        time_at: number;
+        amount: number;
+      }>
+    >(`/user/${accountAddress}/${chainName}/tokens`);
   } catch (error) {
     throw createAccountServiceError(error);
   }

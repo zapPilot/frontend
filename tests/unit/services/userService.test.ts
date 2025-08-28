@@ -1,14 +1,77 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../../../src/lib/api-client", () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
+// Mock the HTTP utils module
+vi.mock("../../../src/lib/http-utils", () => ({
+  httpUtils: {
+    accountApi: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    analyticsEngine: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    backendApi: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    intentEngine: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    debank: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
   },
-  handleAPIError: vi.fn(),
+  httpRequest: vi.fn(),
+  httpGet: vi.fn(),
+  httpPost: vi.fn(),
+  httpPut: vi.fn(),
+  httpPatch: vi.fn(),
+  httpDelete: vi.fn(),
+  APIError: class APIError extends Error {
+    constructor(
+      message: string,
+      public status: number,
+      public code?: string,
+      public details?: any
+    ) {
+      super(message);
+      this.name = "APIError";
+    }
+  },
+  NetworkError: class NetworkError extends Error {
+    constructor(message: string = "Network connection failed") {
+      super(message);
+      this.name = "NetworkError";
+    }
+  },
+  TimeoutError: class TimeoutError extends Error {
+    constructor(message: string = "Request timed out") {
+      super(message);
+      this.name = "TimeoutError";
+    }
+  },
+  handleHTTPError: vi.fn().mockReturnValue("Mock HTTP error"),
 }));
+
+// No longer needed - userService now uses handleHTTPError from http-utils
 
 // Mock the account service instead of clients
 vi.mock("../../../src/services/accountService", () => ({
@@ -49,7 +112,7 @@ import {
 } from "../../../src/services/userService";
 
 // Import the mocked modules
-import { handleAPIError } from "../../../src/lib/api-client";
+import { handleHTTPError } from "../../../src/lib/http-utils";
 import {
   connectWallet as connectWalletService,
   getUserProfile as getUserProfileService,
@@ -60,7 +123,7 @@ import {
   AccountServiceError,
 } from "../../../src/services/accountService";
 
-const mockHandleAPIError = vi.mocked(handleAPIError);
+const mockHandleHTTPError = vi.mocked(handleHTTPError);
 const mockConnectWalletService = vi.mocked(connectWalletService);
 const mockGetUserProfileService = vi.mocked(getUserProfileService);
 const mockGetUserWalletsService = vi.mocked(getUserWalletsService);
@@ -86,7 +149,7 @@ class APIError extends Error {
 describe("userService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockHandleAPIError.mockReturnValue("Mock API error");
+    mockHandleHTTPError.mockReturnValue("Mock HTTP error");
   });
 
   describe("connectWallet", () => {
@@ -148,7 +211,7 @@ describe("userService", () => {
     it("handles network errors correctly", async () => {
       const networkError = new Error("Network connection failed");
       mockConnectWalletService.mockRejectedValue(networkError);
-      mockHandleAPIError.mockReturnValue("Network connection failed");
+      mockHandleHTTPError.mockReturnValue("Network connection failed");
 
       const result = await connectWallet(
         "0x1234567890123456789012345678901234567890"
@@ -550,19 +613,19 @@ describe("userService", () => {
 
     it("falls back to generic error handling for non-AccountApiError", () => {
       const genericError = new Error("Network connection failed");
-      mockHandleAPIError.mockReturnValue("Network connection failed");
+      mockHandleHTTPError.mockReturnValue("Network connection failed");
 
       const result = handleWalletError(genericError);
       expect(result).toBe("Network connection failed");
-      expect(mockHandleAPIError).toHaveBeenCalledWith(genericError);
+      expect(mockHandleHTTPError).toHaveBeenCalledWith(genericError);
     });
 
     it("handles unknown error types", () => {
-      mockHandleAPIError.mockReturnValue("Unknown error occurred");
+      mockHandleHTTPError.mockReturnValue("Unknown error occurred");
 
       const result = handleWalletError("string error");
       expect(result).toBe("Unknown error occurred");
-      expect(mockHandleAPIError).toHaveBeenCalledWith("string error");
+      expect(mockHandleHTTPError).toHaveBeenCalledWith("string error");
     });
   });
 });
