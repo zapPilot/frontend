@@ -1,30 +1,28 @@
 /**
- * API Client Architecture Analysis and Refactoring Recommendations
+ * DEPRECATED: API Client Architecture Analysis
  *
- * This file analyzes the current API client architecture and provides
- * recommendations for potential refactoring opportunities.
+ * ⚠️  This analysis file is now deprecated following the migration from APIClient
+ *     to httpUtils-based architecture. The recommendations in this file have been
+ *     largely implemented through the new httpUtils module.
  *
- * Current Architecture Assessment:
- * ================================
+ * Migration Status:
+ * =================
+ * ✅ Migrated from monolithic APIClient to service-specific httpUtils
+ * ✅ Service-specific utilities (accountApi, analyticsEngine, etc.)
+ * ✅ Preserved error handling (APIError, NetworkError, TimeoutError)
+ * ✅ Maintained retry logic and timeout handling
+ * ✅ Functional approach vs class-based approach
  *
- * STRENGTHS:
- * - Unified error handling with custom error types (APIError, NetworkError, TimeoutError)
- * - Consistent retry logic with exponential backoff
- * - Multiple service endpoint support (5 different APIs)
- * - Timeout handling with AbortController
- * - Request/response transformation support
- * - React Query integration with proper caching and error policies
+ * New Architecture (httpUtils):
+ * ============================
+ * - Service-specific utilities: httpUtils.accountApi, httpUtils.analyticsEngine, etc.
+ * - Functional approach with httpGet, httpPost, httpPut, etc.
+ * - Consistent error handling with APIError, NetworkError, TimeoutError
+ * - Service-specific base URLs configured in API_ENDPOINTS
+ * - Maintained backward compatibility during transition
  *
- * IDENTIFIED ISSUES:
- * - Monolithic APIClient class handling all service types
- * - Service-specific logic scattered across generic client
- * - Limited service-specific configuration options
- * - Inconsistent error handling patterns between services
- * - No service-specific interceptors or middleware
- * - Mixed concerns: transport layer + business logic
- *
- * RECOMMENDED REFACTORING OPPORTUNITIES:
- * =====================================
+ * This file remains for historical reference and to document the migration path.
+ * The analysis served its purpose in guiding the architectural improvements.
  */
 
 import { describe, expect, it } from "vitest";
@@ -152,7 +150,6 @@ describe("API Client Architecture Analysis", () => {
           days?: number
         ): Promise<PortfolioTrend[]>;
         getPortfolioAPR(userId: string): Promise<PortfolioAPRResponse>;
-
       }
 
       // Each client interface is focused on its specific domain

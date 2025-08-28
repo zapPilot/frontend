@@ -1,7 +1,7 @@
 /**
  * Service-Specific API Clients
  * DEPRECATED: Client classes have been migrated to service functions in src/services/
- * 
+ *
  * This file maintains only the base client and DeBank client (external service)
  * All other API operations should use service functions instead
  */
@@ -35,17 +35,20 @@ import { debankApiClient, DebankApiError } from "./debank-api-client";
  */
 export const SERVICE_CONFIG = {
   ACCOUNT_API: {
-    baseURL: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "http://127.0.0.1:3004",
+    baseURL:
+      process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "http://127.0.0.1:3004",
     timeout: 8000,
     retries: 2,
   },
   INTENT_ENGINE: {
-    baseURL: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "http://127.0.0.1:3002",
+    baseURL:
+      process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "http://127.0.0.1:3002",
     timeout: 30000,
     retries: 1,
   },
   ANALYTICS_ENGINE: {
-    baseURL: process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "http://localhost:8001",
+    baseURL:
+      process.env["NEXT_PUBLIC_QUANT_ENGINE_URL"] || "http://localhost:8001",
     timeout: 15000,
     retries: 2,
   },

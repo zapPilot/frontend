@@ -7,22 +7,51 @@ import {
 } from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 
-// Mock the API client module
-vi.mock("../../../src/lib/api-client", () => ({
-  apiClient: {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-  },
-  createApiClient: {
+// Mock the HTTP utils module
+vi.mock("../../../src/lib/http-utils", () => ({
+  httpUtils: {
     accountApi: {
       get: vi.fn(),
       post: vi.fn(),
       put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    analyticsEngine: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    backendApi: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    intentEngine: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
+    },
+    debank: {
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
       delete: vi.fn(),
     },
   },
+  httpRequest: vi.fn(),
+  httpGet: vi.fn(),
+  httpPost: vi.fn(),
+  httpPut: vi.fn(),
+  httpPatch: vi.fn(),
+  httpDelete: vi.fn(),
   APIError: class APIError extends Error {
     constructor(
       message: string,
@@ -34,8 +63,22 @@ vi.mock("../../../src/lib/api-client", () => ({
       this.name = "APIError";
     }
   },
-  handleAPIError: vi.fn().mockReturnValue("Mock API error"),
+  NetworkError: class NetworkError extends Error {
+    constructor(message: string = "Network connection failed") {
+      super(message);
+      this.name = "NetworkError";
+    }
+  },
+  TimeoutError: class TimeoutError extends Error {
+    constructor(message: string = "Request timed out") {
+      super(message);
+      this.name = "TimeoutError";
+    }
+  },
+  handleHTTPError: vi.fn().mockReturnValue("Mock HTTP error"),
 }));
+
+// No longer needed - userService now uses handleHTTPError from http-utils
 
 // Mock the account service module to provide AccountServiceError
 vi.mock("../../../src/services/accountService", () => {
@@ -322,12 +365,12 @@ describe("userService - Pure Functions", () => {
     it("falls back to generic error handling for non-AccountApiError", () => {
       const genericError = new Error("Network connection failed");
       const result = handleWalletError(genericError);
-      expect(result).toBe("Mock API error");
+      expect(result).toBe("Mock HTTP error");
     });
 
     it("handles unknown error types", () => {
       const result = handleWalletError("string error");
-      expect(result).toBe("Mock API error");
+      expect(result).toBe("Mock HTTP error");
     });
   });
 

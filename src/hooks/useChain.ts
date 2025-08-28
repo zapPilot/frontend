@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState, useRef } from "react";
 import { useWalletContext } from "@/providers/WalletContext";
 import { chainUtils } from "@/config/wallet";
 import type { Chain, WalletError } from "@/types/wallet";
-import { apiClient, handleAPIError } from "@/lib/api-client";
+import { httpRequest, handleHTTPError } from "@/lib/http-utils";
 
 /**
  * Chain hook configuration
@@ -404,8 +404,8 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
     const startTime = Date.now();
 
     try {
-      // Simple network check - try to fetch a lightweight endpoint using the unified API client
-      await apiClient.request(chainConfig.rpcUrls.default.http[0], {
+      // Simple network check - try to fetch a lightweight endpoint using HTTP utils
+      await httpRequest(chainConfig.rpcUrls.default.http[0], {
         method: "POST",
         body: {
           jsonrpc: "2.0",
@@ -439,7 +439,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
       }
 
       const latency = Date.now() - startTime;
-      const errorMessage = handleAPIError(error);
+      const errorMessage = handleHTTPError(error);
 
       setNetworkStatus(prev => ({
         ...prev,

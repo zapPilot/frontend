@@ -3,7 +3,7 @@
  * Provides wallet bundle management and user profile operations
  */
 
-import { handleAPIError } from "../lib/api-client";
+import { handleHTTPError } from "../lib/http-utils";
 import {
   connectWallet as connectWalletService,
   getUserProfile as getUserProfileService,
@@ -203,7 +203,7 @@ export const handleWalletError = (error: unknown): string => {
   }
 
   // Fallback to generic error handling
-  return handleAPIError(error);
+  return handleHTTPError(error);
 };
 
 // Export convenience type for component usage

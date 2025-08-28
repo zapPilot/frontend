@@ -1,4 +1,4 @@
-import { createApiClient, handleAPIError } from "../lib/api-client";
+import { getUserTokens } from "../services/accountService";
 
 /**
  * Fetches dust tokens from the backend API
@@ -8,9 +8,7 @@ import { createApiClient, handleAPIError } from "../lib/api-client";
  */
 export const getTokens = async (chainName, accountAddress) => {
   try {
-    const data = await createApiClient.backendApi.get(
-      `/user/${accountAddress}/${chainName}/tokens`
-    );
+    const data = await getUserTokens(accountAddress, chainName);
     const filteredAndSortedTokens = data
       ? data
           .filter(token => token.price > 0)
@@ -29,9 +27,8 @@ export const getTokens = async (chainName, accountAddress) => {
       : [];
     return filteredAndSortedTokens;
   } catch (error) {
-    // Enhanced error handling using the unified API client error handling
-    const errorMessage = handleAPIError(error);
-    const enhancedError = new Error(`Failed to fetch tokens: ${errorMessage}`);
+    // Enhanced error handling using the service's built-in error handling
+    const enhancedError = new Error(`Failed to fetch tokens: ${error.message}`);
     enhancedError.cause = error;
     throw enhancedError;
   }

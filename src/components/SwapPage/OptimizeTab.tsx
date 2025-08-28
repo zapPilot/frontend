@@ -19,7 +19,10 @@ import { useUIState } from "./hooks/useUIState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
-import { createApiClient, handleAPIError } from "../../lib/api-client";
+import {
+  executeDustZap,
+  IntentServiceError,
+} from "../../services/intentService";
 import {
   WalletConnectionState,
   DustToken,
@@ -173,29 +176,32 @@ const useIntentCreation = (
       slippage: number
     ) => {
       try {
-        const result = await createApiClient.intentEngine.post<{
-          intentId: string;
-        }>("/api/v1/intents/dustZap", {
-          userAddress,
-          chainId,
-          params: {
-            slippage,
-            dustTokens: filteredDustTokens.map(token => ({
+        const result = await executeDustZap(userAddress, chainId, {
+          slippage,
+          dustTokens: filteredDustTokens
+            .filter(token => token.raw_amount_hex_str) // Only include tokens with raw_amount_hex_str
+            .map(token => ({
               address: token.id,
               symbol: token.optimized_symbol || token.symbol,
               amount: token.amount,
               price: token.price,
               decimals: token.decimals,
-              raw_amount_hex_str: token.raw_amount_hex_str,
+              raw_amount_hex_str: token.raw_amount_hex_str!,
             })),
-            toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-            toTokenDecimals: 18,
-          },
+          toTokenAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          toTokenDecimals: 18,
         });
 
         return result.intentId;
       } catch (error) {
-        const errorMessage = handleAPIError(error);
+        let errorMessage = "An unexpected error occurred";
+
+        if (error instanceof IntentServiceError) {
+          errorMessage = error.message;
+        } else if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+
         showToast({
           type: "error",
           title: "Optimization Failed",

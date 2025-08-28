@@ -249,6 +249,56 @@ export const checkAccountServiceHealth = async (): Promise<{
 };
 
 /**
+ * Get user tokens for a specific chain
+ */
+export const getUserTokens = async (
+  accountAddress: string,
+  chainName: string
+): Promise<
+  Array<{
+    id: string;
+    chain: string;
+    name: string;
+    symbol: string;
+    display_symbol: string;
+    optimized_symbol: string;
+    decimals: number;
+    logo_url: string;
+    protocol_id: string;
+    price: number;
+    is_verified: boolean;
+    is_core: boolean;
+    is_wallet: boolean;
+    time_at: number;
+    amount: number;
+  }>
+> => {
+  try {
+    return await httpUtils.backendApi.get<
+      Array<{
+        id: string;
+        chain: string;
+        name: string;
+        symbol: string;
+        display_symbol: string;
+        optimized_symbol: string;
+        decimals: number;
+        logo_url: string;
+        protocol_id: string;
+        price: number;
+        is_verified: boolean;
+        is_core: boolean;
+        is_wallet: boolean;
+        time_at: number;
+        amount: number;
+      }>
+    >(`/user/${accountAddress}/${chainName}/tokens`);
+  } catch (error) {
+    throw createAccountServiceError(error);
+  }
+};
+
+/**
  * Validate wallet address format client-side before API call
  */
 export const validateWalletAddress = (address: string): boolean => {

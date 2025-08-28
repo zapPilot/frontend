@@ -181,6 +181,43 @@ export const executeOptimization = async (
   }
 };
 
+/**
+ * Dust token conversion interface for intent service
+ */
+export interface DustTokenParams {
+  address: string;
+  symbol: string;
+  amount: number;
+  price: number;
+  decimals: number;
+  raw_amount_hex_str: string;
+}
+
+/**
+ * Execute dust token conversion to ETH
+ */
+export const executeDustZap = async (
+  userAddress: string,
+  chainId: number,
+  params: {
+    slippage: number;
+    dustTokens: DustTokenParams[];
+    toTokenAddress: string;
+    toTokenDecimals: number;
+  }
+): Promise<{ intentId: string }> => {
+  try {
+    const client = getIntentEngineClient();
+    return await client.post<{ intentId: string }>("/api/v1/intents/dustZap", {
+      userAddress,
+      chainId,
+      params,
+    });
+  } catch (error) {
+    throw createIntentServiceError(error);
+  }
+};
+
 // Intent Monitoring Operations
 
 /**
