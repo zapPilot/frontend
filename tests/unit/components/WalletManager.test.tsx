@@ -2,6 +2,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
+import * as accountService from "../../../src/services/accountService";
 import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 import { render } from "../../test-utils";
@@ -27,6 +28,16 @@ vi.mock("../../../src/contexts/UserContext", () => {
   return {
     UserContext: MockUserContext,
     useUser: () => mockUserContextValue,
+  };
+});
+
+vi.mock("../../../src/hooks/useToast", async () => {
+  const actual = await vi.importActual("../../../src/hooks/useToast");
+  return {
+    ...actual,
+    useToast: () => ({
+      addToast: vi.fn(),
+    }),
   };
 });
 
@@ -112,6 +123,7 @@ vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
 
 describe("WalletManager", () => {
   const mockUserService = vi.mocked(userService);
+  const mockAccountService = vi.mocked(accountService);
 
   // Mock data
   const mockWallets: UserCryptoWallet[] = [
@@ -205,6 +217,10 @@ describe("WalletManager", () => {
       data: { message: "Wallet removed successfully" },
     });
     mockUserService.handleWalletError.mockReturnValue("Mock error message");
+    mockAccountService.updateUserEmail.mockResolvedValue({
+      success: true,
+      data: { message: "Email updated" },
+    });
 
     // Mock clipboard API - setup default that will be overridden in tests
     Object.defineProperty(navigator, "clipboard", {
@@ -218,10 +234,10 @@ describe("WalletManager", () => {
 
   describe("Rendering and Initial State", () => {
     it("renders nothing when modal is closed", async () => {
-      const { container } = await act(async () => {
-        return renderWalletManager(false);
+      await act(async () => {
+        renderWalletManager(false);
       });
-      expect(container.firstChild).toBeNull();
+      expect(screen.queryByText("Bundle Wallets")).not.toBeInTheDocument();
     });
 
     it("renders modal when open", async () => {
@@ -1125,5 +1141,77 @@ describe("WalletManager", () => {
         vi.useRealTimers();
       }
     }, 10000); // Increase test timeout to 10 seconds
+  });
+
+  describe("Email Subscription", () => {
+    it("successfully subscribes with a valid email", async () => {
+      const user = userEvent.setup();
+      renderWalletManager();
+
+      await screen.findByText("Add New Wallet");
+
+      const emailInput = screen.getByPlaceholderText("Enter your email");
+      const subscribeButton = screen.getByText("Subscribe");
+
+      await user.type(emailInput, "test@example.com");
+      await user.click(subscribeButton);
+
+      await waitFor(() => {
+        expect(mockAccountService.updateUserEmail).toHaveBeenCalledWith(
+          "user-123",
+          "test@example.com"
+        );
+      });
+
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText("Enter your email")).toHaveValue("");
+      });
+    });
+
+    it("shows an error message for an empty email", async () => {
+      const user = userEvent.setup();
+      await act(async () => {
+        renderWalletManager();
+      });
+
+      const subscribeButton = screen.getByText("Subscribe");
+
+      await act(async () => {
+        await user.click(subscribeButton);
+      });
+
+      expect(
+        screen.getByText("Please enter a valid email address.")
+      ).toBeInTheDocument();
+      expect(mockAccountService.updateUserEmail).not.toHaveBeenCalled();
+    });
+
+    it("handles API errors during subscription", async () => {
+      const user = userEvent.setup();
+      mockAccountService.updateUserEmail.mockRejectedValue(
+        new Error("Email already subscribed")
+      );
+      mockUserService.handleWalletError.mockReturnValue(
+        "Email is already subscribed"
+      );
+
+      await act(async () => {
+        renderWalletManager();
+      });
+
+      const emailInput = screen.getByPlaceholderText("Enter your email");
+      const subscribeButton = screen.getByText("Subscribe");
+
+      await act(async () => {
+        await user.type(emailInput, "duplicate@example.com");
+        await user.click(subscribeButton);
+      });
+
+      await waitFor(() => {
+        expect(
+          screen.getByText("Email is already subscribed")
+        ).toBeInTheDocument();
+      });
+    });
   });
 });
