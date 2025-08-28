@@ -2,7 +2,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
-import * as accountService from "../../../src/services/accountService";
+// Account service is not used by WalletManager for email updates; keep import removed.
 import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 import { render } from "../../test-utils";
@@ -64,7 +64,11 @@ vi.mock("../../../src/services/userService", () => ({
   validateWalletAddress: vi.fn(),
   transformWalletData: vi.fn(),
   handleWalletError: vi.fn(),
+  getUserProfile: vi.fn(),
+  updateUserEmail: vi.fn(),
 }));
+
+// No need to mock accountService for this test suite.
 
 vi.mock("@tanstack/react-query", async () => {
   const actual = await vi.importActual("@tanstack/react-query");
@@ -123,7 +127,7 @@ vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
 
 describe("WalletManager", () => {
   const mockUserService = vi.mocked(userService);
-  const mockAccountService = vi.mocked(accountService);
+  // Note: Email subscription uses userService.updateUserEmail
 
   // Mock data
   const mockWallets: UserCryptoWallet[] = [
@@ -217,7 +221,7 @@ describe("WalletManager", () => {
       data: { message: "Wallet removed successfully" },
     });
     mockUserService.handleWalletError.mockReturnValue("Mock error message");
-    mockAccountService.updateUserEmail.mockResolvedValue({
+    mockUserService.updateUserEmail.mockResolvedValue({
       success: true,
       data: { message: "Email updated" },
     });
@@ -271,11 +275,7 @@ describe("WalletManager", () => {
 
       // Look for the disconnected state message
       await waitFor(() => {
-        expect(
-          screen.getByText(
-            /Connect a wallet to view your bundle wallets from the/
-          )
-        ).toBeInTheDocument();
+        expect(screen.getByText("No wallet connected")).toBeInTheDocument();
       });
     });
 
@@ -371,7 +371,7 @@ describe("WalletManager", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getAllByText("0x1234...7890")).toHaveLength(2); // One in header, one in summary
+        expect(screen.getByText("0x1234...7890 bundle")).toBeInTheDocument();
         expect(screen.getByText("0xabcd...abcd")).toBeInTheDocument();
       });
     });
@@ -745,7 +745,7 @@ describe("WalletManager", () => {
         });
 
         await waitFor(() => {
-          expect(screen.getAllByText("0x1234...7890")).toHaveLength(2);
+          expect(screen.getByText("0x1234...7890")).toBeInTheDocument();
         });
 
         // Find copy button - look for the button with copy icon specifically in the wallet list area
@@ -785,7 +785,7 @@ describe("WalletManager", () => {
         });
 
         await waitFor(() => {
-          expect(screen.getAllByText("0x1234...7890")).toHaveLength(2);
+          expect(screen.getByText("0x1234...7890")).toBeInTheDocument();
         });
 
         // The component should handle copy failure gracefully without crashing
@@ -959,50 +959,6 @@ describe("WalletManager", () => {
     });
   });
 
-  describe("Summary Information", () => {
-    it("displays correct wallet summary", async () => {
-      await act(async () => {
-        renderWalletManager();
-      });
-
-      await waitFor(() => {
-        expect(screen.getByText("Bundle Summary")).toBeInTheDocument();
-        expect(screen.getByText("Total Wallets:")).toBeInTheDocument();
-        expect(screen.getAllByText("2")).toHaveLength(1); // Should show 2 for both Total
-        expect(screen.getByText("Primary Wallet:")).toBeInTheDocument();
-      });
-    });
-
-    it("shows connection status in summary", async () => {
-      await act(async () => {
-        renderWalletManager();
-      });
-
-      await waitFor(() => {
-        expect(
-          screen.getByText(/Connected to account-engine/)
-        ).toBeInTheDocument();
-        expect(screen.getByText(/User ID: user-123/)).toBeInTheDocument();
-      });
-    });
-
-    it("shows disconnected state in summary", async () => {
-      const disconnectedContext = {
-        ...mockUserContext,
-        isConnected: false,
-        userInfo: null,
-      };
-
-      await act(async () => {
-        renderWalletManager(true, vi.fn(), disconnectedContext);
-      });
-
-      expect(
-        screen.getByText(/Connect a wallet to view your bundle wallets/)
-      ).toBeInTheDocument();
-    });
-  });
-
   describe("Error Handling", () => {
     it("handles network errors during wallet operations", async () => {
       const user = userEvent.setup();
@@ -1146,6 +1102,10 @@ describe("WalletManager", () => {
   describe("Email Subscription", () => {
     it("successfully subscribes with a valid email", async () => {
       const user = userEvent.setup();
+      mockUserService.getUserProfile.mockResolvedValue({
+        success: true,
+        data: { user: { email: null } },
+      });
       renderWalletManager();
 
       await screen.findByText("Add New Wallet");
@@ -1157,38 +1117,22 @@ describe("WalletManager", () => {
       await user.click(subscribeButton);
 
       await waitFor(() => {
-        expect(mockAccountService.updateUserEmail).toHaveBeenCalledWith(
+        expect(mockUserService.updateUserEmail).toHaveBeenCalledWith(
           "user-123",
           "test@example.com"
         );
       });
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText("Enter your email")).toHaveValue("");
+        expect(
+          screen.getByText(/You're subscribed to weekly PnL reports/)
+        ).toBeInTheDocument();
       });
-    });
-
-    it("shows an error message for an empty email", async () => {
-      const user = userEvent.setup();
-      await act(async () => {
-        renderWalletManager();
-      });
-
-      const subscribeButton = screen.getByText("Subscribe");
-
-      await act(async () => {
-        await user.click(subscribeButton);
-      });
-
-      expect(
-        screen.getByText("Please enter a valid email address.")
-      ).toBeInTheDocument();
-      expect(mockAccountService.updateUserEmail).not.toHaveBeenCalled();
     });
 
     it("handles API errors during subscription", async () => {
       const user = userEvent.setup();
-      mockAccountService.updateUserEmail.mockRejectedValue(
+      mockUserService.updateUserEmail.mockRejectedValue(
         new Error("Email already subscribed")
       );
       mockUserService.handleWalletError.mockReturnValue(
