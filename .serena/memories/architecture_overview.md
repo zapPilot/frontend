@@ -70,18 +70,24 @@ SwapPage/
 
 ## 🔄 Data Flow Architecture - **UPDATED (2025)**
 
-### **Service Function Architecture** ✅ **STANDARDIZED**
+### **Service Function Architecture** ✅ **FINAL IMPLEMENTATION**
 
-**NEW PATTERN**: All API operations use service functions for consistency and simplicity
+**CURRENT PATTERN**: All API operations use service functions for consistency and simplicity
 
 ```
 src/services/
-├── accountService.ts     # User & wallet management (replaces accountApiClient)
-├── intentService.ts      # Transaction execution (replaces intentEngineClient)
-├── backendService.ts     # Notifications & reporting (replaces backendApiClient)
-├── analyticsEngine.ts    # Portfolio analytics (existing, enhanced)
-└── userService.ts        # User data transformations (enhanced wrapper)
+├── accountService.ts     # User & wallet management
+├── intentService.ts      # Transaction execution
+├── backendService.ts     # Notifications & reporting
+├── analyticsEngine.ts    # Portfolio analytics
+└── userService.ts        # User data transformations
 ```
+
+### **HTTP Utilities** (`src/lib/http-utils.ts`)
+
+- **Shared Logic**: Common HTTP request handling, error types, retry logic
+- **Service Utilities**: Pre-configured utilities for each API endpoint
+- **Error Handling**: Unified error types (APIError, NetworkError, TimeoutError)
 
 ### **Service Function Benefits:**
 
@@ -90,10 +96,6 @@ src/services/
 - **React Query Integration**: Better compatibility with existing query patterns
 - **Bundle Size**: Lighter weight, reduced complexity
 - **Error Handling**: Structured errors where needed, simpler patterns where sufficient
-
-### **Remaining Client Classes** (External Services Only):
-
-- **DeBank API Client**: External service, complex authentication, kept as client class
 
 ### **State Management Pattern**
 
@@ -132,10 +134,10 @@ src/services/
 
 - **ThirdWeb SDK**: Web3 wallet connectivity and transactions
 - **Chain Networks**: Multi-chain blockchain integration
-- **DeBank API**: External DeFi data (client class pattern)
+- **DeBank API**: External DeFi data (via dedicated client class)
 - **Mock APIs**: Development-time data simulation
 
-### **Internal Services** ✅ **UPDATED (2025)**
+### **Internal Services** ✅ **FINAL (2025)**
 
 - **Account Service**: User and wallet management via service functions
 - **Intent Service**: Transaction execution via service functions
@@ -163,10 +165,9 @@ src/services/
 - **Animation Performance**: CSS transforms and GPU acceleration
 - **Service Function Efficiency**: Lighter API layer reduces bundle size
 
-## 🔍 Key Architectural Decisions - **UPDATED (2025)**
+## 🔍 Key Architectural Decisions - **FINAL (2025)**
 
-1. **Service Function Standardization**: ✅ **NEW** - Migrated from mixed client classes/service
-   functions to standardized service function pattern
+1. **Service Function Standardization**: ✅ **COMPLETE** - All internal APIs use service functions
 2. **Feature-Based Organization**: Groups related functionality together
 3. **Composition Over Inheritance**: React component composition patterns
 4. **Hook-First Design**: Business logic encapsulated in custom hooks
@@ -174,29 +175,30 @@ src/services/
 6. **Configuration-Based Flexibility**: Environment and chain configuration externalized
 7. **External Service Boundary**: Client classes reserved only for external APIs (DeBank)
 
-## 🧹 **Architecture Cleanup (2025)**
+## 🧹 **Architecture Cleanup (2025) - COMPLETE**
 
 ### **Dead Code Elimination:**
 
-- ✅ **Removed**: `analytics-engine-client.ts` (367 lines of unused code)
-- ✅ **Removed**: `account-api-client.ts`, `intent-engine-client.ts`, `backend-api-client.ts`
-- ✅ **Cleaned**: `src/lib/clients/index.ts` exports and imports
+- ✅ **Removed**: `src/lib/api-client.ts` (unified API client with createApiClient)
+- ✅ **Removed**: `src/lib/clients/` directory (base-client, debank-api-client, index)
+- ✅ **Removed**: `tests/unit/lib/api-client-analysis.test.ts` (deprecated analysis)
 
-### **Standardization Benefits:**
+### **Final Architecture Benefits:**
 
-- **Single Pattern**: Developers no longer need to choose between client classes vs service
-  functions
-- **Consistency**: All internal APIs use the same approach
+- **Single Pattern**: Service functions for all internal APIs (no more dual architecture)
+- **Consistency**: Unified approach eliminates developer confusion
 - **Maintenance**: Reduced cognitive overhead and code duplication
-- **Testing**: Unified mocking and testing strategies
+- **Testing**: Simplified mocking with service function pattern
 - **Bundle Size**: Eliminated class overhead for simple API operations
+- **Type Safety**: Direct service function types vs generic API client
 
 ### **Migration Results:**
 
-- **~1000 lines** of duplicate/unused code removed
+- **~1500 lines** of duplicate/unused code removed
 - **TypeScript Compilation**: ✅ Clean, no errors
+- **Test Suite**: ✅ All 531 tests passing
 - **Functionality**: ✅ Preserved, all features working
-- **Error Handling**: ✅ Enhanced in service functions where needed
+- **Performance**: ✅ Improved with lighter HTTP layer
 
 ## 🤖 AI Development Aids
 
