@@ -1,4 +1,7 @@
 import { useCallback, useRef, useState } from "react";
+import { logger } from "@/utils/logger";
+
+const operationLogger = logger.createContextLogger("CancellableOperation");
 
 /**
  * Hook for managing cancellable operations with timeout support
@@ -35,7 +38,7 @@ export const useCancellableOperation = () => {
             try {
               callback(reason);
             } catch (error) {
-              console.error("Error in cancellation callback:", error);
+              operationLogger.error("Error in cancellation callback", error);
             }
           });
         }

@@ -3,6 +3,9 @@ import type {
   AssetDetail,
   PieChartData,
 } from "../types/portfolio";
+import { logger } from "@/utils/logger";
+
+const borrowingLogger = logger.createContextLogger("BorrowingUtils");
 
 export interface PortfolioSeparation {
   assets: AssetCategory[];
@@ -300,15 +303,13 @@ export function validatePieChartWeights(
     process.env.NODE_ENV === "development" &&
     (!isValid || context.includes("debug"))
   ) {
-    console.group(`⚖️ Pie Chart Weight Validation [${context}]`);
-    console.log("Is Valid:", isValid);
-    console.log("Total Percentage:", totalPercentage.toFixed(2) + "%");
-    console.log("Total Value:", totalValue);
-    if (issues.length > 0) {
-      console.warn("Issues:", issues);
-    }
-    console.log("Data:", pieData);
-    console.groupEnd();
+    borrowingLogger.debug(`Pie Chart Weight Validation [${context}]`, {
+      isValid,
+      totalPercentage: totalPercentage.toFixed(2) + "%",
+      totalValue,
+      issues: issues.length > 0 ? issues : undefined,
+      pieData,
+    });
   }
 
   return {

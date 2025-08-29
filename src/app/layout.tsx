@@ -7,6 +7,8 @@ import { ToastProvider } from "@/hooks/useToast";
 import { UserProvider } from "@/contexts/UserContext";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
+import { GlobalErrorHandler } from "@/components/errors/GlobalErrorHandler";
+import { LogViewer } from "@/components/debug/LogViewer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -91,7 +93,9 @@ export default function RootLayout({
               <UserProvider>
                 <OnboardingProvider>
                   <ErrorBoundary resetKeys={["user-context"]}>
+                    <GlobalErrorHandler />
                     <ToastProvider>{children}</ToastProvider>
+                    <LogViewer />
                   </ErrorBoundary>
                 </OnboardingProvider>
               </UserProvider>

@@ -13,6 +13,9 @@ import { WalletManager } from "./WalletManager";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
+import { logger } from "@/utils/logger";
+
+const walletPortfolioLogger = logger.createContextLogger("WalletPortfolio");
 
 interface WalletPortfolioProps {
   onAnalyticsClick?: (() => void) | undefined;
@@ -74,7 +77,9 @@ export function WalletPortfolio({
 
   return (
     <ErrorBoundary
-      onError={error => console.error("WalletPortfolio Error:", error)}
+      onError={error =>
+        walletPortfolioLogger.error("WalletPortfolio Error", error)
+      }
       resetKeys={[
         userInfo?.userId || "no-user",
         isConnected ? "connected" : "disconnected",
@@ -83,7 +88,9 @@ export function WalletPortfolio({
       <div className="space-y-6">
         {/* Wallet Header */}
         <ErrorBoundary
-          onError={error => console.error("WalletHeader Error:", error)}
+          onError={error =>
+            walletPortfolioLogger.error("WalletHeader Error", error)
+          }
         >
           <GlassCard>
             <WalletHeader
@@ -115,7 +122,9 @@ export function WalletPortfolio({
 
         {/* Portfolio Overview */}
         <ErrorBoundary
-          onError={error => console.error("PortfolioOverview Error:", error)}
+          onError={error =>
+            walletPortfolioLogger.error("PortfolioOverview Error", error)
+          }
         >
           <PortfolioOverview
             portfolioData={portfolioData}
@@ -135,7 +144,9 @@ export function WalletPortfolio({
 
         {/* Wallet Manager Modal */}
         <ErrorBoundary
-          onError={error => console.error("WalletManager Error:", error)}
+          onError={error =>
+            walletPortfolioLogger.error("WalletManager Error", error)
+          }
         >
           <WalletManager
             isOpen={isWalletManagerOpen}

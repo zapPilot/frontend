@@ -34,6 +34,7 @@ import {
 import { WalletProviderFactory } from "./WalletProviderFactory";
 import { useThirdWebAdapter } from "./adapters/ThirdWebAdapter";
 import { WALLET_CONFIG, chainUtils } from "@/config/wallet";
+import { walletLogger } from "@/utils/logger";
 
 /**
  * Wallet Context State
@@ -572,7 +573,7 @@ export function WalletProvider({
       try {
         listener(event);
       } catch (error) {
-        console.error("Error in event listener:", error);
+        walletLogger.error("Error in event listener", error);
       }
     });
   }, []);
@@ -698,7 +699,7 @@ export function WalletProvider({
   const log = useCallback(
     (message: string, data?: unknown) => {
       if (enableDebug) {
-        console.log(`[WalletContext] ${message}`, data || "");
+        walletLogger.debug(message, data);
       }
     },
     [enableDebug]

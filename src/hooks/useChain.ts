@@ -12,6 +12,7 @@ import { useWalletContext } from "@/providers/WalletContext";
 import { chainUtils } from "@/config/wallet";
 import type { Chain, WalletError } from "@/types/wallet";
 import { httpRequest, handleHTTPError } from "@/lib/http-utils";
+import { chainLogger } from "@/utils/logger";
 
 /**
  * Chain hook configuration
@@ -468,7 +469,7 @@ export function useChain(config: UseChainConfig = {}): UseChainReturn {
   const log = useCallback(
     (message: string, data?: unknown) => {
       if (debug) {
-        console.log(`[useChain] ${message}`, data || "");
+        chainLogger.debug(message, data);
       }
     },
     [debug]

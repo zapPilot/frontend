@@ -3,6 +3,9 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { GlassCard } from "../ui/GlassCard";
 import { GradientButton } from "../ui/GradientButton";
+import { logger } from "@/utils/logger";
+
+const errorLogger = logger.createContextLogger("ErrorBoundary");
 
 interface Props {
   children: ReactNode;
@@ -47,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error details
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    errorLogger.error("ErrorBoundary caught an error", { error, errorInfo });
 
     // Update state with error info
     this.setState({

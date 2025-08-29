@@ -13,6 +13,7 @@ import {
   portfolioStateUtils,
   preparePortfolioDataWithBorrowing,
 } from "../../utils/portfolio.utils";
+import { portfolioLogger } from "../../utils/logger";
 
 export interface UsePortfolioQueryReturn {
   totalValue: number | null;
@@ -46,7 +47,7 @@ export function usePortfolioSummary(userId: string | null | undefined) {
         poolDetails = aprData.pool_details;
       } catch (error) {
         // APR data is optional - continue without it if unavailable
-        console.warn("Failed to fetch APR data:", error);
+        portfolioLogger.warn("Failed to fetch APR data", error);
       }
 
       // Transform API response using utility function with APR data
@@ -136,10 +137,10 @@ export function useRefreshPortfolio() {
     },
     onSuccess: () => {
       // Could add success toast here if needed
-      console.log("Portfolio refreshed successfully");
+      portfolioLogger.info("Portfolio refreshed successfully");
     },
     onError: error => {
-      console.error("Failed to refresh portfolio:", error);
+      portfolioLogger.error("Failed to refresh portfolio", error);
     },
   });
 }

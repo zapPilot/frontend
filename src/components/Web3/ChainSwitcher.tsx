@@ -12,6 +12,7 @@ import {
 
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
+import { chainLogger } from "@/utils/logger";
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 
@@ -44,7 +45,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
         await switchChain(targetChain);
       }
     } catch (error) {
-      console.error("Chain switch failed:", error);
+      chainLogger.error("Chain switch failed", error);
     } finally {
       setIsSwitching(false);
       dropdown.close();

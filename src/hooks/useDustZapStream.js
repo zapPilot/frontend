@@ -1,4 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { logger } from "../utils/logger";
+
+const dustZapLogger = logger.createContextLogger("DustZapStream");
 
 export const useDustZapStream = () => {
   const [isConnected, setIsConnected] = useState(false);
@@ -20,7 +23,7 @@ export const useDustZapStream = () => {
   const startStreaming = useCallback(
     async intentId => {
       if (isStreaming) {
-        console.warn("Already streaming, ignoring new request");
+        dustZapLogger.warn("Already streaming, ignoring new request");
         return;
       }
 
@@ -52,7 +55,7 @@ export const useDustZapStream = () => {
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {
-          console.log("SSE connection opened");
+          dustZapLogger.debug("SSE connection opened");
           setIsConnected(true);
         };
 
@@ -64,7 +67,7 @@ export const useDustZapStream = () => {
             }
 
             const data = JSON.parse(event.data);
-            console.log("SSE event received:", data);
+            dustZapLogger.debug("SSE event received", data);
 
             setEvents(prev => [...prev, data]);
 
@@ -83,7 +86,7 @@ export const useDustZapStream = () => {
                 break;
 
               case "complete":
-                console.log("🏁 SSE Complete Event Received:", {
+                dustZapLogger.info("SSE Complete Event Received", {
                   eventData: data,
                   hasTransactions: !!data.transactions,
                   transactionCount: data.transactions?.length || 0,
@@ -108,16 +111,16 @@ export const useDustZapStream = () => {
                 break;
 
               default:
-                console.log("Unknown event type:", data.type);
+                dustZapLogger.warn("Unknown event type", { type: data.type });
             }
           } catch (parseError) {
-            console.error("Error parsing SSE message:", parseError);
+            dustZapLogger.error("Error parsing SSE message", parseError);
             setError("Failed to parse streaming data");
           }
         };
 
         eventSource.onerror = error => {
-          console.error("SSE error:", error);
+          dustZapLogger.error("SSE error", error);
 
           // Only treat as error if not completed normally (use ref for current state)
           if (!isCompleteRef.current) {
@@ -137,8 +140,8 @@ export const useDustZapStream = () => {
               );
               reconnectAttemptsRef.current += 1;
 
-              console.log(
-                `Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${backoffDelay}ms...`
+              dustZapLogger.info(
+                `Attempting to reconnect (${reconnectAttemptsRef.current}/${maxReconnectAttempts}) in ${backoffDelay}ms`
               );
 
               setTimeout(() => {
@@ -147,18 +150,20 @@ export const useDustZapStream = () => {
                 }
               }, backoffDelay);
             } else if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
-              console.error("Max reconnection attempts reached, giving up");
+              dustZapLogger.error(
+                "Max reconnection attempts reached, giving up"
+              );
               setError("Connection failed after multiple attempts");
             }
           } else {
             // Stream completed normally, just clean up
-            console.log("SSE connection closed after completion");
+            dustZapLogger.debug("SSE connection closed after completion");
             setIsStreaming(false);
             setIsConnected(false);
           }
         };
       } catch (error) {
-        console.error("Error starting stream:", error);
+        dustZapLogger.error("Error starting stream", error);
         setError(`Failed to start streaming: ${error.message}`);
         setIsStreaming(false);
       }

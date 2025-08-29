@@ -19,6 +19,7 @@ import {
 
 import { createThirdwebClient } from "thirdweb";
 import { WALLET_CONFIG, chainUtils } from "@/config/wallet";
+import { walletLogger } from "@/utils/logger";
 
 import {
   WalletError,
@@ -109,7 +110,10 @@ export class ThirdWebAdapter implements WalletProvider {
         try {
           callback();
         } catch (error) {
-          console.error("Error in ThirdWebAdapter cleanup callback:", error);
+          walletLogger.error(
+            "Error in ThirdWebAdapter cleanup callback",
+            error
+          );
         }
       });
 
@@ -379,7 +383,7 @@ export class ThirdWebAdapter implements WalletProvider {
       try {
         callback(account);
       } catch (error) {
-        console.error("Error in account change callback:", error);
+        walletLogger.error("Error in account change callback", error);
       }
     });
   }
@@ -389,7 +393,7 @@ export class ThirdWebAdapter implements WalletProvider {
       try {
         callback(chain);
       } catch (error) {
-        console.error("Error in chain change callback:", error);
+        walletLogger.error("Error in chain change callback", error);
       }
     });
   }
@@ -399,13 +403,13 @@ export class ThirdWebAdapter implements WalletProvider {
       try {
         callback(isConnected);
       } catch (error) {
-        console.error("Error in connection change callback:", error);
+        walletLogger.error("Error in connection change callback", error);
       }
     });
   }
 
   private handleError(error: unknown, contextMessage: string): WalletError {
-    console.error(`ThirdWeb Adapter Error: ${contextMessage}`, error);
+    walletLogger.error(`ThirdWeb Adapter Error: ${contextMessage}`, error);
 
     if (error instanceof Error) {
       // Map common ThirdWeb errors to standardized error types
@@ -516,7 +520,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
           try {
             await connect(walletToConnect);
           } catch (error) {
-            console.error("ThirdWeb connect error:", error);
+            walletLogger.error("ThirdWeb connect error", error);
             throw error;
           }
         }
@@ -526,7 +530,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
           try {
             await disconnect(wallet);
           } catch (error) {
-            console.error("ThirdWeb disconnect error:", error);
+            walletLogger.error("ThirdWeb disconnect error", error);
             throw error;
           }
         }
@@ -537,7 +541,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
           try {
             await switchChain(chainToSwitch);
           } catch (error) {
-            console.error("ThirdWeb switchChain error:", error);
+            walletLogger.error("ThirdWeb switchChain error", error);
             throw error;
           }
         }

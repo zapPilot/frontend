@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { walletLogger } from "@/utils/logger";
 
 interface BundleWallet {
   id: string;
@@ -103,7 +104,7 @@ export function useBundleWallets({
       const errorMessage =
         err instanceof Error ? err.message : "Failed to process bundle wallets";
       setError(errorMessage);
-      console.error("Bundle wallets processing error:", err);
+      walletLogger.error("Bundle wallets processing error", err);
 
       // Fallback to single wallet on error
       if (connectedWallet) {

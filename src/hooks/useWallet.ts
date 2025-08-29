@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useWalletContext } from "@/providers/WalletContext";
+import { walletLogger } from "@/utils/logger";
 import type {
   WalletAccount,
   Chain,
@@ -390,7 +391,7 @@ export function useWallet(config: UseWalletConfig = {}): UseWalletReturn {
   const log = useCallback(
     (message: string, data?: unknown) => {
       if (debug) {
-        console.log(`[useWallet] ${message}`, data || "");
+        walletLogger.debug(message, data);
       }
     },
     [debug]

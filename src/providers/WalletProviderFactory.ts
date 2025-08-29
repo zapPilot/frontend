@@ -16,6 +16,7 @@ import {
 
 import { WALLET_CONFIG, providerUtils } from "@/config/wallet";
 import { ThirdWebAdapter } from "./adapters/ThirdWebAdapter";
+import { walletLogger } from "@/utils/logger";
 
 /**
  * Provider Factory Configuration
@@ -370,7 +371,7 @@ export class WalletProviderFactory {
       try {
         listener(provider);
       } catch (error) {
-        console.error("Error in provider change listener:", error);
+        walletLogger.error("Error in provider change listener", error);
       }
     });
   }
@@ -380,7 +381,7 @@ export class WalletProviderFactory {
    */
   private log(message: string, data?: unknown): void {
     if (this.debug) {
-      console.log(`[WalletProviderFactory] ${message}`, data || "");
+      walletLogger.debug(message, data);
     }
   }
 }

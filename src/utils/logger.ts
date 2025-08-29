@@ -15,6 +15,8 @@ interface LogConfig {
   enableRemote: boolean;
   remoteEndpoint?: string;
   maxLocalLogs: number;
+  enableDebugInProduction?: boolean;
+  enableDevLogging?: boolean;
 }
 
 interface LogEntry {
@@ -31,11 +33,20 @@ class Logger {
   private localLogs: LogEntry[] = [];
 
   constructor(config: Partial<LogConfig> = {}) {
+    const isProduction = process.env.NODE_ENV === "production";
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const enableDebugInProd =
+      process.env["NEXT_PUBLIC_ENABLE_DEBUG_LOGGING"] === "true";
+    const enableDevLogging =
+      process.env["NEXT_PUBLIC_ENABLE_DEV_LOGGING"] !== "false";
+
     this.config = {
       level:
-        process.env.NODE_ENV === "production" ? LogLevel.WARN : LogLevel.DEBUG,
-      enableConsole: process.env.NODE_ENV !== "production",
-      enableRemote: process.env.NODE_ENV === "production",
+        isProduction && !enableDebugInProd ? LogLevel.WARN : LogLevel.DEBUG,
+      enableConsole: isDevelopment || enableDebugInProd,
+      enableRemote: isProduction,
+      enableDebugInProduction: enableDebugInProd,
+      enableDevLogging,
       maxLocalLogs: 1000,
       ...config,
     };
@@ -178,6 +189,30 @@ class Logger {
 
   setLevel(level: LogLevel): void {
     this.config.level = level;
+  }
+
+  /**
+   * Enable/disable console logging at runtime
+   */
+  setConsoleLogging(enabled: boolean): void {
+    this.config.enableConsole = enabled;
+  }
+
+  /**
+   * Enable/disable remote logging at runtime
+   */
+  setRemoteLogging(enabled: boolean, endpoint?: string): void {
+    this.config.enableRemote = enabled;
+    if (endpoint) {
+      this.config.remoteEndpoint = endpoint;
+    }
+  }
+
+  /**
+   * Get current configuration
+   */
+  getConfig(): LogConfig {
+    return { ...this.config };
   }
 
   getLevel(): LogLevel {

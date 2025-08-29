@@ -4,6 +4,7 @@ import {
   transformPortfolioTrends,
 } from "../services/analyticsEngine";
 import { PortfolioDataPoint } from "../types/portfolio";
+import { portfolioLogger } from "../utils/logger";
 
 interface UsePortfolioTrendsConfig {
   userId?: string | undefined;
@@ -53,7 +54,7 @@ export function usePortfolioTrends({
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch portfolio trends";
       setError(errorMessage);
-      console.error("Portfolio trends fetch error:", err);
+      portfolioLogger.error("Portfolio trends fetch error", err);
       setData([]); // Reset data on error
     } finally {
       setLoading(false);

@@ -7,6 +7,9 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import { logger } from "@/utils/logger";
+
+const onboardingLogger = logger.createContextLogger("OnboardingProvider");
 
 interface OnboardingState {
   isFirstVisit: boolean;
@@ -59,7 +62,7 @@ export const OnboardingProvider = ({
           const parsedState = JSON.parse(saved);
           setState(prevState => ({ ...prevState, ...parsedState }));
         } catch (error) {
-          console.warn("Failed to parse onboarding state:", error);
+          onboardingLogger.warn("Failed to parse onboarding state", error);
         }
       }
     }

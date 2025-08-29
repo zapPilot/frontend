@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useWalletConnection } from "./useWalletConnection";
 import { portfolioStateUtils } from "@/utils/portfolio.utils";
 import { DustToken } from "../types/optimize";
+import { logger } from "@/utils/logger";
+
+const dustZapLogger = logger.createContextLogger("DustZap");
 
 export interface DustConversionMessage {
   fromToken: string;
@@ -158,7 +161,7 @@ export function useDustZap(
         const dustTokens = await fetchDustTokens(chainName);
         setTokens(dustTokens);
       } catch (err) {
-        console.log("err", err);
+        dustZapLogger.error("DustZap error", err);
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load tokens";
         setError(errorMessage);
