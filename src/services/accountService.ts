@@ -214,12 +214,12 @@ export const removeWalletFromBundle = async (
  */
 export const updateWalletLabel = async (
   userId: string,
-  walletId: string,
+  walletAddress: string,
   label: string
 ): Promise<{ message: string }> => {
   try {
     return await httpUtils.accountApi.put<{ message: string }>(
-      `/users/${userId}/wallets/${walletId}`,
+      `/users/${userId}/wallets/${walletAddress}/label`,
       {
         label,
       }

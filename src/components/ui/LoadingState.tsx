@@ -1,12 +1,12 @@
 import React from "react";
-import { LoadingSpinner } from "./LoadingSpinner";
 import { LoadingCard } from "./LoadingCard";
 import {
-  LoadingSkeleton,
   CardSkeleton,
-  MetricsSkeleton,
   ChartSkeleton,
+  LoadingSkeleton,
+  MetricsSkeleton,
 } from "./LoadingSkeleton";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 export interface LoadingStateProps {
   variant?: "spinner" | "card" | "skeleton" | "inline";
@@ -145,60 +145,6 @@ export function AssetCategorySkeleton({
         </div>
       </div>
     </div>
-  );
-}
-
-/**
- * Reusable refresh button with loading state
- */
-export function RefreshButton({
-  isLoading,
-  onClick,
-  size = "md",
-  className = "",
-  title = "Refresh",
-}: {
-  isLoading: boolean;
-  onClick: () => void;
-  size?: "sm" | "md" | "lg";
-  className?: string;
-  title?: string;
-}) {
-  const sizeClasses = {
-    sm: "p-1.5 w-3 h-3",
-    md: "p-2 w-4 h-4",
-    lg: "p-3 w-5 h-5",
-  };
-
-  const iconSize = sizeClasses[size].split(" ")[2]; // Extract icon size
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={isLoading}
-      className={`rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200 disabled:opacity-50 ${sizeClasses[size].split(" ").slice(0, 2).join(" ")} ${className}`}
-      title={title}
-    >
-      <LoadingSpinner
-        size={size === "sm" ? "xs" : size === "md" ? "sm" : "md"}
-        color="primary"
-        className={`${iconSize} text-gray-300 ${isLoading ? "" : "hidden"}`}
-        aria-hidden="true"
-      />
-      <svg
-        className={`${iconSize} text-gray-300 ${isLoading ? "hidden" : ""}`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-        />
-      </svg>
-    </button>
   );
 }
 
