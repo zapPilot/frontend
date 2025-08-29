@@ -32,6 +32,7 @@ import {
 import { GlassCard, GradientButton } from "./ui";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { UnifiedLoading } from "./ui/UnifiedLoading";
+import { Portal } from "./ui/Portal";
 
 interface WalletManagerProps {
   isOpen: boolean;
@@ -83,6 +84,10 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const [subscribedEmail, setSubscribedEmail] = useState<string | null>(null);
   const [isEditingSubscription, setIsEditingSubscription] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
 
   // Load wallets when component opens or user changes
   useEffect(() => {
@@ -399,61 +404,109 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     return (
       <div className="relative">
         <button
-          onClick={() => setOpenDropdown(isOpen ? null : wallet.id)}
+          onClick={e => {
+            e.stopPropagation();
+            if (isOpen) {
+              setOpenDropdown(null);
+              setMenuPosition(null);
+              return;
+            }
+            const rect = (
+              e.currentTarget as HTMLElement
+            ).getBoundingClientRect();
+            const MENU_WIDTH = 192; // w-48
+            const estimatedHeight = wallet.isMain ? 130 : 210; // rough height for options
+            const openUp =
+              rect.bottom + estimatedHeight > window.innerHeight - 8;
+            const top = openUp
+              ? Math.max(8, rect.top - estimatedHeight - 4)
+              : rect.bottom + 4;
+            // Align right edge to button right, clamp within viewport
+            const preferredLeft = rect.right - MENU_WIDTH;
+            const left = Math.max(
+              8,
+              Math.min(preferredLeft, window.innerWidth - MENU_WIDTH - 8)
+            );
+            setMenuPosition({ top, left });
+            setOpenDropdown(wallet.id);
+          }}
           className="p-2 rounded-lg hover:bg-white/10 transition-colors"
           aria-label={`Actions for ${wallet.label}`}
         >
           <MoreVertical className="w-4 h-4 text-gray-400" />
         </button>
 
-        {isOpen && (
-          <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-10">
-            <div className="py-1">
-              <button
-                onClick={() => handleCopyAddress(wallet.address, wallet.id)}
-                className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-              >
-                <Copy className="w-4 h-4" />
-                Copy Address
-              </button>
-              <a
-                href={`https://debank.com/profile/${wallet.address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-                onClick={() => setOpenDropdown(null)}
-              >
-                <ExternalLink className="w-4 h-4" />
-                View on DeBank
-              </a>
-              {!wallet.isMain && (
-                <>
-                  <div className="border-t border-gray-700 my-1" />
-                  <button
-                    onClick={() => {
-                      setEditingWallet({ id: wallet.id, label: wallet.label });
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                    Edit Label
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteWallet(wallet.id);
-                      setOpenDropdown(null);
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
-                    disabled={operations.removing[wallet.id]?.isLoading}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Remove from Bundle
-                  </button>
-                </>
-              )}
+        {isOpen && menuPosition && (
+          <Portal>
+            <div
+              className="w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[80]"
+              style={{
+                position: "fixed",
+                top: menuPosition.top,
+                left: menuPosition.left,
+                zIndex: 1000,
+              }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="py-1">
+                <button
+                  onClick={() => {
+                    handleCopyAddress(wallet.address, wallet.id);
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Address
+                </button>
+                <a
+                  href={`https://debank.com/profile/${wallet.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                  onClick={() => {
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View on DeBank
+                </a>
+                {!wallet.isMain && (
+                  <>
+                    <div className="border-t border-gray-700 my-1" />
+                    <button
+                      onClick={() => {
+                        setEditingWallet({
+                          id: wallet.id,
+                          label: wallet.label,
+                        });
+                        setOpenDropdown(null);
+                        setMenuPosition(null);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Edit Label
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleDeleteWallet(wallet.id);
+                        setOpenDropdown(null);
+                        setMenuPosition(null);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+                      disabled={operations.removing[wallet.id]?.isLoading}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove from Bundle
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          </Portal>
         )}
       </div>
     );
@@ -682,7 +735,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
                   aria-label="Close wallet manager"
                 >
-                  <X className="w-5 h-5 text-gray-300" />
+                  <X className="w-5 h-5 text-gray-300 hover:bg-white/10 transition-color" />
                 </button>
               </div>
             </div>
