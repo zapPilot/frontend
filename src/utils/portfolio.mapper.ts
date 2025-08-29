@@ -4,22 +4,53 @@ import type {
   ApiPosition,
 } from "../schemas/portfolioApi";
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
+import type { PoolDetail } from "../hooks/queries/useAPRQuery";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
+
+/**
+ * Find matching APR data for a position
+ *
+ * Matches position with pool details by protocol and symbol to get real APR data
+ */
+function findPositionAPR(
+  position: ApiPosition,
+  poolDetails: PoolDetail[] = []
+): number {
+  // Try to match by protocol and symbol
+  const match = poolDetails.find(pool => {
+    const protocolMatches =
+      pool.protocol_name?.toLowerCase() ===
+        position.protocol_name?.toLowerCase() ||
+      pool.protocol?.toLowerCase() === position.protocol_name?.toLowerCase();
+
+    const symbolMatches = pool.pool_symbols.some(
+      symbol => symbol.toLowerCase() === position.symbol?.toLowerCase()
+    );
+
+    return protocolMatches && symbolMatches;
+  });
+
+  return match?.final_apr || 0;
+}
 
 /**
  * Transform API position to AssetDetail format
  *
  * Converts raw API position data to the standardized AssetDetail interface
  * used throughout the frontend for consistent data handling.
+ * Now includes real APR data from pool details when available.
  */
-function transformApiPosition(position: ApiPosition): AssetDetail {
+function transformApiPosition(
+  position: ApiPosition,
+  poolDetails: PoolDetail[] = []
+): AssetDetail {
   return {
     name: position.symbol?.toUpperCase() || "Unknown",
     symbol: position.symbol || "UNK",
     protocol: position.protocol_name || "Unknown",
     amount: position.amount || 0,
     value: position.total_usd_value || 0,
-    apr: 0, // TODO: Backend needs to provide real APR data - currently shows "APR coming soon" in UI
+    apr: findPositionAPR(position, poolDetails),
     type: position.protocol_type || "Unknown",
   };
 }
@@ -33,7 +64,8 @@ function transformApiPosition(position: ApiPosition): AssetDetail {
 function transformApiCategory(
   apiCategory: ApiCategory,
   index: number,
-  totalValue: number
+  totalValue: number,
+  poolDetails: PoolDetail[] = []
 ): AssetCategory {
   const categoryTotal =
     apiCategory.positions?.reduce(
@@ -48,7 +80,10 @@ function transformApiCategory(
     totalValue: categoryTotal,
     percentage: totalValue > 0 ? (categoryTotal / totalValue) * 100 : 0,
     change24h: 0, // API doesn't provide this, set to 0
-    assets: apiCategory.positions?.map(transformApiPosition) || [],
+    assets:
+      apiCategory.positions?.map(pos =>
+        transformApiPosition(pos, poolDetails)
+      ) || [],
   };
 }
 
@@ -62,7 +97,10 @@ function transformApiCategory(
  * @param apiResponse - Raw API response from the portfolio service
  * @returns Transformed data with totalValue and categories for frontend consumption
  */
-export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
+export function transformPortfolioSummary(
+  apiResponse: ApiPortfolioSummary,
+  poolDetails: PoolDetail[] = []
+): {
   totalValue: number;
   categories: AssetCategory[];
 } {
@@ -98,7 +136,7 @@ export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
 
     // Transform asset positions
     const assetCategories = apiResponse.asset_positions.map((cat, index) =>
-      transformApiCategory(cat, index, assetValue)
+      transformApiCategory(cat, index, assetValue, poolDetails)
     );
 
     // Transform borrowing positions (mark them as negative for internal processing)
@@ -107,7 +145,8 @@ export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
         const category = transformApiCategory(
           cat,
           index + assetCategories.length,
-          borrowingValue
+          borrowingValue,
+          poolDetails
         );
         // Mark as negative values for internal borrowing logic
         category.totalValue = -Math.abs(category.totalValue);
@@ -135,7 +174,7 @@ export function transformPortfolioSummary(apiResponse: ApiPortfolioSummary): {
     );
 
     categories = apiResponse.categories.map((cat, index) =>
-      transformApiCategory(cat, index, totalValue)
+      transformApiCategory(cat, index, totalValue, poolDetails)
     );
   }
 

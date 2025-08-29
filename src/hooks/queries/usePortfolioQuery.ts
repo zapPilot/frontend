@@ -2,7 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { queryKeys } from "../../lib/queryClient";
 import { parsePortfolioSummary } from "../../schemas/portfolioApi";
-import { getPortfolioSummary } from "../../services/analyticsEngine";
+import {
+  getPortfolioSummary,
+  getPortfolioAPR,
+  type PoolDetail,
+} from "../../services/analyticsEngine";
 import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { transformPortfolioSummary } from "../../utils/portfolio.mapper";
 import {
@@ -35,8 +39,18 @@ export function usePortfolioSummary(userId: string | null | undefined) {
       // Validate and parse API response with Zod
       const summary = parsePortfolioSummary(rawResponse);
 
-      // Transform API response using utility function
-      const result = transformPortfolioSummary(summary);
+      // Fetch APR data to enhance positions with real APR values
+      let poolDetails: PoolDetail[] = [];
+      try {
+        const aprData = await getPortfolioAPR(userId);
+        poolDetails = aprData.pool_details;
+      } catch (error) {
+        // APR data is optional - continue without it if unavailable
+        console.warn("Failed to fetch APR data:", error);
+      }
+
+      // Transform API response using utility function with APR data
+      const result = transformPortfolioSummary(summary, poolDetails);
 
       // Get final total value with proper handling of net vs gross
       const totalValue = Number.isFinite(summary.metrics.total_value_usd)
