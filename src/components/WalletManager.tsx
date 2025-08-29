@@ -5,16 +5,17 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
-  Check,
   Copy,
+  Crown,
   Edit3,
   ExternalLink,
+  MoreVertical,
   Plus,
   Trash2,
   Wallet,
   X,
 } from "lucide-react";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState, type JSX } from "react";
 import { useUser } from "../contexts/UserContext";
 import { useToast } from "../hooks/useToast";
 import {
@@ -30,7 +31,6 @@ import {
 } from "../services/userService";
 import { GlassCard, GradientButton } from "./ui";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { RefreshButton } from "./ui/LoadingState";
 import { UnifiedLoading } from "./ui/UnifiedLoading";
 
 interface WalletManagerProps {
@@ -72,14 +72,17 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
   // Local UI state
   const [isAdding, setIsAdding] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editLabel, setEditLabel] = useState("");
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [editingWallet, setEditingWallet] = useState<{
+    id: string;
+    label: string;
+  } | null>(null);
+  const [, setCopiedId] = useState<string | null>(null);
   const [newWallet, setNewWallet] = useState({ address: "", label: "" });
   const [validationError, setValidationError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [subscribedEmail, setSubscribedEmail] = useState<string | null>(null);
   const [isEditingSubscription, setIsEditingSubscription] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   // Load wallets when component opens or user changes
   useEffect(() => {
@@ -204,8 +207,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const handleEditLabel = useCallback(
     async (walletId: string, newLabel: string) => {
       if (!userId || !newLabel.trim()) {
-        setEditingId(null);
-        setEditLabel("");
+        setEditingWallet(null);
         return;
       }
 
@@ -226,8 +228,8 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
           )
         );
 
-        setEditingId(null);
-        setEditLabel("");
+        setEditingWallet(null);
+        setOpenDropdown(null);
 
         // Note: The account-engine API doesn't have a direct label update endpoint
         // This would need to be implemented on the backend or handled differently
@@ -361,13 +363,273 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       try {
         await navigator.clipboard.writeText(address);
         setCopiedId(walletId);
+        setOpenDropdown(null);
+        showToast({
+          type: "success",
+          title: "Address Copied",
+          message: `${formatAddress(address)} copied to clipboard`,
+        });
         setTimeout(() => setCopiedId(null), 2000);
       } catch {
-        // Handle silently - copy operation failed
+        // Fallback for older browsers
+        const textArea = document.createElement("textarea");
+        textArea.value = address;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        showToast({
+          type: "success",
+          title: "Address Copied",
+          message: `${formatAddress(address)} copied to clipboard`,
+        });
       }
     },
-    []
+    [formatAddress, showToast]
   );
+
+  // Separate primary and secondary wallets
+  const primaryWallets = wallets.filter(w => w.isMain);
+  const secondaryWallets = wallets.filter(w => !w.isMain);
+
+  // Action menu component
+  const WalletActionMenu = ({ wallet }: { wallet: WalletData }) => {
+    const isOpen = openDropdown === wallet.id;
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setOpenDropdown(isOpen ? null : wallet.id)}
+          className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label={`Actions for ${wallet.label}`}
+        >
+          <MoreVertical className="w-4 h-4 text-gray-400" />
+        </button>
+
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-1 w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-10">
+            <div className="py-1">
+              <button
+                onClick={() => handleCopyAddress(wallet.address, wallet.id)}
+                className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Address
+              </button>
+              <a
+                href={`https://debank.com/profile/${wallet.address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                onClick={() => setOpenDropdown(null)}
+              >
+                <ExternalLink className="w-4 h-4" />
+                View on DeBank
+              </a>
+              {!wallet.isMain && (
+                <>
+                  <div className="border-t border-gray-700 my-1" />
+                  <button
+                    onClick={() => {
+                      setEditingWallet({ id: wallet.id, label: wallet.label });
+                      setOpenDropdown(null);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit Label
+                  </button>
+                  <button
+                    onClick={() => {
+                      handleDeleteWallet(wallet.id);
+                      setOpenDropdown(null);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+                    disabled={operations.removing[wallet.id]?.isLoading}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Remove from Bundle
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Wallet card component
+  const WalletCard = ({ wallet }: { wallet: WalletData }) => (
+    <motion.div
+      key={wallet.id}
+      layout
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className={`p-4 rounded-xl border transition-all duration-200 ${
+        wallet.isMain
+          ? "bg-gradient-to-r from-purple-600/30 to-blue-600/30 border-purple-400/50 ring-1 ring-purple-400/20"
+          : "glass-morphism border-gray-700 hover:border-gray-600"
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            {wallet.isMain && (
+              <Crown className="w-4 h-4 text-yellow-400 flex-shrink-0" />
+            )}
+            <span className="font-medium text-white truncate">
+              {wallet.label}
+            </span>
+            {wallet.isMain && (
+              <span className="px-2 py-1 text-xs bg-blue-600/30 text-blue-300 rounded-full flex-shrink-0">
+                Primary
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <code className="font-mono text-xs sm:text-sm truncate">
+              {formatAddress(wallet.address)}
+            </code>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {operations.editing[wallet.id]?.isLoading && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <LoadingSpinner size="sm" />
+              <span className="hidden sm:inline">Updating...</span>
+            </div>
+          )}
+          {operations.removing[wallet.id]?.isLoading && (
+            <div className="flex items-center gap-2 text-sm text-gray-400">
+              <LoadingSpinner size="sm" />
+              <span className="hidden sm:inline">Removing...</span>
+            </div>
+          )}
+          <WalletActionMenu wallet={wallet} />
+        </div>
+      </div>
+
+      {/* Show operation errors */}
+      {(operations.removing[wallet.id]?.error ||
+        operations.editing[wallet.id]?.error) && (
+        <div className="mt-3 p-2 bg-red-600/10 border border-red-600/20 rounded-lg">
+          <p className="text-xs text-red-300">
+            {operations.removing[wallet.id]?.error ||
+              operations.editing[wallet.id]?.error}
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+
+  // Edit wallet modal
+  const EditWalletModal = (): JSX.Element | null => {
+    const [newLabel, setNewLabel] = useState(editingWallet?.label || "");
+
+    if (!editingWallet) return null;
+
+    const handleSave = () => {
+      handleEditLabel(editingWallet.id, newLabel);
+    };
+
+    const handleClose = () => {
+      setEditingWallet(null);
+      setNewLabel("");
+    };
+
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-60 bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4"
+        onClick={handleClose}
+      >
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="w-full max-w-md"
+          onClick={e => e.stopPropagation()}
+        >
+          <GlassCard className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-white">
+                Edit Wallet Label
+              </h3>
+              <button
+                onClick={handleClose}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-400 mb-4">
+              Update the display name for{" "}
+              {formatAddress(
+                wallets.find(w => w.id === editingWallet.id)?.address || ""
+              )}
+            </p>
+
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={newLabel}
+                onChange={e => setNewLabel(e.target.value)}
+                placeholder="Enter wallet label"
+                className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
+                autoFocus
+                onKeyDown={e => {
+                  if (e.key === "Enter") handleSave();
+                  if (e.key === "Escape") handleClose();
+                }}
+              />
+
+              <div className="flex gap-3">
+                <GradientButton
+                  onClick={handleSave}
+                  gradient="from-green-600 to-emerald-600"
+                  className="flex-1"
+                  disabled={
+                    !newLabel.trim() ||
+                    !!operations.editing[editingWallet.id]?.isLoading
+                  }
+                >
+                  {operations.editing[editingWallet.id]?.isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <LoadingSpinner size="sm" color="white" />
+                      <span>Saving...</span>
+                    </div>
+                  ) : (
+                    "Save Changes"
+                  )}
+                </GradientButton>
+                <button
+                  onClick={handleClose}
+                  className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </GlassCard>
+        </motion.div>
+      </motion.div>
+    );
+  };
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    const handleClickOutside = () => setOpenDropdown(null);
+    if (openDropdown) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+    return undefined;
+  }, [openDropdown]);
 
   // Early return if modal is closed
   if (!isOpen) return null;
@@ -388,9 +650,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
           className="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
-          <GlassCard className="p-6">
+          <GlassCard className="p-0 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
               <div className="flex items-center space-x-3">
                 <div
                   className={`w-10 h-10 rounded-xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
@@ -398,26 +660,27 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   <Wallet className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">
+                  <h2
+                    id="wallet-manager-title"
+                    className="text-xl font-bold text-white"
+                  >
                     Bundle Wallets
                   </h2>
-                  <p className="text-sm text-gray-400">
+                  <p
+                    id="wallet-manager-description"
+                    className="text-sm text-gray-400"
+                  >
                     {!isConnected
                       ? "No wallet connected"
-                      : `${primaryWallet?.slice(0, 6)}...${primaryWallet?.slice(-4)} bundle`}
+                      : `Manage your ${primaryWallet?.slice(0, 6)}...${primaryWallet?.slice(-4)} bundle`}
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
-                <RefreshButton
-                  isLoading={loading || isRefreshing}
-                  onClick={() => loadWallets()}
-                  size="md"
-                  title="Refresh Bundle"
-                />
                 <button
                   onClick={onClose}
                   className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
+                  aria-label="Close wallet manager"
                 >
                   <X className="w-5 h-5 text-gray-300" />
                 </button>
@@ -426,7 +689,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
             {/* Loading State */}
             {(loading || isRefreshing) && (
-              <div className="text-center py-8">
+              <div className="p-6 text-center">
                 <div className="flex justify-center mb-3">
                   <UnifiedLoading
                     variant="skeleton-inline"
@@ -444,7 +707,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
             {/* Error State */}
             {error && (
-              <div className="text-center py-6 mb-4">
+              <div className="p-6 text-center">
                 <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
                 <p className="text-red-400 text-sm mb-3">{error}</p>
                 <button
@@ -456,243 +719,159 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Wallet List */}
+            {/* Primary Wallet Section */}
+            {!loading &&
+              !isRefreshing &&
+              !error &&
+              primaryWallets.length > 0 && (
+                <div className="p-6 border-b border-gray-700/50">
+                  <h3 className="text-sm font-medium text-gray-300 mb-4">
+                    Primary Wallet
+                  </h3>
+                  <div className="space-y-3">
+                    {primaryWallets.map(wallet => (
+                      <WalletCard key={wallet.id} wallet={wallet} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            {/* Secondary Wallets Section */}
             {!loading && !isRefreshing && !error && (
-              <div className="space-y-3 mb-6">
-                {wallets.map(wallet => (
-                  <motion.div
-                    key={wallet.id}
-                    layout
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={`p-4 rounded-xl border transition-all duration-200 ${
-                      wallet.isActive
-                        ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 border-purple-500/30"
-                        : "glass-morphism border-gray-800 hover:border-gray-700"
-                    }`}
-                  >
-                    {/* {JSON.stringify(wallet)} */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          {editingId === wallet.id ? (
-                            <input
-                              type="text"
-                              value={editLabel}
-                              onChange={e => setEditLabel(e.target.value)}
-                              onBlur={() =>
-                                handleEditLabel(wallet.id, editLabel)
-                              }
-                              onKeyDown={e => {
-                                if (e.key === "Enter") {
-                                  handleEditLabel(wallet.id, editLabel);
-                                }
-                                if (e.key === "Escape") {
-                                  setEditingId(null);
-                                  setEditLabel("");
-                                }
-                              }}
-                              className="bg-gray-800/50 text-white px-2 py-1 rounded text-sm border border-gray-600 focus:border-purple-500 outline-none"
-                              autoFocus
-                            />
-                          ) : (
-                            <span
-                              className={`font-medium ${
-                                wallet.isActive ? "text-white" : "text-gray-300"
-                              }`}
-                            >
-                              {wallet.label}
-                            </span>
-                          )}
-                          {wallet.isMain && (
-                            <span className="px-2 py-1 text-xs bg-blue-600/30 text-blue-300 rounded-full">
-                              Primary
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center space-x-2 text-sm text-gray-400">
-                          <span className="font-mono">
-                            {formatAddress(wallet?.address || "")}
-                          </span>
-                          <button
-                            onClick={() =>
-                              handleCopyAddress(wallet.address, wallet.id)
-                            }
-                            className="p-1 hover:bg-white/10 rounded transition-colors"
-                          >
-                            {copiedId === wallet.id ? (
-                              <Check className="w-3 h-3 text-green-400" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
-                          <a
-                            href={`https://debank.com/profile/${wallet.address}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="p-1 hover:bg-white/10 rounded transition-colors"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      </div>
+              <div className="p-6 border-b border-gray-700/50">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-medium text-gray-300">
+                    Secondary Wallets ({secondaryWallets.length})
+                  </h3>
+                </div>
 
-                      <div className="flex items-center space-x-2">
-                        {!wallet.isMain && (
-                          <>
-                            <button
-                              onClick={() => {
-                                setEditingId(wallet.id);
-                                setEditLabel(wallet.label);
-                              }}
-                              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                              title="Edit Label"
-                              disabled={
-                                operations.editing[wallet.id]?.isLoading
-                              }
-                            >
-                              {operations.editing[wallet.id]?.isLoading ? (
-                                <LoadingSpinner size="sm" color="gray" />
-                              ) : (
-                                <Edit3 className="w-4 h-4 text-gray-400" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteWallet(wallet.id)}
-                              className="p-2 hover:bg-red-600/20 rounded-lg transition-colors"
-                              title="Remove from Bundle"
-                              disabled={
-                                operations.removing[wallet.id]?.isLoading
-                              }
-                            >
-                              {operations.removing[wallet.id]?.isLoading ? (
-                                <LoadingSpinner size="sm" color="red" />
-                              ) : (
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                              )}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Show operation errors */}
-                    {operations.removing[wallet.id]?.error && (
-                      <div className="mt-2 p-2 bg-red-600/10 border border-red-600/20 rounded-lg">
-                        <p className="text-xs text-red-300">
-                          {operations.removing[wallet.id]?.error}
-                        </p>
-                      </div>
-                    )}
-                    {operations.editing[wallet.id]?.error && (
-                      <div className="mt-2 p-2 bg-red-600/10 border border-red-600/20 rounded-lg">
-                        <p className="text-xs text-red-300">
-                          {operations.editing[wallet.id]?.error}
-                        </p>
-                      </div>
-                    )}
-                  </motion.div>
-                ))}
+                {secondaryWallets.length === 0 ? (
+                  <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
+                    <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-300 mb-4">
+                      Add secondary wallets to your bundle
+                    </p>
+                    <GradientButton
+                      onClick={() => setIsAdding(true)}
+                      gradient={GRADIENTS.PRIMARY}
+                      icon={Plus}
+                    >
+                      Add Your First Secondary Wallet
+                    </GradientButton>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {secondaryWallets.map(wallet => (
+                      <WalletCard key={wallet.id} wallet={wallet} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Add New Wallet - Only show if not loading */}
-            {!loading && !isRefreshing && !error && (
-              <>
-                {isAdding ? (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="p-4 glass-morphism rounded-xl mb-4"
-                  >
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Wallet Label (e.g., Trading Wallet)"
-                        value={newWallet.label}
-                        onChange={e =>
-                          setNewWallet(prev => ({
-                            ...prev,
-                            label: e.target.value,
-                          }))
-                        }
-                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Wallet Address (0x...)"
-                        value={newWallet.address}
-                        onChange={e =>
-                          setNewWallet(prev => ({
-                            ...prev,
-                            address: e.target.value,
-                          }))
-                        }
-                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
-                      />
+            {/* Add New Wallet Section - Only show if we have secondary wallets */}
+            {!loading &&
+              !isRefreshing &&
+              !error &&
+              secondaryWallets.length > 0 && (
+                <div className="p-6 border-b border-gray-700/50">
+                  <h3 className="text-sm font-medium text-gray-300 mb-4">
+                    Add Another Wallet
+                  </h3>
+                  {isAdding ? (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="p-4 glass-morphism rounded-xl mb-4"
+                    >
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Wallet Label (e.g., Trading Wallet)"
+                          value={newWallet.label}
+                          onChange={e =>
+                            setNewWallet(prev => ({
+                              ...prev,
+                              label: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Wallet Address (0x...)"
+                          value={newWallet.address}
+                          onChange={e =>
+                            setNewWallet(prev => ({
+                              ...prev,
+                              address: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
+                        />
 
-                      {/* Show validation error */}
-                      {validationError && (
-                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                          <p className="text-xs text-red-300">
-                            {validationError}
-                          </p>
+                        {/* Show validation error */}
+                        {validationError && (
+                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                            <p className="text-xs text-red-300">
+                              {validationError}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Show add operation error */}
+                        {operations.adding.error && (
+                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                            <p className="text-xs text-red-300">
+                              {operations.adding.error}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex space-x-2">
+                          <GradientButton
+                            onClick={handleAddWallet}
+                            gradient="from-green-600 to-emerald-600"
+                            className="flex-1"
+                            disabled={operations.adding.isLoading}
+                          >
+                            {operations.adding.isLoading ? (
+                              <div className="flex items-center space-x-2">
+                                <LoadingSpinner size="sm" color="white" />
+                                <span>Adding...</span>
+                              </div>
+                            ) : (
+                              "Add to Bundle"
+                            )}
+                          </GradientButton>
+                          <button
+                            onClick={() => {
+                              setIsAdding(false);
+                              setNewWallet({ address: "", label: "" });
+                            }}
+                            className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
+                          >
+                            Cancel
+                          </button>
                         </div>
-                      )}
-
-                      {/* Show add operation error */}
-                      {operations.adding.error && (
-                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                          <p className="text-xs text-red-300">
-                            {operations.adding.error}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex space-x-2">
-                        <GradientButton
-                          onClick={handleAddWallet}
-                          gradient="from-green-600 to-emerald-600"
-                          className="flex-1"
-                          disabled={operations.adding.isLoading}
-                        >
-                          {operations.adding.isLoading ? (
-                            <div className="flex items-center space-x-2">
-                              <LoadingSpinner size="sm" color="white" />
-                              <span>Adding...</span>
-                            </div>
-                          ) : (
-                            "Add to Bundle"
-                          )}
-                        </GradientButton>
-                        <button
-                          onClick={() => {
-                            setIsAdding(false);
-                            setNewWallet({ address: "", label: "" });
-                          }}
-                          className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
-                        >
-                          Cancel
-                        </button>
                       </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <GradientButton
-                    onClick={() => setIsAdding(true)}
-                    gradient={GRADIENTS.PRIMARY}
-                    icon={Plus}
-                    className="w-full mb-4"
-                  >
-                    Add New Wallet
-                  </GradientButton>
-                )}
-              </>
-            )}
+                    </motion.div>
+                  ) : (
+                    <GradientButton
+                      onClick={() => setIsAdding(true)}
+                      gradient={GRADIENTS.PRIMARY}
+                      icon={Plus}
+                      className="w-full"
+                    >
+                      Add Another Wallet
+                    </GradientButton>
+                  )}
+                </div>
+              )}
 
             {/* PnL Subscription */}
             {!loading && !isRefreshing && !error && isConnected && userId && (
-              <div className="p-4 glass-morphism rounded-xl mb-4">
+              <div className="p-6 bg-gray-900/20">
                 <h3 className="text-sm font-medium text-gray-300 mb-3">
                   Weekly PnL Reports
                 </h3>
@@ -768,6 +947,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
             )}
           </GlassCard>
         </motion.div>
+
+        {/* Edit Wallet Modal */}
+        <EditWalletModal />
       </motion.div>
     </AnimatePresence>
   );

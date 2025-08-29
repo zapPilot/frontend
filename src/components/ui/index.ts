@@ -24,7 +24,6 @@ export { LoadingSpinner } from "./LoadingSpinner";
 export {
   AssetCategorySkeleton,
   LoadingState,
-  RefreshButton,
   useLoadingComponent,
   WalletMetricsSkeleton,
   withLoadingState,
