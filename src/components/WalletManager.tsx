@@ -26,6 +26,7 @@ import {
   removeWalletFromBundle,
   transformWalletData,
   updateUserEmail,
+  updateWalletLabel,
   validateWalletAddress,
   WalletData,
 } from "../services/userService";
@@ -216,6 +217,13 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         return;
       }
 
+      // Find the wallet to get its address
+      const wallet = wallets.find(w => w.id === walletId);
+      if (!wallet) {
+        setEditingWallet(null);
+        return;
+      }
+
       // Set loading state for this specific wallet edit
       setOperations(prev => ({
         ...prev,
@@ -228,17 +236,39 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       try {
         // Update local state immediately (optimistic update)
         setWallets(prev =>
-          prev.map(wallet =>
-            wallet.id === walletId ? { ...wallet, label: newLabel } : wallet
-          )
+          prev.map(w => (w.id === walletId ? { ...w, label: newLabel } : w))
         );
 
         setEditingWallet(null);
         setOpenDropdown(null);
 
-        // Note: The account-engine API doesn't have a direct label update endpoint
-        // This would need to be implemented on the backend or handled differently
-        // For now, we'll show the optimistic update
+        // Call the API to update wallet label
+        const response = await updateWalletLabel(
+          userId,
+          wallet.address,
+          newLabel
+        );
+
+        if (!response.success) {
+          // Revert optimistic update on API failure
+          setWallets(prev =>
+            prev.map(w =>
+              w.id === walletId ? { ...w, label: wallet.label } : w
+            )
+          );
+
+          setOperations(prev => ({
+            ...prev,
+            editing: {
+              ...prev.editing,
+              [walletId]: {
+                isLoading: false,
+                error: response.error || "Failed to update wallet label",
+              },
+            },
+          }));
+          return;
+        }
 
         setOperations(prev => ({
           ...prev,
@@ -248,6 +278,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
           },
         }));
       } catch (error) {
+        // Revert optimistic update on error
+        setWallets(prev =>
+          prev.map(w => (w.id === walletId ? { ...w, label: wallet.label } : w))
+        );
+
         const errorMessage = handleWalletError(error);
         setOperations(prev => ({
           ...prev,
@@ -258,7 +293,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }));
       }
     },
-    [userId]
+    [userId, wallets]
   );
 
   // Handle adding new wallet

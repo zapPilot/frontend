@@ -5,15 +5,6 @@
 
 import { handleHTTPError } from "../lib/http-utils";
 import {
-  connectWallet as connectWalletService,
-  getUserProfile as getUserProfileService,
-  getUserWallets as getUserWalletsService,
-  addWalletToBundle as addWalletToBundleService,
-  removeWalletFromBundle as removeWalletFromBundleService,
-  updateUserEmail as updateUserEmailService,
-  AccountServiceError,
-} from "./accountService";
-import {
   AddWalletResponse,
   ConnectWalletResponse,
   ServiceResponse,
@@ -21,6 +12,16 @@ import {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
+import {
+  AccountServiceError,
+  addWalletToBundle as addWalletToBundleService,
+  connectWallet as connectWalletService,
+  getUserProfile as getUserProfileService,
+  getUserWallets as getUserWalletsService,
+  removeWalletFromBundle as removeWalletFromBundleService,
+  updateUserEmail as updateUserEmailService,
+  updateWalletLabel as updateWalletLabelService,
+} from "./accountService";
 
 // Using the new service-specific AccountApiClient
 
@@ -145,6 +146,28 @@ export const updateUserEmail = async (
 ): Promise<ServiceResponse<UpdateEmailResponse>> => {
   try {
     const data = await updateUserEmailService(userId, email);
+
+    return {
+      data,
+      success: true,
+    };
+  } catch (error) {
+    return {
+      error: handleWalletError(error),
+      success: false,
+    };
+  }
+};
+/**
+ * Update wallet label
+ */
+export const updateWalletLabel = async (
+  userId: string,
+  walletAddress: string,
+  label: string
+): Promise<ServiceResponse<{ message: string }>> => {
+  try {
+    const data = await updateWalletLabelService(userId, walletAddress, label);
 
     return {
       data,
