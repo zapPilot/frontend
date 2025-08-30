@@ -40,5 +40,7 @@ export const queryKeys = {
     summary: (userId: string) => ["portfolio", "summary", userId] as const,
     analytics: (userId: string) => ["portfolio", "analytics", userId] as const,
     apr: (userId: string) => ["portfolio", "apr", userId] as const,
+    landingPage: (userId: string) =>
+      ["portfolio", "landing-page", userId] as const,
   },
 } as const;

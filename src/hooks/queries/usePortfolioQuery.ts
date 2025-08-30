@@ -5,7 +5,9 @@ import { parsePortfolioSummary } from "../../schemas/portfolioApi";
 import {
   getPortfolioSummary,
   getPortfolioAPR,
+  getLandingPagePortfolioData,
   type PoolDetail,
+  type LandingPageResponse,
 } from "../../services/analyticsEngine";
 import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { transformPortfolioSummary } from "../../utils/portfolio.mapper";
@@ -26,6 +28,7 @@ export interface UsePortfolioQueryReturn {
 }
 
 // Hook to get portfolio summary data
+// @deprecated Use useLandingPageData instead for new implementations
 export function usePortfolioSummary(userId: string | null | undefined) {
   return useQuery({
     queryKey: queryKeys.portfolio.summary(userId || ""),
@@ -89,6 +92,7 @@ export function usePortfolioSummary(userId: string | null | undefined) {
 }
 
 // Combined hook that provides the same interface as the old usePortfolioData
+// @deprecated Use useLandingPageData instead for new implementations
 export function usePortfolioDisplayData(
   userId: string | null | undefined
 ): UsePortfolioQueryReturn {
@@ -117,6 +121,37 @@ export function usePortfolioDisplayData(
     refetch: portfolioQuery.refetch,
     isRefetching: portfolioQuery.isRefetching,
   };
+}
+
+// Hook for unified landing page data - replaces dual API calls
+export function useLandingPageData(userId: string | null | undefined) {
+  return useQuery({
+    queryKey: queryKeys.portfolio.landingPage(userId || ""),
+    queryFn: async (): Promise<LandingPageResponse> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+
+      // Single API call to get all landing page data
+      return await getLandingPagePortfolioData(userId);
+    },
+    enabled: !!userId, // Only run when userId is available
+    staleTime: 30 * 1000, // Portfolio data is stale after 30 seconds (DeFi changes quickly)
+    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
+    refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active
+    retry: (failureCount, error) => {
+      // Don't retry USER_NOT_FOUND errors
+      if (error instanceof Error && error.message.includes("USER_NOT_FOUND")) {
+        return false;
+      }
+      // Don't retry 404 errors (user has no portfolio data)
+      if (error instanceof Error && error.message.includes("404")) {
+        return false;
+      }
+      // Retry other errors up to 2 times
+      return failureCount < 2;
+    },
+  });
 }
 
 // Mutation for manual portfolio refresh

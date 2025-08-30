@@ -94,6 +94,7 @@ function transformApiCategory(
  * This is the main transformation function that processes the entire API response into
  * the format expected by the frontend components.
  *
+ * @deprecated Use the unified useLandingPageData hook instead - server provides pre-formatted data
  * @param apiResponse - Raw API response from the portfolio service
  * @returns Transformed data with totalValue and categories for frontend consumption
  */

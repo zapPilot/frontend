@@ -113,6 +113,33 @@ export interface PortfolioAPRResponse {
   pool_details: PoolDetail[];
 }
 
+// Unified Landing Page Response Type
+export interface LandingPageResponse {
+  total_assets_usd: number;
+  total_debt_usd: number;
+  total_net_usd: number;
+  weighted_apr: number;
+  estimated_monthly_income: number;
+  pie_chart_categories: {
+    btc: number;
+    eth: number;
+    stablecoins: number;
+    others: number;
+  };
+  pool_details: PoolDetail[];
+  total_positions: number;
+  protocols_count: number;
+  chains_count: number;
+  last_updated: string | null;
+  apr_coverage: {
+    matched_pools: number;
+    total_pools: number;
+    coverage_percentage: number;
+    matched_asset_value_usd: number;
+  };
+  message?: string;
+}
+
 // Transformed data types for UI
 export interface WalletAddress {
   id: string;
@@ -189,6 +216,19 @@ export const getPortfolioAPR = async (
 ): Promise<PortfolioAPRResponse> => {
   const endpoint = `/api/v1/apr/portfolio/${userId}/summary`;
   return await httpUtils.analyticsEngine.get<PortfolioAPRResponse>(endpoint);
+};
+
+/**
+ * Get unified landing page portfolio data
+ *
+ * Combines portfolio summary, APR calculations, and pre-formatted data
+ * in a single API call for optimal performance. Implements BFF pattern.
+ */
+export const getLandingPagePortfolioData = async (
+  userId: string
+): Promise<LandingPageResponse> => {
+  const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
+  return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
 };
 
 /**

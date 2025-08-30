@@ -3,8 +3,10 @@ import {
   AlertTriangle,
   ChevronDown,
   ChevronUp,
+  Filter,
   TrendingDown,
   TrendingUp,
+  X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import type { PoolDetail } from "../../hooks/queries/useAPRQuery";
@@ -17,6 +19,8 @@ interface PoolPerformanceTableProps {
   isLoading?: boolean;
   error?: string | null;
   onRetry?: () => void;
+  categoryFilter?: string | null;
+  onClearCategoryFilter?: () => void;
 }
 
 type SortField = "apr" | "value" | "contribution" | "protocol";
@@ -54,22 +58,85 @@ const formatAPR = (apr: number): string => {
   return `${(apr * 100).toFixed(2)}%`;
 };
 
+// Category mapping for filtering - matches portfolio.utils.ts categorization
+const categorizePool = (
+  poolSymbols: string[]
+): "btc" | "eth" | "stablecoins" | "others" => {
+  const symbols = poolSymbols.map(s => s.toLowerCase());
+
+  // Bitcoin category
+  const btcSymbols = ["btc", "wbtc", "cbbtc", "tbtc"];
+  if (symbols.some(s => btcSymbols.includes(s))) {
+    return "btc";
+  }
+
+  // Ethereum category
+  const ethSymbols = [
+    "eth",
+    "weth",
+    "steth",
+    "wsteth",
+    "weeth",
+    "mseth",
+    "frxeth",
+  ];
+  if (symbols.some(s => ethSymbols.includes(s))) {
+    return "eth";
+  }
+
+  // Stablecoins category
+  const stableSymbols = [
+    "usdc",
+    "usdt",
+    "dai",
+    "frax",
+    "usd₮0",
+    "bold",
+    "msusd",
+    "openusdt",
+    "susd",
+    "gho",
+    "vst",
+    "frxusd",
+    "wfrax",
+    "legacy frax dollar",
+  ];
+  if (symbols.some(s => stableSymbols.includes(s))) {
+    return "stablecoins";
+  }
+
+  // Everything else
+  return "others";
+};
+
 export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
   pools,
   isLoading,
   error,
   onRetry,
+  categoryFilter,
+  onClearCategoryFilter,
 }) => {
   const [sortState, setSortState] = useState<SortState>({
     field: "value",
     direction: "desc",
   });
 
-  // Sort pools based on current sort state
-  const sortedPools = useMemo(() => {
-    if (!pools.length) return [];
+  // Filter pools by category if specified
+  const filteredPools = useMemo(() => {
+    if (!categoryFilter) return pools;
 
-    return [...pools].sort((a, b) => {
+    return pools.filter(pool => {
+      const poolCategory = categorizePool(pool.pool_symbols);
+      return poolCategory === categoryFilter;
+    });
+  }, [pools, categoryFilter]);
+
+  // Sort filtered pools based on current sort state
+  const sortedPools = useMemo(() => {
+    if (!filteredPools.length) return [];
+
+    return [...filteredPools].sort((a, b) => {
       let valueA: number | string;
       let valueB: number | string;
 
@@ -104,7 +171,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
       const comparison = numA - numB;
       return sortState.direction === "asc" ? comparison : -comparison;
     });
-  }, [pools, sortState]);
+  }, [filteredPools, sortState]);
 
   const handleSort = (field: SortField) => {
     setSortState(prev => ({
@@ -168,14 +235,46 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
     );
   }
 
+  const getCategoryDisplayName = (categoryId: string): string => {
+    const names = {
+      btc: "Bitcoin",
+      eth: "Ethereum",
+      stablecoins: "Stablecoins",
+      others: "Others",
+    };
+    return names[categoryId as keyof typeof names] || categoryId;
+  };
+
   return (
     <GlassCard>
       <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Pool Performance</h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white">
+              Pool Performance
+            </h2>
+            {categoryFilter && (
+              <div className="flex items-center gap-2 mt-2">
+                <Filter className="w-4 h-4 text-blue-400" />
+                <span className="text-sm text-blue-400">
+                  Showing {getCategoryDisplayName(categoryFilter)} pools
+                </span>
+                {onClearCategoryFilter && (
+                  <button
+                    onClick={onClearCategoryFilter}
+                    className="p-1 rounded hover:bg-gray-800 transition-colors"
+                    title="Clear filter"
+                  >
+                    <X className="w-3 h-3 text-gray-400 hover:text-white" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
           <div className="text-sm text-gray-400">
-            {pools.length} pools •{" "}
-            {pools.filter(p => !isUnderperforming(p)).length} performing well
+            {filteredPools.length} pools •{" "}
+            {filteredPools.filter(p => !isUnderperforming(p)).length} performing
+            well
           </div>
         </div>
 
@@ -423,21 +522,24 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
             <div className="text-center">
               <p className="text-gray-400 mb-1">Underperforming</p>
               <p className="text-yellow-400 font-medium">
-                {pools.filter(p => isUnderperforming(p)).length}
+                {filteredPools.filter(p => isUnderperforming(p)).length}
               </p>
             </div>
             <div className="text-center">
               <p className="text-gray-400 mb-1">Performing Well</p>
               <p className="text-green-400 font-medium">
-                {pools.filter(p => !isUnderperforming(p)).length}
+                {filteredPools.filter(p => !isUnderperforming(p)).length}
               </p>
             </div>
             <div className="text-center">
               <p className="text-gray-400 mb-1">Avg APR</p>
               <p className="text-white font-medium">
-                {formatAPR(
-                  pools.reduce((sum, p) => sum + p.final_apr, 0) / pools.length
-                )}
+                {filteredPools.length > 0
+                  ? formatAPR(
+                      filteredPools.reduce((sum, p) => sum + p.final_apr, 0) /
+                        filteredPools.length
+                    )
+                  : "0.00%"}
               </p>
             </div>
           </div>

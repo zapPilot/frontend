@@ -18,7 +18,6 @@ import {
   validatePieChartWeights,
   type BorrowingDisplayData,
 } from "../utils/borrowingUtils";
-import { toPieChartData } from "../utils/chart.transformers";
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -54,37 +53,12 @@ export interface PortfolioMetrics {
 // =============================================================================
 
 /**
- * Comprehensive portfolio data preparation utility
- *
- * Handles all common data transformation patterns in one place.
- * This is the basic version without borrowing separation.
- *
- * @param apiCategoriesData - Portfolio category data from API
- * @param totalValue - Total portfolio value
- * @returns Processed portfolio data ready for display
- */
-export function preparePortfolioData(
-  apiCategoriesData: AssetCategory[] | null,
-  totalValue: number | null
-): PortfolioDataResult {
-  // Safe data preparation - handle null/undefined gracefully
-  const portfolioData = apiCategoriesData || [];
-
-  // Transform to pie chart format - handle null totalValue gracefully
-  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
-
-  return {
-    portfolioData,
-    pieChartData,
-  };
-}
-
-/**
  * Enhanced portfolio data preparation with borrowing support
  *
  * Separates assets from borrowing and provides all display data.
  * This version is borrowing-aware and provides accurate pie chart weights.
  *
+ * @deprecated Use the unified useLandingPageData hook instead - server provides pre-formatted data
  * @param apiCategoriesData - Portfolio category data from API
  * @param _totalValue - Total portfolio value (unused but kept for interface compatibility)
  * @param debugContext - Optional debug context for validation logging
@@ -142,51 +116,6 @@ export function calculatePortfolioMetrics(
     totalChange24h,
     totalChangePercentage,
   };
-}
-
-/**
- * Calculate weighted average of a metric across portfolio categories
- *
- * @param categories - Portfolio categories
- * @param metricKey - Key of the metric to calculate weighted average for
- * @returns Weighted average value
- */
-export function calculateWeightedAverage(
-  categories: AssetCategory[],
-  metricKey: keyof AssetCategory
-): number {
-  const totalValue = categories.reduce((sum, cat) => sum + cat.totalValue, 0);
-
-  if (totalValue === 0) return 0;
-
-  return categories.reduce((sum, cat) => {
-    const weight = cat.totalValue / totalValue;
-    const metricValue = cat[metricKey] as number;
-    return sum + metricValue * weight;
-  }, 0);
-}
-
-/**
- * Calculate portfolio diversification score
- * Based on Herfindahl-Hirschman Index (lower is more diversified)
- *
- * @param categories - Portfolio categories
- * @returns Diversification score (0-1, where 0 is perfectly diversified)
- */
-export function calculateDiversificationScore(
-  categories: AssetCategory[]
-): number {
-  const totalValue = categories.reduce((sum, cat) => sum + cat.totalValue, 0);
-
-  if (totalValue === 0) return 0;
-
-  const hhi = categories.reduce((sum, cat) => {
-    const weight = cat.totalValue / totalValue;
-    return sum + weight * weight;
-  }, 0);
-
-  // Convert HHI to 0-1 scale (1 = concentrated, 0 = diversified)
-  return hhi;
 }
 
 // =============================================================================

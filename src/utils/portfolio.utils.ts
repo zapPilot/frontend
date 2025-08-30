@@ -4,33 +4,6 @@ import {
   validatePieChartWeights,
   type BorrowingDisplayData,
 } from "./borrowingUtils";
-import { toPieChartData } from "./chart.transformers";
-
-/**
- * Comprehensive portfolio data preparation utility
- *
- * Handles all common data transformation patterns in one place.
- * This is the basic version without borrowing separation.
- *
- * @param apiCategoriesData - Portfolio category data from API
- * @param totalValue - Total portfolio value
- * @returns Processed portfolio data ready for display
- */
-export function preparePortfolioData(
-  apiCategoriesData: AssetCategory[] | null,
-  totalValue: number | null
-) {
-  // Safe data preparation - handle null/undefined gracefully
-  const portfolioData = apiCategoriesData || [];
-
-  // Transform to pie chart format - handle null totalValue gracefully
-  const pieChartData = toPieChartData(portfolioData, totalValue || undefined);
-
-  return {
-    portfolioData,
-    pieChartData,
-  };
-}
 
 /**
  * Enhanced portfolio data preparation with borrowing support
@@ -38,6 +11,7 @@ export function preparePortfolioData(
  * Separates assets from borrowing and provides all display data.
  * This version is borrowing-aware and provides accurate pie chart weights.
  *
+ * @deprecated Use the unified useLandingPageData hook instead - server provides pre-formatted data
  * @param apiCategoriesData - Portfolio category data from API
  * @param _totalValue - Total portfolio value (unused but kept for interface compatibility)
  * @param debugContext - Optional debug context for validation logging
@@ -151,3 +125,207 @@ export const portfolioStateUtils = {
     return !Array.isArray(array) || array.length === 0;
   },
 } as const;
+
+/**
+ * Category summary utilities for unified landing page data
+ *
+ * Functions to transform pool_details from landing-page API into category summaries
+ * for progressive disclosure UX (show summaries on landing, full details in analytics)
+ */
+
+export interface CategorySummary {
+  id: string;
+  name: string;
+  color: string;
+  totalValue: number;
+  percentage: number;
+  poolCount: number;
+  averageAPR: number;
+  topProtocols: Array<{
+    name: string;
+    value: number;
+    count: number;
+  }>;
+}
+
+export interface PoolDetail {
+  snapshot_id: string;
+  chain: string;
+  protocol: string;
+  protocol_name: string;
+  asset_usd_value: number;
+  pool_symbols: string[];
+  final_apr: number;
+  protocol_matched: boolean;
+  apr_data: {
+    apr_protocol: string | null;
+    apr_symbol: string | null;
+    apr: number | null;
+    apr_base: number | null;
+    apr_reward: number | null;
+    apr_updated_at: string | null;
+  };
+  contribution_to_portfolio: number;
+}
+
+/**
+ * Categorize pool details by asset type based on symbols
+ */
+function categorizePool(
+  poolSymbols: string[]
+): "btc" | "eth" | "stablecoins" | "others" {
+  const symbols = poolSymbols.map(s => s.toLowerCase());
+
+  // Bitcoin category
+  const btcSymbols = ["btc", "wbtc", "cbbtc", "tbtc"];
+  if (symbols.some(s => btcSymbols.includes(s))) {
+    return "btc";
+  }
+
+  // Ethereum category
+  const ethSymbols = [
+    "eth",
+    "weth",
+    "steth",
+    "wsteth",
+    "weeth",
+    "mseth",
+    "frxeth",
+  ];
+  if (symbols.some(s => ethSymbols.includes(s))) {
+    return "eth";
+  }
+
+  // Stablecoins category
+  const stableSymbols = [
+    "usdc",
+    "usdt",
+    "dai",
+    "frax",
+    "usd₮0",
+    "bold",
+    "msusd",
+    "openusdt",
+    "susd",
+    "gho",
+    "vst",
+    "frxusd",
+    "wfrax",
+    "legacy frax dollar",
+  ];
+  if (symbols.some(s => stableSymbols.includes(s))) {
+    return "stablecoins";
+  }
+
+  // Everything else
+  return "others";
+}
+
+/**
+ * Transform pool_details into category summaries for AssetCategoriesDetail
+ */
+export function createCategorySummaries(
+  poolDetails: PoolDetail[],
+  pieChartCategories: {
+    btc: number;
+    eth: number;
+    stablecoins: number;
+    others: number;
+  },
+  totalNetUsd: number
+): CategorySummary[] {
+  if (!poolDetails || poolDetails.length === 0) {
+    return [];
+  }
+
+  // Group pools by category
+  const categoryGroups: Record<string, PoolDetail[]> = {
+    btc: [],
+    eth: [],
+    stablecoins: [],
+    others: [],
+  };
+
+  poolDetails.forEach(pool => {
+    if (pool?.pool_symbols && Array.isArray(pool.pool_symbols)) {
+      const category = categorizePool(pool.pool_symbols);
+      categoryGroups[category]?.push(pool);
+    }
+  });
+
+  // Create summaries for each category
+  const categories: CategorySummary[] = [];
+
+  const categoryInfo = {
+    btc: { name: "Bitcoin", color: "#F7931A" },
+    eth: { name: "Ethereum", color: "#627EEA" },
+    stablecoins: { name: "Stablecoins", color: "#26A69A" },
+    others: { name: "Others", color: "#AB47BC" },
+  };
+
+  Object.entries(categoryGroups).forEach(([categoryId, pools]) => {
+    if (pools.length === 0) return;
+
+    const totalValue =
+      pieChartCategories[categoryId as keyof typeof pieChartCategories];
+    const percentage = totalNetUsd > 0 ? (totalValue / totalNetUsd) * 100 : 0;
+
+    // Calculate average APR (weighted by value)
+    const totalWeightedAPR = pools.reduce(
+      (sum, pool) => sum + pool.final_apr * pool.asset_usd_value,
+      0
+    );
+    const totalValue_calc = pools.reduce(
+      (sum, pool) => sum + pool.asset_usd_value,
+      0
+    );
+    const averageAPR =
+      totalValue_calc > 0 ? totalWeightedAPR / totalValue_calc : 0;
+
+    // Get top protocols by value
+    const protocolTotals: Record<string, { value: number; count: number }> = {};
+    pools.forEach(pool => {
+      const protocol = pool.protocol_name || pool.protocol;
+      if (!protocolTotals[protocol]) {
+        protocolTotals[protocol] = { value: 0, count: 0 };
+      }
+      protocolTotals[protocol].value += pool.asset_usd_value;
+      protocolTotals[protocol].count += 1;
+    });
+
+    const topProtocols = Object.entries(protocolTotals)
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 3);
+
+    categories.push({
+      id: categoryId,
+      name: categoryInfo[categoryId as keyof typeof categoryInfo].name,
+      color: categoryInfo[categoryId as keyof typeof categoryInfo].color,
+      totalValue,
+      percentage,
+      poolCount: pools.length,
+      averageAPR: averageAPR * 100, // Convert to percentage
+      topProtocols,
+    });
+  });
+
+  return categories.sort((a, b) => b.totalValue - a.totalValue);
+}
+
+/**
+ * Filter pool details by category for analytics tab
+ */
+export function filterPoolDetailsByCategory(
+  poolDetails: PoolDetail[],
+  categoryId: string
+): PoolDetail[] {
+  if (!poolDetails || poolDetails.length === 0) {
+    return [];
+  }
+
+  return poolDetails.filter(pool => {
+    const category = categorizePool(pool.pool_symbols);
+    return category === categoryId;
+  });
+}
