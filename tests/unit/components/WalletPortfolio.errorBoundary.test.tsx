@@ -46,6 +46,24 @@ vi.mock("../../../src/components/WalletManager", () => ({
   ),
 }));
 
+// Mock UI components to avoid dynamic import issues
+vi.mock("../../../src/components/ui/GradientButton", () => ({
+  GradientButton: vi.fn(({ children, onClick, icon: Icon, ...props }) => (
+    <button onClick={onClick} {...props}>
+      {Icon && <Icon />}
+      {children}
+    </button>
+  )),
+}));
+
+vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
+  LoadingSpinner: vi.fn(({ size, className }) => (
+    <div data-testid="loading-spinner" className={className} data-size={size}>
+      Loading...
+    </div>
+  )),
+}));
+
 // Mock ThirdWeb
 vi.mock("thirdweb/react", () => ({
   useActiveAccount: vi.fn(() => null),
@@ -54,6 +72,34 @@ vi.mock("thirdweb/react", () => ({
 
 vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
   SimpleConnectButton: vi.fn(() => <button>Simple Connect</button>),
+}));
+
+// Mock Lucide icons
+vi.mock("lucide-react", () => ({
+  AlertCircle: vi.fn(() => (
+    <span data-testid="alert-circle-icon">AlertCircle</span>
+  )),
+  ArrowDownLeft: vi.fn(() => (
+    <span data-testid="arrow-down-left-icon">ArrowDownLeft</span>
+  )),
+  ArrowUpRight: vi.fn(() => (
+    <span data-testid="arrow-up-right-icon">ArrowUpRight</span>
+  )),
+  BarChart3: vi.fn(() => <span data-testid="bar-chart3-icon">BarChart3</span>),
+  DollarSign: vi.fn(() => (
+    <span data-testid="dollar-sign-icon">DollarSign</span>
+  )),
+  Eye: vi.fn(() => <span data-testid="eye-icon">Eye</span>),
+  EyeOff: vi.fn(() => <span data-testid="eye-off-icon">EyeOff</span>),
+  Loader: vi.fn(() => <span data-testid="loader-icon">Loader</span>),
+  Settings: vi.fn(() => <span data-testid="settings-icon">Settings</span>),
+  TrendingDown: vi.fn(() => (
+    <span data-testid="trending-down-icon">TrendingDown</span>
+  )),
+  TrendingUp: vi.fn(() => (
+    <span data-testid="trending-up-icon">TrendingUp</span>
+  )),
+  Wallet: vi.fn(() => <span data-testid="wallet-icon">Wallet</span>),
 }));
 
 // Mock framer-motion

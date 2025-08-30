@@ -33,6 +33,15 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock React.memo to avoid memoization issues in tests
+vi.mock("react", async () => {
+  const actual = await vi.importActual("react");
+  return {
+    ...actual,
+    memo: vi.fn(component => component), // Return the component without memoization
+  };
+});
+
 // Mock icon
 const MockIcon = vi.fn(() => <span data-testid="mock-icon">Icon</span>);
 

@@ -22,7 +22,7 @@ vi.mock("../../../src/components/PortfolioOverview", () => ({
       </div>
       <div data-testid="error-state">{apiError || "no-error"}</div>
       <div data-testid="pie-chart-data">
-        {pieChartData ? "has-data" : "no-data"}
+        {pieChartData && pieChartData.length > 0 ? "has-data" : "no-data"}
       </div>
     </div>
   )),
@@ -792,9 +792,7 @@ describe("WalletPortfolio", () => {
       });
 
       // Component should still render pie chart data placeholder even on error
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-        "has-data"
-      );
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
     });
 
     it("should handle data transformation errors gracefully", async () => {

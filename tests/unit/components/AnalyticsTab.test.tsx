@@ -21,6 +21,17 @@ vi.mock("../../../src/components/PortfolioChart", () => ({
   )),
 }));
 
+// Mock LoadingSpinner specifically to avoid dynamic import issues
+vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
+  LoadingSpinner: vi.fn(
+    ({ size, className }: { size?: string; className?: string }) => (
+      <div data-testid="loading-spinner" className={className} data-size={size}>
+        Loading...
+      </div>
+    )
+  ),
+}));
+
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
@@ -94,7 +105,8 @@ describe("AnalyticsTab", () => {
     it("should render PortfolioChart component", () => {
       render(<AnalyticsTab />);
 
-      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      // Since we're using dynamic imports, check for the dynamic component mock
+      expect(screen.getByTestId("dynamic-component-mock")).toBeInTheDocument();
     });
 
     it("should render AnalyticsDashboard component", () => {
@@ -116,11 +128,12 @@ describe("AnalyticsTab", () => {
       render(<AnalyticsTab />);
 
       // Ensure both child components are present
-      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      // PortfolioChart is dynamically imported so it shows as dynamic-component-mock
+      expect(screen.getByTestId("dynamic-component-mock")).toBeInTheDocument();
       expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
 
       // Verify they have content
-      expect(screen.getByText("Portfolio Chart")).toBeInTheDocument();
+      expect(screen.getByText("Dynamic Component Mock")).toBeInTheDocument();
       expect(screen.getByText("Analytics Dashboard")).toBeInTheDocument();
     });
 
@@ -129,7 +142,7 @@ describe("AnalyticsTab", () => {
       render(<AnalyticsTab />);
 
       expect(screen.getByText("Portfolio Analytics")).toBeInTheDocument();
-      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("dynamic-component-mock")).toBeInTheDocument();
       expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
     });
   });
@@ -148,7 +161,7 @@ describe("AnalyticsTab", () => {
 
       // Main sections should all be present
       expect(screen.getByText("Portfolio Analytics")).toBeInTheDocument();
-      expect(screen.getByTestId("portfolio-chart")).toBeInTheDocument();
+      expect(screen.getByTestId("dynamic-component-mock")).toBeInTheDocument();
       expect(screen.getByTestId("analytics-dashboard")).toBeInTheDocument();
     });
   });
