@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { memo, ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
 
 interface GradientButtonProps {
@@ -15,7 +15,7 @@ interface GradientButtonProps {
   testId?: string;
 }
 
-export function GradientButton({
+const GradientButtonComponent = ({
   children,
   onClick,
   gradient,
@@ -24,7 +24,7 @@ export function GradientButton({
   disabled = false,
   className = "",
   testId,
-}: GradientButtonProps) {
+}: GradientButtonProps) => {
   const baseClasses =
     "p-4 rounded-2xl text-white font-semibold flex items-center justify-center space-x-2 transition-all duration-300";
   const gradientClasses = `bg-gradient-to-r ${gradient}`;
@@ -50,4 +50,6 @@ export function GradientButton({
       {children}
     </motion.button>
   );
-}
+};
+
+export const GradientButton = memo(GradientButtonComponent);

@@ -90,24 +90,6 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     left: number;
   } | null>(null);
 
-  // Load wallets when component opens or user changes
-  useEffect(() => {
-    if (isOpen && userId && isConnected) {
-      loadWallets();
-    }
-  }, [isOpen, userId, isConnected]);
-
-  // Auto-refresh data periodically
-  useEffect(() => {
-    if (!isOpen || !isConnected || !userId) return;
-
-    const interval = setInterval(() => {
-      loadWallets(true); // Silent refresh
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, [isOpen, isConnected, userId]);
-
   // Load user profile to determine existing subscription email
   useEffect(() => {
     const loadProfile = async () => {
@@ -154,6 +136,24 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     },
     [userId]
   );
+
+  // Load wallets when component opens or user changes
+  useEffect(() => {
+    if (isOpen && userId && isConnected) {
+      loadWallets();
+    }
+  }, [isOpen, userId, isConnected, loadWallets]);
+
+  // Auto-refresh data periodically
+  useEffect(() => {
+    if (!isOpen || !isConnected || !userId) return;
+
+    const interval = setInterval(() => {
+      loadWallets(true); // Silent refresh
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isOpen, isConnected, userId, loadWallets]);
 
   // Utility function to format wallet address
   const formatAddress = useCallback((address: string) => {
@@ -711,12 +711,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
   // Click outside handler for dropdown
   useEffect(() => {
+    if (!openDropdown) return;
+
     const handleClickOutside = () => setOpenDropdown(null);
-    if (openDropdown) {
-      document.addEventListener("click", handleClickOutside);
-      return () => document.removeEventListener("click", handleClickOutside);
-    }
-    return undefined;
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, [openDropdown]);
 
   // Early return if modal is closed

@@ -8,8 +8,30 @@ import { useWalletModal } from "../hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { GlassCard } from "./ui";
-import { PortfolioOverview } from "./PortfolioOverview";
-import { WalletManager } from "./WalletManager";
+import dynamic from "next/dynamic";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+
+// Dynamic imports for heavy components
+const PortfolioOverview = dynamic(
+  () =>
+    import("./PortfolioOverview").then(mod => ({
+      default: mod.PortfolioOverview,
+    })),
+  {
+    loading: () => (
+      <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">
+        <LoadingSpinner size="lg" />
+      </div>
+    ),
+  }
+);
+
+const WalletManager = dynamic(
+  () => import("./WalletManager").then(mod => ({ default: mod.WalletManager })),
+  {
+    loading: () => null, // Modal doesn't need loading state when closed
+  }
+);
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";

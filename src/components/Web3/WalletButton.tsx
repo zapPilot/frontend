@@ -201,6 +201,8 @@ export function WalletButton({
 
   // Handle click outside to close dropdown
   useEffect(() => {
+    if (!showDropdown) return;
+
     function handleClickOutside(event: MouseEvent) {
       if (
         dropdownRef.current &&
@@ -210,13 +212,8 @@ export function WalletButton({
       }
     }
 
-    if (showDropdown) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {};
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
   // Handle copy address

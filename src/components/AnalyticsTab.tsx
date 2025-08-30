@@ -5,7 +5,22 @@ import { useUser } from "../contexts/UserContext";
 import { usePortfolioAPR } from "../hooks/queries/useAPRQuery";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
-import { PortfolioChart } from "./PortfolioChart";
+import dynamic from "next/dynamic";
+import { LoadingSpinner } from "./ui/LoadingSpinner";
+
+// Dynamic import for heavy chart component
+const PortfolioChart = dynamic(
+  () =>
+    import("./PortfolioChart").then(mod => ({ default: mod.PortfolioChart })),
+  {
+    loading: () => (
+      <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">
+        <LoadingSpinner size="lg" />
+        <span className="ml-3 text-gray-400">Loading Chart...</span>
+      </div>
+    ),
+  }
+);
 
 export function AnalyticsTab() {
   // Get user data for pool analytics

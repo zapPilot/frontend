@@ -28,11 +28,7 @@ const PortfolioChartComponent = () => {
   const { userInfo, isConnected } = useUser();
 
   // Fetch real portfolio trends data
-  const {
-    data: apiPortfolioHistory,
-    loading: apiLoading,
-    error: apiError,
-  } = usePortfolioTrends({
+  const { data: apiPortfolioHistory } = usePortfolioTrends({
     userId: userInfo?.userId,
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
     enabled: isConnected && !!userInfo?.userId,
@@ -40,14 +36,7 @@ const PortfolioChartComponent = () => {
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     return apiPortfolioHistory;
-  }, [
-    apiPortfolioHistory,
-    selectedPeriod,
-    apiError,
-    isConnected,
-    userInfo?.userId,
-    apiLoading,
-  ]);
+  }, [apiPortfolioHistory]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
     const days = Math.min(
