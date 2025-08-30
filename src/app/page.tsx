@@ -1,15 +1,15 @@
 "use client";
 
 import { Navigation } from "@/components/Navigation";
+import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
-import { LoadingState } from "@/components/ui/LoadingState";
 import dynamic from "next/dynamic";
-import { useCallback, useState } from "react";
+import { ComponentType, useCallback, useState } from "react";
 
 // Dynamic imports for code splitting
-const AnalyticsTab = dynamic(
+const AnalyticsTab: ComponentType = dynamic(
   () =>
     import("@/components/AnalyticsTab").then(mod => ({
       default: mod.AnalyticsTab,
@@ -26,7 +26,7 @@ const AnalyticsTab = dynamic(
   }
 );
 
-const CommunityTab = dynamic(
+const CommunityTab: ComponentType = dynamic(
   () =>
     import("@/components/CommunityTab").then(mod => ({
       default: mod.CommunityTab,
@@ -43,7 +43,7 @@ const CommunityTab = dynamic(
   }
 );
 
-const AirdropTab = dynamic(
+const AirdropTab: ComponentType = dynamic(
   () =>
     import("@/components/AirdropTab").then(mod => ({
       default: mod.AirdropTab,
@@ -60,7 +60,7 @@ const AirdropTab = dynamic(
   }
 );
 
-const SettingsTab = dynamic(
+const SettingsTab: ComponentType = dynamic(
   () =>
     import("@/components/SettingsTab").then(mod => ({
       default: mod.SettingsTab,
@@ -77,7 +77,7 @@ const SettingsTab = dynamic(
   }
 );
 
-const SwapPage = dynamic(
+const SwapPage: ComponentType = dynamic(
   () =>
     import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
   {

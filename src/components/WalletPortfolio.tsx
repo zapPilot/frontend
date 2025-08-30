@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { logger } from "@/utils/logger";
+import dynamic from "next/dynamic";
+import { ComponentType, useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioDisplayData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
@@ -8,11 +10,13 @@ import { useWalletModal } from "../hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { GlassCard } from "./ui";
-import dynamic from "next/dynamic";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { WalletActions } from "./wallet/WalletActions";
+import { WalletHeader } from "./wallet/WalletHeader";
+import { WalletMetrics } from "./wallet/WalletMetrics";
 
 // Dynamic imports for heavy components
-const PortfolioOverview = dynamic(
+const PortfolioOverview: ComponentType = dynamic(
   () =>
     import("./PortfolioOverview").then(mod => ({
       default: mod.PortfolioOverview,
@@ -26,16 +30,12 @@ const PortfolioOverview = dynamic(
   }
 );
 
-const WalletManager = dynamic(
+const WalletManager: ComponentType = dynamic(
   () => import("./WalletManager").then(mod => ({ default: mod.WalletManager })),
   {
     loading: () => null, // Modal doesn't need loading state when closed
   }
 );
-import { WalletActions } from "./wallet/WalletActions";
-import { WalletHeader } from "./wallet/WalletHeader";
-import { WalletMetrics } from "./wallet/WalletMetrics";
-import { logger } from "@/utils/logger";
 
 const walletPortfolioLogger = logger.createContextLogger("WalletPortfolio");
 

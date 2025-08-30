@@ -8,7 +8,11 @@
  * @module lib/portfolio-data
  */
 
-import type { AssetCategory } from "../types/portfolio";
+import type {
+  AssetCategory,
+  UnvalidatedAssetCategory,
+  UnvalidatedPortfolioData,
+} from "../types/portfolio";
 import {
   transformForDisplay,
   validatePieChartWeights,
@@ -302,7 +306,9 @@ export const portfolioStateUtils = {
  * @param categories - Categories to validate
  * @returns Validation result with cleaned data
  */
-export function validatePortfolioCategories(categories: any[]): {
+export function validatePortfolioCategories(
+  categories: UnvalidatedAssetCategory[]
+): {
   isValid: boolean;
   data: AssetCategory[];
   errors: string[];
@@ -368,7 +374,9 @@ export function validatePortfolioCategories(categories: any[]): {
  * @param data - Raw portfolio data
  * @returns Sanitized data safe for processing
  */
-export function sanitizePortfolioData(data: any): AssetCategory[] {
+export function sanitizePortfolioData(
+  data: UnvalidatedPortfolioData
+): AssetCategory[] {
   if (!data || !Array.isArray(data)) return [];
 
   return data

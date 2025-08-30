@@ -7,9 +7,10 @@ import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
 import dynamic from "next/dynamic";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { ComponentType } from "react";
 
 // Dynamic import for heavy chart component
-const PortfolioChart = dynamic(
+const PortfolioChart: ComponentType = dynamic(
   () =>
     import("./PortfolioChart").then(mod => ({ default: mod.PortfolioChart })),
   {

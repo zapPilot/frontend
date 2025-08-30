@@ -7,6 +7,15 @@ interface WalletBatchConfig {
   estimatedTime: number; // milliseconds
 }
 
+interface WalletAccount {
+  wallet?: {
+    id?: string;
+    name?: string;
+  };
+  address?: string;
+  [key: string]: unknown;
+}
+
 const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> & {
   default: WalletBatchConfig;
 } = {
@@ -20,7 +29,9 @@ const WALLET_BATCH_CONFIGS: Record<string, WalletBatchConfig> & {
 /**
  * Get wallet batch configuration based on wallet type
  */
-export function getWalletBatchConfig(account: any): WalletBatchConfig {
+export function getWalletBatchConfig(
+  account: WalletAccount
+): WalletBatchConfig {
   const walletType = detectSimpleWalletType(account);
   return WALLET_BATCH_CONFIGS[walletType] ?? WALLET_BATCH_CONFIGS.default;
 }
@@ -28,7 +39,7 @@ export function getWalletBatchConfig(account: any): WalletBatchConfig {
 /**
  * Simple wallet type detection
  */
-function detectSimpleWalletType(account: any): string {
+function detectSimpleWalletType(account: WalletAccount): string {
   if (!account?.wallet?.id) return "default";
 
   const walletId = account.wallet.id.toLowerCase();
@@ -44,7 +55,7 @@ function detectSimpleWalletType(account: any): string {
 /**
  * Get simple wallet name for display
  */
-export function getSimpleWalletName(account: any): string {
+export function getSimpleWalletName(account: WalletAccount): string {
   const walletType = detectSimpleWalletType(account);
 
   switch (walletType) {

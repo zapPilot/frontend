@@ -31,6 +31,19 @@ import {
 } from "@/types/wallet";
 import { useEffect, useMemo, useState } from "react";
 
+// ThirdWeb wallet and chain type interfaces
+interface ThirdWebWalletToConnect {
+  id: string;
+  name?: string;
+  [key: string]: unknown;
+}
+
+interface ThirdWebChainToSwitch {
+  id: number;
+  name?: string;
+  [key: string]: unknown;
+}
+
 /**
  * ThirdWeb Provider Adapter Class
  *
@@ -465,10 +478,10 @@ export interface ThirdWebHooks {
   // Core hooks
   account: ReturnType<typeof useActiveAccount>;
   wallet: ReturnType<typeof useActiveWallet>;
-  connect: (wallet: any) => Promise<void>;
+  connect: (wallet: ThirdWebWalletToConnect) => Promise<void>;
   disconnect: () => Promise<void>;
   chain: ReturnType<typeof useActiveWalletChain>;
-  switchChain: (chain: any) => Promise<void>;
+  switchChain: (chain: ThirdWebChainToSwitch) => Promise<void>;
   balance: ReturnType<typeof useWalletBalance>;
   connectedWallets: ReturnType<typeof useConnectedWallets>;
 }
@@ -515,7 +528,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
     (): ThirdWebHooks => ({
       account,
       wallet,
-      connect: async (walletToConnect: any) => {
+      connect: async (walletToConnect: ThirdWebWalletToConnect) => {
         if (connect) {
           try {
             await connect(walletToConnect);
@@ -536,7 +549,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
         }
       },
       chain,
-      switchChain: async (chainToSwitch: any) => {
+      switchChain: async (chainToSwitch: ThirdWebChainToSwitch) => {
         if (switchChain) {
           try {
             await switchChain(chainToSwitch);
@@ -589,7 +602,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
         switchChain: async () => {},
         balance: { data: null },
         connectedWallets: [],
-      } as any);
+      } as ThirdWebHooks);
     };
 
     ThirdWebAdapter.registerCleanupCallback(cleanup);

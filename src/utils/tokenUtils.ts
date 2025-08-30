@@ -42,6 +42,20 @@ export interface FilteredTokenResult {
   filteredCount: number;
 }
 
+/** Interface for unvalidated token input from external sources */
+export interface UnvalidatedTokenInput {
+  symbol?: unknown;
+  optimized_symbol?: unknown;
+  amount?: unknown;
+  price?: unknown;
+  decimals?: unknown;
+  address?: unknown;
+  raw_amount_hex_str?: unknown;
+  logo_url?: unknown;
+  name?: unknown;
+  [key: string]: unknown;
+}
+
 // =============================================================================
 // SYMBOL AND METADATA UTILITIES
 // =============================================================================
@@ -299,7 +313,7 @@ export function groupTokensByCategory(
  * @param token - Token to validate
  * @returns Validation result
  */
-export function validateToken(token: any): {
+export function validateToken(token: UnvalidatedTokenInput): {
   isValid: boolean;
   errors: string[];
 } {
@@ -342,7 +356,7 @@ export function validateToken(token: any): {
  * @param token - Raw token data
  * @returns Sanitized token
  */
-export function sanitizeToken(token: any): Token | null {
+export function sanitizeToken(token: UnvalidatedTokenInput): Token | null {
   const { isValid } = validateToken(token);
 
   if (!isValid) return null;
@@ -370,7 +384,7 @@ export function sanitizeToken(token: any): Token | null {
  * @param tokens - Array of raw token data
  * @returns Array of sanitized tokens
  */
-export function sanitizeTokens(tokens: any[]): Token[] {
+export function sanitizeTokens(tokens: UnvalidatedTokenInput[]): Token[] {
   if (!Array.isArray(tokens)) return [];
 
   return tokens

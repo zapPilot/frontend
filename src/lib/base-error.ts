@@ -14,7 +14,22 @@
 
 export interface ErrorDetails {
   /** Additional error context data */
-  [key: string]: any;
+  [key: string]: unknown;
+}
+
+/** Interface for unknown error objects from external sources */
+export interface UnknownErrorInput {
+  message?: string;
+  status?: number;
+  code?: string;
+  details?: ErrorDetails;
+  response?: {
+    status?: number;
+    data?: unknown;
+  };
+  stack?: string;
+  name?: string;
+  [key: string]: unknown;
 }
 
 export interface ErrorContext {
@@ -302,7 +317,7 @@ export function createServiceError(
 
   // Handle objects with status/message properties
   if (typeof error === "object" && error !== null) {
-    const errorObj = error as any;
+    const errorObj = error as UnknownErrorInput;
     return new BaseServiceError(errorObj.message || defaultMessage, {
       source,
       status: errorObj.status || errorObj.response?.status || 500,
@@ -321,9 +336,12 @@ export function createServiceError(
 /**
  * Enhanced error messages for common backend errors
  */
-export const createBackendServiceError = (error: any): BackendServiceError => {
-  const status = error.status || error.response?.status || 500;
-  let message = error.message || "Backend service error";
+export const createBackendServiceError = (
+  error: unknown
+): BackendServiceError => {
+  const errorObj = error as UnknownErrorInput;
+  const status = errorObj.status || errorObj.response?.status || 500;
+  let message = errorObj.message || "Backend service error";
 
   switch (status) {
     case 400:
@@ -342,15 +360,23 @@ export const createBackendServiceError = (error: any): BackendServiceError => {
       break;
   }
 
-  return new BackendServiceError(message, status, error.code, error.details);
+  return new BackendServiceError(
+    message,
+    status,
+    errorObj.code,
+    errorObj.details
+  );
 };
 
 /**
  * Enhanced error messages for common intent engine errors
  */
-export const createIntentServiceError = (error: any): IntentServiceError => {
-  const status = error.status || error.response?.status || 500;
-  let message = error.message || "Intent service error";
+export const createIntentServiceError = (
+  error: unknown
+): IntentServiceError => {
+  const errorObj = error as UnknownErrorInput;
+  const status = errorObj.status || errorObj.response?.status || 500;
+  let message = errorObj.message || "Intent service error";
 
   switch (status) {
     case 400:
@@ -370,7 +396,12 @@ export const createIntentServiceError = (error: any): IntentServiceError => {
       break;
   }
 
-  return new IntentServiceError(message, status, error.code, error.details);
+  return new IntentServiceError(
+    message,
+    status,
+    errorObj.code,
+    errorObj.details
+  );
 };
 
 // =============================================================================
