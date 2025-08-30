@@ -92,7 +92,13 @@ export function useWalletTransactions({
 
     try {
       // Get wallet batch configuration
-      const batchConfig = getWalletBatchConfig(activeAccount);
+      // Convert ThirdWebAccount to WalletAccount for compatibility
+      const walletAccount = {
+        address: activeAccount.address,
+        isConnected: true,
+        balance: "0", // This is just for batching config, balance not critical
+      };
+      const batchConfig = getWalletBatchConfig(walletAccount);
 
       // Create transaction batches with optimal size
       const transactionBatches = createTransactionBatches(

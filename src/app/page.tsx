@@ -7,6 +7,7 @@ import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { ComponentType, useCallback, useState } from "react";
+import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType = dynamic(
@@ -77,7 +78,7 @@ const SettingsTab: ComponentType = dynamic(
   }
 );
 
-const SwapPage: ComponentType = dynamic(
+const SwapPage: ComponentType<SwapPageProps> = dynamic(
   () =>
     import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
   {

@@ -15,8 +15,12 @@ import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
 
-// Dynamic imports for heavy components
-const PortfolioOverview: ComponentType = dynamic(
+// Import component props interfaces for proper typing
+import type { PortfolioOverviewProps } from "./PortfolioOverview";
+import type { WalletManagerProps } from "./WalletManager";
+
+// Dynamic imports for heavy components with proper typing
+const PortfolioOverview: ComponentType<PortfolioOverviewProps> = dynamic(
   () =>
     import("./PortfolioOverview").then(mod => ({
       default: mod.PortfolioOverview,
@@ -30,7 +34,7 @@ const PortfolioOverview: ComponentType = dynamic(
   }
 );
 
-const WalletManager: ComponentType = dynamic(
+const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () => import("./WalletManager").then(mod => ({ default: mod.WalletManager })),
   {
     loading: () => null, // Modal doesn't need loading state when closed

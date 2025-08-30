@@ -122,7 +122,11 @@ export function StreamingProgress({
           }
           batches={batchProgress}
           currentBatch={currentBatchIndex}
-          walletType={getSimpleWalletName(activeAccount)}
+          walletType={getSimpleWalletName({
+            address: activeAccount.address,
+            isConnected: true,
+            balance: "0",
+          })}
         />
 
         {/* Trading Summary */}

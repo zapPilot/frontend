@@ -13,7 +13,7 @@ import { PieChartLoading } from "./ui/UnifiedLoading";
 
 type TabType = "assets" | "borrowing";
 
-interface PortfolioOverviewProps {
+export interface PortfolioOverviewProps {
   portfolioData: AssetCategory[];
   pieChartData: PieChartData[]; // Now required - no more fallback logic needed
   totalValue?: number | null; // Optional authoritative total value, can be null (kept for backward compatibility)

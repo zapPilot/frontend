@@ -35,7 +35,7 @@ import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { UnifiedLoading } from "./ui/UnifiedLoading";
 import { Portal } from "./ui/Portal";
 
-interface WalletManagerProps {
+export interface WalletManagerProps {
   isOpen: boolean;
   onClose: () => void;
 }

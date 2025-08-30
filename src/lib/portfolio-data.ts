@@ -349,7 +349,7 @@ export function validatePortfolioCategories(
         totalValue: Math.max(0, Number(category.totalValue)),
         change24h: Number(category.change24h) || 0,
         percentage: Number(category.percentage) || 0,
-        color: category.color || "#6B7280",
+        color: typeof category.color === "string" ? category.color : "#6B7280",
         assets: Array.isArray(category.assets) ? category.assets : [],
       };
 

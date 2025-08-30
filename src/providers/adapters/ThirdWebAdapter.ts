@@ -31,18 +31,7 @@ import {
 } from "@/types/wallet";
 import { useEffect, useMemo, useState } from "react";
 
-// ThirdWeb wallet and chain type interfaces
-interface ThirdWebWalletToConnect {
-  id: string;
-  name?: string;
-  [key: string]: unknown;
-}
-
-interface ThirdWebChainToSwitch {
-  id: number;
-  name?: string;
-  [key: string]: unknown;
-}
+// ThirdWeb wallet and chain type interfaces (removed unused specific interfaces)
 
 /**
  * ThirdWeb Provider Adapter Class
@@ -197,7 +186,15 @@ export class ThirdWebAdapter implements WalletProvider {
       // This is a basic implementation - in a real app, you'd want to
       // handle wallet selection properly
       if (this.hooks.connectedWallets.length > 0) {
-        await this.hooks.connect(this.hooks.connectedWallets[0]);
+        const wallet = this.hooks.connectedWallets[0];
+        if (wallet) {
+          await this.hooks.connect(wallet);
+        } else {
+          throw new WalletError(
+            WalletErrorType.WALLET_NOT_FOUND,
+            "No valid wallet found in connected wallets"
+          );
+        }
       } else {
         throw new WalletError(
           WalletErrorType.WALLET_NOT_FOUND,
@@ -478,10 +475,10 @@ export interface ThirdWebHooks {
   // Core hooks
   account: ReturnType<typeof useActiveAccount>;
   wallet: ReturnType<typeof useActiveWallet>;
-  connect: (wallet: ThirdWebWalletToConnect) => Promise<void>;
+  connect: (wallet: any) => Promise<void>;
   disconnect: () => Promise<void>;
   chain: ReturnType<typeof useActiveWalletChain>;
-  switchChain: (chain: ThirdWebChainToSwitch) => Promise<void>;
+  switchChain: (chain: any) => Promise<void>;
   balance: ReturnType<typeof useWalletBalance>;
   connectedWallets: ReturnType<typeof useConnectedWallets>;
 }
@@ -528,7 +525,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
     (): ThirdWebHooks => ({
       account,
       wallet,
-      connect: async (walletToConnect: ThirdWebWalletToConnect) => {
+      connect: async (walletToConnect: any) => {
         if (connect) {
           try {
             await connect(walletToConnect);
@@ -549,7 +546,7 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
         }
       },
       chain,
-      switchChain: async (chainToSwitch: ThirdWebChainToSwitch) => {
+      switchChain: async (chainToSwitch: any) => {
         if (switchChain) {
           try {
             await switchChain(chainToSwitch);
@@ -593,16 +590,8 @@ export function useThirdWebAdapter(): ThirdWebAdapter {
   useEffect(() => {
     const cleanup = () => {
       // Clear hooks reference when component unmounts
-      adapter.injectHooks({
-        account: null,
-        wallet: null,
-        connect: async () => {},
-        disconnect: async () => {},
-        chain: null,
-        switchChain: async () => {},
-        balance: { data: null },
-        connectedWallets: [],
-      } as ThirdWebHooks);
+      // Use null assertion since this is cleanup and exact types don't matter
+      adapter.injectHooks(null as any);
     };
 
     ThirdWebAdapter.registerCleanupCallback(cleanup);

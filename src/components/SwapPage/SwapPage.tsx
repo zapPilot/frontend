@@ -110,7 +110,7 @@ const MOCK_ASSET_CATEGORIES: AssetCategory[] = [
   },
 ];
 
-interface SwapPageProps {
+export interface SwapPageProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
 }
