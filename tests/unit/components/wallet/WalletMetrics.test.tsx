@@ -24,10 +24,11 @@ vi.mock("../../../../src/components/ui/LoadingSpinner", () => ({
   )),
 }));
 
-// Mock formatters and utilities
-vi.mock("../../../../src/lib/utils", () => ({
-  formatCurrency: vi.fn((amount, hidden) => {
-    if (hidden) return "****";
+// Mock formatters
+vi.mock("../../../../src/lib/formatters", () => ({
+  formatCurrency: vi.fn((amount, options = {}) => {
+    const isHidden = typeof options === "boolean" ? options : options.isHidden;
+    if (isHidden) return "****";
     if (amount === null || amount === undefined) return "$0.00";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
@@ -35,12 +36,6 @@ vi.mock("../../../../src/lib/utils", () => ({
       minimumFractionDigits: 2,
     }).format(amount);
   }),
-  getChangeColorClasses: vi.fn(percentage =>
-    percentage >= 0 ? "text-green-400" : "text-red-400"
-  ),
-}));
-
-vi.mock("../../../../src/utils/formatters", () => ({
   formatSmallCurrency: vi.fn(amount => {
     if (amount === null || amount === undefined) return "$0.00";
     return new Intl.NumberFormat("en-US", {
@@ -49,6 +44,13 @@ vi.mock("../../../../src/utils/formatters", () => ({
       minimumFractionDigits: 2,
     }).format(amount);
   }),
+}));
+
+// Mock color utilities
+vi.mock("../../../../src/lib/color-utils", () => ({
+  getChangeColorClasses: vi.fn(percentage =>
+    percentage >= 0 ? "text-green-400" : "text-red-400"
+  ),
 }));
 
 vi.mock("../../../../src/styles/design-tokens", () => ({

@@ -11,7 +11,10 @@ import {
   generateSVGPath,
   generateYAxisLabels,
 } from "../lib/chartUtils";
-import { calculateDrawdownData, CHART_PERIODS } from "../lib/portfolioUtils";
+import {
+  calculateDrawdownData,
+  CHART_PERIODS,
+} from "../lib/portfolio-analytics";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { GlassCard } from "./ui";
 

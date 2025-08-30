@@ -4,7 +4,7 @@ import { GRADIENTS } from "@/constants/design-system";
 import { ArrowDown, ChevronDown, Settings, Zap } from "lucide-react";
 import { useCallback, useState } from "react";
 import { SWAP_CONSTANTS } from "../../constants/swap";
-import { formatCurrency } from "../../lib/utils";
+import { formatCurrency } from "../../lib/formatters";
 import { InvestmentOpportunity } from "../../types/investment";
 import { SwapToken } from "../../types/swap";
 import { UnifiedProgressModal } from "../shared/UnifiedProgressModal";

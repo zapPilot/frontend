@@ -17,9 +17,11 @@ import {
   getAnalyticsMetrics,
   getPerformanceData,
   generateAssetAttribution,
-  getChangeColor,
+} from "../../lib/portfolio-analytics";
+import {
+  getTrendColorClasses,
   getPerformanceColor,
-} from "../../lib/portfolioUtils";
+} from "../../lib/color-utils";
 import {
   AnalyticsMetric,
   PerformancePeriod,
@@ -118,7 +120,7 @@ const AnalyticsDashboardComponent = () => {
                   <div className="flex items-start justify-between mb-2">
                     <Icon className="w-5 h-5 text-purple-400" />
                     <div
-                      className={`flex items-center text-xs ${getChangeColor(metric.trend)}`}
+                      className={`flex items-center text-xs ${getTrendColorClasses(metric.trend)}`}
                     >
                       {metric.trend === "up" && (
                         <ArrowUpRight className="w-3 h-3 mr-1" />

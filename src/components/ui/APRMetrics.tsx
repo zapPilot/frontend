@@ -1,7 +1,7 @@
 "use client";
 
 import { TrendingUp, TrendingDown, Percent, Calendar } from "lucide-react";
-import { getChangeColorClasses } from "../../lib/utils";
+import { getChangeColorClasses } from "../../lib/color-utils";
 import { APRMetricsSize } from "../../types/portfolio";
 
 interface APRMetricsProps {

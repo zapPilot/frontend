@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import type { PoolDetail } from "../../hooks/queries/useAPRQuery";
-import { formatCurrency } from "../../lib/utils";
+import { formatCurrency } from "../../lib/formatters";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/UnifiedLoading";
 

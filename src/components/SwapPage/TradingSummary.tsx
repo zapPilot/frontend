@@ -2,7 +2,7 @@
 
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useMemo } from "react";
-import { formatSmallNumber } from "../../utils/formatters";
+import { formatSmallNumber } from "../../lib/formatters";
 import { SwapEvent } from "../../types/api";
 
 interface TradingSummaryProps {

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PieChart } from "../../../src/components/PieChart";
 import { PORTFOLIO_CONFIG } from "../../../src/constants/portfolio";
-import { formatCurrency } from "../../../src/lib/utils";
+import { formatCurrency } from "../../../src/lib/formatters";
 import { PieChartData } from "../../../src/types/portfolio";
 
 // Mock framer-motion
@@ -15,7 +15,7 @@ vi.mock("framer-motion", () => ({
 }));
 
 // Mock formatCurrency utility
-vi.mock("../../../src/lib/utils", () => ({
+vi.mock("../../../src/lib/formatters", () => ({
   formatCurrency: vi.fn((amount: number, isHidden = false) =>
     isHidden ? "••••••••" : `$${amount.toFixed(2)}`
   ),

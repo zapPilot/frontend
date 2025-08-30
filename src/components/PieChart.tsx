@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
-import { formatCurrency } from "../lib/utils";
+import { formatCurrency } from "../lib/formatters";
 import { PieChartData } from "../types/portfolio";
 
 interface PieChartProps {

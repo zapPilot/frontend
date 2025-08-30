@@ -17,7 +17,7 @@ vi.mock("../../../../src/components/shared/ImageWithFallback", () => ({
 }));
 
 // Mock formatters
-vi.mock("../../../../src/utils/formatters", () => ({
+vi.mock("../../../../src/lib/formatters", () => ({
   formatSmallNumber: vi.fn((value: number) => `$${value.toFixed(2)}`),
 }));
 

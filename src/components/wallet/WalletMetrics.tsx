@@ -2,9 +2,9 @@ import { AlertCircle, TrendingUp } from "lucide-react";
 import React from "react";
 import { usePortfolioAPR } from "../../hooks/queries/useAPRQuery";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
-import { formatCurrency, getChangeColorClasses } from "../../lib/utils";
+import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import { getChangeColorClasses } from "../../lib/color-utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
-import { formatSmallCurrency } from "../../utils/formatters";
 import { BalanceLoading } from "../ui/UnifiedLoading";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 
@@ -128,7 +128,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <div className="text-gray-400 text-lg">Please Connect Wallet</div>
         );
       }
-      return formatCurrency(totalValue, balanceHidden);
+      return formatCurrency(totalValue, { isHidden: balanceHidden });
     };
 
     // Use real APR data or fall back to default

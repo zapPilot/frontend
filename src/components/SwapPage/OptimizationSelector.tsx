@@ -2,7 +2,7 @@
 
 import { ArrowRightLeft, Coins } from "lucide-react";
 import { memo, useMemo } from "react";
-import { formatSmallCurrency } from "../../utils/formatters";
+import { formatSmallCurrency } from "../../lib/formatters";
 import {
   calculateTotalTokenValue,
   getTokenSymbol,

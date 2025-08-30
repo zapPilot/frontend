@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { AssetCategory, PortfolioMetrics } from "../types/portfolio";
-import { calculatePortfolioMetrics } from "../lib/utils";
+import { calculatePortfolioMetrics } from "../lib/portfolio-data";
 
 /**
  * Custom hook for portfolio state management and calculations

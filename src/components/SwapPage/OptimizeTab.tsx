@@ -8,7 +8,7 @@ import {
 } from "thirdweb/react";
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { useToast } from "../../hooks/useToast";
-import { formatSmallNumber } from "../../utils/formatters";
+import { formatSmallNumber } from "../../lib/formatters";
 import { getTokenSymbol } from "../../utils/tokenUtils";
 import { SlippageComponent } from "../shared/SlippageComponent";
 import { TokenImage } from "../shared/TokenImage";
@@ -19,10 +19,8 @@ import { useUIState } from "./hooks/useUIState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
 import { StreamingProgress } from "./StreamingProgress";
-import {
-  executeDustZap,
-  IntentServiceError,
-} from "../../services/intentService";
+import { executeDustZap } from "../../services/intentService";
+import { IntentServiceError } from "../../lib/base-error";
 import {
   WalletConnectionState,
   DustToken,

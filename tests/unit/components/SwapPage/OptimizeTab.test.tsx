@@ -167,7 +167,7 @@ vi.mock("../../../../src/components/ui", () => ({
 }));
 
 // Mock utility functions
-vi.mock("../../../../src/utils/formatters", () => ({
+vi.mock("../../../../src/lib/formatters", () => ({
   formatSmallNumber: vi.fn((value: number) => `$${value.toFixed(2)}`),
 }));
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatSmallNumber } from "../../utils/formatters";
+import { formatSmallNumber } from "../../lib/formatters";
 import { ImageWithFallback } from "../shared/ImageWithFallback";
 import { SwapEvent } from "../../types/api";
 

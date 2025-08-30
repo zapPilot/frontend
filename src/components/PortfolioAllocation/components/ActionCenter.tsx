@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowRightLeft, Coins, RotateCcw, Settings, Zap } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import type { SwapToken } from "../../../types/swap";
-import { formatSmallCurrency } from "../../../utils/formatters";
+import { formatSmallCurrency } from "../../../lib/formatters";
 import {
   calculateTotalTokenValue,
   getTokenSymbol,

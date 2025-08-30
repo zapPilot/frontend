@@ -5,6 +5,7 @@
  */
 
 import { httpUtils } from "../lib/http-utils";
+import { createIntentServiceError } from "../lib/base-error";
 
 /**
  * Intent Engine interfaces
@@ -45,49 +46,6 @@ export interface IntentStatus {
     blockNumber?: number;
   }>;
 }
-
-/**
- * Intent Service Error
- */
-export class IntentServiceError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string,
-    public details?: any
-  ) {
-    super(message);
-    this.name = "IntentServiceError";
-  }
-}
-
-/**
- * Create enhanced error messages for common intent engine errors
- */
-const createIntentServiceError = (error: any): IntentServiceError => {
-  const status = error.status || error.response?.status || 500;
-  let message = error.message || "Intent service error";
-
-  switch (status) {
-    case 400:
-      if (message?.includes("slippage")) {
-        message = "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-      } else if (message?.includes("amount")) {
-        message = "Invalid transaction amount. Please check your balance.";
-      }
-      break;
-    case 429:
-      message =
-        "Too many transactions in progress. Please wait before submitting another.";
-      break;
-    case 503:
-      message =
-        "Intent engine is temporarily overloaded. Please try again in a moment.";
-      break;
-  }
-
-  return new IntentServiceError(message, status, error.code, error.details);
-};
 
 // Get configured client
 const getIntentEngineClient = () => {

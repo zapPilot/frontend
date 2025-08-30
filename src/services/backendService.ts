@@ -5,6 +5,7 @@
  */
 
 import { httpUtils } from "../lib/http-utils";
+import { createBackendServiceError } from "../lib/base-error";
 
 /**
  * Backend interfaces
@@ -45,48 +46,6 @@ export interface EmailReport {
     gasSpent: string;
   };
 }
-
-/**
- * Backend Service Error
- */
-export class BackendServiceError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string,
-    public details?: any
-  ) {
-    super(message);
-    this.name = "BackendServiceError";
-  }
-}
-
-/**
- * Create enhanced error messages for common backend errors
- */
-const createBackendServiceError = (error: any): BackendServiceError => {
-  const status = error.status || error.response?.status || 500;
-  let message = error.message || "Backend service error";
-
-  switch (status) {
-    case 400:
-      if (message?.includes("email")) {
-        message = "Invalid email address format.";
-      } else if (message?.includes("webhook")) {
-        message = "Invalid Discord webhook configuration.";
-      }
-      break;
-    case 429:
-      message =
-        "Too many notification requests. Please wait before sending more.";
-      break;
-    case 502:
-      message = "External notification service is temporarily unavailable.";
-      break;
-  }
-
-  return new BackendServiceError(message, status, error.code, error.details);
-};
 
 // Get configured client
 const getBackendApiClient = () => {

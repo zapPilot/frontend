@@ -7,7 +7,7 @@ import {
   AlertTriangle,
   CheckCircle,
 } from "lucide-react";
-import { formatSmallCurrency } from "../../utils/formatters";
+import { formatSmallCurrency } from "../../lib/formatters";
 import { OptimizationOptions } from "../../types/optimize";
 
 interface OptimizationPreviewProps {

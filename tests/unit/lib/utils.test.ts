@@ -3,10 +3,12 @@ import {
   formatCurrency,
   formatNumber,
   formatPercentage,
+} from "../../../src/lib/formatters";
+import {
   getRiskLevelClasses,
   getChangeColorClasses,
-  calculatePortfolioMetrics,
-} from "../../../src/lib/utils";
+} from "../../../src/lib/color-utils";
+import { calculatePortfolioMetrics } from "../../../src/lib/portfolio-data";
 
 describe("utils", () => {
   describe("formatCurrency", () => {

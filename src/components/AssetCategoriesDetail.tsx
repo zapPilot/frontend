@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import React, { useCallback, useMemo, useRef } from "react";
-import { formatCurrency, formatNumber } from "../lib/utils";
+import { formatCurrency, formatNumber } from "../lib/formatters";
 import { AssetCategory, AssetDetail } from "../types/portfolio";
 import {
   formatBorrowingAmount,
@@ -109,7 +109,8 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
               {formatBorrowingAmount(position.value)}
             </div>
             <div className="text-sm text-orange-400/70">
-              -{formatNumber(position.amount, balanceHidden)} {position.symbol}
+              -{formatNumber(position.amount, { isHidden: balanceHidden })}{" "}
+              {position.symbol}
             </div>
             <div className="text-sm text-orange-400/70">
               {position.apr > 0
@@ -209,10 +210,9 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                         <div className="flex items-center space-x-4">
                           <div className="text-right">
                             <div className="font-semibold text-white">
-                              {formatCurrency(
-                                category.totalValue,
-                                balanceHidden
-                              )}
+                              {formatCurrency(category.totalValue, {
+                                isHidden: balanceHidden,
+                              })}
                             </div>
                             <div
                               className={`text-sm ${category.change24h >= 0 ? "text-green-400" : "text-red-400"}`}
@@ -270,16 +270,14 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
 
                                   <div className="text-right">
                                     <div className="font-semibold text-white">
-                                      {formatCurrency(
-                                        asset.value,
-                                        balanceHidden
-                                      )}
+                                      {formatCurrency(asset.value, {
+                                        isHidden: balanceHidden,
+                                      })}
                                     </div>
                                     <div className="text-sm text-gray-400">
-                                      {formatNumber(
-                                        asset.amount,
-                                        balanceHidden
-                                      )}{" "}
+                                      {formatNumber(asset.amount, {
+                                        isHidden: balanceHidden,
+                                      })}{" "}
                                       {asset.symbol}
                                     </div>
                                     <div className="text-sm text-gray-400">
