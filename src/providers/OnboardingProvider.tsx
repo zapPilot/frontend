@@ -1,15 +1,17 @@
 "use client";
 
+import {
+  getStorageItem,
+  removeStorageItem,
+  setStorageItem,
+} from "@/utils/localStorage";
 import React, {
   createContext,
-  useContext,
   useCallback,
+  useContext,
   useEffect,
   useState,
 } from "react";
-import { logger } from "@/utils/logger";
-
-const onboardingLogger = logger.createContextLogger("OnboardingProvider");
 
 interface OnboardingState {
   isFirstVisit: boolean;
@@ -56,14 +58,9 @@ export const OnboardingProvider = ({
   // Load onboarding state from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(ONBOARDING_STORAGE_KEY);
-      if (saved) {
-        try {
-          const parsedState = JSON.parse(saved);
-          setState(prevState => ({ ...prevState, ...parsedState }));
-        } catch (error) {
-          onboardingLogger.warn("Failed to parse onboarding state", error);
-        }
+      const savedState = getStorageItem(ONBOARDING_STORAGE_KEY, null);
+      if (savedState) {
+        setState(prevState => ({ ...prevState, ...savedState }));
       }
     }
   }, []);
@@ -71,7 +68,7 @@ export const OnboardingProvider = ({
   // Save state to localStorage whenever it changes
   useEffect(() => {
     if (typeof window !== "undefined") {
-      localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(state));
+      setStorageItem(ONBOARDING_STORAGE_KEY, state);
     }
   }, [state]);
 
@@ -106,7 +103,7 @@ export const OnboardingProvider = ({
   const resetOnboarding = useCallback(() => {
     setState(defaultState);
     if (typeof window !== "undefined") {
-      localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+      removeStorageItem(ONBOARDING_STORAGE_KEY);
     }
   }, []);
 

@@ -198,6 +198,7 @@ export function WalletButton({
 
   // Refs
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -216,12 +217,28 @@ export function WalletButton({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Handle copy address
   const handleCopyAddress = async () => {
     const success = await wallet.copyAddress();
     if (success) {
       setCopiedAddress(true);
-      setTimeout(() => setCopiedAddress(false), 2000);
+
+      // Clear any existing timeout
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+
+      // Set new timeout
+      copyTimeoutRef.current = setTimeout(() => setCopiedAddress(false), 2000);
     }
   };
 

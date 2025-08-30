@@ -95,7 +95,7 @@ export function TooltipHint({
     };
 
     // Initial positioning
-    setTimeout(findAndPositionHint, 100);
+    const positionTimer = setTimeout(findAndPositionHint, 100);
 
     // Re-position on window resize
     const handleResize = () => {
@@ -105,7 +105,10 @@ export function TooltipHint({
     };
 
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(positionTimer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [targetSelector, shouldShow, targetElement, updatePosition]);
 
   // Handle show/hide logic based on trigger

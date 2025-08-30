@@ -10,6 +10,11 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { useWalletContext } from "@/providers/WalletContext";
 import { walletLogger } from "@/utils/logger";
+import {
+  getStorageItem,
+  setStorageItem,
+  removeStorageItem,
+} from "@/utils/localStorage";
 import type {
   WalletAccount,
   Chain,
@@ -149,7 +154,7 @@ export function useWallet(config: UseWalletConfig = {}): UseWalletReturn {
   // Auto-connect on mount
   useEffect(() => {
     if (autoConnect && !account?.isConnected && !isConnecting) {
-      const lastConnected = localStorage.getItem("wallet_last_connected");
+      const lastConnected = getStorageItem("wallet_last_connected", null);
       if (lastConnected) {
         log("Auto-connecting to wallet");
         connect();
@@ -189,7 +194,7 @@ export function useWallet(config: UseWalletConfig = {}): UseWalletReturn {
       await contextConnect();
 
       // Store successful connection
-      localStorage.setItem("wallet_last_connected", "true");
+      setStorageItem("wallet_last_connected", "true");
 
       // Reset retry count on success
       setRetryCount(0);
@@ -221,7 +226,7 @@ export function useWallet(config: UseWalletConfig = {}): UseWalletReturn {
       await contextDisconnect();
 
       // Clear stored connection
-      localStorage.removeItem("wallet_last_connected");
+      removeStorageItem("wallet_last_connected");
 
       // Reset retry state
       setRetryCount(0);
