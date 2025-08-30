@@ -60,7 +60,10 @@ export const OnboardingProvider = ({
     if (typeof window !== "undefined") {
       const savedState = getStorageItem(ONBOARDING_STORAGE_KEY, null);
       if (savedState) {
-        setState(prevState => ({ ...prevState, ...savedState }));
+        setState(prevState => ({
+          ...prevState,
+          ...(savedState as OnboardingState),
+        }));
       }
     }
   }, []);

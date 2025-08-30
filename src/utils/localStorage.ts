@@ -43,7 +43,9 @@ export function getStorageItem<T>(key: string, defaultValue: T): T {
     // Cache the parsed value (with size limit)
     if (parseCache.size >= cacheMaxSize) {
       const firstKey = parseCache.keys().next().value;
-      parseCache.delete(firstKey);
+      if (firstKey !== undefined) {
+        parseCache.delete(firstKey);
+      }
     }
     parseCache.set(key, parsed);
 
