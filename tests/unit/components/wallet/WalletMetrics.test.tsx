@@ -112,8 +112,6 @@ vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
   )),
 }));
 
-
-
 describe("WalletMetrics", () => {
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const defaultProps = {
