@@ -8,11 +8,9 @@ import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { useWalletModal } from "../hooks/useWalletModal";
 import { createCategorySummaries } from "../utils/portfolio.utils";
-import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
-import { PieChart } from "./PieChart";
+import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
@@ -115,10 +113,7 @@ export function WalletPortfolio({
   }, [landingPageData]);
 
   // Portfolio UI state management (simplified since we have pre-formatted data)
-  const {
-    balanceHidden,
-    toggleBalanceVisibility,
-  } = usePortfolio([]);
+  const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
 
   // Wallet modal state
   const {
@@ -183,48 +178,26 @@ export function WalletPortfolio({
           </GlassCard>
         </ErrorBoundary>
 
-        {/* Asset Distribution */}
+        {/* Asset Distribution with Horizontal Layout */}
         <ErrorBoundary
           onError={error =>
-            walletPortfolioLogger.error("AssetDistribution Error", error)
+            walletPortfolioLogger.error("PortfolioOverview Error", error)
           }
         >
-          <GlassCard>
-            <div className="p-6">
-              <h3 className="text-xl font-bold gradient-text mb-6">
-                Asset Distribution
-              </h3>
-
-              {/* Pie Chart */}
-              <div className="mb-6">
-                {landingPageQuery.isLoading ? (
-                  <div className="flex items-center justify-center h-64">
-                    <LoadingSpinner size="lg" />
-                  </div>
-                ) : landingPageQuery.error ? (
-                  <div className="text-center p-8 text-red-400">
-                    Error loading chart: {landingPageQuery.error.message}
-                  </div>
-                ) : (
-                  <PieChart
-                    data={pieChartData || []}
-                    totalValue={landingPageData?.total_net_usd || 0}
-                  />
-                )}
-              </div>
-
-              {/* Category Summaries */}
-              <AssetCategoriesDetail
-                categorySummaries={categorySummaries}
-                onViewAllClick={handleViewAllCategory}
-                balanceHidden={balanceHidden}
-                isLoading={landingPageQuery.isLoading}
-                error={landingPageQuery.error?.message || null}
-                onRetry={landingPageQuery.refetch}
-                isRetrying={landingPageQuery.isRefetching}
-              />
-            </div>
-          </GlassCard>
+          <PortfolioOverview
+            categorySummaries={categorySummaries}
+            pieChartData={pieChartData || []}
+            totalValue={landingPageData?.total_net_usd || null}
+            onViewAllClick={handleViewAllCategory}
+            balanceHidden={balanceHidden}
+            title="Asset Distribution"
+            isLoading={landingPageQuery.isLoading}
+            apiError={landingPageQuery.error?.message || null}
+            onRetry={landingPageQuery.refetch}
+            isRetrying={landingPageQuery.isRefetching}
+            isConnected={isConnected}
+            testId="wallet-portfolio-overview"
+          />
         </ErrorBoundary>
 
         {/* Wallet Manager Modal */}
