@@ -5,8 +5,8 @@ import { ArrowDownLeft, TrendingUp } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { PieChartData } from "../types/portfolio";
-import { CategorySummary } from "../utils/portfolio.utils";
 import { transformPositionsForDisplay } from "../utils/borrowingUtils";
+import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
@@ -18,7 +18,6 @@ export interface PortfolioOverviewProps {
   categorySummaries: CategorySummary[];
   pieChartData: PieChartData[];
   totalValue?: number | null;
-  onViewAllClick: (categoryId: string) => void;
   balanceHidden?: boolean;
   title?: string;
   className?: string;
@@ -35,7 +34,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     categorySummaries,
     pieChartData,
     totalValue,
-    onViewAllClick,
     balanceHidden = false,
     title = "Asset Distribution",
     className = "",
@@ -270,7 +268,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               >
                 <AssetCategoriesDetail
                   categorySummaries={categorySummaries}
-                  onViewAllClick={onViewAllClick}
                   balanceHidden={balanceHidden}
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={showLoadingState}
@@ -312,7 +309,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
             <div data-testid="allocation-list-mobile">
               <AssetCategoriesDetail
                 categorySummaries={categorySummaries}
-                onViewAllClick={onViewAllClick}
                 balanceHidden={balanceHidden}
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={showLoadingState}

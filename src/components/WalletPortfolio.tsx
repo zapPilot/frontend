@@ -122,17 +122,6 @@ export function WalletPortfolio({
     closeModal: closeWalletManager,
   } = useWalletModal();
 
-  // Navigation handler for "View All" category button
-  const handleViewAllCategory = () => {
-    // This would typically navigate to analytics tab with category filter
-    // For now, we'll trigger the analytics click with a category parameter
-    if (onAnalyticsClick) {
-      onAnalyticsClick();
-      // TODO: In a real app, you'd pass the categoryId to the analytics tab
-      // categoryId could be used for filtering: btc, eth, stablecoins, others
-    }
-  };
-
   return (
     <ErrorBoundary
       onError={error =>
@@ -188,7 +177,6 @@ export function WalletPortfolio({
             categorySummaries={categorySummaries}
             pieChartData={pieChartData || []}
             totalValue={landingPageData?.total_net_usd || null}
-            onViewAllClick={handleViewAllCategory}
             balanceHidden={balanceHidden}
             title="Asset Distribution"
             isLoading={landingPageQuery.isLoading}

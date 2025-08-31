@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import React from "react";
 import { formatCurrency } from "../lib/formatters";
 import { CategorySummary } from "../utils/portfolio.utils";
@@ -12,7 +12,6 @@ type TabType = "assets" | "borrowing";
 
 interface AssetCategoriesDetailProps {
   categorySummaries: CategorySummary[];
-  onViewAllClick: (categoryId: string) => void;
   balanceHidden?: boolean;
   className?: string;
   isLoading?: boolean;
@@ -25,7 +24,6 @@ interface AssetCategoriesDetailProps {
 export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
   ({
     categorySummaries,
-    onViewAllClick,
     balanceHidden = false,
     className = "",
     isLoading = false,
@@ -115,15 +113,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                           </div>
                         </div>
                       </div>
-
-                      {/* View All CTA */}
-                      <button
-                        onClick={() => onViewAllClick(category.id)}
-                        className="w-full p-2 rounded-lg bg-blue-600/10 border border-blue-500/20 hover:bg-blue-600/20 transition-all duration-200 flex items-center justify-center space-x-2 text-blue-400 text-sm font-medium"
-                      >
-                        <span>View All {category.name} Positions</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
                     </motion.div>
                   ))
                 ) : (
