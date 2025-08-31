@@ -112,10 +112,11 @@ export function transformPortfolioSummary(
   if (apiResponse.asset_positions && apiResponse.borrowing_positions) {
     // Calculate total value from assets only (positive values)
     const assetValue = apiResponse.asset_positions.reduce(
-      (sum, cat) =>
+      (sum: number, cat: ApiCategory) =>
         sum +
         (cat.positions?.reduce(
-          (catSum, pos) => catSum + Math.max(0, pos.total_usd_value || 0),
+          (catSum: number, pos: ApiPosition) =>
+            catSum + Math.max(0, pos.total_usd_value || 0),
           0
         ) || 0),
       0
@@ -123,10 +124,11 @@ export function transformPortfolioSummary(
 
     // Calculate total borrowing value (should be positive in the new structure)
     const borrowingValue = apiResponse.borrowing_positions.reduce(
-      (sum, cat) =>
+      (sum: number, cat: ApiCategory) =>
         sum +
         (cat.positions?.reduce(
-          (catSum, pos) => catSum + Math.abs(pos.total_usd_value || 0),
+          (catSum: number, pos: ApiPosition) =>
+            catSum + Math.abs(pos.total_usd_value || 0),
           0
         ) || 0),
       0
@@ -136,13 +138,14 @@ export function transformPortfolioSummary(
     totalValue = assetValue;
 
     // Transform asset positions
-    const assetCategories = apiResponse.asset_positions.map((cat, index) =>
-      transformApiCategory(cat, index, assetValue, poolDetails)
+    const assetCategories = apiResponse.asset_positions.map(
+      (cat: ApiCategory, index: number) =>
+        transformApiCategory(cat, index, assetValue, poolDetails)
     );
 
     // Transform borrowing positions (mark them as negative for internal processing)
     const borrowingCategories = apiResponse.borrowing_positions.map(
-      (cat, index) => {
+      (cat: ApiCategory, index: number) => {
         const category = transformApiCategory(
           cat,
           index + assetCategories.length,
@@ -165,16 +168,17 @@ export function transformPortfolioSummary(
   // Handle legacy structure
   else if (apiResponse.categories) {
     totalValue = apiResponse.categories.reduce(
-      (sum, cat) =>
+      (sum: number, cat: ApiCategory) =>
         sum +
         (cat.positions?.reduce(
-          (catSum, pos) => catSum + (pos.total_usd_value || 0),
+          (catSum: number, pos: ApiPosition) =>
+            catSum + (pos.total_usd_value || 0),
           0
         ) || 0),
       0
     );
 
-    categories = apiResponse.categories.map((cat, index) =>
+    categories = apiResponse.categories.map((cat: ApiCategory, index: number) =>
       transformApiCategory(cat, index, totalValue, poolDetails)
     );
   }
