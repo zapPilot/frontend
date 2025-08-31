@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletMetrics } from "../../../../src/components/wallet/WalletMetrics";
-import { usePortfolioAPR } from "../../../../src/hooks/queries/useAPRQuery";
+import { useLandingPageData } from "../../../../src/hooks/queries/usePortfolioQuery";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -69,19 +69,33 @@ vi.mock("../../../../src/constants/portfolio", () => ({
   }),
 }));
 
-// Mock the usePortfolioAPR hook
-vi.mock("../../../../src/hooks/queries/useAPRQuery", () => ({
-  usePortfolioAPR: vi.fn(userId => ({
+// Mock the useLandingPageData hook
+vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
+  useLandingPageData: vi.fn(userId => ({
     data: {
-      portfolio_summary: {
-        total_asset_value_usd: 15000,
-        weighted_apr: 0.125, // 12.5% APR as decimal (API format)
+      total_assets_usd: 15000,
+      total_debt_usd: 0,
+      total_net_usd: 15000,
+      weighted_apr: 0.125, // 12.5% APR as decimal (API format)
+      estimated_monthly_income: 1000,
+      pie_chart_categories: {
+        btc: 0,
+        eth: 0,
+        stablecoins: 0,
+        others: 0,
       },
       pool_details: [],
+      total_positions: 0,
+      protocols_count: 0,
+      chains_count: 0,
+      last_updated: null,
+      apr_coverage: {
+        matched_pools: 0,
+        total_pools: 0,
+        coverage_percentage: 0,
+        matched_asset_value_usd: 0,
+      },
     },
-    portfolioAPR: 0.125, // Return as decimal for display calculation (will be multiplied by 100)
-    estimatedMonthlyIncome: null, // Let component calculate based on totalValue prop
-    poolDetails: [],
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -98,11 +112,10 @@ vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
   )),
 }));
 
-// Mock APR query hook
-vi.mock("../../../../src/hooks/queries/useAPRQuery");
+
 
 describe("WalletMetrics", () => {
-  const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
+  const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const defaultProps = {
     totalValue: 15000,
     balanceHidden: false,
@@ -116,14 +129,35 @@ describe("WalletMetrics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    // Setup APR hook mock
-    mockUsePortfolioAPR.mockReturnValue({
-      poolDetails: [],
+    // Setup landing page data mock
+    mockUseLandingPageData.mockReturnValue({
+      data: {
+        total_assets_usd: 15000,
+        total_debt_usd: 0,
+        total_net_usd: 15000,
+        weighted_apr: 0.125,
+        estimated_monthly_income: 1000,
+        pie_chart_categories: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
+        pool_details: [],
+        total_positions: 0,
+        protocols_count: 0,
+        chains_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
-      portfolioAPR: 0.125,
-      estimatedMonthlyIncome: 1000,
       isRefetching: false,
     });
   });

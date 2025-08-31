@@ -2,7 +2,7 @@ import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
-import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolio.utils";
@@ -253,7 +253,7 @@ const mockNewApiResponse = {
 describe("WalletPortfolio", () => {
   const mockUseUser = vi.mocked(useUser);
   const mockUsePortfolio = vi.mocked(usePortfolio);
-  const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
+  const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUseWalletModal = vi.mocked(useWalletModal);
   const mockPreparePortfolioDataWithBorrowing = vi.mocked(
     preparePortfolioDataWithBorrowing

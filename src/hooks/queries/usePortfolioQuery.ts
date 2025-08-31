@@ -3,19 +3,18 @@ import { useMemo } from "react";
 import { queryKeys } from "../../lib/queryClient";
 import { parsePortfolioSummary } from "../../schemas/portfolioApi";
 import {
-  getPortfolioSummary,
-  getPortfolioAPR,
   getLandingPagePortfolioData,
-  type PoolDetail,
+  getPortfolioSummary,
   type LandingPageResponse,
+  type PoolDetail,
 } from "../../services/analyticsEngine";
 import type { AssetCategory, PieChartData } from "../../types/portfolio";
+import { portfolioLogger } from "../../utils/logger";
 import { transformPortfolioSummary } from "../../utils/portfolio.mapper";
 import {
   portfolioStateUtils,
   preparePortfolioDataWithBorrowing,
 } from "../../utils/portfolio.utils";
-import { portfolioLogger } from "../../utils/logger";
 
 export interface UsePortfolioQueryReturn {
   totalValue: number | null;
@@ -43,15 +42,8 @@ export function usePortfolioSummary(userId: string | null | undefined) {
       // Validate and parse API response with Zod
       const summary = parsePortfolioSummary(rawResponse);
 
-      // Fetch APR data to enhance positions with real APR values
-      let poolDetails: PoolDetail[] = [];
-      try {
-        const aprData = await getPortfolioAPR(userId);
-        poolDetails = aprData.pool_details;
-      } catch (error) {
-        // APR data is optional - continue without it if unavailable
-        portfolioLogger.warn("Failed to fetch APR data", error);
-      }
+      // APR data is now handled by useLandingPageData - no separate fetch needed
+      const poolDetails: PoolDetail[] = [];
 
       // Transform API response using utility function with APR data
       const result = transformPortfolioSummary(summary, poolDetails);

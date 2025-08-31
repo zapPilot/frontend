@@ -208,15 +208,7 @@ export const getPortfolioSummary = async (
   return await httpUtils.analyticsEngine.get<PortfolioSummaryResponse>(url);
 };
 
-/**
- * Get portfolio APR summary with pool details
- */
-export const getPortfolioAPR = async (
-  userId: string
-): Promise<PortfolioAPRResponse> => {
-  const endpoint = `/api/v1/apr/portfolio/${userId}/summary`;
-  return await httpUtils.analyticsEngine.get<PortfolioAPRResponse>(endpoint);
-};
+
 
 /**
  * Get unified landing page portfolio data

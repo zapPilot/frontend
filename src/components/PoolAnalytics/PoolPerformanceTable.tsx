@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
-import type { PoolDetail } from "../../hooks/queries/useAPRQuery";
+import type { PoolDetail } from "../../services/analyticsEngine";
 import { formatCurrency } from "../../lib/formatters";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/UnifiedLoading";
