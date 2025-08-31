@@ -36,39 +36,6 @@ export const portfolioMetricsSchema = z.object({
 });
 
 /**
- * Zod schema for complete Portfolio Summary API response
- * Validates the full structure returned by getPortfolioSummary
- * Updated to support new asset_positions and borrowing_positions structure
- */
-export const portfolioSummarySchema = z
-  .object({
-    metrics: portfolioMetricsSchema,
-    // Legacy structure support
-    categories: z
-      .array(apiCategorySchema)
-      .min(0, "Categories array is required")
-      .optional(),
-    // New separated structure
-    asset_positions: z
-      .array(apiCategorySchema)
-      .min(0, "Asset positions array is required")
-      .optional(),
-    borrowing_positions: z
-      .array(apiCategorySchema)
-      .min(0, "Borrowing positions array is required")
-      .optional(),
-  })
-  .refine(
-    data =>
-      data.categories || (data.asset_positions && data.borrowing_positions),
-    {
-      message:
-        "Either categories or both asset_positions and borrowing_positions must be provided",
-      path: ["categories"],
-    }
-  );
-
-/**
  * Type inference from Zod schemas
  * These types are automatically generated from the schemas above
  */

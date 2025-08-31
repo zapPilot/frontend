@@ -5,7 +5,7 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolio.utils";
+import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
 // Mock dependencies
@@ -255,8 +255,8 @@ describe("WalletPortfolio", () => {
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUseWalletModal = vi.mocked(useWalletModal);
-  const mockPreparePortfolioDataWithBorrowing = vi.mocked(
-    preparePortfolioDataWithBorrowing
+  const mockCreateCategoriesFromApiData = vi.mocked(
+    createCategoriesFromApiData
   );
 
   beforeEach(() => {
@@ -267,9 +267,31 @@ describe("WalletPortfolio", () => {
       loading: false,
     });
 
-    mockUsePortfolioDisplayData.mockReturnValue({
-      totalValue: 15000,
-      categories: mockAssetCategories,
+    mockUseLandingPageData.mockReturnValue({
+      data: {
+        total_net_usd: 15000,
+        weighted_apr: 0.125,
+        estimated_monthly_income: 1000,
+        pie_chart_categories: {
+          btc: 7500,
+          eth: 4500,
+          stablecoins: 2000,
+          others: 1000,
+        },
+        pool_details: [],
+        total_positions: 0,
+        protocols_count: 0,
+        chains_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+        total_assets_usd: 15000,
+        total_debt_usd: 0,
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -290,18 +312,7 @@ describe("WalletPortfolio", () => {
       closeModal: vi.fn(),
     });
 
-    // Mock the data transformation utility
-    mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-      portfolioData: mockAssetCategories,
-      pieChartData: mockPieChartData,
-      borrowingData: {
-        assetsPieData: mockPieChartData,
-        borrowingItems: [],
-        netValue: 12000,
-        totalBorrowing: 0,
-        hasBorrowing: false,
-      },
-    });
+    mockCreateCategoriesFromApiData.mockReturnValue(mockAssetCategories);
   });
 
   afterEach(() => {
@@ -320,23 +331,42 @@ describe("WalletPortfolio", () => {
 
       // Verify that the individual hooks are called
       expect(mockUseUser).toHaveBeenCalled();
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
-      expect(mockUsePortfolio).toHaveBeenCalledWith(mockAssetCategories);
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
+      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
       expect(mockUseWalletModal).toHaveBeenCalled();
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
-        mockAssetCategories,
-        15000,
-        "WalletPortfolio"
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
+        { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
+        15000
       );
     });
 
     it("should ensure pie chart data only contains positive asset values, no borrowing", async () => {
       // Mock data with borrowing included in portfolio but excluded from pie chart
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 10000,
-        categories: mockMixedPortfolioData, // Includes borrowing
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 10000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 7500,
+            eth: 4500,
+            stablecoins: 2000,
+            others: 1000,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 5000,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -352,19 +382,10 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify pie chart data contains only positive values (no borrowing)
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
-        mockMixedPortfolioData,
-        10000,
-        "WalletPortfolio"
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
+        { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
+        15000
       );
-
-      const prepareCall = mockPreparePortfolioDataWithBorrowing.mock.results[0];
-      expect(prepareCall.value.pieChartData).toEqual(mockPieChartData);
-
-      // Ensure all pie chart values are positive
-      prepareCall.value.pieChartData.forEach((item: any) => {
-        expect(item.value).toBeGreaterThan(0);
-      });
     });
 
     it("should handle preparePortfolioDataWithBorrowing being called directly", async () => {
@@ -377,33 +398,42 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify that the component uses the borrowing-aware transformation
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
-        mockAssetCategories,
-        15000,
-        "WalletPortfolio"
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
+        { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
+        15000
       );
     });
 
     it("should validate that borrowing data is separated but pie chart excludes it", async () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 12000,
-        categories: mockMixedPortfolioData,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 12000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 7500,
+            eth: 4500,
+            stablecoins: 2000,
+            others: 1000,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 3000,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: mockMixedPortfolioData,
-        pieChartData: mockPieChartData, // Only contains assets
-        borrowingData: {
-          assetsPieData: mockPieChartData,
-          borrowingItems: mockBorrowingCategories,
-          netValue: 10000, // 12000 assets - 2000 borrowing
-          totalBorrowing: 2000,
-          hasBorrowing: true,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -413,31 +443,13 @@ describe("WalletPortfolio", () => {
           "has-data"
         );
       });
-
-      // Verify pie chart only contains assets (BTC, ETH), not borrowing (USDC)
-      const prepareResult =
-        mockPreparePortfolioDataWithBorrowing.mock.results[0].value;
-
-      expect(prepareResult.pieChartData).toHaveLength(2); // Only BTC and ETH
-      expect(
-        prepareResult.pieChartData.find((item: any) => item.label === "BTC")
-      ).toBeDefined();
-      expect(
-        prepareResult.pieChartData.find((item: any) => item.label === "ETH")
-      ).toBeDefined();
-      expect(
-        prepareResult.pieChartData.find(
-          (item: any) => item.label === "Stablecoins"
-        )
-      ).toBeUndefined();
     });
   });
 
   describe("Prop Passing to PortfolioOverview", () => {
     it("should pass isLoading=true initially", async () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: true,
         error: null,
         refetch: vi.fn(),
@@ -469,11 +481,10 @@ describe("WalletPortfolio", () => {
 
     it("should pass apiError when API call fails", async () => {
       const errorMessage = "Failed to load portfolio summary";
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
-        error: errorMessage,
+        error: { message: errorMessage },
         refetch: vi.fn(),
         isRefetching: false,
       });
@@ -497,29 +508,15 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify that PortfolioOverview receives the correct pieChartData
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
-        mockAssetCategories,
-        15000,
-        "WalletPortfolio"
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
+        { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
+        15000
       );
     });
   });
 
   describe("New API Structure Integration", () => {
     it("should handle new asset_positions and borrowing_positions API structure", async () => {
-      // Mock the transformation utility to simulate new API structure handling
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: mockAssetCategories,
-        pieChartData: mockPieChartData,
-        borrowingData: {
-          assetsPieData: mockPieChartData,
-          borrowingItems: mockBorrowingCategories,
-          netValue: 10000,
-          totalBorrowing: 2000,
-          hasBorrowing: true,
-        },
-      });
-
       render(<WalletPortfolio />);
 
       await waitFor(() => {
@@ -529,10 +526,8 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify individual hooks properly handle new structure
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalled();
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalled();
     });
 
     it("should maintain backward compatibility with legacy categories structure", async () => {
@@ -552,32 +547,35 @@ describe("WalletPortfolio", () => {
         },
       ];
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 15000,
-        categories: legacyCategories,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 15000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 7500,
+            eth: 4500,
+            stablecoins: 2000,
+            others: 1000,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 0,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: legacyCategories,
-        pieChartData: [
-          {
-            label: "Mixed Assets",
-            value: 15000,
-            percentage: 100,
-            color: "#333333",
-          },
-        ],
-        borrowingData: {
-          assetsPieData: [],
-          borrowingItems: [],
-          netValue: 15000,
-          totalBorrowing: 0,
-          hasBorrowing: false,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -588,7 +586,7 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(mockUsePortfolio).toHaveBeenCalledWith(legacyCategories);
+      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
     });
   });
 
@@ -601,25 +599,35 @@ describe("WalletPortfolio", () => {
         // Note: No negative borrowing values in pie chart
       ];
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 13000,
-        categories: mockMixedPortfolioData,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 13000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 8000,
+            eth: 5000,
+            stablecoins: 0,
+            others: 0,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 13000,
+          total_debt_usd: 0,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: mockMixedPortfolioData,
-        pieChartData: mixedPieChartData,
-        borrowingData: {
-          assetsPieData: mixedPieChartData,
-          borrowingItems: mockBorrowingCategories,
-          netValue: 11000,
-          totalBorrowing: 2000,
-          hasBorrowing: true,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -629,35 +637,33 @@ describe("WalletPortfolio", () => {
           "has-data"
         );
       });
-
-      // Verify all pie chart values are positive
-      const prepareResult =
-        mockPreparePortfolioDataWithBorrowing.mock.results[0].value;
-      prepareResult.pieChartData.forEach((item: any) => {
-        expect(item.value).toBeGreaterThan(0);
-      });
     });
 
     it("should handle empty asset positions gracefully", async () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 0,
-        categories: [],
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 0,
+          weighted_apr: 0,
+          estimated_monthly_income: 0,
+          pie_chart_categories: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 0,
+          total_debt_usd: 0,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: [],
-        pieChartData: [],
-        borrowingData: {
-          assetsPieData: [],
-          borrowingItems: [],
-          netValue: 0,
-          totalBorrowing: 0,
-          hasBorrowing: false,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -675,25 +681,35 @@ describe("WalletPortfolio", () => {
         // Borrowing should be filtered out by preparePortfolioDataWithBorrowing
       ];
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 10000,
-        categories: mockMixedPortfolioData,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 10000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 7500,
+            eth: 4500,
+            stablecoins: 2000,
+            others: 1000,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 5000,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: mockMixedPortfolioData,
-        pieChartData: validPieChartData, // Only positive values after filtering
-        borrowingData: {
-          assetsPieData: validPieChartData,
-          borrowingItems: mockBorrowingCategories,
-          netValue: 10000,
-          totalBorrowing: 2000,
-          hasBorrowing: true,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -705,19 +721,17 @@ describe("WalletPortfolio", () => {
       });
 
       // Component should render correctly with filtered data
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalledWith(
-        mockMixedPortfolioData,
-        10000,
-        "WalletPortfolio"
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
+        { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
+        15000
       );
     });
   });
 
   describe("Loading States", () => {
     it("should show loading state when portfolio data is loading", () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: true,
         error: null,
         refetch: vi.fn(),
@@ -730,9 +744,8 @@ describe("WalletPortfolio", () => {
     });
 
     it("should show loading state while retrying", () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -753,34 +766,19 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
     });
   });
 
   describe("Error Handling", () => {
     it("should handle API errors gracefully with decomposed hooks", async () => {
       const errorMessage = "Network error";
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
-        error: errorMessage,
+        error: { message: errorMessage },
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: [],
-        pieChartData: [],
-        borrowingData: {
-          assetsPieData: [],
-          borrowingItems: [],
-          netValue: 0,
-          totalBorrowing: 0,
-          hasBorrowing: false,
-        },
       });
 
       render(<WalletPortfolio />);
@@ -796,11 +794,10 @@ describe("WalletPortfolio", () => {
     });
 
     it("should handle data transformation errors gracefully", async () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
-        error: "Failed to transform portfolio data",
+        error: { message: "Failed to transform portfolio data" },
         refetch: vi.fn(),
         isRefetching: false,
       });
@@ -823,18 +820,15 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify successful state with decomposed hooks
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
     });
 
     it("should handle retry functionality for failed API calls", async () => {
       const mockRetry = vi.fn();
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
-        error: "API call failed",
+        error: { message: "API call failed" },
         refetch: mockRetry,
         isRefetching: false,
       });
@@ -860,9 +854,8 @@ describe("WalletPortfolio", () => {
         loading: false,
       });
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -877,16 +870,14 @@ describe("WalletPortfolio", () => {
         );
       });
 
-      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-        "has-data"
-      );
+      expect(screen.getByTestId("pie-chart-data")).toHaveTextContent("no-data");
     });
 
     it("should fetch data when wallet becomes connected", async () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
+        expect(mockUseLandingPageData).toHaveBeenCalledWith(
           mockUserInfo.userId
         );
       });
@@ -981,9 +972,8 @@ describe("WalletPortfolio", () => {
     });
 
     it("should show loading spinner in metrics when loading", () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: true,
         error: null,
         refetch: vi.fn(),
@@ -997,11 +987,10 @@ describe("WalletPortfolio", () => {
     });
 
     it("should show error state in portfolio when API fails", async () => {
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null,
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
         isLoading: false,
-        error: "API Error",
+        error: { message: "API Error" },
         refetch: vi.fn(),
         isRefetching: false,
       });
@@ -1074,9 +1063,31 @@ describe("WalletPortfolio", () => {
         toggleCategoryExpansion: vi.fn(),
       });
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 10000,
-        categories: mockMixedPortfolioData,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 10000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 7500,
+            eth: 4500,
+            stablecoins: 2000,
+            others: 1000,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 5000,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -1115,9 +1126,7 @@ describe("WalletPortfolio", () => {
       });
 
       // Verify component renders with all action callbacks using decomposed hooks
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
       expect(mockUsePortfolio).toHaveBeenCalled();
       expect(mockUseWalletModal).toHaveBeenCalled();
     });
@@ -1136,12 +1145,10 @@ describe("WalletPortfolio", () => {
 
       // Verify all hooks are called and data flows correctly
       expect(mockUseUser).toHaveBeenCalled();
-      expect(mockUsePortfolioDisplayData).toHaveBeenCalledWith(
-        mockUserInfo.userId
-      );
-      expect(mockUsePortfolio).toHaveBeenCalledWith(mockAssetCategories);
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
+      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
       expect(mockUseWalletModal).toHaveBeenCalled();
-      expect(mockPreparePortfolioDataWithBorrowing).toHaveBeenCalled();
+      expect(mockCreateCategoriesFromApiData).toHaveBeenCalled();
 
       // Verify portfolio metrics integration
       const portfolioResult = mockUsePortfolio.mock.results[0].value;
@@ -1159,28 +1166,35 @@ describe("WalletPortfolio", () => {
       });
 
       // Update mock data in usePortfolioDisplayData
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 20000,
-        categories: mockAssetCategories,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 20000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: {
+            btc: 12000,
+            eth: 8000,
+            stablecoins: 0,
+            others: 0,
+          },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 20000,
+          total_debt_usd: 0,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
-      });
-
-      mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-        portfolioData: mockAssetCategories,
-        pieChartData: [
-          { label: "BTC", value: 12000, percentage: 60, color: "#F7931A" },
-          { label: "ETH", value: 8000, percentage: 40, color: "#627EEA" },
-        ],
-        borrowingData: {
-          assetsPieData: [],
-          borrowingItems: [],
-          netValue: 20000,
-          totalBorrowing: 0,
-          hasBorrowing: false,
-        },
       });
 
       // Rerender

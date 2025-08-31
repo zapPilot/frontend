@@ -37,7 +37,6 @@
 
 ### **Wallet Management**
 
-- **`WalletButton`** - Primary wallet connection with dropdown menu
 - **`SimpleConnectButton`** - Minimal wallet connection interface
 - **`HeaderWalletControls`** - Navigation-integrated wallet controls
 

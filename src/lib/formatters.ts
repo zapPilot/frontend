@@ -133,16 +133,6 @@ export function formatSmallCurrency(
   return isNegative ? `-${formatted}` : formatted;
 }
 
-/**
- * Legacy balance formatter for backward compatibility
- * @deprecated Use formatSmallCurrency instead
- */
-export function formatBalance(balance: number): string {
-  if (balance === 0) return "$0.00";
-  if (balance < 0.01) return "< $0.01";
-  return `$${balance.toFixed(2)}`;
-}
-
 // =============================================================================
 // NUMBER FORMATTING
 // =============================================================================

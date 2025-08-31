@@ -1,10 +1,10 @@
 "use client";
 
+import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { memo } from "react";
-import { useDropdown } from "@/hooks/useDropdown";
-import { MOCK_TOKENS } from "../../../../../constants/swap";
+import { MOCK_TOKENS } from "../../../../../constants/trading";
 import type { SwapToken } from "../../../../../types/swap";
 
 interface TokenSelectorProps {

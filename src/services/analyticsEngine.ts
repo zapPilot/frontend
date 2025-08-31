@@ -197,24 +197,6 @@ export const getPortfolioTrends = async (
 };
 
 /**
- * Get portfolio summary for a user
- */
-export const getPortfolioSummary = async (
-  userId: string,
-  includeCategories: boolean = false
-): Promise<PortfolioSummaryResponse> => {
-  const params = new URLSearchParams();
-  if (includeCategories) {
-    params.set("include_categories", "true");
-  }
-
-  const endpoint = `/api/v1/users/${userId}/portfolio-summary`;
-  const url = params.toString() ? `${endpoint}?${params}` : endpoint;
-
-  return await httpUtils.analyticsEngine.get<PortfolioSummaryResponse>(url);
-};
-
-/**
  * Get unified landing page portfolio data
  *
  * Combines portfolio summary, APR calculations, and pre-formatted data

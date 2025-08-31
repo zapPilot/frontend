@@ -2,10 +2,9 @@ import { act, fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
-import { usePortfolioDisplayData } from "../../src/hooks/queries/usePortfolioQuery";
+import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../src/hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../../src/utils/portfolio.utils";
 import { render } from "../test-utils";
 
 // Mock dependencies
@@ -150,12 +149,9 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
 }));
 
 const mockUseUser = vi.mocked(useUser);
-const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
+const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseWalletModal = vi.mocked(useWalletModal);
-const mockPreparePortfolioDataWithBorrowing = vi.mocked(
-  preparePortfolioDataWithBorrowing
-);
 
 // Mock data
 const mockUserInfo = {
@@ -203,9 +199,31 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
     });
 
     // Setup portfolio data mock
-    mockUsePortfolioDisplayData.mockReturnValue({
-      totalValue: 25000,
-      categories: mockPortfolioData,
+    mockUseLandingPageData.mockReturnValue({
+      data: {
+        total_net_usd: 25000,
+        weighted_apr: 0.125,
+        estimated_monthly_income: 1000,
+        pie_chart_categories: {
+          btc: 15000,
+          eth: 7500,
+          stablecoins: 2500,
+          others: 0,
+        },
+        pool_details: [],
+        total_positions: 0,
+        protocols_count: 0,
+        chains_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+        total_assets_usd: 25000,
+        total_debt_usd: 0,
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -226,16 +244,6 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       isOpen: false,
       openModal: vi.fn(),
       closeModal: vi.fn(),
-    });
-
-    // Setup data preparation mock
-    mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-      portfolioData: mockPortfolioData,
-      pieChartData: [
-        { label: "DeFi", value: 15000, percentage: 60, color: "#8B5CF6" },
-        { label: "CEX", value: 7500, percentage: 30, color: "#06B6D4" },
-        { label: "NFTs", value: 2500, percentage: 10, color: "#F59E0B" },
-      ],
     });
   });
 

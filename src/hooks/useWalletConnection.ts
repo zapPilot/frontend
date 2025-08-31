@@ -1,6 +1,5 @@
 "use client";
 // Import new types and config
-import { chainUtils } from "@/config/wallet";
 import { Chain, WalletConnectionHooks } from "@/types/wallet";
 
 // Import new wallet context
@@ -112,19 +111,3 @@ export const CHAIN_NAMES = {
 
 export type SupportedChainId =
   (typeof SUPPORTED_CHAINS)[keyof typeof SUPPORTED_CHAINS];
-
-/**
- * Legacy helper for backward compatibility
- * @deprecated Use chainUtils from @/config/wallet instead
- */
-export const getChainName = (chainId: number): string => {
-  return chainUtils.getChainName(chainId);
-};
-
-/**
- * Legacy helper for backward compatibility
- * @deprecated Use chainUtils from @/config/wallet instead
- */
-export const isChainSupported = (chainId: number): boolean => {
-  return chainUtils.isChainSupported(chainId);
-};

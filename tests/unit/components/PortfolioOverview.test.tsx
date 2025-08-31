@@ -47,10 +47,10 @@ vi.mock("../../../src/components/PieChart", () => ({
 
 // Mock the AssetCategoriesDetail component
 vi.mock("../../../src/components/AssetCategoriesDetail", () => ({
-  AssetCategoriesDetail: vi.fn(({ portfolioData }) => (
+  AssetCategoriesDetail: vi.fn(({ categorySummaries }) => (
     <div data-testid="asset-categories-detail">
-      {portfolioData &&
-        portfolioData.map((item: AssetCategory, index: number) => (
+      {categorySummaries &&
+        categorySummaries.map((item: AssetCategory, index: number) => (
           <div key={index} data-testid={`category-item-${index}`}>
             {item.name}: ${item.totalValue}
           </div>
@@ -138,7 +138,7 @@ describe("PortfolioOverview", () => {
   ];
 
   const defaultProps = {
-    portfolioData: mockPortfolioData,
+    categorySummaries: mockPortfolioData,
     pieChartData: mockPieChartData,
     expandedCategory: null,
     onCategoryToggle: vi.fn(),
@@ -266,7 +266,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={differentPortfolioData}
+          categorySummaries={differentPortfolioData}
           pieChartData={mockPieChartData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -412,10 +412,10 @@ describe("PortfolioOverview", () => {
   });
 
   describe("Edge Cases and Error Handling", () => {
-    it("should handle empty portfolioData", () => {
+    it("should handle empty categorySummaries", () => {
       render(
         <PortfolioOverview
-          portfolioData={[]}
+          categorySummaries={[]}
           pieChartData={[]}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -437,11 +437,11 @@ describe("PortfolioOverview", () => {
       ).toBeInTheDocument();
     });
 
-    it("should handle undefined portfolioData gracefully", () => {
+    it("should handle undefined categorySummaries gracefully", () => {
       // This would normally cause TypeScript errors, but testing runtime behavior
       render(
         <PortfolioOverview
-          portfolioData={undefined as unknown as AssetCategory[]}
+          categorySummaries={[]}
           pieChartData={mockPieChartData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -452,10 +452,10 @@ describe("PortfolioOverview", () => {
       expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
     });
 
-    it("should prioritize pieChartData over portfolioData when both are empty", () => {
+    it("should prioritize pieChartData over categorySummaries when both are empty", () => {
       render(
         <PortfolioOverview
-          portfolioData={[]}
+          categorySummaries={[]}
           pieChartData={[]}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -623,7 +623,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={combinedPortfolioData}
+          categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -652,7 +652,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={combinedPortfolioData}
+          categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -679,7 +679,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={combinedPortfolioData}
+          categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -705,7 +705,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={combinedPortfolioData}
+          categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -724,7 +724,7 @@ describe("PortfolioOverview", () => {
       // Test with the original mixed portfolio data structure
       render(
         <PortfolioOverview
-          portfolioData={mockPortfolioData}
+          categorySummaries={mockPortfolioData}
           pieChartData={mockPieChartData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -747,7 +747,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={mockAssetCategoriesFromNewAPI}
+          categorySummaries={mockAssetCategoriesFromNewAPI}
           pieChartData={validPieData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
@@ -768,7 +768,7 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
-          portfolioData={borrowingOnlyData}
+          categorySummaries={borrowingOnlyData}
           pieChartData={emptyPieData}
           expandedCategory={null}
           onCategoryToggle={vi.fn()}
