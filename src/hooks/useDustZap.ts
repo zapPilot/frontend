@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useWalletConnection } from "./useWalletConnection";
+import { useWallet } from "./useWallet";
 import { portfolioStateUtils } from "@/utils/portfolio.utils";
 import { DustToken } from "../types/optimize";
 import { logger } from "@/utils/logger";
@@ -128,7 +128,7 @@ const fetchDustTokens = async (chainName: string): Promise<DustToken[]> => {
 export function useDustZap(
   options: DustZapOptions = { slippage: 30, enableConversion: true }
 ): DustZapData {
-  const { account, chain } = useWalletConnection();
+  const { account, chain } = useWallet();
 
   // State management
   const [tokens, setTokens] = useState<DustToken[]>([]);

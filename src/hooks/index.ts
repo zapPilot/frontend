@@ -4,13 +4,13 @@
  * Centralized exports for all custom hooks
  */
 
-// Enhanced wallet hooks
+// Main wallet hook
 export { useWallet } from "./useWallet";
 export { useChain } from "./useChain";
 export { useWalletEvents } from "./useWalletEvents";
 
-// Legacy hooks for backward compatibility
-export { useWalletConnection } from "./useWalletConnection";
+// Legacy compatibility
+export { useWalletConnection } from "./useWallet";
 
 // Portfolio hooks
 export { usePortfolio } from "./usePortfolio";
@@ -24,6 +24,7 @@ export { useDropdown } from "./useDropdown";
 export type {
   WalletAccount,
   Chain,
-  ProviderType,
-  WalletConnectionHooks,
+  WalletError,
+  SupportedChainId,
+  WalletProviderInterface,
 } from "@/types/wallet";
