@@ -117,9 +117,7 @@ export function WalletPortfolio({
   // Portfolio UI state management (simplified since we have pre-formatted data)
   const {
     balanceHidden,
-    expandedCategory,
     toggleBalanceVisibility,
-    toggleCategoryExpansion,
   } = usePortfolio([]);
 
   // Wallet modal state
@@ -218,8 +216,6 @@ export function WalletPortfolio({
               {/* Category Summaries */}
               <AssetCategoriesDetail
                 categorySummaries={categorySummaries}
-                expandedCategory={expandedCategory}
-                onCategoryToggle={toggleCategoryExpansion}
                 onViewAllClick={handleViewAllCategory}
                 balanceHidden={balanceHidden}
                 isLoading={landingPageQuery.isLoading}
