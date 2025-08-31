@@ -1,13 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
+import { ComponentType } from "react";
 import { useUser } from "../contexts/UserContext";
-import { usePortfolioAPR } from "../hooks/queries/useAPRQuery";
+import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
-import dynamic from "next/dynamic";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
-import { ComponentType } from "react";
 
 // Dynamic import for heavy chart component
 const PortfolioChart: ComponentType = dynamic(
@@ -23,17 +23,27 @@ const PortfolioChart: ComponentType = dynamic(
   }
 );
 
-export function AnalyticsTab() {
+interface AnalyticsTabProps {
+  categoryFilter?: string | null;
+}
+
+export function AnalyticsTab({ categoryFilter }: AnalyticsTabProps = {}) {
   // Get user data for pool analytics
   const { userInfo } = useUser();
 
-  // Fetch pool analytics data
-  const {
-    poolDetails,
-    isLoading: poolLoading,
-    error: poolError,
-    refetch: poolRefetch,
-  } = usePortfolioAPR(userInfo?.userId);
+  // Fetch unified landing page data (includes pool_details)
+  const landingPageQuery = useLandingPageData(userInfo?.userId);
+  const poolDetails = landingPageQuery.data?.pool_details || [];
+  const poolLoading = landingPageQuery.isLoading;
+  const poolError = landingPageQuery.error?.message || null;
+  const poolRefetch = landingPageQuery.refetch;
+
+  // Clear category filter handler
+  const handleClearCategoryFilter = () => {
+    // This would typically update URL params or parent state
+    // For now, we'll handle this via the parent component
+    // TODO: Implement proper category filter clearing
+  };
 
   return (
     <div className="space-y-6">
@@ -65,6 +75,10 @@ export function AnalyticsTab() {
           isLoading={poolLoading}
           error={poolError}
           onRetry={poolRefetch}
+          categoryFilter={categoryFilter || null}
+          {...(categoryFilter
+            ? { onClearCategoryFilter: handleClearCategoryFilter }
+            : {})}
         />
       </motion.div>
 

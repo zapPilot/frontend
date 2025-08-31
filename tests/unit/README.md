@@ -132,7 +132,6 @@ npm run test:vitest --watch
 
 - `useUser`: Mocked to control user loading states and user info
 - `usePortfolio`: Mocked to provide portfolio state management functions
-- `getPortfolioSummary`: Mocked to control API response behavior
 - `framer-motion`: Mocked to avoid animation complexity in tests
 - `lucide-react`: Icons mocked with simple div elements
 

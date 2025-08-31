@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { AnalyticsTab } from "../../../src/components/AnalyticsTab";
 import { useUser } from "../../../src/contexts/UserContext";
-import { usePortfolioAPR } from "../../../src/hooks/queries/useAPRQuery";
+import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../../src/hooks/queries/useAPRQuery");
+vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 
 // Mock child components
 vi.mock("../../../src/components/MoreTab/index", () => ({
@@ -48,7 +48,7 @@ vi.mock("../../../src/components/PoolAnalytics", () => ({
 
 describe("AnalyticsTab", () => {
   const mockUseUser = vi.mocked(useUser);
-  const mockUsePortfolioAPR = vi.mocked(usePortfolioAPR);
+  const mockUseLandingPageData = vi.mocked(useLandingPageData);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -64,13 +64,34 @@ describe("AnalyticsTab", () => {
       logout: vi.fn(),
     });
 
-    mockUsePortfolioAPR.mockReturnValue({
-      poolDetails: [],
+    mockUseLandingPageData.mockReturnValue({
+      data: {
+        pool_details: [],
+        weighted_apr: 0.125,
+        estimated_monthly_income: 1000,
+        total_assets_usd: 10000,
+        total_debt_usd: 0,
+        total_net_usd: 10000,
+        pie_chart_categories: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
+        total_positions: 0,
+        protocols_count: 0,
+        chains_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
-      portfolioAPR: 0.125,
-      estimatedMonthlyIncome: 1000,
       isRefetching: false,
     });
   });

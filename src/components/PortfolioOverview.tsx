@@ -2,10 +2,10 @@
 
 import { motion } from "framer-motion";
 import { ArrowDownLeft, TrendingUp } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
-import { AssetCategory, PieChartData } from "../types/portfolio";
-import { transformPositionsForDisplay } from "../utils/borrowingUtils";
+import { PieChartData } from "../types/portfolio";
+import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
@@ -14,78 +14,60 @@ import { PieChartLoading } from "./ui/UnifiedLoading";
 type TabType = "assets" | "borrowing";
 
 export interface PortfolioOverviewProps {
-  portfolioData: AssetCategory[];
-  pieChartData: PieChartData[]; // Now required - no more fallback logic needed
-  totalValue?: number | null; // Optional authoritative total value, can be null (kept for backward compatibility)
-  expandedCategory: string | null;
-  onCategoryToggle: (categoryId: string) => void;
+  categorySummaries: CategorySummary[];
+  debtCategorySummaries?: CategorySummary[];
+  pieChartData: PieChartData[];
+  totalValue?: number | null;
   balanceHidden?: boolean;
   title?: string;
   className?: string;
   testId?: string;
   isLoading?: boolean;
   apiError?: string | null;
-  renderBalanceDisplay?: () => React.ReactNode;
   onRetry?: () => void;
   isRetrying?: boolean;
   isConnected?: boolean;
+  onCategoryClick?: (categoryId: string) => void;
 }
 
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
-    portfolioData,
-    pieChartData, // Now required - no more optional fallback
-    totalValue: _totalValue, // eslint-disable-line @typescript-eslint/no-unused-vars -- Kept for backward compatibility
-    expandedCategory,
-    onCategoryToggle,
+    categorySummaries,
+    debtCategorySummaries = [],
+    pieChartData,
+    totalValue,
     balanceHidden = false,
-    title = "Portfolio Allocation",
+    title = "Asset Distribution",
     className = "",
     testId,
     isLoading = false,
     apiError = null,
-    renderBalanceDisplay,
     onRetry,
     isRetrying = false,
     isConnected = false,
+    onCategoryClick,
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
 
-    // Transform portfolio data to separate positions into assets and borrowing
-    const { assetsForDisplay, borrowingPositions, hasBorrowing } = useMemo(
-      () => transformPositionsForDisplay(portfolioData || []),
-      [portfolioData]
-    );
-
-    // Calculate borrowing data for display (for PieChart)
-    const borrowingData = useMemo(() => {
-      if (!portfolioData || portfolioData.length === 0) {
-        return {
-          assetsPieData: [],
-          borrowingItems: [],
-          netValue: 0,
-          totalBorrowing: 0,
-          hasBorrowing: false,
-        };
-      }
-      return transformPositionsForDisplay(portfolioData);
-    }, [portfolioData]);
+    // Get actual counts for tab badges
+    const assetCount = categorySummaries.length;
+    const debtCount = debtCategorySummaries.length;
 
     // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
     const showLoadingState =
       isLoading ||
       isRetrying ||
       (isConnected &&
-        (!portfolioData || portfolioData.length === 0) &&
+        (!categorySummaries || categorySummaries.length === 0) &&
         !apiError);
 
     // Check if we should show empty state (no data and not loading/error)
     const showEmptyState =
       !showLoadingState &&
       !apiError &&
-      (!portfolioData ||
-        portfolioData.length === 0 ||
+      (!categorySummaries ||
+        categorySummaries.length === 0 ||
         !pieChartData ||
         pieChartData.length === 0);
 
@@ -102,132 +84,129 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           <div className="hidden sm:flex items-center justify-between">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
 
-            {hasBorrowing && (
-              <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg">
-                <button
-                  id="assets-tab"
-                  onClick={() => setActiveTab("assets")}
-                  role="tab"
-                  aria-selected={activeTab === "assets"}
-                  aria-controls="assets-tabpanel"
-                  className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+            {/* Always show tabs for now, even though borrowing is empty */}
+            <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg">
+              <button
+                id="assets-tab"
+                onClick={() => setActiveTab("assets")}
+                role="tab"
+                aria-selected={activeTab === "assets"}
+                aria-controls="assets-tabpanel"
+                className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+                  activeTab === "assets"
+                    ? "bg-blue-600 text-white shadow-lg transform scale-105"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                }`}
+              >
+                <TrendingUp
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeTab === "assets" ? "scale-110" : ""
+                  }`}
+                />
+                <span>Assets</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
                     activeTab === "assets"
-                      ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                      ? "bg-blue-800 text-blue-100"
+                      : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  <TrendingUp
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      activeTab === "assets" ? "scale-110" : ""
-                    }`}
-                  />
-                  <span>Assets</span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                      activeTab === "assets"
-                        ? "bg-blue-800 text-blue-100"
-                        : "bg-gray-700 text-gray-300"
-                    }`}
-                  >
-                    {assetsForDisplay.length}
-                  </span>
-                </button>
-                <button
-                  id="borrowing-tab"
-                  onClick={() => setActiveTab("borrowing")}
-                  role="tab"
-                  aria-selected={activeTab === "borrowing"}
-                  aria-controls="borrowing-tabpanel"
-                  className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                  {assetCount}
+                </span>
+              </button>
+              <button
+                id="borrowing-tab"
+                onClick={() => setActiveTab("borrowing")}
+                role="tab"
+                aria-selected={activeTab === "borrowing"}
+                aria-controls="borrowing-tabpanel"
+                className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                  activeTab === "borrowing"
+                    ? "bg-orange-600 text-white shadow-lg transform scale-105"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                }`}
+              >
+                <ArrowDownLeft
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeTab === "borrowing" ? "scale-110" : ""
+                  }`}
+                />
+                <span>Borrowing</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
                     activeTab === "borrowing"
-                      ? "bg-orange-600 text-white shadow-lg transform scale-105"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                      ? "bg-orange-800 text-orange-100"
+                      : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  <ArrowDownLeft
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      activeTab === "borrowing" ? "scale-110" : ""
-                    }`}
-                  />
-                  <span>Borrowing</span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                      activeTab === "borrowing"
-                        ? "bg-orange-800 text-orange-100"
-                        : "bg-gray-700 text-gray-300"
-                    }`}
-                  >
-                    {borrowingPositions.length}
-                  </span>
-                </button>
-              </div>
-            )}
+                  {debtCount}
+                </span>
+              </button>
+            </div>
           </div>
 
           {/* Mobile: Title and tabs stacked */}
           <div className="sm:hidden space-y-4">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
 
-            {hasBorrowing && (
-              <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg">
-                <button
-                  id="assets-tab-mobile"
-                  onClick={() => setActiveTab("assets")}
-                  role="tab"
-                  aria-selected={activeTab === "assets"}
-                  aria-controls="assets-tabpanel"
-                  className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+            <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg">
+              <button
+                id="assets-tab-mobile"
+                onClick={() => setActiveTab("assets")}
+                role="tab"
+                aria-selected={activeTab === "assets"}
+                aria-controls="assets-tabpanel"
+                className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
+                  activeTab === "assets"
+                    ? "bg-blue-600 text-white shadow-lg transform scale-105"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                }`}
+              >
+                <TrendingUp
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeTab === "assets" ? "scale-110" : ""
+                  }`}
+                />
+                <span>Assets</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
                     activeTab === "assets"
-                      ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                      ? "bg-blue-800 text-blue-100"
+                      : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  <TrendingUp
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      activeTab === "assets" ? "scale-110" : ""
-                    }`}
-                  />
-                  <span>Assets</span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                      activeTab === "assets"
-                        ? "bg-blue-800 text-blue-100"
-                        : "bg-gray-700 text-gray-300"
-                    }`}
-                  >
-                    {assetsForDisplay.length}
-                  </span>
-                </button>
-                <button
-                  id="borrowing-tab-mobile"
-                  onClick={() => setActiveTab("borrowing")}
-                  role="tab"
-                  aria-selected={activeTab === "borrowing"}
-                  aria-controls="borrowing-tabpanel"
-                  className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                  {assetCount}
+                </span>
+              </button>
+              <button
+                id="borrowing-tab-mobile"
+                onClick={() => setActiveTab("borrowing")}
+                role="tab"
+                aria-selected={activeTab === "borrowing"}
+                aria-controls="borrowing-tabpanel"
+                className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
+                  activeTab === "borrowing"
+                    ? "bg-orange-600 text-white shadow-lg transform scale-105"
+                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                }`}
+              >
+                <ArrowDownLeft
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    activeTab === "borrowing" ? "scale-110" : ""
+                  }`}
+                />
+                <span>Borrowing</span>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
                     activeTab === "borrowing"
-                      ? "bg-orange-600 text-white shadow-lg transform scale-105"
-                      : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
+                      ? "bg-orange-800 text-orange-100"
+                      : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  <ArrowDownLeft
-                    className={`w-4 h-4 transition-transform duration-300 ${
-                      activeTab === "borrowing" ? "scale-110" : ""
-                    }`}
-                  />
-                  <span>Borrowing</span>
-                  <span
-                    className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                      activeTab === "borrowing"
-                        ? "bg-orange-800 text-orange-100"
-                        : "bg-gray-700 text-gray-300"
-                    }`}
-                  >
-                    {borrowingPositions.length}
-                  </span>
-                </button>
-              </div>
-            )}
+                  {debtCount}
+                </span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -264,9 +243,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                     data={pieChartData}
                     size={250}
                     strokeWidth={10}
-                    totalBorrowing={borrowingData.totalBorrowing}
-                    showNetValue={borrowingData.hasBorrowing}
-                    {...(renderBalanceDisplay && { renderBalanceDisplay })}
+                    totalValue={totalValue || 0}
                   />
                 )}
               </div>
@@ -279,9 +256,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data-testid="allocation-list"
               >
                 <AssetCategoriesDetail
-                  portfolioData={portfolioData || []}
-                  expandedCategory={expandedCategory}
-                  onCategoryToggle={onCategoryToggle}
+                  categorySummaries={categorySummaries}
+                  debtCategorySummaries={debtCategorySummaries}
                   balanceHidden={balanceHidden}
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={showLoadingState}
@@ -289,6 +265,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   {...(onRetry && { onRetry })}
                   isRetrying={isRetrying}
                   activeTab={activeTab}
+                  {...(onCategoryClick && { onCategoryClick })}
                 />
               </div>
             </div>
@@ -316,17 +293,14 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   data={pieChartData}
                   size={200}
                   strokeWidth={8}
-                  totalBorrowing={borrowingData.totalBorrowing}
-                  showNetValue={borrowingData.hasBorrowing}
-                  {...(renderBalanceDisplay && { renderBalanceDisplay })}
+                  totalValue={totalValue || 0}
                 />
               )}
             </div>
             <div data-testid="allocation-list-mobile">
               <AssetCategoriesDetail
-                portfolioData={portfolioData || []}
-                expandedCategory={expandedCategory}
-                onCategoryToggle={onCategoryToggle}
+                categorySummaries={categorySummaries}
+                debtCategorySummaries={debtCategorySummaries}
                 balanceHidden={balanceHidden}
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={showLoadingState}
@@ -334,6 +308,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 {...(onRetry && { onRetry })}
                 isRetrying={isRetrying}
                 activeTab={activeTab}
+                {...(onCategoryClick && { onCategoryClick })}
               />
             </div>
           </div>

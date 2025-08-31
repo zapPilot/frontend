@@ -8,27 +8,6 @@
 import { ProviderType, WalletConfig } from "@/types/wallet";
 
 // Import from unified chain configuration
-import {
-  SUPPORTED_CHAINS as CANONICAL_CHAINS,
-  CHAIN_IDS as CANONICAL_CHAIN_IDS,
-  formatChainForDisplay as formatCanonicalChainForDisplay,
-  getChainById as getCanonicalChainById,
-  getChainName as getCanonicalChainName,
-  getChainSymbol as getCanonicalChainSymbol,
-  isChainSupported as isCanonicalChainSupported,
-} from "@/config/chains";
-
-/**
- * Supported blockchain networks
- * @deprecated Use @/config/chains instead for new code
- */
-export const SUPPORTED_CHAINS = CANONICAL_CHAINS;
-
-/**
- * Chain ID mappings for easy reference
- * @deprecated Use CHAIN_IDS from @/config/chains instead
- */
-export const CHAIN_IDS = CANONICAL_CHAIN_IDS;
 
 /**
  * Default provider configuration
@@ -102,51 +81,6 @@ export const WALLET_CONFIG: WalletConfig = {
   features: {
     enableMultiChain: true,
   },
-};
-
-/**
- * Utility functions for chain management
- * @deprecated Use functions from @/config/chains directly
- */
-export const chainUtils = {
-  /**
-   * Get chain by ID
-   */
-  getChainById: getCanonicalChainById,
-
-  /**
-   * Check if chain is supported
-   */
-  isChainSupported: isCanonicalChainSupported,
-
-  /**
-   * Get only supported chains
-   */
-  getSupportedChains: () => {
-    return SUPPORTED_CHAINS.filter(chain => chain.isSupported);
-  },
-
-  /**
-   * Get mainnet chains only
-   */
-  getMainnetChains: () => {
-    return SUPPORTED_CHAINS.filter(chain => chain.isSupported);
-  },
-
-  /**
-   * Get chain display name
-   */
-  getChainName: getCanonicalChainName,
-
-  /**
-   * Get chain symbol
-   */
-  getChainSymbol: getCanonicalChainSymbol,
-
-  /**
-   * Format chain for display
-   */
-  formatChainForDisplay: formatCanonicalChainForDisplay,
 };
 
 /**

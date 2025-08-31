@@ -59,12 +59,7 @@ export {
 // Re-export for convenience
 import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
-import {
-  getMainnetChains,
-  toChainIdMapping,
-  toChainNameMapping,
-  toThirdWebChains,
-} from "./adapters";
+import { getMainnetChains, toThirdWebChains } from "./adapters";
 
 /**
  * Convenience functions for common use cases
@@ -155,14 +150,3 @@ export const getChainBlockExplorer = (chainId: number): string | null => {
   const chain = getChainById(chainId);
   return chain ? chain.blockExplorers.default.url : null;
 };
-
-/**
- * Backward compatibility exports
- * @deprecated Use the new unified exports above
- */
-
-// Legacy chain ID mappings (for backward compatibility)
-export const LEGACY_SUPPORTED_CHAINS = toChainIdMapping(SUPPORTED_CHAINS);
-
-// Legacy chain name mappings (for backward compatibility)
-export const LEGACY_CHAIN_NAMES = toChainNameMapping(SUPPORTED_CHAINS);

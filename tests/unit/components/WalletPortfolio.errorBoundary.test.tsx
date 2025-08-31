@@ -3,10 +3,10 @@ import React, { ErrorInfo, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
-import { usePortfolioDisplayData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../../../src/utils/portfolio.utils";
+import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 
 // Mock dependencies for decomposed architecture
 vi.mock("../../../src/contexts/UserContext");
@@ -205,10 +205,10 @@ const mockPortfolioMetrics = {
 describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () => {
   const mockUseUser = vi.mocked(useUser);
   const mockUsePortfolio = vi.mocked(usePortfolio);
-  const mockUsePortfolioDisplayData = vi.mocked(usePortfolioDisplayData);
+  const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUseWalletModal = vi.mocked(useWalletModal);
-  const mockPreparePortfolioDataWithBorrowing = vi.mocked(
-    preparePortfolioDataWithBorrowing
+  const mockCreateCategoriesFromApiData = vi.mocked(
+    createCategoriesFromApiData
   );
 
   // Store original console methods
@@ -231,9 +231,26 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       loading: false,
     });
 
-    mockUsePortfolioDisplayData.mockReturnValue({
-      totalValue: 15000,
-      categories: mockCategories,
+    mockUseLandingPageData.mockReturnValue({
+      data: {
+        total_net_usd: 15000,
+        weighted_apr: 0.125,
+        estimated_monthly_income: 1000,
+        pie_chart_categories: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
+        pool_details: [],
+        total_positions: 0,
+        protocols_count: 0,
+        chains_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+        total_assets_usd: 15000,
+        total_debt_usd: 0,
+      },
       isLoading: false,
       error: null,
       refetch: vi.fn(),
@@ -254,17 +271,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       closeModal: vi.fn(),
     });
 
-    mockPreparePortfolioDataWithBorrowing.mockReturnValue({
-      portfolioData: mockCategories,
-      pieChartData: [],
-      borrowingData: {
-        assetsPieData: [],
-        borrowingItems: [],
-        netValue: 15000,
-        totalBorrowing: 0,
-        hasBorrowing: false,
-      },
-    });
+    mockCreateCategoriesFromApiData.mockReturnValue(mockCategories);
   });
 
   afterEach(() => {
@@ -293,9 +300,9 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       expect(onError).toHaveBeenCalled();
     });
 
-    it("should handle usePortfolioDisplayData hook throwing an error", () => {
+    it("should handle useLandingPageData hook throwing an error", () => {
       const onError = vi.fn();
-      mockUsePortfolioDisplayData.mockImplementation(() => {
+      mockUseLandingPageData.mockImplementation(() => {
         throw new Error("Failed to initialize portfolio query");
       });
 
@@ -349,25 +356,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       );
       expect(onError).toHaveBeenCalled();
     });
-
-    it("should handle preparePortfolioDataWithBorrowing throwing an error", () => {
-      const onError = vi.fn();
-      mockPreparePortfolioDataWithBorrowing.mockImplementation(() => {
-        throw new Error("Data transformation failed");
-      });
-
-      render(
-        <TestErrorBoundary onError={onError}>
-          <WalletPortfolio />
-        </TestErrorBoundary>
-      );
-
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-      expect(screen.getByTestId("error-message")).toHaveTextContent(
-        "Data transformation failed"
-      );
-      expect(onError).toHaveBeenCalled();
-    });
   });
 
   describe("Hook Data Validation Errors", () => {
@@ -394,9 +382,8 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
         loading: false,
       });
 
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: null, // Valid when loading or error
-        categories: null,
+      mockUseLandingPageData.mockReturnValue({
+        data: null, // Valid when loading or error
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -420,7 +407,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       const onError = vi.fn();
 
       // Initial error state
-      mockUsePortfolioDisplayData.mockImplementation(() => {
+      mockUseLandingPageData.mockImplementation(() => {
         throw new Error("Network connection failed");
       });
 
@@ -437,9 +424,26 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
 
       // Fix the hook and change resetKeys (simulating user connection change)
-      mockUsePortfolioDisplayData.mockReturnValue({
-        totalValue: 15000,
-        categories: mockCategories,
+      mockUseLandingPageData.mockReturnValue({
+        data: {
+          total_net_usd: 15000,
+          weighted_apr: 0.125,
+          estimated_monthly_income: 1000,
+          pie_chart_categories: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
+          pool_details: [],
+          total_positions: 0,
+          protocols_count: 0,
+          chains_count: 0,
+          last_updated: null,
+          apr_coverage: {
+            matched_pools: 0,
+            total_pools: 0,
+            coverage_percentage: 0,
+            matched_asset_value_usd: 0,
+          },
+          total_assets_usd: 15000,
+          total_debt_usd: 0,
+        },
         isLoading: false,
         error: null,
         refetch: vi.fn(),
@@ -508,7 +512,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
         throw new Error("User context failed");
       });
 
-      mockUsePortfolioDisplayData.mockImplementation(() => {
+      mockUseLandingPageData.mockImplementation(() => {
         throw new Error("Portfolio data failed");
       });
 
@@ -529,18 +533,9 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
     it("should handle errors during hook dependency chain", () => {
       const onError = vi.fn();
 
-      // Make usePortfolio fail when it receives categories from usePortfolioDisplayData
-      mockUsePortfolio.mockImplementation(categories => {
-        if (categories && categories.length > 0) {
-          throw new Error("Cannot process portfolio categories");
-        }
-        return {
-          balanceHidden: false,
-          expandedCategory: null,
-          portfolioMetrics: null,
-          toggleBalanceVisibility: vi.fn(),
-          toggleCategoryExpansion: vi.fn(),
-        };
+      // Make usePortfolio fail when it receives categories from useLandingPageData
+      mockUsePortfolio.mockImplementation(() => {
+        throw new Error("Cannot process portfolio categories");
       });
 
       render(
@@ -561,13 +556,30 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       const onError = vi.fn();
       let shouldError = true;
 
-      mockUsePortfolioDisplayData.mockImplementation(() => {
+      mockUseLandingPageData.mockImplementation(() => {
         if (shouldError) {
           throw new Error("Initial error");
         }
         return {
-          totalValue: 15000,
-          categories: mockCategories,
+          data: {
+            total_net_usd: 15000,
+            weighted_apr: 0.125,
+            estimated_monthly_income: 1000,
+            pie_chart_categories: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
+            pool_details: [],
+            total_positions: 0,
+            protocols_count: 0,
+            chains_count: 0,
+            last_updated: null,
+            apr_coverage: {
+              matched_pools: 0,
+              total_pools: 0,
+              coverage_percentage: 0,
+              matched_asset_value_usd: 0,
+            },
+            total_assets_usd: 15000,
+            total_debt_usd: 0,
+          },
           isLoading: false,
           error: null,
           refetch: vi.fn(),
@@ -619,7 +631,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
     it("should handle real-world error: network timeout during hook initialization", () => {
       const onError = vi.fn();
 
-      mockUsePortfolioDisplayData.mockImplementation(() => {
+      mockUseLandingPageData.mockImplementation(() => {
         throw new Error("Network timeout: ETIMEDOUT");
       });
 
@@ -632,25 +644,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
       expect(screen.getByTestId("error-message")).toHaveTextContent(
         "Network timeout: ETIMEDOUT"
-      );
-    });
-
-    it("should handle real-world error: malformed API response during data transformation", () => {
-      const onError = vi.fn();
-
-      mockPreparePortfolioDataWithBorrowing.mockImplementation(() => {
-        throw new Error("Cannot read property 'totalValue' of undefined");
-      });
-
-      render(
-        <TestErrorBoundary onError={onError}>
-          <WalletPortfolio />
-        </TestErrorBoundary>
-      );
-
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-      expect(screen.getByTestId("error-message")).toHaveTextContent(
-        "Cannot read property 'totalValue' of undefined"
       );
     });
 

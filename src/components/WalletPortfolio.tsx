@@ -4,35 +4,19 @@ import { logger } from "@/utils/logger";
 import dynamic from "next/dynamic";
 import { ComponentType, useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
-import { usePortfolioDisplayData } from "../hooks/queries/usePortfolioQuery";
+import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { preparePortfolioDataWithBorrowing } from "../utils/portfolio.utils";
+import { createCategoriesFromApiData } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
+import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
 import { WalletActions } from "./wallet/WalletActions";
 import { WalletHeader } from "./wallet/WalletHeader";
 import { WalletMetrics } from "./wallet/WalletMetrics";
 
 // Import component props interfaces for proper typing
-import type { PortfolioOverviewProps } from "./PortfolioOverview";
 import type { WalletManagerProps } from "./WalletManager";
-
-// Dynamic imports for heavy components with proper typing
-const PortfolioOverview: ComponentType<PortfolioOverviewProps> = dynamic(
-  () =>
-    import("./PortfolioOverview").then(mod => ({
-      default: mod.PortfolioOverview,
-    })),
-  {
-    loading: () => (
-      <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">
-        <LoadingSpinner size="lg" />
-      </div>
-    ),
-  }
-);
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () => import("./WalletManager").then(mod => ({ default: mod.WalletManager })),
@@ -48,6 +32,7 @@ interface WalletPortfolioProps {
   onOptimizeClick?: (() => void) | undefined;
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
+  onCategoryClick?: (categoryId: string) => void;
 }
 
 export function WalletPortfolio({
@@ -55,28 +40,106 @@ export function WalletPortfolio({
   onOptimizeClick,
   onZapInClick,
   onZapOutClick,
+  onCategoryClick,
 }: WalletPortfolioProps = {}) {
-  // Get user data for APR calculations
+  // Get user data for landing page
   const { userInfo, isConnected } = useUser();
 
-  // Data fetching and API state
-  const {
-    totalValue,
-    categories: apiCategoriesData,
-    isLoading,
-    error: apiError,
-    refetch: retry,
-    isRefetching: isRetrying,
-  } = usePortfolioDisplayData(userInfo?.userId);
+  // Unified data fetching - single API call for all landing page data
+  const landingPageQuery = useLandingPageData(userInfo?.userId);
+  const landingPageData = landingPageQuery.data;
 
-  // Portfolio UI state management
+  // Transform landing page data for pie chart and category summaries
   const {
-    balanceHidden,
-    expandedCategory,
+    pieChartData,
+    categorySummaries,
+    debtCategorySummaries,
     portfolioMetrics,
-    toggleBalanceVisibility,
-    toggleCategoryExpansion,
-  } = usePortfolio(apiCategoriesData || []);
+  } = useMemo(() => {
+    if (!landingPageData) {
+      return {
+        pieChartData: null,
+        categorySummaries: [],
+        debtCategorySummaries: [],
+        portfolioMetrics: null,
+      };
+    }
+
+    // Use total_assets_usd for pie chart and asset categories (not total_net_usd)
+    const categories = landingPageData.pie_chart_categories;
+    const totalAssetsValue = landingPageData.total_assets_usd;
+
+    const transformedPieChartData = [
+      {
+        label: "Bitcoin",
+        value: categories.btc,
+        percentage:
+          totalAssetsValue > 0 ? (categories.btc / totalAssetsValue) * 100 : 0,
+        color: "#F7931A", // Bitcoin orange
+      },
+      {
+        label: "Ethereum",
+        value: categories.eth,
+        percentage:
+          totalAssetsValue > 0 ? (categories.eth / totalAssetsValue) * 100 : 0,
+        color: "#627EEA", // Ethereum blue
+      },
+      {
+        label: "Stablecoins",
+        value: categories.stablecoins,
+        percentage:
+          totalAssetsValue > 0
+            ? (categories.stablecoins / totalAssetsValue) * 100
+            : 0,
+        color: "#26A69A", // Teal for stable
+      },
+      {
+        label: "Others",
+        value: categories.others,
+        percentage:
+          totalAssetsValue > 0
+            ? (categories.others / totalAssetsValue) * 100
+            : 0,
+        color: "#AB47BC", // Purple for others
+      },
+    ].filter(item => item.value > 0); // Only show categories with value
+
+    // Create asset category summaries using simplified API data
+    const assetSummaries = createCategoriesFromApiData(
+      categories,
+      totalAssetsValue
+    );
+
+    // Create debt category summaries from category_summary_debt
+    const debtSummaries = createCategoriesFromApiData(
+      landingPageData.category_summary_debt || {
+        btc: 0,
+        eth: 0,
+        stablecoins: 0,
+        others: 0,
+      },
+      landingPageData.total_debt_usd || 0
+    );
+
+    const transformedMetrics = {
+      totalValue: landingPageData.total_net_usd,
+      totalChange24h: 0, // Not available from unified API yet
+      totalChangePercentage: 0, // Not available from unified API yet
+      annualAPR: landingPageData.weighted_apr,
+      monthlyReturn: landingPageData.estimated_monthly_income,
+    };
+
+    return {
+      pieChartData:
+        transformedPieChartData.length > 0 ? transformedPieChartData : null,
+      categorySummaries: assetSummaries,
+      debtCategorySummaries: debtSummaries,
+      portfolioMetrics: transformedMetrics,
+    };
+  }, [landingPageData]);
+
+  // Portfolio UI state management (simplified since we have pre-formatted data)
+  const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
 
   // Wallet modal state
   const {
@@ -84,22 +147,6 @@ export function WalletPortfolio({
     openModal: openWalletManager,
     closeModal: closeWalletManager,
   } = useWalletModal();
-
-  // Performance optimization: Consolidated data preparation using useMemo
-  //
-  // This transformation is expensive (sorts, filters, and processes all portfolio data)
-  // and was previously running on every component render. Now memoized to only
-  // recalculate when actual dependencies (apiCategoriesData, totalValue) change.
-  //
-  // Impact: Significant performance improvement for large portfolios (50+ assets)
-  // Dependencies: Only recalculates when portfolio data or total value changes
-  const { portfolioData, pieChartData } = useMemo(() => {
-    return preparePortfolioDataWithBorrowing(
-      apiCategoriesData,
-      totalValue,
-      "WalletPortfolio"
-    );
-  }, [apiCategoriesData, totalValue]);
 
   return (
     <ErrorBoundary
@@ -127,10 +174,10 @@ export function WalletPortfolio({
             />
 
             <WalletMetrics
-              totalValue={totalValue}
+              totalValue={landingPageData?.total_net_usd || null}
               balanceHidden={balanceHidden}
-              isLoading={isLoading}
-              error={apiError}
+              isLoading={landingPageQuery.isLoading}
+              error={landingPageQuery.error?.message || null}
               portfolioChangePercentage={
                 portfolioMetrics?.totalChangePercentage || 0
               }
@@ -146,25 +193,26 @@ export function WalletPortfolio({
           </GlassCard>
         </ErrorBoundary>
 
-        {/* Portfolio Overview */}
+        {/* Asset Distribution with Horizontal Layout */}
         <ErrorBoundary
           onError={error =>
             walletPortfolioLogger.error("PortfolioOverview Error", error)
           }
         >
           <PortfolioOverview
-            portfolioData={portfolioData}
-            pieChartData={pieChartData} // Always provide pieChartData (now required)
-            totalValue={totalValue}
-            expandedCategory={expandedCategory}
-            onCategoryToggle={toggleCategoryExpansion}
+            categorySummaries={categorySummaries}
+            debtCategorySummaries={debtCategorySummaries}
+            pieChartData={pieChartData || []}
+            totalValue={landingPageData?.total_net_usd || null}
             balanceHidden={balanceHidden}
             title="Asset Distribution"
-            isLoading={isLoading}
-            apiError={apiError}
-            onRetry={retry}
-            isRetrying={isRetrying}
+            isLoading={landingPageQuery.isLoading}
+            apiError={landingPageQuery.error?.message || null}
+            onRetry={landingPageQuery.refetch}
+            isRetrying={landingPageQuery.isRefetching}
             isConnected={isConnected}
+            testId="wallet-portfolio-overview"
+            {...(onCategoryClick && { onCategoryClick })}
           />
         </ErrorBoundary>
 

@@ -1,6 +1,6 @@
 import { AlertCircle, TrendingUp } from "lucide-react";
 import React from "react";
-import { usePortfolioAPR } from "../../hooks/queries/useAPRQuery";
+import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import { getChangeColorClasses } from "../../lib/color-utils";
@@ -74,12 +74,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     isConnected,
     userId,
   }) => {
-    // Fetch real APR data
+    // Fetch unified landing page data (includes APR data)
     const {
-      portfolioAPR,
-      estimatedMonthlyIncome,
-      isLoading: aprIsLoading,
-    } = usePortfolioAPR(userId);
+      data: landingPageData,
+      isLoading: landingPageLoading,
+    } = useLandingPageData(userId);
+
+    const portfolioAPR = landingPageData?.weighted_apr || null;
+    const estimatedMonthlyIncome = landingPageData?.estimated_monthly_income || null;
 
     // Helper function to render balance display
     const renderBalanceDisplay = () => {
@@ -157,7 +159,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           </p>
           {(isLoading ||
             isRetrying ||
-            aprIsLoading ||
+            landingPageLoading ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
@@ -177,7 +179,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
           {(isLoading ||
             isRetrying ||
-            aprIsLoading ||
+            landingPageLoading ||
             (isConnected && totalValue === null && !error)) &&
           error !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton

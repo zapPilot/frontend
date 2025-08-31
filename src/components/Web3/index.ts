@@ -5,12 +5,11 @@
  */
 
 // Core wallet components
-export { WalletButton } from "./WalletButton";
-export { SimpleConnectButton } from "./SimpleConnectButton";
 export { ChainSwitcher } from "./ChainSwitcher";
 export { HeaderWalletControls } from "./HeaderWalletControls";
+export { SimpleConnectButton } from "./SimpleConnectButton";
 
 // Legacy components for backward compatibility
 
 // Re-export types for convenience
-export type { WalletAccount, Chain, ProviderType } from "@/types/wallet";
+export type { Chain, ProviderType, WalletAccount } from "@/types/wallet";

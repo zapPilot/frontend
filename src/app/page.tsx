@@ -10,7 +10,7 @@ import { ComponentType, useCallback, useState } from "react";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 
 // Dynamic imports for code splitting
-const AnalyticsTab: ComponentType = dynamic(
+const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
   () =>
     import("@/components/AnalyticsTab").then(mod => ({
       default: mod.AnalyticsTab,
@@ -97,6 +97,9 @@ export default function DashboardApp() {
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<
+    string | null
+  >(null);
 
   // Navigation handlers with context awareness
   // Each handler sets the appropriate navigationContext to control SwapPage behavior
@@ -121,6 +124,17 @@ export default function DashboardApp() {
       setSelectedStrategy(null);
     }
   }, [selectedStrategy]);
+
+  const handleCategoryClick = useCallback(
+    (categoryId: string) => {
+      setSelectedCategoryFilter(categoryId);
+      setActiveTab("analytics");
+      if (selectedStrategy) {
+        setSelectedStrategy(null);
+      }
+    },
+    [selectedStrategy]
+  );
 
   const handleOptimizeClick = useCallback(() => {
     // Find the optimize strategy from mock data
@@ -167,10 +181,11 @@ export default function DashboardApp() {
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
+            onCategoryClick={handleCategoryClick}
           />
         );
       case "analytics":
-        return <AnalyticsTab />;
+        return <AnalyticsTab categoryFilter={selectedCategoryFilter} />;
       case "community":
         return <CommunityTab />;
       case "airdrop":
@@ -184,6 +199,7 @@ export default function DashboardApp() {
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
+            onCategoryClick={handleCategoryClick}
           />
         );
     }
