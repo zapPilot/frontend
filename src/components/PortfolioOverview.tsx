@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { ArrowDownLeft, TrendingUp } from "lucide-react";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { PieChartData } from "../types/portfolio";
-import { transformPositionsForDisplay } from "../utils/borrowingUtils";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
@@ -16,6 +15,7 @@ type TabType = "assets" | "borrowing";
 
 export interface PortfolioOverviewProps {
   categorySummaries: CategorySummary[];
+  debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
   totalValue?: number | null;
   balanceHidden?: boolean;
@@ -27,11 +27,13 @@ export interface PortfolioOverviewProps {
   onRetry?: () => void;
   isRetrying?: boolean;
   isConnected?: boolean;
+  onCategoryClick?: (categoryId: string) => void;
 }
 
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
     categorySummaries,
+    debtCategorySummaries = [],
     pieChartData,
     totalValue,
     balanceHidden = false,
@@ -43,27 +45,14 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     onRetry,
     isRetrying = false,
     isConnected = false,
+    onCategoryClick,
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
 
-    // For now, we'll have empty borrowing data since the unified API doesn't provide it yet
-    // This maintains the UI structure for when the API is updated
-    const { assetsForDisplay, borrowingPositions } = useMemo(() => {
-      // Convert CategorySummary back to legacy format for borrowing utils
-      // This is a temporary bridge until API provides borrowing data directly
-      const mockPortfolioData = categorySummaries.map(summary => ({
-        id: summary.id,
-        name: summary.name,
-        totalValue: summary.totalValue,
-        percentage: summary.percentage,
-        color: summary.color,
-        change24h: 0, // Not available in new format yet
-        assets: [], // Simplified for now
-      }));
-
-      return transformPositionsForDisplay(mockPortfolioData);
-    }, [categorySummaries]);
+    // Get actual counts for tab badges
+    const assetCount = categorySummaries.length;
+    const debtCount = debtCategorySummaries.length;
 
     // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
     const showLoadingState =
@@ -122,7 +111,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                       : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  {assetsForDisplay.length}
+                  {assetCount}
                 </span>
               </button>
               <button
@@ -150,7 +139,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                       : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  {borrowingPositions.length}
+                  {debtCount}
                 </span>
               </button>
             </div>
@@ -186,7 +175,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                       : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  {assetsForDisplay.length}
+                  {assetCount}
                 </span>
               </button>
               <button
@@ -214,7 +203,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                       : "bg-gray-700 text-gray-300"
                   }`}
                 >
-                  {borrowingPositions.length}
+                  {debtCount}
                 </span>
               </button>
             </div>
@@ -268,6 +257,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               >
                 <AssetCategoriesDetail
                   categorySummaries={categorySummaries}
+                  debtCategorySummaries={debtCategorySummaries}
                   balanceHidden={balanceHidden}
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={showLoadingState}
@@ -275,6 +265,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   {...(onRetry && { onRetry })}
                   isRetrying={isRetrying}
                   activeTab={activeTab}
+                  {...(onCategoryClick && { onCategoryClick })}
                 />
               </div>
             </div>
@@ -309,6 +300,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
             <div data-testid="allocation-list-mobile">
               <AssetCategoriesDetail
                 categorySummaries={categorySummaries}
+                debtCategorySummaries={debtCategorySummaries}
                 balanceHidden={balanceHidden}
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={showLoadingState}
@@ -316,6 +308,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 {...(onRetry && { onRetry })}
                 isRetrying={isRetrying}
                 activeTab={activeTab}
+                {...(onCategoryClick && { onCategoryClick })}
               />
             </div>
           </div>

@@ -126,6 +126,12 @@ export interface LandingPageResponse {
     stablecoins: number;
     others: number;
   };
+  category_summary_debt: {
+    btc: number;
+    eth: number;
+    stablecoins: number;
+    others: number;
+  };
   pool_details: PoolDetail[];
   total_positions: number;
   protocols_count: number;
@@ -207,8 +213,6 @@ export const getPortfolioSummary = async (
 
   return await httpUtils.analyticsEngine.get<PortfolioSummaryResponse>(url);
 };
-
-
 
 /**
  * Get unified landing page portfolio data

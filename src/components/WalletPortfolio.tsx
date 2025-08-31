@@ -7,7 +7,7 @@ import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { createCategorySummaries } from "../utils/portfolio.utils";
+import { createCategoriesFromApiData } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
@@ -32,6 +32,7 @@ interface WalletPortfolioProps {
   onOptimizeClick?: (() => void) | undefined;
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
+  onCategoryClick?: (categoryId: string) => void;
 }
 
 export function WalletPortfolio({
@@ -39,6 +40,7 @@ export function WalletPortfolio({
   onOptimizeClick,
   onZapInClick,
   onZapOutClick,
+  onCategoryClick,
 }: WalletPortfolioProps = {}) {
   // Get user data for landing page
   const { userInfo, isConnected } = useUser();
@@ -48,52 +50,75 @@ export function WalletPortfolio({
   const landingPageData = landingPageQuery.data;
 
   // Transform landing page data for pie chart and category summaries
-  const { pieChartData, categorySummaries, portfolioMetrics } = useMemo(() => {
+  const {
+    pieChartData,
+    categorySummaries,
+    debtCategorySummaries,
+    portfolioMetrics,
+  } = useMemo(() => {
     if (!landingPageData) {
       return {
         pieChartData: null,
         categorySummaries: [],
+        debtCategorySummaries: [],
         portfolioMetrics: null,
       };
     }
 
-    // Transform pre-formatted pie chart categories to PieChartData format
+    // Use total_assets_usd for pie chart and asset categories (not total_net_usd)
     const categories = landingPageData.pie_chart_categories;
-    const totalValue = landingPageData.total_net_usd;
+    const totalAssetsValue = landingPageData.total_assets_usd;
 
     const transformedPieChartData = [
       {
         label: "Bitcoin",
         value: categories.btc,
-        percentage: totalValue > 0 ? (categories.btc / totalValue) * 100 : 0,
+        percentage:
+          totalAssetsValue > 0 ? (categories.btc / totalAssetsValue) * 100 : 0,
         color: "#F7931A", // Bitcoin orange
       },
       {
         label: "Ethereum",
         value: categories.eth,
-        percentage: totalValue > 0 ? (categories.eth / totalValue) * 100 : 0,
+        percentage:
+          totalAssetsValue > 0 ? (categories.eth / totalAssetsValue) * 100 : 0,
         color: "#627EEA", // Ethereum blue
       },
       {
         label: "Stablecoins",
         value: categories.stablecoins,
         percentage:
-          totalValue > 0 ? (categories.stablecoins / totalValue) * 100 : 0,
+          totalAssetsValue > 0
+            ? (categories.stablecoins / totalAssetsValue) * 100
+            : 0,
         color: "#26A69A", // Teal for stable
       },
       {
         label: "Others",
         value: categories.others,
-        percentage: totalValue > 0 ? (categories.others / totalValue) * 100 : 0,
+        percentage:
+          totalAssetsValue > 0
+            ? (categories.others / totalAssetsValue) * 100
+            : 0,
         color: "#AB47BC", // Purple for others
       },
     ].filter(item => item.value > 0); // Only show categories with value
 
-    // Create category summaries for AssetCategoriesDetail
-    const summaries = createCategorySummaries(
-      landingPageData.pool_details || [],
+    // Create asset category summaries using simplified API data
+    const assetSummaries = createCategoriesFromApiData(
       categories,
-      totalValue
+      totalAssetsValue
+    );
+
+    // Create debt category summaries from category_summary_debt
+    const debtSummaries = createCategoriesFromApiData(
+      landingPageData.category_summary_debt || {
+        btc: 0,
+        eth: 0,
+        stablecoins: 0,
+        others: 0,
+      },
+      landingPageData.total_debt_usd || 0
     );
 
     const transformedMetrics = {
@@ -107,7 +132,8 @@ export function WalletPortfolio({
     return {
       pieChartData:
         transformedPieChartData.length > 0 ? transformedPieChartData : null,
-      categorySummaries: summaries,
+      categorySummaries: assetSummaries,
+      debtCategorySummaries: debtSummaries,
       portfolioMetrics: transformedMetrics,
     };
   }, [landingPageData]);
@@ -175,6 +201,7 @@ export function WalletPortfolio({
         >
           <PortfolioOverview
             categorySummaries={categorySummaries}
+            debtCategorySummaries={debtCategorySummaries}
             pieChartData={pieChartData || []}
             totalValue={landingPageData?.total_net_usd || null}
             balanceHidden={balanceHidden}
@@ -185,6 +212,7 @@ export function WalletPortfolio({
             isRetrying={landingPageQuery.isRefetching}
             isConnected={isConnected}
             testId="wallet-portfolio-overview"
+            {...(onCategoryClick && { onCategoryClick })}
           />
         </ErrorBoundary>
 

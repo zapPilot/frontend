@@ -139,8 +139,8 @@ export interface CategorySummary {
   color: string;
   totalValue: number;
   percentage: number;
-  poolCount: number;
   averageAPR: number;
+  // Removed poolCount as this data is no longer provided by the unified API
   topProtocols: Array<{
     name: string;
     value: number;
@@ -304,13 +304,55 @@ export function createCategorySummaries(
       color: categoryInfo[categoryId as keyof typeof categoryInfo].color,
       totalValue,
       percentage,
-      poolCount: pools.length,
       averageAPR: averageAPR * 100, // Convert to percentage
       topProtocols,
     });
   });
 
   return categories.sort((a, b) => b.totalValue - a.totalValue);
+}
+
+/**
+ * Create category summaries from unified API data structure
+ * Works for both assets (pie_chart_categories) and debt (category_summary_debt)
+ */
+export function createCategoriesFromApiData(
+  categoryData: {
+    btc: number;
+    eth: number;
+    stablecoins: number;
+    others: number;
+  },
+  totalValue: number
+): CategorySummary[] {
+  if (!categoryData) {
+    return [];
+  }
+
+  const categoryInfo = {
+    btc: { name: "Bitcoin", color: "#F7931A" },
+    eth: { name: "Ethereum", color: "#627EEA" },
+    stablecoins: { name: "Stablecoins", color: "#26A69A" },
+    others: { name: "Others", color: "#AB47BC" },
+  };
+
+  return Object.entries(categoryData)
+    .filter(([, value]) => value > 0) // Only include categories with value
+    .map(([categoryId, value]) => {
+      const info = categoryInfo[categoryId as keyof typeof categoryInfo];
+      const percentage = totalValue > 0 ? (value / totalValue) * 100 : 0;
+
+      return {
+        id: categoryId,
+        name: info.name,
+        color: info.color,
+        totalValue: value,
+        percentage,
+        averageAPR: 0, // Not available in simplified API structure
+        topProtocols: [], // Not available in simplified API structure
+      };
+    })
+    .sort((a, b) => b.totalValue - a.totalValue);
 }
 
 /**
