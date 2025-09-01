@@ -36,6 +36,22 @@ export const portfolioMetricsSchema = z.object({
 });
 
 /**
+ * Zod schema for Portfolio Summary API Response
+ * Validates the complete portfolio API response supporting both legacy and new structures
+ */
+export const portfolioSummarySchema = z.object({
+  // Portfolio metrics (always present)
+  metrics: portfolioMetricsSchema.optional(),
+
+  // Legacy structure (single categories array)
+  categories: z.array(apiCategorySchema).optional(),
+
+  // New structure (separated asset and borrowing positions)
+  asset_positions: z.array(apiCategorySchema).optional(),
+  borrowing_positions: z.array(apiCategorySchema).optional(),
+});
+
+/**
  * Type inference from Zod schemas
  * These types are automatically generated from the schemas above
  */
@@ -59,7 +75,10 @@ export function parsePortfolioSummary(data: unknown) {
   if (!result.success) {
     // Create a detailed error message for debugging
     const errorMessages = result.error.errors
-      .map(err => `${err.path.join(".")}: ${err.message}`)
+      .map(
+        (err: { path: (string | number)[]; message: string }) =>
+          `${err.path.join(".")}: ${err.message}`
+      )
       .join("; ");
 
     throw new Error(`Portfolio API validation failed: ${errorMessages}`);

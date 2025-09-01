@@ -204,11 +204,31 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
         total_net_usd: 25000,
         weighted_apr: 0.125,
         estimated_monthly_income: 1000,
-        pie_chart_categories: {
-          btc: 15000,
-          eth: 7500,
-          stablecoins: 2500,
-          others: 0,
+        portfolio_allocation: {
+          btc: {
+            total_value: 15000,
+            percentage_of_portfolio: 60,
+            wallet_tokens_value: 2000,
+            other_sources_value: 13000,
+          },
+          eth: {
+            total_value: 7500,
+            percentage_of_portfolio: 30,
+            wallet_tokens_value: 1200,
+            other_sources_value: 6300,
+          },
+          stablecoins: {
+            total_value: 2500,
+            percentage_of_portfolio: 10,
+            wallet_tokens_value: 500,
+            other_sources_value: 2000,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
         },
         pool_details: [],
         total_positions: 0,

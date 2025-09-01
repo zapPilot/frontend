@@ -1,74 +1,39 @@
 /**
  * Providers Index
  *
- * Central export point for all wallet provider functionality.
- * Provides a clean interface for importing wallet-related components and hooks.
+ * Simplified export point for wallet provider functionality.
+ * Clean interface for importing simplified wallet components and hooks.
  */
 
 // Main provider components
 import { Web3Provider } from "./Web3Provider";
-import {
-  WalletProvider,
-  useWalletContext,
-  useWalletConnection,
-} from "./WalletContext";
-
-// Provider factory and adapters
-import { WalletProviderFactory } from "./WalletProviderFactory";
-import { ThirdWebAdapter } from "./adapters/ThirdWebAdapter";
-
-// Re-export configuration utilities
-import { WALLET_CONFIG, CHAIN_IDS } from "@/config/wallet";
+import { WalletProvider, useWalletProvider } from "./WalletProvider";
 
 // Export all the components
 export { Web3Provider } from "./Web3Provider";
-export {
-  WalletProvider,
-  useWalletContext,
-  useWalletConnection,
-} from "./WalletContext";
-export { WalletProviderFactory } from "./WalletProviderFactory";
-export { ThirdWebAdapter } from "./adapters/ThirdWebAdapter";
+export { WalletProvider, useWalletProvider } from "./WalletProvider";
 
-// Re-export types for convenience
+// Re-export simplified types
 export type {
-  WalletProvider as IWalletProvider,
   WalletAccount,
   Chain,
-  ProviderType,
-  WalletConfig,
-} from "@/types/wallet";
-
-// Re-export error types
-export {
   WalletError,
-  WalletErrorType,
-  WalletEventType,
-  WalletConnectionStatus,
+  ConnectionStatus,
+  WalletProviderInterface,
+  SupportedChainId,
+  ProviderType,
 } from "@/types/wallet";
 
-// Re-export configuration utilities
-export { WALLET_CONFIG, CHAIN_IDS, chainUtils } from "@/config/wallet";
+// Re-export chain utilities
+export { SUPPORTED_CHAINS, CHAIN_INFO, chainUtils } from "@/types/wallet";
 
 /**
- * Convenience re-exports for backward compatibility
- */
-
-// Legacy imports - these will continue to work
-export { useWalletConnection as useWallet } from "./WalletContext";
-
-/**
- * Default exports for common patterns
+ * Main exports for the app
  */
 export const ProviderExports = {
   Web3Provider,
   WalletProvider,
-  useWalletConnection,
-  useWalletContext,
-  WalletProviderFactory,
-  ThirdWebAdapter,
-  WALLET_CONFIG,
-  CHAIN_IDS,
+  useWalletProvider,
 };
 
 export default ProviderExports;

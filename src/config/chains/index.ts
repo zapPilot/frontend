@@ -44,16 +44,10 @@ export {
 // Adapter functions
 export {
   createChainSelector,
-  createRpcUrlWithKey,
   getMainnetChains,
   getSupportedChains,
-  toChainIdMapping,
-  toChainNameMapping,
   toThirdWebChain,
   toThirdWebChains,
-  toWagmiChain,
-  toWagmiChains,
-  withApiKeys,
 } from "./adapters";
 
 // Re-export for convenience

@@ -75,13 +75,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     userId,
   }) => {
     // Fetch unified landing page data (includes APR data)
-    const {
-      data: landingPageData,
-      isLoading: landingPageLoading,
-    } = useLandingPageData(userId);
+    const { data: landingPageData, isLoading: landingPageLoading } =
+      useLandingPageData(userId);
 
     const portfolioAPR = landingPageData?.weighted_apr || null;
-    const estimatedMonthlyIncome = landingPageData?.estimated_monthly_income || null;
+    const estimatedMonthlyIncome =
+      landingPageData?.estimated_monthly_income || null;
 
     // Helper function to render balance display
     const renderBalanceDisplay = () => {
