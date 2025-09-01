@@ -65,49 +65,45 @@ export function WalletPortfolio({
       };
     }
 
-    // Use total_assets_usd for pie chart and asset categories (not total_net_usd)
-    const categories = landingPageData.pie_chart_categories;
-    const totalAssetsValue = landingPageData.total_assets_usd;
+    // Use portfolio_allocation for pie chart data with pre-calculated percentages
+    const portfolioAllocation = landingPageData.portfolio_allocation;
 
     const transformedPieChartData = [
       {
         label: "Bitcoin",
-        value: categories.btc,
-        percentage:
-          totalAssetsValue > 0 ? (categories.btc / totalAssetsValue) * 100 : 0,
+        value: portfolioAllocation.btc.total_value,
+        percentage: portfolioAllocation.btc.percentage_of_portfolio,
         color: "#F7931A", // Bitcoin orange
       },
       {
         label: "Ethereum",
-        value: categories.eth,
-        percentage:
-          totalAssetsValue > 0 ? (categories.eth / totalAssetsValue) * 100 : 0,
+        value: portfolioAllocation.eth.total_value,
+        percentage: portfolioAllocation.eth.percentage_of_portfolio,
         color: "#627EEA", // Ethereum blue
       },
       {
         label: "Stablecoins",
-        value: categories.stablecoins,
-        percentage:
-          totalAssetsValue > 0
-            ? (categories.stablecoins / totalAssetsValue) * 100
-            : 0,
+        value: portfolioAllocation.stablecoins.total_value,
+        percentage: portfolioAllocation.stablecoins.percentage_of_portfolio,
         color: "#26A69A", // Teal for stable
       },
       {
         label: "Others",
-        value: categories.others,
-        percentage:
-          totalAssetsValue > 0
-            ? (categories.others / totalAssetsValue) * 100
-            : 0,
+        value: portfolioAllocation.others.total_value,
+        percentage: portfolioAllocation.others.percentage_of_portfolio,
         color: "#AB47BC", // Purple for others
       },
     ].filter(item => item.value > 0); // Only show categories with value
 
-    // Create asset category summaries using simplified API data
+    // Create asset category summaries using portfolio allocation data
     const assetSummaries = createCategoriesFromApiData(
-      categories,
-      totalAssetsValue
+      {
+        btc: portfolioAllocation.btc.total_value,
+        eth: portfolioAllocation.eth.total_value,
+        stablecoins: portfolioAllocation.stablecoins.total_value,
+        others: portfolioAllocation.others.total_value,
+      },
+      landingPageData.total_assets_usd
     );
 
     // Create debt category summaries from category_summary_debt

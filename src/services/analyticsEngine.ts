@@ -120,11 +120,36 @@ export interface LandingPageResponse {
   total_net_usd: number;
   weighted_apr: number;
   estimated_monthly_income: number;
-  pie_chart_categories: {
-    btc: number;
-    eth: number;
-    stablecoins: number;
-    others: number;
+  portfolio_allocation: {
+    btc: {
+      total_value: number;
+      percentage_of_portfolio: number;
+      wallet_tokens_value: number;
+      other_sources_value: number;
+    };
+    eth: {
+      total_value: number;
+      percentage_of_portfolio: number;
+      wallet_tokens_value: number;
+      other_sources_value: number;
+    };
+    stablecoins: {
+      total_value: number;
+      percentage_of_portfolio: number;
+      wallet_tokens_value: number;
+      other_sources_value: number;
+    };
+    others: {
+      total_value: number;
+      percentage_of_portfolio: number;
+      wallet_tokens_value: number;
+      other_sources_value: number;
+    };
+  };
+  wallet_token_summary: {
+    total_value_usd: number;
+    token_count: number;
+    apr_30d: number;
   };
   category_summary_debt: {
     btc: number;

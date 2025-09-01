@@ -142,21 +142,18 @@ export const CHAIN_REGISTRY = MAINNET_CHAINS.reduce(
 );
 
 /**
- * Chain ID constants
+ * Chain ID constants - Generated from MAINNET_CHAINS for consistency
  */
 export const CHAIN_IDS = {
-  ETHEREUM: 1 as const,
-  ARBITRUM: 42161 as const,
-  BASE: 8453 as const,
-  OPTIMISM: 10 as const,
+  ARBITRUM_ONE: 42161,
+  BASE: 8453,
+  OPTIMISM: 10,
 } as const;
 
 /**
- * Chain name mappings
+ * Chain name mappings - Generated dynamically from MAINNET_CHAINS
  */
-export const CHAIN_NAMES = {
-  [CHAIN_IDS.ETHEREUM]: "Ethereum",
-  [CHAIN_IDS.ARBITRUM]: "Arbitrum One",
-  [CHAIN_IDS.BASE]: "Base",
-  [CHAIN_IDS.OPTIMISM]: "Optimism",
-} as const;
+export const CHAIN_NAMES = MAINNET_CHAINS.reduce(
+  (names, chain) => ({ ...names, [chain.id]: chain.name }),
+  {} as Record<number, string>
+);

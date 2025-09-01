@@ -78,11 +78,31 @@ vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
       total_net_usd: 15000,
       weighted_apr: 0.125, // 12.5% APR as decimal (API format)
       estimated_monthly_income: 1000,
-      pie_chart_categories: {
-        btc: 0,
-        eth: 0,
-        stablecoins: 0,
-        others: 0,
+      portfolio_allocation: {
+        btc: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        eth: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        stablecoins: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        others: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
       },
       pool_details: [],
       total_positions: 0,

@@ -8,6 +8,10 @@
 "use client";
 
 import { useWalletProvider } from "@/providers/WalletProvider";
+import {
+  SUPPORTED_CHAINS,
+  isChainSupported as configIsChainSupported,
+} from "@/config/chains";
 
 // Compatible interface matching the original useWalletConnection
 export interface WalletHooks {
@@ -47,39 +51,22 @@ export interface WalletHooks {
   getSupportedChains: () => Array<{ id: number; name: string; symbol: string }>;
 }
 
-// Supported chain configuration (simplified)
-const SUPPORTED_CHAIN_IDS = [1, 42161, 8453, 10] as const; // Ethereum, Arbitrum, Base, Optimism
-
-const CHAIN_NAMES: Record<number, string> = {
-  1: "Ethereum",
-  42161: "Arbitrum One",
-  8453: "Base",
-  10: "Optimism",
-};
-
-const CHAIN_SYMBOLS: Record<number, string> = {
-  1: "ETH",
-  42161: "ETH",
-  8453: "ETH",
-  10: "ETH",
-};
-
 /**
  * Main wallet hook - drop-in replacement for useWalletConnection
  */
 export function useWallet(): WalletHooks {
   const walletContext = useWalletProvider();
 
-  // Utility functions for backward compatibility
+  // Utility functions for backward compatibility - now using canonical configuration
   const isChainSupported = (chainId: number): boolean => {
-    return SUPPORTED_CHAIN_IDS.includes(chainId as any);
+    return configIsChainSupported(chainId);
   };
 
   const getSupportedChains = () => {
-    return SUPPORTED_CHAIN_IDS.map(id => ({
-      id,
-      name: CHAIN_NAMES[id] || `Chain ${id}`,
-      symbol: CHAIN_SYMBOLS[id] || "ETH",
+    return SUPPORTED_CHAINS.map(chain => ({
+      id: chain.id,
+      name: chain.name,
+      symbol: chain.symbol,
     }));
   };
 
@@ -106,13 +93,8 @@ export function useWallet(): WalletHooks {
 // Legacy exports for backward compatibility
 export const useWalletConnection = useWallet;
 
-// Chain constants for backward compatibility
-export const SUPPORTED_CHAINS = {
-  ETHEREUM: 1,
-  ARBITRUM: 42161,
-  BASE: 8453,
-  OPTIMISM: 10,
-} as const;
+// Chain constants for backward compatibility - now using canonical CHAIN_IDS
+export { CHAIN_IDS as SUPPORTED_CHAINS } from "@/config/chains";
 
 export type SupportedChainId =
   (typeof SUPPORTED_CHAINS)[keyof typeof SUPPORTED_CHAINS];
