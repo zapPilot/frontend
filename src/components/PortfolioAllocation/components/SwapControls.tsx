@@ -11,7 +11,11 @@ import type {
   SwapSettings,
   SwapValidation,
 } from "../types";
-import { AmountInput, TokenSelector, ValidationMessages } from "./Controls";
+import {
+  AmountInput,
+  TokenSelector,
+  ValidationMessages,
+} from "./ActionsAndControls";
 
 interface SwapControlsProps {
   operationMode: OperationMode;

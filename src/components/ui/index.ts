@@ -12,27 +12,40 @@ export { GlassCard } from "./GlassCard";
 export { GradientButton } from "./GradientButton";
 export { WalletConnectionPrompt } from "./WalletConnectionPrompt";
 
-// Loading components
-export { LoadingCard } from "./LoadingCard";
+// Unified Loading System - all loading components consolidated
 export {
+  // Core components
+  Spinner,
+  Skeleton,
+  LoadingWrapper,
+
+  // Specialized skeletons
   CardSkeleton,
   ChartSkeleton,
-  LoadingSkeleton,
   MetricsSkeleton,
-} from "./LoadingSkeleton";
-export { LoadingSpinner } from "./LoadingSpinner";
-export {
-  AssetCategorySkeleton,
-  LoadingState,
-  useLoadingComponent,
+  ButtonSkeleton,
+  BalanceSkeleton,
   WalletMetricsSkeleton,
+  AssetCategorySkeleton,
+
+  // Composite components
+  LoadingState,
   withLoadingState,
-} from "./LoadingState";
-export {
-  BalanceLoading,
-  ButtonLoading,
-  LoadingWrapper,
-  MetricsLoading,
-  PieChartLoading,
+  useLoadingComponent,
+
+  // Legacy compatibility (maintained for existing code)
+  LoadingSpinner,
+  LoadingSkeleton,
   UnifiedLoading,
-} from "./UnifiedLoading";
+  LoadingButton,
+  LoadingCard,
+
+  // Types
+  type LoadingSize,
+  type LoadingColor,
+  type SpinnerVariant,
+  type SkeletonVariant,
+  type SpinnerProps,
+  type SkeletonProps,
+  type LoadingWrapperProps,
+} from "./LoadingSystem";

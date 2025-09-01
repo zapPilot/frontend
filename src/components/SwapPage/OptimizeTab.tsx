@@ -14,7 +14,7 @@ import { SlippageComponent } from "../shared/SlippageComponent";
 import { TokenImage } from "../shared/TokenImage";
 import { GlassCard, GradientButton } from "../ui";
 import { useOptimizationData } from "./hooks/useOptimizationData";
-import { useTokenState } from "./hooks/useTokenState";
+import { useTokenManagement } from "./hooks/useTokenManagement";
 import { useUIState } from "./hooks/useUIState";
 import { useWalletTransactions } from "./hooks/useWalletTransactions";
 import { OptimizationSelector } from "./OptimizationSelector";
@@ -595,7 +595,7 @@ export function OptimizeTab() {
     fetchTokens: fetchDustTokens,
     deleteToken: handleDeleteToken,
     restoreTokens: handleRestoreDeletedTokens,
-  } = useTokenState(toast =>
+  } = useTokenManagement(toast =>
     showToast({
       ...toast,
       type: toast.type as "success" | "error" | "info",

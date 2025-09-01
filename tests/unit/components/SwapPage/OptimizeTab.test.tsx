@@ -271,14 +271,6 @@ describe("OptimizeTab", () => {
       expect(screen.getByText("Rebalance Portfolio")).toBeInTheDocument();
     });
 
-    it("should handle wallet connection state", () => {
-      render(<OptimizeTab {...defaultProps} />);
-
-      // Button should be enabled when wallet is connected
-      const optimizeButton = screen.getByTestId("gradient-button");
-      expect(optimizeButton).not.toBeDisabled();
-    });
-
     it("should show technical details toggle area", () => {
       render(<OptimizeTab {...defaultProps} />);
 

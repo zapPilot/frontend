@@ -1,19 +1,15 @@
 /**
- * Providers Index
- *
- * Simplified export point for wallet provider functionality.
- * Clean interface for importing simplified wallet components and hooks.
+ * Providers Index - Clean barrel exports
  */
 
-// Main provider components
-import { Web3Provider } from "./Web3Provider";
-import { WalletProvider, useWalletProvider } from "./WalletProvider";
-
-// Export all the components
+// Provider components
 export { Web3Provider } from "./Web3Provider";
 export { WalletProvider, useWalletProvider } from "./WalletProvider";
+export { QueryProvider } from "./QueryProvider";
+export { OnboardingProvider } from "./OnboardingProvider";
+export { SimpleWeb3Provider } from "./SimpleWeb3Provider";
 
-// Re-export simplified types
+// Re-export wallet types and utilities
 export type {
   WalletAccount,
   Chain,
@@ -24,16 +20,4 @@ export type {
   ProviderType,
 } from "@/types/wallet";
 
-// Re-export chain utilities
 export { SUPPORTED_CHAINS, CHAIN_INFO, chainUtils } from "@/types/wallet";
-
-/**
- * Main exports for the app
- */
-export const ProviderExports = {
-  Web3Provider,
-  WalletProvider,
-  useWalletProvider,
-};
-
-export default ProviderExports;

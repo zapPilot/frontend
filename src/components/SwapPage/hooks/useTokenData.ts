@@ -1,64 +1,49 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { transformToDebankChainName } from "../../../utils/chainHelper";
 import { getTokens } from "../../../utils/dustConversion";
 import { DustToken } from "../../../types/optimize";
 
-interface TokenState {
+interface TokenDataState {
   data: DustToken[];
   status: "idle" | "loading" | "error";
   error: string | null;
-  deletedIds: Set<string>;
 }
 
-interface UseTokenStateReturn {
-  // State
+interface UseTokenDataReturn {
   tokens: DustToken[];
-  filteredTokens: DustToken[];
   isLoading: boolean;
   error: string | null;
-  deletedIds: Set<string>;
-
-  // Actions
   fetchTokens: (chainName: string, userAddress: string) => Promise<void>;
-  deleteToken: (tokenId: string) => void;
-  restoreTokens: () => void;
   clearError: () => void;
   reset: () => void;
 }
 
-export function useTokenState(
-  showToast?: (toast: {
-    type: string;
-    title: string;
-    message: string;
-    duration?: number;
-  }) => void
-): UseTokenStateReturn {
-  const [state, setState] = useState<TokenState>({
+interface ToastConfig {
+  type: string;
+  title: string;
+  message: string;
+  duration?: number;
+}
+
+/**
+ * Hook for managing token data fetching and state
+ * Simplified from the original over-complex useTokenState hook
+ */
+export function useTokenData(
+  showToast?: (toast: ToastConfig) => void
+): UseTokenDataReturn {
+  const [state, setState] = useState<TokenDataState>({
     data: [],
     status: "idle",
     error: null,
-    deletedIds: new Set(),
   });
 
-  // Request state tracking to prevent infinite loops and race conditions
+  // Track current request to prevent race conditions
   const currentRequestRef = useRef<{
     userAddress: string;
     chainName: string;
     abortController: AbortController;
   } | null>(null);
-
-  // Performance optimization: Filter tokens using useMemo
-  //
-  // Previously filtered tokens on every render, which can be expensive for large token lists.
-  // Now memoized to only recalculate when token data or deleted IDs change.
-  //
-  // Impact: Prevents unnecessary filtering operations on every component render
-  // Dependencies: state.data (token list), state.deletedIds (deleted token set)
-  const filteredTokens = useMemo(
-    () => state.data.filter(token => !state.deletedIds.has(token.id)),
-    [state.data, state.deletedIds]
-  );
 
   const fetchTokens = useCallback(
     async (chainName: string, userAddress: string) => {
@@ -71,7 +56,7 @@ export function useTokenState(
         currentRequest.userAddress === userAddress &&
         currentRequest.chainName === chainName
       ) {
-        return; // Request already in progress, skip
+        return; // Request already in progress
       }
 
       // Cancel any existing request
@@ -109,7 +94,7 @@ export function useTokenState(
           return;
         }
 
-        // Show user-friendly error notification if showToast is provided
+        // Show user-friendly error notification
         if (showToast) {
           showToast({
             type: "error",
@@ -139,20 +124,6 @@ export function useTokenState(
     [showToast]
   );
 
-  const deleteToken = useCallback((tokenId: string) => {
-    setState(prev => ({
-      ...prev,
-      deletedIds: new Set([...prev.deletedIds, tokenId]),
-    }));
-  }, []);
-
-  const restoreTokens = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      deletedIds: new Set(),
-    }));
-  }, []);
-
   const clearError = useCallback(() => {
     setState(prev => ({ ...prev, error: null, status: "idle" }));
   }, []);
@@ -168,22 +139,14 @@ export function useTokenState(
       data: [],
       status: "idle",
       error: null,
-      deletedIds: new Set(),
     });
   }, []);
 
   return {
-    // State
     tokens: state.data,
-    filteredTokens,
     isLoading: state.status === "loading",
     error: state.error,
-    deletedIds: state.deletedIds,
-
-    // Actions
     fetchTokens,
-    deleteToken,
-    restoreTokens,
     clearError,
     reset,
   };
