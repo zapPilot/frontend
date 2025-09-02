@@ -15,6 +15,45 @@ vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolio.utils");
 
+// Mock dynamic imports
+vi.mock("next/dynamic", () => ({
+  __esModule: true,
+  default: vi.fn(factory => {
+    // Handle the promise returned by factory
+    const importPromise = factory();
+    if (importPromise && typeof importPromise.then === "function") {
+      // Return a mock component that will be resolved
+      return vi.fn(({ isOpen, onClose }) =>
+        isOpen ? (
+          <div data-testid="wallet-manager-modal">
+            <h2>Bundle Wallets</h2>
+            <div data-testid="wallet-manager-content">
+              <div data-testid="wallet-list">
+                <div data-testid="wallet-item">Main Wallet: 0x123...456</div>
+                <div data-testid="wallet-item">
+                  Secondary Wallet: 0x789...abc
+                </div>
+              </div>
+              <button data-testid="add-wallet">Add Wallet</button>
+              <button data-testid="remove-wallet">Remove Wallet</button>
+              <button data-testid="close-wallet-manager" onClick={onClose}>
+                Close
+              </button>
+              <button data-testid="close-modal" onClick={onClose}>
+                ×
+              </button>
+            </div>
+          </div>
+        ) : null
+      );
+    }
+    // Fallback for non-promise factory
+    return vi.fn(() => (
+      <div data-testid="dynamic-component-mock">Dynamic Component Mock</div>
+    ));
+  }),
+}));
+
 // Mock child components with interaction capabilities
 vi.mock("../../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(
@@ -442,7 +481,7 @@ describe("WalletPortfolio - Regression Tests", () => {
 
   describe("Critical User Flow: Balance Visibility Toggle", () => {
     it("should complete full balance visibility toggle flow", async () => {
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Initial state - balance visible
       expect(screen.getByTestId("balance-visibility")).toHaveTextContent(
@@ -474,7 +513,6 @@ describe("WalletPortfolio - Regression Tests", () => {
 
       expect(mockToggleBalance).toHaveBeenCalled();
 
-      const { rerender } = render(<WalletPortfolio />);
       rerender(<WalletPortfolio />);
 
       // Should show hidden state
@@ -525,7 +563,7 @@ describe("WalletPortfolio - Regression Tests", () => {
 
   describe("Critical User Flow: Modal Management", () => {
     it("should complete wallet manager modal flow", async () => {
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Modal initially closed
       expect(
@@ -546,7 +584,6 @@ describe("WalletPortfolio - Regression Tests", () => {
         closeModal: mockCloseModal,
       });
 
-      const { rerender } = render(<WalletPortfolio />);
       rerender(<WalletPortfolio />);
 
       // Modal should be visible
@@ -599,7 +636,7 @@ describe("WalletPortfolio - Regression Tests", () => {
         isRefetching: false,
       });
 
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Should show error state
       expect(screen.getByTestId("overview-error")).toHaveTextContent(
@@ -625,7 +662,6 @@ describe("WalletPortfolio - Regression Tests", () => {
         isRefetching: true,
       });
 
-      const { rerender } = render(<WalletPortfolio />);
       rerender(<WalletPortfolio />);
 
       expect(screen.getByTestId("overview-retrying")).toHaveTextContent(
@@ -657,7 +693,7 @@ describe("WalletPortfolio - Regression Tests", () => {
     });
 
     it("should handle network failure and recovery", async () => {
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Initial successful state
       expect(screen.getByTestId("total-value-display")).toHaveTextContent(
@@ -673,7 +709,6 @@ describe("WalletPortfolio - Regression Tests", () => {
         isRefetching: false,
       });
 
-      const { rerender } = render(<WalletPortfolio />);
       rerender(<WalletPortfolio />);
 
       expect(screen.getByTestId("overview-error")).toHaveTextContent(
@@ -718,7 +753,7 @@ describe("WalletPortfolio - Regression Tests", () => {
         isRefetching: false,
       });
 
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Should show loading state
       expect(screen.getByTestId("overview-loading")).toHaveTextContent(
@@ -737,7 +772,6 @@ describe("WalletPortfolio - Regression Tests", () => {
         isRefetching: false,
       });
 
-      const { rerender } = render(<WalletPortfolio />);
       rerender(<WalletPortfolio />);
 
       await waitFor(() => {
@@ -903,7 +937,7 @@ describe("WalletPortfolio - Regression Tests", () => {
 
   describe("Critical User Flow: Component Re-mounting", () => {
     it("should handle component unmount and remount gracefully", async () => {
-      const { unmount, rerender } = render(<WalletPortfolio />);
+      const { unmount } = render(<WalletPortfolio />);
 
       // Verify initial render
       expect(screen.getByTestId("total-value-display")).toHaveTextContent(
@@ -913,8 +947,8 @@ describe("WalletPortfolio - Regression Tests", () => {
       // Unmount
       unmount();
 
-      // Remount should work without issues
-      rerender(<WalletPortfolio />);
+      // Remount should work without issues - use fresh render after unmount
+      render(<WalletPortfolio />);
 
       await waitFor(() => {
         expect(screen.getByTestId("total-value-display")).toHaveTextContent(
