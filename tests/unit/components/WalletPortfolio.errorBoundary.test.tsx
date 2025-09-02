@@ -387,6 +387,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
     it("should handle invalid return data from hooks", () => {
       const onError = vi.fn();
       // Mock useUser returning invalid data structure
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       mockUseUser.mockReturnValue(undefined as any);
 
       render(

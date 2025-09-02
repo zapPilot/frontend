@@ -1,0 +1,936 @@
+import { act, screen, waitFor, fireEvent } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
+import { useUser } from "../../../src/contexts/UserContext";
+import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import { useWalletModal } from "../../../src/hooks/useWalletModal";
+import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
+import { render } from "../../test-utils";
+
+// Mock dependencies
+vi.mock("../../../src/contexts/UserContext");
+vi.mock("../../../src/hooks/usePortfolio");
+vi.mock("../../../src/hooks/queries/usePortfolioQuery");
+vi.mock("../../../src/hooks/useWalletModal");
+vi.mock("../../../src/utils/portfolio.utils");
+
+// Mock child components with interaction capabilities
+vi.mock("../../../src/components/PortfolioOverview", () => ({
+  PortfolioOverview: vi.fn(
+    ({
+      onRetry,
+      onCategoryClick,
+      isLoading,
+      apiError,
+      pieChartData,
+      categorySummaries,
+      isRetrying,
+    }) => (
+      <div data-testid="portfolio-overview">
+        <div data-testid="overview-loading">
+          {isLoading ? "loading" : "loaded"}
+        </div>
+        <div data-testid="overview-error">{apiError || "no-error"}</div>
+        <div data-testid="overview-retrying">
+          {isRetrying ? "retrying" : "not-retrying"}
+        </div>
+        <div data-testid="overview-categories">
+          {categorySummaries?.length || 0}
+        </div>
+        <div data-testid="overview-pie-data">{pieChartData?.length || 0}</div>
+        <button
+          data-testid="overview-retry"
+          onClick={onRetry}
+          disabled={isLoading}
+        >
+          Retry
+        </button>
+        {onCategoryClick && (
+          <>
+            <button
+              data-testid="category-btc"
+              onClick={() => onCategoryClick("btc")}
+            >
+              BTC
+            </button>
+            <button
+              data-testid="category-eth"
+              onClick={() => onCategoryClick("eth")}
+            >
+              ETH
+            </button>
+          </>
+        )}
+      </div>
+    )
+  ),
+}));
+
+vi.mock("../../../src/components/WalletManager", () => ({
+  WalletManager: vi.fn(({ isOpen, onClose }) =>
+    isOpen ? (
+      <div data-testid="wallet-manager-modal">
+        <h2>Wallet Manager</h2>
+        <button data-testid="add-wallet">Add Wallet</button>
+        <button data-testid="remove-wallet">Remove Wallet</button>
+        <button data-testid="close-modal" onClick={onClose}>
+          Close
+        </button>
+      </div>
+    ) : null
+  ),
+}));
+
+vi.mock("../../../src/components/ui", () => ({
+  GlassCard: vi.fn(({ children }) => (
+    <div data-testid="glass-card">{children}</div>
+  )),
+}));
+
+vi.mock("../../../src/components/wallet/WalletHeader", () => ({
+  WalletHeader: vi.fn(
+    ({
+      onAnalyticsClick,
+      onWalletManagerClick,
+      onToggleBalance,
+      balanceHidden,
+    }) => (
+      <div data-testid="wallet-header">
+        <div data-testid="balance-visibility">
+          {balanceHidden ? "hidden" : "visible"}
+        </div>
+        <button data-testid="analytics-btn" onClick={onAnalyticsClick}>
+          View Analytics
+        </button>
+        <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>
+          Manage Wallets
+        </button>
+        <button data-testid="toggle-balance-btn" onClick={onToggleBalance}>
+          {balanceHidden ? "Show Balance" : "Hide Balance"}
+        </button>
+      </div>
+    )
+  ),
+}));
+
+vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
+  WalletMetrics: vi.fn(
+    ({ totalValue, balanceHidden, isLoading, error, isConnected }) => (
+      <div data-testid="wallet-metrics">
+        <div data-testid="total-value-display">
+          {balanceHidden
+            ? "****"
+            : totalValue
+              ? `$${totalValue.toLocaleString()}`
+              : "No value"}
+        </div>
+        <div data-testid="metrics-loading-state">
+          {isLoading ? "Loading..." : "Loaded"}
+        </div>
+        <div data-testid="metrics-error-state">{error || "No errors"}</div>
+        <div data-testid="metrics-connection-state">
+          {isConnected ? "Connected" : "Disconnected"}
+        </div>
+      </div>
+    )
+  ),
+}));
+
+vi.mock("../../../src/components/wallet/WalletActions", () => ({
+  WalletActions: vi.fn(({ onZapInClick, onZapOutClick, onOptimizeClick }) => (
+    <div data-testid="wallet-actions">
+      <button
+        data-testid="zap-in-action"
+        onClick={onZapInClick}
+        className="action-button"
+      >
+        Zap In
+      </button>
+      <button
+        data-testid="zap-out-action"
+        onClick={onZapOutClick}
+        className="action-button"
+      >
+        Zap Out
+      </button>
+      <button
+        data-testid="optimize-action"
+        onClick={onOptimizeClick}
+        className="action-button"
+      >
+        Optimize Portfolio
+      </button>
+    </div>
+  )),
+}));
+
+vi.mock("../../../src/components/errors/ErrorBoundary", () => ({
+  ErrorBoundary: vi.fn(({ children, onError, resetKeys }) => {
+    // Simulate error boundary behavior
+    try {
+      return (
+        <div
+          data-testid="error-boundary"
+          data-reset-keys={JSON.stringify(resetKeys)}
+        >
+          {children}
+        </div>
+      );
+    } catch (error) {
+      onError?.(error);
+      return <div data-testid="error-fallback">Something went wrong</div>;
+    }
+  }),
+}));
+
+vi.mock("../../../src/utils/logger", () => ({
+  logger: {
+    createContextLogger: vi.fn(() => ({
+      error: vi.fn(),
+      warn: vi.fn(),
+      info: vi.fn(),
+      debug: vi.fn(),
+    })),
+  },
+}));
+
+describe("WalletPortfolio - Regression Tests", () => {
+  const mockUseUser = vi.mocked(useUser);
+  const mockUsePortfolio = vi.mocked(usePortfolio);
+  const mockUseLandingPageData = vi.mocked(useLandingPageData);
+  const mockUseWalletModal = vi.mocked(useWalletModal);
+  const mockCreateCategoriesFromApiData = vi.mocked(
+    createCategoriesFromApiData
+  );
+
+  const mockUserInfo = { userId: "test-user-123" };
+  const mockRefetch = vi.fn();
+  const mockToggleBalance = vi.fn();
+  const mockOpenModal = vi.fn();
+  const mockCloseModal = vi.fn();
+
+  const validPortfolioData = {
+    total_net_usd: 25000,
+    weighted_apr: 0.15,
+    estimated_monthly_income: 1250,
+    portfolio_allocation: {
+      btc: {
+        total_value: 12500,
+        percentage_of_portfolio: 50,
+        wallet_tokens_value: 2000,
+        other_sources_value: 10500,
+      },
+      eth: {
+        total_value: 7500,
+        percentage_of_portfolio: 30,
+        wallet_tokens_value: 1500,
+        other_sources_value: 6000,
+      },
+      stablecoins: {
+        total_value: 3750,
+        percentage_of_portfolio: 15,
+        wallet_tokens_value: 750,
+        other_sources_value: 3000,
+      },
+      others: {
+        total_value: 1250,
+        percentage_of_portfolio: 5,
+        wallet_tokens_value: 250,
+        other_sources_value: 1000,
+      },
+    },
+    pool_details: [],
+    total_positions: 15,
+    protocols_count: 5,
+    chains_count: 3,
+    last_updated: new Date().toISOString(),
+    apr_coverage: {
+      matched_pools: 10,
+      total_pools: 15,
+      coverage_percentage: 66.67,
+      matched_asset_value_usd: 20000,
+    },
+    total_assets_usd: 25000,
+    total_debt_usd: 0,
+  };
+
+  const mockCategories = [
+    {
+      id: "btc",
+      name: "Bitcoin",
+      color: "#F7931A",
+      totalValue: 12500,
+      percentage: 50,
+      averageAPR: 0,
+      topProtocols: [],
+    },
+    {
+      id: "eth",
+      name: "Ethereum",
+      color: "#627EEA",
+      totalValue: 7500,
+      percentage: 30,
+      averageAPR: 4.5,
+      topProtocols: [],
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockUseUser.mockReturnValue({
+      userInfo: mockUserInfo,
+      isConnected: true,
+      loading: false,
+    });
+
+    mockUseLandingPageData.mockReturnValue({
+      data: validPortfolioData,
+      isLoading: false,
+      error: null,
+      refetch: mockRefetch,
+      isRefetching: false,
+    });
+
+    mockUsePortfolio.mockReturnValue({
+      balanceHidden: false,
+      expandedCategory: null,
+      portfolioMetrics: {
+        totalValue: 25000,
+        totalChangePercentage: 7.5,
+        totalChangeValue: 1750,
+      },
+      toggleBalanceVisibility: mockToggleBalance,
+      toggleCategoryExpansion: vi.fn(),
+    });
+
+    mockUseWalletModal.mockReturnValue({
+      isOpen: false,
+      openModal: mockOpenModal,
+      closeModal: mockCloseModal,
+    });
+
+    mockCreateCategoriesFromApiData.mockReturnValue(mockCategories);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("Critical User Flow: Wallet Connection/Disconnection", () => {
+    it("should handle complete wallet connection flow", async () => {
+      // Start disconnected
+      mockUseUser.mockReturnValue({
+        userInfo: null,
+        isConnected: false,
+        loading: false,
+      });
+
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+
+      // Should show disconnected state
+      expect(screen.getByTestId("metrics-connection-state")).toHaveTextContent(
+        "Disconnected"
+      );
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "No value"
+      );
+
+      // Simulate wallet connection
+      mockUseUser.mockReturnValue({
+        userInfo: mockUserInfo,
+        isConnected: true,
+        loading: false,
+      });
+
+      mockUseLandingPageData.mockReturnValue({
+        data: validPortfolioData,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("metrics-connection-state")
+        ).toHaveTextContent("Connected");
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "$25,000"
+        );
+      });
+
+      // Verify data fetching was triggered
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
+    });
+
+    it("should handle wallet disconnection gracefully", async () => {
+      // Start connected
+      const { rerender } = render(<WalletPortfolio />);
+
+      expect(screen.getByTestId("metrics-connection-state")).toHaveTextContent(
+        "Connected"
+      );
+
+      // Simulate disconnection
+      mockUseUser.mockReturnValue({
+        userInfo: null,
+        isConnected: false,
+        loading: false,
+      });
+
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId("metrics-connection-state")
+        ).toHaveTextContent("Disconnected");
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "No value"
+        );
+      });
+    });
+
+    it("should maintain state during wallet switching", async () => {
+      const firstUser = { userId: "user-1" };
+      const secondUser = { userId: "user-2" };
+
+      // Start with first user
+      mockUseUser.mockReturnValue({
+        userInfo: firstUser,
+        isConnected: true,
+        loading: false,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(firstUser.userId);
+
+      // Switch to second user
+      mockUseUser.mockReturnValue({
+        userInfo: secondUser,
+        isConnected: true,
+        loading: false,
+      });
+
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(mockUseLandingPageData).toHaveBeenCalledWith(secondUser.userId);
+      });
+    });
+  });
+
+  describe("Critical User Flow: Balance Visibility Toggle", () => {
+    it("should complete full balance visibility toggle flow", async () => {
+      render(<WalletPortfolio />);
+
+      // Initial state - balance visible
+      expect(screen.getByTestId("balance-visibility")).toHaveTextContent(
+        "visible"
+      );
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "$25,000"
+      );
+      expect(screen.getByTestId("toggle-balance-btn")).toHaveTextContent(
+        "Hide Balance"
+      );
+
+      // Toggle to hidden
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: true,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: 25000,
+          totalChangePercentage: 7.5,
+          totalChangeValue: 1750,
+        },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("toggle-balance-btn"));
+      });
+
+      expect(mockToggleBalance).toHaveBeenCalled();
+
+      const { rerender } = render(<WalletPortfolio />);
+      rerender(<WalletPortfolio />);
+
+      // Should show hidden state
+      expect(screen.getByTestId("balance-visibility")).toHaveTextContent(
+        "hidden"
+      );
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "****"
+      );
+      expect(screen.getByTestId("toggle-balance-btn")).toHaveTextContent(
+        "Show Balance"
+      );
+    });
+
+    it("should maintain balance visibility across data refreshes", async () => {
+      mockUsePortfolio.mockReturnValue({
+        balanceHidden: true,
+        expandedCategory: null,
+        portfolioMetrics: {
+          totalValue: 25000,
+          totalChangePercentage: 7.5,
+          totalChangeValue: 1750,
+        },
+        toggleBalanceVisibility: mockToggleBalance,
+        toggleCategoryExpansion: vi.fn(),
+      });
+
+      render(<WalletPortfolio />);
+
+      // Balance should be hidden
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "****"
+      );
+
+      // Trigger data refresh
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("overview-retry"));
+      });
+
+      expect(mockRefetch).toHaveBeenCalled();
+
+      // Balance should still be hidden after refresh
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "****"
+      );
+    });
+  });
+
+  describe("Critical User Flow: Modal Management", () => {
+    it("should complete wallet manager modal flow", async () => {
+      render(<WalletPortfolio />);
+
+      // Modal initially closed
+      expect(
+        screen.queryByTestId("wallet-manager-modal")
+      ).not.toBeInTheDocument();
+
+      // Open modal
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("wallet-manager-btn"));
+      });
+
+      expect(mockOpenModal).toHaveBeenCalled();
+
+      // Simulate modal open
+      mockUseWalletModal.mockReturnValue({
+        isOpen: true,
+        openModal: mockOpenModal,
+        closeModal: mockCloseModal,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+      rerender(<WalletPortfolio />);
+
+      // Modal should be visible
+      expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
+      expect(screen.getByTestId("add-wallet")).toBeInTheDocument();
+      expect(screen.getByTestId("remove-wallet")).toBeInTheDocument();
+
+      // Close modal
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("close-modal"));
+      });
+
+      expect(mockCloseModal).toHaveBeenCalled();
+    });
+
+    it("should handle modal interactions without affecting main component", async () => {
+      mockUseWalletModal.mockReturnValue({
+        isOpen: true,
+        openModal: mockOpenModal,
+        closeModal: mockCloseModal,
+      });
+
+      render(<WalletPortfolio />);
+
+      // Modal interactions should not affect main component state
+      const initialMetricsText = screen.getByTestId(
+        "total-value-display"
+      ).textContent;
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("add-wallet"));
+      });
+
+      // Main component should remain unaffected
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        initialMetricsText!
+      );
+    });
+  });
+
+  describe("Critical User Flow: Error Recovery", () => {
+    it("should handle complete error recovery flow", async () => {
+      // Start with error state
+      const errorMessage = "Failed to load portfolio data";
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { message: errorMessage },
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      render(<WalletPortfolio />);
+
+      // Should show error state
+      expect(screen.getByTestId("overview-error")).toHaveTextContent(
+        errorMessage
+      );
+      expect(screen.getByTestId("metrics-error-state")).toHaveTextContent(
+        errorMessage
+      );
+
+      // Attempt retry
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("overview-retry"));
+      });
+
+      expect(mockRefetch).toHaveBeenCalled();
+
+      // Simulate retry in progress
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { message: errorMessage },
+        refetch: mockRefetch,
+        isRefetching: true,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+      rerender(<WalletPortfolio />);
+
+      expect(screen.getByTestId("overview-retrying")).toHaveTextContent(
+        "retrying"
+      );
+
+      // Simulate successful recovery
+      mockUseLandingPageData.mockReturnValue({
+        data: validPortfolioData,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("overview-error")).toHaveTextContent(
+          "no-error"
+        );
+        expect(screen.getByTestId("metrics-error-state")).toHaveTextContent(
+          "No errors"
+        );
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "$25,000"
+        );
+      });
+    });
+
+    it("should handle network failure and recovery", async () => {
+      render(<WalletPortfolio />);
+
+      // Initial successful state
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "$25,000"
+      );
+
+      // Simulate network failure
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: false,
+        error: { message: "Network connection lost" },
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+      rerender(<WalletPortfolio />);
+
+      expect(screen.getByTestId("overview-error")).toHaveTextContent(
+        "Network connection lost"
+      );
+
+      // Recovery attempt
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("overview-retry"));
+      });
+
+      // Successful recovery
+      mockUseLandingPageData.mockReturnValue({
+        data: validPortfolioData,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("overview-error")).toHaveTextContent(
+          "no-error"
+        );
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "$25,000"
+        );
+      });
+    });
+  });
+
+  describe("Critical User Flow: Data Loading Sequences", () => {
+    it("should handle complete loading sequence", async () => {
+      // Start with loading state
+      mockUseLandingPageData.mockReturnValue({
+        data: null,
+        isLoading: true,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      render(<WalletPortfolio />);
+
+      // Should show loading state
+      expect(screen.getByTestId("overview-loading")).toHaveTextContent(
+        "loading"
+      );
+      expect(screen.getByTestId("metrics-loading-state")).toHaveTextContent(
+        "Loading..."
+      );
+
+      // Simulate loading completion
+      mockUseLandingPageData.mockReturnValue({
+        data: validPortfolioData,
+        isLoading: false,
+        error: null,
+        refetch: mockRefetch,
+        isRefetching: false,
+      });
+
+      const { rerender } = render(<WalletPortfolio />);
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("overview-loading")).toHaveTextContent(
+          "loaded"
+        );
+        expect(screen.getByTestId("metrics-loading-state")).toHaveTextContent(
+          "Loaded"
+        );
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "$25,000"
+        );
+      });
+    });
+
+    it("should handle rapid loading state changes", async () => {
+      const { rerender } = render(<WalletPortfolio />);
+
+      // Multiple rapid state changes
+      const states = [
+        { isLoading: true, data: null, error: null },
+        { isLoading: false, data: validPortfolioData, error: null },
+        { isLoading: false, data: null, error: { message: "Error" } },
+        { isLoading: false, data: validPortfolioData, error: null },
+      ];
+
+      for (const state of states) {
+        mockUseLandingPageData.mockReturnValue({
+          ...state,
+          refetch: mockRefetch,
+          isRefetching: false,
+        });
+
+        rerender(<WalletPortfolio />);
+
+        await waitFor(() => {
+          expect(screen.getByTestId("overview-loading")).toHaveTextContent(
+            state.isLoading ? "loading" : "loaded"
+          );
+        });
+      }
+
+      // Final state should be stable
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "$25,000"
+      );
+    });
+  });
+
+  describe("Critical User Flow: Category Interactions", () => {
+    it("should handle category click interactions", async () => {
+      const onCategoryClick = vi.fn();
+
+      render(<WalletPortfolio onCategoryClick={onCategoryClick} />);
+
+      // Category buttons should be available
+      expect(screen.getByTestId("category-btc")).toBeInTheDocument();
+      expect(screen.getByTestId("category-eth")).toBeInTheDocument();
+
+      // Click BTC category
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("category-btc"));
+      });
+
+      expect(onCategoryClick).toHaveBeenCalledWith("btc");
+
+      // Click ETH category
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("category-eth"));
+      });
+
+      expect(onCategoryClick).toHaveBeenCalledWith("eth");
+      expect(onCategoryClick).toHaveBeenCalledTimes(2);
+    });
+
+    it("should handle category interactions without affecting other state", async () => {
+      const onCategoryClick = vi.fn();
+
+      render(<WalletPortfolio onCategoryClick={onCategoryClick} />);
+
+      const initialBalance = screen.getByTestId(
+        "total-value-display"
+      ).textContent;
+
+      // Category interactions should not affect balance display
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("category-btc"));
+      });
+
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        initialBalance!
+      );
+      expect(onCategoryClick).toHaveBeenCalledWith("btc");
+    });
+  });
+
+  describe("Critical User Flow: Action Button Interactions", () => {
+    it("should handle all action button clicks", async () => {
+      const onZapInClick = vi.fn();
+      const onZapOutClick = vi.fn();
+      const onOptimizeClick = vi.fn();
+      const onAnalyticsClick = vi.fn();
+
+      render(
+        <WalletPortfolio
+          onZapInClick={onZapInClick}
+          onZapOutClick={onZapOutClick}
+          onOptimizeClick={onOptimizeClick}
+          onAnalyticsClick={onAnalyticsClick}
+        />
+      );
+
+      // Test all action buttons
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("zap-in-action"));
+      });
+      expect(onZapInClick).toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("zap-out-action"));
+      });
+      expect(onZapOutClick).toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("optimize-action"));
+      });
+      expect(onOptimizeClick).toHaveBeenCalled();
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("analytics-btn"));
+      });
+      expect(onAnalyticsClick).toHaveBeenCalled();
+    });
+
+    it("should handle action button clicks without side effects", async () => {
+      const onZapInClick = vi.fn();
+
+      render(<WalletPortfolio onZapInClick={onZapInClick} />);
+
+      const initialState = {
+        balance: screen.getByTestId("total-value-display").textContent,
+        loading: screen.getByTestId("overview-loading").textContent,
+        error: screen.getByTestId("overview-error").textContent,
+      };
+
+      // Action should not affect component state
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("zap-in-action"));
+      });
+
+      expect(onZapInClick).toHaveBeenCalled();
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        initialState.balance!
+      );
+      expect(screen.getByTestId("overview-loading")).toHaveTextContent(
+        initialState.loading!
+      );
+      expect(screen.getByTestId("overview-error")).toHaveTextContent(
+        initialState.error!
+      );
+    });
+  });
+
+  describe("Critical User Flow: Component Re-mounting", () => {
+    it("should handle component unmount and remount gracefully", async () => {
+      const { unmount, rerender } = render(<WalletPortfolio />);
+
+      // Verify initial render
+      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+        "$25,000"
+      );
+
+      // Unmount
+      unmount();
+
+      // Remount should work without issues
+      rerender(<WalletPortfolio />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId("total-value-display")).toHaveTextContent(
+          "$25,000"
+        );
+        expect(mockUseLandingPageData).toHaveBeenCalledWith(
+          mockUserInfo.userId
+        );
+      });
+    });
+
+    it("should cleanup resources on unmount", async () => {
+      const { unmount } = render(<WalletPortfolio />);
+
+      // Should not throw errors on unmount
+      expect(() => unmount()).not.toThrow();
+    });
+  });
+});

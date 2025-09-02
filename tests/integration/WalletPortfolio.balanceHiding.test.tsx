@@ -113,6 +113,7 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
     }: {
       renderBalanceDisplay?: () => React.ReactNode;
       balanceHidden?: boolean;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pieChartData: any[];
       totalValue?: number;
     }) => {
@@ -159,29 +160,7 @@ const mockUserInfo = {
   email: "test@example.com",
 };
 
-const mockPortfolioData = [
-  {
-    name: "DeFi",
-    totalValue: 15000,
-    percentage: 60,
-    color: "#8B5CF6",
-    assets: [],
-  },
-  {
-    name: "CEX",
-    totalValue: 7500,
-    percentage: 30,
-    color: "#06B6D4",
-    assets: [],
-  },
-  {
-    name: "NFTs",
-    totalValue: 2500,
-    percentage: 10,
-    color: "#F59E0B",
-    assets: [],
-  },
-];
+// Removed unused mockPortfolioData - data is mocked via hooks
 
 describe("WalletPortfolio - Balance Hiding Integration", () => {
   let mockToggleBalance: ReturnType<typeof vi.fn>;
