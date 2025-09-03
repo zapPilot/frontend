@@ -4,7 +4,9 @@ import { motion } from "framer-motion";
 import { ArrowDownLeft, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
+import { usePortfolioStateHelpers } from "../hooks/usePortfolioState";
 import { PieChartData } from "../types/portfolio";
+import { PortfolioState } from "../types/portfolioState";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
@@ -14,69 +16,47 @@ import { PieChartLoading } from "./ui/UnifiedLoading";
 type TabType = "assets" | "borrowing";
 
 export interface PortfolioOverviewProps {
+  portfolioState: PortfolioState;
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
-  totalValue?: number | null;
   balanceHidden?: boolean;
   title?: string;
   className?: string;
   testId?: string;
-  isLoading?: boolean;
-  apiError?: string | null;
   onRetry?: () => void;
-  isRetrying?: boolean;
-  isConnected?: boolean;
   onCategoryClick?: (categoryId: string) => void;
-  hasZeroData?: boolean;
 }
 
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   ({
+    portfolioState,
     categorySummaries,
     debtCategorySummaries = [],
     pieChartData,
-    totalValue,
     balanceHidden = false,
     title = "Asset Distribution",
     className = "",
     testId,
-    isLoading = false,
-    apiError = null,
     onRetry,
-    isRetrying = false,
-    isConnected = false,
     onCategoryClick,
-    hasZeroData = false,
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
 
+    // Use portfolio state helpers for consistent logic
+    const {
+      shouldShowLoading,
+      shouldShowConnectPrompt,
+      shouldShowNoDataMessage,
+      shouldShowPortfolioContent,
+      shouldShowError,
+      getDisplayTotalValue,
+    } = usePortfolioStateHelpers(portfolioState);
+
     // Get actual counts for tab badges
     const assetCount = categorySummaries.length;
     const debtCount = debtCategorySummaries.length;
-
-    // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
-    const showLoadingState =
-      isLoading ||
-      isRetrying ||
-      (isConnected &&
-        (!categorySummaries || categorySummaries.length === 0) &&
-        !apiError);
-
-    // Check if we should show empty state (no data and not loading/error)
-    const showEmptyState =
-      !showLoadingState &&
-      !apiError &&
-      (!isConnected ||
-        !categorySummaries ||
-        categorySummaries.length === 0 ||
-        !pieChartData ||
-        pieChartData.length === 0);
-
-    // Check if we have zero data (API returned data but all values are 0)
-    const showZeroDataState =
-      !showLoadingState && !apiError && isConnected && hasZeroData;
 
     return (
       <motion.div
@@ -217,8 +197,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           </div>
         </div>
 
-        {/* Empty State */}
-        {showEmptyState && (
+        {/* Wallet Not Connected State */}
+        {shouldShowConnectPrompt && (
           <div className="py-8">
             <WalletConnectionPrompt
               title="Connect Wallet to View Portfolio"
@@ -227,8 +207,31 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           </div>
         )}
 
-        {/* Zero Data State */}
-        {showZeroDataState && (
+        {/* Error State */}
+        {shouldShowError && (
+          <div className="py-8 text-center">
+            <div className="text-red-400 mb-4">
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <h3 className="text-lg font-medium text-red-300 mb-2">
+                Error Loading Portfolio
+              </h3>
+              <p className="text-sm text-red-400 mb-4">
+                {portfolioState.errorMessage}
+              </p>
+              {onRetry && (
+                <button
+                  onClick={onRetry}
+                  className="px-4 py-2 bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors"
+                >
+                  Retry
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Connected But No Data State */}
+        {shouldShowNoDataMessage && (
           <div className="py-8 text-center">
             <div className="text-gray-400 mb-4">
               <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -244,7 +247,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         )}
 
         {/* Desktop Layout: Sticky PieChart with Scrollable Details */}
-        {!showEmptyState && !showZeroDataState && (
+        {shouldShowPortfolioContent && (
           <div className="hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8">
             {/* Left Column: Sticky PieChart (50% width like original) */}
             <div className="sticky top-0">
@@ -252,21 +255,14 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 className="flex justify-center items-start pt-8"
                 data-testid="pie-chart-container"
               >
-                {showLoadingState ? (
+                {shouldShowLoading ? (
                   <PieChartLoading size={250} className="h-[250px] w-[250px]" />
-                ) : apiError ? (
-                  <div className="flex items-center justify-center h-[250px] w-[250px]">
-                    <div className="text-center text-red-500">
-                      <div className="text-sm">Chart Unavailable</div>
-                      <div className="text-xs mt-1 opacity-75">{apiError}</div>
-                    </div>
-                  </div>
                 ) : (
                   <PieChart
                     data={pieChartData}
                     size={250}
                     strokeWidth={10}
-                    totalValue={totalValue || 0}
+                    totalValue={getDisplayTotalValue() || 0}
                   />
                 )}
               </div>
@@ -283,10 +279,10 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   debtCategorySummaries={debtCategorySummaries}
                   balanceHidden={balanceHidden}
                   className="!bg-transparent !border-0 !p-0"
-                  isLoading={showLoadingState}
-                  error={apiError}
+                  isLoading={shouldShowLoading}
+                  error={portfolioState.errorMessage || null}
                   {...(onRetry && { onRetry })}
-                  isRetrying={isRetrying}
+                  isRetrying={portfolioState.isRetrying || false}
                   activeTab={activeTab}
                   {...(onCategoryClick && { onCategoryClick })}
                 />
@@ -296,27 +292,20 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         )}
 
         {/* Mobile Layout: Vertical Stack */}
-        {!showEmptyState && !showZeroDataState && (
+        {shouldShowPortfolioContent && (
           <div className="lg:hidden space-y-6">
             <div
               className="flex justify-center items-center"
               data-testid="pie-chart-container-mobile"
             >
-              {showLoadingState ? (
+              {shouldShowLoading ? (
                 <PieChartLoading size={200} className="h-[200px] w-[200px]" />
-              ) : apiError ? (
-                <div className="flex items-center justify-center h-[200px] w-[200px]">
-                  <div className="text-center text-red-500">
-                    <div className="text-sm">Chart Unavailable</div>
-                    <div className="text-xs mt-1 opacity-75">{apiError}</div>
-                  </div>
-                </div>
               ) : (
                 <PieChart
                   data={pieChartData}
                   size={200}
                   strokeWidth={8}
-                  totalValue={totalValue || 0}
+                  totalValue={getDisplayTotalValue() || 0}
                 />
               )}
             </div>
@@ -326,10 +315,10 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 debtCategorySummaries={debtCategorySummaries}
                 balanceHidden={balanceHidden}
                 className="!bg-transparent !border-0 !p-0"
-                isLoading={showLoadingState}
-                error={apiError}
+                isLoading={shouldShowLoading}
+                error={portfolioState.errorMessage || null}
                 {...(onRetry && { onRetry })}
-                isRetrying={isRetrying}
+                isRetrying={portfolioState.isRetrying || false}
                 activeTab={activeTab}
                 {...(onCategoryClick && { onCategoryClick })}
               />

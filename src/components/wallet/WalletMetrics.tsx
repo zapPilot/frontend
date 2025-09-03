@@ -1,22 +1,19 @@
 import { AlertCircle, TrendingUp } from "lucide-react";
 import React from "react";
-import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
-import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
+import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
+import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
-import { BalanceLoading } from "../ui/UnifiedLoading";
+import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
+import { BalanceLoading } from "../ui/UnifiedLoading";
 
 interface WalletMetricsProps {
-  totalValue: number | null;
+  portfolioState: PortfolioState;
   balanceHidden: boolean;
-  isLoading: boolean;
-  error: string | null;
   portfolioChangePercentage: number;
-  onRetry?: () => void;
-  isRetrying?: boolean;
-  isConnected: boolean;
   userId?: string | null;
 }
 
@@ -63,46 +60,42 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
 }
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
-  ({
-    totalValue,
-    balanceHidden,
-    isLoading,
-    error,
-    portfolioChangePercentage,
-    onRetry,
-    isRetrying,
-    isConnected,
-    userId,
-  }) => {
+  ({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
     // Fetch unified landing page data (includes APR data)
     const { data: landingPageData, isLoading: landingPageLoading } =
       useLandingPageData(userId);
+
+    // Use portfolio state helpers for consistent logic
+    const {
+      shouldShowLoading,
+      shouldShowConnectPrompt,
+      shouldShowNoDataMessage,
+      shouldShowError,
+      getDisplayTotalValue,
+    } = usePortfolioStateHelpers(portfolioState);
 
     const portfolioAPR = landingPageData?.weighted_apr || null;
     const estimatedMonthlyIncome =
       landingPageData?.estimated_monthly_income || null;
 
-    // Helper function to render balance display
+    // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
-      // Show loading when: 1) explicitly loading, 2) retrying, 3) wallet connected but no data yet
-      const showLoader =
-        isLoading ||
-        isRetrying ||
-        (isConnected && totalValue === null && !error);
-
-      if (showLoader) {
+      // Loading state
+      if (shouldShowLoading) {
         return (
           <div className="flex items-center space-x-2">
             <BalanceLoading size="default" className="" />
             <span className="text-lg text-gray-400">
-              {isRetrying ? "Retrying..." : "Loading..."}
+              {portfolioState.isRetrying ? "Retrying..." : "Loading..."}
             </span>
           </div>
         );
       }
-      if (error) {
+
+      // Error state
+      if (shouldShowError) {
         // Special handling for new users (404 errors)
-        if (error === "USER_NOT_FOUND") {
+        if (portfolioState.errorMessage === "USER_NOT_FOUND") {
           return null; // Component will show welcome message below
         }
         // Regular error display for other errors
@@ -110,36 +103,38 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <div className="flex flex-col space-y-2">
             <div className="text-sm text-red-400 flex items-center space-x-2">
               <AlertCircle className="w-4 h-4" />
-              <span>{error}</span>
+              <span>{portfolioState.errorMessage}</span>
             </div>
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                disabled={isRetrying}
-                className="text-xs text-purple-400 hover:text-purple-300 transition-colors underline self-start"
-              >
-                Retry
-              </button>
-            )}
           </div>
         );
       }
-      if (totalValue === null) {
+
+      // Wallet not connected
+      if (shouldShowConnectPrompt) {
         return (
           <div className="text-gray-400 text-lg">Please Connect Wallet</div>
         );
       }
-      return formatCurrency(totalValue, { isHidden: balanceHidden });
+
+      // Connected but no data
+      if (shouldShowNoDataMessage) {
+        return <div className="text-gray-400 text-lg">No data available</div>;
+      }
+
+      // Normal portfolio display
+      const displayValue = getDisplayTotalValue();
+      return formatCurrency(displayValue ?? 0, { isHidden: balanceHidden });
     };
 
     // Use real APR data or fall back to default
     const displayAPR = portfolioAPR ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
+    const displayValue = getDisplayTotalValue();
     const displayMonthlyIncome =
       estimatedMonthlyIncome ??
-      (totalValue ? calculateMonthlyIncome(totalValue, displayAPR) : 0);
+      (displayValue ? calculateMonthlyIncome(displayValue, displayAPR) : 0);
 
     // Show welcome message for new users
-    if (error === "USER_NOT_FOUND") {
+    if (portfolioState.errorMessage === "USER_NOT_FOUND") {
       return <WelcomeNewUser />;
     }
 
@@ -154,17 +149,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
         <div>
           <p className="text-sm text-gray-400 mb-1">
-            Portfolio APR {totalValue === null ? "(Potential)" : ""}
+            Portfolio APR {shouldShowConnectPrompt ? "(Potential)" : ""}
           </p>
-          {(isLoading ||
-            isRetrying ||
-            landingPageLoading ||
-            (isConnected && totalValue === null && !error)) &&
-          error !== "USER_NOT_FOUND" ? (
+          {(shouldShowLoading || landingPageLoading) &&
+          portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
           ) : (
             <div
-              className={`flex items-center space-x-2 ${totalValue === null ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+              className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
             >
               <TrendingUp className="w-4 h-4" />
               <span className="text-xl font-semibold">
@@ -176,11 +168,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
         <div>
           <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
-          {(isLoading ||
-            isRetrying ||
-            landingPageLoading ||
-            (isConnected && totalValue === null && !error)) &&
-          error !== "USER_NOT_FOUND" ? (
+          {(shouldShowLoading || landingPageLoading) &&
+          portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton
               showValue={true}
               showPercentage={false}
@@ -188,9 +177,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             />
           ) : (
             <p
-              className={`text-xl font-semibold ${totalValue === null ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+              className={`text-xl font-semibold ${shouldShowConnectPrompt ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
             >
-              {totalValue === null
+              {shouldShowConnectPrompt
                 ? "Connect to calculate"
                 : formatSmallCurrency(displayMonthlyIncome)}
             </p>

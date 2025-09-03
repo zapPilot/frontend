@@ -6,6 +6,7 @@ import { ComponentType, useMemo } from "react";
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
+import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
@@ -145,6 +146,16 @@ export function WalletPortfolio({
     };
   }, [landingPageData]);
 
+  // Centralized portfolio state management
+  const portfolioState = usePortfolioState({
+    isConnected,
+    isLoading: landingPageQuery.isLoading,
+    isRetrying: landingPageQuery.isRefetching,
+    error: landingPageQuery.error?.message || null,
+    landingPageData,
+    hasZeroData,
+  });
+
   // Portfolio UI state management (simplified since we have pre-formatted data)
   const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
 
@@ -181,14 +192,11 @@ export function WalletPortfolio({
             />
 
             <WalletMetrics
-              totalValue={landingPageData?.total_net_usd || null}
+              portfolioState={portfolioState}
               balanceHidden={balanceHidden}
-              isLoading={landingPageQuery.isLoading}
-              error={landingPageQuery.error?.message || null}
               portfolioChangePercentage={
                 portfolioMetrics?.totalChangePercentage || 0
               }
-              isConnected={isConnected}
               userId={userInfo?.userId || null}
             />
 
@@ -207,19 +215,14 @@ export function WalletPortfolio({
           }
         >
           <PortfolioOverview
+            portfolioState={portfolioState}
             categorySummaries={categorySummaries}
             debtCategorySummaries={debtCategorySummaries}
             pieChartData={pieChartData || []}
-            totalValue={landingPageData?.total_net_usd || null}
             balanceHidden={balanceHidden}
             title="Asset Distribution"
-            isLoading={landingPageQuery.isLoading}
-            apiError={landingPageQuery.error?.message || null}
             onRetry={landingPageQuery.refetch}
-            isRetrying={landingPageQuery.isRefetching}
-            isConnected={isConnected}
             testId="wallet-portfolio-overview"
-            hasZeroData={hasZeroData}
             {...(onCategoryClick && { onCategoryClick })}
           />
         </ErrorBoundary>
