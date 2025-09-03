@@ -28,6 +28,7 @@ export interface PortfolioOverviewProps {
   isRetrying?: boolean;
   isConnected?: boolean;
   onCategoryClick?: (categoryId: string) => void;
+  hasZeroData?: boolean;
 }
 
 export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
@@ -46,6 +47,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     isRetrying = false,
     isConnected = false,
     onCategoryClick,
+    hasZeroData = false,
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
@@ -66,10 +68,15 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     const showEmptyState =
       !showLoadingState &&
       !apiError &&
-      (!categorySummaries ||
+      (!isConnected ||
+        !categorySummaries ||
         categorySummaries.length === 0 ||
         !pieChartData ||
         pieChartData.length === 0);
+
+    // Check if we have zero data (API returned data but all values are 0)
+    const showZeroDataState =
+      !showLoadingState && !apiError && isConnected && hasZeroData;
 
     return (
       <motion.div
@@ -220,8 +227,24 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           </div>
         )}
 
+        {/* Zero Data State */}
+        {showZeroDataState && (
+          <div className="py-8 text-center">
+            <div className="text-gray-400 mb-4">
+              <TrendingUp className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <h3 className="text-lg font-medium text-gray-300 mb-2">
+                Currently no data
+              </h3>
+              <p className="text-sm text-gray-400">
+                Please wait for one day for your portfolio data to be processed
+                and displayed.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Desktop Layout: Sticky PieChart with Scrollable Details */}
-        {!showEmptyState && (
+        {!showEmptyState && !showZeroDataState && (
           <div className="hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8">
             {/* Left Column: Sticky PieChart (50% width like original) */}
             <div className="sticky top-0">
@@ -273,7 +296,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         )}
 
         {/* Mobile Layout: Vertical Stack */}
-        {!showEmptyState && (
+        {!showEmptyState && !showZeroDataState && (
           <div className="lg:hidden space-y-6">
             <div
               className="flex justify-center items-center"

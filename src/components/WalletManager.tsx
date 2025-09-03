@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   Copy,
-  Crown,
   Edit3,
   ExternalLink,
   MoreVertical,
@@ -55,8 +54,7 @@ interface WalletOperations {
 
 const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   const queryClient = useQueryClient();
-  const { userInfo, loading, error, isConnected, connectedWallet, refetch } =
-    useUser();
+  const { userInfo, loading, error, isConnected, refetch } = useUser();
   const { showToast } = useToast();
 
   // Component state
@@ -69,7 +67,6 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const primaryWallet = connectedWallet;
   const userId = userInfo?.userId;
 
   // Local UI state
@@ -428,9 +425,8 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     [formatAddress, showToast]
   );
 
-  // Separate primary and secondary wallets
-  const primaryWallets = wallets.filter(w => w.isMain);
-  const secondaryWallets = wallets.filter(w => !w.isMain);
+  // All wallets (no longer separating primary and secondary)
+  const allWallets = wallets;
 
   // Action menu component
   const WalletActionMenu = ({ wallet }: { wallet: WalletData }) => {
@@ -450,7 +446,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               e.currentTarget as HTMLElement
             ).getBoundingClientRect();
             const MENU_WIDTH = 192; // w-48
-            const estimatedHeight = wallet.isMain ? 130 : 210; // rough height for options
+            const estimatedHeight = 210; // rough height for options
             const openUp =
               rect.bottom + estimatedHeight > window.innerHeight - 8;
             const top = openUp
@@ -508,37 +504,33 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   <ExternalLink className="w-4 h-4" />
                   View on DeBank
                 </a>
-                {!wallet.isMain && (
-                  <>
-                    <div className="border-t border-gray-700 my-1" />
-                    <button
-                      onClick={() => {
-                        setEditingWallet({
-                          id: wallet.id,
-                          label: wallet.label,
-                        });
-                        setOpenDropdown(null);
-                        setMenuPosition(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Edit Label
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleDeleteWallet(wallet.id);
-                        setOpenDropdown(null);
-                        setMenuPosition(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
-                      disabled={operations.removing[wallet.id]?.isLoading}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Remove from Bundle
-                    </button>
-                  </>
-                )}
+                <div className="border-t border-gray-700 my-1" />
+                <button
+                  onClick={() => {
+                    setEditingWallet({
+                      id: wallet.id,
+                      label: wallet.label,
+                    });
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit Label
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteWallet(wallet.id);
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+                  disabled={operations.removing[wallet.id]?.isLoading}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove from Bundle
+                </button>
               </div>
             </div>
           </Portal>
@@ -554,26 +546,14 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-4 rounded-xl border transition-all duration-200 ${
-        wallet.isMain
-          ? "bg-gradient-to-r from-purple-600/30 to-blue-600/30 border-purple-400/50 ring-1 ring-purple-400/20"
-          : "glass-morphism border-gray-700 hover:border-gray-600"
-      }`}
+      className="p-4 rounded-xl border transition-all duration-200 glass-morphism border-gray-700 hover:border-gray-600"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            {wallet.isMain && (
-              <Crown className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-            )}
             <span className="font-medium text-white truncate">
               {wallet.label}
             </span>
-            {wallet.isMain && (
-              <span className="px-2 py-1 text-xs bg-blue-600/30 text-blue-300 rounded-full flex-shrink-0">
-                Primary
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <code className="font-mono text-xs sm:text-sm truncate">
@@ -759,7 +739,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   >
                     {!isConnected
                       ? "No wallet connected"
-                      : `Manage your ${primaryWallet?.slice(0, 6)}...${primaryWallet?.slice(-4)} bundle`}
+                      : "Manage your wallet bundle"}
                   </p>
                 </div>
               </div>
@@ -806,49 +786,32 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Primary Wallet Section */}
-            {!loading &&
-              !isRefreshing &&
-              !error &&
-              primaryWallets.length > 0 && (
-                <div className="p-6 border-b border-gray-700/50">
-                  <h3 className="text-sm font-medium text-gray-300 mb-4">
-                    Primary Wallet
-                  </h3>
-                  <div className="space-y-3">
-                    {primaryWallets.map(wallet => (
-                      <WalletCard key={wallet.id} wallet={wallet} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            {/* Secondary Wallets Section */}
+            {/* All Wallets Section */}
             {!loading && !isRefreshing && !error && (
               <div className="p-6 border-b border-gray-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium text-gray-300">
-                    Secondary Wallets ({secondaryWallets.length})
+                    Bundle Wallets ({allWallets.length})
                   </h3>
                 </div>
 
-                {secondaryWallets.length === 0 ? (
+                {allWallets.length === 0 ? (
                   <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
                     <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-300 mb-4">
-                      Add secondary wallets to your bundle
+                      Add wallets to your bundle
                     </p>
                     <GradientButton
                       onClick={() => setIsAdding(true)}
                       gradient={GRADIENTS.PRIMARY}
                       icon={Plus}
                     >
-                      Add Your First Secondary Wallet
+                      Add Your First Wallet
                     </GradientButton>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {secondaryWallets.map(wallet => (
+                    {allWallets.map(wallet => (
                       <WalletCard key={wallet.id} wallet={wallet} />
                     ))}
                   </div>
@@ -856,105 +819,102 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Add New Wallet Section - Only show if we have secondary wallets */}
-            {!loading &&
-              !isRefreshing &&
-              !error &&
-              secondaryWallets.length > 0 && (
-                <div className="p-6 border-b border-gray-700/50">
-                  <h3 className="text-sm font-medium text-gray-300 mb-4">
-                    Add Another Wallet
-                  </h3>
-                  {isAdding ? (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="p-4 glass-morphism rounded-xl mb-4"
-                    >
-                      <div className="space-y-3">
-                        <input
-                          type="text"
-                          placeholder="Wallet Label (e.g., Trading Wallet)"
-                          value={newWallet.label}
-                          onChange={e =>
-                            setNewWallet(prev => ({
-                              ...prev,
-                              label: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Wallet Address (0x...)"
-                          value={newWallet.address}
-                          onChange={e =>
-                            setNewWallet(prev => ({
-                              ...prev,
-                              address: e.target.value,
-                            }))
-                          }
-                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
-                        />
+            {/* Add New Wallet Section - Only show if we have wallets */}
+            {!loading && !isRefreshing && !error && allWallets.length > 0 && (
+              <div className="p-6 border-b border-gray-700/50">
+                <h3 className="text-sm font-medium text-gray-300 mb-4">
+                  Add Another Wallet
+                </h3>
+                {isAdding ? (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="p-4 glass-morphism rounded-xl mb-4"
+                  >
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Wallet Label (e.g., Trading Wallet)"
+                        value={newWallet.label}
+                        onChange={e =>
+                          setNewWallet(prev => ({
+                            ...prev,
+                            label: e.target.value,
+                          }))
+                        }
+                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Wallet Address (0x...)"
+                        value={newWallet.address}
+                        onChange={e =>
+                          setNewWallet(prev => ({
+                            ...prev,
+                            address: e.target.value,
+                          }))
+                        }
+                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
+                      />
 
-                        {/* Show validation error */}
-                        {validationError && (
-                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                            <p className="text-xs text-red-300">
-                              {validationError}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Show add operation error */}
-                        {operations.adding.error && (
-                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                            <p className="text-xs text-red-300">
-                              {operations.adding.error}
-                            </p>
-                          </div>
-                        )}
-
-                        <div className="flex space-x-2">
-                          <GradientButton
-                            onClick={handleAddWallet}
-                            gradient="from-green-600 to-emerald-600"
-                            className="flex-1"
-                            disabled={operations.adding.isLoading}
-                          >
-                            {operations.adding.isLoading ? (
-                              <div className="flex items-center space-x-2">
-                                <LoadingSpinner size="sm" color="white" />
-                                <span>Adding...</span>
-                              </div>
-                            ) : (
-                              "Add to Bundle"
-                            )}
-                          </GradientButton>
-                          <button
-                            onClick={() => {
-                              setIsAdding(false);
-                              setNewWallet({ address: "", label: "" });
-                            }}
-                            className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
-                          >
-                            Cancel
-                          </button>
+                      {/* Show validation error */}
+                      {validationError && (
+                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                          <p className="text-xs text-red-300">
+                            {validationError}
+                          </p>
                         </div>
+                      )}
+
+                      {/* Show add operation error */}
+                      {operations.adding.error && (
+                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                          <p className="text-xs text-red-300">
+                            {operations.adding.error}
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex space-x-2">
+                        <GradientButton
+                          onClick={handleAddWallet}
+                          gradient="from-green-600 to-emerald-600"
+                          className="flex-1"
+                          disabled={operations.adding.isLoading}
+                        >
+                          {operations.adding.isLoading ? (
+                            <div className="flex items-center space-x-2">
+                              <LoadingSpinner size="sm" color="white" />
+                              <span>Adding...</span>
+                            </div>
+                          ) : (
+                            "Add to Bundle"
+                          )}
+                        </GradientButton>
+                        <button
+                          onClick={() => {
+                            setIsAdding(false);
+                            setNewWallet({ address: "", label: "" });
+                          }}
+                          className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
+                        >
+                          Cancel
+                        </button>
                       </div>
-                    </motion.div>
-                  ) : (
-                    <GradientButton
-                      onClick={() => setIsAdding(true)}
-                      gradient={GRADIENTS.PRIMARY}
-                      icon={Plus}
-                      className="w-full"
-                    >
-                      Add Another Wallet
-                    </GradientButton>
-                  )}
-                </div>
-              )}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <GradientButton
+                    onClick={() => setIsAdding(true)}
+                    gradient={GRADIENTS.PRIMARY}
+                    icon={Plus}
+                    className="w-full"
+                  >
+                    Add Another Wallet
+                  </GradientButton>
+                )}
+              </div>
+            )}
 
             {/* PnL Subscription */}
             {!loading && !isRefreshing && !error && isConnected && userId && (

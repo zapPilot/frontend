@@ -55,6 +55,7 @@ export function WalletPortfolio({
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
+    hasZeroData,
   } = useMemo(() => {
     if (!landingPageData) {
       return {
@@ -62,11 +63,20 @@ export function WalletPortfolio({
         categorySummaries: [],
         debtCategorySummaries: [],
         portfolioMetrics: null,
+        hasZeroData: false,
       };
     }
 
-    // Use portfolio_allocation for pie chart data with pre-calculated percentages
+    // Check if all portfolio values are zero (API returns data but all values are 0)
     const portfolioAllocation = landingPageData.portfolio_allocation;
+    const hasZeroPortfolioData =
+      portfolioAllocation.btc.total_value === 0 &&
+      portfolioAllocation.eth.total_value === 0 &&
+      portfolioAllocation.stablecoins.total_value === 0 &&
+      portfolioAllocation.others.total_value === 0 &&
+      landingPageData.total_net_usd === 0;
+
+    // Use portfolio_allocation for pie chart data with pre-calculated percentages
 
     const transformedPieChartData = [
       {
@@ -131,6 +141,7 @@ export function WalletPortfolio({
       categorySummaries: assetSummaries,
       debtCategorySummaries: debtSummaries,
       portfolioMetrics: transformedMetrics,
+      hasZeroData: hasZeroPortfolioData,
     };
   }, [landingPageData]);
 
@@ -208,6 +219,7 @@ export function WalletPortfolio({
             isRetrying={landingPageQuery.isRefetching}
             isConnected={isConnected}
             testId="wallet-portfolio-overview"
+            hasZeroData={hasZeroData}
             {...(onCategoryClick && { onCategoryClick })}
           />
         </ErrorBoundary>
