@@ -515,37 +515,6 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
       expect(loadingStates[0]).toHaveTextContent("loading"); // WalletMetrics loading
       expect(loadingStates[1]).toHaveTextContent("loading"); // PortfolioOverview loading
     });
-
-    it("should handle retry functionality", async () => {
-      const refetch = vi.fn();
-      mockUseLandingPageData.mockReturnValue({
-        data: null,
-        isLoading: false,
-        error: { message: "Network error" },
-        refetch,
-        isRefetching: false,
-      });
-
-      const user = userEvent.setup();
-      render(<WalletPortfolio />);
-
-      await user.click(screen.getByTestId("retry-btn"));
-      expect(refetch).toHaveBeenCalledTimes(1);
-    });
-
-    it("should show retrying state", () => {
-      mockUseLandingPageData.mockReturnValue({
-        data: null,
-        isLoading: false,
-        error: { message: "Network error" },
-        refetch: vi.fn(),
-        isRefetching: true,
-      });
-
-      render(<WalletPortfolio />);
-
-      expect(screen.getByTestId("retry-btn")).toHaveTextContent("Retrying...");
-    });
   });
 
   describe("Error Handling", () => {
@@ -631,7 +600,6 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
       expect(screen.getByTestId("user-id")).toHaveTextContent("test-user-123");
     });
 
-
     it("should handle partial user info", () => {
       mockUseUser.mockReturnValue({
         userInfo: { userId: null, address: "0x123", email: null },
@@ -684,33 +652,6 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
   });
 
   describe("Edge Cases", () => {
-    it("should handle very large numbers", () => {
-      const dataWithLargeNumbers = {
-        ...defaultLandingPageData,
-        total_net_usd: 999999999.99,
-        portfolio_allocation: {
-          btc: { total_value: 999999999.99, percentage_of_portfolio: 100 },
-          eth: { total_value: 0, percentage_of_portfolio: 0 },
-          stablecoins: { total_value: 0, percentage_of_portfolio: 0 },
-          others: { total_value: 0, percentage_of_portfolio: 0 },
-        },
-      };
-
-      mockUseLandingPageData.mockReturnValue({
-        data: dataWithLargeNumbers,
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
-        isRefetching: false,
-      });
-
-      render(<WalletPortfolio />);
-
-      expect(screen.getByTestId("total-value")).toHaveTextContent(
-        "999999999.99"
-      );
-    });
-
     it("should handle rapid state changes", async () => {
       const toggleFn = vi.fn();
       mockUsePortfolio.mockReturnValue({

@@ -1,5 +1,4 @@
-import { InvestmentOpportunity, InvestmentStat } from "../types/investment";
-import { Shield, Target, TrendingUp } from "lucide-react";
+import { InvestmentOpportunity } from "../types/investment";
 
 export const mockInvestmentOpportunities: InvestmentOpportunity[] = [
   {
@@ -66,10 +65,4 @@ export const mockInvestmentOpportunities: InvestmentOpportunity[] = [
     tvl: "$0",
     color: "from-red-500 to-rose-600",
   },
-];
-
-export const mockInvestmentStats: InvestmentStat[] = [
-  { label: "Available Strategies", value: "12", icon: Target },
-  { label: "Avg APR", value: "11.8%", icon: TrendingUp },
-  { label: "Total TVL", value: "$15.2M", icon: Shield },
 ];

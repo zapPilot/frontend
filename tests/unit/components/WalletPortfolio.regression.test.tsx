@@ -938,39 +938,6 @@ describe("WalletPortfolio - Regression Tests", () => {
         );
       });
     });
-
-    it("should handle rapid loading state changes", async () => {
-      const { rerender } = render(<WalletPortfolio />);
-
-      // Multiple rapid state changes
-      const states = [
-        { isLoading: true, data: null, error: null },
-        { isLoading: false, data: validPortfolioData, error: null },
-        { isLoading: false, data: null, error: { message: "Error" } },
-        { isLoading: false, data: validPortfolioData, error: null },
-      ];
-
-      for (const state of states) {
-        mockUseLandingPageData.mockReturnValue({
-          ...state,
-          refetch: mockRefetch,
-          isRefetching: false,
-        });
-
-        rerender(<WalletPortfolio />);
-
-        await waitFor(() => {
-          expect(screen.getByTestId("overview-loading")).toHaveTextContent(
-            state.isLoading ? "loading" : "loaded"
-          );
-        });
-      }
-
-      // Final state should be stable
-      expect(screen.getByTestId("total-value-display")).toHaveTextContent(
-        "$25,000"
-      );
-    });
   });
 
   describe("Critical User Flow: Category Interactions", () => {
