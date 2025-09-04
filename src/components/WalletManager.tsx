@@ -37,6 +37,7 @@ import { Portal } from "./ui/Portal";
 export interface WalletManagerProps {
   isOpen: boolean;
   onClose: () => void;
+  urlUserId?: string;
 }
 
 // Local operation states
@@ -52,7 +53,11 @@ interface WalletOperations {
   subscribing: OperationState;
 }
 
-const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
+const WalletManagerComponent = ({
+  isOpen,
+  onClose,
+  urlUserId,
+}: WalletManagerProps) => {
   const queryClient = useQueryClient();
   const { userInfo, loading, error, isConnected, refetch } = useUser();
   const { showToast } = useToast();
@@ -67,7 +72,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const userId = userInfo?.userId;
+
+  // User identification logic
+  const realUserId = userInfo?.userId; // Authenticated user (for operations)
+  const viewingUserId = urlUserId || realUserId; // Which user's bundle to view
+  const isOwner = realUserId && realUserId === viewingUserId; // Can user edit?
 
   // Local UI state
   const [isAdding, setIsAdding] = useState(false);
@@ -90,9 +99,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   // Load user profile to determine existing subscription email
   useEffect(() => {
     const loadProfile = async () => {
-      if (!isOpen || !userId) return;
+      if (!isOpen || !viewingUserId) return;
       try {
-        const profile = await getUserProfile(userId);
+        const profile = await getUserProfile(viewingUserId);
         if (profile.success && profile.data?.user?.email) {
           setSubscribedEmail(profile.data.user.email);
           setEmail(profile.data.user.email);
@@ -104,19 +113,19 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       }
     };
     loadProfile();
-  }, [isOpen, userId]);
+  }, [isOpen, viewingUserId]);
 
   // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
-      if (!userId) return;
+      if (!viewingUserId) return;
 
       if (!silent) {
         setIsRefreshing(true);
       }
 
       try {
-        const response = await getUserWallets(userId);
+        const response = await getUserWallets(viewingUserId);
         if (response.success && response.data) {
           const transformedWallets = transformWalletData(response.data);
           setWallets(transformedWallets);
@@ -131,26 +140,26 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }
       }
     },
-    [userId]
+    [viewingUserId]
   );
 
   // Load wallets when component opens or user changes
   useEffect(() => {
-    if (isOpen && userId && isConnected) {
+    if (isOpen && viewingUserId) {
       loadWallets();
     }
-  }, [isOpen, userId, isConnected, loadWallets]);
+  }, [isOpen, viewingUserId, loadWallets]);
 
-  // Auto-refresh data periodically
+  // Auto-refresh data periodically (only for connected users viewing their own data)
   useEffect(() => {
-    if (!isOpen || !isConnected || !userId) return;
+    if (!isOpen || !isConnected || !viewingUserId || !isOwner) return;
 
     const interval = setInterval(() => {
       loadWallets(true); // Silent refresh
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isOpen, isConnected, userId, loadWallets]);
+  }, [isOpen, isConnected, viewingUserId, isOwner, loadWallets]);
 
   // Utility function to format wallet address
   const formatAddress = useCallback((address: string) => {
@@ -160,7 +169,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   // Handle wallet deletion
   const handleDeleteWallet = useCallback(
     async (walletId: string) => {
-      if (!userId) return;
+      if (!realUserId) return;
 
       // Set loading state for this specific wallet
       setOperations(prev => ({
@@ -172,13 +181,15 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       }));
 
       try {
-        const response = await removeWalletFromBundle(userId, walletId);
+        const response = await removeWalletFromBundle(realUserId, walletId);
         if (response.success) {
           // Remove wallet from local state immediately (optimistic update)
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          queryClient.invalidateQueries({ queryKey: ["user-wallets", userId] });
+          queryClient.invalidateQueries({
+            queryKey: ["user-wallets", realUserId],
+          });
           refetch();
         } else {
           setOperations(prev => ({
@@ -203,13 +214,13 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }));
       }
     },
-    [userId, queryClient, refetch]
+    [realUserId, queryClient, refetch]
   );
 
   // Handle editing label
   const handleEditLabel = useCallback(
     async (walletId: string, newLabel: string) => {
-      if (!userId || !newLabel.trim()) {
+      if (!realUserId || !newLabel.trim()) {
         setEditingWallet(null);
         return;
       }
@@ -241,7 +252,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
         // Call the API to update wallet label
         const response = await updateWalletLabel(
-          userId,
+          realUserId,
           wallet.address,
           newLabel
         );
@@ -290,12 +301,12 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }));
       }
     },
-    [userId, wallets]
+    [realUserId, wallets]
   );
 
   // Handle adding new wallet
   const handleAddWallet = useCallback(async () => {
-    if (!userId || !newWallet.address || !newWallet.label) {
+    if (!realUserId || !newWallet.address || !newWallet.label) {
       setValidationError("Please fill in all fields");
       return;
     }
@@ -316,7 +327,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
     try {
       const response = await addWalletToBundle(
-        userId,
+        realUserId,
         newWallet.address,
         newWallet.label
       );
@@ -330,7 +341,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         await loadWallets();
 
         // Invalidate and refetch user data
-        queryClient.invalidateQueries({ queryKey: ["user-wallets", userId] });
+        queryClient.invalidateQueries({
+          queryKey: ["user-wallets", realUserId],
+        });
         refetch();
 
         setOperations(prev => ({
@@ -353,10 +366,10 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         adding: { isLoading: false, error: errorMessage },
       }));
     }
-  }, [userId, newWallet, loadWallets, queryClient, refetch]);
+  }, [realUserId, newWallet, loadWallets, queryClient, refetch]);
 
   const handleSubscribe = useCallback(async () => {
-    if (!userId || !email) {
+    if (!realUserId || !email) {
       setOperations(prev => ({
         ...prev,
         subscribing: {
@@ -373,7 +386,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     }));
 
     try {
-      await updateUserEmail(userId, email);
+      await updateUserEmail(realUserId, email);
       setOperations(prev => ({
         ...prev,
         subscribing: { isLoading: false, error: null },
@@ -392,7 +405,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         subscribing: { isLoading: false, error: errorMessage },
       }));
     }
-  }, [userId, email, showToast]);
+  }, [realUserId, email, showToast]);
 
   // Handle copy to clipboard
   const handleCopyAddress = useCallback(
@@ -575,7 +588,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               <span className="hidden sm:inline">Removing...</span>
             </div>
           )}
-          <WalletActionMenu wallet={wallet} />
+          {isOwner && <WalletActionMenu wallet={wallet} />}
         </div>
       </div>
 
@@ -739,7 +752,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   >
                     {!isConnected
                       ? "No wallet connected"
-                      : "Manage your wallet bundle"}
+                      : isOwner
+                        ? "Manage your wallet bundle"
+                        : "Viewing wallet bundle"}
                   </p>
                 </div>
               </div>
@@ -799,15 +814,19 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
                     <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-300 mb-4">
-                      Add wallets to your bundle
+                      {isOwner
+                        ? "Add wallets to your bundle"
+                        : "No wallets in this bundle"}
                     </p>
-                    <GradientButton
-                      onClick={() => setIsAdding(true)}
-                      gradient={GRADIENTS.PRIMARY}
-                      icon={Plus}
-                    >
-                      Add Your First Wallet
-                    </GradientButton>
+                    {isOwner && (
+                      <GradientButton
+                        onClick={() => setIsAdding(true)}
+                        gradient={GRADIENTS.PRIMARY}
+                        icon={Plus}
+                      >
+                        Add Your First Wallet
+                      </GradientButton>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -819,105 +838,109 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Add New Wallet Section - Only show if we have wallets */}
-            {!loading && !isRefreshing && !error && allWallets.length > 0 && (
-              <div className="p-6 border-b border-gray-700/50">
-                <h3 className="text-sm font-medium text-gray-300 mb-4">
-                  Add Another Wallet
-                </h3>
-                {isAdding ? (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="p-4 glass-morphism rounded-xl mb-4"
-                  >
-                    <div className="space-y-3">
-                      <input
-                        type="text"
-                        placeholder="Wallet Label (e.g., Trading Wallet)"
-                        value={newWallet.label}
-                        onChange={e =>
-                          setNewWallet(prev => ({
-                            ...prev,
-                            label: e.target.value,
-                          }))
-                        }
-                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Wallet Address (0x...)"
-                        value={newWallet.address}
-                        onChange={e =>
-                          setNewWallet(prev => ({
-                            ...prev,
-                            address: e.target.value,
-                          }))
-                        }
-                        className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
-                      />
-
-                      {/* Show validation error */}
-                      {validationError && (
-                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                          <p className="text-xs text-red-300">
-                            {validationError}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Show add operation error */}
-                      {operations.adding.error && (
-                        <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
-                          <p className="text-xs text-red-300">
-                            {operations.adding.error}
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex space-x-2">
-                        <GradientButton
-                          onClick={handleAddWallet}
-                          gradient="from-green-600 to-emerald-600"
-                          className="flex-1"
-                          disabled={operations.adding.isLoading}
-                        >
-                          {operations.adding.isLoading ? (
-                            <div className="flex items-center space-x-2">
-                              <LoadingSpinner size="sm" color="white" />
-                              <span>Adding...</span>
-                            </div>
-                          ) : (
-                            "Add to Bundle"
-                          )}
-                        </GradientButton>
-                        <button
-                          onClick={() => {
-                            setIsAdding(false);
-                            setNewWallet({ address: "", label: "" });
-                          }}
-                          className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <GradientButton
-                    onClick={() => setIsAdding(true)}
-                    gradient={GRADIENTS.PRIMARY}
-                    icon={Plus}
-                    className="w-full"
-                  >
+            {/* Add New Wallet Section - Only show if we have wallets and user is owner */}
+            {!loading &&
+              !isRefreshing &&
+              !error &&
+              allWallets.length > 0 &&
+              isOwner && (
+                <div className="p-6 border-b border-gray-700/50">
+                  <h3 className="text-sm font-medium text-gray-300 mb-4">
                     Add Another Wallet
-                  </GradientButton>
-                )}
-              </div>
-            )}
+                  </h3>
+                  {isAdding ? (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="p-4 glass-morphism rounded-xl mb-4"
+                    >
+                      <div className="space-y-3">
+                        <input
+                          type="text"
+                          placeholder="Wallet Label (e.g., Trading Wallet)"
+                          value={newWallet.label}
+                          onChange={e =>
+                            setNewWallet(prev => ({
+                              ...prev,
+                              label: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Wallet Address (0x...)"
+                          value={newWallet.address}
+                          onChange={e =>
+                            setNewWallet(prev => ({
+                              ...prev,
+                              address: e.target.value,
+                            }))
+                          }
+                          className="w-full bg-gray-800/50 text-white px-3 py-2 rounded-lg border border-gray-600 focus:border-purple-500 outline-none font-mono text-sm"
+                        />
+
+                        {/* Show validation error */}
+                        {validationError && (
+                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                            <p className="text-xs text-red-300">
+                              {validationError}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Show add operation error */}
+                        {operations.adding.error && (
+                          <div className="p-2 bg-red-600/10 border border-red-600/20 rounded-lg mb-3">
+                            <p className="text-xs text-red-300">
+                              {operations.adding.error}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex space-x-2">
+                          <GradientButton
+                            onClick={handleAddWallet}
+                            gradient="from-green-600 to-emerald-600"
+                            className="flex-1"
+                            disabled={operations.adding.isLoading}
+                          >
+                            {operations.adding.isLoading ? (
+                              <div className="flex items-center space-x-2">
+                                <LoadingSpinner size="sm" color="white" />
+                                <span>Adding...</span>
+                              </div>
+                            ) : (
+                              "Add to Bundle"
+                            )}
+                          </GradientButton>
+                          <button
+                            onClick={() => {
+                              setIsAdding(false);
+                              setNewWallet({ address: "", label: "" });
+                            }}
+                            className="px-4 py-2 glass-morphism rounded-lg hover:bg-white/10 transition-colors text-gray-300"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <GradientButton
+                      onClick={() => setIsAdding(true)}
+                      gradient={GRADIENTS.PRIMARY}
+                      icon={Plus}
+                      className="w-full"
+                    >
+                      Add Another Wallet
+                    </GradientButton>
+                  )}
+                </div>
+              )}
 
             {/* PnL Subscription */}
-            {!loading && !isRefreshing && !error && isConnected && userId && (
+            {!loading && !isRefreshing && !error && isOwner && (
               <div className="p-6 bg-gray-900/20">
                 <h3 className="text-sm font-medium text-gray-300 mb-3">
                   Weekly PnL Reports

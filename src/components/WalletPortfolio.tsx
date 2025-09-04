@@ -29,6 +29,7 @@ const WalletManager: ComponentType<WalletManagerProps> = dynamic(
 const walletPortfolioLogger = logger.createContextLogger("WalletPortfolio");
 
 interface WalletPortfolioProps {
+  urlUserId?: string;
   onAnalyticsClick?: (() => void) | undefined;
   onOptimizeClick?: (() => void) | undefined;
   onZapInClick?: (() => void) | undefined;
@@ -37,6 +38,7 @@ interface WalletPortfolioProps {
 }
 
 export function WalletPortfolio({
+  urlUserId,
   onAnalyticsClick,
   onOptimizeClick,
   onZapInClick,
@@ -236,6 +238,7 @@ export function WalletPortfolio({
           <WalletManager
             isOpen={isWalletManagerOpen}
             onClose={closeWalletManager}
+            {...(urlUserId && { urlUserId })}
           />
         </ErrorBoundary>
       </div>
