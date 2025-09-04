@@ -266,7 +266,11 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, isLoading: true, type: "loading" }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            type: "loading",
+          }}
         />
       );
 
@@ -287,7 +291,12 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, hasError: true, errorMessage, type: "error" }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            hasError: true,
+            errorMessage,
+            type: "error",
+          }}
         />
       );
 
@@ -312,7 +321,12 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, hasError: true, errorMessage, type: "error" }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            hasError: true,
+            errorMessage,
+            type: "error",
+          }}
         />
       );
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
@@ -437,7 +451,10 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, totalValue: 999999999 }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            totalValue: 999999999,
+          }}
         />
       );
 
@@ -511,7 +528,13 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, isLoading: true, hasError: true, errorMessage: "Some error", type: "loading" }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            hasError: true,
+            errorMessage: "Some error",
+            type: "loading",
+          }}
         />
       );
 
@@ -628,7 +651,11 @@ describe("WalletMetrics", () => {
       render(
         <WalletMetrics
           {...defaultProps}
-          portfolioState={{ ...defaultProps.portfolioState, isLoading: true, type: "loading" }}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            type: "loading",
+          }}
         />
       );
 

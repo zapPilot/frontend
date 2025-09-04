@@ -500,7 +500,9 @@ describe("PortfolioOverview", () => {
 
     it("should handle undefined categorySummaries gracefully", () => {
       // This would normally cause TypeScript errors, but testing runtime behavior
-      render(<PortfolioOverview {...defaultProps} pieChartData={mockPieChartData} />);
+      render(
+        <PortfolioOverview {...defaultProps} pieChartData={mockPieChartData} />
+      );
 
       // Should not crash and should use empty array fallback or show appropriate state
       expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
