@@ -247,7 +247,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         )}
 
         {/* Desktop Layout: Sticky PieChart with Scrollable Details */}
-        {shouldShowPortfolioContent && (
+        {(shouldShowPortfolioContent || shouldShowLoading) && (
           <div className="hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8">
             {/* Left Column: Sticky PieChart (50% width like original) */}
             <div className="sticky top-0">
@@ -292,7 +292,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         )}
 
         {/* Mobile Layout: Vertical Stack */}
-        {shouldShowPortfolioContent && (
+        {(shouldShowPortfolioContent || shouldShowLoading) && (
           <div className="lg:hidden space-y-6">
             <div
               className="flex justify-center items-center"
