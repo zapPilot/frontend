@@ -5,6 +5,10 @@ import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../src/hooks/usePortfolio";
+import {
+  usePortfolioState,
+  usePortfolioStateHelpers,
+} from "../../src/hooks/usePortfolioState";
 import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../src/utils/portfolio.utils";
 import { render } from "../test-utils";
@@ -14,6 +18,7 @@ vi.mock("../../src/contexts/UserContext");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/useWalletModal");
+vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 vi.mock("../../src/components/PortfolioOverview");
 
@@ -87,41 +92,46 @@ vi.mock("../../src/components/WalletManager", () => ({
 vi.mock("../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(
     ({
-      isLoading,
-      apiError,
+      portfolioState,
       pieChartData,
       categorySummaries,
       onCategoryClick,
       onRetry,
       isRetrying,
-    }) => (
-      <div data-testid="portfolio-overview">
-        {isLoading && <div data-testid="portfolio-loading">Loading...</div>}
-        {apiError && (
-          <div data-testid="portfolio-error">
-            <div>Error: {apiError}</div>
-            <button onClick={onRetry} disabled={isRetrying}>
-              Retry
-            </button>
-          </div>
-        )}
-        {!isLoading && !apiError && (
-          <div data-testid="portfolio-content">
-            <div data-testid="asset-distribution">Asset Distribution</div>
-            {pieChartData && <div data-testid="pie-chart">Pie Chart</div>}
-            {categorySummaries?.map(cat => (
-              <div
-                key={cat.id}
-                data-testid={`category-${cat.id}`}
-                onClick={() => onCategoryClick?.(cat.id)}
-              >
-                {cat.name}: ${cat.value}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    )
+    }) => {
+      const isLoading = portfolioState?.isLoading;
+      const hasError = portfolioState?.hasError;
+      const errorMessage = portfolioState?.errorMessage;
+
+      return (
+        <div data-testid="portfolio-overview">
+          {isLoading && <div data-testid="portfolio-loading">Loading...</div>}
+          {hasError && (
+            <div data-testid="portfolio-error">
+              <div>Error: {errorMessage}</div>
+              <button onClick={onRetry} disabled={isRetrying}>
+                Retry
+              </button>
+            </div>
+          )}
+          {!isLoading && !hasError && (
+            <div data-testid="portfolio-content">
+              <div data-testid="asset-distribution">Asset Distribution</div>
+              {pieChartData && <div data-testid="pie-chart">Pie Chart</div>}
+              {categorySummaries?.map(cat => (
+                <div
+                  key={cat.id}
+                  data-testid={`category-${cat.id}`}
+                  onClick={() => onCategoryClick?.(cat.id)}
+                >
+                  {cat.name}: ${cat.value}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
   ),
 }));
 
@@ -191,6 +201,8 @@ const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockCreateCategoriesFromApiData = vi.mocked(createCategoriesFromApiData);
+const mockUsePortfolioState = vi.mocked(usePortfolioState);
+const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
 
 describe("WalletPortfolio - Integration Tests", () => {
   const defaultUserInfo = {
@@ -259,6 +271,27 @@ describe("WalletPortfolio - Integration Tests", () => {
     });
 
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategorySummaries);
+
+    // Setup portfolio state mock
+    mockUsePortfolioState.mockReturnValue({
+      type: "has_data",
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 45000,
+      errorMessage: null,
+      isRetrying: false,
+    });
+
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 45000,
+    });
   });
 
   afterEach(() => {
@@ -370,6 +403,27 @@ describe("WalletPortfolio - Integration Tests", () => {
         isRefetching: false,
       });
 
+      // Update portfolio state mock for loading scenario
+      mockUsePortfolioState.mockReturnValue({
+        type: "loading",
+        isConnected: true,
+        isLoading: true,
+        hasError: false,
+        hasZeroData: false,
+        totalValue: null,
+        errorMessage: null,
+        isRetrying: false,
+      });
+
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
       render(<WalletPortfolio />);
 
       // Should show loading spinners in metrics
@@ -393,6 +447,27 @@ describe("WalletPortfolio - Integration Tests", () => {
         error: { message: "API connection failed" },
         refetch,
         isRefetching: false,
+      });
+
+      // Update portfolio state mock for error scenario
+      mockUsePortfolioState.mockReturnValue({
+        type: "error",
+        isConnected: true,
+        isLoading: false,
+        hasError: true,
+        hasZeroData: false,
+        totalValue: null,
+        errorMessage: "API connection failed",
+        isRetrying: false,
+      });
+
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => null,
       });
 
       render(<WalletPortfolio />);

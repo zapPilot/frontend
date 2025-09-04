@@ -11,6 +11,12 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock the portfolio state helpers - will be updated per test
+const mockUsePortfolioStateHelpers = vi.fn();
+vi.mock("../../../src/hooks/usePortfolioState", () => ({
+  usePortfolioStateHelpers: mockUsePortfolioStateHelpers,
+}));
+
 // Mock LoadingSpinner component
 vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
   LoadingSpinner: vi.fn(({ size, color }) => (
@@ -137,31 +143,66 @@ describe("PortfolioOverview", () => {
     },
   ];
 
+  const defaultPortfolioState = {
+    type: "has_data" as const,
+    isConnected: true,
+    isLoading: false,
+    hasError: false,
+    hasZeroData: false,
+    totalValue: 10000,
+    errorMessage: null,
+    isRetrying: false,
+  };
+
   const defaultProps = {
+    portfolioState: defaultPortfolioState,
     categorySummaries: mockPortfolioData,
     pieChartData: mockPieChartData,
-    expandedCategory: null,
-    onCategoryToggle: vi.fn(),
+    onCategoryClick: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Reset the mock to default values
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 10000,
+    });
   });
 
   describe("Loading States for Pie Chart Area", () => {
     it("should show loading spinner in pie chart area when isLoading=true", () => {
-      render(<PortfolioOverview {...defaultProps} isLoading={true} />);
+      const loadingState = { ...defaultPortfolioState, isLoading: true };
 
-      // Should show pie chart loading instead of PieChart
-      const loadingElements = screen.getAllByTestId("pie-chart-loading");
-      expect(loadingElements.length).toBeGreaterThan(0); // At least one loading element (desktop or mobile)
-      const loadingElement = loadingElements[0];
-      expect(loadingElement).toHaveAttribute("aria-label", "Loading chart");
+      // Configure mock to return loading state
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 10000,
+      });
+
+      render(
+        <PortfolioOverview {...defaultProps} portfolioState={loadingState} />
+      );
+
+      // Should show loading spinner
+      expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
       expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
     });
 
     it("should show PieChart when isLoading=false", () => {
-      render(<PortfolioOverview {...defaultProps} isLoading={false} />);
+      const loadedState = { ...defaultPortfolioState, isLoading: false };
+      render(
+        <PortfolioOverview {...defaultProps} portfolioState={loadedState} />
+      );
 
       expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
       expect(screen.getAllByTestId("pie-chart-loading")[0]).toHaveTextContent(
@@ -182,8 +223,15 @@ describe("PortfolioOverview", () => {
   describe("Error States for Pie Chart Area", () => {
     it("should show error message in pie chart area when apiError is present", () => {
       const errorMessage = "Failed to load portfolio data";
+      const errorState = {
+        ...defaultPortfolioState,
+        hasError: true,
+        errorMessage,
+      };
 
-      render(<PortfolioOverview {...defaultProps} apiError={errorMessage} />);
+      render(
+        <PortfolioOverview {...defaultProps} portfolioState={errorState} />
+      );
 
       // Should show error message instead of PieChart
       expect(screen.getAllByText("Chart Unavailable")[0]).toBeInTheDocument();
@@ -192,7 +240,14 @@ describe("PortfolioOverview", () => {
     });
 
     it("should show PieChart when apiError is null", () => {
-      render(<PortfolioOverview {...defaultProps} apiError={null} />);
+      const noErrorState = {
+        ...defaultPortfolioState,
+        hasError: false,
+        errorMessage: null,
+      };
+      render(
+        <PortfolioOverview {...defaultProps} portfolioState={noErrorState} />
+      );
 
       expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
       expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
@@ -211,12 +266,17 @@ describe("PortfolioOverview", () => {
 
     it("should prioritize loading over error - show loading when both isLoading and apiError are true", () => {
       const errorMessage = "API Error";
+      const loadingWithErrorState = {
+        ...defaultPortfolioState,
+        isLoading: true,
+        hasError: true,
+        errorMessage,
+      };
 
       render(
         <PortfolioOverview
           {...defaultProps}
-          isLoading={true}
-          apiError={errorMessage}
+          portfolioState={loadingWithErrorState}
         />
       );
 
@@ -471,11 +531,16 @@ describe("PortfolioOverview", () => {
 
   describe("Loading and Error State Combinations", () => {
     it("should handle loading and error states simultaneously", () => {
+      const loadingWithErrorState = {
+        ...defaultPortfolioState,
+        isLoading: true,
+        hasError: true,
+        errorMessage: "Some error occurred",
+      };
       render(
         <PortfolioOverview
           {...defaultProps}
-          isLoading={true}
-          apiError="Some error occurred"
+          portfolioState={loadingWithErrorState}
         />
       );
 
@@ -487,11 +552,12 @@ describe("PortfolioOverview", () => {
     });
 
     it("should handle loading state with custom data", () => {
+      const loadingState = { ...defaultPortfolioState, isLoading: true };
       render(
         <PortfolioOverview
           {...defaultProps}
+          portfolioState={loadingState}
           pieChartData={mockPieChartData}
-          isLoading={true}
         />
       );
 
@@ -502,11 +568,16 @@ describe("PortfolioOverview", () => {
     });
 
     it("should handle error state with custom data", () => {
+      const errorState = {
+        ...defaultPortfolioState,
+        hasError: true,
+        errorMessage: "Data error",
+      };
       render(
         <PortfolioOverview
           {...defaultProps}
+          portfolioState={errorState}
           pieChartData={mockPieChartData}
-          apiError="Data error"
         />
       );
 

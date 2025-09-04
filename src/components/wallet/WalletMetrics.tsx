@@ -85,9 +85,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         return (
           <div className="flex items-center space-x-2">
             <BalanceLoading size="default" className="" />
-            <span className="text-lg text-gray-400">
-              {portfolioState.isRetrying ? "Retrying..." : "Loading..."}
-            </span>
           </div>
         );
       }

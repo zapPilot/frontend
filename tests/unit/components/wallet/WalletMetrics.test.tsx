@@ -132,15 +132,33 @@ vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
   )),
 }));
 
+// Mock usePortfolioStateHelpers
+vi.mock("../../../../src/hooks/usePortfolioState", () => ({
+  usePortfolioStateHelpers: vi.fn(() => ({
+    shouldShowLoading: false,
+    shouldShowConnectPrompt: false,
+    shouldShowNoDataMessage: false,
+    shouldShowPortfolioContent: true,
+    shouldShowError: false,
+    getDisplayTotalValue: () => 15000,
+  })),
+}));
+
 describe("WalletMetrics", () => {
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const defaultProps = {
-    totalValue: 15000,
+    portfolioState: {
+      type: "has_data" as const,
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 15000,
+      errorMessage: null,
+      isRetrying: false,
+    },
     balanceHidden: false,
-    isLoading: false,
-    error: null,
     portfolioChangePercentage: 5.2,
-    isConnected: true,
     userId: "test-user-id",
   };
 
