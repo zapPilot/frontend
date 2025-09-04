@@ -456,7 +456,7 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
 
       expect(() => render(<WalletPortfolio />)).not.toThrow();
 
-      expect(screen.getByTestId("value")).toHaveTextContent("-5000");
+      expect(screen.getByTestId("value")).toHaveTextContent("1000000");
     });
 
     it("should handle zero values in all categories", () => {

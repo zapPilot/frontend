@@ -12,22 +12,14 @@ vi.mock("framer-motion", () => ({
 }));
 
 // Mock the portfolio state helpers - will be updated per test
-const mockUsePortfolioStateHelpers = vi.fn();
+const { mockUsePortfolioStateHelpers } = vi.hoisted(() => ({
+  mockUsePortfolioStateHelpers: vi.fn(),
+}));
 vi.mock("../../../src/hooks/usePortfolioState", () => ({
   usePortfolioStateHelpers: mockUsePortfolioStateHelpers,
 }));
 
-// Mock LoadingSpinner component
-vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
-  LoadingSpinner: vi.fn(({ size, color }) => (
-    <div
-      className={`animate-spin rounded-full border-b-2 border-purple-500 ${
-        size === "xl" ? "h-16 w-16" : size === "lg" ? "h-12 w-12" : "h-8 w-8"
-      }`}
-      data-testid="loading-spinner"
-    />
-  )),
-}));
+// Note: PortfolioOverview now uses PieChartLoading from UnifiedLoading
 
 // Mock the PieChart component to verify it receives the correct data
 vi.mock("../../../src/components/PieChart", () => ({
@@ -193,9 +185,10 @@ describe("PortfolioOverview", () => {
         <PortfolioOverview {...defaultProps} portfolioState={loadingState} />
       );
 
-      // Should show loading spinner
-      expect(screen.getByTestId("loading-spinner")).toBeInTheDocument();
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      // Should show loading skeleton(s) for pie chart
+      const spinners = screen.getAllByTestId("pie-chart-loading");
+      expect(spinners.length).toBeGreaterThan(0);
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
 
     it("should show PieChart when isLoading=false", () => {
@@ -221,7 +214,7 @@ describe("PortfolioOverview", () => {
   });
 
   describe("Error States for Pie Chart Area", () => {
-    it("should show error message in pie chart area when apiError is present", () => {
+    it("should show error message when error is present", () => {
       const errorMessage = "Failed to load portfolio data";
       const errorState = {
         ...defaultPortfolioState,
@@ -229,17 +222,29 @@ describe("PortfolioOverview", () => {
         errorMessage,
       };
 
+      // Configure helpers to expose error UI
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => 10000,
+      });
+
       render(
         <PortfolioOverview {...defaultProps} portfolioState={errorState} />
       );
 
-      // Should show error message instead of PieChart
-      expect(screen.getAllByText("Chart Unavailable")[0]).toBeInTheDocument();
+      // Should show global error message instead of PieChart
+      expect(
+        screen.getAllByText("Error Loading Portfolio")[0]
+      ).toBeInTheDocument();
       expect(screen.getAllByText(errorMessage)[0]).toBeInTheDocument();
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
 
-    it("should show PieChart when apiError is null", () => {
+    it("should show PieChart when no error", () => {
       const noErrorState = {
         ...defaultPortfolioState,
         hasError: false,
@@ -250,18 +255,14 @@ describe("PortfolioOverview", () => {
       );
 
       expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
-      expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
-        "no-error"
-      );
+      // PieChart receives no error prop in new flow; ensure it renders
     });
 
-    it("should show PieChart when apiError prop is not provided", () => {
+    it("should show PieChart when error prop is not provided", () => {
       render(<PortfolioOverview {...defaultProps} />);
 
       expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
-      expect(screen.getAllByTestId("pie-chart-error")[0]).toHaveTextContent(
-        "no-error"
-      );
+      // No explicit error provided
     });
 
     it("should prioritize loading over error - show loading when both isLoading and apiError are true", () => {
@@ -273,6 +274,16 @@ describe("PortfolioOverview", () => {
         errorMessage,
       };
 
+      // Configure helpers to prefer loading UI
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 10000,
+      });
+
       render(
         <PortfolioOverview
           {...defaultProps}
@@ -283,8 +294,10 @@ describe("PortfolioOverview", () => {
       // Component should show loading state (isLoading takes priority)
       const loadingElements = screen.getAllByTestId("pie-chart-loading");
       expect(loadingElements.length).toBeGreaterThan(0);
-      expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Error Loading Portfolio")
+      ).not.toBeInTheDocument();
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
   });
 
@@ -326,10 +339,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={differentPortfolioData}
           pieChartData={mockPieChartData}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -444,88 +456,76 @@ describe("PortfolioOverview", () => {
     });
   });
 
-  describe("Category Expansion and Interaction", () => {
-    it("should handle expandedCategory prop", () => {
-      render(
-        <PortfolioOverview {...defaultProps} expandedCategory="stablecoins" />
-      );
+  // Note: Category expansion props were removed in refactor
 
-      expect(
-        screen.getAllByTestId("asset-categories-detail")[0]
-      ).toBeInTheDocument();
-    });
-
-    it("should call onCategoryToggle when provided", () => {
-      const mockOnCategoryToggle = vi.fn();
+  describe("Edge Cases and Error Handling", () => {
+    it("should handle empty categorySummaries", () => {
+      // Configure helpers to show connected but no data
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: true,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 0,
+      });
 
       render(
         <PortfolioOverview
           {...defaultProps}
-          onCategoryToggle={mockOnCategoryToggle}
-        />
-      );
-
-      // The actual interaction would need to be triggered through user events
-      // This test verifies that the prop is accepted
-      expect(screen.getAllByTestId("pie-chart")[0]).toBeInTheDocument();
-    });
-  });
-
-  describe("Edge Cases and Error Handling", () => {
-    it("should handle empty categorySummaries", () => {
-      render(
-        <PortfolioOverview
           categorySummaries={[]}
           pieChartData={[]}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
-      // Should show empty state when data is empty
-      expect(
-        screen.getByTestId("wallet-connection-prompt")
-      ).toBeInTheDocument();
+      // Should show connected but no data message
+      expect(screen.getByText("Currently no data")).toBeInTheDocument();
     });
 
     it("should handle empty pieChartData", () => {
+      // Configure helpers to show connected but no data
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: true,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 0,
+      });
+
       render(<PortfolioOverview {...defaultProps} pieChartData={[]} />);
 
-      // Should show empty state when pieChartData is empty
-      expect(
-        screen.getByTestId("wallet-connection-prompt")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Currently no data")).toBeInTheDocument();
     });
 
     it("should handle undefined categorySummaries gracefully", () => {
       // This would normally cause TypeScript errors, but testing runtime behavior
-      render(
-        <PortfolioOverview
-          categorySummaries={[]}
-          pieChartData={mockPieChartData}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
-        />
-      );
+      render(<PortfolioOverview {...defaultProps} pieChartData={mockPieChartData} />);
 
       // Should not crash and should use empty array fallback or show appropriate state
       expect(screen.getByTestId("portfolio-overview")).toBeInTheDocument();
     });
 
     it("should prioritize pieChartData over categorySummaries when both are empty", () => {
+      // Configure helpers to show connected but no data
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: true,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 0,
+      });
+
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={[]}
           pieChartData={[]}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
-      // Should show empty state when both are empty
-      expect(
-        screen.getByTestId("wallet-connection-prompt")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Currently no data")).toBeInTheDocument();
     });
   });
 
@@ -537,6 +537,16 @@ describe("PortfolioOverview", () => {
         hasError: true,
         errorMessage: "Some error occurred",
       };
+      // Configure helpers to prefer loading
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 10000,
+      });
+
       render(
         <PortfolioOverview
           {...defaultProps}
@@ -547,12 +557,23 @@ describe("PortfolioOverview", () => {
       // Loading should take priority over error
       const loadingElements = screen.getAllByTestId("pie-chart-loading");
       expect(loadingElements.length).toBeGreaterThan(0);
-      expect(screen.queryByText("Chart Unavailable")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Error Loading Portfolio")
+      ).not.toBeInTheDocument();
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
 
     it("should handle loading state with custom data", () => {
       const loadingState = { ...defaultPortfolioState, isLoading: true };
+      // Configure helpers to prefer loading UI
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 10000,
+      });
       render(
         <PortfolioOverview
           {...defaultProps}
@@ -564,7 +585,7 @@ describe("PortfolioOverview", () => {
       // Should still show loading state regardless of data
       const loadingElements = screen.getAllByTestId("pie-chart-loading");
       expect(loadingElements.length).toBeGreaterThan(0);
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
 
     it("should handle error state with custom data", () => {
@@ -573,6 +594,15 @@ describe("PortfolioOverview", () => {
         hasError: true,
         errorMessage: "Data error",
       };
+      // Configure helpers to expose error UI
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => 10000,
+      });
       render(
         <PortfolioOverview
           {...defaultProps}
@@ -582,9 +612,11 @@ describe("PortfolioOverview", () => {
       );
 
       // Should show error state regardless of data
-      expect(screen.getAllByText("Chart Unavailable")[0]).toBeInTheDocument();
+      expect(
+        screen.getAllByText("Error Loading Portfolio")[0]
+      ).toBeInTheDocument();
       expect(screen.getAllByText("Data error")[0]).toBeInTheDocument();
-      expect(screen.queryByTestId("pie-chart")).not.toBeInTheDocument();
+      expect(screen.queryAllByTestId("pie-chart").length).toBe(0);
     });
   });
 
@@ -694,10 +726,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -723,10 +754,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -750,10 +780,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -776,10 +805,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={combinedPortfolioData}
           pieChartData={mockPieChartDataFromNewAPI}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -795,10 +823,9 @@ describe("PortfolioOverview", () => {
       // Test with the original mixed portfolio data structure
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={mockPortfolioData}
           pieChartData={mockPieChartData}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -818,10 +845,9 @@ describe("PortfolioOverview", () => {
 
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={mockAssetCategoriesFromNewAPI}
           pieChartData={validPieData}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
@@ -837,22 +863,26 @@ describe("PortfolioOverview", () => {
       const borrowingOnlyData = mockBorrowingCategoriesFromNewAPI;
       const emptyPieData: PieChartData[] = [];
 
+      // Configure helpers to show connected but no data
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: true,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 0,
+      });
+
       render(
         <PortfolioOverview
+          {...defaultProps}
           categorySummaries={borrowingOnlyData}
           pieChartData={emptyPieData}
-          expandedCategory={null}
-          onCategoryToggle={vi.fn()}
         />
       );
 
-      // Should show empty state when no assets (only borrowing)
-      expect(
-        screen.getByTestId("wallet-connection-prompt")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText("Connect Wallet to View Portfolio")
-      ).toBeInTheDocument();
+      // Should show connected but no data message
+      expect(screen.getByText("Currently no data")).toBeInTheDocument();
     });
   });
 });

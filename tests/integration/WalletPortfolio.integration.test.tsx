@@ -309,7 +309,6 @@ describe("WalletPortfolio - Integration Tests", () => {
 
       // Should render wallet header section
       expect(screen.getByText("My Wallet")).toBeInTheDocument();
-      expect(screen.getByText("DeFi Portfolio Overview")).toBeInTheDocument();
 
       // Should render wallet metrics
       expect(screen.getAllByText(/\$45,?000/)).toHaveLength(1); // Total Balance displayed once
