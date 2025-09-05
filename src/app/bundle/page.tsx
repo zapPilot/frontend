@@ -1,10 +1,10 @@
-"use client";
-
-import { useSearchParams } from "next/navigation";
-import { BundlePageClient } from "./BundlePageClient";
+import { Suspense } from "react";
+import { BundlePageEntry } from "./BundlePageEntry";
 
 export default function BundlePage() {
-  const searchParams = useSearchParams();
-  const userId = searchParams.get("userId") ?? "";
-  return <BundlePageClient userId={userId} />;
+  return (
+    <Suspense fallback={<div />}>
+      <BundlePageEntry />
+    </Suspense>
+  );
 }
