@@ -120,6 +120,14 @@ export interface LandingPageResponse {
   total_net_usd: number;
   weighted_apr: number;
   estimated_monthly_income: number;
+  portfolio_roi: {
+    recommended_roi: number;
+    recommended_roi_period: string;
+    estimated_monthly_pnl_usd: number;
+    roi_windows?: {
+      [period: string]: number; // e.g., "7d": 0.02, "30d": 0.08, etc.
+    };
+  };
   portfolio_allocation: {
     btc: {
       total_value: number;

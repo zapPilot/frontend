@@ -138,8 +138,8 @@ export function WalletPortfolio({
       totalValue: landingPageData.total_net_usd,
       totalChange24h: 0, // Not available from unified API yet
       totalChangePercentage: 0, // Not available from unified API yet
-      annualAPR: landingPageData.weighted_apr,
-      monthlyReturn: landingPageData.estimated_monthly_income,
+      annualAPR: landingPageData.portfolio_roi?.recommended_monthly_roi / 100,
+      monthlyReturn: landingPageData.portfolio_roi?.estimated_monthly_pnl_usd
     };
 
     return {

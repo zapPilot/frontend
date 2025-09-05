@@ -1,5 +1,5 @@
-import { AlertCircle, TrendingUp } from "lucide-react";
-import React from "react";
+import { AlertCircle, ChevronDown, Info, TrendingUp } from "lucide-react";
+import React, { useState } from "react";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
@@ -61,6 +61,9 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
+    // State for debug UI
+    const [showDebugInfo, setShowDebugInfo] = useState(false);
+    
     // Fetch unified landing page data (includes APR data)
     const { data: landingPageData, isLoading: landingPageLoading } =
       useLandingPageData(userId);
@@ -74,9 +77,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       getDisplayTotalValue,
     } = usePortfolioStateHelpers(portfolioState);
 
-    const portfolioAPR = landingPageData?.weighted_apr || null;
+    const portfolioROI = landingPageData?.portfolio_roi;
+    const portfolioAPR = portfolioROI?.recommended_monthly_roi/100
     const estimatedMonthlyIncome =
-      landingPageData?.estimated_monthly_income || null;
+      portfolioROI?.estimated_monthly_pnl_usd || landingPageData?.estimated_monthly_income || null;
+    const roiPeriod = portfolioROI?.recommended_roi_period;
+    const roiWindows = portfolioROI?.roi_windows;
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -145,21 +151,62 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">
-            Portfolio APR {shouldShowConnectPrompt ? "(Potential)" : ""}
-          </p>
+          <div className="flex items-center space-x-1 mb-1">
+            <p className="text-sm text-gray-400">
+              Portfolio APR {shouldShowConnectPrompt ? "(Potential)" : ""}
+            </p>
+            {roiPeriod && (
+              <div className="relative group">
+                <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                  Based on {roiPeriod} performance
+                </div>
+              </div>
+            )}
+            {roiWindows && Object.keys(roiWindows).length > 0 && (
+              <button
+                onClick={() => setShowDebugInfo(!showDebugInfo)}
+                className="p-1 text-gray-500 hover:text-gray-400 transition-colors"
+                title="Show ROI breakdown"
+              >
+                <ChevronDown className={`w-3 h-3 transition-transform ${showDebugInfo ? 'rotate-180' : ''}`} />
+              </button>
+            )}
+          </div>
           {(shouldShowLoading || landingPageLoading) &&
           portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
           ) : (
-            <div
-              className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xl font-semibold">
-                {(displayAPR * 100).toFixed(2)}%
-              </span>
-            </div>
+            <>
+              <div
+                className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-xl font-semibold">
+                  {(displayAPR * 100).toFixed(2)}%
+                </span>
+                {roiPeriod && (
+                  <span className="text-xs text-gray-500 font-normal">
+                    ({roiPeriod})
+                  </span>
+                )}
+              </div>
+              {showDebugInfo && roiWindows && (
+                <div className="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs">
+                  <p className="text-gray-400 mb-1">ROI Windows:</p>
+                  <div className="space-y-1">
+                    {Object.entries(roiWindows).map(([period, roi]) => (
+                      <div key={period} className="flex justify-between">
+                        <span className="text-gray-300">{period}:</span>
+                        <span className={`${roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {(roi * 100).toFixed(2)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 
