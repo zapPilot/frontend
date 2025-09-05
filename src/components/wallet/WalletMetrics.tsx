@@ -6,9 +6,9 @@ import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsEngine";
-import { normalizeApr } from "../../utils/portfolio.utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { PortfolioState } from "../../types/portfolioState";
+import { normalizeApr } from "../../utils/portfolio.utils";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 import { BalanceLoading } from "../ui/UnifiedLoading";
 
@@ -173,13 +173,52 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">
-              Portfolio APR {shouldShowConnectPrompt ? "(Potential)" : ""}
+              Portfolio ROI {shouldShowConnectPrompt ? "(Potential)" : ""}
             </p>
-            {roiPeriod && (
+            {portfolioROI && (
               <div className="relative group">
                 <Info className="w-3 h-3 text-gray-500 cursor-help" />
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  Based on {roiPeriod} performance
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 w-56 p-3 border border-gray-700">
+                  <div className="font-semibold text-gray-200 mb-1">
+                    APR Details
+                  </div>
+                  {typeof portfolioAPR === "number" && (
+                    <div className="flex justify-between text-gray-300">
+                      <span>Recommended ROI</span>
+                      <span>{(portfolioAPR * 100).toFixed(2)}%</span>
+                    </div>
+                  )}
+                  {roiPeriod && (
+                    <div className="text-gray-400 mt-1">
+                      Period: {roiPeriod}
+                    </div>
+                  )}
+                  {typeof estimatedMonthlyIncome === "number" && (
+                    <div className="flex justify-between text-gray-300 mt-2">
+                      <span>Est. Monthly PnL</span>
+                      <span>{formatSmallCurrency(estimatedMonthlyIncome)}</span>
+                    </div>
+                  )}
+                  {roiWindows && Object.keys(roiWindows).length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-gray-400 mb-1">ROI Windows</div>
+                      <div className="space-y-0.5 max-h-40 overflow-auto pr-1">
+                        {Object.entries(roiWindows).map(([period, roi]) => (
+                          <div
+                            key={period}
+                            className="flex justify-between text-gray-300"
+                          >
+                            <span>{period}</span>
+                            <span
+                              className={`${roi >= 0 ? "text-green-400" : "text-red-400"}`}
+                            >
+                              {(roi * 100).toFixed(2)}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
