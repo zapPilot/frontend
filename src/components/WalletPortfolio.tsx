@@ -48,8 +48,12 @@ export function WalletPortfolio({
   // Get user data for landing page
   const { userInfo, isConnected } = useUser();
 
+  // Resolve which userId to use for data fetching
+  // Prefer explicit urlUserId (shared view), else fallback to connected user's id
+  const resolvedUserId = urlUserId || userInfo?.userId || null;
+
   // Unified data fetching - single API call for all landing page data
-  const landingPageQuery = useLandingPageData(userInfo?.userId);
+  const landingPageQuery = useLandingPageData(resolvedUserId);
   const landingPageData = landingPageQuery.data;
 
   // Transform landing page data for pie chart and category summaries
@@ -199,7 +203,7 @@ export function WalletPortfolio({
               portfolioChangePercentage={
                 portfolioMetrics?.totalChangePercentage || 0
               }
-              userId={userInfo?.userId || null}
+              userId={resolvedUserId}
             />
 
             <WalletActions

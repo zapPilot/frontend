@@ -108,6 +108,8 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<
     string | null
   >(null);
+  const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
+  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
 
   // Redirect to home when user disconnects from their own bundle page
   useEffect(() => {
@@ -124,6 +126,33 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       router.replace(newUrl);
     }
   }, [isConnected, userInfo?.userId, userId, router]);
+
+  // Offer to switch to the connected user's own bundle when viewing someone else's
+  useEffect(() => {
+    const isDifferentUser = !!(
+      isConnected &&
+      userInfo?.userId &&
+      userInfo.userId !== userId
+    );
+    if (isDifferentUser && !dismissedSwitchPrompt) {
+      setShowSwitchPrompt(true);
+    } else {
+      setShowSwitchPrompt(false);
+    }
+  }, [isConnected, userInfo?.userId, userId, dismissedSwitchPrompt]);
+
+  const handleSwitchToMyBundle = useCallback(() => {
+    if (!userInfo?.userId) return;
+    const params = new URLSearchParams(window.location.search);
+    params.set("userId", userInfo.userId);
+    const queryString = params.toString();
+    router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
+  }, [router, userInfo?.userId]);
+
+  const handleStayHere = useCallback(() => {
+    setDismissedSwitchPrompt(true);
+    setShowSwitchPrompt(false);
+  }, []);
 
   // Navigation handlers with context awareness
   const handleBackToPortfolio = useCallback(() => {
@@ -237,6 +266,31 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
 
       {/* Main content */}
       <div className="relative z-10 lg:pl-72">
+        {/* Switch Prompt Banner */}
+        {showSwitchPrompt && (
+          <div className="sticky top-0 z-20 mx-4 lg:mx-8 mt-4">
+            <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="text-sm">
+                You’re viewing another user’s bundle. Switch to your own bundle?
+              </div>
+              <div className="flex gap-2 justify-end">
+                <button
+                  onClick={handleStayHere}
+                  className="px-3 py-1.5 text-sm rounded-md bg-white/10 hover:bg-white/20 transition"
+                >
+                  Stay
+                </button>
+                <button
+                  onClick={handleSwitchToMyBundle}
+                  className="px-3 py-1.5 text-sm rounded-md bg-indigo-500 hover:bg-indigo-400 text-white transition"
+                  data-testid="switch-to-my-bundle"
+                >
+                  Switch to my bundle
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Mobile header spacing */}
         <div className="lg:hidden h-16" />
 

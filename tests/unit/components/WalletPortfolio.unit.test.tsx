@@ -865,7 +865,7 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
 
       render(<WalletPortfolio />);
 
-      expect(mockUseLandingPageData).toHaveBeenCalledWith(undefined);
+      expect(mockUseLandingPageData).toHaveBeenCalledWith(null);
     });
 
     it("should fetch data when user becomes available", async () => {
