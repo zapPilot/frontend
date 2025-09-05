@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     } : false,
   },
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: 'https',
@@ -23,6 +24,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  output: 'export',
   // Narrow webpack dev watcher scope to reduce memory/CPU (webpack-only)
   webpackDevMiddleware(config: any) {
     config.watchOptions = {
