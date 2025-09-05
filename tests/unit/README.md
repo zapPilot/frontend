@@ -34,24 +34,6 @@ Tests the `PortfolioOverview` component focusing on:
 
 ## Key Test Scenarios
 
-### Data Transformation (WalletPortfolio)
-
-```typescript
-// Tests that pieChartData is calculated as: (percentage / 100) * apiTotalValue
-// Example: 40% * $15,000 = $6,000
-const pieChartData = useMemo(() => {
-  if (!apiTotalValue || apiTotalValue <= 0) {
-    return undefined;
-  }
-  return mockPortfolioData.map(cat => ({
-    label: cat.name,
-    value: (cat.percentage / 100) * apiTotalValue,
-    percentage: cat.percentage,
-    color: cat.color,
-  }));
-}, [apiTotalValue]);
-```
-
 ### Loading State Management
 
 ```typescript

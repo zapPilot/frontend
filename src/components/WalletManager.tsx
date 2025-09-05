@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
   Copy,
-  Crown,
   Edit3,
   ExternalLink,
   MoreVertical,
@@ -38,6 +37,7 @@ import { Portal } from "./ui/Portal";
 export interface WalletManagerProps {
   isOpen: boolean;
   onClose: () => void;
+  urlUserId?: string;
 }
 
 // Local operation states
@@ -53,10 +53,13 @@ interface WalletOperations {
   subscribing: OperationState;
 }
 
-const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
+const WalletManagerComponent = ({
+  isOpen,
+  onClose,
+  urlUserId,
+}: WalletManagerProps) => {
   const queryClient = useQueryClient();
-  const { userInfo, loading, error, isConnected, connectedWallet, refetch } =
-    useUser();
+  const { userInfo, loading, error, isConnected, refetch } = useUser();
   const { showToast } = useToast();
 
   // Component state
@@ -69,8 +72,11 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const primaryWallet = connectedWallet;
-  const userId = userInfo?.userId;
+
+  // User identification logic
+  const realUserId = userInfo?.userId; // Authenticated user (for operations)
+  const viewingUserId = urlUserId || realUserId; // Which user's bundle to view
+  const isOwner = realUserId && realUserId === viewingUserId; // Can user edit?
 
   // Local UI state
   const [isAdding, setIsAdding] = useState(false);
@@ -93,9 +99,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   // Load user profile to determine existing subscription email
   useEffect(() => {
     const loadProfile = async () => {
-      if (!isOpen || !userId) return;
+      if (!isOpen || !viewingUserId) return;
       try {
-        const profile = await getUserProfile(userId);
+        const profile = await getUserProfile(viewingUserId);
         if (profile.success && profile.data?.user?.email) {
           setSubscribedEmail(profile.data.user.email);
           setEmail(profile.data.user.email);
@@ -107,19 +113,19 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       }
     };
     loadProfile();
-  }, [isOpen, userId]);
+  }, [isOpen, viewingUserId]);
 
   // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
-      if (!userId) return;
+      if (!viewingUserId) return;
 
       if (!silent) {
         setIsRefreshing(true);
       }
 
       try {
-        const response = await getUserWallets(userId);
+        const response = await getUserWallets(viewingUserId);
         if (response.success && response.data) {
           const transformedWallets = transformWalletData(response.data);
           setWallets(transformedWallets);
@@ -134,26 +140,26 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }
       }
     },
-    [userId]
+    [viewingUserId]
   );
 
   // Load wallets when component opens or user changes
   useEffect(() => {
-    if (isOpen && userId && isConnected) {
+    if (isOpen && viewingUserId) {
       loadWallets();
     }
-  }, [isOpen, userId, isConnected, loadWallets]);
+  }, [isOpen, viewingUserId, loadWallets]);
 
-  // Auto-refresh data periodically
+  // Auto-refresh data periodically (only for connected users viewing their own data)
   useEffect(() => {
-    if (!isOpen || !isConnected || !userId) return;
+    if (!isOpen || !isConnected || !viewingUserId || !isOwner) return;
 
     const interval = setInterval(() => {
       loadWallets(true); // Silent refresh
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [isOpen, isConnected, userId, loadWallets]);
+  }, [isOpen, isConnected, viewingUserId, isOwner, loadWallets]);
 
   // Utility function to format wallet address
   const formatAddress = useCallback((address: string) => {
@@ -163,7 +169,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
   // Handle wallet deletion
   const handleDeleteWallet = useCallback(
     async (walletId: string) => {
-      if (!userId) return;
+      if (!realUserId) return;
 
       // Set loading state for this specific wallet
       setOperations(prev => ({
@@ -175,13 +181,15 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       }));
 
       try {
-        const response = await removeWalletFromBundle(userId, walletId);
+        const response = await removeWalletFromBundle(realUserId, walletId);
         if (response.success) {
           // Remove wallet from local state immediately (optimistic update)
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          queryClient.invalidateQueries({ queryKey: ["user-wallets", userId] });
+          queryClient.invalidateQueries({
+            queryKey: ["user-wallets", realUserId],
+          });
           refetch();
         } else {
           setOperations(prev => ({
@@ -206,13 +214,13 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }));
       }
     },
-    [userId, queryClient, refetch]
+    [realUserId, queryClient, refetch]
   );
 
   // Handle editing label
   const handleEditLabel = useCallback(
     async (walletId: string, newLabel: string) => {
-      if (!userId || !newLabel.trim()) {
+      if (!realUserId || !newLabel.trim()) {
         setEditingWallet(null);
         return;
       }
@@ -244,7 +252,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
         // Call the API to update wallet label
         const response = await updateWalletLabel(
-          userId,
+          realUserId,
           wallet.address,
           newLabel
         );
@@ -293,12 +301,12 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         }));
       }
     },
-    [userId, wallets]
+    [realUserId, wallets]
   );
 
   // Handle adding new wallet
   const handleAddWallet = useCallback(async () => {
-    if (!userId || !newWallet.address || !newWallet.label) {
+    if (!realUserId || !newWallet.address || !newWallet.label) {
       setValidationError("Please fill in all fields");
       return;
     }
@@ -319,7 +327,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
 
     try {
       const response = await addWalletToBundle(
-        userId,
+        realUserId,
         newWallet.address,
         newWallet.label
       );
@@ -333,7 +341,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         await loadWallets();
 
         // Invalidate and refetch user data
-        queryClient.invalidateQueries({ queryKey: ["user-wallets", userId] });
+        queryClient.invalidateQueries({
+          queryKey: ["user-wallets", realUserId],
+        });
         refetch();
 
         setOperations(prev => ({
@@ -356,10 +366,10 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         adding: { isLoading: false, error: errorMessage },
       }));
     }
-  }, [userId, newWallet, loadWallets, queryClient, refetch]);
+  }, [realUserId, newWallet, loadWallets, queryClient, refetch]);
 
   const handleSubscribe = useCallback(async () => {
-    if (!userId || !email) {
+    if (!realUserId || !email) {
       setOperations(prev => ({
         ...prev,
         subscribing: {
@@ -376,7 +386,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     }));
 
     try {
-      await updateUserEmail(userId, email);
+      await updateUserEmail(realUserId, email);
       setOperations(prev => ({
         ...prev,
         subscribing: { isLoading: false, error: null },
@@ -395,7 +405,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
         subscribing: { isLoading: false, error: errorMessage },
       }));
     }
-  }, [userId, email, showToast]);
+  }, [realUserId, email, showToast]);
 
   // Handle copy to clipboard
   const handleCopyAddress = useCallback(
@@ -428,9 +438,8 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
     [formatAddress, showToast]
   );
 
-  // Separate primary and secondary wallets
-  const primaryWallets = wallets.filter(w => w.isMain);
-  const secondaryWallets = wallets.filter(w => !w.isMain);
+  // All wallets (no longer separating primary and secondary)
+  const allWallets = wallets;
 
   // Action menu component
   const WalletActionMenu = ({ wallet }: { wallet: WalletData }) => {
@@ -450,7 +459,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               e.currentTarget as HTMLElement
             ).getBoundingClientRect();
             const MENU_WIDTH = 192; // w-48
-            const estimatedHeight = wallet.isMain ? 130 : 210; // rough height for options
+            const estimatedHeight = 210; // rough height for options
             const openUp =
               rect.bottom + estimatedHeight > window.innerHeight - 8;
             const top = openUp
@@ -508,37 +517,33 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   <ExternalLink className="w-4 h-4" />
                   View on DeBank
                 </a>
-                {!wallet.isMain && (
-                  <>
-                    <div className="border-t border-gray-700 my-1" />
-                    <button
-                      onClick={() => {
-                        setEditingWallet({
-                          id: wallet.id,
-                          label: wallet.label,
-                        });
-                        setOpenDropdown(null);
-                        setMenuPosition(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Edit Label
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleDeleteWallet(wallet.id);
-                        setOpenDropdown(null);
-                        setMenuPosition(null);
-                      }}
-                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
-                      disabled={operations.removing[wallet.id]?.isLoading}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      Remove from Bundle
-                    </button>
-                  </>
-                )}
+                <div className="border-t border-gray-700 my-1" />
+                <button
+                  onClick={() => {
+                    setEditingWallet({
+                      id: wallet.id,
+                      label: wallet.label,
+                    });
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                >
+                  <Edit3 className="w-4 h-4" />
+                  Edit Label
+                </button>
+                <button
+                  onClick={() => {
+                    handleDeleteWallet(wallet.id);
+                    setOpenDropdown(null);
+                    setMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+                  disabled={operations.removing[wallet.id]?.isLoading}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove from Bundle
+                </button>
               </div>
             </div>
           </Portal>
@@ -554,26 +559,14 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
       layout
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`p-4 rounded-xl border transition-all duration-200 ${
-        wallet.isMain
-          ? "bg-gradient-to-r from-purple-600/30 to-blue-600/30 border-purple-400/50 ring-1 ring-purple-400/20"
-          : "glass-morphism border-gray-700 hover:border-gray-600"
-      }`}
+      className="p-4 rounded-xl border transition-all duration-200 glass-morphism border-gray-700 hover:border-gray-600"
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            {wallet.isMain && (
-              <Crown className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-            )}
             <span className="font-medium text-white truncate">
               {wallet.label}
             </span>
-            {wallet.isMain && (
-              <span className="px-2 py-1 text-xs bg-blue-600/30 text-blue-300 rounded-full flex-shrink-0">
-                Primary
-              </span>
-            )}
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-400">
             <code className="font-mono text-xs sm:text-sm truncate">
@@ -595,7 +588,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               <span className="hidden sm:inline">Removing...</span>
             </div>
           )}
-          <WalletActionMenu wallet={wallet} />
+          {isOwner && <WalletActionMenu wallet={wallet} />}
         </div>
       </div>
 
@@ -759,7 +752,9 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
                   >
                     {!isConnected
                       ? "No wallet connected"
-                      : `Manage your ${primaryWallet?.slice(0, 6)}...${primaryWallet?.slice(-4)} bundle`}
+                      : isOwner
+                        ? "Manage your wallet bundle"
+                        : "Viewing wallet bundle"}
                   </p>
                 </div>
               </div>
@@ -806,49 +801,36 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Primary Wallet Section */}
-            {!loading &&
-              !isRefreshing &&
-              !error &&
-              primaryWallets.length > 0 && (
-                <div className="p-6 border-b border-gray-700/50">
-                  <h3 className="text-sm font-medium text-gray-300 mb-4">
-                    Primary Wallet
-                  </h3>
-                  <div className="space-y-3">
-                    {primaryWallets.map(wallet => (
-                      <WalletCard key={wallet.id} wallet={wallet} />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            {/* Secondary Wallets Section */}
+            {/* All Wallets Section */}
             {!loading && !isRefreshing && !error && (
               <div className="p-6 border-b border-gray-700/50">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm font-medium text-gray-300">
-                    Secondary Wallets ({secondaryWallets.length})
+                    Bundle Wallets ({allWallets.length})
                   </h3>
                 </div>
 
-                {secondaryWallets.length === 0 ? (
+                {allWallets.length === 0 ? (
                   <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
                     <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-300 mb-4">
-                      Add secondary wallets to your bundle
+                      {isOwner
+                        ? "Add wallets to your bundle"
+                        : "No wallets in this bundle"}
                     </p>
-                    <GradientButton
-                      onClick={() => setIsAdding(true)}
-                      gradient={GRADIENTS.PRIMARY}
-                      icon={Plus}
-                    >
-                      Add Your First Secondary Wallet
-                    </GradientButton>
+                    {isOwner && (
+                      <GradientButton
+                        onClick={() => setIsAdding(true)}
+                        gradient={GRADIENTS.PRIMARY}
+                        icon={Plus}
+                      >
+                        Add Your First Wallet
+                      </GradientButton>
+                    )}
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {secondaryWallets.map(wallet => (
+                    {allWallets.map(wallet => (
                       <WalletCard key={wallet.id} wallet={wallet} />
                     ))}
                   </div>
@@ -856,11 +838,12 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               </div>
             )}
 
-            {/* Add New Wallet Section - Only show if we have secondary wallets */}
+            {/* Add New Wallet Section - Only show if we have wallets and user is owner */}
             {!loading &&
               !isRefreshing &&
               !error &&
-              secondaryWallets.length > 0 && (
+              allWallets.length > 0 &&
+              isOwner && (
                 <div className="p-6 border-b border-gray-700/50">
                   <h3 className="text-sm font-medium text-gray-300 mb-4">
                     Add Another Wallet
@@ -957,7 +940,7 @@ const WalletManagerComponent = ({ isOpen, onClose }: WalletManagerProps) => {
               )}
 
             {/* PnL Subscription */}
-            {!loading && !isRefreshing && !error && isConnected && userId && (
+            {!loading && !isRefreshing && !error && isOwner && (
               <div className="p-6 bg-gray-900/20">
                 <h3 className="text-sm font-medium text-gray-300 mb-3">
                   Weekly PnL Reports

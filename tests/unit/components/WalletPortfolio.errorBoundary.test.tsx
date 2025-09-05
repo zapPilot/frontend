@@ -5,6 +5,10 @@ import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import {
+  usePortfolioState,
+  usePortfolioStateHelpers,
+} from "../../../src/hooks/usePortfolioState";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 
@@ -13,6 +17,7 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/useWalletModal");
+vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components to test error boundaries at different levels
@@ -207,6 +212,8 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUseWalletModal = vi.mocked(useWalletModal);
+  const mockUsePortfolioState = vi.mocked(usePortfolioState);
+  const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
   const mockCreateCategoriesFromApiData = vi.mocked(
     createCategoriesFromApiData
   );
@@ -275,6 +282,12 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
         },
         total_assets_usd: 15000,
         total_debt_usd: 0,
+        category_summary_debt: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
       },
       isLoading: false,
       error: null,
@@ -297,6 +310,27 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
     });
 
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategories);
+
+    // Setup portfolio state mock
+    mockUsePortfolioState.mockReturnValue({
+      type: "has_data",
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 15000,
+      errorMessage: null,
+      isRetrying: false,
+    });
+
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 15000,
+    });
   });
 
   afterEach(() => {
@@ -494,6 +528,12 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
           },
           total_assets_usd: 15000,
           total_debt_usd: 0,
+          category_summary_debt: {
+            btc: 0,
+            eth: 0,
+            stablecoins: 0,
+            others: 0,
+          },
         },
         isLoading: false,
         error: null,
@@ -655,6 +695,12 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
             },
             total_assets_usd: 15000,
             total_debt_usd: 0,
+            category_summary_debt: {
+              btc: 0,
+              eth: 0,
+              stablecoins: 0,
+              others: 0,
+            },
           },
           isLoading: false,
           error: null,

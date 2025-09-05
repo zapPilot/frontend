@@ -4,6 +4,10 @@ import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../src/hooks/usePortfolio";
+import {
+  usePortfolioState,
+  usePortfolioStateHelpers,
+} from "../../src/hooks/usePortfolioState";
 import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { render } from "../test-utils";
 
@@ -11,6 +15,7 @@ import { render } from "../test-utils";
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/useWalletModal");
+vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 vi.mock("../../src/services/analyticsEngine");
 vi.mock("../../src/contexts/UserContext");
@@ -21,6 +26,9 @@ vi.mock("framer-motion", () => ({
     div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
     circle: vi.fn(({ children, ...props }) => (
       <circle {...props}>{children}</circle>
+    )),
+    button: vi.fn(({ children, whileHover, whileTap, ...props }) => (
+      <button {...props}>{children}</button>
     )),
   },
 }));
@@ -40,6 +48,21 @@ vi.mock("../../src/components/ui", () => ({
   WalletConnectionPrompt: vi.fn(() => (
     <div data-testid="wallet-connection-prompt">Connect Wallet</div>
   )),
+  GradientButton: vi.fn(
+    ({
+      children,
+      onClick,
+      testId,
+    }: {
+      children: React.ReactNode;
+      onClick?: () => void;
+      testId?: string;
+    }) => (
+      <button data-testid={testId} onClick={onClick}>
+        {children}
+      </button>
+    )
+  ),
 }));
 
 // Mock wallet components that show/hide balance
@@ -73,28 +96,49 @@ vi.mock("../../src/components/wallet/WalletHeader", () => ({
 vi.mock("../../src/components/wallet/WalletMetrics", () => ({
   WalletMetrics: vi.fn(
     ({
-      totalValue,
+      portfolioState,
       balanceHidden,
     }: {
-      totalValue: number | null;
+      portfolioState: {
+        type: string;
+        totalValue: number | null;
+        isLoading: boolean;
+        hasError: boolean;
+        errorMessage?: string | null;
+      };
       balanceHidden: boolean;
-      isLoading?: boolean;
-      error?: string | null;
       portfolioChangePercentage?: number;
-      onRetry?: () => void;
-      isRetrying?: boolean;
-    }) => (
-      <div data-testid="wallet-metrics">
-        <div data-testid="total-value">
-          {balanceHidden
-            ? "••••••••"
-            : `$${totalValue?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+      userId?: string | null;
+    }) => {
+      // Mock the getDisplayTotalValue logic
+      const getDisplayTotalValue = () => {
+        if (!portfolioState || portfolioState.type === "wallet_disconnected")
+          return null;
+        if (portfolioState.type === "loading") return null;
+        if (portfolioState.type === "error") return null;
+        if (portfolioState.type === "connected_no_data") return 0;
+        return portfolioState.totalValue;
+      };
+
+      const displayValue = getDisplayTotalValue();
+      const shouldShowNoDataMessage =
+        portfolioState?.type === "connected_no_data";
+
+      return (
+        <div data-testid="wallet-metrics">
+          <div data-testid="total-value">
+            {shouldShowNoDataMessage
+              ? "No data available"
+              : balanceHidden
+                ? "••••••••"
+                : `$${displayValue?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+          </div>
+          <div data-testid="balance-visibility">
+            {balanceHidden ? "hidden" : "visible"}
+          </div>
         </div>
-        <div data-testid="balance-visibility">
-          {balanceHidden ? "hidden" : "visible"}
-        </div>
-      </div>
-    )
+      );
+    }
   ),
 }));
 
@@ -153,6 +197,13 @@ const mockUseUser = vi.mocked(useUser);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseWalletModal = vi.mocked(useWalletModal);
+const mockUsePortfolioState = vi.mocked(usePortfolioState);
+const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
+
+vi.mock("../../src/hooks/usePortfolioState", () => ({
+  usePortfolioState: vi.fn(),
+  usePortfolioStateHelpers: vi.fn(),
+}));
 
 // Mock data
 const mockUserInfo = {
@@ -222,6 +273,12 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
         },
         total_assets_usd: 25000,
         total_debt_usd: 0,
+        category_summary_debt: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
       },
       isLoading: false,
       error: null,
@@ -243,6 +300,27 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       isOpen: false,
       openModal: vi.fn(),
       closeModal: vi.fn(),
+    });
+
+    // Setup portfolio state mock
+    mockUsePortfolioState.mockReturnValue({
+      type: "has_data",
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 25000,
+      errorMessage: null,
+      isRetrying: false,
+    });
+
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 25000,
     });
   });
 
@@ -290,6 +368,7 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
         toggleCategoryExpansion: vi.fn(),
       });
 
+      // Portfolio state remains the same (balance hidden is handled by balanceHidden prop)
       rerender(<WalletPortfolio />);
 
       // Verify balance is now hidden

@@ -25,8 +25,7 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
             <DollarSign className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">My Wallet</h1>
-            <p className="text-sm text-gray-400">DeFi Portfolio Overview</p>
+            <h1 className="text-2xl font-bold text-white">My Portfolio</h1>
           </div>
         </div>
 

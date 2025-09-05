@@ -5,6 +5,10 @@ import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../src/hooks/usePortfolio";
+import {
+  usePortfolioState,
+  usePortfolioStateHelpers,
+} from "../../src/hooks/usePortfolioState";
 import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { render } from "../test-utils";
 
@@ -13,14 +17,14 @@ vi.mock("../../src/contexts/UserContext");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/useWalletModal");
+vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 
 // Create realistic component mocks
 vi.mock("../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(
     ({
-      isLoading,
-      apiError,
+      portfolioState,
       onRetry,
       isRetrying,
       onCategoryClick,
@@ -28,12 +32,12 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
       categorySummaries,
     }) => (
       <div data-testid="portfolio-overview">
-        {isLoading && (
+        {portfolioState?.isLoading && (
           <div data-testid="portfolio-loading">Loading portfolio...</div>
         )}
-        {apiError && (
+        {portfolioState?.hasError && (
           <div data-testid="portfolio-error">
-            <span>{apiError}</span>
+            <span>{portfolioState.errorMessage || "An error occurred"}</span>
             {onRetry && (
               <button
                 data-testid="portfolio-retry"
@@ -45,7 +49,7 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
             )}
           </div>
         )}
-        {!isLoading && !apiError && (
+        {!portfolioState?.isLoading && !portfolioState?.hasError && (
           <div data-testid="portfolio-content">
             <div data-testid="chart-data">
               {pieChartData?.length || 0} categories
@@ -105,27 +109,27 @@ vi.mock("../../src/components/wallet/WalletHeader", () => ({
 }));
 
 vi.mock("../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(
-    ({ totalValue, balanceHidden, isLoading, error, isConnected, userId }) => (
-      <div data-testid="wallet-metrics">
-        <div data-testid="connection-indicator">
-          {isConnected ? "Connected" : "Disconnected"}
-        </div>
-        <div data-testid="user-indicator">
-          {userId ? `User: ${userId}` : "No user"}
-        </div>
-        {isLoading ? (
-          <div data-testid="metrics-loading">Loading metrics...</div>
-        ) : error ? (
-          <div data-testid="metrics-error">Error: {error}</div>
-        ) : (
-          <div data-testid="total-balance">
-            {balanceHidden ? "****" : `$${totalValue || 0}`}
-          </div>
-        )}
+  WalletMetrics: vi.fn(({ portfolioState, balanceHidden, userId }) => (
+    <div data-testid="wallet-metrics">
+      <div data-testid="connection-indicator">
+        {portfolioState?.isConnected ? "Connected" : "Disconnected"}
       </div>
-    )
-  ),
+      <div data-testid="user-indicator">
+        {userId ? `User: ${userId}` : "No user"}
+      </div>
+      {portfolioState?.isLoading ? (
+        <div data-testid="metrics-loading">Loading metrics...</div>
+      ) : portfolioState?.hasError ? (
+        <div data-testid="metrics-error">
+          Error: {portfolioState.errorMessage}
+        </div>
+      ) : (
+        <div data-testid="total-balance">
+          {balanceHidden ? "****" : `$${portfolioState?.totalValue || 0}`}
+        </div>
+      )}
+    </div>
+  )),
 }));
 
 vi.mock("../../src/components/wallet/WalletActions", () => ({
@@ -184,6 +188,8 @@ const mockUseUser = vi.mocked(useUser);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUseWalletModal = vi.mocked(useWalletModal);
+const mockUsePortfolioState = vi.mocked(usePortfolioState);
+const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
 
 describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
   const defaultUserInfo = {
@@ -249,6 +255,27 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
       isOpen: false,
       openModal: vi.fn(),
       closeModal: vi.fn(),
+    });
+
+    // Setup portfolio state mocks
+    mockUsePortfolioState.mockReturnValue({
+      type: "has_data",
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 15000,
+      errorMessage: null,
+      isRetrying: false,
+    });
+
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 15000,
     });
 
     // Mock createCategoriesFromApiData

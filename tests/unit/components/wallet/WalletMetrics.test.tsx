@@ -17,12 +17,7 @@ vi.mock("lucide-react", () => ({
   )),
 }));
 
-// Mock LoadingSpinner component
-vi.mock("../../../../src/components/ui/LoadingSpinner", () => ({
-  LoadingSpinner: vi.fn(() => (
-    <span data-testid="loader-icon">Loading...</span>
-  )),
-}));
+// Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed
 
 // Mock formatters
 vi.mock("../../../../src/lib/formatters", () => ({
@@ -132,15 +127,36 @@ vi.mock("../../../../src/components/Web3/SimpleConnectButton", () => ({
   )),
 }));
 
+// Mock usePortfolioStateHelpers with overrideable fn
+const { mockUsePortfolioStateHelpers } = vi.hoisted(() => ({
+  mockUsePortfolioStateHelpers: vi.fn(() => ({
+    shouldShowLoading: false,
+    shouldShowConnectPrompt: false,
+    shouldShowNoDataMessage: false,
+    shouldShowPortfolioContent: true,
+    shouldShowError: false,
+    getDisplayTotalValue: () => 15000,
+  })),
+}));
+vi.mock("../../../../src/hooks/usePortfolioState", () => ({
+  usePortfolioStateHelpers: mockUsePortfolioStateHelpers,
+}));
+
 describe("WalletMetrics", () => {
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const defaultProps = {
-    totalValue: 15000,
+    portfolioState: {
+      type: "has_data" as const,
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 15000,
+      errorMessage: null,
+      isRetrying: false,
+    },
     balanceHidden: false,
-    isLoading: false,
-    error: null,
     portfolioChangePercentage: 5.2,
-    isConnected: true,
     userId: "test-user-id",
   };
 
@@ -177,6 +193,17 @@ describe("WalletMetrics", () => {
       error: null,
       refetch: vi.fn(),
       isRefetching: false,
+    });
+
+    // Default helper state: show content
+    mockUsePortfolioStateHelpers.mockReset();
+    mockUsePortfolioStateHelpers.mockReturnValue({
+      shouldShowLoading: false,
+      shouldShowConnectPrompt: false,
+      shouldShowNoDataMessage: false,
+      shouldShowPortfolioContent: true,
+      shouldShowError: false,
+      getDisplayTotalValue: () => 15000,
     });
   });
 
@@ -227,7 +254,25 @@ describe("WalletMetrics", () => {
     });
 
     it("should show loader when loading", () => {
-      render(<WalletMetrics {...defaultProps} isLoading={true} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            type: "loading",
+          }}
+        />
+      );
 
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
       expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
@@ -235,7 +280,25 @@ describe("WalletMetrics", () => {
 
     it("should show error message when error exists", () => {
       const errorMessage = "Failed to load data";
-      render(<WalletMetrics {...defaultProps} error={errorMessage} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => null,
+      });
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            hasError: true,
+            errorMessage,
+            type: "error",
+          }}
+        />
+      );
 
       expect(screen.getByText(errorMessage)).toBeInTheDocument();
       expect(screen.getByTestId("alert-circle-icon")).toBeInTheDocument();
@@ -245,32 +308,52 @@ describe("WalletMetrics", () => {
       );
     });
 
-    it("should show retry button when error exists and onRetry provided", () => {
-      const onRetry = vi.fn();
+    it("should not render a retry button in error state (handled elsewhere)", () => {
       const errorMessage = "Failed to load data";
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => null,
+      });
       render(
         <WalletMetrics
           {...defaultProps}
-          error={errorMessage}
-          onRetry={onRetry}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            hasError: true,
+            errorMessage,
+            type: "error",
+          }}
         />
       );
-
-      const retryButton = screen.getByText("Retry");
-      expect(retryButton).toBeInTheDocument();
-      expect(retryButton).toHaveClass("text-xs", "text-purple-400");
-
-      retryButton.click();
-      expect(onRetry).toHaveBeenCalledTimes(1);
+      expect(screen.getByText(errorMessage)).toBeInTheDocument();
+      expect(screen.queryByText("Retry")).not.toBeInTheDocument();
     });
 
     it("should show retrying state when isRetrying is true", () => {
-      const onRetry = vi.fn();
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
       render(
-        <WalletMetrics {...defaultProps} isRetrying={true} onRetry={onRetry} />
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            isRetrying: true,
+            type: "loading",
+          }}
+        />
       );
-
-      expect(screen.getByText("Retrying...")).toBeInTheDocument();
+      // Skeleton present; no explicit text anymore
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
     });
 
@@ -357,20 +440,62 @@ describe("WalletMetrics", () => {
 
   describe("Edge Cases and Error Handling", () => {
     it("should handle very large totalValue", () => {
-      render(<WalletMetrics {...defaultProps} totalValue={999999999} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 999999999,
+      });
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            totalValue: 999999999,
+          }}
+        />
+      );
 
       expect(screen.getByText("$999,999,999.00")).toBeInTheDocument();
     });
 
     it("should handle zero totalValue", () => {
-      render(<WalletMetrics {...defaultProps} totalValue={0} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 0,
+      });
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{ ...defaultProps.portfolioState, totalValue: 0 }}
+        />
+      );
 
       expect(screen.getByText("$0.00")).toBeInTheDocument(); // Balance
       expect(screen.getByText("$1,000.00")).toBeInTheDocument(); // Monthly income from mock
     });
 
     it("should handle negative totalValue", () => {
-      render(<WalletMetrics {...defaultProps} totalValue={-1000} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => -1000,
+      });
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{ ...defaultProps.portfolioState, totalValue: -1000 }}
+        />
+      );
 
       expect(screen.getByText("-$1,000.00")).toBeInTheDocument();
     });
@@ -392,8 +517,25 @@ describe("WalletMetrics", () => {
     });
 
     it("should handle loading and error states simultaneously", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
       render(
-        <WalletMetrics {...defaultProps} isLoading={true} error="Some error" />
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            hasError: true,
+            errorMessage: "Some error",
+            type: "loading",
+          }}
+        />
       );
 
       // Loading takes precedence over error
@@ -439,13 +581,32 @@ describe("WalletMetrics", () => {
     });
 
     it("should re-render when totalValue changes", () => {
-      const { rerender } = render(
-        <WalletMetrics {...defaultProps} totalValue={15000} />
-      );
+      mockUsePortfolioStateHelpers.mockReturnValueOnce({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 15000,
+      });
+      const { rerender } = render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("$15,000.00")).toBeInTheDocument();
 
-      rerender(<WalletMetrics {...defaultProps} totalValue={20000} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 20000,
+      });
+      rerender(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{ ...defaultProps.portfolioState, totalValue: 20000 }}
+        />
+      );
 
       expect(screen.getByText("$20,000.00")).toBeInTheDocument();
     });
@@ -478,14 +639,50 @@ describe("WalletMetrics", () => {
     });
 
     it("should handle loader accessibility", () => {
-      render(<WalletMetrics {...defaultProps} isLoading={true} />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            isLoading: true,
+            type: "loading",
+          }}
+        />
+      );
 
       const loader = screen.getByTestId("balance-loading");
       expect(loader).toBeInTheDocument();
     });
 
     it("should handle error message accessibility", () => {
-      render(<WalletMetrics {...defaultProps} error="Connection error" />);
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => null,
+      });
+      render(
+        <WalletMetrics
+          {...defaultProps}
+          portfolioState={{
+            ...defaultProps.portfolioState,
+            hasError: true,
+            errorMessage: "Connection error",
+            type: "error",
+          }}
+        />
+      );
 
       const errorMessage = screen.getByText("Connection error");
       expect(errorMessage.parentElement).toHaveClass("text-red-400");

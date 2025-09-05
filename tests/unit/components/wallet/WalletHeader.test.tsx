@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
 
 // Mock lucide-react icons
@@ -35,8 +35,7 @@ describe("WalletHeader", () => {
     it("should render header with title and subtitle", () => {
       render(<WalletHeader {...defaultProps} />);
 
-      expect(screen.getByText("My Wallet")).toBeInTheDocument();
-      expect(screen.getByText("DeFi Portfolio Overview")).toBeInTheDocument();
+      expect(screen.getByText("My Portfolio")).toBeInTheDocument();
     });
 
     it("should render dollar sign icon in gradient container", () => {
@@ -65,10 +64,9 @@ describe("WalletHeader", () => {
     it("should have proper layout structure", () => {
       render(<WalletHeader {...defaultProps} />);
 
-      const container = screen.getByText("My Wallet").closest("div");
+      const container = screen.getByText("My Portfolio").closest("div");
       expect(container).toBeInTheDocument();
-      expect(screen.getByText("My Wallet")).toBeInTheDocument();
-      expect(screen.getByText("DeFi Portfolio Overview")).toBeInTheDocument();
+      expect(screen.getByText("My Portfolio")).toBeInTheDocument();
     });
   });
 
@@ -207,7 +205,7 @@ describe("WalletHeader", () => {
       render(<WalletHeader {...defaultProps} />);
 
       const heading = screen.getByRole("heading", { level: 1 });
-      expect(heading).toHaveTextContent("My Wallet");
+      expect(heading).toHaveTextContent("My Portfolio");
     });
 
     it("should have descriptive title attributes for all buttons", () => {
@@ -245,7 +243,7 @@ describe("WalletHeader", () => {
       rerender(<WalletHeader {...props} />);
 
       // If React.memo is working, component should maintain same DOM structure
-      expect(screen.getByText("My Wallet")).toBeInTheDocument();
+      expect(screen.getByText("My Portfolio")).toBeInTheDocument();
     });
 
     it("should re-render when balanceHidden prop changes", () => {
@@ -280,7 +278,7 @@ describe("WalletHeader", () => {
         render(<WalletHeader {...requiredProps} />);
       }).not.toThrow();
 
-      expect(screen.getByText("My Wallet")).toBeInTheDocument();
+      expect(screen.getByText("My Portfolio")).toBeInTheDocument();
     });
   });
 });

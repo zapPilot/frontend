@@ -5,17 +5,13 @@ export type { LoadingSpinnerProps } from "../LoadingSpinner";
 export { LoadingButton, LoadingIconButton } from "../LoadingButton";
 export type { LoadingButtonProps } from "../LoadingButton";
 
-export {
-  LoadingPage,
-  LoadingOverlay,
-  LoadingPlaceholder,
-} from "../LoadingPage";
+export { LoadingPage, LoadingPlaceholder } from "../LoadingPage";
 export type { LoadingPageProps } from "../LoadingPage";
 
 export {
   LoadingState,
-  withLoadingState,
   useLoadingComponent,
+  withLoadingState,
 } from "../LoadingState";
 export type { LoadingStateProps } from "../LoadingState";
 
@@ -23,9 +19,9 @@ export { LoadingCard } from "../LoadingCard";
 export type { LoadingCardProps } from "../LoadingCard";
 
 export {
-  LoadingSkeleton,
   CardSkeleton,
-  MetricsSkeleton,
   ChartSkeleton,
+  LoadingSkeleton,
+  MetricsSkeleton,
 } from "../LoadingSkeleton";
 export type { LoadingSkeletonProps } from "../LoadingSkeleton";

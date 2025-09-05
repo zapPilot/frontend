@@ -160,15 +160,15 @@ vi.mock("next/dynamic", () => {
             // Determine what component is being imported based on the import function
             const importString = importFunc.toString();
 
-            // For PortfolioOverview, return a mock with the expected testids
+            // For PortfolioOverview, return a mock aligned with current props
             if (importString.includes("PortfolioOverview")) {
-              // Calculate total from pieChartData like the real component would
+              // Calculate total from portfolioState or pieChartData like the real component would
               const calculatedTotal =
-                props?.totalValue ||
+                props?.portfolioState?.totalValue ??
                 props?.pieChartData?.reduce(
                   (sum, item) => sum + (item.value || 0),
                   0
-                ) ||
+                ) ??
                 25000; // Default fallback for tests
 
               const formatCurrency = amount => {
@@ -188,7 +188,7 @@ vi.mock("next/dynamic", () => {
                       key: "loading-state",
                       "data-testid": "loading-state",
                     },
-                    props?.isLoading ? "loading" : "not-loading"
+                    props?.portfolioState?.isLoading ? "loading" : "not-loading"
                   ),
                   React.createElement(
                     "div",
@@ -196,7 +196,7 @@ vi.mock("next/dynamic", () => {
                       key: "error-state",
                       "data-testid": "error-state",
                     },
-                    props?.apiError || "no-error"
+                    props?.portfolioState?.errorMessage || "no-error"
                   ),
                   React.createElement(
                     "div",

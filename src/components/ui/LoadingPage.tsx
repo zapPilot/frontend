@@ -1,5 +1,5 @@
-import React from "react";
 import { motion } from "framer-motion";
+import React from "react";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export interface LoadingPageProps {
@@ -91,35 +91,6 @@ export function LoadingPage({
         </motion.div>
       </div>
     </div>
-  );
-}
-
-/**
- * Simple loading overlay for existing content
- */
-export function LoadingOverlay({
-  isVisible,
-  message = "Loading...",
-  className = "",
-}: {
-  isVisible: boolean;
-  message?: string;
-  className?: string;
-}) {
-  if (!isVisible) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className={`absolute inset-0 bg-gray-950/50 backdrop-blur-sm z-10 flex items-center justify-center ${className}`}
-    >
-      <div className="text-center space-y-3">
-        <LoadingSpinner size="lg" color="primary" />
-        <p className="text-sm text-gray-300">{message}</p>
-      </div>
-    </motion.div>
   );
 }
 

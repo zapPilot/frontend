@@ -95,7 +95,11 @@ const SwapPage: ComponentType<SwapPageProps> = dynamic(
   }
 );
 
-export default function DashboardApp() {
+interface BundlePageClientProps {
+  userId: string;
+}
+
+export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
   const [activeTab, setActiveTab] = useState("wallet");
@@ -105,24 +109,23 @@ export default function DashboardApp() {
     string | null
   >(null);
 
-  // Redirect to user's bundle page after wallet connection
+  // Redirect to home when user disconnects from their own bundle page
   useEffect(() => {
-    if (isConnected && userInfo?.userId) {
-      // Only redirect if we're on the root path
-      if (window.location.pathname === "/") {
-        // Preserve query parameters
-        const searchParams = new URLSearchParams(window.location.search);
-        const queryString = searchParams.toString();
-        const newUrl = `/bundle/${userInfo.userId}${queryString ? `?${queryString}` : ""}`;
+    const isOwnBundle = userInfo?.userId === userId;
 
-        // Replace current history entry to avoid redirect loops
-        router.replace(newUrl);
-      }
+    // If this was the user's own bundle but they've disconnected, redirect to home
+    if (!isConnected && isOwnBundle) {
+      // Preserve query parameters
+      const searchParams = new URLSearchParams(window.location.search);
+      const queryString = searchParams.toString();
+      const newUrl = `/${queryString ? `?${queryString}` : ""}`;
+
+      // Replace current history entry to avoid navigation loops
+      router.replace(newUrl);
     }
-  }, [isConnected, userInfo?.userId, router]);
+  }, [isConnected, userInfo?.userId, userId, router]);
 
   // Navigation handlers with context awareness
-  // Each handler sets the appropriate navigationContext to control SwapPage behavior
   const handleBackToPortfolio = useCallback(() => {
     setSelectedStrategy(null);
   }, []);
@@ -130,7 +133,7 @@ export default function DashboardApp() {
   const handleTabChange = useCallback(
     (tab: string) => {
       setActiveTab(tab);
-      // Reset strategy when switching tabs to enable navigation from SwapPage
+      // Reset strategy when switching tabs
       if (selectedStrategy) {
         setSelectedStrategy(null);
       }
@@ -157,7 +160,6 @@ export default function DashboardApp() {
   );
 
   const handleOptimizeClick = useCallback(() => {
-    // Find the optimize strategy from mock data
     const optimizeStrategy = mockInvestmentOpportunities.find(
       strategy => strategy.id === "optimize-portfolio"
     );
@@ -167,7 +169,6 @@ export default function DashboardApp() {
   }, []);
 
   const handleZapInClick = useCallback(() => {
-    // Find the ZapIn strategy from mock data
     const zapInStrategy = mockInvestmentOpportunities.find(
       strategy => strategy.id === "zap-in"
     );
@@ -177,7 +178,6 @@ export default function DashboardApp() {
   }, []);
 
   const handleZapOutClick = useCallback(() => {
-    // Find the ZapOut strategy from mock data
     const zapOutStrategy = mockInvestmentOpportunities.find(
       strategy => strategy.id === "zap-out"
     );
@@ -197,6 +197,7 @@ export default function DashboardApp() {
       case "wallet":
         return (
           <WalletPortfolio
+            urlUserId={userId}
             onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
@@ -215,6 +216,7 @@ export default function DashboardApp() {
       default:
         return (
           <WalletPortfolio
+            urlUserId={userId}
             onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}

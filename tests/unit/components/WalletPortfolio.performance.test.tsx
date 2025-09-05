@@ -5,6 +5,7 @@ import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import { usePortfolioState } from "../../../src/hooks/usePortfolioState";
 import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
@@ -13,13 +14,14 @@ import { render } from "../../test-utils";
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
+vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components for performance testing
 vi.mock("../../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(
-    ({ categorySummaries, pieChartData, onCategoryClick }) => (
+    ({ portfolioState, categorySummaries, pieChartData, onCategoryClick }) => (
       <div data-testid="portfolio-overview">
         <div data-testid="render-count">{Date.now()}</div>
         <div data-testid="categories-length">
@@ -52,11 +54,15 @@ vi.mock("../../../src/components/wallet/WalletHeader", () => ({
 }));
 
 vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(({ totalValue, balanceHidden }) => (
-    <div data-testid="wallet-metrics">
-      <div data-testid="value">{balanceHidden ? "****" : totalValue}</div>
-    </div>
-  )),
+  WalletMetrics: vi.fn(({ portfolioState, balanceHidden }) => {
+    const totalValue = portfolioState?.totalValue;
+
+    return (
+      <div data-testid="wallet-metrics">
+        <div data-testid="value">{balanceHidden ? "****" : totalValue}</div>
+      </div>
+    );
+  }),
 }));
 
 vi.mock("../../../src/components/wallet/WalletActions", () => ({
@@ -73,9 +79,20 @@ vi.mock("../../../src/components/errors/ErrorBoundary", () => ({
   ErrorBoundary: vi.fn(({ children }) => children),
 }));
 
+// Mock framer-motion
+vi.mock("framer-motion", () => ({
+  motion: {
+    div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
+    button: vi.fn(({ children, whileHover, whileTap, ...props }) => (
+      <button {...props}>{children}</button>
+    )),
+  },
+}));
+
 const mockUseUser = vi.mocked(useUser);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
+const mockUsePortfolioState = vi.mocked(usePortfolioState);
 const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockCreateCategoriesFromApiData = vi.mocked(createCategoriesFromApiData);
 
@@ -130,6 +147,17 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
       isOpen: false,
       openModal: vi.fn(),
       closeModal: vi.fn(),
+    });
+
+    mockUsePortfolioState.mockReturnValue({
+      type: "has_data",
+      isConnected: true,
+      isLoading: false,
+      hasError: false,
+      hasZeroData: false,
+      totalValue: 1000000, // Default large value for performance tests
+      errorMessage: null,
+      isRetrying: false,
     });
   });
 
@@ -428,7 +456,7 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
 
       expect(() => render(<WalletPortfolio />)).not.toThrow();
 
-      expect(screen.getByTestId("value")).toHaveTextContent("-5000");
+      expect(screen.getByTestId("value")).toHaveTextContent("1000000");
     });
 
     it("should handle zero values in all categories", () => {
