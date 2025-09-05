@@ -171,53 +171,17 @@ export interface PoolDetail {
 /**
  * Categorize pool details by asset type based on symbols
  */
+import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
+
 function categorizePool(
   poolSymbols: string[]
 ): "btc" | "eth" | "stablecoins" | "others" {
   const symbols = poolSymbols.map(s => s.toLowerCase());
 
-  // Bitcoin category
-  const btcSymbols = ["btc", "wbtc", "cbbtc", "tbtc"];
-  if (symbols.some(s => btcSymbols.includes(s))) {
-    return "btc";
-  }
-
-  // Ethereum category
-  const ethSymbols = [
-    "eth",
-    "weth",
-    "steth",
-    "wsteth",
-    "weeth",
-    "mseth",
-    "frxeth",
-  ];
-  if (symbols.some(s => ethSymbols.includes(s))) {
-    return "eth";
-  }
-
-  // Stablecoins category
-  const stableSymbols = [
-    "usdc",
-    "usdt",
-    "dai",
-    "frax",
-    "usd₮0",
-    "bold",
-    "msusd",
-    "openusdt",
-    "susd",
-    "gho",
-    "vst",
-    "frxusd",
-    "wfrax",
-    "legacy frax dollar",
-  ];
-  if (symbols.some(s => stableSymbols.includes(s))) {
+  if (symbols.some(s => ASSET_SYMBOL_SETS.btc.has(s))) return "btc";
+  if (symbols.some(s => ASSET_SYMBOL_SETS.eth.has(s))) return "eth";
+  if (symbols.some(s => ASSET_SYMBOL_SETS.stablecoins.has(s)))
     return "stablecoins";
-  }
-
-  // Everything else
   return "others";
 }
 
