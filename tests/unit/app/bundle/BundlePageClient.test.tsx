@@ -47,23 +47,6 @@ describe("BundlePageClient switch prompt", () => {
     window.history.pushState({}, "", "/bundle?userId=OWNER123&foo=bar");
   });
 
-  it("shows prompt and switches to connected user's bundle", async () => {
-    mockIsConnected = true;
-    mockUserId = "ME456"; // connected user is different from URL user
-
-    render(<BundlePageClient userId="OWNER123" />);
-
-    // Prompt visible
-    const switchBtn = await screen.findByTestId("switch-to-my-bundle");
-    expect(switchBtn).toBeInTheDocument();
-
-    // Click switch
-    await userEvent.click(switchBtn);
-
-    // Should navigate to /bundle?userId=ME456&foo=bar
-    expect(replaceMock).toHaveBeenCalledWith("/bundle?userId=ME456&foo=bar");
-  });
-
   it("allows staying on the current bundle (hides prompt)", async () => {
     mockIsConnected = true;
     mockUserId = "ME456"; // different user

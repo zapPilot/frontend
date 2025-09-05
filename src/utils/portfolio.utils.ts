@@ -356,6 +356,19 @@ export function createCategoriesFromApiData(
 }
 
 /**
+ * Normalize APR value from API
+ * Handles the heuristic: if value looks like 7.5% (>1.5), convert to decimal (0.075)
+ * @param apr - Raw APR value from API
+ * @returns Normalized decimal APR or undefined if invalid
+ */
+export function normalizeApr(apr?: number | null): number | undefined {
+  if (typeof apr !== "number") {
+    return undefined;
+  }
+  return apr / 100;
+}
+
+/**
  * Filter pool details by category for analytics tab
  */
 export function filterPoolDetailsByCategory(

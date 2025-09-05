@@ -8,7 +8,10 @@ import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { createCategoriesFromApiData } from "../utils/portfolio.utils";
+import {
+  createCategoriesFromApiData,
+  normalizeApr,
+} from "../utils/portfolio.utils";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
@@ -134,12 +137,19 @@ export function WalletPortfolio({
       landingPageData.total_debt_usd || 0
     );
 
+    // Normalize APR for derived metrics if used elsewhere
+    const normalizedRecommendedRoi = normalizeApr(
+      landingPageData.portfolio_roi?.recommended_roi
+    );
+
     const transformedMetrics = {
       totalValue: landingPageData.total_net_usd,
       totalChange24h: 0, // Not available from unified API yet
       totalChangePercentage: 0, // Not available from unified API yet
-      annualAPR: landingPageData.portfolio_roi?.recommended_monthly_roi / 100,
-      monthlyReturn: landingPageData.portfolio_roi?.estimated_monthly_pnl_usd
+      annualAPR: normalizedRecommendedRoi ?? landingPageData.weighted_apr,
+      monthlyReturn:
+        landingPageData.portfolio_roi?.estimated_monthly_pnl_usd ??
+        landingPageData.estimated_monthly_income,
     };
 
     return {
@@ -204,6 +214,7 @@ export function WalletPortfolio({
                 portfolioMetrics?.totalChangePercentage || 0
               }
               userId={resolvedUserId}
+              landingPageData={landingPageData}
             />
 
             <WalletActions

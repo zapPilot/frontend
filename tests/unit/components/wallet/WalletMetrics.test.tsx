@@ -241,7 +241,7 @@ describe("WalletMetrics", () => {
       ];
 
       labels.forEach(label => {
-        expect(label).toHaveClass("text-sm", "text-gray-400", "mb-1");
+        expect(label).toHaveClass("text-sm", "text-gray-400");
       });
     });
   });

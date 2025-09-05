@@ -5,6 +5,8 @@ import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import type { LandingPageResponse } from "../../services/analyticsEngine";
+import { normalizeApr } from "../../utils/portfolio.utils";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
@@ -15,6 +17,8 @@ interface WalletMetricsProps {
   balanceHidden: boolean;
   portfolioChangePercentage: number;
   userId?: string | null;
+  // If provided, use this data instead of fetching again
+  landingPageData?: LandingPageResponse | null | undefined;
 }
 
 interface WelcomeNewUserProps {
@@ -60,13 +64,22 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
 }
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
-  ({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
+  ({
+    portfolioState,
+    balanceHidden,
+    portfolioChangePercentage,
+    userId,
+    landingPageData,
+  }) => {
     // State for debug UI
     const [showDebugInfo, setShowDebugInfo] = useState(false);
-    
-    // Fetch unified landing page data (includes APR data)
-    const { data: landingPageData, isLoading: landingPageLoading } =
-      useLandingPageData(userId);
+
+    // Fetch unified landing page data (includes APR data) only if not provided via props
+    const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
+      landingPageData ? null : userId
+    );
+    const data = landingPageData ?? fetchedData;
+    const landingPageLoading = landingPageData ? false : fetchedLoading;
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -77,10 +90,17 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       getDisplayTotalValue,
     } = usePortfolioStateHelpers(portfolioState);
 
-    const portfolioROI = landingPageData?.portfolio_roi;
-    const portfolioAPR = portfolioROI?.recommended_monthly_roi/100
+    const portfolioROI = data?.portfolio_roi;
+    // Use normalized APR from utility function
+    const portfolioAPR =
+      normalizeApr(portfolioROI?.recommended_roi) ??
+      (typeof data?.weighted_apr === "number" ? data.weighted_apr : null);
     const estimatedMonthlyIncome =
-      portfolioROI?.estimated_monthly_pnl_usd || landingPageData?.estimated_monthly_income || null;
+      (typeof portfolioROI?.estimated_monthly_pnl_usd === "number"
+        ? portfolioROI?.estimated_monthly_pnl_usd
+        : null) ??
+      data?.estimated_monthly_income ??
+      null;
     const roiPeriod = portfolioROI?.recommended_roi_period;
     const roiWindows = portfolioROI?.roi_windows;
 
@@ -169,7 +189,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 className="p-1 text-gray-500 hover:text-gray-400 transition-colors"
                 title="Show ROI breakdown"
               >
-                <ChevronDown className={`w-3 h-3 transition-transform ${showDebugInfo ? 'rotate-180' : ''}`} />
+                <ChevronDown
+                  className={`w-3 h-3 transition-transform ${showDebugInfo ? "rotate-180" : ""}`}
+                />
               </button>
             )}
           </div>
@@ -198,7 +220,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                     {Object.entries(roiWindows).map(([period, roi]) => (
                       <div key={period} className="flex justify-between">
                         <span className="text-gray-300">{period}:</span>
-                        <span className={`${roi >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <span
+                          className={`${roi >= 0 ? "text-green-400" : "text-red-400"}`}
+                        >
                           {(roi * 100).toFixed(2)}%
                         </span>
                       </div>
