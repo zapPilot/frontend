@@ -12,6 +12,8 @@ import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui";
 import { PieChartLoading } from "./ui/UnifiedLoading";
+import { TabButton } from "./ui/TabButton";
+import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 
 type TabType = "assets" | "borrowing";
 
@@ -34,7 +36,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     categorySummaries,
     debtCategorySummaries = [],
     pieChartData,
-    balanceHidden = false,
     title = "Asset Distribution",
     className = "",
     testId,
@@ -43,6 +44,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
+    useBalanceVisibility();
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -57,84 +59,18 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     // Get actual counts for tab badges
     const assetCount = categorySummaries.length;
     const debtCount = debtCategorySummaries.length;
-
-    const TabButtons = ({
-      compact = false,
-      idPrefix,
-      containerClassName = "",
-    }: {
-      compact?: boolean;
-      idPrefix: string;
-      containerClassName?: string;
-    }) => {
-      const baseBtn =
-        "relative flex items-center rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2";
-      const spacing = compact
-        ? "space-x-1.5 px-2.5 py-1.5"
-        : "space-x-2 px-3 py-1.5";
-
-      return (
-        <div
-          className={`flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg ${containerClassName}`}
-        >
-          <button
-            id={`assets-tab-${idPrefix}`}
-            onClick={() => setActiveTab("assets")}
-            role="tab"
-            aria-selected={activeTab === "assets"}
-            aria-controls="assets-tabpanel"
-            className={`${baseBtn} ${spacing} ${
-              activeTab === "assets"
-                ? "bg-blue-600 text-white shadow-lg transform scale-105 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
-                : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
-            }`}
-          >
-            <TrendingUp
-              className={`w-4 h-4 transition-transform duration-300 ${
-                activeTab === "assets" ? "scale-110" : ""
-              }`}
-            />
-            <span>Assets</span>
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                activeTab === "assets"
-                  ? "bg-blue-800 text-blue-100"
-                  : "bg-gray-700 text-gray-300"
-              }`}
-            >
-              {assetCount}
-            </span>
-          </button>
-          <button
-            id={`borrowing-tab-${idPrefix}`}
-            onClick={() => setActiveTab("borrowing")}
-            role="tab"
-            aria-selected={activeTab === "borrowing"}
-            aria-controls="borrowing-tabpanel"
-            className={`${baseBtn} ${spacing} ${
-              activeTab === "borrowing"
-                ? "bg-orange-600 text-white shadow-lg transform scale-105 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
-                : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
-            }`}
-          >
-            <ArrowDownLeft
-              className={`w-4 h-4 transition-transform duration-300 ${
-                activeTab === "borrowing" ? "scale-110" : ""
-              }`}
-            />
-            <span>Borrowing</span>
-            <span
-              className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                activeTab === "borrowing"
-                  ? "bg-orange-800 text-orange-100"
-                  : "bg-gray-700 text-gray-300"
-              }`}
-            >
-              {debtCount}
-            </span>
-          </button>
-        </div>
-      );
+    const handleTabListKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+        e.preventDefault();
+        const order: TabType[] = ["assets", "borrowing"];
+        const current = order.indexOf(activeTab);
+        const nextIndex =
+          e.key === "ArrowRight"
+            ? (current + 1) % order.length
+            : (current - 1 + order.length) % order.length;
+        const nextTab: TabType = order[nextIndex] ?? "assets";
+        setActiveTab(nextTab);
+      }
     };
 
     return (
@@ -149,14 +85,74 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           {/* Desktop: Title and tabs on same row */}
           <div className="hidden sm:flex items-center justify-between">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-            <TabButtons idPrefix="desktop" />
+            <div
+              className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg"
+              role="tablist"
+              aria-label="Portfolio sections"
+              onKeyDown={handleTabListKeyDown}
+            >
+              <TabButton
+                id="assets-tab-desktop"
+                label="Assets"
+                active={activeTab === "assets"}
+                onSelect={() => setActiveTab("assets")}
+                icon={TrendingUp}
+                badgeCount={assetCount}
+                variant="assets"
+                controls="assets-tabpanel"
+              />
+              <TabButton
+                id="borrowing-tab-desktop"
+                label="Borrowing"
+                active={activeTab === "borrowing"}
+                onSelect={() => setActiveTab("borrowing")}
+                icon={ArrowDownLeft}
+                badgeCount={debtCount}
+                variant="borrowing"
+                controls="borrowing-tabpanel"
+              />
+            </div>
           </div>
 
           {/* Mobile: Title and tabs stacked */}
           <div className="sm:hidden space-y-4">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-            <TabButtons compact idPrefix="mobile" containerClassName="w-fit" />
+            <div
+              className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg"
+              role="tablist"
+              aria-label="Portfolio sections"
+              onKeyDown={handleTabListKeyDown}
+            >
+              <TabButton
+                id="assets-tab-mobile"
+                label="Assets"
+                active={activeTab === "assets"}
+                onSelect={() => setActiveTab("assets")}
+                icon={TrendingUp}
+                badgeCount={assetCount}
+                variant="assets"
+                compact
+                controls="assets-tabpanel"
+              />
+              <TabButton
+                id="borrowing-tab-mobile"
+                label="Borrowing"
+                active={activeTab === "borrowing"}
+                onSelect={() => setActiveTab("borrowing")}
+                icon={ArrowDownLeft}
+                badgeCount={debtCount}
+                variant="borrowing"
+                compact
+                controls="borrowing-tabpanel"
+              />
+            </div>
           </div>
+        </div>
+
+        <div className="sr-only" aria-live="polite">
+          {activeTab === "assets"
+            ? `Assets tab selected, ${assetCount} categories`
+            : `Borrowing tab selected, ${debtCount} categories`}
         </div>
 
         {/* Wallet Not Connected State */}
@@ -239,7 +235,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 <AssetCategoriesDetail
                   categorySummaries={categorySummaries}
                   debtCategorySummaries={debtCategorySummaries}
-                  balanceHidden={balanceHidden}
                   className="!bg-transparent !border-0 !p-0"
                   isLoading={shouldShowLoading}
                   error={portfolioState.errorMessage || null}
@@ -275,7 +270,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               <AssetCategoriesDetail
                 categorySummaries={categorySummaries}
                 debtCategorySummaries={debtCategorySummaries}
-                balanceHidden={balanceHidden}
                 className="!bg-transparent !border-0 !p-0"
                 isLoading={shouldShowLoading}
                 error={portfolioState.errorMessage || null}

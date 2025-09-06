@@ -8,7 +8,8 @@ import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { useWalletPortfolioTransform } from "../hooks/useWalletPortfolioTransform";
+import { usePortfolioData } from "../hooks/usePortfolioData";
+import { BalanceVisibilityProvider } from "../contexts/BalanceVisibilityContext";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
@@ -63,7 +64,7 @@ export function WalletPortfolio({
     debtCategorySummaries,
     portfolioMetrics,
     hasZeroData,
-  } = useWalletPortfolioTransform(landingPageData);
+  } = usePortfolioData(landingPageData);
 
   // Centralized portfolio state management
   const portfolioState = usePortfolioState({
@@ -95,71 +96,75 @@ export function WalletPortfolio({
         isConnected ? "connected" : "disconnected",
       ]}
     >
-      <div className="space-y-6">
-        {/* Wallet Header */}
-        <ErrorBoundary
-          onError={error =>
-            walletPortfolioLogger.error("WalletHeader Error", error)
-          }
-        >
-          <GlassCard>
-            <WalletHeader
-              onAnalyticsClick={onAnalyticsClick}
-              onWalletManagerClick={openWalletManager}
-              onToggleBalance={toggleBalanceVisibility}
-              balanceHidden={balanceHidden}
-            />
+      <BalanceVisibilityProvider
+        value={{ balanceHidden, toggleBalanceVisibility }}
+      >
+        <div className="space-y-6">
+          {/* Wallet Header */}
+          <ErrorBoundary
+            onError={error =>
+              walletPortfolioLogger.error("WalletHeader Error", error)
+            }
+          >
+            <GlassCard>
+              <WalletHeader
+                onAnalyticsClick={onAnalyticsClick}
+                onWalletManagerClick={openWalletManager}
+                onToggleBalance={toggleBalanceVisibility}
+                balanceHidden={balanceHidden}
+              />
 
-            <WalletMetrics
+              <WalletMetrics
+                portfolioState={portfolioState}
+                balanceHidden={balanceHidden}
+                portfolioChangePercentage={
+                  portfolioMetrics?.totalChangePercentage || 0
+                }
+                userId={resolvedUserId}
+                landingPageData={landingPageData}
+              />
+
+              <WalletActions
+                onZapInClick={onZapInClick}
+                onZapOutClick={onZapOutClick}
+                onOptimizeClick={onOptimizeClick}
+              />
+            </GlassCard>
+          </ErrorBoundary>
+
+          {/* Asset Distribution with Horizontal Layout */}
+          <ErrorBoundary
+            onError={error =>
+              walletPortfolioLogger.error("PortfolioOverview Error", error)
+            }
+          >
+            <PortfolioOverview
               portfolioState={portfolioState}
+              categorySummaries={categorySummaries}
+              debtCategorySummaries={debtCategorySummaries}
+              pieChartData={pieChartData || []}
               balanceHidden={balanceHidden}
-              portfolioChangePercentage={
-                portfolioMetrics?.totalChangePercentage || 0
-              }
-              userId={resolvedUserId}
-              landingPageData={landingPageData}
+              title="Asset Distribution"
+              onRetry={landingPageQuery.refetch}
+              testId="wallet-portfolio-overview"
+              {...(onCategoryClick && { onCategoryClick })}
             />
+          </ErrorBoundary>
 
-            <WalletActions
-              onZapInClick={onZapInClick}
-              onZapOutClick={onZapOutClick}
-              onOptimizeClick={onOptimizeClick}
+          {/* Wallet Manager Modal */}
+          <ErrorBoundary
+            onError={error =>
+              walletPortfolioLogger.error("WalletManager Error", error)
+            }
+          >
+            <WalletManager
+              isOpen={isWalletManagerOpen}
+              onClose={closeWalletManager}
+              {...(urlUserId && { urlUserId })}
             />
-          </GlassCard>
-        </ErrorBoundary>
-
-        {/* Asset Distribution with Horizontal Layout */}
-        <ErrorBoundary
-          onError={error =>
-            walletPortfolioLogger.error("PortfolioOverview Error", error)
-          }
-        >
-          <PortfolioOverview
-            portfolioState={portfolioState}
-            categorySummaries={categorySummaries}
-            debtCategorySummaries={debtCategorySummaries}
-            pieChartData={pieChartData || []}
-            balanceHidden={balanceHidden}
-            title="Asset Distribution"
-            onRetry={landingPageQuery.refetch}
-            testId="wallet-portfolio-overview"
-            {...(onCategoryClick && { onCategoryClick })}
-          />
-        </ErrorBoundary>
-
-        {/* Wallet Manager Modal */}
-        <ErrorBoundary
-          onError={error =>
-            walletPortfolioLogger.error("WalletManager Error", error)
-          }
-        >
-          <WalletManager
-            isOpen={isWalletManagerOpen}
-            onClose={closeWalletManager}
-            {...(urlUserId && { urlUserId })}
-          />
-        </ErrorBoundary>
-      </div>
+          </ErrorBoundary>
+        </div>
+      </BalanceVisibilityProvider>
     </ErrorBoundary>
   );
 }
