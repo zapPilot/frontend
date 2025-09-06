@@ -58,6 +58,85 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     const assetCount = categorySummaries.length;
     const debtCount = debtCategorySummaries.length;
 
+    const TabButtons = ({
+      compact = false,
+      idPrefix,
+      containerClassName = "",
+    }: {
+      compact?: boolean;
+      idPrefix: string;
+      containerClassName?: string;
+    }) => {
+      const baseBtn =
+        "relative flex items-center rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2";
+      const spacing = compact
+        ? "space-x-1.5 px-2.5 py-1.5"
+        : "space-x-2 px-3 py-1.5";
+
+      return (
+        <div
+          className={`flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg ${containerClassName}`}
+        >
+          <button
+            id={`assets-tab-${idPrefix}`}
+            onClick={() => setActiveTab("assets")}
+            role="tab"
+            aria-selected={activeTab === "assets"}
+            aria-controls="assets-tabpanel"
+            className={`${baseBtn} ${spacing} ${
+              activeTab === "assets"
+                ? "bg-blue-600 text-white shadow-lg transform scale-105 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+                : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102 focus-visible:outline-blue-500 focus-visible:outline-offset-2"
+            }`}
+          >
+            <TrendingUp
+              className={`w-4 h-4 transition-transform duration-300 ${
+                activeTab === "assets" ? "scale-110" : ""
+              }`}
+            />
+            <span>Assets</span>
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                activeTab === "assets"
+                  ? "bg-blue-800 text-blue-100"
+                  : "bg-gray-700 text-gray-300"
+              }`}
+            >
+              {assetCount}
+            </span>
+          </button>
+          <button
+            id={`borrowing-tab-${idPrefix}`}
+            onClick={() => setActiveTab("borrowing")}
+            role="tab"
+            aria-selected={activeTab === "borrowing"}
+            aria-controls="borrowing-tabpanel"
+            className={`${baseBtn} ${spacing} ${
+              activeTab === "borrowing"
+                ? "bg-orange-600 text-white shadow-lg transform scale-105 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
+                : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102 focus-visible:outline-orange-500 focus-visible:outline-offset-2"
+            }`}
+          >
+            <ArrowDownLeft
+              className={`w-4 h-4 transition-transform duration-300 ${
+                activeTab === "borrowing" ? "scale-110" : ""
+              }`}
+            />
+            <span>Borrowing</span>
+            <span
+              className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
+                activeTab === "borrowing"
+                  ? "bg-orange-800 text-orange-100"
+                  : "bg-gray-700 text-gray-300"
+              }`}
+            >
+              {debtCount}
+            </span>
+          </button>
+        </div>
+      );
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -70,130 +149,13 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           {/* Desktop: Title and tabs on same row */}
           <div className="hidden sm:flex items-center justify-between">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-
-            {/* Always show tabs for now, even though borrowing is empty */}
-            <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg">
-              <button
-                id="assets-tab"
-                onClick={() => setActiveTab("assets")}
-                role="tab"
-                aria-selected={activeTab === "assets"}
-                aria-controls="assets-tabpanel"
-                className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
-                  activeTab === "assets"
-                    ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
-                }`}
-              >
-                <TrendingUp
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    activeTab === "assets" ? "scale-110" : ""
-                  }`}
-                />
-                <span>Assets</span>
-                <span
-                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                    activeTab === "assets"
-                      ? "bg-blue-800 text-blue-100"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  {assetCount}
-                </span>
-              </button>
-              <button
-                id="borrowing-tab"
-                onClick={() => setActiveTab("borrowing")}
-                role="tab"
-                aria-selected={activeTab === "borrowing"}
-                aria-controls="borrowing-tabpanel"
-                className={`relative flex items-center space-x-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
-                  activeTab === "borrowing"
-                    ? "bg-orange-600 text-white shadow-lg transform scale-105"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
-                }`}
-              >
-                <ArrowDownLeft
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    activeTab === "borrowing" ? "scale-110" : ""
-                  }`}
-                />
-                <span>Borrowing</span>
-                <span
-                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                    activeTab === "borrowing"
-                      ? "bg-orange-800 text-orange-100"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  {debtCount}
-                </span>
-              </button>
-            </div>
+            <TabButtons idPrefix="desktop" />
           </div>
 
           {/* Mobile: Title and tabs stacked */}
           <div className="sm:hidden space-y-4">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-
-            <div className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg">
-              <button
-                id="assets-tab-mobile"
-                onClick={() => setActiveTab("assets")}
-                role="tab"
-                aria-selected={activeTab === "assets"}
-                aria-controls="assets-tabpanel"
-                className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-blue-500 focus-visible:outline-offset-2 ${
-                  activeTab === "assets"
-                    ? "bg-blue-600 text-white shadow-lg transform scale-105"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
-                }`}
-              >
-                <TrendingUp
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    activeTab === "assets" ? "scale-110" : ""
-                  }`}
-                />
-                <span>Assets</span>
-                <span
-                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                    activeTab === "assets"
-                      ? "bg-blue-800 text-blue-100"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  {assetCount}
-                </span>
-              </button>
-              <button
-                id="borrowing-tab-mobile"
-                onClick={() => setActiveTab("borrowing")}
-                role="tab"
-                aria-selected={activeTab === "borrowing"}
-                aria-controls="borrowing-tabpanel"
-                className={`relative flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-sm font-medium transition-all duration-300 focus-visible:outline-2 focus-visible:outline-orange-500 focus-visible:outline-offset-2 ${
-                  activeTab === "borrowing"
-                    ? "bg-orange-600 text-white shadow-lg transform scale-105"
-                    : "text-gray-400 hover:text-white hover:bg-gray-800/80 hover:scale-102"
-                }`}
-              >
-                <ArrowDownLeft
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    activeTab === "borrowing" ? "scale-110" : ""
-                  }`}
-                />
-                <span>Borrowing</span>
-                <span
-                  className={`text-xs px-1.5 py-0.5 rounded transition-colors duration-300 ${
-                    activeTab === "borrowing"
-                      ? "bg-orange-800 text-orange-100"
-                      : "bg-gray-700 text-gray-300"
-                  }`}
-                >
-                  {debtCount}
-                </span>
-              </button>
-            </div>
+            <TabButtons compact idPrefix="mobile" containerClassName="w-fit" />
           </div>
         </div>
 

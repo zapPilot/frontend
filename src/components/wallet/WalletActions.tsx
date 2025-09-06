@@ -17,7 +17,7 @@ export const WalletActions = React.memo<WalletActionsProps>(
           gradient={GRADIENTS.SUCCESS}
           shadowColor="green-500"
           icon={ArrowUpRight}
-          onClick={onZapInClick || (() => {})}
+          {...(onZapInClick ? { onClick: onZapInClick } : {})}
         >
           <span className="text-sm">Zap In</span>
         </GradientButton>
@@ -26,7 +26,7 @@ export const WalletActions = React.memo<WalletActionsProps>(
           gradient={GRADIENTS.DANGER}
           shadowColor="red-500"
           icon={ArrowDownLeft}
-          onClick={onZapOutClick || (() => {})}
+          {...(onZapOutClick ? { onClick: onZapOutClick } : {})}
         >
           <span className="text-sm">Zap Out</span>
         </GradientButton>
@@ -35,7 +35,7 @@ export const WalletActions = React.memo<WalletActionsProps>(
           gradient={GRADIENTS.PRIMARY}
           shadowColor="purple-500"
           icon={Settings}
-          onClick={onOptimizeClick || (() => {})}
+          {...(onOptimizeClick ? { onClick: onOptimizeClick } : {})}
         >
           <span className="text-sm">Optimize</span>
         </GradientButton>

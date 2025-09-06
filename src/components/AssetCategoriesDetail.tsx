@@ -137,8 +137,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                             })}
                           </div>
                           <div className="text-sm text-green-400 flex items-center justify-end gap-1">
-                            {/* <TrendingUp className="w-3 h-3" /> */}
-                            {/* {category.averageAPR.toFixed(2)}% APR */}
                             APR: Coming soon
                           </div>
                         </div>
