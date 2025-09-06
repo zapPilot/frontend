@@ -609,7 +609,6 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
         rerender(
           <WalletPortfolio
             onCategoryClick={vi.fn()}
-            onAnalyticsClick={i % 2 === 0 ? vi.fn() : undefined}
             onOptimizeClick={i % 3 === 0 ? vi.fn() : undefined}
           />
         );

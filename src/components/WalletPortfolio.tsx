@@ -31,7 +31,6 @@ const walletPortfolioLogger = logger.createContextLogger("WalletPortfolio");
 
 interface WalletPortfolioProps {
   urlUserId?: string;
-  onAnalyticsClick?: (() => void) | undefined;
   onOptimizeClick?: (() => void) | undefined;
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
@@ -43,7 +42,6 @@ interface WalletPortfolioProps {
 
 export function WalletPortfolio({
   urlUserId,
-  onAnalyticsClick,
   onOptimizeClick,
   onZapInClick,
   onZapOutClick,

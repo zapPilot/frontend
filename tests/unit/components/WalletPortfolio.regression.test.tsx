@@ -138,21 +138,31 @@ vi.mock("../../../src/components/ui", () => ({
 
 vi.mock("../../../src/components/wallet/WalletHeader", () => {
   return {
-    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
-      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
-      return (
-        <div data-testid="wallet-header">
-          <div data-testid="balance-visibility">{hidden ? "hidden" : "visible"}</div>
-          <button data-testid="analytics-btn" onClick={onAnalyticsClick}>View Analytics</button>
-          <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>Manage Wallets</button>
-          <button data-testid="toggle-balance-btn" onClick={handleToggle}>
-            {hidden ? "Show Balance" : "Hide Balance"}
-          </button>
-        </div>
-      );
-    }),
+    WalletHeader: vi.fn(
+      ({ onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+        const { balanceHidden: hookHidden, toggleBalanceVisibility } =
+          usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        return (
+          <div data-testid="wallet-header">
+            <div data-testid="balance-visibility">
+              {hidden ? "hidden" : "visible"}
+            </div>
+            <button
+              data-testid="wallet-manager-btn"
+              onClick={onWalletManagerClick}
+            >
+              Manage Wallets
+            </button>
+            <button data-testid="toggle-balance-btn" onClick={handleToggle}>
+              {hidden ? "Show Balance" : "Hide Balance"}
+            </button>
+          </div>
+        );
+      }
+    ),
   };
 });
 
@@ -160,7 +170,8 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => {
   return {
     WalletMetrics: vi.fn(({ portfolioState, balanceHidden }) => {
       const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+      const hidden =
+        typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
       const totalValue = portfolioState?.totalValue;
       const isLoading = portfolioState?.isLoading || false;
       const error = portfolioState?.errorMessage;
@@ -169,11 +180,11 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => {
       return (
         <div data-testid="wallet-metrics">
           <div data-testid="total-value-display">
-          {hidden
-            ? "****"
-            : totalValue
-              ? `$${totalValue.toLocaleString()}`
-              : "No value"}
+            {hidden
+              ? "****"
+              : totalValue
+                ? `$${totalValue.toLocaleString()}`
+                : "No value"}
           </div>
           <div data-testid="metrics-loading-state">
             {isLoading ? "Loading..." : "Loaded"}
@@ -990,14 +1001,12 @@ describe("WalletPortfolio - Regression Tests", () => {
       const onZapInClick = vi.fn();
       const onZapOutClick = vi.fn();
       const onOptimizeClick = vi.fn();
-      const onAnalyticsClick = vi.fn();
 
       render(
         <WalletPortfolio
           onZapInClick={onZapInClick}
           onZapOutClick={onZapOutClick}
           onOptimizeClick={onOptimizeClick}
-          onAnalyticsClick={onAnalyticsClick}
         />
       );
 
@@ -1017,10 +1026,7 @@ describe("WalletPortfolio - Regression Tests", () => {
       });
       expect(onOptimizeClick).toHaveBeenCalled();
 
-      await act(async () => {
-        fireEvent.click(screen.getByTestId("analytics-btn"));
-      });
-      expect(onAnalyticsClick).toHaveBeenCalled();
+      // Analytics action removed in new UI; covered via category/analytics tab navigation
     });
 
     it("should handle action button clicks without side effects", async () => {

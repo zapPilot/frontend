@@ -113,7 +113,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
-  
+
   // Computed values
   const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
   const bundleUrl = bundleService.generateBundleUrl(userId);
@@ -188,14 +188,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
     },
     [selectedStrategy]
   );
-
-  const handleAnalyticsClick = useCallback(() => {
-    setActiveTab("analytics");
-    if (selectedStrategy) {
-      setSelectedStrategy(null);
-    }
-  }, [selectedStrategy]);
-
   const handleCategoryClick = useCallback(
     (categoryId: string) => {
       setSelectedCategoryFilter(categoryId);
@@ -246,7 +238,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         return (
           <WalletPortfolio
             urlUserId={userId}
-            onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
@@ -268,7 +259,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         return (
           <WalletPortfolio
             urlUserId={userId}
-            onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
@@ -323,9 +313,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         <div className="hidden lg:block h-16" />
 
         <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">
-            {renderTabContent()}
-          </div>
+          <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
         </main>
 
         {/* Mobile bottom nav spacing */}

@@ -1,15 +1,15 @@
 "use client";
 
 import { Navigation } from "@/components/Navigation";
+import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { useUser } from "@/contexts/UserContext";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
-import { useUser } from "@/contexts/UserContext";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ComponentType, useCallback, useEffect, useState } from "react";
-import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
@@ -146,12 +146,8 @@ export default function DashboardApp() {
     [selectedStrategy]
   );
 
-  const handleAnalyticsClick = useCallback(() => {
-    setActiveTab("analytics");
-    if (selectedStrategy) {
-      setSelectedStrategy(null);
-    }
-  }, [selectedStrategy]);
+  // Previously triggered by an analytics button in header; UI no longer has it
+  // Category selection and other navigation set the analytics tab directly now.
 
   const handleCategoryClick = useCallback(
     (categoryId: string) => {
@@ -205,7 +201,6 @@ export default function DashboardApp() {
       case "wallet":
         return (
           <WalletPortfolio
-            onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
@@ -223,7 +218,6 @@ export default function DashboardApp() {
       default:
         return (
           <WalletPortfolio
-            onAnalyticsClick={handleAnalyticsClick}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}

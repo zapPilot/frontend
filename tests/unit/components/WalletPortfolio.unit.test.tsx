@@ -20,62 +20,74 @@ vi.mock("../../../src/utils/portfolio.utils");
 // Mock child components with detailed props tracking
 vi.mock("../../../src/components/PortfolioOverview", () => {
   return {
-    PortfolioOverview: vi.fn(({ portfolioState, categorySummaries, debtCategorySummaries, pieChartData, balanceHidden, onRetry, testId, onCategoryClick }) => {
-      const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const isLoading = portfolioState?.isLoading || false;
-      const hasError = portfolioState?.hasError || false;
-      const isRetrying = portfolioState?.isRetrying || false;
-      const isConnected = portfolioState?.isConnected || false;
-      const totalValue = portfolioState?.totalValue;
-      const errorMessage = portfolioState?.errorMessage;
+    PortfolioOverview: vi.fn(
+      ({
+        portfolioState,
+        categorySummaries,
+        debtCategorySummaries,
+        pieChartData,
+        balanceHidden,
+        onRetry,
+        testId,
+        onCategoryClick,
+      }) => {
+        const { balanceHidden: hookHidden } = usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const isLoading = portfolioState?.isLoading || false;
+        const hasError = portfolioState?.hasError || false;
+        const isRetrying = portfolioState?.isRetrying || false;
+        const isConnected = portfolioState?.isConnected || false;
+        const totalValue = portfolioState?.totalValue;
+        const errorMessage = portfolioState?.errorMessage;
 
-      return (
-        <div data-testid="portfolio-overview">
-          <div data-testid="loading-state">
-            {isLoading ? "loading" : "not-loading"}
+        return (
+          <div data-testid="portfolio-overview">
+            <div data-testid="loading-state">
+              {isLoading ? "loading" : "not-loading"}
+            </div>
+            <div data-testid="error-state">{errorMessage || "no-error"}</div>
+            <div data-testid="pie-chart-data">
+              {pieChartData && pieChartData.length > 0 ? "has-data" : "no-data"}
+            </div>
+            <div data-testid="total-value">
+              {totalValue !== undefined && totalValue !== null
+                ? totalValue
+                : "no-value"}
+            </div>
+            <div data-testid="balance-hidden">
+              {hidden ? "hidden" : "visible"}
+            </div>
+            <div data-testid="categories-count">
+              {categorySummaries?.length || 0}
+            </div>
+            <div data-testid="debt-categories-count">
+              {debtCategorySummaries?.length || 0}
+            </div>
+            <div data-testid="is-connected">
+              {isConnected ? "connected" : "disconnected"}
+            </div>
+            <div data-testid="test-id">{testId}</div>
+            <div data-testid="is-retrying">
+              {isRetrying ? "retrying" : "not-retrying"}
+            </div>
+            {(hasError || onRetry) && (
+              <button data-testid="retry-button" onClick={onRetry}>
+                Retry
+              </button>
+            )}
+            {onCategoryClick && (
+              <button
+                data-testid="category-click-button"
+                onClick={() => onCategoryClick("test-category")}
+              >
+                Category Click
+              </button>
+            )}
           </div>
-          <div data-testid="error-state">{errorMessage || "no-error"}</div>
-          <div data-testid="pie-chart-data">
-            {pieChartData && pieChartData.length > 0 ? "has-data" : "no-data"}
-          </div>
-          <div data-testid="total-value">
-            {totalValue !== undefined && totalValue !== null
-              ? totalValue
-              : "no-value"}
-          </div>
-          <div data-testid="balance-hidden">
-            {hidden ? "hidden" : "visible"}
-          </div>
-          <div data-testid="categories-count">
-            {categorySummaries?.length || 0}
-          </div>
-          <div data-testid="debt-categories-count">
-            {debtCategorySummaries?.length || 0}
-          </div>
-          <div data-testid="is-connected">
-            {isConnected ? "connected" : "disconnected"}
-          </div>
-          <div data-testid="test-id">{testId}</div>
-          <div data-testid="is-retrying">
-            {isRetrying ? "retrying" : "not-retrying"}
-          </div>
-          {(hasError || onRetry) && (
-            <button data-testid="retry-button" onClick={onRetry}>
-              Retry
-            </button>
-          )}
-          {onCategoryClick && (
-            <button
-              data-testid="category-click-button"
-              onClick={() => onCategoryClick("test-category")}
-            >
-              Category Click
-            </button>
-          )}
-        </div>
-      );
-    }),
+        );
+      }
+    ),
   };
 });
 
@@ -123,54 +135,74 @@ vi.mock("../../../src/components/ui", () => ({
 // Mock wallet components with prop tracking
 vi.mock("../../../src/components/wallet/WalletHeader", () => {
   return {
-    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
-      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
-      return (
-        <div data-testid="wallet-header">
-          <div data-testid="balance-hidden-state">{hidden ? "hidden" : "visible"}</div>
-          <button data-testid="analytics-button" onClick={onAnalyticsClick}>Analytics</button>
-          <button data-testid="wallet-manager-button" onClick={onWalletManagerClick}>Wallet Manager</button>
-          <button data-testid="toggle-balance-button" onClick={handleToggle}>Toggle Balance</button>
-        </div>
-      );
-    }),
+    WalletHeader: vi.fn(
+      ({ onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+        const { balanceHidden: hookHidden, toggleBalanceVisibility } =
+          usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        return (
+          <div data-testid="wallet-header">
+            <div data-testid="balance-hidden-state">
+              {hidden ? "hidden" : "visible"}
+            </div>
+            <button
+              data-testid="wallet-manager-button"
+              onClick={onWalletManagerClick}
+            >
+              Wallet Manager
+            </button>
+            <button data-testid="toggle-balance-button" onClick={handleToggle}>
+              Toggle Balance
+            </button>
+          </div>
+        );
+      }
+    ),
   };
 });
 
 vi.mock("../../../src/components/wallet/WalletMetrics", () => {
   return {
-    WalletMetrics: vi.fn(({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
-      const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const totalValue = portfolioState?.totalValue;
-      const isLoading = portfolioState?.isLoading || false;
-      const error = portfolioState?.errorMessage;
-      const isConnected = portfolioState?.isConnected || false;
+    WalletMetrics: vi.fn(
+      ({
+        portfolioState,
+        balanceHidden,
+        portfolioChangePercentage,
+        userId,
+      }) => {
+        const { balanceHidden: hookHidden } = usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const totalValue = portfolioState?.totalValue;
+        const isLoading = portfolioState?.isLoading || false;
+        const error = portfolioState?.errorMessage;
+        const isConnected = portfolioState?.isConnected || false;
 
-      return (
-        <div data-testid="wallet-metrics">
-          <div data-testid="metrics-total-value">
-            {totalValue || "no-value"}
+        return (
+          <div data-testid="wallet-metrics">
+            <div data-testid="metrics-total-value">
+              {totalValue || "no-value"}
+            </div>
+            <div data-testid="metrics-balance-hidden">
+              {hidden ? "hidden" : "visible"}
+            </div>
+            <div data-testid="metrics-loading">
+              {isLoading ? "loading" : "not-loading"}
+            </div>
+            <div data-testid="metrics-error">{error || "no-error"}</div>
+            <div data-testid="metrics-change-percentage">
+              {portfolioChangePercentage}
+            </div>
+            <div data-testid="metrics-connected">
+              {isConnected ? "connected" : "disconnected"}
+            </div>
+            <div data-testid="metrics-user-id">{userId || "no-user"}</div>
           </div>
-          <div data-testid="metrics-balance-hidden">
-            {hidden ? "hidden" : "visible"}
-          </div>
-          <div data-testid="metrics-loading">
-            {isLoading ? "loading" : "not-loading"}
-          </div>
-          <div data-testid="metrics-error">{error || "no-error"}</div>
-          <div data-testid="metrics-change-percentage">
-            {portfolioChangePercentage}
-          </div>
-          <div data-testid="metrics-connected">
-            {isConnected ? "connected" : "disconnected"}
-          </div>
-          <div data-testid="metrics-user-id">{userId || "no-user"}</div>
-        </div>
-      );
-    }),
+        );
+      }
+    ),
   };
 });
 
@@ -875,7 +907,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
 
   describe("Callback Props", () => {
     it("should handle all optional callback props", async () => {
-      const onAnalyticsClick = vi.fn();
       const onOptimizeClick = vi.fn();
       const onZapInClick = vi.fn();
       const onZapOutClick = vi.fn();
@@ -883,7 +914,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
 
       render(
         <WalletPortfolio
-          onAnalyticsClick={onAnalyticsClick}
           onOptimizeClick={onOptimizeClick}
           onZapInClick={onZapInClick}
           onZapOutClick={onZapOutClick}
@@ -892,11 +922,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       );
 
       // Test all callbacks
-      await act(async () => {
-        screen.getByTestId("analytics-button").click();
-      });
-      expect(onAnalyticsClick).toHaveBeenCalled();
-
       await act(async () => {
         screen.getByTestId("zap-in-button").click();
       });
@@ -931,7 +956,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
     it("should handle undefined callback props", () => {
       render(
         <WalletPortfolio
-          onAnalyticsClick={undefined}
           onOptimizeClick={undefined}
           onZapInClick={undefined}
           onZapOutClick={undefined}
@@ -951,7 +975,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       expect(screen.getByTestId("balance-hidden-state")).toHaveTextContent(
         "visible"
       );
-      expect(screen.getByTestId("analytics-button")).toBeInTheDocument();
       expect(screen.getByTestId("wallet-manager-button")).toBeInTheDocument();
       expect(screen.getByTestId("toggle-balance-button")).toBeInTheDocument();
     });

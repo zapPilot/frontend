@@ -325,21 +325,14 @@ describe("WalletPortfolio - Integration Tests", () => {
     it("should handle complex user interaction flows", async () => {
       const user = userEvent.setup();
       const onCategoryClick = vi.fn();
-      const onAnalyticsClick = vi.fn();
       const onOptimizeClick = vi.fn();
 
       render(
         <WalletPortfolio
           onCategoryClick={onCategoryClick}
-          onAnalyticsClick={onAnalyticsClick}
           onOptimizeClick={onOptimizeClick}
         />
       );
-
-      // Test analytics flow - click analytics button by title
-      const analyticsButton = screen.getByTitle("View Analytics");
-      await user.click(analyticsButton);
-      expect(onAnalyticsClick).toHaveBeenCalled();
 
       // Test optimization flow
       await user.click(screen.getByText("Optimize"));

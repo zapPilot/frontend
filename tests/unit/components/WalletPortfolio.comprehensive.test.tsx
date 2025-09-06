@@ -105,63 +105,77 @@ vi.mock("../../../src/components/WalletManager", () => ({
 
 vi.mock("../../../src/components/wallet/WalletHeader", () => {
   return {
-    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
-      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
-      return (
-        <div data-testid="wallet-header">
-          {onAnalyticsClick && (
-            <button data-testid="analytics-btn" onClick={onAnalyticsClick}>Analytics</button>
-          )}
-          <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>Wallet Manager</button>
-          <button data-testid="toggle-balance-btn" onClick={handleToggle}>
-            {hidden ? "Show Balance" : "Hide Balance"}
-          </button>
-        </div>
-      );
-    }),
+    WalletHeader: vi.fn(
+      ({ onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+        const { balanceHidden: hookHidden, toggleBalanceVisibility } =
+          usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        return (
+          <div data-testid="wallet-header">
+            <button
+              data-testid="wallet-manager-btn"
+              onClick={onWalletManagerClick}
+            >
+              Wallet Manager
+            </button>
+            <button data-testid="toggle-balance-btn" onClick={handleToggle}>
+              {hidden ? "Show Balance" : "Hide Balance"}
+            </button>
+          </div>
+        );
+      }
+    ),
   };
 });
 
 vi.mock("../../../src/components/wallet/WalletMetrics", () => {
   return {
-    WalletMetrics: vi.fn(({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
-      const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      // Mock the getDisplayTotalValue logic
-      const getDisplayTotalValue = () => {
-        if (!portfolioState || portfolioState.type === "wallet_disconnected")
-          return null;
-        if (portfolioState.type === "loading") return null;
-        if (portfolioState.type === "error") return null;
-        if (portfolioState.type === "connected_no_data") return 0;
-        return portfolioState.totalValue;
-      };
+    WalletMetrics: vi.fn(
+      ({
+        portfolioState,
+        balanceHidden,
+        portfolioChangePercentage,
+        userId,
+      }) => {
+        const { balanceHidden: hookHidden } = usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        // Mock the getDisplayTotalValue logic
+        const getDisplayTotalValue = () => {
+          if (!portfolioState || portfolioState.type === "wallet_disconnected")
+            return null;
+          if (portfolioState.type === "loading") return null;
+          if (portfolioState.type === "error") return null;
+          if (portfolioState.type === "connected_no_data") return 0;
+          return portfolioState.totalValue;
+        };
 
-      const displayValue = getDisplayTotalValue();
+        const displayValue = getDisplayTotalValue();
 
-      return (
-        <div data-testid="wallet-metrics">
-          <div data-testid="total-value">
-            {hidden ? "****" : displayValue || "0"}
+        return (
+          <div data-testid="wallet-metrics">
+            <div data-testid="total-value">
+              {hidden ? "****" : displayValue || "0"}
+            </div>
+            <div data-testid="loading-state">
+              {portfolioState?.isLoading ? "loading" : "not-loading"}
+            </div>
+            <div data-testid="error-state">
+              {portfolioState?.errorMessage || "no-error"}
+            </div>
+            <div data-testid="change-percentage">
+              {portfolioChangePercentage || 0}
+            </div>
+            <div data-testid="connection-state">
+              {portfolioState?.isConnected ? "connected" : "disconnected"}
+            </div>
+            <div data-testid="user-id">{userId || "no-user"}</div>
           </div>
-          <div data-testid="loading-state">
-            {portfolioState?.isLoading ? "loading" : "not-loading"}
-          </div>
-          <div data-testid="error-state">
-            {portfolioState?.errorMessage || "no-error"}
-          </div>
-          <div data-testid="change-percentage">
-            {portfolioChangePercentage || 0}
-          </div>
-          <div data-testid="connection-state">
-            {portfolioState?.isConnected ? "connected" : "disconnected"}
-          </div>
-          <div data-testid="user-id">{userId || "no-user"}</div>
-        </div>
-      );
-    }),
+        );
+      }
+    ),
   };
 });
 
@@ -401,17 +415,7 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
   });
 
   describe("User Interactions", () => {
-    it("should handle analytics click when provided", async () => {
-      const onAnalyticsClick = vi.fn();
-      const user = userEvent.setup();
-
-      render(<WalletPortfolio onAnalyticsClick={onAnalyticsClick} />);
-
-      const analyticsBtn = screen.getByTestId("analytics-btn");
-      await user.click(analyticsBtn);
-
-      expect(onAnalyticsClick).toHaveBeenCalledTimes(1);
-    });
+    // Analytics button removed in new UI; interaction covered via category/optimize flows
 
     it("should handle all action button clicks", async () => {
       const onZapInClick = vi.fn();
@@ -689,30 +693,30 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
     });
 
     it("should handle prop changes dynamically", () => {
-      const onAnalyticsClick1 = vi.fn();
-      const onAnalyticsClick2 = vi.fn();
+      const onOptimizeClick1 = vi.fn();
+      const onOptimizeClick2 = vi.fn();
 
       const { rerender } = render(
-        <WalletPortfolio onAnalyticsClick={onAnalyticsClick1} />
+        <WalletPortfolio onOptimizeClick={onOptimizeClick1} />
       );
 
-      expect(screen.getByTestId("analytics-btn")).toBeInTheDocument();
+      expect(screen.getByTestId("wallet-actions")).toBeInTheDocument();
 
-      rerender(<WalletPortfolio onAnalyticsClick={onAnalyticsClick2} />);
+      rerender(<WalletPortfolio onOptimizeClick={onOptimizeClick2} />);
 
-      expect(screen.getByTestId("analytics-btn")).toBeInTheDocument();
+      expect(screen.getByTestId("wallet-actions")).toBeInTheDocument();
     });
 
     it("should handle prop removal", () => {
       const { rerender } = render(
-        <WalletPortfolio onAnalyticsClick={vi.fn()} />
+        <WalletPortfolio onOptimizeClick={vi.fn()} />
       );
 
-      expect(screen.getByTestId("analytics-btn")).toBeInTheDocument();
+      expect(screen.getByTestId("wallet-actions")).toBeInTheDocument();
 
       rerender(<WalletPortfolio />);
 
-      expect(screen.queryByTestId("analytics-btn")).not.toBeInTheDocument();
+      expect(screen.getByTestId("wallet-actions")).toBeInTheDocument();
     });
   });
 });

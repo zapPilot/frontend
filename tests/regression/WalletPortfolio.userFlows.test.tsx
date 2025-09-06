@@ -79,27 +79,31 @@ vi.mock("../../src/components/PortfolioOverview", () => ({
 
 vi.mock("../../src/components/wallet/WalletHeader", () => {
   return {
-    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
-      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
-      return (
-        <div data-testid="wallet-header">
-          {onAnalyticsClick && (
-            <button data-testid="analytics-button" onClick={onAnalyticsClick}>
-              View Analytics
+    WalletHeader: vi.fn(
+      ({ onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+        const { balanceHidden: hookHidden, toggleBalanceVisibility } =
+          usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        return (
+          <div data-testid="wallet-header">
+            <button
+              data-testid="wallet-manager-button"
+              onClick={onWalletManagerClick}
+            >
+              Manage Wallets
             </button>
-          )}
-          <button data-testid="wallet-manager-button" onClick={onWalletManagerClick}>
-            Manage Wallets
-          </button>
-          <button data-testid="balance-toggle-button" onClick={handleToggle}>
-            {hidden ? "Show Balance" : "Hide Balance"}
-          </button>
-          <div data-testid="balance-visibility">{hidden ? "hidden" : "visible"}</div>
-        </div>
-      );
-    }),
+            <button data-testid="balance-toggle-button" onClick={handleToggle}>
+              {hidden ? "Show Balance" : "Hide Balance"}
+            </button>
+            <div data-testid="balance-visibility">
+              {hidden ? "hidden" : "visible"}
+            </div>
+          </div>
+        );
+      }
+    ),
   };
 });
 
@@ -107,19 +111,26 @@ vi.mock("../../src/components/wallet/WalletMetrics", () => {
   return {
     WalletMetrics: vi.fn(({ portfolioState, balanceHidden, userId }) => {
       const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+      const hidden =
+        typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
       return (
         <div data-testid="wallet-metrics">
           <div data-testid="connection-indicator">
             {portfolioState?.isConnected ? "Connected" : "Disconnected"}
           </div>
-          <div data-testid="user-indicator">{userId ? `User: ${userId}` : "No user"}</div>
+          <div data-testid="user-indicator">
+            {userId ? `User: ${userId}` : "No user"}
+          </div>
           {portfolioState?.isLoading ? (
             <div data-testid="metrics-loading">Loading metrics...</div>
           ) : portfolioState?.hasError ? (
-            <div data-testid="metrics-error">Error: {portfolioState.errorMessage}</div>
+            <div data-testid="metrics-error">
+              Error: {portfolioState.errorMessage}
+            </div>
           ) : (
-            <div data-testid="total-balance">{hidden ? "****" : `$${portfolioState?.totalValue || 0}`}</div>
+            <div data-testid="total-balance">
+              {hidden ? "****" : `$${portfolioState?.totalValue || 0}`}
+            </div>
           )}
         </div>
       );
@@ -680,29 +691,5 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
     });
   });
 
-  describe("Accessibility and UX Flow", () => {
-    it("should maintain accessible interaction patterns", async () => {
-      const user = userEvent.setup();
-      const onAnalyticsClick = vi.fn();
-
-      render(<WalletPortfolio onAnalyticsClick={onAnalyticsClick} />);
-
-      // Test keyboard navigation would be more appropriate with real components
-      // Here we test that buttons are properly rendered and clickable
-      const analyticsButton = screen.getByTestId("analytics-button");
-      const balanceToggle = screen.getByTestId("balance-toggle-button");
-      const walletManager = screen.getByTestId("wallet-manager-button");
-
-      expect(analyticsButton).toBeInTheDocument();
-      expect(balanceToggle).toBeInTheDocument();
-      expect(walletManager).toBeInTheDocument();
-
-      // All buttons should be interactive
-      await user.click(analyticsButton);
-      await user.click(balanceToggle);
-      await user.click(walletManager);
-
-      expect(onAnalyticsClick).toHaveBeenCalled();
-    });
-  });
+  // Analytics entrypoint removed from header in new UI; accessibility covered elsewhere
 });

@@ -1129,7 +1129,6 @@ describe("WalletPortfolio", () => {
 
   describe("Component Props", () => {
     it("should handle optional callback props", async () => {
-      const onAnalyticsClick = vi.fn();
       const onOptimizeClick = vi.fn();
       const onZapInClick = vi.fn();
       const onZapOutClick = vi.fn();
@@ -1137,7 +1136,6 @@ describe("WalletPortfolio", () => {
       await act(async () => {
         render(
           <WalletPortfolio
-            onAnalyticsClick={onAnalyticsClick}
             onOptimizeClick={onOptimizeClick}
             onZapInClick={onZapInClick}
             onZapOutClick={onZapOutClick}
@@ -1369,14 +1367,12 @@ describe("WalletPortfolio", () => {
     });
 
     it("should provide wallet action callbacks correctly", async () => {
-      const onAnalyticsClick = vi.fn();
       const onOptimizeClick = vi.fn();
       const onZapInClick = vi.fn();
       const onZapOutClick = vi.fn();
 
       render(
         <WalletPortfolio
-          onAnalyticsClick={onAnalyticsClick}
           onOptimizeClick={onOptimizeClick}
           onZapInClick={onZapInClick}
           onZapOutClick={onZapOutClick}

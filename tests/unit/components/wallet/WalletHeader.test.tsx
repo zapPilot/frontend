@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "../../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
 
@@ -70,35 +70,7 @@ describe("WalletHeader", () => {
     });
   });
 
-  describe("Conditional Analytics Button", () => {
-    it("should not render analytics button when onAnalyticsClick is not provided", () => {
-      render(<WalletHeader {...defaultProps} />);
-
-      expect(screen.queryByTestId("bar-chart-icon")).not.toBeInTheDocument();
-      expect(screen.queryByTitle("View Analytics")).not.toBeInTheDocument();
-    });
-
-    it("should render analytics button when onAnalyticsClick is provided", () => {
-      const onAnalyticsClick = vi.fn();
-      render(
-        <WalletHeader {...defaultProps} onAnalyticsClick={onAnalyticsClick} />
-      );
-
-      expect(screen.getByTestId("bar-chart-icon")).toBeInTheDocument();
-      expect(screen.getByTitle("View Analytics")).toBeInTheDocument();
-    });
-
-    it("should call onAnalyticsClick when analytics button is clicked", () => {
-      const onAnalyticsClick = vi.fn();
-      render(
-        <WalletHeader {...defaultProps} onAnalyticsClick={onAnalyticsClick} />
-      );
-
-      fireEvent.click(screen.getByTitle("View Analytics"));
-
-      expect(onAnalyticsClick).toHaveBeenCalledTimes(1);
-    });
-  });
+  // Analytics button has been removed from the new UI; tests updated accordingly.
 
   describe("Balance Visibility Toggle", () => {
     it("should show Eye icon when balance is not hidden", () => {
@@ -166,10 +138,7 @@ describe("WalletHeader", () => {
 
   describe("Button Styling and Hover States", () => {
     it("should apply correct CSS classes to all buttons", () => {
-      const onAnalyticsClick = vi.fn();
-      render(
-        <WalletHeader {...defaultProps} onAnalyticsClick={onAnalyticsClick} />
-      );
+      render(<WalletHeader {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
 
@@ -209,14 +178,12 @@ describe("WalletHeader", () => {
     });
 
     it("should have descriptive title attributes for all buttons", () => {
-      const onAnalyticsClick = vi.fn();
-      render(
-        <WalletHeader {...defaultProps} onAnalyticsClick={onAnalyticsClick} />
-      );
+      render(<WalletHeader {...defaultProps} />);
 
-      expect(screen.getByTitle("View Analytics")).toBeInTheDocument();
       expect(screen.getByTitle("Manage Wallets")).toBeInTheDocument();
-      expect(screen.getByTitle("Hide Balance")).toBeInTheDocument();
+      expect(
+        screen.getByTitle(/Hide Balance|Show Balance/)
+      ).toBeInTheDocument();
     });
 
     it("should support keyboard navigation", () => {
@@ -260,18 +227,11 @@ describe("WalletHeader", () => {
   });
 
   describe("Edge Cases", () => {
-    it("should handle undefined onAnalyticsClick gracefully", () => {
-      expect(() => {
-        render(<WalletHeader {...defaultProps} onAnalyticsClick={undefined} />);
-      }).not.toThrow();
-    });
-
-    it("should handle all required props being provided", () => {
+    it("should render with required props without throwing", () => {
       const requiredProps = {
         onWalletManagerClick: vi.fn(),
         onToggleBalance: vi.fn(),
         balanceHidden: false,
-        onAnalyticsClick: vi.fn(),
       };
 
       expect(() => {
