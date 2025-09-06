@@ -1,6 +1,6 @@
 "use client";
 
-import { GRADIENTS } from "@/constants/design-system";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -720,7 +720,7 @@ const WalletManagerComponent = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4"
+        className={`fixed inset-0 ${Z_INDEX.MODAL} bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4`}
         onClick={onClose}
       >
         <motion.div

@@ -2,6 +2,7 @@
 
 import { createContext, ReactNode, useContext, useState } from "react";
 import { Toast, ToastNotification } from "../components/ui/ToastNotification";
+import { Z_INDEX } from "@/constants/design-system";
 
 interface ToastContextType {
   showToast: (toast: Omit<Toast, "id">) => void;
@@ -41,7 +42,9 @@ export function ToastProvider({ children }: ToastProviderProps) {
       {children}
 
       {/* Toast Container - Fixed to top-right */}
-      <div className="fixed top-4 right-4 z-50 pointer-events-none">
+      <div
+        className={`fixed top-4 right-4 ${Z_INDEX.TOAST} pointer-events-none`}
+      >
         <div className="pointer-events-auto">
           {toasts.map(toast => (
             <ToastNotification

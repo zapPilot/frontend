@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import React from "react";
+import { Z_INDEX } from "@/constants/design-system";
 import { LoadingSpinner } from "./LoadingSpinner";
 
 export interface LoadingPageProps {
@@ -27,7 +28,7 @@ export function LoadingPage({
   children,
 }: LoadingPageProps) {
   const containerClasses = {
-    fullscreen: "fixed inset-0 bg-gray-950/90 backdrop-blur-sm z-50",
+    fullscreen: `fixed inset-0 bg-gray-950/90 backdrop-blur-sm ${Z_INDEX.MODAL}`,
     centered: "flex items-center justify-center min-h-[400px]",
     inline: "py-8",
   };
