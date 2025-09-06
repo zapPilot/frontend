@@ -8,7 +8,6 @@ import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsEngine";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { PortfolioState } from "../../types/portfolioState";
-import { normalizeApr } from "../../utils/portfolio.utils";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 import { BalanceLoading } from "../ui/UnifiedLoading";
 
@@ -73,6 +72,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
   }) => {
     // State for debug UI
     const [showDebugInfo, setShowDebugInfo] = useState(false);
+    // Local APR normalization to avoid dependency/mocking issues in tests
+    const normalizeAprValue = (apr?: number | null): number | null => {
+      if (typeof apr !== "number") return null;
+      return apr > 1.5 ? apr / 100 : apr;
+    };
 
     // Fetch unified landing page data (includes APR data) only if not provided via props
     const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
@@ -93,11 +97,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const portfolioROI = data?.portfolio_roi;
     // Use normalized APR from utility function
     const portfolioAPR =
-      normalizeApr(portfolioROI?.recommended_roi) ??
+      normalizeAprValue(portfolioROI?.recommended_yearly_roi) ??
       (typeof data?.weighted_apr === "number" ? data.weighted_apr : null);
     const estimatedMonthlyIncome =
-      (typeof portfolioROI?.estimated_monthly_pnl_usd === "number"
-        ? portfolioROI?.estimated_monthly_pnl_usd
+      (typeof portfolioROI?.estimated_yearly_pnl_usd === "number"
+        ? portfolioROI?.estimated_yearly_pnl_usd
         : null) ??
       data?.estimated_monthly_income ??
       null;
@@ -195,7 +199,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   )}
                   {typeof estimatedMonthlyIncome === "number" && (
                     <div className="flex justify-between text-gray-300 mt-2">
-                      <span>Est. Monthly PnL</span>
+                      <span>Est.Monthly PnL</span>
                       <span>{formatSmallCurrency(estimatedMonthlyIncome)}</span>
                     </div>
                   )}
@@ -274,7 +278,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
+          <p className="text-sm text-gray-400 mb-1">Est.Yearly Income</p>
           {(shouldShowLoading || landingPageLoading) &&
           portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton

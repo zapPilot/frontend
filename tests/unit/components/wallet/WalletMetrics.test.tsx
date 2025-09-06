@@ -213,7 +213,7 @@ describe("WalletMetrics", () => {
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Portfolio APR/)).toBeInTheDocument();
-      expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
+      expect(screen.getByText("Est.Yearly Income")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -237,7 +237,7 @@ describe("WalletMetrics", () => {
       const labels = [
         screen.getByText("Total Balance"),
         screen.getByText(/Portfolio APR/),
-        screen.getByText("Est. Monthly Income"),
+        screen.getByText("Est.Yearly Income"),
       ];
 
       labels.forEach(label => {
@@ -631,7 +631,7 @@ describe("WalletMetrics", () => {
       // Check that metric labels are properly associated with their values
       const totalBalanceLabel = screen.getByText("Total Balance");
       const aprLabel = screen.getByText(/Portfolio APR/);
-      const incomeLabel = screen.getByText("Est. Monthly Income");
+      const incomeLabel = screen.getByText("Est.Yearly Income");
 
       expect(totalBalanceLabel.tagName).toBe("P");
       expect(aprLabel.tagName).toBe("P");

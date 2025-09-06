@@ -1172,7 +1172,7 @@ describe("WalletPortfolio", () => {
       // Metrics sections - test labels, not values
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText("Portfolio APR")).toBeInTheDocument();
-      expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
+      expect(screen.getByText("Est.Yearly Income")).toBeInTheDocument();
     });
 
     it("should render action buttons grid", () => {

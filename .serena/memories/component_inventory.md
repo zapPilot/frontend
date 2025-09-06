@@ -314,8 +314,8 @@ These legacy-named components support the Analytics and Community tabs.
 
 1. **WalletMetrics APR Enhancement** - ✅ ENHANCED (2025): Real APR data integration
    - **Change**: Replaced hardcoded `BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR` with live API data
-   - **Features**: Real Portfolio APR display, accurate Est. Monthly Income calculations, fallback
-     to default APR when API unavailable
+   - **Features**: Real Portfolio APR display, accurate Est.Yearly Income calculations, fallback to
+     default APR when API unavailable
    - **Integration**: Seamless integration with existing loading/error states
    - **UX**: More accurate financial projections based on actual pool performance
 

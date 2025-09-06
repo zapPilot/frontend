@@ -173,7 +173,7 @@ export class BackendServiceError extends BaseServiceError {
         if (this.message?.includes("webhook")) {
           return "Invalid Discord webhook configuration.";
         }
-        return "Invalid request. Please check your input.";
+        return "Invalid requEst.Please check your input.";
 
       case 429:
         return "Too many notification requests. Please wait before sending more.";

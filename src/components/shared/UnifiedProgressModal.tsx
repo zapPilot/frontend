@@ -1,23 +1,23 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
-  X,
-  Clock,
-  CheckCircle,
   AlertCircle,
-  Loader2,
   ArrowRight,
-  Shield,
-  Zap,
-  RefreshCw,
-  FileText,
-  DollarSign,
-  TrendingUp,
-  Settings,
   ArrowRightLeft,
+  CheckCircle,
+  Clock,
+  DollarSign,
+  FileText,
+  Loader2,
+  RefreshCw,
+  Settings,
+  Shield,
+  TrendingUp,
+  X,
+  Zap,
 } from "lucide-react";
-import { useState, useEffect, useCallback, memo, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { GlassCard } from "../ui";
 
 // Base step interface
@@ -429,7 +429,7 @@ const UnifiedProgressModalComponent = ({
               </div>
               <div className="flex justify-between text-xs text-gray-500 mt-1">
                 <span>Started</span>
-                <span>Est. {totalEstimatedTime}s</span>
+                <span>Est.{totalEstimatedTime}s</span>
               </div>
             </div>
 
@@ -595,7 +595,7 @@ const UnifiedProgressModalComponent = ({
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-sm mt-2">
-                  <span className="text-gray-400">Est. Gas Price:</span>
+                  <span className="text-gray-400">Est.Gas Price:</span>
                   <span className="text-white">23 gwei</span>
                 </div>
               </div>
