@@ -1,4 +1,4 @@
-import { AlertCircle, ChevronDown, Info, TrendingUp } from "lucide-react";
+import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
@@ -106,7 +106,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       data?.estimated_monthly_income ??
       null;
     const roiPeriod = portfolioROI?.recommended_roi_period;
-    const roiWindows = portfolioROI?.roi_windows;
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -184,7 +183,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 w-56 p-3 border border-gray-700">
                   <div className="font-semibold text-gray-200 mb-1">
-                    APR Details
+                    ROI Details
                   </div>
                   {typeof portfolioAPR === "number" && (
                     <div className="flex justify-between text-gray-300">
@@ -203,39 +202,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                       <span>{formatSmallCurrency(estimatedMonthlyIncome)}</span>
                     </div>
                   )}
-                  {roiWindows && Object.keys(roiWindows).length > 0 && (
-                    <div className="mt-2">
-                      <div className="text-gray-400 mb-1">ROI Windows</div>
-                      <div className="space-y-0.5 max-h-40 overflow-auto pr-1">
-                        {Object.entries(roiWindows).map(([period, roi]) => (
-                          <div
-                            key={period}
-                            className="flex justify-between text-gray-300"
-                          >
-                            <span>{period}</span>
-                            <span
-                              className={`${roi >= 0 ? "text-green-400" : "text-red-400"}`}
-                            >
-                              {(roi * 100).toFixed(2)}%
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-            )}
-            {roiWindows && Object.keys(roiWindows).length > 0 && (
-              <button
-                onClick={() => setShowDebugInfo(!showDebugInfo)}
-                className="p-1 text-gray-500 hover:text-gray-400 transition-colors"
-                title="Show ROI breakdown"
-              >
-                <ChevronDown
-                  className={`w-3 h-3 transition-transform ${showDebugInfo ? "rotate-180" : ""}`}
-                />
-              </button>
             )}
           </div>
           {(shouldShowLoading || landingPageLoading) &&
@@ -256,23 +224,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   </span>
                 )}
               </div>
-              {showDebugInfo && roiWindows && (
-                <div className="mt-2 p-2 bg-gray-800/50 rounded-lg text-xs">
-                  <p className="text-gray-400 mb-1">ROI Windows:</p>
-                  <div className="space-y-1">
-                    {Object.entries(roiWindows).map(([period, roi]) => (
-                      <div key={period} className="flex justify-between">
-                        <span className="text-gray-300">{period}:</span>
-                        <span
-                          className={`${roi >= 0 ? "text-green-400" : "text-red-400"}`}
-                        >
-                          {(roi * 100).toFixed(2)}%
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </>
           )}
         </div>
