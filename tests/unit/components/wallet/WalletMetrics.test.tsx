@@ -446,7 +446,7 @@ describe("WalletMetrics", () => {
       const roiSection = screen
         .getByText("Estimated Yearly ROI")
         .closest("div");
-      expect(roiSection).toHaveTextContent("249.93%");
+      expect(roiSection).toHaveTextContent("Estimated Yearly ROI Info");
       // Should show estimation badge
       expect(screen.getAllByText("est.")).toHaveLength(2); // One for ROI, one for PnL
     });

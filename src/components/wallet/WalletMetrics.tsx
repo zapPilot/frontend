@@ -1,5 +1,6 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
-import React from "react";
+import React, { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
@@ -77,6 +78,26 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const data = landingPageData ?? fetchedData;
     const landingPageLoading = landingPageData ? false : fetchedLoading;
 
+    // ROI tooltip portal state
+    const [roiTooltipVisible, setRoiTooltipVisible] = useState(false);
+    const [roiTooltipPos, setRoiTooltipPos] = useState<{
+      top: number;
+      left: number;
+    }>({ top: 0, left: 0 });
+    const infoIconRef = useRef<HTMLSpanElement | null>(null);
+
+    const openRoiTooltip = () => {
+      const el = infoIconRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      setRoiTooltipPos({
+        top: rect.bottom + 8 + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX,
+      });
+      setRoiTooltipVisible(true);
+    };
+    const closeRoiTooltip = () => setRoiTooltipVisible(false);
+
     // Use portfolio state helpers for consistent logic
     const {
       shouldShowLoading,
@@ -100,7 +121,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
     const fallbackMonthlyIncome = data?.estimated_monthly_income;
 
-    const roiPeriod = portfolioROI?.recommended_roi_period;
     const roiWindows = portfolioROI;
 
     // Helper function to render balance display using centralized state
@@ -182,113 +202,83 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               {shouldShowConnectPrompt ? "(Potential)" : ""}
             </p>
             {portfolioROI && (
-              <div className="relative group">
-                <Info className="w-3 h-3 text-gray-500 cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 w-72 p-4 border border-gray-700">
-                  <div className="font-semibold text-gray-200 mb-2 text-center">
-                    📊 Portfolio ROI Estimation
-                  </div>
-
-                  {/* ROI Windows */}
-                  {roiWindows && (
-                    <div className="mb-3 p-2 bg-gray-800 rounded">
-                      <div className="text-gray-300 font-medium mb-2">
-                        ROI by Time Period
+              <div className="relative">
+                <span
+                  ref={infoIconRef}
+                  onMouseEnter={openRoiTooltip}
+                  onMouseLeave={closeRoiTooltip}
+                  className="inline-flex"
+                >
+                  <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                </span>
+                {roiTooltipVisible &&
+                  createPortal(
+                    <div
+                      onMouseEnter={openRoiTooltip}
+                      onMouseLeave={closeRoiTooltip}
+                      style={{
+                        position: "fixed",
+                        top: roiTooltipPos.top,
+                        left: roiTooltipPos.left,
+                        transform: "translateX(-50%)",
+                        zIndex: 2147483647,
+                      }}
+                      className="bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700"
+                    >
+                      <div className="font-semibold text-gray-200 mb-2 text-center">
+                        📊 Portfolio ROI Estimation
                       </div>
-                      {roiWindows.roi_7d && (
-                        <div className="flex justify-between text-gray-300 mb-1">
-                          <span>
-                            7 days ({roiWindows.roi_7d.data_points} data points)
-                          </span>
-                          <span>{roiWindows.roi_7d.value.toFixed(2)}%</span>
+
+                      {/* ROI Windows */}
+                      {roiWindows && (
+                        <div className="mb-3 p-2 bg-gray-800 rounded">
+                          <div className="text-gray-300 font-medium mb-2">
+                            ROI by Time Period
+                          </div>
+                          {roiWindows.roi_7d && (
+                            <div className="flex justify-between text-gray-300 mb-1">
+                              <span>
+                                7 days ({roiWindows.roi_7d.data_points} data
+                                points)
+                              </span>
+                              <span>{roiWindows.roi_7d.value.toFixed(2)}%</span>
+                            </div>
+                          )}
+                          {roiWindows.roi_30d && (
+                            <div className="flex justify-between text-gray-300 mb-1">
+                              <span>
+                                30 days ({roiWindows.roi_30d.data_points} data
+                                points)
+                              </span>
+                              <span>
+                                {roiWindows.roi_30d.value.toFixed(2)}%
+                              </span>
+                            </div>
+                          )}
+                          {roiWindows.roi_365d && (
+                            <div className="flex justify-between text-gray-300">
+                              <span>
+                                365 days ({roiWindows.roi_365d.data_points} data
+                                points)
+                              </span>
+                              <span>
+                                {roiWindows.roi_365d.value.toFixed(2)}%
+                              </span>
+                            </div>
+                          )}
                         </div>
                       )}
-                      {roiWindows.roi_30d && (
-                        <div className="flex justify-between text-gray-300 mb-1">
-                          <span>
-                            30 days ({roiWindows.roi_30d.data_points} data
-                            points)
-                          </span>
-                          <span>{roiWindows.roi_30d.value.toFixed(2)}%</span>
-                        </div>
-                      )}
-                      {roiWindows.roi_365d && (
-                        <div className="flex justify-between text-gray-300">
-                          <span>
-                            365 days ({roiWindows.roi_365d.data_points} data
-                            points)
-                          </span>
-                          <span>{roiWindows.roi_365d.value.toFixed(2)}%</span>
-                        </div>
-                      )}
-                    </div>
+
+                      {/* Methodology Note */}
+                      <div className="text-gray-400 text-xs leading-relaxed border-t border-gray-700 pt-2">
+                        💡 <strong>Methodology:</strong> ROI estimates use
+                        recent performance windows and scale linearly to yearly
+                        projections. Estimates become more accurate as data
+                        points increase over time.
+                      </div>
+                    </div>,
+                    document.body
                   )}
-
-                  {/* Current Estimates */}
-                  <div className="mb-3 p-2 bg-purple-900/20 rounded border border-purple-600/30">
-                    <div className="text-purple-300 font-medium mb-2">
-                      Current Estimates
-                    </div>
-                    {recommendedYearlyROI && (
-                      <div className="flex justify-between text-gray-300 mb-1">
-                        <span>Yearly ROI</span>
-                        <span>{recommendedYearlyROI.toFixed(2)}%</span>
-                      </div>
-                    )}
-                    {estimatedYearlyPnL && (
-                      <div className="flex justify-between text-gray-300 mb-1">
-                        <span>Yearly PnL</span>
-                        <span>{formatSmallCurrency(estimatedYearlyPnL)}</span>
-                      </div>
-                    )}
-                    {roiPeriod && (
-                      <div className="text-gray-400 text-xs mt-1">
-                        ⚡ Based on {roiPeriod} window, scaled linearly
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Portfolio Overview */}
-                  {data && (
-                    <div className="mb-3 p-2 bg-blue-900/20 rounded border border-blue-600/30">
-                      <div className="text-blue-300 font-medium mb-2">
-                        Portfolio Overview
-                      </div>
-                      <div className="flex justify-between text-gray-300 mb-1">
-                        <span>Total Assets</span>
-                        <span>
-                          {formatSmallCurrency(data.total_assets_usd)}
-                        </span>
-                      </div>
-                      {data.total_debt_usd > 0 && (
-                        <div className="flex justify-between text-gray-300 mb-1">
-                          <span>Total Debt</span>
-                          <span>
-                            {formatSmallCurrency(data.total_debt_usd)}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-gray-300 mb-1">
-                        <span>Net Worth</span>
-                        <span>{formatSmallCurrency(data.total_net_usd)}</span>
-                      </div>
-                      {data.protocols_count && (
-                        <div className="text-gray-400 text-xs mt-1">
-                          🔗 {data.protocols_count} protocols,{" "}
-                          {data.chains_count} chains
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Methodology Note */}
-                  <div className="text-gray-400 text-xs leading-relaxed border-t border-gray-700 pt-2">
-                    💡 <strong>Methodology:</strong> ROI estimates use recent
-                    performance windows and scale linearly to yearly
-                    projections. Estimates become more accurate as data points
-                    increase over time.
-                  </div>
-                </div>
               </div>
             )}
           </div>
@@ -297,19 +287,23 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
           ) : (
             <>
-              <div
-                className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
-              >
-                <TrendingUp className="w-4 h-4" />
-                <span className="text-xl font-semibold">
-                  {(displayAPR * 100).toFixed(2)}%
-                </span>
-                <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
-                  est.
-                </span>
-                {roiPeriod && (
-                  <span className="text-xs text-gray-500 font-normal">
-                    ({roiPeriod})
+              <div className="flex flex-col">
+                <div
+                  className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="text-xl font-semibold">
+                    {(displayAPR * 100).toFixed(2)}%
+                  </span>
+                  <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+                    est.
+                  </span>
+                </div>
+                {portfolioROI?.recommended_roi_period && (
+                  <span className="text-xs text-gray-500 font-normal mt-1">
+                    Based on{" "}
+                    {portfolioROI?.recommended_roi_period.replace("roi_", "")}{" "}
+                    performance data
                   </span>
                 )}
               </div>
