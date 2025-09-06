@@ -12,6 +12,7 @@ import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ComponentType, useCallback, useEffect, useState } from "react";
+import { HEADER, Z_INDEX } from "@/constants/design-system";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
@@ -283,7 +284,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       <div className="relative z-10 lg:pl-72">
         {/* Switch Prompt Banner */}
         {showSwitchPrompt && (
-          <div className="sticky top-0 z-20 mx-4 lg:mx-8 mt-4">
+          <div
+            className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}
+          >
             <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm">
                 You’re viewing another user’s bundle. Switch to your own bundle?
