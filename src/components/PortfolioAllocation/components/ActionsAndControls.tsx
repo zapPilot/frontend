@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { Z_INDEX } from "@/constants/design-system";
 import { GRADIENTS } from "@/constants/design-system";
 import { GradientButton } from "@/components/ui";
 import { useDropdown } from "@/hooks";
@@ -136,7 +137,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl z-50 max-h-64 overflow-auto"
+              className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
               {MOCK_TOKENS.map(token => (
                 <button
@@ -174,7 +175,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
               ))}
             </motion.div>
             <div
-              className="fixed inset-0 z-40"
+              className={`fixed inset-0 ${Z_INDEX.HEADER}`}
               onClick={() => dropdown.close()}
             />
           </>

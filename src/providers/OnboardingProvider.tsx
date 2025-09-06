@@ -21,6 +21,7 @@ interface OnboardingState {
   hasConnectedWallet: boolean;
   hasSwitchedChain: boolean;
   hasNavigated: boolean;
+  hasEmailSubscription: boolean;
 }
 
 interface OnboardingContextType {
@@ -31,6 +32,7 @@ interface OnboardingContextType {
   toggleHints: () => void;
   resetOnboarding: () => void;
   shouldShowHint: (hintId: string) => boolean;
+  markEmailSubscribed: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextType | undefined>(
@@ -46,6 +48,7 @@ const defaultState: OnboardingState = {
   hasConnectedWallet: false,
   hasSwitchedChain: false,
   hasNavigated: false,
+  hasEmailSubscription: false,
 };
 
 export const OnboardingProvider = ({
@@ -109,6 +112,9 @@ export const OnboardingProvider = ({
       removeStorageItem(ONBOARDING_STORAGE_KEY);
     }
   }, []);
+  const markEmailSubscribed = useCallback(() => {
+    setState(prev => ({ ...prev, hasEmailSubscription: true }));
+  }, []);
 
   const shouldShowHint = useCallback(
     (hintId: string) => {
@@ -136,6 +142,13 @@ export const OnboardingProvider = ({
             window.innerWidth < 1024
           );
 
+        case "email-subscription-reminder":
+          return (
+            state.hasConnectedWallet && 
+            !state.hasEmailSubscription &&
+            !state.isFirstVisit
+          );
+
         default:
           return true;
       }
@@ -151,6 +164,7 @@ export const OnboardingProvider = ({
     toggleHints,
     resetOnboarding,
     shouldShowHint,
+    markEmailSubscribed,
   };
 
   return (

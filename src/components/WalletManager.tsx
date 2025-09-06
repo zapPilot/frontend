@@ -483,12 +483,11 @@ const WalletManagerComponent = ({
         {isOpen && menuPosition && (
           <Portal>
             <div
-              className="w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl z-[80]"
+              className={`w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST}`}
               style={{
                 position: "fixed",
                 top: menuPosition.top,
                 left: menuPosition.left,
-                zIndex: 1000,
               }}
               onClick={e => e.stopPropagation()}
             >
@@ -625,7 +624,7 @@ const WalletManagerComponent = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-60 bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4"
+        className={`fixed inset-0 ${Z_INDEX.MODAL} bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4`}
         onClick={handleClose}
       >
         <motion.div

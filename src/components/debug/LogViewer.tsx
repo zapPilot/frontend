@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { logger, LogLevel, type LogEntry } from "@/utils/logger";
 import { GlassCard } from "@/components/ui/GlassCard";
+import { Z_INDEX } from "@/constants/design-system";
+import { logger, LogLevel, type LogEntry } from "@/utils/logger";
+import { useEffect, useState } from "react";
 
 /**
  * Development Log Viewer Component
@@ -63,7 +64,7 @@ export function LogViewer() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div className={`fixed bottom-4 right-4 ${Z_INDEX.TOAST}`}>
       <button
         onClick={() => setIsVisible(!isVisible)}
         className="bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-mono"

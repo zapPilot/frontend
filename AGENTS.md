@@ -15,6 +15,7 @@ portfolios using intent-based execution.
 - `src/utils`, `src/lib`, `src/services`: Pure utilities, helpers, and API adapters.
 - `src/config`, `src/constants`, `src/types`: App settings, constants, and TypeScript types.
 - `public/`: Static assets; `cloudflare/`: deployment config; `tests/`: e2e and unit tests.
+- `docs/`: Engineering guides and conventions (e.g., layering/z-index).
 
 ## Build, Test, and Development Commands
 
@@ -63,3 +64,11 @@ portfolios using intent-based execution.
 - For complex changes, break them down into smaller, verifiable steps.
 - Always review the agent's output and test its changes thoroughly.
 - Keep memories in `.serena/memories/` updated to provide the agent with the latest context.
+
+### UI Layering & z-index
+
+- Use the centralized tokens in `src/constants/design-system.ts` (`Z_INDEX`, `HEADER`) for any
+  stacking/offset needs. Do not introduce raw z-index numbers.
+- When adding banners under fixed headers, use `sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER}`.
+- For toasts, modals, FABs, and overlays, use the appropriate `Z_INDEX` token.
+- Reference `docs/LAYERING.md` for detailed guidance and examples.

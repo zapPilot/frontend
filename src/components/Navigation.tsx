@@ -36,7 +36,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-72">
+      <div className={`hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 ${Z_INDEX.HEADER_MOBILE} lg:w-72`}>
         <div className="flex grow flex-col gap-y-5 overflow-y-auto glass-morphism border-r border-gray-800 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
             <motion.div

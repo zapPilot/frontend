@@ -1,6 +1,6 @@
 "use client";
 
-import { GRADIENTS } from "@/constants/design-system";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useOnboarding } from "@/providers/OnboardingProvider";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -178,7 +178,7 @@ export function TooltipHint({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 10 }}
           transition={{ duration: 0.3, type: "spring", damping: 25 }}
-          className={`fixed z-[9999] max-w-xs sm:max-w-sm pointer-events-auto`}
+          className={`fixed ${Z_INDEX.TOOLTIP} max-w-xs sm:max-w-sm pointer-events-auto`}
           style={{
             left: position.x,
             top: position.y,

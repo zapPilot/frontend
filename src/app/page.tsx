@@ -1,6 +1,7 @@
 "use client";
 
 import { Navigation } from "@/components/Navigation";
+import { Z_INDEX } from "@/constants/design-system";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
@@ -231,7 +232,7 @@ export default function DashboardApp() {
     return (
       <div className="min-h-screen bg-gray-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
-        <div className="relative z-10 flex items-center justify-center h-screen">
+        <div className={`relative ${Z_INDEX.CONTENT} flex items-center justify-center h-screen`}>
           <LoadingState
             variant="spinner"
             size="lg"
@@ -251,7 +252,7 @@ export default function DashboardApp() {
       <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Main content */}
-      <div className="relative z-10 lg:pl-72">
+      <div className={`relative ${Z_INDEX.CONTENT} lg:pl-72`}>
         {/* Mobile header spacing */}
         <div className="lg:hidden h-16" />
 

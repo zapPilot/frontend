@@ -1,18 +1,21 @@
 "use client";
 
 import { QuickSwitchFAB } from "@/components/bundle";
+import { EmailReminderBanner } from "@/components/EmailReminderBanner";
 import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
+import type { WalletManagerProps } from "@/components/WalletManager";
+import { HEADER, Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
+import { useOnboarding } from "@/providers/OnboardingProvider";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { bundleService, BundleUser } from "@/services/bundleService";
 import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ComponentType, useCallback, useEffect, useState } from "react";
-import { HEADER, Z_INDEX } from "@/constants/design-system";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
@@ -98,6 +101,14 @@ const SwapPage: ComponentType<SwapPageProps> = dynamic(
   }
 );
 
+const WalletManager: ComponentType<WalletManagerProps> = dynamic(
+  () =>
+    import("@/components/WalletManager").then(mod => ({ default: mod.WalletManager })),
+  {
+    loading: () => null, // Modal doesn't need loading state when closed
+  }
+);
+
 interface BundlePageClientProps {
   userId: string;
 }
@@ -105,6 +116,7 @@ interface BundlePageClientProps {
 export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
+  const { shouldShowHint, markStepCompleted } = useOnboarding();
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
@@ -114,6 +126,8 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+  const [previousIsConnected, setPreviousIsConnected] = useState<boolean | null>(null);
 
   // Computed values
   const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
@@ -161,6 +175,23 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
     }
   }, [isConnected, userInfo?.userId, userId, dismissedSwitchPrompt]);
 
+  // Sync wallet connection state with OnboardingProvider
+  useEffect(() => {
+    // Initialize previous state on first render
+    if (previousIsConnected === null) {
+      setPreviousIsConnected(isConnected);
+      return;
+    }
+
+    // Only mark as completed when transitioning from disconnected to connected
+    if (!previousIsConnected && isConnected) {
+      markStepCompleted("wallet-connected");
+    }
+
+    // Update previous state for next comparison
+    setPreviousIsConnected(isConnected);
+  }, [isConnected, previousIsConnected, markStepCompleted]);
+
   const handleSwitchToMyBundle = useCallback(() => {
     if (!userInfo?.userId) return;
     const params = new URLSearchParams(window.location.search);
@@ -173,6 +204,14 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
     setDismissedSwitchPrompt(true);
     setShowSwitchPrompt(false);
   }, []);
+
+  const handleEmailSubscribe = useCallback(() => {
+    setIsWalletManagerOpen(true);
+  }, []);
+
+  const handleEmailReminderDismiss = useCallback(() => {
+    markStepCompleted("email-subscription-reminder");
+  }, [markStepCompleted]);
 
   // Navigation handlers with context awareness
   const handleBackToPortfolio = useCallback(() => {
@@ -281,7 +320,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Main content */}
-      <div className="relative z-10 lg:pl-72">
+      <div className={`relative ${Z_INDEX.CONTENT} lg:pl-72`}>
         {/* Switch Prompt Banner */}
         {showSwitchPrompt && (
           <div
@@ -289,7 +328,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
           >
             <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm">
-                You’re viewing another user’s bundle. Switch to your own bundle?
+                You're viewing another user's bundle. Switch to your own bundle?
               </div>
               <div className="flex gap-2 justify-end">
                 <button
@@ -309,6 +348,14 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
             </div>
           </div>
         )}
+
+        {/* Email Subscription Reminder Banner */}
+        {shouldShowHint("email-subscription-reminder") && isOwnBundle && (
+          <EmailReminderBanner
+            onSubscribe={handleEmailSubscribe}
+            onDismiss={handleEmailReminderDismiss}
+          />
+        )}
         {/* Mobile header spacing */}
         <div className="lg:hidden h-16" />
 
@@ -327,6 +374,13 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       {showQuickSwitch && (
         <QuickSwitchFAB onSwitchToMyBundle={handleSwitchToMyBundle} />
       )}
+
+      {/* Wallet Manager Modal */}
+      <WalletManager
+        isOpen={isWalletManagerOpen}
+        onClose={() => setIsWalletManagerOpen(false)}
+        onEmailSubscribed={() => markStepCompleted("email-subscription-reminder")}
+      />
     </div>
   );
 }
