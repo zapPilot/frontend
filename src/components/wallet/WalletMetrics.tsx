@@ -1,7 +1,6 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
@@ -110,16 +109,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const portfolioROI = data?.portfolio_roi;
 
     // Use recommended_yearly_roi directly from API (as percentage, not decimal)
-    const recommendedYearlyROI = portfolioROI?.recommended_yearly_roi;
-    const portfolioAPR = recommendedYearlyROI
-      ? recommendedYearlyROI / 100
-      : typeof data?.weighted_apr === "number"
-        ? data.weighted_apr
-        : null;
+    const estimatedYearlyROI = portfolioROI?.recommended_yearly_roi
+      ? portfolioROI.recommended_yearly_roi / 100
+      : null;
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
-    const fallbackMonthlyIncome = data?.estimated_monthly_income;
 
     const roiWindows = portfolioROI;
 
@@ -169,17 +164,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     };
 
     // Use API-provided APR data or fall back to business constant default
-    const displayAPR = portfolioAPR ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
-    const displayValue = getDisplayTotalValue();
+    const displayAPR =
+      estimatedYearlyROI ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
 
-    // Prioritize API's estimated yearly PnL over calculated fallbacks
-    const displayYearlyPnL =
-      estimatedYearlyPnL ??
-      (fallbackMonthlyIncome
-        ? fallbackMonthlyIncome * 12
-        : displayValue
-          ? calculateMonthlyIncome(displayValue, displayAPR) * 12
-          : 0);
+    // Use estimated yearly PnL directly from API
+    const displayYearlyPnL = estimatedYearlyPnL ?? 0;
 
     // Show welcome message for new users
     if (portfolioState.errorMessage === "USER_NOT_FOUND") {
