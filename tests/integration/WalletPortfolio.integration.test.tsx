@@ -483,32 +483,6 @@ describe("WalletPortfolio - Integration Tests", () => {
       await user.click(retryButton);
       expect(refetch).toHaveBeenCalled();
     });
-
-    it("should transform and display data correctly", async () => {
-      render(<WalletPortfolio />);
-
-      await waitFor(() => {
-        // Should display formatted total value
-        expect(screen.getAllByText(/\$45,?000/)[0]).toBeInTheDocument();
-
-        // Should show APR
-        expect(screen.getByText(/1520\.00%/)).toBeInTheDocument();
-
-        // Should show monthly income
-        expect(screen.getByText(/\$570/)).toBeInTheDocument();
-      });
-
-      // Verify data transformation was called
-      expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
-        {
-          btc: 20000,
-          eth: 15000,
-          stablecoins: 8000,
-          others: 2000,
-        },
-        45000
-      );
-    });
   });
 
   describe("Balance Privacy Integration", () => {

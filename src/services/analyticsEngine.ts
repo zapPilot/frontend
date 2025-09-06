@@ -123,7 +123,20 @@ export interface LandingPageResponse {
   portfolio_roi: {
     recommended_roi: number;
     recommended_roi_period: string;
+    recommended_yearly_roi: number;
     estimated_yearly_pnl_usd: number;
+    roi_7d?: {
+      value: number;
+      data_points: number;
+    };
+    roi_30d?: {
+      value: number;
+      data_points: number;
+    };
+    roi_365d?: {
+      value: number;
+      data_points: number;
+    };
     roi_windows?: {
       [period: string]: number; // e.g., "7d": 0.02, "30d": 0.08, etc.
     };
