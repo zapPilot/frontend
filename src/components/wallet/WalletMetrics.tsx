@@ -1,10 +1,11 @@
-import { AlertCircle, TrendingUp } from "lucide-react";
+import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React from "react";
 import { calculateMonthlyIncome } from "../../constants/portfolio";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import type { LandingPageResponse } from "../../services/analyticsEngine";
 import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
@@ -15,6 +16,8 @@ interface WalletMetricsProps {
   balanceHidden: boolean;
   portfolioChangePercentage: number;
   userId?: string | null;
+  // If provided, use this data instead of fetching again
+  landingPageData?: LandingPageResponse | null | undefined;
 }
 
 interface WelcomeNewUserProps {
@@ -60,10 +63,19 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
 }
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
-  ({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
-    // Fetch unified landing page data (includes APR data)
-    const { data: landingPageData, isLoading: landingPageLoading } =
-      useLandingPageData(userId);
+  ({
+    portfolioState,
+    balanceHidden,
+    portfolioChangePercentage,
+    userId,
+    landingPageData,
+  }) => {
+    // Fetch unified landing page data (includes APR data) only if not provided via props
+    const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
+      landingPageData ? null : userId
+    );
+    const data = landingPageData ?? fetchedData;
+    const landingPageLoading = landingPageData ? false : fetchedLoading;
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -74,9 +86,22 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       getDisplayTotalValue,
     } = usePortfolioStateHelpers(portfolioState);
 
-    const portfolioAPR = landingPageData?.weighted_apr || null;
-    const estimatedMonthlyIncome =
-      landingPageData?.estimated_monthly_income || null;
+    const portfolioROI = data?.portfolio_roi;
+
+    // Use recommended_yearly_roi directly from API (as percentage, not decimal)
+    const recommendedYearlyROI = portfolioROI?.recommended_yearly_roi;
+    const portfolioAPR = recommendedYearlyROI
+      ? recommendedYearlyROI / 100
+      : typeof data?.weighted_apr === "number"
+        ? data.weighted_apr
+        : null;
+
+    // Use estimated_yearly_pnl_usd directly from API
+    const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
+    const fallbackMonthlyIncome = data?.estimated_monthly_income;
+
+    const roiPeriod = portfolioROI?.recommended_roi_period;
+    const roiWindows = portfolioROI;
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -123,12 +148,18 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return formatCurrency(displayValue ?? 0, { isHidden: balanceHidden });
     };
 
-    // Use real APR data or fall back to default
+    // Use API-provided APR data or fall back to business constant default
     const displayAPR = portfolioAPR ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
     const displayValue = getDisplayTotalValue();
-    const displayMonthlyIncome =
-      estimatedMonthlyIncome ??
-      (displayValue ? calculateMonthlyIncome(displayValue, displayAPR) : 0);
+
+    // Prioritize API's estimated yearly PnL over calculated fallbacks
+    const displayYearlyPnL =
+      estimatedYearlyPnL ??
+      (fallbackMonthlyIncome
+        ? fallbackMonthlyIncome * 12
+        : displayValue
+          ? calculateMonthlyIncome(displayValue, displayAPR) * 12
+          : 0);
 
     // Show welcome message for new users
     if (portfolioState.errorMessage === "USER_NOT_FOUND") {
@@ -145,26 +176,149 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">
-            Portfolio APR {shouldShowConnectPrompt ? "(Potential)" : ""}
-          </p>
+          <div className="flex items-center space-x-1 mb-1">
+            <p className="text-sm text-gray-400">
+              Estimated Yearly ROI{" "}
+              {shouldShowConnectPrompt ? "(Potential)" : ""}
+            </p>
+            {portfolioROI && (
+              <div className="relative group">
+                <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity z-20 w-72 p-4 border border-gray-700">
+                  <div className="font-semibold text-gray-200 mb-2 text-center">
+                    📊 Portfolio ROI Estimation
+                  </div>
+
+                  {/* ROI Windows */}
+                  {roiWindows && (
+                    <div className="mb-3 p-2 bg-gray-800 rounded">
+                      <div className="text-gray-300 font-medium mb-2">
+                        ROI by Time Period
+                      </div>
+                      {roiWindows.roi_7d && (
+                        <div className="flex justify-between text-gray-300 mb-1">
+                          <span>
+                            7 days ({roiWindows.roi_7d.data_points} data points)
+                          </span>
+                          <span>{roiWindows.roi_7d.value.toFixed(2)}%</span>
+                        </div>
+                      )}
+                      {roiWindows.roi_30d && (
+                        <div className="flex justify-between text-gray-300 mb-1">
+                          <span>
+                            30 days ({roiWindows.roi_30d.data_points} data
+                            points)
+                          </span>
+                          <span>{roiWindows.roi_30d.value.toFixed(2)}%</span>
+                        </div>
+                      )}
+                      {roiWindows.roi_365d && (
+                        <div className="flex justify-between text-gray-300">
+                          <span>
+                            365 days ({roiWindows.roi_365d.data_points} data
+                            points)
+                          </span>
+                          <span>{roiWindows.roi_365d.value.toFixed(2)}%</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Current Estimates */}
+                  <div className="mb-3 p-2 bg-purple-900/20 rounded border border-purple-600/30">
+                    <div className="text-purple-300 font-medium mb-2">
+                      Current Estimates
+                    </div>
+                    {recommendedYearlyROI && (
+                      <div className="flex justify-between text-gray-300 mb-1">
+                        <span>Yearly ROI</span>
+                        <span>{recommendedYearlyROI.toFixed(2)}%</span>
+                      </div>
+                    )}
+                    {estimatedYearlyPnL && (
+                      <div className="flex justify-between text-gray-300 mb-1">
+                        <span>Yearly PnL</span>
+                        <span>{formatSmallCurrency(estimatedYearlyPnL)}</span>
+                      </div>
+                    )}
+                    {roiPeriod && (
+                      <div className="text-gray-400 text-xs mt-1">
+                        ⚡ Based on {roiPeriod} window, scaled linearly
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Portfolio Overview */}
+                  {data && (
+                    <div className="mb-3 p-2 bg-blue-900/20 rounded border border-blue-600/30">
+                      <div className="text-blue-300 font-medium mb-2">
+                        Portfolio Overview
+                      </div>
+                      <div className="flex justify-between text-gray-300 mb-1">
+                        <span>Total Assets</span>
+                        <span>
+                          {formatSmallCurrency(data.total_assets_usd)}
+                        </span>
+                      </div>
+                      {data.total_debt_usd > 0 && (
+                        <div className="flex justify-between text-gray-300 mb-1">
+                          <span>Total Debt</span>
+                          <span>
+                            {formatSmallCurrency(data.total_debt_usd)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between text-gray-300 mb-1">
+                        <span>Net Worth</span>
+                        <span>{formatSmallCurrency(data.total_net_usd)}</span>
+                      </div>
+                      {data.protocols_count && (
+                        <div className="text-gray-400 text-xs mt-1">
+                          🔗 {data.protocols_count} protocols,{" "}
+                          {data.chains_count} chains
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Methodology Note */}
+                  <div className="text-gray-400 text-xs leading-relaxed border-t border-gray-700 pt-2">
+                    💡 <strong>Methodology:</strong> ROI estimates use recent
+                    performance windows and scale linearly to yearly
+                    projections. Estimates become more accurate as data points
+                    increase over time.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           {(shouldShowLoading || landingPageLoading) &&
           portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton showValue={true} showPercentage={false} />
           ) : (
-            <div
-              className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
-            >
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xl font-semibold">
-                {(displayAPR * 100).toFixed(2)}%
-              </span>
-            </div>
+            <>
+              <div
+                className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+              >
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-xl font-semibold">
+                  {(displayAPR * 100).toFixed(2)}%
+                </span>
+                <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+                  est.
+                </span>
+                {roiPeriod && (
+                  <span className="text-xs text-gray-500 font-normal">
+                    ({roiPeriod})
+                  </span>
+                )}
+              </div>
+            </>
           )}
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">Est. Monthly Income</p>
+          <p className="text-sm text-gray-400 mb-1">Estimated Yearly PnL</p>
           {(shouldShowLoading || landingPageLoading) &&
           portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
             <WalletMetricsSkeleton
@@ -173,13 +327,20 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               className="w-24"
             />
           ) : (
-            <p
-              className={`text-xl font-semibold ${shouldShowConnectPrompt ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
+            <div
+              className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
             >
-              {shouldShowConnectPrompt
-                ? "Connect to calculate"
-                : formatSmallCurrency(displayMonthlyIncome)}
-            </p>
+              <p className="text-xl font-semibold">
+                {shouldShowConnectPrompt
+                  ? "Connect to calculate"
+                  : formatSmallCurrency(displayYearlyPnL)}
+              </p>
+              {!shouldShowConnectPrompt && (
+                <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+                  est.
+                </span>
+              )}
+            </div>
           )}
         </div>
       </div>

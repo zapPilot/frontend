@@ -15,6 +15,7 @@ vi.mock("lucide-react", () => ({
   AlertCircle: vi.fn(() => (
     <span data-testid="alert-circle-icon">AlertCircle</span>
   )),
+  Info: vi.fn(() => <span data-testid="info-icon">Info</span>),
 }));
 
 // Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed
@@ -73,6 +74,24 @@ vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
       total_net_usd: 15000,
       weighted_apr: 0.125, // 12.5% APR as decimal (API format)
       estimated_monthly_income: 1000,
+      portfolio_roi: {
+        recommended_roi: 4.7932,
+        recommended_roi_period: "roi_7d",
+        recommended_yearly_roi: 249.9313,
+        estimated_yearly_pnl_usd: 12000,
+        roi_7d: {
+          value: 4.7932,
+          data_points: 6,
+        },
+        roi_30d: {
+          value: 67.5856,
+          data_points: 25,
+        },
+        roi_365d: {
+          value: 67.5856,
+          data_points: 25,
+        },
+      },
       portfolio_allocation: {
         btc: {
           total_value: 0,
@@ -171,16 +190,65 @@ describe("WalletMetrics", () => {
         total_net_usd: 15000,
         weighted_apr: 0.125,
         estimated_monthly_income: 1000,
-        pie_chart_categories: {
-          btc: 0,
-          eth: 0,
-          stablecoins: 0,
-          others: 0,
+        portfolio_roi: {
+          recommended_roi: 4.7932,
+          recommended_roi_period: "roi_7d",
+          recommended_yearly_roi: 249.9313,
+          estimated_yearly_pnl_usd: 12000,
+          roi_7d: {
+            value: 4.7932,
+            data_points: 6,
+          },
+          roi_30d: {
+            value: 67.5856,
+            data_points: 25,
+          },
+          roi_365d: {
+            value: 67.5856,
+            data_points: 25,
+          },
+        },
+        portfolio_allocation: {
+          btc: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          eth: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          stablecoins: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+        },
+        wallet_token_summary: {
+          total_value_usd: 2884.38,
+          token_count: 263,
+          apr_30d: 0.6316,
+        },
+        category_summary_debt: {
+          btc: 0.0,
+          eth: 0.0,
+          stablecoins: 10366.38,
+          others: 7393.87,
         },
         pool_details: [],
         total_positions: 0,
-        protocols_count: 0,
-        chains_count: 0,
+        protocols_count: 5,
+        chains_count: 3,
         last_updated: null,
         apr_coverage: {
           matched_pools: 0,
@@ -212,8 +280,8 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
-      expect(screen.getByText(/Portfolio APR/)).toBeInTheDocument();
-      expect(screen.getByText("Est. Monthly Income")).toBeInTheDocument();
+      expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
+      expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -236,12 +304,12 @@ describe("WalletMetrics", () => {
 
       const labels = [
         screen.getByText("Total Balance"),
-        screen.getByText(/Portfolio APR/),
-        screen.getByText("Est. Monthly Income"),
+        screen.getByText(/Estimated Yearly ROI/),
+        screen.getByText("Estimated Yearly PnL"),
       ];
 
       labels.forEach(label => {
-        expect(label).toHaveClass("text-sm", "text-gray-400", "mb-1");
+        expect(label).toHaveClass("text-sm", "text-gray-400");
       });
     });
   });
@@ -250,7 +318,9 @@ describe("WalletMetrics", () => {
     it("should show formatted currency when data is loaded", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+      // Check the main balance display (not the tooltip instances)
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$15,000.00");
     });
 
     it("should show loader when loading", () => {
@@ -275,7 +345,11 @@ describe("WalletMetrics", () => {
       );
 
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
+      // The main balance section should show loading, not the actual balance
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toContainElement(
+        screen.getByTestId("balance-loading")
+      );
     });
 
     it("should show error message when error exists", () => {
@@ -364,11 +438,17 @@ describe("WalletMetrics", () => {
     });
   });
 
-  describe("Portfolio APR Display", () => {
-    it("should display default APR percentage", () => {
+  describe("Portfolio ROI Display", () => {
+    it("should display API yearly ROI percentage", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("12.50%")).toBeInTheDocument();
+      // Should use recommended_yearly_roi from API (249.93%) in the main ROI section
+      const roiSection = screen
+        .getByText("Estimated Yearly ROI")
+        .closest("div");
+      expect(roiSection).toHaveTextContent("249.93%");
+      // Should show estimation badge
+      expect(screen.getAllByText("est.")).toHaveLength(2); // One for ROI, one for PnL
     });
 
     it("should show TrendingUp icon for positive portfolio change", () => {
@@ -404,24 +484,30 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={5.2} />
       );
 
-      const aprContainer = screen.getByTestId("trending-up-icon").parentElement;
-      expect(aprContainer).toHaveClass("text-green-400");
+      const roiContainer = screen.getByTestId("trending-up-icon").parentElement;
+      expect(roiContainer).toHaveClass("text-green-400");
 
       rerender(
         <WalletMetrics {...defaultProps} portfolioChangePercentage={-3.8} />
       );
 
-      const aprContainerNegative =
+      const roiContainerNegative =
         screen.getByTestId("trending-up-icon").parentElement;
-      expect(aprContainerNegative).toHaveClass("text-red-400");
+      expect(roiContainerNegative).toHaveClass("text-red-400");
     });
   });
 
-  describe("Monthly Income Display", () => {
-    it("should display formatted monthly income", () => {
+  describe("Yearly PnL Display", () => {
+    it("should display formatted yearly PnL from API", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$1,000.00")).toBeInTheDocument();
+      // Should use estimated_yearly_pnl_usd from API ($12,000.00) in the PnL section
+      const pnlSection = screen
+        .getByText("Estimated Yearly PnL")
+        .closest("div");
+      expect(pnlSection).toHaveTextContent("$12,000.00");
+      // Should show estimation badge
+      expect(screen.getAllByText("est.")).toHaveLength(2); // One for ROI, one for PnL
     });
 
     it("should apply color classes based on portfolio performance", () => {
@@ -429,12 +515,15 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={5.2} />
       );
 
-      const incomeText = screen.getByText("$1,000.00");
-      expect(incomeText).toHaveClass(
-        "text-xl",
-        "font-semibold",
-        "text-green-400"
-      );
+      // Find the PnL text within the Estimated Yearly PnL section
+      const pnlSection = screen
+        .getByText("Estimated Yearly PnL")
+        .closest("div");
+      const pnlText = pnlSection.querySelector("p.text-xl.font-semibold");
+      expect(pnlText).toHaveTextContent("$12,000.00");
+      expect(pnlText).toHaveClass("text-xl", "font-semibold");
+      // Check parent div has color class
+      expect(pnlText.parentElement).toHaveClass("text-green-400");
     });
   });
 
@@ -458,7 +547,8 @@ describe("WalletMetrics", () => {
         />
       );
 
-      expect(screen.getByText("$999,999,999.00")).toBeInTheDocument();
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$999,999,999.00");
     });
 
     it("should handle zero totalValue", () => {
@@ -477,8 +567,13 @@ describe("WalletMetrics", () => {
         />
       );
 
-      expect(screen.getByText("$0.00")).toBeInTheDocument(); // Balance
-      expect(screen.getByText("$1,000.00")).toBeInTheDocument(); // Monthly income from mock
+      // Check the main balance display
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$0.00");
+      // Check yearly PnL display
+      expect(
+        screen.getByText("Estimated Yearly PnL").closest("div")
+      ).toHaveTextContent("$12,000.00");
     });
 
     it("should handle negative totalValue", () => {
@@ -497,7 +592,8 @@ describe("WalletMetrics", () => {
         />
       );
 
-      expect(screen.getByText("-$1,000.00")).toBeInTheDocument();
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("-$1,000.00");
     });
 
     it("should handle very large positive portfolio change percentage", () => {
@@ -548,23 +644,26 @@ describe("WalletMetrics", () => {
     it("should apply correct classes to balance display container", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      const balanceContainer = screen.getByText("$15,000.00").parentElement;
-      expect(balanceContainer).toBeInTheDocument();
-      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toBeInTheDocument();
+      expect(balanceSection).toHaveTextContent("$15,000.00");
     });
 
-    it("should apply correct classes to APR display", () => {
+    it("should apply correct classes to ROI display", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      const aprValue = screen.getByText("12.50%");
-      expect(aprValue).toHaveClass("text-xl", "font-semibold");
+      // Find the ROI value by looking for the TrendingUp icon and getting its sibling
+      const trendingUpIcon = screen.getByTestId("trending-up-icon");
+      const roiValue = trendingUpIcon.nextElementSibling;
+      expect(roiValue).toHaveTextContent("249.93%");
+      expect(roiValue).toHaveClass("text-xl", "font-semibold");
     });
 
     it("should apply correct grid structure", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Portfolio APR|Est\. Monthly Income/
+        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL/
       );
       expect(sections).toHaveLength(3);
     });
@@ -577,7 +676,8 @@ describe("WalletMetrics", () => {
 
       rerender(<WalletMetrics {...props} />);
 
-      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$15,000.00");
     });
 
     it("should re-render when totalValue changes", () => {
@@ -591,7 +691,8 @@ describe("WalletMetrics", () => {
       });
       const { rerender } = render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+      let balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$15,000.00");
 
       mockUsePortfolioStateHelpers.mockReturnValue({
         shouldShowLoading: false,
@@ -608,7 +709,8 @@ describe("WalletMetrics", () => {
         />
       );
 
-      expect(screen.getByText("$20,000.00")).toBeInTheDocument();
+      balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$20,000.00");
     });
 
     it("should re-render when balanceHidden changes", () => {
@@ -616,7 +718,8 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} balanceHidden={false} />
       );
 
-      expect(screen.getByText("$15,000.00")).toBeInTheDocument();
+      const balanceSection = screen.getByText("Total Balance").closest("div");
+      expect(balanceSection).toHaveTextContent("$15,000.00");
 
       rerender(<WalletMetrics {...defaultProps} balanceHidden={true} />);
 
@@ -630,12 +733,12 @@ describe("WalletMetrics", () => {
 
       // Check that metric labels are properly associated with their values
       const totalBalanceLabel = screen.getByText("Total Balance");
-      const aprLabel = screen.getByText(/Portfolio APR/);
-      const incomeLabel = screen.getByText("Est. Monthly Income");
+      const roiLabel = screen.getByText(/Estimated Yearly ROI/);
+      const pnlLabel = screen.getByText("Estimated Yearly PnL");
 
       expect(totalBalanceLabel.tagName).toBe("P");
-      expect(aprLabel.tagName).toBe("P");
-      expect(incomeLabel.tagName).toBe("P");
+      expect(roiLabel.tagName).toBe("P");
+      expect(pnlLabel.tagName).toBe("P");
     });
 
     it("should handle loader accessibility", () => {

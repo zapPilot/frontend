@@ -123,6 +123,12 @@ export default function DashboardApp() {
     }
   }, [isConnected, userInfo?.userId, router]);
 
+  // While redirecting from root to /bundle, avoid mounting heavy components
+  // to prevent duplicate data fetches on both routes
+  const isOnRoot =
+    typeof window !== "undefined" && window.location.pathname === "/";
+  const pendingRedirect = isOnRoot && isConnected && !!userInfo?.userId;
+
   // Navigation handlers with context awareness
   // Each handler sets the appropriate navigationContext to control SwapPage behavior
   const handleBackToPortfolio = useCallback(() => {
@@ -226,6 +232,21 @@ export default function DashboardApp() {
         );
     }
   };
+
+  if (pendingRedirect) {
+    return (
+      <div className="min-h-screen bg-gray-950 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
+        <div className="relative z-10 flex items-center justify-center h-screen">
+          <LoadingState
+            variant="spinner"
+            size="lg"
+            message="Opening your bundle..."
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 relative overflow-hidden">
