@@ -85,7 +85,7 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
               <div
                 role="tabpanel"
                 id="assets-tabpanel"
-                aria-labelledby="assets-tab-desktop assets-tab-mobile"
+                aria-labelledby="assets-tab assets-tab-mobile"
               >
                 {categorySummaries.length > 0 ? (
                   categorySummaries.map(category => (
@@ -111,7 +111,7 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
               <div
                 role="tabpanel"
                 id="borrowing-tabpanel"
-                aria-labelledby="borrowing-tab-desktop borrowing-tab-mobile"
+                aria-labelledby="borrowing-tab borrowing-tab-mobile"
               >
                 {debtCategorySummaries.length > 0 ? (
                   debtCategorySummaries.map(category => (

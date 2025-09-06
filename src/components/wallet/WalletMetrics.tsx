@@ -1,5 +1,6 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useRef, useState } from "react";
+import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { createPortal } from "react-dom";
 import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
@@ -13,7 +14,7 @@ import { BalanceLoading } from "../ui/UnifiedLoading";
 
 interface WalletMetricsProps {
   portfolioState: PortfolioState;
-  balanceHidden: boolean;
+  balanceHidden?: boolean;
   portfolioChangePercentage: number;
   userId?: string | null;
   // If provided, use this data instead of fetching again
@@ -70,6 +71,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     userId,
     landingPageData,
   }) => {
+    const { balanceHidden: ctxHidden } = useBalanceVisibility();
+    const resolvedHidden = balanceHidden ?? ctxHidden;
     // Fetch unified landing page data (includes APR data) only if not provided via props
     const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
       landingPageData ? null : userId
@@ -160,7 +163,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
       // Normal portfolio display
       const displayValue = getDisplayTotalValue();
-      return formatCurrency(displayValue ?? 0, { isHidden: balanceHidden });
+      return formatCurrency(displayValue ?? 0, { isHidden: resolvedHidden });
     };
 
     // Use API-provided APR data or fall back to business constant default

@@ -3,13 +3,13 @@
 import { logger } from "@/utils/logger";
 import dynamic from "next/dynamic";
 import { ComponentType } from "react";
+import { BalanceVisibilityProvider } from "../contexts/BalanceVisibilityContext";
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../hooks/usePortfolio";
+import { usePortfolioData } from "../hooks/usePortfolioData";
 import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
-import { usePortfolioData } from "../hooks/usePortfolioData";
-import { BalanceVisibilityProvider } from "../contexts/BalanceVisibilityContext";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
 import { PortfolioOverview } from "./PortfolioOverview";
 import { GlassCard } from "./ui";
@@ -36,6 +36,9 @@ interface WalletPortfolioProps {
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
   onCategoryClick?: (categoryId: string) => void;
+  isOwnBundle?: boolean | undefined;
+  bundleUserName?: string | undefined;
+  bundleUrl?: string;
 }
 
 export function WalletPortfolio({
@@ -45,6 +48,9 @@ export function WalletPortfolio({
   onZapInClick,
   onZapOutClick,
   onCategoryClick,
+  isOwnBundle,
+  bundleUserName,
+  bundleUrl,
 }: WalletPortfolioProps = {}) {
   // Get user data for landing page
   const { userInfo, isConnected } = useUser();
@@ -108,15 +114,14 @@ export function WalletPortfolio({
           >
             <GlassCard>
               <WalletHeader
-                onAnalyticsClick={onAnalyticsClick}
                 onWalletManagerClick={openWalletManager}
-                onToggleBalance={toggleBalanceVisibility}
-                balanceHidden={balanceHidden}
+                isOwnBundle={isOwnBundle}
+                bundleUserName={bundleUserName}
+                bundleUrl={bundleUrl}
               />
 
               <WalletMetrics
                 portfolioState={portfolioState}
-                balanceHidden={balanceHidden}
                 portfolioChangePercentage={
                   portfolioMetrics?.totalChangePercentage || 0
                 }

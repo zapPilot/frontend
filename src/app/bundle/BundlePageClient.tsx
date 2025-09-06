@@ -1,15 +1,17 @@
 "use client";
 
+import { QuickSwitchFAB } from "@/components/bundle";
 import { Navigation } from "@/components/Navigation";
+import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
-import { mockInvestmentOpportunities } from "@/data/mockInvestments";
-import { InvestmentOpportunity } from "@/types/investment";
 import { useUser } from "@/contexts/UserContext";
+import { mockInvestmentOpportunities } from "@/data/mockInvestments";
+import { bundleService, BundleUser } from "@/services/bundleService";
+import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ComponentType, useCallback, useEffect, useState } from "react";
-import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
@@ -110,6 +112,23 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   >(null);
   const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
+  const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
+  
+  // Computed values
+  const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
+  const bundleUrl = bundleService.generateBundleUrl(userId);
+  const showQuickSwitch = isConnected && !isOwnBundle && userInfo?.userId;
+
+  // Load bundle user info
+  useEffect(() => {
+    const loadBundleUser = async () => {
+      if (userId) {
+        const user = await bundleService.getBundleUser(userId);
+        setBundleUser(user);
+      }
+    };
+    loadBundleUser();
+  }, [userId]);
 
   // Redirect to home when user disconnects from their own bundle page
   useEffect(() => {
@@ -232,6 +251,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
             onCategoryClick={handleCategoryClick}
+            isOwnBundle={isOwnBundle}
+            bundleUserName={bundleUser?.displayName}
+            bundleUrl={bundleUrl}
           />
         );
       case "analytics":
@@ -251,6 +273,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}
             onCategoryClick={handleCategoryClick}
+            isOwnBundle={isOwnBundle}
+            bundleUserName={bundleUser?.displayName}
+            bundleUrl={bundleUrl}
           />
         );
     }
@@ -298,12 +323,19 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         <div className="hidden lg:block h-16" />
 
         <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
+          <div className="max-w-7xl mx-auto">
+            {renderTabContent()}
+          </div>
         </main>
 
         {/* Mobile bottom nav spacing */}
         <div className="lg:hidden h-20" />
       </div>
+
+      {/* Quick Switch FAB */}
+      {showQuickSwitch && (
+        <QuickSwitchFAB onSwitchToMyBundle={handleSwitchToMyBundle} />
+      )}
     </div>
   );
 }

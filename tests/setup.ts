@@ -205,23 +205,25 @@ vi.mock("next/dynamic", () => {
                       "data-testid": "pie-chart-mock",
                     },
                     [
-                      React.createElement(
-                        "div",
-                        {
-                          key: "pie-chart-visibility",
-                          "data-testid": "pie-chart-visibility-state",
-                        },
-                        props?.balanceHidden ? "hidden" : "visible"
-                      ),
+                      (() => {
+                        // Prefer explicit prop, otherwise default to visible since context isn't accessible here
+                        const hidden = props?.balanceHidden === true;
+                        return React.createElement(
+                          "div",
+                          {
+                            key: "pie-chart-visibility",
+                            "data-testid": "pie-chart-visibility-state",
+                          },
+                          hidden ? "hidden" : "visible"
+                        );
+                      })(),
                       React.createElement(
                         "div",
                         {
                           key: "pie-chart-balance",
                           "data-testid": "pie-chart-balance",
                         },
-                        props?.balanceHidden
-                          ? "••••••••"
-                          : formatCurrency(calculatedTotal)
+                        (props?.balanceHidden ? "••••••••" : formatCurrency(calculatedTotal))
                       ),
                       React.createElement(
                         "div",

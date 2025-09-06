@@ -136,59 +136,57 @@ vi.mock("../../../src/components/ui", () => ({
   )),
 }));
 
-vi.mock("../../../src/components/wallet/WalletHeader", () => ({
-  WalletHeader: vi.fn(
-    ({
-      onAnalyticsClick,
-      onWalletManagerClick,
-      onToggleBalance,
-      balanceHidden,
-    }) => (
-      <div data-testid="wallet-header">
-        <div data-testid="balance-visibility">
-          {balanceHidden ? "hidden" : "visible"}
+vi.mock("../../../src/components/wallet/WalletHeader", () => {
+  return {
+    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
+      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+      return (
+        <div data-testid="wallet-header">
+          <div data-testid="balance-visibility">{hidden ? "hidden" : "visible"}</div>
+          <button data-testid="analytics-btn" onClick={onAnalyticsClick}>View Analytics</button>
+          <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>Manage Wallets</button>
+          <button data-testid="toggle-balance-btn" onClick={handleToggle}>
+            {hidden ? "Show Balance" : "Hide Balance"}
+          </button>
         </div>
-        <button data-testid="analytics-btn" onClick={onAnalyticsClick}>
-          View Analytics
-        </button>
-        <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>
-          Manage Wallets
-        </button>
-        <button data-testid="toggle-balance-btn" onClick={onToggleBalance}>
-          {balanceHidden ? "Show Balance" : "Hide Balance"}
-        </button>
-      </div>
-    )
-  ),
-}));
+      );
+    }),
+  };
+});
 
-vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(({ portfolioState, balanceHidden }) => {
-    const totalValue = portfolioState?.totalValue;
-    const isLoading = portfolioState?.isLoading || false;
-    const error = portfolioState?.errorMessage;
-    const isConnected = portfolioState?.isConnected || false;
+vi.mock("../../../src/components/wallet/WalletMetrics", () => {
+  return {
+    WalletMetrics: vi.fn(({ portfolioState, balanceHidden }) => {
+      const { balanceHidden: hookHidden } = usePortfolio();
+      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+      const totalValue = portfolioState?.totalValue;
+      const isLoading = portfolioState?.isLoading || false;
+      const error = portfolioState?.errorMessage;
+      const isConnected = portfolioState?.isConnected || false;
 
-    return (
-      <div data-testid="wallet-metrics">
-        <div data-testid="total-value-display">
-          {balanceHidden
+      return (
+        <div data-testid="wallet-metrics">
+          <div data-testid="total-value-display">
+          {hidden
             ? "****"
             : totalValue
               ? `$${totalValue.toLocaleString()}`
               : "No value"}
+          </div>
+          <div data-testid="metrics-loading-state">
+            {isLoading ? "Loading..." : "Loaded"}
+          </div>
+          <div data-testid="metrics-error-state">{error || "No errors"}</div>
+          <div data-testid="metrics-connection-state">
+            {isConnected ? "Connected" : "Disconnected"}
+          </div>
         </div>
-        <div data-testid="metrics-loading-state">
-          {isLoading ? "Loading..." : "Loaded"}
-        </div>
-        <div data-testid="metrics-error-state">{error || "No errors"}</div>
-        <div data-testid="metrics-connection-state">
-          {isConnected ? "Connected" : "Disconnected"}
-        </div>
-      </div>
-    );
-  }),
-}));
+      );
+    }),
+  };
+});
 
 vi.mock("../../../src/components/wallet/WalletActions", () => ({
   WalletActions: vi.fn(({ onZapInClick, onZapOutClick, onOptimizeClick }) => (

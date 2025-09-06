@@ -1,7 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { memo, useMemo } from "react";
+import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 import { formatCurrency } from "../lib/formatters";
 import { PieChartData } from "../types/portfolio";
@@ -27,6 +28,8 @@ const PieChartComponent = ({
 }: PieChartProps) => {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+  const prefersReducedMotion = useReducedMotion();
+  const { balanceHidden } = useBalanceVisibility();
 
   // Memoize expensive calculations
   const chartData = useMemo(() => {
@@ -73,35 +76,36 @@ const PieChartComponent = ({
           role="presentation"
           aria-hidden="true"
         >
-          {chartData.map((item, index) => (
-            <motion.circle
-              key={`pie-${item.label}-${item.percentage}-${index}`}
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="transparent"
-              stroke={item.color}
-              strokeWidth={strokeWidth}
-              strokeDasharray={item.strokeDasharray}
-              strokeDashoffset={item.strokeDashoffset}
-              strokeLinecap="round"
-              initial={{ strokeDasharray: `0 ${circumference}` }}
-              animate={{
-                strokeDasharray: item.strokeDasharray,
-                strokeDashoffset: item.strokeDashoffset,
-              }}
-              transition={{
-                duration: 1,
-                delay: item.index * PORTFOLIO_CONFIG.ANIMATION_DELAY_STEP * 2,
-                ease: "easeOut",
-              }}
-              className="hover:brightness-110 transition-all duration-200 cursor-pointer"
-              style={{
-                filter: `drop-shadow(0 0 8px ${item.color}40)`,
-                willChange: "transform", // GPU acceleration hint
-              }}
-            />
-          ))}
+          {chartData.map((item, index) => {
+            const key = `pie-${item.label}-${item.percentage}-${index}`;
+            const commonProps = {
+              key,
+              cx: size / 2,
+              cy: size / 2,
+              r: radius,
+              fill: "transparent",
+              stroke: item.color,
+              strokeWidth,
+              strokeDasharray: item.strokeDasharray,
+              strokeDashoffset: item.strokeDashoffset,
+              strokeLinecap: "round" as const,
+              className: "hover:brightness-110 transition-all duration-200",
+            };
+            const animate = !prefersReducedMotion && chartData.length <= 8;
+            return animate ? (
+              <motion.circle
+                {...commonProps}
+                initial={{ strokeDasharray: `0 ${circumference}` }}
+                animate={{
+                  strokeDasharray: item.strokeDasharray,
+                  strokeDashoffset: item.strokeDashoffset,
+                }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            ) : (
+              <circle {...commonProps} />
+            );
+          })}
         </svg>
 
         {/* Center content */}
@@ -112,7 +116,9 @@ const PieChartComponent = ({
             ) : (
               <>
                 <div className="text-2xl font-bold text-white">
-                  {formatCurrency(calculatedValues.netValue)}
+                  {formatCurrency(calculatedValues.netValue, {
+                    isHidden: balanceHidden,
+                  })}
                 </div>
                 <div className="text-sm text-gray-400">Total Value</div>
               </>

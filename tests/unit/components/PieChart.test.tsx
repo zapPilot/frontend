@@ -5,19 +5,20 @@ import { PORTFOLIO_CONFIG } from "../../../src/constants/portfolio";
 import { formatCurrency } from "../../../src/lib/formatters";
 import { PieChartData } from "../../../src/types/portfolio";
 
-// Mock framer-motion
+// Mock framer-motion with reduced-motion hook
 vi.mock("framer-motion", () => ({
   motion: {
     circle: vi.fn(({ children, ...props }) => (
       <circle {...props}>{children}</circle>
     )),
   },
+  useReducedMotion: () => true,
 }));
 
-// Mock formatCurrency utility
+// Mock formatCurrency utility to support options object
 vi.mock("../../../src/lib/formatters", () => ({
-  formatCurrency: vi.fn((amount: number, isHidden = false) =>
-    isHidden ? "••••••••" : `$${amount.toFixed(2)}`
+  formatCurrency: vi.fn((amount: number, opts?: { isHidden?: boolean }) =>
+    opts?.isHidden ? "••••••••" : `$${amount.toFixed(2)}`
   ),
 }));
 
@@ -115,14 +116,14 @@ describe("PieChart", () => {
     it("should calculate total value from data when no totalValue prop provided", () => {
       render(<PieChart {...defaultProps} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(25000); // 15000 + 7500 + 2500
+      expect(formatCurrency).toHaveBeenCalledWith(25000, { isHidden: false }); // 15000 + 7500 + 2500
     });
 
     it("should use provided totalValue over calculated value", () => {
       const propsWithTotalValue = { ...defaultProps, totalValue: 30000 };
       render(<PieChart {...propsWithTotalValue} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(30000);
+      expect(formatCurrency).toHaveBeenCalledWith(30000, { isHidden: false });
     });
   });
 
@@ -130,7 +131,7 @@ describe("PieChart", () => {
     it("should show actual currency when no custom renderer provided", () => {
       render(<PieChart {...defaultProps} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(25000);
+      expect(formatCurrency).toHaveBeenCalledWith(25000, { isHidden: false });
       expect(screen.getByText("$25000.00")).toBeInTheDocument();
     });
 
@@ -267,14 +268,14 @@ describe("PieChart", () => {
 
       rerender(<PieChart data={newData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenLastCalledWith(10000);
+      expect(formatCurrency).toHaveBeenLastCalledWith(10000, { isHidden: false });
     });
 
     it("should handle zero total value gracefully", () => {
       const zeroData = mockPieChartData.map(item => ({ ...item, value: 0 }));
       render(<PieChart data={zeroData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(0);
+      expect(formatCurrency).toHaveBeenCalledWith(0, { isHidden: false });
       expect(screen.getByText("$0.00")).toBeInTheDocument();
     });
   });
@@ -286,7 +287,7 @@ describe("PieChart", () => {
       ];
       render(<PieChart data={largeValueData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(999999999);
+      expect(formatCurrency).toHaveBeenCalledWith(999999999, { isHidden: false });
     });
 
     it("should handle negative values", () => {
@@ -295,7 +296,7 @@ describe("PieChart", () => {
       ];
       render(<PieChart data={negativeData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(-1000);
+      expect(formatCurrency).toHaveBeenCalledWith(-1000, { isHidden: false });
     });
 
     it("should handle floating point values", () => {
@@ -304,7 +305,7 @@ describe("PieChart", () => {
       ];
       render(<PieChart data={floatData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(123.456);
+      expect(formatCurrency).toHaveBeenCalledWith(123.456, { isHidden: false });
     });
 
     it("should maintain consistent key generation for data items", () => {

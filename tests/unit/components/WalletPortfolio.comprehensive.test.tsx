@@ -103,34 +103,32 @@ vi.mock("../../../src/components/WalletManager", () => ({
   ),
 }));
 
-vi.mock("../../../src/components/wallet/WalletHeader", () => ({
-  WalletHeader: vi.fn(
-    ({
-      onAnalyticsClick,
-      onWalletManagerClick,
-      onToggleBalance,
-      balanceHidden,
-    }) => (
-      <div data-testid="wallet-header">
-        {onAnalyticsClick && (
-          <button data-testid="analytics-btn" onClick={onAnalyticsClick}>
-            Analytics
+vi.mock("../../../src/components/wallet/WalletHeader", () => {
+  return {
+    WalletHeader: vi.fn(({ onAnalyticsClick, onWalletManagerClick, onToggleBalance, balanceHidden }) => {
+      const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
+      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+      const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+      return (
+        <div data-testid="wallet-header">
+          {onAnalyticsClick && (
+            <button data-testid="analytics-btn" onClick={onAnalyticsClick}>Analytics</button>
+          )}
+          <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>Wallet Manager</button>
+          <button data-testid="toggle-balance-btn" onClick={handleToggle}>
+            {hidden ? "Show Balance" : "Hide Balance"}
           </button>
-        )}
-        <button data-testid="wallet-manager-btn" onClick={onWalletManagerClick}>
-          Wallet Manager
-        </button>
-        <button data-testid="toggle-balance-btn" onClick={onToggleBalance}>
-          {balanceHidden ? "Show Balance" : "Hide Balance"}
-        </button>
-      </div>
-    )
-  ),
-}));
+        </div>
+      );
+    }),
+  };
+});
 
-vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
-  WalletMetrics: vi.fn(
-    ({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
+vi.mock("../../../src/components/wallet/WalletMetrics", () => {
+  return {
+    WalletMetrics: vi.fn(({ portfolioState, balanceHidden, portfolioChangePercentage, userId }) => {
+      const { balanceHidden: hookHidden } = usePortfolio();
+      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
       // Mock the getDisplayTotalValue logic
       const getDisplayTotalValue = () => {
         if (!portfolioState || portfolioState.type === "wallet_disconnected")
@@ -146,7 +144,7 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
       return (
         <div data-testid="wallet-metrics">
           <div data-testid="total-value">
-            {balanceHidden ? "****" : displayValue || "0"}
+            {hidden ? "****" : displayValue || "0"}
           </div>
           <div data-testid="loading-state">
             {portfolioState?.isLoading ? "loading" : "not-loading"}
@@ -163,9 +161,9 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
           <div data-testid="user-id">{userId || "no-user"}</div>
         </div>
       );
-    }
-  ),
-}));
+    }),
+  };
+});
 
 vi.mock("../../../src/components/wallet/WalletActions", () => ({
   WalletActions: vi.fn(({ onZapInClick, onZapOutClick, onOptimizeClick }) => (

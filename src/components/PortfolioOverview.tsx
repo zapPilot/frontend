@@ -23,6 +23,7 @@ export interface PortfolioOverviewProps {
   debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
   balanceHidden?: boolean;
+  renderBalanceDisplay?: () => React.ReactNode;
   title?: string;
   className?: string;
   testId?: string;
@@ -41,6 +42,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     testId,
     onRetry,
     onCategoryClick,
+    renderBalanceDisplay,
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
@@ -92,7 +94,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               onKeyDown={handleTabListKeyDown}
             >
               <TabButton
-                id="assets-tab-desktop"
+                id="assets-tab"
                 label="Assets"
                 active={activeTab === "assets"}
                 onSelect={() => setActiveTab("assets")}
@@ -102,7 +104,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 controls="assets-tabpanel"
               />
               <TabButton
-                id="borrowing-tab-desktop"
+                id="borrowing-tab"
                 label="Borrowing"
                 active={activeTab === "borrowing"}
                 onSelect={() => setActiveTab("borrowing")}
@@ -221,6 +223,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                     size={250}
                     strokeWidth={10}
                     totalValue={getDisplayTotalValue() || 0}
+                    {...(renderBalanceDisplay ? { renderBalanceDisplay } : {})}
                   />
                 )}
               </div>
@@ -263,6 +266,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                   size={200}
                   strokeWidth={8}
                   totalValue={getDisplayTotalValue() || 0}
+                  {...(renderBalanceDisplay ? { renderBalanceDisplay } : {})}
                 />
               )}
             </div>
