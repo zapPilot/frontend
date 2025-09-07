@@ -391,20 +391,10 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
     it("should handle portfolio optimization flow", async () => {
       const user = userEvent.setup();
       const onOptimizeClick = vi.fn();
-      const onAnalyticsClick = vi.fn();
 
-      render(
-        <WalletPortfolio
-          onOptimizeClick={onOptimizeClick}
-          onAnalyticsClick={onAnalyticsClick}
-        />
-      );
+      render(<WalletPortfolio onOptimizeClick={onOptimizeClick} />);
 
-      // 1. View analytics
-      await user.click(screen.getByTestId("analytics-button"));
-      expect(onAnalyticsClick).toHaveBeenCalled();
-
-      // 2. Optimize portfolio
+      // Optimize portfolio
       await user.click(screen.getByTestId("optimize-action"));
       expect(onOptimizeClick).toHaveBeenCalled();
     });

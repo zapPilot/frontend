@@ -12,6 +12,14 @@ vi.mock("@/components/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 
+// Mock onboarding provider to avoid provider requirement
+vi.mock("@/providers/OnboardingProvider", () => ({
+  useOnboarding: () => ({
+    shouldShowHint: () => false,
+    markStepCompleted: vi.fn(),
+  }),
+}));
+
 // Router mock
 const replaceMock = vi.fn();
 vi.mock("next/navigation", async () => {

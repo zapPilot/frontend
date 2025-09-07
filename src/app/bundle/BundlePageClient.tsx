@@ -103,7 +103,9 @@ const SwapPage: ComponentType<SwapPageProps> = dynamic(
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>
-    import("@/components/WalletManager").then(mod => ({ default: mod.WalletManager })),
+    import("@/components/WalletManager").then(mod => ({
+      default: mod.WalletManager,
+    })),
   {
     loading: () => null, // Modal doesn't need loading state when closed
   }
@@ -116,7 +118,8 @@ interface BundlePageClientProps {
 export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
-  const { shouldShowHint, markStepCompleted } = useOnboarding();
+  const { shouldShowHint, markStepCompleted, markEmailSubscribed } =
+    useOnboarding();
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
@@ -127,7 +130,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
-  const [previousIsConnected, setPreviousIsConnected] = useState<boolean | null>(null);
+  const [previousIsConnected, setPreviousIsConnected] = useState<
+    boolean | null
+  >(null);
 
   // Computed values
   const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
@@ -328,7 +333,8 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
           >
             <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="text-sm">
-                You're viewing another user's bundle. Switch to your own bundle?
+                You&apos;re viewing another user&apos;s bundle. Switch to your
+                own bundle?
               </div>
               <div className="flex gap-2 justify-end">
                 <button
@@ -379,7 +385,10 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       <WalletManager
         isOpen={isWalletManagerOpen}
         onClose={() => setIsWalletManagerOpen(false)}
-        onEmailSubscribed={() => markStepCompleted("email-subscription-reminder")}
+        onEmailSubscribed={() => {
+          markEmailSubscribed();
+          markStepCompleted("email-subscription-reminder");
+        }}
       />
     </div>
   );

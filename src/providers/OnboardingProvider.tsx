@@ -143,11 +143,7 @@ export const OnboardingProvider = ({
           );
 
         case "email-subscription-reminder":
-          return (
-            state.hasConnectedWallet && 
-            !state.hasEmailSubscription &&
-            !state.isFirstVisit
-          );
+          return state.hasConnectedWallet && !state.hasEmailSubscription;
 
         default:
           return true;

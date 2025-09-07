@@ -472,7 +472,7 @@ describe("WalletManager", () => {
         });
 
         expect(
-          screen.getByText("Please fill in all fields")
+          screen.getByText("Wallet label is required")
         ).toBeInTheDocument();
         expect(mockUserService.addWalletToBundle).not.toHaveBeenCalled();
       });

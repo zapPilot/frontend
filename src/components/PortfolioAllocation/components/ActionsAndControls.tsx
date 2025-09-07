@@ -3,8 +3,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
-import { Z_INDEX } from "@/constants/design-system";
-import { GRADIENTS } from "@/constants/design-system";
+import { Z_INDEX, GRADIENTS } from "@/constants/design-system";
 import { GradientButton } from "@/components/ui";
 import { useDropdown } from "@/hooks";
 import { MOCK_TOKENS } from "@/constants/trading";
