@@ -663,7 +663,7 @@ describe("WalletPortfolio - Integration Tests", () => {
 
   describe("Real-world Scenarios", () => {
     it("should handle network switching scenarios", async () => {
-      render(<WalletPortfolio />);
+      const { rerender } = render(<WalletPortfolio />);
 
       // Initial state - connected with data
       expect(screen.getAllByText(/\$45,?000/)[0]).toBeInTheDocument();
@@ -682,7 +682,29 @@ describe("WalletPortfolio - Integration Tests", () => {
         isRefetching: false,
       });
 
-      const { rerender } = render(<WalletPortfolio />);
+      // Update portfolio state mocks to reflect disconnected/loading state
+      mockUsePortfolioState.mockReturnValue({
+        type: "wallet_disconnected",
+        isConnected: false,
+        isLoading: true,
+        hasError: false,
+        hasZeroData: false,
+        totalValue: null,
+        errorMessage: null,
+        isRetrying: false,
+      });
+
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: true,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      // Trigger re-render with the updated mocks
+      rerender(<WalletPortfolio />);
 
       // Should show loading/disconnected state
       await waitFor(() => {
@@ -703,6 +725,27 @@ describe("WalletPortfolio - Integration Tests", () => {
         error: null,
         refetch: vi.fn(),
         isRefetching: false,
+      });
+
+      // Update portfolio state mocks back to connected with data
+      mockUsePortfolioState.mockReturnValue({
+        type: "has_data",
+        isConnected: true,
+        isLoading: false,
+        hasError: false,
+        hasZeroData: false,
+        totalValue: 45000,
+        errorMessage: null,
+        isRetrying: false,
+      });
+
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 45000,
       });
 
       rerender(<WalletPortfolio />);

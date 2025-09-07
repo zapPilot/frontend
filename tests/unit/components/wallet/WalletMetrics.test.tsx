@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletMetrics } from "../../../../src/components/wallet/WalletMetrics";
 import { useLandingPageData } from "../../../../src/hooks/queries/usePortfolioQuery";
+import type { LandingPageResponse } from "../../../../src/services/analyticsEngine";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -163,6 +164,71 @@ vi.mock("../../../../src/hooks/usePortfolioState", () => ({
 
 describe("WalletMetrics", () => {
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
+  const mockLandingData: LandingPageResponse = {
+    total_assets_usd: 15000,
+    total_debt_usd: 0,
+    total_net_usd: 15000,
+    weighted_apr: 0.125,
+    estimated_monthly_income: 1000,
+    portfolio_roi: {
+      recommended_roi: 4.7932,
+      recommended_roi_period: "roi_7d",
+      recommended_yearly_roi: 249.9313,
+      estimated_yearly_pnl_usd: 12000,
+      roi_7d: { value: 4.7932, data_points: 6 },
+      roi_30d: { value: 67.5856, data_points: 25 },
+      roi_365d: { value: 67.5856, data_points: 25 },
+    },
+    portfolio_allocation: {
+      btc: {
+        total_value: 0,
+        percentage_of_portfolio: 0,
+        wallet_tokens_value: 0,
+        other_sources_value: 0,
+      },
+      eth: {
+        total_value: 0,
+        percentage_of_portfolio: 0,
+        wallet_tokens_value: 0,
+        other_sources_value: 0,
+      },
+      stablecoins: {
+        total_value: 0,
+        percentage_of_portfolio: 0,
+        wallet_tokens_value: 0,
+        other_sources_value: 0,
+      },
+      others: {
+        total_value: 0,
+        percentage_of_portfolio: 0,
+        wallet_tokens_value: 0,
+        other_sources_value: 0,
+      },
+    },
+    wallet_token_summary: {
+      total_value_usd: 2884.38,
+      token_count: 263,
+      apr_30d: 0.6316,
+    },
+    category_summary_debt: {
+      btc: 0,
+      eth: 0,
+      stablecoins: 10366.38,
+      others: 7393.87,
+    },
+    pool_details: [],
+    total_positions: 0,
+    protocols_count: 5,
+    chains_count: 3,
+    last_updated: null,
+    apr_coverage: {
+      matched_pools: 0,
+      total_pools: 0,
+      coverage_percentage: 0,
+      matched_asset_value_usd: 0,
+    },
+  };
+
   const defaultProps = {
     portfolioState: {
       type: "has_data" as const,
@@ -177,6 +243,7 @@ describe("WalletMetrics", () => {
     balanceHidden: false,
     portfolioChangePercentage: 5.2,
     userId: "test-user-id",
+    landingPageData: mockLandingData,
   };
 
   beforeEach(() => {
@@ -184,79 +251,7 @@ describe("WalletMetrics", () => {
 
     // Setup landing page data mock
     mockUseLandingPageData.mockReturnValue({
-      data: {
-        total_assets_usd: 15000,
-        total_debt_usd: 0,
-        total_net_usd: 15000,
-        weighted_apr: 0.125,
-        estimated_monthly_income: 1000,
-        portfolio_roi: {
-          recommended_roi: 4.7932,
-          recommended_roi_period: "roi_7d",
-          recommended_yearly_roi: 249.9313,
-          estimated_yearly_pnl_usd: 12000,
-          roi_7d: {
-            value: 4.7932,
-            data_points: 6,
-          },
-          roi_30d: {
-            value: 67.5856,
-            data_points: 25,
-          },
-          roi_365d: {
-            value: 67.5856,
-            data_points: 25,
-          },
-        },
-        portfolio_allocation: {
-          btc: {
-            total_value: 0,
-            percentage_of_portfolio: 0,
-            wallet_tokens_value: 0,
-            other_sources_value: 0,
-          },
-          eth: {
-            total_value: 0,
-            percentage_of_portfolio: 0,
-            wallet_tokens_value: 0,
-            other_sources_value: 0,
-          },
-          stablecoins: {
-            total_value: 0,
-            percentage_of_portfolio: 0,
-            wallet_tokens_value: 0,
-            other_sources_value: 0,
-          },
-          others: {
-            total_value: 0,
-            percentage_of_portfolio: 0,
-            wallet_tokens_value: 0,
-            other_sources_value: 0,
-          },
-        },
-        wallet_token_summary: {
-          total_value_usd: 2884.38,
-          token_count: 263,
-          apr_30d: 0.6316,
-        },
-        category_summary_debt: {
-          btc: 0.0,
-          eth: 0.0,
-          stablecoins: 10366.38,
-          others: 7393.87,
-        },
-        pool_details: [],
-        total_positions: 0,
-        protocols_count: 5,
-        chains_count: 3,
-        last_updated: null,
-        apr_coverage: {
-          matched_pools: 0,
-          total_pools: 0,
-          coverage_percentage: 0,
-          matched_asset_value_usd: 0,
-        },
-      },
+      data: mockLandingData,
       isLoading: false,
       error: null,
       refetch: vi.fn(),

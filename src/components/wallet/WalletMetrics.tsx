@@ -1,9 +1,8 @@
-import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import { Z_INDEX } from "@/constants/design-system";
+import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { createPortal } from "react-dom";
-import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
+import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
@@ -69,17 +68,13 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     portfolioState,
     balanceHidden,
     portfolioChangePercentage,
-    userId: _userId,
     landingPageData,
   }) => {
     const { balanceHidden: ctxHidden } = useBalanceVisibility();
     const resolvedHidden = balanceHidden ?? ctxHidden;
-    // Prefer parent-provided data; fallback to query to preserve compatibility in tests
-    const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
-      landingPageData ? null : _userId
-    );
-    const data = landingPageData ?? fetchedData;
-    const landingPageLoading = landingPageData ? false : fetchedLoading;
+    // Data must be provided by parent; no internal fetching
+    const data = landingPageData;
+    const landingPageLoading = !data && portfolioState.isLoading;
 
     // ROI tooltip portal state
     const [roiTooltipVisible, setRoiTooltipVisible] = useState(false);
