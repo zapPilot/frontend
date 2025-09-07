@@ -69,14 +69,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     portfolioState,
     balanceHidden,
     portfolioChangePercentage,
-    userId,
+    userId: _userId,
     landingPageData,
   }) => {
     const { balanceHidden: ctxHidden } = useBalanceVisibility();
     const resolvedHidden = balanceHidden ?? ctxHidden;
-    // Fetch unified landing page data (includes APR data) only if not provided via props
+    // Prefer parent-provided data; fallback to query to preserve compatibility in tests
     const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
-      landingPageData ? null : userId
+      landingPageData ? null : _userId
     );
     const data = landingPageData ?? fetchedData;
     const landingPageLoading = landingPageData ? false : fetchedLoading;

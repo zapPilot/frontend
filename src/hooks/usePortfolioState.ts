@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { LandingPageResponse } from "../services/analyticsEngine";
 import { PortfolioState, PortfolioStateType } from "../types/portfolioState";
 
 /**
@@ -19,7 +20,7 @@ export function usePortfolioState({
   isLoading: boolean;
   isRetrying?: boolean;
   error?: string | null;
-  landingPageData?: unknown;
+  landingPageData?: LandingPageResponse | null;
   hasZeroData: boolean;
 }): PortfolioState {
   return useMemo(() => {
@@ -62,7 +63,7 @@ export function usePortfolioState({
     const stateType = getPortfolioStateType();
 
     // Extract total value, handling zero properly (don't convert 0 to null)
-    const totalValue = (landingPageData as any)?.total_net_usd ?? null;
+    const totalValue = landingPageData?.total_net_usd ?? null;
 
     return {
       type: stateType,

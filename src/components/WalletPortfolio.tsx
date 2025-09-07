@@ -6,8 +6,8 @@ import { ComponentType } from "react";
 import { BalanceVisibilityProvider } from "../contexts/BalanceVisibilityContext";
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
+import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
@@ -76,11 +76,13 @@ export function WalletPortfolio({
     isLoading: landingPageQuery.isLoading,
     isRetrying: landingPageQuery.isRefetching,
     error: landingPageQuery.error?.message || null,
-    landingPageData,
+    landingPageData: landingPageData ?? null,
     hasZeroData,
   });
 
   // Portfolio UI state management (simplified since we have pre-formatted data)
+  // Keep using usePortfolio([]) to align with existing tests that verify this hook
+  // and to provide BalanceVisibility state.
   const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
 
   // Wallet modal state
