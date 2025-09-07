@@ -48,8 +48,27 @@ const eslintConfig = [
         "varsIgnorePattern": "^_",
         "ignoreRestSiblings": true 
       }],
+      // Allow require() in tests
+      "@typescript-eslint/no-require-imports": "off",
       // Allow console statements in tests (useful for debugging)
       "no-console": "off"
+    }
+  },
+  {
+    files: ["scripts/**/*.{js,ts}", "cloudflare/**/*.js"],
+    languageOptions: {
+      globals: {
+        console: true,
+        process: true,
+        require: true,
+        module: true,
+        __dirname: true,
+        __filename: true
+      }
+    },
+    rules: {
+      // Scripts may use require()
+      "@typescript-eslint/no-require-imports": "off"
     }
   },
   {
@@ -62,7 +81,8 @@ const eslintConfig = [
       "node_modules/**",
       "*.config.js",
       "*.config.mjs",
-      "*.config.ts"
+      "*.config.ts",
+      "next-env.d.ts"
     ]
   }
 ];

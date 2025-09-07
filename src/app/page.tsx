@@ -1,10 +1,10 @@
 "use client";
 
 import { Navigation } from "@/components/Navigation";
-import { Z_INDEX } from "@/constants/design-system";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
@@ -232,7 +232,9 @@ export default function DashboardApp() {
     return (
       <div className="min-h-screen bg-gray-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
-        <div className={`relative ${Z_INDEX.CONTENT} flex items-center justify-center h-screen`}>
+        <div
+          className={`relative ${Z_INDEX.CONTENT} flex items-center justify-center h-screen`}
+        >
           <LoadingState
             variant="spinner"
             size="lg"
