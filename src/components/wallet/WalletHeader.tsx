@@ -2,7 +2,7 @@ import { Check, Copy, DollarSign, Eye, EyeOff, Wallet } from "lucide-react";
 import React, { useState } from "react";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { useToast } from "../../hooks/useToast";
-import { GRADIENTS } from "../../styles/design-tokens";
+import { GRADIENTS } from "../../constants/design-system";
 
 interface WalletHeaderProps {
   onWalletManagerClick: () => void;

@@ -8,8 +8,8 @@
 // Re-export formatting functions
 export { formatCurrency, formatNumber, formatPercentage } from "./formatters";
 
-// Re-export color utilities
-export { getChangeColorClasses, getRiskLevelClasses } from "./color-utils";
+// Re-export color utilities  
+export { getChangeColorClasses } from "./color-utils";
 
 // Re-export portfolio utilities
 export { calculatePortfolioMetrics } from "./portfolio-data";

@@ -22,7 +22,7 @@ export {
 } from "./portfolio-analytics";
 
 // Re-export color utilities
-export { getChangeColor, getPerformanceColor } from "./color-utils";
+export { getChangeColorClasses } from "./color-utils";
 
 // Re-export data processing utilities
 export { calculatePortfolioMetrics } from "./portfolio-data";

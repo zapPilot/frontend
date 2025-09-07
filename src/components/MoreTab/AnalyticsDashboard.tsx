@@ -19,8 +19,7 @@ import {
   generateAssetAttribution,
 } from "../../lib/portfolio-analytics";
 import {
-  getTrendColorClasses,
-  getPerformanceColor,
+  getChangeColorClasses,
 } from "../../lib/color-utils";
 import {
   AnalyticsMetric,
@@ -120,7 +119,7 @@ const AnalyticsDashboardComponent = () => {
                   <div className="flex items-start justify-between mb-2">
                     <Icon className="w-5 h-5 text-purple-400" />
                     <div
-                      className={`flex items-center text-xs ${getTrendColorClasses(metric.trend)}`}
+                      className={`flex items-center text-xs ${getChangeColorClasses(metric.trend === 'up' ? 1 : metric.trend === 'down' ? -1 : 0)}`}
                     >
                       {metric.trend === "up" && (
                         <ArrowUpRight className="w-3 h-3 mr-1" />
@@ -195,7 +194,7 @@ const AnalyticsDashboardComponent = () => {
                       {period.period}
                     </td>
                     <td
-                      className={`py-3 text-sm text-right font-medium ${getPerformanceColor(period.return)}`}
+                      className={`py-3 text-sm text-right font-medium ${getChangeColorClasses(period.return)}`}
                     >
                       {period.return > 0 ? "+" : ""}
                       {period.return.toFixed(2)}%
@@ -257,7 +256,7 @@ const AnalyticsDashboardComponent = () => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <div
-                    className={`text-sm font-medium ${getPerformanceColor(asset.performance)}`}
+                    className={`text-sm font-medium ${getChangeColorClasses(asset.performance)}`}
                   >
                     {asset.performance > 0 ? "+" : ""}
                     {asset.performance.toFixed(1)}%
@@ -320,7 +319,7 @@ const AnalyticsDashboardComponent = () => {
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
                       <div
-                        className={`text-sm font-medium ${getPerformanceColor(item.performance)}`}
+                        className={`text-sm font-medium ${getChangeColorClasses(item.performance)}`}
                       >
                         {item.performance > 0 ? "+" : ""}
                         {item.performance.toFixed(1)}%
@@ -330,7 +329,7 @@ const AnalyticsDashboardComponent = () => {
 
                     <div className="text-right min-w-[60px]">
                       <div
-                        className={`text-lg font-bold ${getPerformanceColor(item.contribution)}`}
+                        className={`text-lg font-bold ${getChangeColorClasses(item.contribution)}`}
                       >
                         {item.contribution > 0 ? "+" : ""}
                         {item.contribution.toFixed(1)}%

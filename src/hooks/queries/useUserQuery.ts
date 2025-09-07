@@ -52,7 +52,7 @@ export function useUserByWallet(walletAddress: string | null) {
         }
       } catch (error) {
         // If profile loading fails, continue with empty email and fallbacks
-        console.warn("Failed to load user profile:", error);
+        // Silently handle profile fetch failures in production
       }
 
       // Derive fields compatible with previous structure

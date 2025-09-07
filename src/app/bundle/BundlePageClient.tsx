@@ -36,11 +36,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
   const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
-  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(() => {
-    // Only read from localStorage if we're in the browser and have a userId
-    if (typeof window === "undefined" || !userId) return false;
-    return localStorage.getItem(`dismissed-switch-${userId}`) === "true";
-  });
+  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -52,6 +48,14 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const showQuickSwitch = isConnected && !isOwnBundle && userInfo?.userId;
   const showEmailBanner =
     isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed;
+
+  // Read dismissed switch prompt from localStorage after mount
+  useEffect(() => {
+    if (typeof window !== "undefined" && userId) {
+      const dismissed = localStorage.getItem(`dismissed-switch-${userId}`) === "true";
+      setDismissedSwitchPrompt(dismissed);
+    }
+  }, [userId]);
 
   // Load bundle user info
   useEffect(() => {

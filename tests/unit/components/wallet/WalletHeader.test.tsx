@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "../../../test-utils";
+import { act, fireEvent, render, screen } from "../../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
 import { useToast } from "../../../../src/hooks/useToast";
@@ -231,7 +231,10 @@ describe("WalletHeader", () => {
 
       const copyBtn = screen.getByTitle("Copy bundle link");
       expect(copyBtn).toBeInTheDocument();
-      copyBtn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      
+      await act(async () => {
+        copyBtn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
 
       expect(writeText).toHaveBeenCalledWith("https://example.com/b/viewer");
     });

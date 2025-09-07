@@ -4,10 +4,10 @@ import { motion } from "framer-motion";
 import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
 import {
   memo,
+  useCallback,
   useMemo,
   useRef,
   useState,
-  useCallback,
   type MouseEvent,
 } from "react";
 import { useUser } from "../contexts/UserContext";
