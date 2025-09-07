@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
- 
-
 /**
  * Custom coverage threshold checker for Vitest
  * This script enforces coverage thresholds when Vitest's built-in enforcement fails
