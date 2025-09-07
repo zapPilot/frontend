@@ -1,7 +1,6 @@
 "use client";
 
 import { Z_INDEX } from "@/constants/design-system";
-import { useOnboarding } from "@/providers/OnboardingProvider";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback } from "react";
@@ -14,23 +13,19 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { markStepCompleted } = useOnboarding();
-
   const handleTabChange = useCallback(
     (tab: string) => {
-      // Mark navigation milestone for onboarding
-      markStepCompleted("navigation-used");
-
-      // Call the original handler
       onTabChange(tab);
     },
-    [onTabChange, markStepCompleted]
+    [onTabChange]
   );
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className={`hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 ${Z_INDEX.HEADER_MOBILE} lg:w-72`}>
+      <div
+        className={`hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 ${Z_INDEX.HEADER_MOBILE} lg:w-72`}
+      >
         <div className="flex grow flex-col gap-y-5 overflow-y-auto glass-morphism border-r border-gray-800 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
             <motion.div

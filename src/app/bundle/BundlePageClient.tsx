@@ -9,7 +9,6 @@ import { WalletPortfolio } from "@/components/WalletPortfolio";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { HEADER, Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
-import { useOnboarding } from "@/providers/OnboardingProvider";
 import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { bundleService, BundleUser } from "@/services/bundleService";
 import { InvestmentOpportunity } from "@/types/investment";
@@ -118,8 +117,6 @@ interface BundlePageClientProps {
 export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
-  const { shouldShowHint, markStepCompleted, markEmailSubscribed } =
-    useOnboarding();
   const [activeTab, setActiveTab] = useState("wallet");
   const [selectedStrategy, setSelectedStrategy] =
     useState<InvestmentOpportunity | null>(null);
@@ -130,14 +127,19 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
-  const [previousIsConnected, setPreviousIsConnected] = useState<
-    boolean | null
-  >(null);
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("email-banner-dismissed") === "true";
+    }
+    return false;
+  });
 
   // Computed values
   const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
   const bundleUrl = bundleService.generateBundleUrl(userId);
   const showQuickSwitch = isConnected && !isOwnBundle && userInfo?.userId;
+  const showEmailBanner =
+    isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed;
 
   // Load bundle user info
   useEffect(() => {
@@ -180,23 +182,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
     }
   }, [isConnected, userInfo?.userId, userId, dismissedSwitchPrompt]);
 
-  // Sync wallet connection state with OnboardingProvider
-  useEffect(() => {
-    // Initialize previous state on first render
-    if (previousIsConnected === null) {
-      setPreviousIsConnected(isConnected);
-      return;
-    }
-
-    // Only mark as completed when transitioning from disconnected to connected
-    if (!previousIsConnected && isConnected) {
-      markStepCompleted("wallet-connected");
-    }
-
-    // Update previous state for next comparison
-    setPreviousIsConnected(isConnected);
-  }, [isConnected, previousIsConnected, markStepCompleted]);
-
   const handleSwitchToMyBundle = useCallback(() => {
     if (!userInfo?.userId) return;
     const params = new URLSearchParams(window.location.search);
@@ -215,8 +200,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   }, []);
 
   const handleEmailReminderDismiss = useCallback(() => {
-    markStepCompleted("email-subscription-reminder");
-  }, [markStepCompleted]);
+    localStorage.setItem("email-banner-dismissed", "true");
+    setEmailBannerDismissed(true);
+  }, []);
 
   // Navigation handlers with context awareness
   const handleBackToPortfolio = useCallback(() => {
@@ -356,7 +342,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         )}
 
         {/* Email Subscription Reminder Banner */}
-        {shouldShowHint("email-subscription-reminder") && isOwnBundle && (
+        {showEmailBanner && (
           <EmailReminderBanner
             onSubscribe={handleEmailSubscribe}
             onDismiss={handleEmailReminderDismiss}
@@ -386,8 +372,9 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         isOpen={isWalletManagerOpen}
         onClose={() => setIsWalletManagerOpen(false)}
         onEmailSubscribed={() => {
-          markEmailSubscribed();
-          markStepCompleted("email-subscription-reminder");
+          // Email subscription handled by UserContext
+          localStorage.setItem("email-banner-dismissed", "true");
+          setEmailBannerDismissed(true);
         }}
       />
     </div>
