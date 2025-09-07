@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen } from "../../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
-import { useToast } from "../../../../src/hooks/useToast";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({

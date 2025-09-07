@@ -23,7 +23,7 @@ let mockUserContextValue = {
 
 vi.mock("../../../src/contexts/UserContext", () => {
   const MockUserContext = {
-    Provider: ({ children, value }: any) => (
+    Provider: ({ children, value: _value }: any) => (
       <div data-testid="user-context-provider">{children}</div>
     ),
     Consumer: ({ children }: any) => children({}),
@@ -788,7 +788,7 @@ describe("WalletManager", () => {
       });
 
       it("handles clipboard copy failure gracefully", async () => {
-        const user = userEvent.setup();
+        const _user = userEvent.setup();
         const mockWriteText = vi
           .fn()
           .mockRejectedValue(new Error("Copy failed"));

@@ -17,6 +17,21 @@ export interface ErrorDetails {
   [key: string]: unknown;
 }
 
+/** Interface for JSON representation of errors */
+export interface ErrorJSON {
+  name: string;
+  message: string;
+  timestamp: number;
+  source?: string;
+  status: number;
+  code?: string;
+  details?: ErrorDetails;
+  severity: string;
+  stack?: string;
+  cause?: string;
+  [key: string]: unknown;
+}
+
 /** Interface for unknown error objects from external sources */
 export interface UnknownErrorInput {
   message?: string;
@@ -92,19 +107,22 @@ export class BaseServiceError extends Error {
   /**
    * Convert error to JSON format for logging or API responses
    */
-  toJSON(): Record<string, any> {
-    return {
+  toJSON(): ErrorJSON {
+    const result: ErrorJSON = {
       name: this.name,
       message: this.message,
-      timestamp: this.timestamp,
-      source: this.source,
+      timestamp: new Date(this.timestamp).getTime(),
       status: this.status,
-      code: this.code,
-      details: this.details,
       severity: this.severity,
-      stack: this.stack,
-      cause: this.cause?.message,
     };
+
+    if (this.source) result.source = this.source;
+    if (this.code) result.code = this.code;
+    if (this.details) result.details = this.details;
+    if (this.stack) result.stack = this.stack;
+    if (this.cause?.message) result.cause = this.cause.message;
+
+    return result;
   }
 
   /**

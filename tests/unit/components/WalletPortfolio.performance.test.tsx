@@ -21,7 +21,12 @@ vi.mock("../../../src/utils/portfolio.utils");
 // Mock child components for performance testing
 vi.mock("../../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(
-    ({ portfolioState, categorySummaries, pieChartData, onCategoryClick }) => (
+    ({
+      portfolioState: _portfolioState,
+      categorySummaries,
+      pieChartData,
+      onCategoryClick,
+    }) => (
       <div data-testid="portfolio-overview">
         <div data-testid="render-count">{Date.now()}</div>
         <div data-testid="categories-length">

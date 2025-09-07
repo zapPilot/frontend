@@ -147,7 +147,7 @@ vi.mock("next/dynamic", () => {
   return {
     default: (
       importFunc: () => Promise<any>,
-      options?: { loading?: () => JSX.Element }
+      _options?: { loading?: () => JSX.Element }
     ) => {
       // Return a component that immediately resolves the import
       const DynamicComponent = (props: any) => {

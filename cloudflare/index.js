@@ -1,4 +1,4 @@
-export default {
+const cloudflareFetch = {
   async fetch(request, env) {
     const path = new URL(request.url).pathname.slice(1);
     const object = await env.ZAP_BUCKET.get(path);
@@ -13,3 +13,5 @@ export default {
     });
   },
 };
+
+export default cloudflareFetch;

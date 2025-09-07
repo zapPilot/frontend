@@ -10,11 +10,38 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWallet } from "./useWallet";
 
+// Wallet-specific event data types
+export interface AccountEventData {
+  address?: string;
+  connector?: string;
+  [key: string]: unknown;
+}
+
+export interface ChainEventData {
+  id?: number;
+  name?: string;
+  rpcUrls?: string[];
+  [key: string]: unknown;
+}
+
+export interface ConnectionEventData {
+  connected: boolean;
+  wallet?: string;
+  [key: string]: unknown;
+}
+
+// Union type for all possible event data
+export type WalletEventData =
+  | AccountEventData
+  | ChainEventData
+  | ConnectionEventData
+  | Record<string, unknown>;
+
 // Simplified event types
 export interface WalletEvent {
   type: string;
   timestamp: number;
-  data?: any;
+  data?: WalletEventData;
 }
 
 // Basic event stats
@@ -28,8 +55,10 @@ export interface UseWalletEventsReturn {
   stats: EventStats;
 
   // Simple event handlers
-  onAccountChange: (callback: (account: any) => void) => () => void;
-  onChainChange: (callback: (chain: any) => void) => () => void;
+  onAccountChange: (
+    callback: (account: AccountEventData) => void
+  ) => () => void;
+  onChainChange: (callback: (chain: ChainEventData) => void) => () => void;
   onConnectionChange: (callback: (isConnected: boolean) => void) => () => void;
 
   // Utility
@@ -57,8 +86,10 @@ export function useWalletEvents(
   const [stats, setStats] = useState<EventStats>({ totalEvents: 0 });
 
   // Callback refs
-  const accountCallbacksRef = useRef<Array<(account: any) => void>>([]);
-  const chainCallbacksRef = useRef<Array<(chain: any) => void>>([]);
+  const accountCallbacksRef = useRef<
+    Array<(account: AccountEventData) => void>
+  >([]);
+  const chainCallbacksRef = useRef<Array<(chain: ChainEventData) => void>>([]);
   const connectionCallbacksRef = useRef<Array<(isConnected: boolean) => void>>(
     []
   );
@@ -76,7 +107,7 @@ export function useWalletEvents(
     if (account !== prevAccountRef.current) {
       accountCallbacksRef.current.forEach(callback => {
         try {
-          callback(account);
+          callback(account || {});
         } catch (error) {
           console.error("Error in account change callback:", error);
         }
@@ -89,7 +120,7 @@ export function useWalletEvents(
     if (chain !== prevChainRef.current) {
       chainCallbacksRef.current.forEach(callback => {
         try {
-          callback(chain);
+          callback(chain || {});
         } catch (error) {
           console.error("Error in chain change callback:", error);
         }
@@ -113,29 +144,35 @@ export function useWalletEvents(
   }, [account, chain, isConnected, enableTracking]);
 
   // Event handler registration
-  const onAccountChange = useCallback((callback: (account: any) => void) => {
-    accountCallbacksRef.current.push(callback);
+  const onAccountChange = useCallback(
+    (callback: (account: AccountEventData) => void) => {
+      accountCallbacksRef.current.push(callback);
 
-    // Return unsubscribe function
-    return () => {
-      const index = accountCallbacksRef.current.indexOf(callback);
-      if (index > -1) {
-        accountCallbacksRef.current.splice(index, 1);
-      }
-    };
-  }, []);
+      // Return unsubscribe function
+      return () => {
+        const index = accountCallbacksRef.current.indexOf(callback);
+        if (index > -1) {
+          accountCallbacksRef.current.splice(index, 1);
+        }
+      };
+    },
+    []
+  );
 
-  const onChainChange = useCallback((callback: (chain: any) => void) => {
-    chainCallbacksRef.current.push(callback);
+  const onChainChange = useCallback(
+    (callback: (chain: ChainEventData) => void) => {
+      chainCallbacksRef.current.push(callback);
 
-    // Return unsubscribe function
-    return () => {
-      const index = chainCallbacksRef.current.indexOf(callback);
-      if (index > -1) {
-        chainCallbacksRef.current.splice(index, 1);
-      }
-    };
-  }, []);
+      // Return unsubscribe function
+      return () => {
+        const index = chainCallbacksRef.current.indexOf(callback);
+        if (index > -1) {
+          chainCallbacksRef.current.splice(index, 1);
+        }
+      };
+    },
+    []
+  );
 
   const onConnectionChange = useCallback(
     (callback: (isConnected: boolean) => void) => {

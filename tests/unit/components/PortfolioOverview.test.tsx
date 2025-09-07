@@ -79,7 +79,7 @@ vi.mock("thirdweb/react", () => ({
 
 // Mock SimpleConnectButton
 vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
-  SimpleConnectButton: vi.fn(({ className, size }) => (
+  SimpleConnectButton: vi.fn(({ className, size: _size }) => (
     <button data-testid="simple-connect-button" className={className}>
       Connect Wallet
     </button>

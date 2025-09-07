@@ -137,7 +137,7 @@ const mockUpdateUserEmailService = vi.mocked(updateUserEmailService);
 const mockRemoveUserEmailService = vi.mocked(removeUserEmailService);
 
 // API Error for testing
-class APIError extends Error {
+class _APIError extends Error {
   constructor(
     message: string,
     public status: number,

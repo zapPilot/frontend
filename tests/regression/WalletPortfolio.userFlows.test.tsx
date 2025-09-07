@@ -286,7 +286,6 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
 
     // Mock createCategoriesFromApiData
     vi.mocked(
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require("../../src/utils/portfolio.utils").createCategoriesFromApiData
     ).mockReturnValue(mockCategorySummaries);
   });

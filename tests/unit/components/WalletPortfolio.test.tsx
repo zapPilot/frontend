@@ -128,7 +128,7 @@ vi.mock("thirdweb/react", () => ({
 
 // Mock SimpleConnectButton
 vi.mock("../../../src/components/Web3/SimpleConnectButton", () => ({
-  SimpleConnectButton: vi.fn(({ className, size }) => (
+  SimpleConnectButton: vi.fn(({ className, size: _size }) => (
     <button data-testid="simple-connect-button" className={className}>
       Connect Wallet
     </button>
@@ -199,7 +199,7 @@ const mockBorrowingCategories = [
   },
 ];
 
-const mockPieChartData = [
+const _mockPieChartData = [
   {
     label: "BTC",
     value: 7500,
@@ -215,7 +215,7 @@ const mockPieChartData = [
 ];
 
 // Mock data with borrowing included (should be filtered out of pie chart)
-const mockMixedPortfolioData = [
+const _mockMixedPortfolioData = [
   ...mockAssetCategories,
   ...mockBorrowingCategories,
 ];
@@ -228,7 +228,7 @@ const mockPortfolioMetrics = {
 };
 
 // Mock new API response structure
-const mockNewApiResponse = {
+const _mockNewApiResponse = {
   metrics: { total_value_usd: 15000 },
   asset_positions: [
     {
@@ -650,7 +650,7 @@ describe("WalletPortfolio", () => {
 
     it("should maintain backward compatibility with legacy categories structure", async () => {
       // Mock legacy structure compatibility
-      const legacyCategories = [
+      const _legacyCategories = [
         {
           id: "mixed",
           name: "Mixed Assets",
@@ -731,7 +731,7 @@ describe("WalletPortfolio", () => {
   describe("Edge Cases and Data Validation", () => {
     it("should handle mixed positive and negative values correctly", async () => {
       // Create data with both positive assets and negative borrowing
-      const mixedPieChartData = [
+      const _mixedPieChartData = [
         { label: "BTC", value: 8000, percentage: 60, color: "#F7931A" },
         { label: "ETH", value: 5000, percentage: 40, color: "#627EEA" },
         // Note: No negative borrowing values in pie chart
@@ -858,7 +858,7 @@ describe("WalletPortfolio", () => {
 
     it("should validate pie chart data structure and prevent invalid borrowing inclusion", async () => {
       // Test that even if somehow borrowing data leaks into pie chart, it's handled
-      const validPieChartData = [
+      const _validPieChartData = [
         { label: "BTC", value: 7500, percentage: 50, color: "#F7931A" },
         { label: "ETH", value: 4500, percentage: 30, color: "#627EEA" },
         // Borrowing should be filtered out by preparePortfolioDataWithBorrowing

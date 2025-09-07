@@ -60,7 +60,7 @@ vi.mock("../../../../src/constants/portfolio", () => ({
 
 // Mock the useLandingPageData hook
 vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
-  useLandingPageData: vi.fn(userId => ({
+  useLandingPageData: vi.fn(_userId => ({
     data: {
       total_assets_usd: 15000,
       total_debt_usd: 0,

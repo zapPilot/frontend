@@ -31,6 +31,11 @@ import {
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
+// Wallet API types
+interface SendCallsParameter {
+  calls: any[]; // This would need to be typed based on the actual thirdweb call structure
+}
+
 // Wallet connection hook interface - using WalletConnectionState directly
 
 // Intent creation hook interface
@@ -139,7 +144,7 @@ const useWalletConnectionState = (): WalletConnectionState => {
         }
       : null,
     sendCalls: async calls => {
-      const result = await sendCalls({ calls } as any);
+      const result = await sendCalls({ calls } as SendCallsParameter);
       return {
         transactionHash: (result as any)?.transactionHash || "",
         status: "success" as const,
@@ -674,7 +679,7 @@ export function OptimizeTab() {
   });
 
   // Extracted hooks
-  const { createDustZapIntent } = useIntentCreation(showToast as any);
+  const { createDustZapIntent } = useIntentCreation(showToast);
   const { handleOptimize } = useOptimizationWorkflow({
     optimizationOptions,
     filteredDustTokens,
@@ -715,12 +720,13 @@ export function OptimizeTab() {
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
     const completeEvent = (events as any[]).find(
-      (event: any) => event.type === "complete"
+      event => event.type === "complete"
     );
 
     if (
       completeEvent &&
       completeEvent.data &&
+      typeof completeEvent.data === "object" &&
       "transactions" in completeEvent.data
     ) {
       const eventData = completeEvent.data as CompleteEventData;
