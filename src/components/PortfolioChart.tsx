@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import {
@@ -30,6 +30,8 @@ const PortfolioChartComponent = () => {
     benchmark: number;
     date: string;
   } | null>(null);
+  const rafId = useRef<number | null>(null);
+  const lastIndexRef = useRef<number | null>(null);
 
   // Get user info from context
   const { userInfo, isConnected } = useUser();
@@ -80,55 +82,112 @@ const PortfolioChartComponent = () => {
 
   const maxValue = Math.max(...portfolioHistory.map(d => d.value));
   const minValue = Math.min(...portfolioHistory.map(d => d.value));
+  const VALUE_RANGE = Math.max(maxValue - minValue, 1);
+
+  // Chart dimensions (match viewBox)
+  const CHART_WIDTH = 800;
+  const CHART_HEIGHT = 300;
+  const CHART_PADDING = 10;
+
+  // Precompute static paths to avoid recomputing on hover
+  const portfolioPath = useMemo(
+    () =>
+      portfolioHistory.length
+        ? generateSVGPath(
+            portfolioHistory,
+            p => p.value,
+            CHART_WIDTH,
+            CHART_HEIGHT,
+            CHART_PADDING
+          )
+        : "",
+    [portfolioHistory]
+  );
+
+  const benchmarkPath = useMemo(
+    () =>
+      portfolioHistory.length
+        ? generateSVGPath(
+            portfolioHistory,
+            p => p.benchmark || 0,
+            CHART_WIDTH,
+            CHART_HEIGHT,
+            CHART_PADDING
+          )
+        : "",
+    [portfolioHistory]
+  );
+
+  const portfolioAreaPath = useMemo(
+    () =>
+      portfolioHistory.length
+        ? generateAreaPath(
+            portfolioHistory,
+            p => p.value,
+            CHART_WIDTH,
+            CHART_HEIGHT,
+            CHART_PADDING
+          )
+        : "",
+    [portfolioHistory]
+  );
 
   const drawdownData = useMemo(() => {
     return calculateDrawdownData(portfolioHistory);
   }, [portfolioHistory]);
 
   // Mouse event handlers for performance chart hover
-  const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
+  const handleMouseMove = (event: MouseEvent<SVGSVGElement>) => {
     if (portfolioHistory.length === 0) return;
 
     const svg = event.currentTarget;
     const rect = svg.getBoundingClientRect();
     const mouseX = event.clientX - rect.left;
-    const svgWidth = rect.width;
+    const svgWidth = rect.width || 1;
 
     // Calculate the data index based on mouse position
-    const dataIndex = Math.round(
-      (mouseX / svgWidth) * (portfolioHistory.length - 1)
-    );
+    const rawIndex = (mouseX / svgWidth) * (portfolioHistory.length - 1);
     const clampedIndex = Math.max(
       0,
-      Math.min(dataIndex, portfolioHistory.length - 1)
+      Math.min(Math.round(rawIndex), portfolioHistory.length - 1)
     );
 
-    const point = portfolioHistory[clampedIndex];
-    if (!point) return;
+    // Drop updates if index didn't change (reduces state churn)
+    if (lastIndexRef.current === clampedIndex) return;
+    lastIndexRef.current = clampedIndex;
 
-    // Calculate SVG coordinates for the point
-    const x = (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) * 800;
-    const padding = 10;
-    const valueRange = Math.max(maxValue - minValue, 1);
-    const y =
-      300 -
-      padding -
-      ((point.value - minValue) / valueRange) * (300 - 2 * padding);
+    // Schedule state update at next animation frame
+    if (rafId.current != null) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      const point = portfolioHistory[clampedIndex];
+      if (!point) return;
 
-    setHoveredPoint({
-      x,
-      y,
-      value: point.value,
-      benchmark: point.benchmark || 0,
-      date: new Date(point.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      const x =
+        (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) * CHART_WIDTH;
+      const y =
+        CHART_HEIGHT -
+        CHART_PADDING -
+        ((point.value - minValue) / VALUE_RANGE) *
+          (CHART_HEIGHT - 2 * CHART_PADDING);
+
+      setHoveredPoint({
+        x,
+        y,
+        value: point.value,
+        benchmark: point.benchmark || 0,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+      });
     });
   };
 
   const handleMouseLeave = () => {
+    if (rafId.current != null) cancelAnimationFrame(rafId.current);
+    rafId.current = null;
+    lastIndexRef.current = null;
     setHoveredPoint(null);
   };
 
@@ -136,7 +195,7 @@ const PortfolioChartComponent = () => {
     () => (
       <div className="relative h-80">
         {/* Grid lines */}
-        <div className="absolute inset-0 flex flex-col justify-between">
+        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="border-t border-gray-800/50" />
           ))}
@@ -144,7 +203,7 @@ const PortfolioChartComponent = () => {
 
         {/* Chart area */}
         <svg
-          viewBox="0 0 800 300"
+          viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           className="w-full h-full"
           preserveAspectRatio="xMidYMid meet"
           onMouseMove={handleMouseMove}
@@ -174,15 +233,9 @@ const PortfolioChartComponent = () => {
           </defs>
 
           {/* Portfolio line */}
-          {portfolioHistory.length > 0 && (
+          {portfolioPath && (
             <path
-              d={generateSVGPath(
-                portfolioHistory,
-                point => point.value,
-                800,
-                300,
-                10
-              )}
+              d={portfolioPath}
               fill="none"
               stroke="#8b5cf6"
               strokeWidth="3"
@@ -191,15 +244,9 @@ const PortfolioChartComponent = () => {
           )}
 
           {/* Benchmark line */}
-          {portfolioHistory.length > 0 && (
+          {benchmarkPath && (
             <path
-              d={generateSVGPath(
-                portfolioHistory,
-                point => point.benchmark || 0,
-                800,
-                300,
-                10
-              )}
+              d={benchmarkPath}
               fill="none"
               stroke="#3b82f6"
               strokeWidth="2"
@@ -209,17 +256,8 @@ const PortfolioChartComponent = () => {
           )}
 
           {/* Fill area under portfolio curve */}
-          {portfolioHistory.length > 0 && (
-            <path
-              d={generateAreaPath(
-                portfolioHistory,
-                point => point.value,
-                800,
-                300,
-                10
-              )}
-              fill="url(#portfolioGradient)"
-            />
+          {portfolioAreaPath && (
+            <path d={portfolioAreaPath} fill="url(#portfolioGradient)" />
           )}
 
           {/* Hover cursor circle */}
@@ -241,14 +279,14 @@ const PortfolioChartComponent = () => {
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
           {generateYAxisLabels(minValue, maxValue, 3).map((value, index) => (
             <span key={index}>{formatAxisLabel(value)}</span>
           ))}
         </div>
 
         {/* Legend */}
-        <div className="absolute top-4 right-4 flex items-center space-x-4 text-xs">
+        <div className="absolute top-4 right-4 flex items-center space-x-4 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-0.5 bg-purple-500"></div>
             <span className="text-white">Portfolio</span>
@@ -270,8 +308,8 @@ const PortfolioChartComponent = () => {
           <motion.div
             className="absolute z-10 pointer-events-none"
             style={{
-              left: `min(${hoveredPoint.x * (100 / 800)}%, calc(100% - 200px))`,
-              top: `max(${hoveredPoint.y * (100 / 300)}%, 10px)`,
+              left: `min(${hoveredPoint.x * (100 / CHART_WIDTH)}%, calc(100% - 200px))`,
+              top: `max(${hoveredPoint.y * (100 / CHART_HEIGHT)}%, 10px)`,
               transform: "translateX(-50%) translateY(-100%)",
             }}
             initial={{ opacity: 0, y: 10 }}
@@ -293,7 +331,7 @@ const PortfolioChartComponent = () => {
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-xs text-blue-300">Benchmark</span>
                   <span className="text-sm font-semibold text-gray-300">
-                    ${(hoveredPoint.benchmark / 1000).toFixed(1)}k
+                    Coming soon
                   </span>
                 </div>
               </div>

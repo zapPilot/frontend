@@ -1,10 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
-// Switched from analytics-engine bundle API to account API
-import { connectWallet, getUserWallets } from "../../services/accountService";
+// Use account service to connect, and user service to fetch profile + wallets in a single call
+import { connectWallet } from "../../services/accountService";
 import { getUserProfile } from "../../services/userService";
-import type { UserCryptoWallet } from "../../types/user.types";
+import type {
+  UserCryptoWallet,
+  UserProfileResponse,
+} from "../../types/user.types";
 
 // Removed ApiBundleResponse in favor of account API wallets
 
@@ -37,20 +40,18 @@ export function useUserByWallet(walletAddress: string | null) {
       // Connect wallet to create/retrieve user
       const connectResponse = await connectWallet(walletAddress);
 
-      // Fetch user wallets from account API
-      const wallets: UserCryptoWallet[] = await getUserWallets(
-        connectResponse.user_id
-      );
-
-      // Fetch user profile to get email data
+      // Fetch complete user profile once (includes wallets and email)
+      let wallets: UserCryptoWallet[] = [];
       let userEmail = "";
       try {
         const profileResponse = await getUserProfile(connectResponse.user_id);
-        if (profileResponse.success && profileResponse.data?.user?.email) {
-          userEmail = profileResponse.data.user.email;
+        if (profileResponse.success && profileResponse.data) {
+          const data: UserProfileResponse = profileResponse.data;
+          wallets = data.wallets || [];
+          userEmail = data.user?.email || "";
         }
       } catch (error) {
-        // If profile loading fails, continue with empty email
+        // If profile loading fails, continue with empty email and fallbacks
         console.warn("Failed to load user profile:", error);
       }
 
