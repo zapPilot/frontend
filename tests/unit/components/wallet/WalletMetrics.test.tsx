@@ -923,9 +923,8 @@ describe("WalletMetrics", () => {
         />
       );
 
-      // Should show connect prompt when no data available
-      expect(screen.getByText("Please Connect Wallet")).toBeInTheDocument();
-      expect(screen.getByText("Connect to calculate")).toBeInTheDocument();
+      // Should show no data available messages for visitors without data (ROI and PnL sections)
+      expect(screen.getAllByText("No data available")).toHaveLength(2);
     });
 
     it("should handle visitor with zero data correctly", () => {
@@ -969,8 +968,8 @@ describe("WalletMetrics", () => {
         />
       );
 
-      // Should show connect prompt for zero data
-      expect(screen.getByText("Please Connect Wallet")).toBeInTheDocument();
+      // Should show actual data for visitors with zero balance but valid portfolio data
+      expect(screen.getByText("18.50%")).toBeInTheDocument();
     });
 
     it("should display ROI tooltip for visitor bundle data", () => {
@@ -1040,7 +1039,7 @@ describe("WalletMetrics", () => {
 
       // Should show loading indicators for visitor
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      expect(screen.getAllByTestId("wallet-metrics-skeleton")).toHaveLength(2);
+      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(4); // ROI + PnL skeletons
     });
   });
 });

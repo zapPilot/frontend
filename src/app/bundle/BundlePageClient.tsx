@@ -52,7 +52,8 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   // Read dismissed switch prompt from localStorage after mount
   useEffect(() => {
     if (typeof window !== "undefined" && userId) {
-      const dismissed = localStorage.getItem(`dismissed-switch-${userId}`) === "true";
+      const dismissed =
+        localStorage.getItem(`dismissed-switch-${userId}`) === "true";
       setDismissedSwitchPrompt(dismissed);
     }
   }, [userId]);

@@ -1093,9 +1093,9 @@ describe("PortfolioOverview", () => {
 
       // Should render assets and borrowing tabs for visitor (desktop + mobile)
       expect(screen.getAllByRole("tab", { name: /assets/i })).toHaveLength(2);
-      expect(
-        screen.getAllByRole("tab", { name: /borrowing/i })
-      ).toHaveLength(2);
+      expect(screen.getAllByRole("tab", { name: /borrowing/i })).toHaveLength(
+        2
+      );
 
       // Should show asset count badges and pie chart data counts (desktop + mobile)
       expect(screen.getAllByText("2")).toHaveLength(4); // Asset count badges + pie chart data counts

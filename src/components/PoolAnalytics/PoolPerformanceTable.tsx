@@ -286,15 +286,16 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
             <div className="text-sm text-gray-400">
               {topN && displayedPools.length < filteredPools.length ? (
                 <>
-                  Showing {displayedPools.length} of {filteredPools.length} pools •{" "}
-                  {displayedPools.filter(p => !isUnderperforming(p)).length} performing
-                  well
+                  Showing {displayedPools.length} of {filteredPools.length}{" "}
+                  pools •{" "}
+                  {displayedPools.filter(p => !isUnderperforming(p)).length}{" "}
+                  performing well
                 </>
               ) : (
                 <>
                   {filteredPools.length} pools •{" "}
-                  {filteredPools.filter(p => !isUnderperforming(p)).length} performing
-                  well
+                  {filteredPools.filter(p => !isUnderperforming(p)).length}{" "}
+                  performing well
                 </>
               )}
             </div>
@@ -302,7 +303,11 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
               <span className="text-sm text-gray-400">Show:</span>
               <select
                 value={topN || "all"}
-                onChange={e => setTopN(e.target.value === "all" ? null : Number(e.target.value))}
+                onChange={e =>
+                  setTopN(
+                    e.target.value === "all" ? null : Number(e.target.value)
+                  )
+                }
                 className="px-2 py-1 bg-gray-800/50 border border-gray-600/50 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
               >
                 <option value="all">All</option>

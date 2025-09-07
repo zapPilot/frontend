@@ -98,7 +98,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use portfolio state helpers for consistent logic
     const {
       shouldShowLoading,
-      shouldShowConnectPrompt,
       shouldShowNoDataMessage,
       shouldShowError,
       getDisplayTotalValue,
@@ -222,7 +221,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         return null; // Component will show welcome message
       }
 
-
       // No data available - prioritize actual data over state helpers
       if (!estimatedYearlyPnL) {
         return (
@@ -265,7 +263,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">
               Estimated Yearly ROI{" "}
-              {shouldShowConnectPrompt ? "(Potential)" : ""}
+              {!portfolioState.isConnected ? "(Potential)" : ""}
             </p>
             {portfolioROI && (
               <div className="relative">

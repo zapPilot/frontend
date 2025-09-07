@@ -231,7 +231,7 @@ describe("WalletHeader", () => {
 
       const copyBtn = screen.getByTitle("Copy bundle link");
       expect(copyBtn).toBeInTheDocument();
-      
+
       await act(async () => {
         copyBtn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
       });

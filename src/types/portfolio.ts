@@ -36,7 +36,7 @@ export interface PortfolioMetrics {
 // DEPRECATED: Use RiskLevel from constants/portfolio.ts instead
 export type RiskLevel = "Low" | "Medium" | "High";
 
-// DEPRECATED: Use ASSET_TYPES from constants/portfolio.ts instead  
+// DEPRECATED: Use ASSET_TYPES from constants/portfolio.ts instead
 export type AssetType =
   | "Staking"
   | "Lending"

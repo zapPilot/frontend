@@ -4,9 +4,7 @@ import {
   formatNumber,
   formatPercentage,
 } from "../../../src/lib/formatters";
-import {
-  getChangeColorClasses,
-} from "../../../src/lib/color-utils";
+import { getChangeColorClasses } from "../../../src/lib/color-utils";
 import { calculatePortfolioMetrics } from "../../../src/lib/portfolio-data";
 
 describe("utils", () => {
@@ -54,7 +52,6 @@ describe("utils", () => {
       expect(formatPercentage(0)).toBe("+0.0%");
     });
   });
-
 
   describe("getChangeColorClasses", () => {
     it("should return green classes for positive values", () => {
