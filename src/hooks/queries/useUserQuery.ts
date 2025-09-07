@@ -3,6 +3,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
 // Switched from analytics-engine bundle API to account API
 import { connectWallet, getUserWallets } from "../../services/accountService";
+import { getUserProfile } from "../../services/userService";
 import type { UserCryptoWallet } from "../../types/user.types";
 
 // Removed ApiBundleResponse in favor of account API wallets
@@ -41,6 +42,18 @@ export function useUserByWallet(walletAddress: string | null) {
         connectResponse.user_id
       );
 
+      // Fetch user profile to get email data
+      let userEmail = "";
+      try {
+        const profileResponse = await getUserProfile(connectResponse.user_id);
+        if (profileResponse.success && profileResponse.data?.user?.email) {
+          userEmail = profileResponse.data.user.email;
+        }
+      } catch (error) {
+        // If profile loading fails, continue with empty email
+        console.warn("Failed to load user profile:", error);
+      }
+
       // Derive fields compatible with previous structure
       const primaryWallet =
         wallets.find(w => w.is_main)?.wallet ||
@@ -61,7 +74,7 @@ export function useUserByWallet(walletAddress: string | null) {
 
       return {
         userId: connectResponse.user_id,
-        email: "", // Email not provided by getUserWallets; can be populated via getUserProfile if needed
+        email: userEmail, // Now populated from getUserProfile
         primaryWallet,
         bundleWallets,
         additionalWallets,
