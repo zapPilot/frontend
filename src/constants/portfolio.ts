@@ -47,11 +47,11 @@ export const RISK_LEVELS = {
 
 // Portfolio Colors
 export const PORTFOLIO_COLORS = {
-  BTC: "#f59e0b",
-  ETH: "#6366f1",
-  STABLECOIN: "#10b981",
-  DEFI: "#8b5cf6",
-  ALTCOIN: "#ef4444",
+  BTC: "#F7931A",
+  ETH: "#627EEA",
+  STABLECOIN: "#26A69A",
+  DEFI: "#8B5CF6",
+  ALTCOIN: "#AB47BC",
 } as const;
 
 // Portfolio Display Configuration
