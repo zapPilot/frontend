@@ -83,8 +83,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
 
   // Smart dropdown positioning logic
   const getDropdownClasses = () => {
-    const baseClasses =
-      `absolute top-full mt-2 p-4 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl ${Z_INDEX.TOAST}`;
+    const baseClasses = `absolute top-full mt-2 p-4 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl ${Z_INDEX.TOAST}`;
 
     switch (dropdownPosition) {
       case "left":

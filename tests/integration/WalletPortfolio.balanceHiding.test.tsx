@@ -79,8 +79,10 @@ vi.mock("../../src/components/wallet/WalletHeader", () => {
         onAnalyticsClick?: () => void;
         onWalletManagerClick?: () => void;
       }) => {
-        const { balanceHidden: hookHidden, toggleBalanceVisibility } = usePortfolio();
-        const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const { balanceHidden: hookHidden, toggleBalanceVisibility } =
+          usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
         const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
         return (
           <div data-testid="wallet-header">
@@ -91,7 +93,9 @@ vi.mock("../../src/components/wallet/WalletHeader", () => {
             >
               {hidden ? "Show Balance" : "Hide Balance"}
             </button>
-            <span data-testid="balance-state">{hidden ? "hidden" : "visible"}</span>
+            <span data-testid="balance-state">
+              {hidden ? "hidden" : "visible"}
+            </span>
           </div>
         );
       }
@@ -102,38 +106,53 @@ vi.mock("../../src/components/wallet/WalletHeader", () => {
 vi.mock("../../src/components/wallet/WalletMetrics", () => {
   const React = require("react");
   return {
-    WalletMetrics: vi.fn(({ portfolioState, balanceHidden }: { portfolioState: { type: string; totalValue: number | null; isLoading: boolean; hasError: boolean; errorMessage?: string | null; }; balanceHidden?: boolean; }) => {
-      const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      // Mock the getDisplayTotalValue logic
-      const getDisplayTotalValue = () => {
-        if (!portfolioState || portfolioState.type === "wallet_disconnected")
-          return null;
-        if (portfolioState.type === "loading") return null;
-        if (portfolioState.type === "error") return null;
-        if (portfolioState.type === "connected_no_data") return 0;
-        return portfolioState.totalValue;
-      };
+    WalletMetrics: vi.fn(
+      ({
+        portfolioState,
+        balanceHidden,
+      }: {
+        portfolioState: {
+          type: string;
+          totalValue: number | null;
+          isLoading: boolean;
+          hasError: boolean;
+          errorMessage?: string | null;
+        };
+        balanceHidden?: boolean;
+      }) => {
+        const { balanceHidden: hookHidden } = usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        // Mock the getDisplayTotalValue logic
+        const getDisplayTotalValue = () => {
+          if (!portfolioState || portfolioState.type === "wallet_disconnected")
+            return null;
+          if (portfolioState.type === "loading") return null;
+          if (portfolioState.type === "error") return null;
+          if (portfolioState.type === "connected_no_data") return 0;
+          return portfolioState.totalValue;
+        };
 
-      const displayValue = getDisplayTotalValue();
-      const shouldShowNoDataMessage =
-        portfolioState?.type === "connected_no_data";
+        const displayValue = getDisplayTotalValue();
+        const shouldShowNoDataMessage =
+          portfolioState?.type === "connected_no_data";
 
-      return (
-        <div data-testid="wallet-metrics">
-          <div data-testid="total-value">
-            {shouldShowNoDataMessage
-              ? "No data available"
-              : hidden
-                ? "••••••••"
-                : `$${displayValue?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+        return (
+          <div data-testid="wallet-metrics">
+            <div data-testid="total-value">
+              {shouldShowNoDataMessage
+                ? "No data available"
+                : hidden
+                  ? "••••••••"
+                  : `$${displayValue?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"}`}
+            </div>
+            <div data-testid="balance-visibility">
+              {hidden ? "hidden" : "visible"}
+            </div>
           </div>
-          <div data-testid="balance-visibility">
-            {hidden ? "hidden" : "visible"}
-          </div>
-        </div>
-      );
-    }),
+        );
+      }
+    ),
   };
 });
 
@@ -145,38 +164,51 @@ vi.mock("../../src/components/wallet/WalletActions", () => ({
 vi.mock("../../src/components/PortfolioOverview", () => {
   const React = require("react");
   return {
-    PortfolioOverview: vi.fn(({ renderBalanceDisplay, balanceHidden, pieChartData, totalValue }: { renderBalanceDisplay?: () => React.ReactNode; balanceHidden?: boolean; pieChartData: any[]; totalValue?: number; }) => {
-      const { balanceHidden: hookHidden } = usePortfolio();
-      const hidden = typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-      const calculatedTotal =
-        totalValue ||
-        pieChartData?.reduce((sum, item) => sum + (item.value || 0), 0) ||
-        0;
+    PortfolioOverview: vi.fn(
+      ({
+        renderBalanceDisplay,
+        balanceHidden,
+        pieChartData,
+        totalValue,
+      }: {
+        renderBalanceDisplay?: () => React.ReactNode;
+        balanceHidden?: boolean;
+        pieChartData: any[];
+        totalValue?: number;
+      }) => {
+        const { balanceHidden: hookHidden } = usePortfolio();
+        const hidden =
+          typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
+        const calculatedTotal =
+          totalValue ||
+          pieChartData?.reduce((sum, item) => sum + (item.value || 0), 0) ||
+          0;
 
-      const formatCurrency = (amount: number) => {
-        return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-      };
+        const formatCurrency = (amount: number) => {
+          return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
 
-      return (
-        <div data-testid="portfolio-overview">
-          <div data-testid="pie-chart-mock">
-            <div data-testid="pie-chart-balance">
-              {renderBalanceDisplay
-                ? renderBalanceDisplay()
-                : hidden
-                  ? "••••••••"
-                  : formatCurrency(calculatedTotal)}
+        return (
+          <div data-testid="portfolio-overview">
+            <div data-testid="pie-chart-mock">
+              <div data-testid="pie-chart-balance">
+                {renderBalanceDisplay
+                  ? renderBalanceDisplay()
+                  : hidden
+                    ? "••••••••"
+                    : formatCurrency(calculatedTotal)}
+              </div>
+              <div data-testid="pie-chart-visibility-state">
+                {hidden ? "hidden" : "visible"}
+              </div>
             </div>
-            <div data-testid="pie-chart-visibility-state">
-              {hidden ? "hidden" : "visible"}
+            <div data-testid="portfolio-data-count">
+              {pieChartData?.length || 0}
             </div>
           </div>
-          <div data-testid="portfolio-data-count">
-            {pieChartData?.length || 0}
-          </div>
-        </div>
-      );
-    }),
+        );
+      }
+    ),
   };
 });
 

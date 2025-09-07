@@ -17,9 +17,7 @@ import {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../../../src/types/user.types";
-import {
-  connectWallet as connectWalletService,
-} from "../../../src/services/accountService";
+import { connectWallet as connectWalletService } from "../../../src/services/accountService";
 import {
   getUserProfile as getUserProfileService,
   getUserWallets as getUserWalletsService,
@@ -59,7 +57,12 @@ describe("useUserByWallet", () => {
       },
     ];
     const mockProfile: UserProfileResponse = {
-      user: { id: "user-123", email: "test@example.com", is_active: true, created_at: "" },
+      user: {
+        id: "user-123",
+        email: "test@example.com",
+        is_active: true,
+        created_at: "",
+      },
       wallets: profileWallets,
     };
 
@@ -81,7 +84,10 @@ describe("useUserByWallet", () => {
         userId: "user-123",
         email: "test@example.com",
         primaryWallet: walletAddress,
-        bundleWallets: [walletAddress, "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"],
+        bundleWallets: [
+          walletAddress,
+          "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+        ],
         totalWallets: 2,
         totalVisibleWallets: 2,
       })
@@ -99,7 +105,10 @@ describe("useUserByWallet", () => {
 
   it("falls back gracefully when profile fetch fails (no duplicate wallet call)", async () => {
     const walletAddress = "0x9999999999999999999999999999999999999999";
-    mockConnectWallet.mockResolvedValue({ user_id: "user-xyz", is_new_user: false });
+    mockConnectWallet.mockResolvedValue({
+      user_id: "user-xyz",
+      is_new_user: false,
+    });
     mockGetUserProfile.mockRejectedValue(new Error("profile failed"));
 
     const { result } = renderHook(() => useUserByWallet(walletAddress));
@@ -123,4 +132,3 @@ describe("useUserByWallet", () => {
     expect(result.current.data?.additionalWallets).toEqual([]);
   });
 });
-

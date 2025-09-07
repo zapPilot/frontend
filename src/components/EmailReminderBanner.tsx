@@ -17,7 +17,8 @@ export function EmailReminderBanner({
     >
       <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="text-sm">
-          💡 Subscribe to email reports for daily data updates. Currently updating weekly only.
+          💡 Subscribe to email reports for daily data updates. Currently
+          updating weekly only.
         </div>
         <div className="flex gap-2 justify-end">
           <button

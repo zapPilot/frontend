@@ -2,7 +2,14 @@
 
 import { motion } from "framer-motion";
 import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
-import { memo, useMemo, useRef, useState, useCallback, type MouseEvent } from "react";
+import {
+  memo,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  type MouseEvent,
+} from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import {
@@ -137,52 +144,56 @@ const PortfolioChartComponent = () => {
   }, [portfolioHistory]);
 
   // Mouse event handlers for performance chart hover
-  const handleMouseMove = useCallback((event: MouseEvent<SVGSVGElement>) => {
-    if (portfolioHistory.length === 0) return;
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<SVGSVGElement>) => {
+      if (portfolioHistory.length === 0) return;
 
-    const svg = event.currentTarget;
-    const rect = svg.getBoundingClientRect();
-    const mouseX = event.clientX - rect.left;
-    const svgWidth = rect.width || 1;
+      const svg = event.currentTarget;
+      const rect = svg.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const svgWidth = rect.width || 1;
 
-    // Calculate the data index based on mouse position
-    const rawIndex = (mouseX / svgWidth) * (portfolioHistory.length - 1);
-    const clampedIndex = Math.max(
-      0,
-      Math.min(Math.round(rawIndex), portfolioHistory.length - 1)
-    );
+      // Calculate the data index based on mouse position
+      const rawIndex = (mouseX / svgWidth) * (portfolioHistory.length - 1);
+      const clampedIndex = Math.max(
+        0,
+        Math.min(Math.round(rawIndex), portfolioHistory.length - 1)
+      );
 
-    // Drop updates if index didn't change (reduces state churn)
-    if (lastIndexRef.current === clampedIndex) return;
-    lastIndexRef.current = clampedIndex;
+      // Drop updates if index didn't change (reduces state churn)
+      if (lastIndexRef.current === clampedIndex) return;
+      lastIndexRef.current = clampedIndex;
 
-    // Schedule state update at next animation frame
-    if (rafId.current != null) cancelAnimationFrame(rafId.current);
-    rafId.current = requestAnimationFrame(() => {
-      const point = portfolioHistory[clampedIndex];
-      if (!point) return;
+      // Schedule state update at next animation frame
+      if (rafId.current != null) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(() => {
+        const point = portfolioHistory[clampedIndex];
+        if (!point) return;
 
-      const x =
-        (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) * CHART_WIDTH;
-      const y =
-        CHART_HEIGHT -
-        CHART_PADDING -
-        ((point.value - minValue) / VALUE_RANGE) *
-          (CHART_HEIGHT - 2 * CHART_PADDING);
+        const x =
+          (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) *
+          CHART_WIDTH;
+        const y =
+          CHART_HEIGHT -
+          CHART_PADDING -
+          ((point.value - minValue) / VALUE_RANGE) *
+            (CHART_HEIGHT - 2 * CHART_PADDING);
 
-      setHoveredPoint({
-        x,
-        y,
-        value: point.value,
-        benchmark: point.benchmark || 0,
-        date: new Date(point.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
+        setHoveredPoint({
+          x,
+          y,
+          value: point.value,
+          benchmark: point.benchmark || 0,
+          date: new Date(point.date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+        });
       });
-    });
-  }, [portfolioHistory, minValue, VALUE_RANGE]);
+    },
+    [portfolioHistory, minValue, VALUE_RANGE]
+  );
 
   const handleMouseLeave = useCallback(() => {
     if (rafId.current != null) cancelAnimationFrame(rafId.current);

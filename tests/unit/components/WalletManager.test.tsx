@@ -1118,7 +1118,9 @@ describe("WalletManager", () => {
       expect(
         screen.queryByText(/You.*subscribed to weekly PnL reports/i)
       ).not.toBeInTheDocument();
-      expect(screen.getByPlaceholderText("Enter your email")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter your email")
+      ).toBeInTheDocument();
     });
     it("uses email from UserContext and does not fetch profile", async () => {
       // Provide email via context

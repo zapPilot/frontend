@@ -223,7 +223,9 @@ vi.mock("next/dynamic", () => {
                           key: "pie-chart-balance",
                           "data-testid": "pie-chart-balance",
                         },
-                        (props?.balanceHidden ? "••••••••" : formatCurrency(calculatedTotal))
+                        props?.balanceHidden
+                          ? "••••••••"
+                          : formatCurrency(calculatedTotal)
                       ),
                       React.createElement(
                         "div",
