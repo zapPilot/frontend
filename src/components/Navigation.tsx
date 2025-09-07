@@ -1,18 +1,12 @@
 "use client";
 
+import { Z_INDEX } from "@/constants/design-system";
+import { useOnboarding } from "@/providers/OnboardingProvider";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
-import { Z_INDEX } from "@/constants/design-system";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
-import { useOnboarding } from "@/providers/OnboardingProvider";
-import {
-  WalletConnectHint,
-  ChainSwitchHint,
-  NavigationHint,
-  MobileNavigationHint,
-} from "./Onboarding";
 
 interface NavigationProps {
   activeTab: string;
@@ -188,12 +182,6 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
           })}
         </div>
       </div>
-
-      {/* Onboarding Hints */}
-      <WalletConnectHint />
-      <ChainSwitchHint />
-      <NavigationHint />
-      <MobileNavigationHint />
     </>
   );
 };
