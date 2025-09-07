@@ -249,6 +249,29 @@ vi.mock("next/dynamic", () => {
               );
             }
 
+            // Special-case WalletManager so tests can interact with its props synchronously
+            if (importString.includes("WalletManager")) {
+              return React.createElement(
+                "div",
+                { "data-testid": "wallet-manager-mock" },
+                [
+                  // Only show confirm button when modal would be open
+                  props?.isOpen
+                    ? React.createElement(
+                        "button",
+                        {
+                          key: "confirm",
+                          type: "button",
+                          "data-testid": "confirm-email-subscribe",
+                          onClick: () => props?.onEmailSubscribed?.(),
+                        },
+                        "Confirm Subscribe"
+                      )
+                    : null,
+                ]
+              );
+            }
+
             // In test environment, return a generic placeholder for other components
             return React.createElement(
               "div",

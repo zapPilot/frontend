@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError } from "@/services/userService";
-import { WalletService } from "../services/WalletService";
 import { validateEmail } from "../utils/validation";
 import type { OperationState } from "../types/wallet.types";
+import { useUser } from "@/contexts/UserContext";
 
 interface UseEmailSubscriptionParams {
   viewingUserId: string;
@@ -13,12 +13,13 @@ interface UseEmailSubscriptionParams {
 }
 
 export const useEmailSubscription = ({
-  viewingUserId,
+  viewingUserId: _viewingUserId,
   realUserId,
   isOpen,
   onEmailSubscribed,
 }: UseEmailSubscriptionParams) => {
   const { showToast } = useToast();
+  const { userInfo } = useUser();
 
   // State
   const [email, setEmail] = useState("");
@@ -30,30 +31,18 @@ export const useEmailSubscription = ({
       error: null,
     });
 
-  // Load user profile to determine existing subscription email
+  // Initialize subscription email from UserContext to avoid duplicate API calls
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!isOpen || !viewingUserId) return;
-
-      try {
-        const profile = await WalletService.loadUserProfile(viewingUserId);
-        if (profile.email) {
-          setSubscribedEmail(profile.email);
-          setEmail(profile.email);
-          // Notify parent component that user already has email subscription
-          if (profile.hasSubscription) {
-            onEmailSubscribed?.();
-          }
-        } else {
-          setSubscribedEmail(null);
-        }
-      } catch {
-        // Ignore profile fetch errors in this context
-      }
-    };
-
-    loadProfile();
-  }, [isOpen, viewingUserId, onEmailSubscribed]);
+    if (!isOpen) return;
+    const emailFromContext = userInfo?.email || null;
+    if (emailFromContext) {
+      setSubscribedEmail(emailFromContext);
+      setEmail(emailFromContext);
+      onEmailSubscribed?.();
+    } else {
+      setSubscribedEmail(null);
+    }
+  }, [isOpen, userInfo?.email, onEmailSubscribed]);
 
   // Handle email subscription
   const handleSubscribe = useCallback(async () => {

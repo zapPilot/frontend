@@ -1091,6 +1091,28 @@ describe("WalletManager", () => {
   });
 
   describe("Email Subscription", () => {
+    it("uses email from UserContext and does not fetch profile", async () => {
+      // Provide email via context
+      const contextWithEmail = {
+        userInfo: { userId: "user-123", email: "owner@example.com" },
+        loading: false,
+        error: null,
+        isConnected: true,
+        connectedWallet: "0x1234567890123456789012345678901234567890",
+        refetch: vi.fn(),
+      };
+
+      await renderWalletManager(true, vi.fn(), contextWithEmail);
+
+      // Should not fetch profile anymore
+      expect(mockUserService.getUserProfile).not.toHaveBeenCalled();
+
+      // UI shows subscribed state with the context email
+      expect(
+        screen.getByText(/You.*subscribed to weekly PnL reports/i)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/owner@example.com/)).toBeInTheDocument();
+    });
     it("successfully subscribes with a valid email", async () => {
       const user = userEvent.setup();
       await act(async () => {

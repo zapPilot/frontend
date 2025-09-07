@@ -1,6 +1,5 @@
 import {
   addWalletToBundle,
-  getUserProfile,
   getUserWallets,
   removeWalletFromBundle,
   transformWalletData,
@@ -51,27 +50,6 @@ export class WalletService {
     newLabel: string
   ): Promise<{ success: boolean; error?: string }> {
     return updateWalletLabel(userId, walletAddress, newLabel);
-  }
-
-  /**
-   * Load user profile to get email subscription status
-   */
-  static async loadUserProfile(userId: string): Promise<{
-    email: string | null;
-    hasSubscription: boolean;
-  }> {
-    try {
-      const profile = await getUserProfile(userId);
-      if (profile.success && profile.data?.user) {
-        return {
-          email: profile.data.user.email || null,
-          hasSubscription: !!profile.data.user.email,
-        };
-      }
-      return { email: null, hasSubscription: false };
-    } catch {
-      return { email: null, hasSubscription: false };
-    }
   }
 
   /**
