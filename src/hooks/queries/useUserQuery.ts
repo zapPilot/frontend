@@ -1,9 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
-// Switched from analytics-engine bundle API to account API
-import { connectWallet, getUserWallets } from "../../services/accountService";
-import type { UserCryptoWallet } from "../../types/user.types";
+// Use account service to connect, and user service to fetch profile + wallets in a single call
+import { connectWallet } from "../../services/accountService";
+import { getUserProfile } from "../../services/userService";
+import type {
+  UserCryptoWallet,
+  UserProfileResponse,
+} from "../../types/user.types";
 
 // Removed ApiBundleResponse in favor of account API wallets
 
@@ -36,10 +40,20 @@ export function useUserByWallet(walletAddress: string | null) {
       // Connect wallet to create/retrieve user
       const connectResponse = await connectWallet(walletAddress);
 
-      // Fetch user wallets from account API
-      const wallets: UserCryptoWallet[] = await getUserWallets(
-        connectResponse.user_id
-      );
+      // Fetch complete user profile once (includes wallets and email)
+      let wallets: UserCryptoWallet[] = [];
+      let userEmail = "";
+      try {
+        const profileResponse = await getUserProfile(connectResponse.user_id);
+        if (profileResponse.success && profileResponse.data) {
+          const data: UserProfileResponse = profileResponse.data;
+          wallets = data.wallets || [];
+          userEmail = data.user?.email || "";
+        }
+      } catch (error) {
+        // If profile loading fails, continue with empty email and fallbacks
+        console.warn("Failed to load user profile:", error);
+      }
 
       // Derive fields compatible with previous structure
       const primaryWallet =
@@ -61,7 +75,7 @@ export function useUserByWallet(walletAddress: string | null) {
 
       return {
         userId: connectResponse.user_id,
-        email: "", // Email not provided by getUserWallets; can be populated via getUserProfile if needed
+        email: userEmail, // Now populated from getUserProfile
         primaryWallet,
         bundleWallets,
         additionalWallets,

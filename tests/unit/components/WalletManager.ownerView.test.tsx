@@ -74,6 +74,7 @@ vi.mock("../../../src/services/userService", () => ({
   handleWalletError: vi.fn(),
   getUserProfile: vi.fn(),
   updateUserEmail: vi.fn(),
+  removeUserEmail: vi.fn(),
 }));
 
 describe("WalletManager owner/viewer behavior", () => {

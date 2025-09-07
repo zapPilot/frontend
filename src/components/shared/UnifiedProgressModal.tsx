@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { GlassCard } from "../ui";
+import { Z_INDEX } from "@/constants/design-system";
 
 // Base step interface
 interface BaseStep {
@@ -363,7 +364,7 @@ const UnifiedProgressModalComponent = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-lg flex items-center justify-center p-4"
+        className={`fixed inset-0 ${Z_INDEX.MODAL} bg-gray-950/90 backdrop-blur-lg flex items-center justify-center p-4`}
         onClick={handleClose}
       >
         <motion.div

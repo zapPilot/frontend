@@ -5,6 +5,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Resource controls: allow low-memory mode via environment variables
+    // Use with: VITEST_SINGLE_THREAD=true VITEST_MAX_CONCURRENCY=1 npm run test:unit
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: process.env['VITEST_SINGLE_THREAD'] === 'true',
+      },
+    },
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],

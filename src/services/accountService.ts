@@ -155,6 +155,21 @@ export const updateUserEmail = async (
   }
 };
 
+/**
+ * Remove user email (unsubscribe from email-based reports)
+ */
+export const removeUserEmail = async (
+  userId: string
+): Promise<UpdateEmailResponse> => {
+  try {
+    return await httpUtils.accountApi.delete<UpdateEmailResponse>(
+      `/users/${userId}/email`
+    );
+  } catch (error) {
+    throw createAccountServiceError(error);
+  }
+};
+
 // Wallet Management Operations
 
 /**

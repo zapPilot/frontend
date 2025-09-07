@@ -95,6 +95,24 @@ export const SCROLLABLE_CONTAINER = {
     "overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-purple-500/50 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/70",
 } as const;
 
+// Layering (z-index) tokens for consistent stacking order
+export const Z_INDEX = {
+  CONTENT: "z-10",
+  BANNER: "z-30", // beneath headers, above content
+  HEADER: "z-40",
+  HEADER_MOBILE: "z-50",
+  FAB: "z-40",
+  TOAST: "z-50",
+  MODAL: "z-60",
+  TOOLTIP: "z-[9999]",
+} as const;
+
+// Header sizing/offset tokens
+export const HEADER = {
+  HEIGHT: "h-16",
+  TOP_OFFSET: "top-16",
+} as const;
+
 // Type exports for convenience
 export type GradientType = keyof typeof GRADIENTS;
 export type GlassMorphismVariant = keyof typeof GLASS_MORPHISM;

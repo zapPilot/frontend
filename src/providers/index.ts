@@ -6,7 +6,6 @@
 export { Web3Provider } from "./Web3Provider";
 export { WalletProvider, useWalletProvider } from "./WalletProvider";
 export { QueryProvider } from "./QueryProvider";
-export { OnboardingProvider } from "./OnboardingProvider";
 export { SimpleWeb3Provider } from "./SimpleWeb3Provider";
 
 // Re-export wallet types and utilities

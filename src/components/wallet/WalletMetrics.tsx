@@ -1,4 +1,5 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
+import { Z_INDEX } from "@/constants/design-system";
 import React, { useRef, useState } from "react";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { createPortal } from "react-dom";
@@ -213,9 +214,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                         top: roiTooltipPos.top,
                         left: roiTooltipPos.left,
                         transform: "translateX(-50%)",
-                        zIndex: 2147483647,
                       }}
-                      className="bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700"
+                      className={`bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700 ${Z_INDEX.TOOLTIP}`}
                     >
                       <div className="font-semibold text-gray-200 mb-2 text-center">
                         📊 Portfolio ROI Estimation

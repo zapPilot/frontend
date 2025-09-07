@@ -13,6 +13,7 @@ import {
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 import { chainLogger } from "@/utils/logger";
+import { Z_INDEX } from "@/constants/design-system";
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 
@@ -115,7 +116,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 glass-morphism border border-gray-700 rounded-lg shadow-lg z-50 backdrop-blur-md"
+            className={`absolute top-full left-0 right-0 mt-2 glass-morphism border border-gray-700 rounded-lg shadow-lg ${Z_INDEX.TOAST} backdrop-blur-md`}
           >
             <div className="p-2 space-y-1">
               {SUPPORTED_CHAINS.map(chain => (

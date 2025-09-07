@@ -20,6 +20,7 @@ import {
   getUserWallets as getUserWalletsService,
   removeWalletFromBundle as removeWalletFromBundleService,
   updateUserEmail as updateUserEmailService,
+  removeUserEmail as removeUserEmailService,
   updateWalletLabel as updateWalletLabelService,
 } from "./accountService";
 
@@ -146,6 +147,27 @@ export const updateUserEmail = async (
 ): Promise<ServiceResponse<UpdateEmailResponse>> => {
   try {
     const data = await updateUserEmailService(userId, email);
+
+    return {
+      data,
+      success: true,
+    };
+  } catch (error) {
+    return {
+      error: handleWalletError(error),
+      success: false,
+    };
+  }
+};
+
+/**
+ * Remove user's email (unsubscribe)
+ */
+export const removeUserEmail = async (
+  userId: string
+): Promise<ServiceResponse<UpdateEmailResponse>> => {
+  try {
+    const data = await removeUserEmailService(userId);
 
     return {
       data,

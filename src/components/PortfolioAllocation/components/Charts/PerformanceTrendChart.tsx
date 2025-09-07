@@ -1,4 +1,5 @@
 "use client";
+import { Z_INDEX } from "@/constants/design-system";
 
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown } from "lucide-react";
@@ -331,7 +332,7 @@ export function PerformanceTrendChart({
         {/* Tooltip */}
         {hoveredPoint && (
           <div
-            className="absolute bg-slate-800/95 backdrop-blur-sm rounded-lg p-3 border border-slate-600/50 shadow-xl pointer-events-none z-10"
+            className={`absolute bg-slate-800/95 backdrop-blur-sm rounded-lg p-3 border border-slate-600/50 shadow-xl pointer-events-none ${Z_INDEX.CONTENT}`}
             style={{
               left: Math.min(hoveredPoint.x, 700), // Keep tooltip in view
               top: Math.max(hoveredPoint.y - 60, 10),

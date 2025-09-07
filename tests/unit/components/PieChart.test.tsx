@@ -268,7 +268,9 @@ describe("PieChart", () => {
 
       rerender(<PieChart data={newData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenLastCalledWith(10000, { isHidden: false });
+      expect(formatCurrency).toHaveBeenLastCalledWith(10000, {
+        isHidden: false,
+      });
     });
 
     it("should handle zero total value gracefully", () => {
@@ -287,7 +289,9 @@ describe("PieChart", () => {
       ];
       render(<PieChart data={largeValueData} size={250} strokeWidth={10} />);
 
-      expect(formatCurrency).toHaveBeenCalledWith(999999999, { isHidden: false });
+      expect(formatCurrency).toHaveBeenCalledWith(999999999, {
+        isHidden: false,
+      });
     });
 
     it("should handle negative values", () => {

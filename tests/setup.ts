@@ -223,7 +223,9 @@ vi.mock("next/dynamic", () => {
                           key: "pie-chart-balance",
                           "data-testid": "pie-chart-balance",
                         },
-                        (props?.balanceHidden ? "••••••••" : formatCurrency(calculatedTotal))
+                        props?.balanceHidden
+                          ? "••••••••"
+                          : formatCurrency(calculatedTotal)
                       ),
                       React.createElement(
                         "div",
@@ -245,6 +247,29 @@ vi.mock("next/dynamic", () => {
                     },
                     props?.pieChartData?.length || 0
                   ),
+                ]
+              );
+            }
+
+            // Special-case WalletManager so tests can interact with its props synchronously
+            if (importString.includes("WalletManager")) {
+              return React.createElement(
+                "div",
+                { "data-testid": "wallet-manager-mock" },
+                [
+                  // Only show confirm button when modal would be open
+                  props?.isOpen
+                    ? React.createElement(
+                        "button",
+                        {
+                          key: "confirm",
+                          type: "button",
+                          "data-testid": "confirm-email-subscribe",
+                          onClick: () => props?.onEmailSubscribed?.(),
+                        },
+                        "Confirm Subscribe"
+                      )
+                    : null,
                 ]
               );
             }

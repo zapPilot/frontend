@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Settings, AlertTriangle, ChevronDown } from "lucide-react";
 import { useSlippage, type SlippagePreset } from "../PortfolioAllocation/hooks";
+import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks/useDropdown";
 
 interface SlippageComponentProps {
@@ -82,8 +83,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
 
   // Smart dropdown positioning logic
   const getDropdownClasses = () => {
-    const baseClasses =
-      "absolute top-full mt-2 p-4 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl z-50";
+    const baseClasses = `absolute top-full mt-2 p-4 bg-gray-900 border border-gray-700 rounded-2xl shadow-xl ${Z_INDEX.TOAST}`;
 
     switch (dropdownPosition) {
       case "left":
@@ -253,7 +253,7 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
         {/* Backdrop to close panel */}
         {dropdown.isOpen && (
           <div
-            className="fixed inset-0 z-40"
+            className={`fixed inset-0 ${Z_INDEX.HEADER}`}
             onClick={() => dropdown.close()}
           />
         )}

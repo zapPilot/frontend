@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
-import { OnboardingProvider } from "@/providers/OnboardingProvider";
 import { ToastProvider } from "@/hooks/useToast";
 import { UserProvider } from "@/contexts/UserContext";
 import { QueryProvider } from "@/providers/QueryProvider";
@@ -91,13 +90,11 @@ export default function RootLayout({
           <QueryProvider>
             <SimpleWeb3Provider>
               <UserProvider>
-                <OnboardingProvider>
-                  <ErrorBoundary resetKeys={["user-context"]}>
-                    <GlobalErrorHandler />
-                    <ToastProvider>{children}</ToastProvider>
-                    <LogViewer />
-                  </ErrorBoundary>
-                </OnboardingProvider>
+                <ErrorBoundary resetKeys={["user-context"]}>
+                  <GlobalErrorHandler />
+                  <ToastProvider>{children}</ToastProvider>
+                  <LogViewer />
+                </ErrorBoundary>
               </UserProvider>
             </SimpleWeb3Provider>
           </QueryProvider>

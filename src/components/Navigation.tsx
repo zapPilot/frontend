@@ -1,17 +1,11 @@
 "use client";
 
+import { Z_INDEX } from "@/constants/design-system";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback } from "react";
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
-import { useOnboarding } from "@/providers/OnboardingProvider";
-import {
-  WalletConnectHint,
-  ChainSwitchHint,
-  NavigationHint,
-  MobileNavigationHint,
-} from "./Onboarding";
 
 interface NavigationProps {
   activeTab: string;
@@ -19,23 +13,19 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
-  const { markStepCompleted } = useOnboarding();
-
   const handleTabChange = useCallback(
     (tab: string) => {
-      // Mark navigation milestone for onboarding
-      markStepCompleted("navigation-used");
-
-      // Call the original handler
       onTabChange(tab);
     },
-    [onTabChange, markStepCompleted]
+    [onTabChange]
   );
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 lg:z-50 lg:w-72">
+      <div
+        className={`hidden lg:flex lg:fixed lg:inset-y-0 lg:left-0 ${Z_INDEX.HEADER_MOBILE} lg:w-72`}
+      >
         <div className="flex grow flex-col gap-y-5 overflow-y-auto glass-morphism border-r border-gray-800 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
             <motion.div
@@ -107,7 +97,9 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       </div>
 
       {/* Desktop Header with Wallet Controls */}
-      <div className="hidden lg:block fixed top-0 left-72 right-0 z-40 glass-morphism border-b border-gray-800">
+      <div
+        className={`hidden lg:block fixed top-0 left-72 right-0 ${Z_INDEX.HEADER} glass-morphism border-b border-gray-800`}
+      >
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex-1"></div>
           <HeaderWalletControls isMobile={false} className="flex" />
@@ -116,7 +108,9 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
 
       {/* Mobile Header */}
       <div className="lg:hidden">
-        <div className="fixed top-0 left-0 right-0 z-50 glass-morphism border-b border-gray-800">
+        <div
+          className={`fixed top-0 left-0 right-0 ${Z_INDEX.HEADER_MOBILE} glass-morphism border-b border-gray-800`}
+        >
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center space-x-3">
               <Image
@@ -150,7 +144,9 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 glass-morphism border-t border-gray-800">
+      <div
+        className={`lg:hidden fixed bottom-0 left-0 right-0 ${Z_INDEX.HEADER} glass-morphism border-t border-gray-800`}
+      >
         <div className="flex items-center justify-around px-4 py-2">
           {NAVIGATION_ITEMS.map(item => {
             const Icon = item.icon;
@@ -181,12 +177,6 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
           })}
         </div>
       </div>
-
-      {/* Onboarding Hints */}
-      <WalletConnectHint />
-      <ChainSwitchHint />
-      <NavigationHint />
-      <MobileNavigationHint />
     </>
   );
 };
