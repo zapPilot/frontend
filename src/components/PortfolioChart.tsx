@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Activity, Calendar, PieChart, TrendingUp } from "lucide-react";
-import { memo, useMemo, useRef, useState, type MouseEvent } from "react";
+import { memo, useMemo, useRef, useState, useCallback, type MouseEvent } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import {
@@ -137,7 +137,7 @@ const PortfolioChartComponent = () => {
   }, [portfolioHistory]);
 
   // Mouse event handlers for performance chart hover
-  const handleMouseMove = (event: MouseEvent<SVGSVGElement>) => {
+  const handleMouseMove = useCallback((event: MouseEvent<SVGSVGElement>) => {
     if (portfolioHistory.length === 0) return;
 
     const svg = event.currentTarget;
@@ -182,14 +182,14 @@ const PortfolioChartComponent = () => {
         }),
       });
     });
-  };
+  }, [portfolioHistory, minValue, VALUE_RANGE]);
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = useCallback(() => {
     if (rafId.current != null) cancelAnimationFrame(rafId.current);
     rafId.current = null;
     lastIndexRef.current = null;
     setHoveredPoint(null);
-  };
+  }, []);
 
   const renderPerformanceChart = useMemo(
     () => (
@@ -340,7 +340,16 @@ const PortfolioChartComponent = () => {
         )}
       </div>
     ),
-    [portfolioHistory, minValue, maxValue, hoveredPoint]
+    [
+      minValue,
+      maxValue,
+      hoveredPoint,
+      portfolioPath,
+      benchmarkPath,
+      portfolioAreaPath,
+      handleMouseMove,
+      handleMouseLeave,
+    ]
   );
 
   const renderAllocationChart = useMemo(

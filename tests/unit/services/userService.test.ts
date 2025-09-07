@@ -81,6 +81,7 @@ vi.mock("../../../src/services/accountService", () => ({
   addWalletToBundle: vi.fn(),
   removeWalletFromBundle: vi.fn(),
   updateUserEmail: vi.fn(),
+  removeUserEmail: vi.fn(),
   AccountServiceError: class MockAccountServiceError extends Error {
     constructor(message: string) {
       super(message);
@@ -120,6 +121,7 @@ import {
   addWalletToBundle as addWalletToBundleService,
   removeWalletFromBundle as removeWalletFromBundleService,
   updateUserEmail as updateUserEmailService,
+  removeUserEmail as removeUserEmailService,
   AccountServiceError,
 } from "../../../src/services/accountService";
 
@@ -132,6 +134,7 @@ const mockRemoveWalletFromBundleService = vi.mocked(
   removeWalletFromBundleService
 );
 const mockUpdateUserEmailService = vi.mocked(updateUserEmailService);
+const mockRemoveUserEmailService = vi.mocked(removeUserEmailService);
 
 // API Error for testing
 class APIError extends Error {
@@ -454,6 +457,43 @@ describe("userService", () => {
 
       expect(result).toEqual({
         error: "Email already in use",
+        success: false,
+      });
+    });
+  });
+
+  describe("removeUserEmail", () => {
+    const mockEmailResponse: UpdateEmailResponse = {
+      success: true,
+      message: "Email removed successfully",
+    };
+
+    it("successfully removes email (unsubscribe)", async () => {
+      mockRemoveUserEmailService.mockResolvedValue(mockEmailResponse);
+
+      const { removeUserEmail } = await import(
+        "../../../src/services/userService"
+      );
+      const result = await removeUserEmail("user-123");
+
+      expect(result).toEqual({
+        data: mockEmailResponse,
+        success: true,
+      });
+      expect(mockRemoveUserEmailService).toHaveBeenCalledWith("user-123");
+    });
+
+    it("handles API errors on remove", async () => {
+      const apiError = new AccountServiceError("User not found", 404);
+      mockRemoveUserEmailService.mockRejectedValue(apiError);
+
+      const { removeUserEmail } = await import(
+        "../../../src/services/userService"
+      );
+      const result = await removeUserEmail("nonexistent-user");
+
+      expect(result).toEqual({
+        error: "User not found",
         success: false,
       });
     });

@@ -9,6 +9,7 @@ interface EmailSubscriptionProps {
   subscriptionOperation: OperationState;
   onEmailChange: (email: string) => void;
   onSubscribe: () => void;
+  onUnsubscribe: () => void;
   onStartEditing: () => void;
   onCancelEditing: () => void;
 }
@@ -20,6 +21,7 @@ export const EmailSubscription = ({
   subscriptionOperation,
   onEmailChange,
   onSubscribe,
+  onUnsubscribe,
   onStartEditing,
   onCancelEditing,
 }: EmailSubscriptionProps) => {
@@ -36,12 +38,20 @@ export const EmailSubscription = ({
             <span className="text-gray-400"> at </span>
             <span className="text-white font-medium">{subscribedEmail}</span>.
           </p>
-          <button
-            onClick={onStartEditing}
-            className="px-3 py-1.5 text-xs rounded-lg glass-morphism hover:bg-white/10 transition-colors"
-          >
-            ✏️ Update email
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onStartEditing}
+              className="px-3 py-1.5 text-xs rounded-lg glass-morphism hover:bg-white/10 transition-colors"
+            >
+              ✏️ Update email
+            </button>
+            <button
+              onClick={onUnsubscribe}
+              className="px-3 py-1.5 text-xs rounded-lg bg-red-600/10 text-red-300 border border-red-600/20 hover:bg-red-600/20 transition-colors"
+            >
+              Unsubscribe
+            </button>
+          </div>
         </div>
       ) : (
         <>

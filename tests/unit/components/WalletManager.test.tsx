@@ -71,6 +71,7 @@ vi.mock("../../../src/services/userService", () => ({
   handleWalletError: vi.fn(),
   getUserProfile: vi.fn(),
   updateUserEmail: vi.fn(),
+  removeUserEmail: vi.fn(),
 }));
 
 // No need to mock accountService for this test suite.
@@ -1091,6 +1092,34 @@ describe("WalletManager", () => {
   });
 
   describe("Email Subscription", () => {
+    it("allows unsubscribing when already subscribed via context", async () => {
+      const user = userEvent.setup();
+      const contextWithEmail = {
+        userInfo: { userId: "user-123", email: "owner@example.com" },
+        loading: false,
+        error: null,
+        isConnected: true,
+        connectedWallet: "0x1234567890123456789012345678901234567890",
+        refetch: vi.fn(),
+      };
+
+      await renderWalletManager(true, vi.fn(), contextWithEmail);
+
+      // Click Unsubscribe
+      await user.click(screen.getByText("Unsubscribe"));
+
+      await waitFor(() => {
+        expect(mockUserService.removeUserEmail).toHaveBeenCalledWith(
+          "user-123"
+        );
+      });
+
+      // Subscribed banner should disappear; input should be present
+      expect(
+        screen.queryByText(/You.*subscribed to weekly PnL reports/i)
+      ).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Enter your email")).toBeInTheDocument();
+    });
     it("uses email from UserContext and does not fetch profile", async () => {
       // Provide email via context
       const contextWithEmail = {

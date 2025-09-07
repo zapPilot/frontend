@@ -4,9 +4,10 @@ import {
   removeWalletFromBundle,
   transformWalletData,
   updateUserEmail,
+  removeUserEmail,
   updateWalletLabel,
   type WalletData,
-} from "@/services/userService";
+} from "../../../services/userService";
 
 export class WalletService {
   /**
@@ -60,6 +61,13 @@ export class WalletService {
     email: string
   ): Promise<void> {
     await updateUserEmail(userId, email);
+  }
+
+  /**
+   * Unsubscribe user email (DELETE /users/:userId/email)
+   */
+  static async unsubscribeUserEmail(userId: string): Promise<void> {
+    await removeUserEmail(userId);
   }
 
   /**

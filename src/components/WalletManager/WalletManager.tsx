@@ -198,6 +198,7 @@ const WalletManagerComponent = ({
                   }
                   onEmailChange={emailSubscription.setEmail}
                   onSubscribe={emailSubscription.handleSubscribe}
+                  onUnsubscribe={emailSubscription.handleUnsubscribe}
                   onStartEditing={emailSubscription.startEditingSubscription}
                   onCancelEditing={emailSubscription.cancelEditingSubscription}
                 />

@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError } from "@/services/userService";
-import { validateEmail } from "../utils/validation";
+import { useCallback, useEffect, useState } from "react";
+import { WalletService } from "../services/WalletService";
 import type { OperationState } from "../types/wallet.types";
-import { useUser } from "@/contexts/UserContext";
-
+import { validateEmail } from "../utils/validation";
 interface UseEmailSubscriptionParams {
   viewingUserId: string;
   realUserId: string;
@@ -13,7 +13,6 @@ interface UseEmailSubscriptionParams {
 }
 
 export const useEmailSubscription = ({
-  viewingUserId: _viewingUserId,
   realUserId,
   isOpen,
   onEmailSubscribed,
@@ -87,6 +86,38 @@ export const useEmailSubscription = ({
     }
   }, [realUserId, email, onEmailSubscribed, showToast]);
 
+  // Unsubscribe (clear email)
+  const handleUnsubscribe = useCallback(async () => {
+    if (!realUserId) {
+      setSubscriptionOperation({
+        isLoading: false,
+        error: "User not authenticated",
+      });
+      return;
+    }
+
+    setSubscriptionOperation({ isLoading: true, error: null });
+
+    try {
+      // Use dedicated endpoint to remove email
+      await WalletService.unsubscribeUserEmail(realUserId);
+
+      setSubscriptionOperation({ isLoading: false, error: null });
+      setSubscribedEmail(null);
+      setEmail("");
+      setIsEditingSubscription(false);
+
+      showToast({
+        type: "success",
+        title: "Unsubscribed",
+        message: "You will no longer receive weekly PnL reports.",
+      });
+    } catch (error) {
+      const errorMessage = handleWalletError(error);
+      setSubscriptionOperation({ isLoading: false, error: errorMessage });
+    }
+  }, [realUserId, showToast]);
+
   // Start editing subscription
   const startEditingSubscription = useCallback(() => {
     setIsEditingSubscription(true);
@@ -114,6 +145,7 @@ export const useEmailSubscription = ({
     // Actions
     setEmail,
     handleSubscribe,
+    handleUnsubscribe,
     startEditingSubscription,
     cancelEditingSubscription,
   };
