@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/* eslint-disable @typescript-eslint/no-require-imports */
+ 
 
 /**
  * Custom coverage threshold checker for Vitest
@@ -12,10 +12,10 @@ const path = require("path");
 
 const COVERAGE_FILE = path.join(__dirname, "../coverage/coverage-summary.json");
 const THRESHOLDS = {
-  statements: 20,
-  branches: 70,
+  statements: 25,
+  branches: 75,
   functions: 46,
-  lines: 20,
+  lines: 25,
 };
 
 function checkCoverageThresholds() {
