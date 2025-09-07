@@ -48,6 +48,41 @@ portfolios using intent-based execution.
   `refactor:`, `chore:`, `ci:`). Use imperative voice and optional scope (e.g.,
   `feat(Portfolio): add chart zoom`).
 
+## Bundle Deep-Linking & Sharing
+
+The application supports deep-linking to view any user's portfolio bundle via URL parameters:
+
+### URL Format
+
+- **Bundle URL**: `/bundle?userId=<user-id>`
+- **Example**: `/bundle?userId=0x1234...abcd`
+
+### Viewing Modes
+
+- **Owner mode**: Connected user viewing their own bundle (full functionality)
+- **Visitor mode**: Viewing someone else's bundle or viewing while disconnected (read-only)
+
+### Visitor Mode Behavior
+
+- **Data Access**: Can view portfolio data, charts, and asset breakdowns
+- **Action Restrictions**: Wallet actions (Zap In/Out, Optimize) are disabled
+- **Switch Banner**: Connected users see a "Switch to my bundle" banner when viewing others' bundles
+- **Banner Persistence**: Banner dismissal is saved to localStorage per userId
+- **Error Handling**: Shows friendly "Bundle not found" page for invalid userIds
+
+### Implementation Details
+
+- **Data Fetching**: `useLandingPageData(userId)` works independently of wallet connection
+- **Caching**: React Query caches by userId to prevent cross-user data contamination
+- **Routing**: `BundlePageEntry` extracts userId from search params
+- **Services**: `bundleService` handles URL generation, parsing, and ownership logic
+
+### Testing
+
+- Visitor mode tests: `tests/unit/components/WalletPortfolio.urlParams.test.tsx`
+- Banner persistence tests: `tests/unit/components/BundlePageClient.test.tsx`
+- Error state tests: BundleNotFound component coverage
+
 ## Security & Configuration Tips
 
 - Never commit secrets. Copy `.env.example` to `.env.local` and update locally.

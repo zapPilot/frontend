@@ -21,6 +21,8 @@ interface PoolPerformanceTableProps {
   onRetry?: () => void;
   categoryFilter?: string | null;
   onClearCategoryFilter?: () => void;
+  defaultTopN?: number | null;
+  topNOptions?: number[];
 }
 
 type SortField = "apr" | "value" | "contribution" | "protocol";
@@ -116,11 +118,14 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
   onRetry,
   categoryFilter,
   onClearCategoryFilter,
+  defaultTopN = null,
+  topNOptions = [5, 10, 20, 50],
 }) => {
   const [sortState, setSortState] = useState<SortState>({
     field: "value",
     direction: "desc",
   });
+  const [topN, setTopN] = useState<number | null>(defaultTopN);
 
   // Filter pools by category if specified
   const filteredPools = useMemo(() => {
@@ -172,6 +177,12 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
       return sortState.direction === "asc" ? comparison : -comparison;
     });
   }, [filteredPools, sortState]);
+
+  // Apply Top N limit if specified
+  const displayedPools = useMemo(() => {
+    if (topN === null || !sortedPools.length) return sortedPools;
+    return sortedPools.slice(0, topN);
+  }, [sortedPools, topN]);
 
   const handleSort = (field: SortField) => {
     setSortState(prev => ({
@@ -271,10 +282,42 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
               </div>
             )}
           </div>
-          <div className="text-sm text-gray-400">
-            {filteredPools.length} pools •{" "}
-            {filteredPools.filter(p => !isUnderperforming(p)).length} performing
-            well
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <div className="text-sm text-gray-400">
+              {topN && displayedPools.length < filteredPools.length ? (
+                <>
+                  Showing {displayedPools.length} of {filteredPools.length}{" "}
+                  pools •{" "}
+                  {displayedPools.filter(p => !isUnderperforming(p)).length}{" "}
+                  performing well
+                </>
+              ) : (
+                <>
+                  {filteredPools.length} pools •{" "}
+                  {filteredPools.filter(p => !isUnderperforming(p)).length}{" "}
+                  performing well
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-400">Show:</span>
+              <select
+                value={topN || "all"}
+                onChange={e =>
+                  setTopN(
+                    e.target.value === "all" ? null : Number(e.target.value)
+                  )
+                }
+                className="px-2 py-1 bg-gray-800/50 border border-gray-600/50 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-400"
+              >
+                <option value="all">All</option>
+                {topNOptions.map(option => (
+                  <option key={option} value={option}>
+                    Top {option}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -340,7 +383,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {sortedPools.map((pool, index) => (
+              {displayedPools.map((pool, index) => (
                 <motion.tr
                   key={pool.snapshot_id}
                   initial={{ opacity: 0, y: 20 }}
@@ -428,7 +471,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
 
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
-          {sortedPools.map((pool, index) => (
+          {displayedPools.map((pool, index) => (
             <motion.div
               key={pool.snapshot_id}
               initial={{ opacity: 0, y: 20 }}
@@ -522,22 +565,22 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
             <div className="text-center">
               <p className="text-gray-400 mb-1">Underperforming</p>
               <p className="text-yellow-400 font-medium">
-                {filteredPools.filter(p => isUnderperforming(p)).length}
+                {displayedPools.filter(p => isUnderperforming(p)).length}
               </p>
             </div>
             <div className="text-center">
               <p className="text-gray-400 mb-1">Performing Well</p>
               <p className="text-green-400 font-medium">
-                {filteredPools.filter(p => !isUnderperforming(p)).length}
+                {displayedPools.filter(p => !isUnderperforming(p)).length}
               </p>
             </div>
             <div className="text-center">
               <p className="text-gray-400 mb-1">Avg APR</p>
               <p className="text-white font-medium">
-                {filteredPools.length > 0
+                {displayedPools.length > 0
                   ? formatAPR(
-                      filteredPools.reduce((sum, p) => sum + p.final_apr, 0) /
-                        filteredPools.length
+                      displayedPools.reduce((sum, p) => sum + p.final_apr, 0) /
+                        displayedPools.length
                     )
                   : "0.00%"}
               </p>

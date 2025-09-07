@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import type { LandingPageResponse } from "../services/analyticsEngine";
 import { PortfolioState, PortfolioStateType } from "../types/portfolioState";
 
 /**
@@ -19,25 +20,25 @@ export function usePortfolioState({
   isLoading: boolean;
   isRetrying?: boolean;
   error?: string | null;
-  landingPageData?: unknown;
+  landingPageData?: LandingPageResponse | null;
   hasZeroData: boolean;
 }): PortfolioState {
   return useMemo(() => {
     // Determine the portfolio state type based on conditions
     const getPortfolioStateType = (): PortfolioStateType => {
-      // 1. Wallet not connected
-      if (!isConnected) {
-        return "wallet_disconnected";
-      }
-
-      // 2. API Error
+      // 1. API Error
       if (error) {
         return "error";
       }
 
-      // 3. Loading state (including retrying)
+      // 2. Loading state (including retrying)
       if (isLoading || isRetrying) {
         return "loading";
+      }
+
+      // 3. Has data - show regardless of connection status (enables visitor mode)
+      if (landingPageData && !hasZeroData) {
+        return "has_data";
       }
 
       // 4. Connected but no data (API returns zeros)
@@ -45,9 +46,9 @@ export function usePortfolioState({
         return "connected_no_data";
       }
 
-      // 5. Has data (normal portfolio state)
-      if (isConnected && landingPageData) {
-        return "has_data";
+      // 5. Not connected AND no valid data - only now show connect prompt
+      if (!isConnected) {
+        return "wallet_disconnected";
       }
 
       // 6. Connected but still loading (no data yet, no error)
@@ -62,7 +63,7 @@ export function usePortfolioState({
     const stateType = getPortfolioStateType();
 
     // Extract total value, handling zero properly (don't convert 0 to null)
-    const totalValue = (landingPageData as any)?.total_net_usd ?? null;
+    const totalValue = landingPageData?.total_net_usd ?? null;
 
     return {
       type: stateType,

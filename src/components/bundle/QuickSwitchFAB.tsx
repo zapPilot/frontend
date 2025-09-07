@@ -2,7 +2,7 @@
 
 import { Home } from "lucide-react";
 import React from "react";
-import { GRADIENTS } from "../../styles/design-tokens";
+import { GRADIENTS } from "../../constants/design-system";
 import { Z_INDEX } from "@/constants/design-system";
 
 interface QuickSwitchFABProps {

@@ -92,25 +92,6 @@ export const PORTFOLIO_CHART = {
   DEFAULT_WIDTH: 800,
   PADDING: 10,
 } as const;
-
-// Mock Data Constants
-export const PORTFOLIO_MOCK_DATA = {
-  PORTFOLIO_VALUE: 100000,
-  ASSET_ALLOCATIONS: {
-    BTC: 35.2,
-    ETH: 28.7,
-    STABLECOIN: 20.1,
-    DEFI: 12.4,
-    ALTCOIN: 3.6,
-  },
-  PERFORMANCE_METRICS: {
-    BEST_DAY: 5.2,
-    WORST_DAY: -3.8,
-    AVG_DAILY: 0.12,
-    WIN_RATE: 64.2,
-  },
-} as const;
-
 // Utility functions
 export const getRiskLevelClass = (risk: keyof typeof RISK_LEVELS) =>
   `${RISK_LEVELS[risk].bgColor} ${RISK_LEVELS[risk].color} px-2 py-1 rounded-full text-xs`;

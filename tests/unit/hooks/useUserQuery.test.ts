@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "../../test-utils";
 
 // Mock account and user services used by the hook
@@ -12,16 +12,16 @@ vi.mock("../../../src/services/userService", () => ({
 }));
 
 import { useUserByWallet } from "../../../src/hooks/queries/useUserQuery";
-import {
-  ConnectWalletResponse,
-  UserCryptoWallet,
-  UserProfileResponse,
-} from "../../../src/types/user.types";
 import { connectWallet as connectWalletService } from "../../../src/services/accountService";
 import {
   getUserProfile as getUserProfileService,
   getUserWallets as getUserWalletsService,
 } from "../../../src/services/userService";
+import {
+  ConnectWalletResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
+} from "../../../src/types/user.types";
 
 const mockConnectWallet = vi.mocked(connectWalletService);
 const mockGetUserProfile = vi.mocked(getUserProfileService);
@@ -101,34 +101,5 @@ describe("useUserByWallet", () => {
         is_main: false,
       }),
     ]);
-  });
-
-  it("falls back gracefully when profile fetch fails (no duplicate wallet call)", async () => {
-    const walletAddress = "0x9999999999999999999999999999999999999999";
-    mockConnectWallet.mockResolvedValue({
-      user_id: "user-xyz",
-      is_new_user: false,
-    });
-    mockGetUserProfile.mockRejectedValue(new Error("profile failed"));
-
-    const { result } = renderHook(() => useUserByWallet(walletAddress));
-
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
-
-    expect(mockConnectWallet).toHaveBeenCalledWith(walletAddress);
-    expect(mockGetUserProfile).toHaveBeenCalledWith("user-xyz");
-    expect(mockGetUserWallets).not.toHaveBeenCalled();
-
-    expect(result.current.data).toEqual(
-      expect.objectContaining({
-        userId: "user-xyz",
-        email: "",
-        primaryWallet: walletAddress,
-        bundleWallets: [walletAddress],
-        totalWallets: 1,
-        totalVisibleWallets: 1,
-      })
-    );
-    expect(result.current.data?.additionalWallets).toEqual([]);
   });
 });

@@ -1,14 +1,12 @@
-import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import { Z_INDEX } from "@/constants/design-system";
+import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useRef, useState } from "react";
-import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { createPortal } from "react-dom";
-import { useLandingPageData } from "../../hooks/queries/usePortfolioQuery";
+import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsEngine";
-import { BUSINESS_CONSTANTS } from "../../styles/design-tokens";
 import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 import { BalanceLoading } from "../ui/UnifiedLoading";
@@ -69,17 +67,13 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     portfolioState,
     balanceHidden,
     portfolioChangePercentage,
-    userId,
     landingPageData,
   }) => {
     const { balanceHidden: ctxHidden } = useBalanceVisibility();
     const resolvedHidden = balanceHidden ?? ctxHidden;
-    // Fetch unified landing page data (includes APR data) only if not provided via props
-    const { data: fetchedData, isLoading: fetchedLoading } = useLandingPageData(
-      landingPageData ? null : userId
-    );
-    const data = landingPageData ?? fetchedData;
-    const landingPageLoading = landingPageData ? false : fetchedLoading;
+    // Data must be provided by parent; no internal fetching
+    const data = landingPageData;
+    const landingPageLoading = !data && portfolioState.isLoading;
 
     // ROI tooltip portal state
     const [roiTooltipVisible, setRoiTooltipVisible] = useState(false);
@@ -104,7 +98,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use portfolio state helpers for consistent logic
     const {
       shouldShowLoading,
-      shouldShowConnectPrompt,
       shouldShowNoDataMessage,
       shouldShowError,
       getDisplayTotalValue,
@@ -150,13 +143,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         );
       }
 
-      // Wallet not connected
-      if (shouldShowConnectPrompt) {
-        return (
-          <div className="text-gray-400 text-lg">Please Connect Wallet</div>
-        );
-      }
-
       // Connected but no data
       if (shouldShowNoDataMessage) {
         return <div className="text-gray-400 text-lg">No data available</div>;
@@ -167,12 +153,97 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return formatCurrency(displayValue ?? 0, { isHidden: resolvedHidden });
     };
 
-    // Use API-provided APR data or fall back to business constant default
-    const displayAPR =
-      estimatedYearlyROI ?? BUSINESS_CONSTANTS.PORTFOLIO.DEFAULT_APR;
+    // Helper function to render ROI display with consistent state handling
+    const renderROIDisplay = () => {
+      // Loading state
+      if (shouldShowLoading || landingPageLoading) {
+        return (
+          <WalletMetricsSkeleton showValue={true} showPercentage={false} />
+        );
+      }
 
-    // Use estimated yearly PnL directly from API
-    const displayYearlyPnL = estimatedYearlyPnL ?? 0;
+      // Error state - show welcome for new users
+      if (portfolioState.errorMessage === "USER_NOT_FOUND") {
+        return null; // Component will show welcome message
+      }
+
+      // No data available - prioritize actual data over state helpers
+      if (!estimatedYearlyROI) {
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2 text-gray-400">
+              <span className="text-xl font-semibold">No data available</span>
+            </div>
+          </div>
+        );
+      }
+
+      // Normal display with data
+      return (
+        <div className="flex flex-col">
+          <div
+            className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioChangePercentage)}`}
+          >
+            <TrendingUp className="w-4 h-4" />
+            <span className="text-xl font-semibold">
+              {(estimatedYearlyROI * 100).toFixed(2)}%
+            </span>
+            <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+              est.
+            </span>
+          </div>
+          {portfolioROI?.recommended_roi_period && (
+            <span className="text-xs text-gray-500 font-normal mt-1">
+              Based on{" "}
+              {portfolioROI?.recommended_roi_period.replace("roi_", "")}{" "}
+              performance data
+            </span>
+          )}
+        </div>
+      );
+    };
+
+    // Helper function to render PnL display with consistent state handling
+    const renderPnLDisplay = () => {
+      // Loading state
+      if (shouldShowLoading || landingPageLoading) {
+        return (
+          <WalletMetricsSkeleton
+            showValue={true}
+            showPercentage={false}
+            className="w-24"
+          />
+        );
+      }
+
+      // Error state - show welcome for new users
+      if (portfolioState.errorMessage === "USER_NOT_FOUND") {
+        return null; // Component will show welcome message
+      }
+
+      // No data available - prioritize actual data over state helpers
+      if (!estimatedYearlyPnL) {
+        return (
+          <div className="flex items-center space-x-2 text-gray-400">
+            <p className="text-xl font-semibold">No data available</p>
+          </div>
+        );
+      }
+
+      // Normal display with data
+      return (
+        <div
+          className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioChangePercentage)}`}
+        >
+          <p className="text-xl font-semibold">
+            {formatSmallCurrency(estimatedYearlyPnL)}
+          </p>
+          <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
+            est.
+          </span>
+        </div>
+      );
+    };
 
     // Show welcome message for new users
     if (portfolioState.errorMessage === "USER_NOT_FOUND") {
@@ -192,7 +263,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">
               Estimated Yearly ROI{" "}
-              {shouldShowConnectPrompt ? "(Potential)" : ""}
+              {!portfolioState.isConnected ? "(Potential)" : ""}
             </p>
             {portfolioROI && (
               <div className="relative">
@@ -274,60 +345,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               </div>
             )}
           </div>
-          {(shouldShowLoading || landingPageLoading) &&
-          portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
-            <WalletMetricsSkeleton showValue={true} showPercentage={false} />
-          ) : (
-            <>
-              <div className="flex flex-col">
-                <div
-                  className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-purple-400" : getChangeColorClasses(portfolioChangePercentage)}`}
-                >
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="text-xl font-semibold">
-                    {(displayAPR * 100).toFixed(2)}%
-                  </span>
-                  <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
-                    est.
-                  </span>
-                </div>
-                {portfolioROI?.recommended_roi_period && (
-                  <span className="text-xs text-gray-500 font-normal mt-1">
-                    Based on{" "}
-                    {portfolioROI?.recommended_roi_period.replace("roi_", "")}{" "}
-                    performance data
-                  </span>
-                )}
-              </div>
-            </>
-          )}
+          {renderROIDisplay()}
         </div>
 
         <div>
           <p className="text-sm text-gray-400 mb-1">Estimated Yearly PnL</p>
-          {(shouldShowLoading || landingPageLoading) &&
-          portfolioState.errorMessage !== "USER_NOT_FOUND" ? (
-            <WalletMetricsSkeleton
-              showValue={true}
-              showPercentage={false}
-              className="w-24"
-            />
-          ) : (
-            <div
-              className={`flex items-center space-x-2 ${shouldShowConnectPrompt ? "text-gray-400" : getChangeColorClasses(portfolioChangePercentage)}`}
-            >
-              <p className="text-xl font-semibold">
-                {shouldShowConnectPrompt
-                  ? "Connect to calculate"
-                  : formatSmallCurrency(displayYearlyPnL)}
-              </p>
-              {!shouldShowConnectPrompt && (
-                <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
-                  est.
-                </span>
-              )}
-            </div>
-          )}
+          {renderPnLDisplay()}
         </div>
       </div>
     );

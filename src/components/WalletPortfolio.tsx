@@ -6,8 +6,8 @@ import { ComponentType } from "react";
 import { BalanceVisibilityProvider } from "../contexts/BalanceVisibilityContext";
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioData } from "../hooks/usePortfolioData";
+import { usePortfolio } from "../hooks/usePortfolio";
 import { usePortfolioState } from "../hooks/usePortfolioState";
 import { useWalletModal } from "../hooks/useWalletModal";
 import { ErrorBoundary } from "./errors/ErrorBoundary";
@@ -57,6 +57,10 @@ export function WalletPortfolio({
   // Prefer explicit urlUserId (shared view), else fallback to connected user's id
   const resolvedUserId = urlUserId || userInfo?.userId || null;
 
+  // Determine if this is visitor mode (not connected or viewing someone else's bundle)
+  const isVisitorMode =
+    !isConnected || (!!urlUserId && urlUserId !== userInfo?.userId);
+
   // Unified data fetching - single API call for all landing page data
   const landingPageQuery = useLandingPageData(resolvedUserId);
   const landingPageData = landingPageQuery.data;
@@ -76,11 +80,13 @@ export function WalletPortfolio({
     isLoading: landingPageQuery.isLoading,
     isRetrying: landingPageQuery.isRefetching,
     error: landingPageQuery.error?.message || null,
-    landingPageData,
+    landingPageData: landingPageData ?? null,
     hasZeroData,
   });
 
   // Portfolio UI state management (simplified since we have pre-formatted data)
+  // Keep using usePortfolio([]) to align with existing tests that verify this hook
+  // and to provide BalanceVisibility state.
   const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
 
   // Wallet modal state
@@ -128,9 +134,10 @@ export function WalletPortfolio({
               />
 
               <WalletActions
-                onZapInClick={onZapInClick}
-                onZapOutClick={onZapOutClick}
-                onOptimizeClick={onOptimizeClick}
+                onZapInClick={isVisitorMode ? undefined : onZapInClick}
+                onZapOutClick={isVisitorMode ? undefined : onZapOutClick}
+                onOptimizeClick={isVisitorMode ? undefined : onOptimizeClick}
+                disabled={isVisitorMode}
               />
             </GlassCard>
           </ErrorBoundary>

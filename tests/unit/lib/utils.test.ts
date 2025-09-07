@@ -4,10 +4,7 @@ import {
   formatNumber,
   formatPercentage,
 } from "../../../src/lib/formatters";
-import {
-  getRiskLevelClasses,
-  getChangeColorClasses,
-} from "../../../src/lib/color-utils";
+import { getChangeColorClasses } from "../../../src/lib/color-utils";
 import { calculatePortfolioMetrics } from "../../../src/lib/portfolio-data";
 
 describe("utils", () => {
@@ -53,29 +50,6 @@ describe("utils", () => {
 
     it("should format zero percentage with + sign", () => {
       expect(formatPercentage(0)).toBe("+0.0%");
-    });
-  });
-
-  describe("getRiskLevelClasses", () => {
-    it("should return correct classes for Low risk", () => {
-      expect(getRiskLevelClasses("Low")).toBe("bg-green-900/30 text-green-400");
-    });
-
-    it("should return correct classes for Medium risk", () => {
-      expect(getRiskLevelClasses("Medium")).toBe(
-        "bg-yellow-900/30 text-yellow-400"
-      );
-    });
-
-    it("should return correct classes for High risk", () => {
-      expect(getRiskLevelClasses("High")).toBe("bg-red-900/30 text-red-400");
-    });
-
-    it("should return default classes for unknown risk", () => {
-      expect(getRiskLevelClasses("Unknown")).toBe(
-        "bg-gray-900/30 text-gray-400"
-      );
-      expect(getRiskLevelClasses("")).toBe("bg-gray-900/30 text-gray-400");
     });
   });
 

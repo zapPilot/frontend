@@ -1,5 +1,5 @@
 import { PortfolioDataPoint, AssetAllocationPoint } from "../types/portfolio";
-import { portfolioStateUtils } from "@/utils/portfolio.utils";
+import { portfolioStateUtils } from "../utils/portfolio.utils";
 
 export interface SVGPathPoint {
   x: number;

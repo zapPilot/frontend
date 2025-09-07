@@ -887,4 +887,353 @@ describe("PortfolioOverview", () => {
       expect(screen.getByText("Currently no data")).toBeInTheDocument();
     });
   });
+
+  describe("Visitor Mode Bundle Viewing", () => {
+    const visitorBundleCategories = [
+      {
+        categoryId: "btc",
+        displayName: "Bitcoin",
+        totalValue: 12000,
+        percentageOfPortfolio: 60,
+        totalDebt: 0,
+        netValue: 12000,
+        backgroundColor: "#F7931A",
+        positions: [
+          {
+            protocolName: "Compound",
+            protocolDisplayName: "Compound Finance",
+            protocolLogo: "compound-logo.png",
+            totalValue: 12000,
+            totalDebt: 0,
+            netValue: 12000,
+            isDebt: false,
+            tokenSymbol: "BTC",
+            tokenLogo: "bitcoin-logo.png",
+            balanceAmount: 0.5,
+            riskLevel: "low",
+            currentAPY: 0.08,
+          },
+        ],
+      },
+      {
+        categoryId: "eth",
+        displayName: "Ethereum",
+        totalValue: 8000,
+        percentageOfPortfolio: 40,
+        totalDebt: 0,
+        netValue: 8000,
+        backgroundColor: "#627EEA",
+        positions: [
+          {
+            protocolName: "Aave",
+            protocolDisplayName: "Aave Protocol",
+            protocolLogo: "aave-logo.png",
+            totalValue: 8000,
+            totalDebt: 0,
+            netValue: 8000,
+            isDebt: false,
+            tokenSymbol: "ETH",
+            tokenLogo: "ethereum-logo.png",
+            balanceAmount: 4.2,
+            riskLevel: "medium",
+            currentAPY: 0.12,
+          },
+        ],
+      },
+    ];
+
+    const visitorBundlePieData = [
+      { label: "Bitcoin", value: 12000, percentage: 60, color: "#F7931A" },
+      { label: "Ethereum", value: 8000, percentage: 40, color: "#627EEA" },
+    ];
+
+    it("should display bundle content for visitor without wallet connection", () => {
+      // Mock visitor mode: has data but not connected
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false, // Critical: should be false when has data
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true, // Should show content for visitor with data
+        shouldShowError: false,
+        getDisplayTotalValue: () => 20000,
+      });
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "has_data", // Critical: visitor with data gets "has_data", not "wallet_disconnected"
+            isConnected: false, // Visitor not connected
+            isLoading: false,
+            hasError: false,
+            hasZeroData: false,
+            totalValue: 20000,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={visitorBundleCategories}
+          pieChartData={visitorBundlePieData}
+          title="Visitor's Portfolio"
+        />
+      );
+
+      // Should show actual portfolio content, not connect prompts (both desktop + mobile)
+      expect(screen.getAllByText("Visitor's Portfolio")).toHaveLength(2);
+
+      // Should display pie chart data
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("2");
+
+      // Should display asset categories
+      expect(screen.getAllByTestId("asset-categories-detail")).toHaveLength(2); // Desktop + mobile
+
+      // Should not show connect wallet prompts
+      expect(
+        screen.queryByText("Connect Wallet to View Portfolio")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Track your DeFi assets")
+      ).not.toBeInTheDocument();
+    });
+
+    it("should show connect prompts only when visitor has no valid data", () => {
+      // Mock visitor mode: no data available
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: true, // Should be true when no data
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "wallet_disconnected", // No data available
+            isConnected: false,
+            isLoading: false,
+            hasError: false,
+            hasZeroData: false,
+            totalValue: null,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={[]}
+          pieChartData={[]}
+        />
+      );
+
+      // Should show connect wallet prompts when no data available
+      expect(
+        screen.getByText("Connect Wallet to View Portfolio")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Track your DeFi assets, discover yield opportunities, and optimize your portfolio performance across multiple protocols and chains."
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("should render tabs correctly for visitor bundle viewing", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 20000,
+      });
+
+      const mockDebtCategories = [
+        {
+          categoryId: "eth-debt",
+          displayName: "ETH Debt",
+          totalValue: 0,
+          percentageOfPortfolio: 0,
+          totalDebt: 2000,
+          netValue: -2000,
+          backgroundColor: "#627EEA",
+          positions: [
+            {
+              protocolName: "Compound",
+              protocolDisplayName: "Compound Finance",
+              protocolLogo: "compound-logo.png",
+              totalValue: 0,
+              totalDebt: 2000,
+              netValue: -2000,
+              isDebt: true,
+              tokenSymbol: "ETH",
+              tokenLogo: "ethereum-logo.png",
+              balanceAmount: -1.0,
+              riskLevel: "medium",
+              currentAPY: 0.05,
+            },
+          ],
+        },
+      ];
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "has_data",
+            isConnected: false, // Visitor
+            isLoading: false,
+            hasError: false,
+            hasZeroData: false,
+            totalValue: 20000,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={visitorBundleCategories}
+          debtCategorySummaries={mockDebtCategories}
+          pieChartData={visitorBundlePieData}
+        />
+      );
+
+      // Should render assets and borrowing tabs for visitor (desktop + mobile)
+      expect(screen.getAllByRole("tab", { name: /assets/i })).toHaveLength(2);
+      expect(screen.getAllByRole("tab", { name: /borrowing/i })).toHaveLength(
+        2
+      );
+
+      // Should show asset count badges and pie chart data counts (desktop + mobile)
+      expect(screen.getAllByText("2")).toHaveLength(4); // Asset count badges + pie chart data counts
+      expect(screen.getAllByText("1")).toHaveLength(2); // Debt count (desktop + mobile)
+    });
+
+    it("should handle visitor loading state correctly", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: true,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false, // Hide content during loading
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "loading",
+            isConnected: false, // Visitor loading state
+            isLoading: true,
+            hasError: false,
+            hasZeroData: false,
+            totalValue: null,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={[]}
+          pieChartData={[]}
+        />
+      );
+
+      // Should show loading indicators for visitor
+      expect(screen.getAllByTestId("pie-chart-loading")).toHaveLength(2); // Desktop + mobile
+    });
+
+    it("should handle visitor error state correctly", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: true,
+        getDisplayTotalValue: () => null,
+      });
+
+      const mockRetry = vi.fn();
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "error",
+            isConnected: false, // Visitor error state
+            isLoading: false,
+            hasError: true,
+            hasZeroData: false,
+            totalValue: null,
+            errorMessage: "Bundle not found",
+            isRetrying: false,
+          }}
+          categorySummaries={[]}
+          pieChartData={[]}
+          onRetry={mockRetry}
+        />
+      );
+
+      // Should show error state for visitor
+      expect(screen.getByText("Error Loading Portfolio")).toBeInTheDocument();
+      expect(screen.getByText("Bundle not found")).toBeInTheDocument();
+      expect(screen.getByText("Retry")).toBeInTheDocument();
+    });
+
+    it("should display correct pie chart for visitor bundle", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: false,
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: true,
+        shouldShowError: false,
+        getDisplayTotalValue: () => 20000,
+      });
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "has_data",
+            isConnected: false, // Visitor
+            isLoading: false,
+            hasError: false,
+            hasZeroData: false,
+            totalValue: 20000,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={visitorBundleCategories}
+          pieChartData={visitorBundlePieData}
+        />
+      );
+
+      // Should render pie chart with visitor's data
+      expect(screen.getAllByTestId("pie-chart")).toHaveLength(2); // Desktop + mobile
+      expect(
+        screen.getAllByTestId("pie-chart-data-count")[0]
+      ).toHaveTextContent("2");
+    });
+
+    it("should handle zero data visitor bundle correctly", () => {
+      mockUsePortfolioStateHelpers.mockReturnValue({
+        shouldShowLoading: false,
+        shouldShowConnectPrompt: true, // Should show connect prompt for zero data
+        shouldShowNoDataMessage: false,
+        shouldShowPortfolioContent: false,
+        shouldShowError: false,
+        getDisplayTotalValue: () => null,
+      });
+
+      render(
+        <PortfolioOverview
+          portfolioState={{
+            type: "wallet_disconnected", // Zero data = wallet_disconnected
+            isConnected: false,
+            isLoading: false,
+            hasError: false,
+            hasZeroData: true,
+            totalValue: null,
+            errorMessage: null,
+            isRetrying: false,
+          }}
+          categorySummaries={[]}
+          pieChartData={[]}
+        />
+      );
+
+      // Should show connect prompt for zero data visitor
+      expect(
+        screen.getByText("Connect Wallet to View Portfolio")
+      ).toBeInTheDocument();
+    });
+  });
 });

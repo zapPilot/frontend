@@ -79,7 +79,6 @@ const PieChartComponent = ({
           {chartData.map((item, index) => {
             const key = `pie-${item.label}-${item.percentage}-${index}`;
             const commonProps = {
-              key,
               cx: size / 2,
               cy: size / 2,
               r: radius,
@@ -94,6 +93,7 @@ const PieChartComponent = ({
             const animate = !prefersReducedMotion && chartData.length <= 8;
             return animate ? (
               <motion.circle
+                key={key}
                 {...commonProps}
                 initial={{ strokeDasharray: `0 ${circumference}` }}
                 animate={{
@@ -103,7 +103,7 @@ const PieChartComponent = ({
                 transition={{ duration: 0.6, ease: "easeOut" }}
               />
             ) : (
-              <circle {...commonProps} />
+              <circle key={key} {...commonProps} />
             );
           })}
         </svg>

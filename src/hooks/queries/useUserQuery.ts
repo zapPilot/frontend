@@ -43,16 +43,11 @@ export function useUserByWallet(walletAddress: string | null) {
       // Fetch complete user profile once (includes wallets and email)
       let wallets: UserCryptoWallet[] = [];
       let userEmail = "";
-      try {
-        const profileResponse = await getUserProfile(connectResponse.user_id);
-        if (profileResponse.success && profileResponse.data) {
-          const data: UserProfileResponse = profileResponse.data;
-          wallets = data.wallets || [];
-          userEmail = data.user?.email || "";
-        }
-      } catch (error) {
-        // If profile loading fails, continue with empty email and fallbacks
-        console.warn("Failed to load user profile:", error);
+      const profileResponse = await getUserProfile(connectResponse.user_id);
+      if (profileResponse.success && profileResponse.data) {
+        const data: UserProfileResponse = profileResponse.data;
+        wallets = data.wallets || [];
+        userEmail = data.user?.email || "";
       }
 
       // Derive fields compatible with previous structure

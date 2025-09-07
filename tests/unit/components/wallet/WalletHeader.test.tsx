@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "../../../test-utils";
+import { act, fireEvent, render, screen } from "../../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
+import { useToast } from "../../../../src/hooks/useToast";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -11,6 +12,8 @@ vi.mock("lucide-react", () => ({
   Eye: vi.fn(() => <span data-testid="eye-icon">Eye</span>),
   EyeOff: vi.fn(() => <span data-testid="eye-off-icon">EyeOff</span>),
   Wallet: vi.fn(() => <span data-testid="wallet-icon">Wallet</span>),
+  Copy: vi.fn(() => <span data-testid="copy-icon">Copy</span>),
+  Check: vi.fn(() => <span data-testid="check-icon">Check</span>),
 }));
 
 // Mock design tokens
@@ -198,6 +201,42 @@ describe("WalletHeader", () => {
         button.focus();
         expect(button).toHaveFocus();
       });
+    });
+  });
+
+  describe("Bundle link copy", () => {
+    it("renders copy button when bundleUrl provided and copies to clipboard", async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, "clipboard", {
+        value: { writeText },
+        configurable: true,
+      });
+
+      // Mock toast
+      vi.mock("../../../../src/hooks/useToast", async () => {
+        const actual = await vi.importActual("../../../../src/hooks/useToast");
+        return { ...actual, useToast: () => ({ showToast: vi.fn() }) };
+      });
+
+      render(
+        <WalletHeader
+          onWalletManagerClick={vi.fn()}
+          onToggleBalance={vi.fn()}
+          balanceHidden={false}
+          isOwnBundle={false}
+          bundleUserName="Viewer"
+          bundleUrl="https://example.com/b/viewer"
+        />
+      );
+
+      const copyBtn = screen.getByTitle("Copy bundle link");
+      expect(copyBtn).toBeInTheDocument();
+
+      await act(async () => {
+        copyBtn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+
+      expect(writeText).toHaveBeenCalledWith("https://example.com/b/viewer");
     });
   });
 
