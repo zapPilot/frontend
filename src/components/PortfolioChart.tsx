@@ -23,6 +23,13 @@ const PortfolioChartComponent = () => {
   const [selectedChart, setSelectedChart] = useState<
     "performance" | "allocation" | "drawdown"
   >("performance");
+  const [hoveredPoint, setHoveredPoint] = useState<{
+    x: number;
+    y: number;
+    value: number;
+    benchmark: number;
+    date: string;
+  } | null>(null);
 
   // Get user info from context
   const { userInfo, isConnected } = useUser();
@@ -78,6 +85,53 @@ const PortfolioChartComponent = () => {
     return calculateDrawdownData(portfolioHistory);
   }, [portfolioHistory]);
 
+  // Mouse event handlers for performance chart hover
+  const handleMouseMove = (event: React.MouseEvent<SVGSVGElement>) => {
+    if (portfolioHistory.length === 0) return;
+
+    const svg = event.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left;
+    const svgWidth = rect.width;
+
+    // Calculate the data index based on mouse position
+    const dataIndex = Math.round(
+      (mouseX / svgWidth) * (portfolioHistory.length - 1)
+    );
+    const clampedIndex = Math.max(
+      0,
+      Math.min(dataIndex, portfolioHistory.length - 1)
+    );
+
+    const point = portfolioHistory[clampedIndex];
+    if (!point) return;
+
+    // Calculate SVG coordinates for the point
+    const x = (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) * 800;
+    const padding = 10;
+    const valueRange = Math.max(maxValue - minValue, 1);
+    const y =
+      300 -
+      padding -
+      ((point.value - minValue) / valueRange) * (300 - 2 * padding);
+
+    setHoveredPoint({
+      x,
+      y,
+      value: point.value,
+      benchmark: point.benchmark || 0,
+      date: new Date(point.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredPoint(null);
+  };
+
   const renderPerformanceChart = useMemo(
     () => (
       <div className="relative h-80">
@@ -93,6 +147,8 @@ const PortfolioChartComponent = () => {
           viewBox="0 0 800 300"
           className="w-full h-full"
           preserveAspectRatio="xMidYMid meet"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
         >
           <defs>
             <linearGradient
@@ -165,6 +221,23 @@ const PortfolioChartComponent = () => {
               fill="url(#portfolioGradient)"
             />
           )}
+
+          {/* Hover cursor circle */}
+          {hoveredPoint && (
+            <motion.circle
+              cx={hoveredPoint.x}
+              cy={hoveredPoint.y}
+              r="6"
+              fill="#8b5cf6"
+              stroke="#ffffff"
+              strokeWidth="2"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.2 }}
+              className="drop-shadow-lg"
+            />
+          )}
         </svg>
 
         {/* Y-axis labels */}
@@ -191,9 +264,45 @@ const PortfolioChartComponent = () => {
             <span className="text-gray-400">Benchmark</span>
           </div>
         </div>
+
+        {/* Hover Tooltip */}
+        {hoveredPoint && (
+          <motion.div
+            className="absolute z-10 pointer-events-none"
+            style={{
+              left: `min(${hoveredPoint.x * (100 / 800)}%, calc(100% - 200px))`,
+              top: `max(${hoveredPoint.y * (100 / 300)}%, 10px)`,
+              transform: "translateX(-50%) translateY(-100%)",
+            }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="px-3 py-2 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl">
+              <div className="text-xs text-gray-300 mb-1">
+                {hoveredPoint.date}
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-purple-300">Portfolio</span>
+                  <span className="text-sm font-semibold text-white">
+                    ${(hoveredPoint.value / 1000).toFixed(1)}k
+                  </span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-blue-300">Benchmark</span>
+                  <span className="text-sm font-semibold text-gray-300">
+                    ${(hoveredPoint.benchmark / 1000).toFixed(1)}k
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     ),
-    [portfolioHistory, minValue, maxValue]
+    [portfolioHistory, minValue, maxValue, hoveredPoint]
   );
 
   const renderAllocationChart = useMemo(

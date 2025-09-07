@@ -127,12 +127,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
-  const [emailBannerDismissed, setEmailBannerDismissed] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("email-banner-dismissed") === "true";
-    }
-    return false;
-  });
+  const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
 
   // Computed values
   const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
@@ -200,7 +195,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   }, []);
 
   const handleEmailReminderDismiss = useCallback(() => {
-    localStorage.setItem("email-banner-dismissed", "true");
     setEmailBannerDismissed(true);
   }, []);
 
@@ -372,8 +366,6 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
         isOpen={isWalletManagerOpen}
         onClose={() => setIsWalletManagerOpen(false)}
         onEmailSubscribed={() => {
-          // Email subscription handled by UserContext
-          localStorage.setItem("email-banner-dismissed", "true");
           setEmailBannerDismissed(true);
         }}
       />
