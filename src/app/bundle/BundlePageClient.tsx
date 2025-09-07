@@ -3,6 +3,7 @@
 import { QuickSwitchFAB } from "@/components/bundle";
 import { EmailReminderBanner } from "@/components/EmailReminderBanner";
 import { DashboardShell } from "@/components/DashboardShell";
+import { BundleNotFound } from "@/components/ui";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { HEADER, Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
@@ -35,8 +36,13 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
   const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
-  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
+  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(() => {
+    // Only read from localStorage if we're in the browser and have a userId
+    if (typeof window === "undefined" || !userId) return false;
+    return localStorage.getItem(`dismissed-switch-${userId}`) === "true";
+  });
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
+  const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
 
@@ -50,9 +56,22 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   // Load bundle user info
   useEffect(() => {
     const loadBundleUser = async () => {
-      if (userId) {
+      if (!userId) {
+        setBundleNotFound(true);
+        return;
+      }
+
+      try {
         const user = await bundleService.getBundleUser(userId);
-        setBundleUser(user);
+        if (user) {
+          setBundleUser(user);
+          setBundleNotFound(false);
+        } else {
+          setBundleNotFound(true);
+        }
+      } catch (error) {
+        console.error("Failed to load bundle user:", error);
+        setBundleNotFound(true);
       }
     };
     loadBundleUser();
@@ -99,7 +118,11 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const handleStayHere = useCallback(() => {
     setDismissedSwitchPrompt(true);
     setShowSwitchPrompt(false);
-  }, []);
+    // Persist dismissal to localStorage
+    if (typeof window !== "undefined" && userId) {
+      localStorage.setItem(`dismissed-switch-${userId}`, "true");
+    }
+  }, [userId]);
 
   const handleEmailSubscribe = useCallback(() => {
     setIsWalletManagerOpen(true);
@@ -174,6 +197,17 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       />
     </>
   );
+
+  // Handle bundle not found case
+  if (bundleNotFound) {
+    return (
+      <BundleNotFound
+        message="Bundle not found"
+        showConnectCTA={!isConnected}
+        onConnectClick={() => setIsWalletManagerOpen(true)}
+      />
+    );
+  }
 
   return (
     <DashboardShell

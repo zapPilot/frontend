@@ -20,7 +20,32 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => ({
 }));
 
 vi.mock("../../../src/components/wallet/WalletActions", () => ({
-  WalletActions: vi.fn(() => <div data-testid="wallet-actions" />),
+  WalletActions: vi.fn(
+    ({ disabled, onZapInClick, onZapOutClick, onOptimizeClick }) => (
+      <div data-testid="wallet-actions">
+        <span data-testid="disabled-state">
+          {disabled ? "disabled" : "enabled"}
+        </span>
+        <button data-testid="zap-in" onClick={onZapInClick} disabled={disabled}>
+          Zap In
+        </button>
+        <button
+          data-testid="zap-out"
+          onClick={onZapOutClick}
+          disabled={disabled}
+        >
+          Zap Out
+        </button>
+        <button
+          data-testid="optimize"
+          onClick={onOptimizeClick}
+          disabled={disabled}
+        >
+          Optimize
+        </button>
+      </div>
+    )
+  ),
 }));
 
 // Mock icons to avoid DOM noise
@@ -84,5 +109,82 @@ describe("WalletPortfolio - urlUserId override", () => {
 
     // Copy link button rendered when bundleUrl provided
     expect(screen.getByTitle("Copy bundle link")).toBeInTheDocument();
+  });
+
+  describe("Visitor mode functionality", () => {
+    it("should disable wallet actions when viewing someone else's bundle", () => {
+      const mockZapIn = vi.fn();
+      const mockZapOut = vi.fn();
+      const mockOptimize = vi.fn();
+
+      render(
+        <WalletPortfolio
+          urlUserId="viewer-xyz"
+          isOwnBundle={false}
+          bundleUserName="Viewer"
+          bundleUrl="https://example.com/b/viewer-xyz"
+          onZapInClick={mockZapIn}
+          onZapOutClick={mockZapOut}
+          onOptimizeClick={mockOptimize}
+        />
+      );
+
+      // Actions should be disabled for visitor mode (viewing someone else's bundle)
+      expect(screen.getByTestId("disabled-state")).toHaveTextContent(
+        "disabled"
+      );
+      expect(screen.getByTestId("zap-in")).toBeDisabled();
+      expect(screen.getByTestId("zap-out")).toBeDisabled();
+      expect(screen.getByTestId("optimize")).toBeDisabled();
+    });
+
+    it("should disable wallet actions when not connected", () => {
+      mockUseUser.mockReturnValue({
+        userInfo: null,
+        isConnected: false,
+      } as any);
+
+      const mockZapIn = vi.fn();
+      const mockZapOut = vi.fn();
+      const mockOptimize = vi.fn();
+
+      render(
+        <WalletPortfolio
+          onZapInClick={mockZapIn}
+          onZapOutClick={mockZapOut}
+          onOptimizeClick={mockOptimize}
+        />
+      );
+
+      // Actions should be disabled when not connected (visitor mode)
+      expect(screen.getByTestId("disabled-state")).toHaveTextContent(
+        "disabled"
+      );
+      expect(screen.getByTestId("zap-in")).toBeDisabled();
+      expect(screen.getByTestId("zap-out")).toBeDisabled();
+      expect(screen.getByTestId("optimize")).toBeDisabled();
+    });
+
+    it("should enable wallet actions when viewing own bundle", () => {
+      const mockZapIn = vi.fn();
+      const mockZapOut = vi.fn();
+      const mockOptimize = vi.fn();
+
+      render(
+        <WalletPortfolio
+          urlUserId="owner-abc" // Same as the userInfo.userId in beforeEach
+          isOwnBundle={true}
+          onZapInClick={mockZapIn}
+          onZapOutClick={mockZapOut}
+          onOptimizeClick={mockOptimize}
+        />
+      );
+
+      // Actions should be enabled when viewing own bundle
+      expect(screen.getByTestId("disabled-state")).toHaveTextContent("enabled");
+      expect(screen.getByTestId("zap-in")).not.toBeDisabled();
+      expect(screen.getByTestId("zap-out")).not.toBeDisabled();
+      expect(screen.getByTestId("optimize")).not.toBeDisabled();
+    });
   });
 });

@@ -26,19 +26,19 @@ export function usePortfolioState({
   return useMemo(() => {
     // Determine the portfolio state type based on conditions
     const getPortfolioStateType = (): PortfolioStateType => {
-      // 1. Wallet not connected
-      if (!isConnected) {
-        return "wallet_disconnected";
-      }
-
-      // 2. API Error
+      // 1. API Error
       if (error) {
         return "error";
       }
 
-      // 3. Loading state (including retrying)
+      // 2. Loading state (including retrying)
       if (isLoading || isRetrying) {
         return "loading";
+      }
+
+      // 3. Has data - show regardless of connection status (enables visitor mode)
+      if (landingPageData && !hasZeroData) {
+        return "has_data";
       }
 
       // 4. Connected but no data (API returns zeros)
@@ -46,9 +46,9 @@ export function usePortfolioState({
         return "connected_no_data";
       }
 
-      // 5. Has data (normal portfolio state)
-      if (isConnected && landingPageData) {
-        return "has_data";
+      // 5. Not connected AND no valid data - only now show connect prompt
+      if (!isConnected) {
+        return "wallet_disconnected";
       }
 
       // 6. Connected but still loading (no data yet, no error)

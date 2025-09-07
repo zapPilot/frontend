@@ -57,6 +57,10 @@ export function WalletPortfolio({
   // Prefer explicit urlUserId (shared view), else fallback to connected user's id
   const resolvedUserId = urlUserId || userInfo?.userId || null;
 
+  // Determine if this is visitor mode (not connected or viewing someone else's bundle)
+  const isVisitorMode =
+    !isConnected || (!!urlUserId && urlUserId !== userInfo?.userId);
+
   // Unified data fetching - single API call for all landing page data
   const landingPageQuery = useLandingPageData(resolvedUserId);
   const landingPageData = landingPageQuery.data;
@@ -130,9 +134,10 @@ export function WalletPortfolio({
               />
 
               <WalletActions
-                onZapInClick={onZapInClick}
-                onZapOutClick={onZapOutClick}
-                onOptimizeClick={onOptimizeClick}
+                onZapInClick={isVisitorMode ? undefined : onZapInClick}
+                onZapOutClick={isVisitorMode ? undefined : onZapOutClick}
+                onOptimizeClick={isVisitorMode ? undefined : onOptimizeClick}
+                disabled={isVisitorMode}
               />
             </GlassCard>
           </ErrorBoundary>
