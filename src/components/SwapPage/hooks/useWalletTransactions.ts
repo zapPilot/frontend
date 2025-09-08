@@ -180,8 +180,10 @@ export function useWalletTransactions({
               });
             });
 
-            // Send batch to wallet - cast to any to bypass strict typing for now
-            const result = await sendCalls(calls as any);
+            // Send batch to wallet - thirdweb types conflict with our custom types
+            const result = await sendCalls(
+              calls as unknown as PreparedTransaction[]
+            );
 
             // Extract transaction hash
             const txnHash = result?.transactionHash;

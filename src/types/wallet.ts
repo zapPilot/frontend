@@ -23,6 +23,22 @@ export interface Chain {
   isTestnet?: boolean;
 }
 
+// EIP-712 Typed Data types
+export interface TypedDataDomain {
+  name?: string;
+  version?: string;
+  chainId?: number;
+  verifyingContract?: string;
+  salt?: string;
+}
+
+export interface TypedDataTypes {
+  [typeName: string]: Array<{
+    name: string;
+    type: string;
+  }>;
+}
+
 // Wallet error types
 export interface WalletError {
   message: string;
@@ -62,7 +78,11 @@ export interface WalletProviderInterface {
 
   // Signing
   signMessage: (message: string) => Promise<string>;
-  signTypedData?: (domain: any, types: any, value: any) => Promise<string>;
+  signTypedData?: (
+    domain: TypedDataDomain,
+    types: TypedDataTypes,
+    value: Record<string, unknown>
+  ) => Promise<string>;
 
   // Utilities
   isChainSupported: (chainId: number) => boolean;

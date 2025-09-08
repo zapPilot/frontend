@@ -27,14 +27,12 @@ import {
   OptimizationOptions,
   OptimizationData,
   CompleteEventData,
+  ThirdWebTransactionResult,
+  StreamEvent,
+  CompleteStreamEvent,
 } from "../../types/optimize";
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
-
-// Wallet API types
-interface SendCallsParameter {
-  calls: any[]; // This would need to be typed based on the actual thirdweb call structure
-}
 
 // Wallet connection hook interface - using WalletConnectionState directly
 
@@ -144,9 +142,11 @@ const useWalletConnectionState = (): WalletConnectionState => {
         }
       : null,
     sendCalls: async calls => {
-      const result = await sendCalls({ calls } as SendCallsParameter);
+      const result = await sendCalls({ calls } as any);
       return {
-        transactionHash: (result as any)?.transactionHash || "",
+        transactionHash:
+          (result as unknown as ThirdWebTransactionResult)?.transactionHash ||
+          "",
         status: "success" as const,
       };
     },
@@ -719,9 +719,9 @@ export function OptimizeTab() {
   // Effect to collect transactions only from complete event
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
-    const completeEvent = (events as any[]).find(
+    const completeEvent = (events as StreamEvent[]).find(
       event => event.type === "complete"
-    );
+    ) as CompleteStreamEvent | undefined;
 
     if (
       completeEvent &&

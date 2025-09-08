@@ -28,7 +28,7 @@ const mockDynamic = vi.fn(
 
         // If it's not a promise, assume it's already resolved
         return importResult?.default ? importResult.default(props) : null;
-      } catch (_error) {
+      } catch {
         // If import fails, return loading or null
         if (options?.loading) {
           return options.loading();

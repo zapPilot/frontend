@@ -156,13 +156,6 @@ export interface StreamingState {
   estimatedTimeRemaining?: number;
 }
 
-export interface StreamEvent {
-  type: string;
-  timestamp: number;
-  data: unknown;
-  message?: string;
-}
-
 export interface CompleteEventData {
   transactions?: PreparedTransaction[];
 }
@@ -231,3 +224,47 @@ export interface OptimizationReport {
   tokensSaved: number;
   recommendedStrategy: OptimizationStrategy;
 }
+
+// ThirdWeb types - simplified to match actual usage
+export interface ThirdWebTransactionResult {
+  transactionHash?: string;
+}
+
+// Stream event types from useDustZapStream
+export interface BaseStreamEvent {
+  type: string;
+  timestamp?: number;
+  processedTokens?: number;
+  totalTokens?: number;
+}
+
+export interface ConnectedStreamEvent extends BaseStreamEvent {
+  type: "connected";
+  totalTokens: number;
+}
+
+export interface TokenReadyStreamEvent extends BaseStreamEvent {
+  type: "token_ready";
+  processedTokens: number;
+}
+
+export interface TokenFailedStreamEvent extends BaseStreamEvent {
+  type: "token_failed";
+  processedTokens: number;
+  error?: string;
+}
+
+export interface CompleteStreamEvent extends BaseStreamEvent {
+  type: "complete";
+  data?: {
+    transactions?: PreparedTransaction[];
+    summary?: OptimizationResult;
+  };
+}
+
+export type StreamEvent =
+  | ConnectedStreamEvent
+  | TokenReadyStreamEvent
+  | TokenFailedStreamEvent
+  | CompleteStreamEvent
+  | BaseStreamEvent;

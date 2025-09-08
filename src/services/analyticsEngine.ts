@@ -113,6 +113,43 @@ export interface PortfolioAPRResponse {
   pool_details: PoolDetail[];
 }
 
+// Portfolio Analytics Response Types
+export interface PortfolioHistoryPoint {
+  date: string;
+  value: number;
+  benchmark: number;
+}
+
+export interface PortfolioMetrics {
+  total_return: number;
+  volatility: number;
+  max_drawdown: number;
+  sharpe_ratio: number;
+  calmar_ratio: number;
+}
+
+export interface SummaryStats {
+  best_day_change: number;
+  worst_day_change: number;
+  avg_daily_return: number;
+  win_rate: number;
+  total_return: number;
+  current_value: number;
+}
+
+export interface PortfolioAnalyticsResponse {
+  user_id: string;
+  period: string;
+  portfolio_history: PortfolioHistoryPoint[];
+  portfolio_metrics: PortfolioMetrics;
+  summary_stats: SummaryStats;
+  asset_allocation_history: any[];
+  performance_by_period: Record<string, any>;
+  asset_allocation_analysis: any[];
+  asset_attribution_analysis: any[];
+  risk_assessment: Record<string, any>;
+}
+
 // Unified Landing Page Response Type
 export interface LandingPageResponse {
   total_assets_usd: number;
@@ -239,6 +276,23 @@ export const getPortfolioTrends = async (
   });
   return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
     `/api/v1/portfolio-trends/by-user/${userId}?${params}`
+  );
+};
+
+/**
+ * Get comprehensive portfolio analytics for a user
+ *
+ * Returns portfolio performance metrics, risk analysis, asset allocation,
+ * and historical performance data for advanced analytics dashboard.
+ */
+export const getPortfolioAnalytics = async (
+  userId: string,
+  period: string = "3M"
+): Promise<PortfolioAnalyticsResponse> => {
+  const params = new URLSearchParams({ period });
+  const endpoint = `/api/v1/portfolio/analytics/${userId}?${params}`;
+  return await httpUtils.analyticsEngine.get<PortfolioAnalyticsResponse>(
+    endpoint
   );
 };
 

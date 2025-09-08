@@ -9,28 +9,117 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   AlertTriangle,
+  Shield,
+  Clock,
+  Activity,
+  TrendingDown,
 } from "lucide-react";
 import { memo, useMemo } from "react";
 import { GRADIENTS } from "@/constants/design-system";
-import { GlassCard, APRMetrics } from "../ui";
+import { GlassCard, APRMetrics, LoadingSpinner, ErrorStateCard } from "../ui";
 import {
-  getAnalyticsMetrics,
   getPerformanceData,
   generateAssetAttribution,
 } from "../../lib/portfolio-analytics";
 import { getChangeColorClasses } from "../../lib/color-utils";
-import {
-  AnalyticsMetric,
-  PerformancePeriod,
-  AssetAttribution,
-} from "../../types/portfolio";
+import { PerformancePeriod, AssetAttribution } from "../../types/portfolio";
+import { usePortfolioAnalytics } from "../../hooks/usePortfolioAnalytics";
 
-const AnalyticsDashboardComponent = () => {
-  // Mock analytics data - in real app this would come from API
-  const portfolioMetrics: AnalyticsMetric[] = useMemo(
-    () => getAnalyticsMetrics(),
-    []
-  );
+interface AnalyticsDashboardProps {
+  analyticsData?: any; // For when passed from parent (Phase 2+)
+}
+
+const AnalyticsDashboardComponent = ({
+  analyticsData,
+}: AnalyticsDashboardProps) => {
+  // Get real analytics data
+  const {
+    data: realAnalyticsData,
+    isLoading,
+    isError,
+    error,
+  } = usePortfolioAnalytics();
+
+  // Use passed data or fetched data
+  const analytics = analyticsData || realAnalyticsData;
+
+  // Convert real analytics data to display metrics
+  const portfolioMetrics = useMemo(() => {
+    if (!analytics?.portfolio_metrics || !analytics?.summary_stats) {
+      return [];
+    }
+
+    const metrics = analytics.portfolio_metrics;
+    const summary = analytics.summary_stats;
+
+    return [
+      {
+        label: "Total Return",
+        value: `${metrics.total_return >= 0 ? "+" : ""}${metrics.total_return.toFixed(1)}%`,
+        change: 0, // We don't have historical change data yet
+        trend: metrics.total_return >= 0 ? "up" : "down",
+        icon: metrics.total_return >= 0 ? TrendingUp : TrendingDown,
+        description: "Portfolio total return",
+      },
+      {
+        label: "Volatility",
+        value: `${metrics.volatility.toFixed(1)}%`,
+        change: 0,
+        trend: "neutral",
+        icon: Activity,
+        description: "Portfolio volatility",
+      },
+      {
+        label: "Max Drawdown",
+        value: `-${metrics.max_drawdown.toFixed(1)}%`,
+        change: 0,
+        trend: "down",
+        icon: TrendingDown,
+        description: "Maximum peak-to-trough decline",
+      },
+      {
+        label: "Sharpe Ratio",
+        value: metrics.sharpe_ratio.toFixed(2),
+        change: 0,
+        trend: metrics.sharpe_ratio > 1 ? "up" : "neutral",
+        icon: Target,
+        description: "Risk-adjusted returns",
+      },
+      {
+        label: "Win Rate",
+        value: `${summary.win_rate.toFixed(1)}%`,
+        change: 0,
+        trend: summary.win_rate > 50 ? "up" : "down",
+        icon: BarChart3,
+        description: "Percentage of positive days",
+      },
+      {
+        label: "Best Day",
+        value: `+${summary.best_day_change.toFixed(1)}%`,
+        change: 0,
+        trend: "up",
+        icon: ArrowUpRight,
+        description: "Best single day return",
+      },
+      {
+        label: "Current Value",
+        value: `$${summary.current_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        change: 0,
+        trend: "neutral",
+        icon: Shield,
+        description: "Current portfolio value",
+      },
+      {
+        label: "Calmar Ratio",
+        value: metrics.calmar_ratio.toFixed(2),
+        change: 0,
+        trend: metrics.calmar_ratio > 1 ? "up" : "neutral",
+        icon: Clock,
+        description: "Return/max drawdown ratio",
+      },
+    ];
+  }, [analytics]);
+
   const performanceData: PerformancePeriod[] = useMemo(
     () => getPerformanceData(),
     []
@@ -55,6 +144,100 @@ const AnalyticsDashboardComponent = () => {
     ],
     []
   );
+
+  // Handle loading state
+  if (isLoading && !analyticsData) {
+    return (
+      <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <h2 className="text-2xl font-bold gradient-text mb-2">
+            Portfolio Analytics
+          </h2>
+          <p className="text-gray-400">Loading your analytics data...</p>
+        </motion.div>
+
+        <div className="space-y-6">
+          {[1, 2, 3].map(index => (
+            <GlassCard key={index} className="p-6">
+              <div className="flex items-center justify-center h-24">
+                <LoadingSpinner size="md" />
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (isError && !analyticsData) {
+    return (
+      <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <h2 className="text-2xl font-bold gradient-text mb-2">
+            Portfolio Analytics
+          </h2>
+          <p className="text-gray-400">Unable to load analytics data</p>
+        </motion.div>
+
+        <ErrorStateCard
+          title="Analytics Unavailable"
+          message={
+            error?.message ||
+            "Unable to load portfolio analytics. Please try again later."
+          }
+          onRetry={() => window.location.reload()}
+        />
+      </div>
+    );
+  }
+
+  // Handle insufficient data
+  if (
+    analytics &&
+    (!analytics.portfolio_history || analytics.portfolio_history.length < 2)
+  ) {
+    return (
+      <div className="space-y-6">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <h2 className="text-2xl font-bold gradient-text mb-2">
+            Portfolio Analytics
+          </h2>
+          <p className="text-gray-400">Building your analytics...</p>
+        </motion.div>
+
+        <GlassCard className="p-6 border border-yellow-800/30 bg-yellow-900/10">
+          <div className="text-center">
+            <AlertTriangle className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-yellow-300 mb-2">
+              Insufficient Historical Data
+            </h3>
+            <p className="text-gray-400 mb-4">
+              We need more portfolio history to generate comprehensive
+              analytics. Check back in a few days as we collect more data
+              points.
+            </p>
+            <div className="text-sm text-gray-500">
+              Current data points: {analytics?.portfolio_history?.length || 0}{" "}
+              (minimum: 7)
+            </div>
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
