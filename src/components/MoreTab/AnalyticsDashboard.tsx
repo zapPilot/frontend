@@ -9,10 +9,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   AlertTriangle,
-  Shield,
-  Clock,
-  Activity,
-  TrendingDown,
 } from "lucide-react";
 import { memo, useMemo } from "react";
 import { GRADIENTS } from "@/constants/design-system";
@@ -23,59 +19,77 @@ import {
 } from "../../lib/portfolio-analytics";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { PerformancePeriod, AssetAttribution } from "../../types/portfolio";
+
+interface AnalyticsMetric {
+  label: string;
+  value: string;
+  change: number;
+  trend: "up" | "down" | "neutral";
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+}
 import { usePortfolioAnalytics } from "../../hooks/usePortfolioAnalytics";
 
-interface AnalyticsDashboardProps {
-  analyticsData?: any; // For when passed from parent (Phase 2+)
-}
-
-const AnalyticsDashboardComponent = ({
-  analyticsData,
-}: AnalyticsDashboardProps) => {
+const AnalyticsDashboardComponent = () => {
   // Get real analytics data
   const {
-    data: realAnalyticsData,
+    data: analytics,
     isLoading,
     isError,
     error,
   } = usePortfolioAnalytics();
 
-  // Use passed data or fetched data
-  const analytics = analyticsData || realAnalyticsData;
-
-  // Convert real analytics data to display metrics
-  const portfolioMetrics = useMemo(() => {
+  // Convert real analytics data to display metrics or fallback to mock data
+  const portfolioMetrics: AnalyticsMetric[] = useMemo(() => {
     if (!analytics?.portfolio_metrics || !analytics?.summary_stats) {
-      return [];
+      // Fallback to original mock data structure
+      return [
+        {
+          label: "Total Return",
+          value: "+0.0%",
+          change: 0,
+          trend: "neutral",
+          icon: TrendingUp,
+          description: "Portfolio total return",
+        },
+        {
+          label: "Sharpe Ratio",
+          value: "0.00",
+          change: 0,
+          trend: "neutral",
+          icon: Target,
+          description: "Risk-adjusted returns",
+        },
+        {
+          label: "Max Drawdown",
+          value: "-0.0%",
+          change: 0,
+          trend: "neutral",
+          icon: AlertTriangle,
+          description: "Maximum peak-to-trough decline",
+        },
+        {
+          label: "Volatility",
+          value: "0.0%",
+          change: 0,
+          trend: "neutral",
+          icon: BarChart3,
+          description: "Portfolio volatility",
+        },
+      ];
     }
 
     const metrics = analytics.portfolio_metrics;
-    const summary = analytics.summary_stats;
+    // const summary = analytics.summary_stats; // Unused for now
 
     return [
       {
         label: "Total Return",
         value: `${metrics.total_return >= 0 ? "+" : ""}${metrics.total_return.toFixed(1)}%`,
-        change: 0, // We don't have historical change data yet
+        change: 0,
         trend: metrics.total_return >= 0 ? "up" : "down",
-        icon: metrics.total_return >= 0 ? TrendingUp : TrendingDown,
+        icon: TrendingUp,
         description: "Portfolio total return",
-      },
-      {
-        label: "Volatility",
-        value: `${metrics.volatility.toFixed(1)}%`,
-        change: 0,
-        trend: "neutral",
-        icon: Activity,
-        description: "Portfolio volatility",
-      },
-      {
-        label: "Max Drawdown",
-        value: `-${metrics.max_drawdown.toFixed(1)}%`,
-        change: 0,
-        trend: "down",
-        icon: TrendingDown,
-        description: "Maximum peak-to-trough decline",
       },
       {
         label: "Sharpe Ratio",
@@ -86,36 +100,20 @@ const AnalyticsDashboardComponent = ({
         description: "Risk-adjusted returns",
       },
       {
-        label: "Win Rate",
-        value: `${summary.win_rate.toFixed(1)}%`,
+        label: "Max Drawdown",
+        value: `-${metrics.max_drawdown.toFixed(1)}%`,
         change: 0,
-        trend: summary.win_rate > 50 ? "up" : "down",
-        icon: BarChart3,
-        description: "Percentage of positive days",
+        trend: "down",
+        icon: AlertTriangle,
+        description: "Maximum peak-to-trough decline",
       },
       {
-        label: "Best Day",
-        value: `+${summary.best_day_change.toFixed(1)}%`,
-        change: 0,
-        trend: "up",
-        icon: ArrowUpRight,
-        description: "Best single day return",
-      },
-      {
-        label: "Current Value",
-        value: `$${summary.current_value.toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        label: "Volatility",
+        value: `${metrics.volatility.toFixed(1)}%`,
         change: 0,
         trend: "neutral",
-        icon: Shield,
-        description: "Current portfolio value",
-      },
-      {
-        label: "Calmar Ratio",
-        value: metrics.calmar_ratio.toFixed(2),
-        change: 0,
-        trend: metrics.calmar_ratio > 1 ? "up" : "neutral",
-        icon: Clock,
-        description: "Return/max drawdown ratio",
+        icon: BarChart3,
+        description: "Portfolio volatility",
       },
     ];
   }, [analytics]);
@@ -146,7 +144,7 @@ const AnalyticsDashboardComponent = ({
   );
 
   // Handle loading state
-  if (isLoading && !analyticsData) {
+  if (isLoading && !analytics) {
     return (
       <div className="space-y-6">
         <motion.div
@@ -174,7 +172,7 @@ const AnalyticsDashboardComponent = ({
   }
 
   // Handle error state
-  if (isError && !analyticsData) {
+  if (isError && !analytics) {
     return (
       <div className="space-y-6">
         <motion.div

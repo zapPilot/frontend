@@ -17,7 +17,7 @@ export interface UsePortfolioAnalyticsOptions {
   period?: string;
   enabled?: boolean;
   staleTime?: number;
-  cacheTime?: number;
+  gcTime?: number;
 }
 
 export interface UsePortfolioAnalyticsReturn {
@@ -43,12 +43,12 @@ export const usePortfolioAnalytics = (
     period = "3M",
     enabled = true,
     staleTime = 1000 * 60 * 5, // 5 minutes
-    cacheTime = 1000 * 60 * 10, // 10 minutes
+    gcTime = 1000 * 60 * 10, // 10 minutes
   } = options;
 
-  const query = useQuery<PortfolioAnalyticsResponse, Error>({
+  const query = useQuery({
     queryKey: ["portfolioAnalytics", userInfo?.userId, period],
-    queryFn: () => {
+    queryFn: async (): Promise<PortfolioAnalyticsResponse> => {
       if (!userInfo?.userId) {
         throw new Error("User ID is required for portfolio analytics");
       }
@@ -56,11 +56,11 @@ export const usePortfolioAnalytics = (
     },
     enabled: enabled && !!userInfo?.userId,
     staleTime,
-    cacheTime,
+    gcTime,
     retry: 3,
     retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     // Keep previous data while fetching new data
-    keepPreviousData: true,
+    placeholderData: previousData => previousData,
   });
 
   return {
@@ -70,7 +70,7 @@ export const usePortfolioAnalytics = (
     error: query.error,
     refetch: query.refetch,
     isFetching: query.isFetching,
-  };
+  } as UsePortfolioAnalyticsReturn;
 };
 
 /**
