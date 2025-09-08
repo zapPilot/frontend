@@ -34,6 +34,11 @@ import {
 
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
+// ThirdWeb specific types to handle the actual API
+interface ThirdWebSendCallsParams {
+  calls: unknown; // ThirdWeb's internal type structure
+}
+
 // Wallet connection hook interface - using WalletConnectionState directly
 
 // Intent creation hook interface
@@ -142,7 +147,9 @@ const useWalletConnectionState = (): WalletConnectionState => {
         }
       : null,
     sendCalls: async calls => {
-      const result = await sendCalls({ calls } as any);
+      // ThirdWeb expects a specific call structure - use type assertion for library compatibility
+      const thirdWebParams: ThirdWebSendCallsParams = { calls };
+      const result = await sendCalls(thirdWebParams as any);
       return {
         transactionHash:
           (result as unknown as ThirdWebTransactionResult)?.transactionHash ||

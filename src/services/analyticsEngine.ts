@@ -137,17 +137,55 @@ export interface SummaryStats {
   current_value: number;
 }
 
+// Asset allocation types
+export interface AssetAllocationHistoryPoint {
+  date: string;
+  allocation: Record<string, number>;
+}
+
+export interface PerformancePeriodData {
+  period: string;
+  return_percentage: number;
+  volatility: number;
+  start_value: number;
+  end_value: number;
+}
+
+export interface AssetAllocationAnalysis {
+  asset_symbol: string;
+  current_weight: number;
+  target_weight: number;
+  deviation: number;
+  recommendation: "increase" | "decrease" | "maintain";
+}
+
+export interface AssetAttributionAnalysis {
+  asset_symbol: string;
+  contribution_to_return: number;
+  weight: number;
+  asset_return: number;
+}
+
+export interface RiskAssessment {
+  var_95: number;
+  var_99: number;
+  expected_shortfall: number;
+  beta: number;
+  correlation_to_market: number;
+  risk_level: "low" | "medium" | "high";
+}
+
 export interface PortfolioAnalyticsResponse {
   user_id: string;
   period: string;
   portfolio_history: PortfolioHistoryPoint[];
   portfolio_metrics: PortfolioMetrics;
   summary_stats: SummaryStats;
-  asset_allocation_history: any[];
-  performance_by_period: Record<string, any>;
-  asset_allocation_analysis: any[];
-  asset_attribution_analysis: any[];
-  risk_assessment: Record<string, any>;
+  asset_allocation_history: AssetAllocationHistoryPoint[];
+  performance_by_period: Record<string, PerformancePeriodData>;
+  asset_allocation_analysis: AssetAllocationAnalysis[];
+  asset_attribution_analysis: AssetAttributionAnalysis[];
+  risk_assessment: RiskAssessment;
 }
 
 // Unified Landing Page Response Type
