@@ -1,31 +1,35 @@
 "use client";
 
+import { GRADIENTS } from "@/constants/design-system";
 import { motion } from "framer-motion";
 import {
-  TrendingUp,
+  ArrowDownRight,
+  ArrowUpRight,
   BarChart3,
   PieChart,
   Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 import { memo, useMemo } from "react";
-import { GRADIENTS } from "@/constants/design-system";
-import { GlassCard, APRMetrics } from "../ui";
-import {
-  getAnalyticsMetrics,
-  getPerformanceData,
-  generateAssetAttribution,
-} from "../../lib/portfolio-analytics";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import {
+  generateAssetAttribution,
+  getAnalyticsMetrics,
+  getPerformanceData,
+} from "../../lib/portfolio-analytics";
+import {
   AnalyticsMetric,
-  PerformancePeriod,
   AssetAttribution,
+  PerformancePeriod,
 } from "../../types/portfolio";
+import { APRMetrics, GlassCard } from "../ui";
+import { RiskAssessment } from "../RiskAssessment";
 
-const AnalyticsDashboardComponent = () => {
+interface AnalyticsDashboardProps {
+  userId?: string | undefined;
+}
+
+const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
   // Mock analytics data - in real app this would come from API
   const portfolioMetrics: AnalyticsMetric[] = useMemo(
     () => getAnalyticsMetrics(),
@@ -71,7 +75,8 @@ const AnalyticsDashboardComponent = () => {
           Advanced metrics and performance insights
         </p>
       </motion.div>
-
+      {/* Risk Assessment */}
+      {userId && <RiskAssessment userId={userId} />}
       {/* APR & Monthly Return Highlight */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -369,58 +374,6 @@ const AnalyticsDashboardComponent = () => {
                   this month.
                 </div>
               </div>
-            </div>
-          </div>
-        </GlassCard>
-      </motion.div>
-
-      {/* Risk Assessment */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2 text-orange-400" />
-            Risk Assessment
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">
-                  Concentration Risk
-                </span>
-                <span className="text-xs bg-yellow-900/30 text-yellow-400 px-2 py-1 rounded-full">
-                  Medium
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">63.9%</div>
-              <div className="text-xs text-gray-500">Top 2 assets exposure</div>
-            </div>
-
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Correlation Risk</span>
-                <span className="text-xs bg-red-900/30 text-red-400 px-2 py-1 rounded-full">
-                  High
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">0.82</div>
-              <div className="text-xs text-gray-500">
-                Average asset correlation
-              </div>
-            </div>
-
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Liquidity Risk</span>
-                <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded-full">
-                  Low
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">94.3%</div>
-              <div className="text-xs text-gray-500">Liquid assets ratio</div>
             </div>
           </div>
         </GlassCard>
