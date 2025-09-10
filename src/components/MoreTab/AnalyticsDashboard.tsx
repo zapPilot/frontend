@@ -2,14 +2,7 @@
 
 import { GRADIENTS } from "@/constants/design-system";
 import { motion } from "framer-motion";
-import {
-  ArrowDownRight,
-  ArrowUpRight,
-  BarChart3,
-  PieChart,
-  Target,
-  TrendingUp,
-} from "lucide-react";
+import { PieChart, Target, TrendingUp } from "lucide-react";
 import { memo, useMemo } from "react";
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getChangeColorClasses } from "../../lib/color-utils";
@@ -18,35 +11,26 @@ import {
   getAnalyticsMetrics,
   getPerformanceData,
 } from "../../lib/portfolio-analytics";
-import {
-  AnalyticsMetric,
-  AssetAttribution,
-  PerformancePeriod,
-} from "../../types/portfolio";
-import { RiskAssessment } from "../RiskAssessment";
+import { AssetAttribution, PerformancePeriod } from "../../types/portfolio";
 import { APRMetrics, GlassCard } from "../ui";
+import { KeyMetricsGrid } from "./components";
 
 interface AnalyticsDashboardProps {
   userId?: string | undefined;
 }
 
 const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
-  // Fetch real risk data including Sharpe ratio
+  // Fetch real risk data for Key Metrics Grid
   const { data: riskData } = useRiskSummary(userId || "");
 
-  // Extract Sharpe ratio from risk data
-  const sharpeRatio =
-    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
-    riskData?.summary_metrics?.sharpe_ratio;
-
-  // Generate analytics metrics with real Sharpe ratio data
-  const portfolioMetrics: AnalyticsMetric[] = useMemo(
-    () => getAnalyticsMetrics(sharpeRatio),
-    [sharpeRatio]
+  // Generate analytics metrics with real risk data
+  const portfolioMetrics = useMemo(
+    () => getAnalyticsMetrics(riskData || undefined),
+    [riskData]
   );
   const performanceData: PerformancePeriod[] = useMemo(
-    () => getPerformanceData(sharpeRatio),
-    [sharpeRatio]
+    () => getPerformanceData(riskData || undefined),
+    [riskData]
   );
   const assetAttributionData: AssetAttribution[] = useMemo(
     () => generateAssetAttribution(),
@@ -84,62 +68,8 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
           Advanced metrics and performance insights
         </p>
       </motion.div>
-      {/* Key Metrics Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2 text-purple-400" />
-            Key Metrics
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {portfolioMetrics.map((metric, index) => {
-              const Icon = metric.icon;
-              return (
-                <motion.div
-                  key={metric.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-4 glass-morphism rounded-xl border border-gray-800 hover:border-gray-700 transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <Icon className="w-5 h-5 text-purple-400" />
-                    <div
-                      className={`flex items-center text-xs ${getChangeColorClasses(metric.trend === "up" ? 1 : metric.trend === "down" ? -1 : 0)}`}
-                    >
-                      {metric.trend === "up" && (
-                        <ArrowUpRight className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.trend === "down" && (
-                        <ArrowDownRight className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.change !== 0 &&
-                        `${metric.change > 0 ? "+" : ""}${metric.change}%`}
-                    </div>
-                  </div>
-                  <div className="text-xl font-bold text-white mb-1">
-                    {metric.value}
-                  </div>
-                  <div className="text-xs text-gray-400 mb-1">
-                    {metric.label}
-                  </div>
-                  {metric.description && (
-                    <div className="text-xs text-gray-500">
-                      {metric.description}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
-        </GlassCard>
-      </motion.div>
-      {/* Risk Assessment */}
-      {userId && <RiskAssessment userId={userId} />}
+      {/* Key Metrics Grid - Now with real risk data */}
+      <KeyMetricsGrid metrics={portfolioMetrics} />
       {/* APR & Monthly Return Highlight */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

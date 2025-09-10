@@ -30,6 +30,21 @@ vi.mock("../../../../src/components/ui", () => ({
   ),
 }));
 
+// Mock KeyMetricsGrid component
+vi.mock("../../../../src/components/MoreTab/components", () => ({
+  KeyMetricsGrid: ({ metrics }: any) => (
+    <div data-testid="key-metrics-grid">
+      {metrics.map((metric: any, index: number) => (
+        <div key={index} data-testid="key-metric-card">
+          <div data-testid="metric-label">{metric.label}</div>
+          <div data-testid="metric-value">{metric.value}</div>
+          <div data-testid="metric-description">{metric.description}</div>
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
 // Mock constants and utilities
 vi.mock("../../../../src/constants/design-system", () => ({
   GRADIENTS: { PRIMARY: "from-blue-500 to-purple-600" },

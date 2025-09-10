@@ -87,9 +87,27 @@ export function RiskAssessment({
           </div>
         )}
 
-        {/* Success State with Data */}
+        {/* Deprecation Notice - Risk data now integrated into Key Metrics Grid */}
+        <div className="p-6 bg-blue-900/20 border border-blue-800/30 rounded-xl">
+          <div className="text-center">
+            <div className="text-lg font-medium text-blue-300 mb-2">
+              Risk Assessment Integrated
+            </div>
+            <div className="text-sm text-gray-400 mb-4">
+              Your risk metrics are now displayed in the{" "}
+              <strong>Key Metrics Grid</strong> above for easier access. The
+              detailed risk analysis has been consolidated with your main
+              portfolio dashboard.
+            </div>
+            <div className="text-xs text-gray-500">
+              Advanced risk analysis features coming soon.
+            </div>
+          </div>
+        </div>
+
+        {/* Legacy Success State - Hidden but kept for data validation */}
         {data && !isLoading && !error && (
-          <div className="space-y-6">
+          <div className="hidden">
             <RiskNarrativeView data={data} />
           </div>
         )}

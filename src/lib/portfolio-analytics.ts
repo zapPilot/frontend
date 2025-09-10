@@ -25,6 +25,8 @@ import type {
   AnalyticsMetric,
   PerformancePeriod,
 } from "../types/portfolio";
+import type { ActualRiskSummaryResponse } from "../types/risk";
+import { getVolatilityLevel } from "../utils/risk";
 
 // =============================================================================
 // CONSTANTS AND CONFIGURATION
@@ -134,12 +136,21 @@ export function generateAssetAttribution(): AssetAttribution[] {
 }
 
 /**
- * Generate analytics metrics
+ * Generate analytics metrics with real risk data
  *
- * @param sharpeRatio - Optional real Sharpe ratio value to use instead of mock data
- * @returns Array of analytics metrics
+ * @param riskData - Optional real risk data from API
+ * @returns Array of analytics metrics with real or mock data
  */
-export function getAnalyticsMetrics(sharpeRatio?: number): AnalyticsMetric[] {
+export function getAnalyticsMetrics(
+  riskData?: ActualRiskSummaryResponse
+): AnalyticsMetric[] {
+  // Extract risk metrics from real data
+  const sharpeRatio =
+    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
+    riskData?.summary_metrics?.sharpe_ratio;
+  const volatilityPct =
+    riskData?.summary_metrics?.annualized_volatility_percentage;
+  const drawdownPct = riskData?.summary_metrics?.max_drawdown_percentage;
   return [
     {
       label: "Total Return",
@@ -158,12 +169,14 @@ export function getAnalyticsMetrics(sharpeRatio?: number): AnalyticsMetric[] {
       description: "Year-over-year performance",
     },
     {
-      label: "Risk Score",
-      value: "6.2/10",
-      change: -0.3,
-      trend: "down",
+      label: "Risk Level",
+      value: volatilityPct ? getVolatilityLevel(volatilityPct) : "Medium",
+      change: volatilityPct ? (volatilityPct > 50 ? -0.5 : 0.2) : 0,
+      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "neutral",
       icon: Shield,
-      description: "Portfolio risk assessment",
+      description: riskData
+        ? "Risk level based on volatility analysis"
+        : "Portfolio risk assessment (mock)",
     },
     {
       label: "Sharpe Ratio",
@@ -177,19 +190,23 @@ export function getAnalyticsMetrics(sharpeRatio?: number): AnalyticsMetric[] {
     },
     {
       label: "Max Drawdown",
-      value: "-12.4%",
-      change: 2.1,
+      value: drawdownPct ? `${drawdownPct.toFixed(1)}%` : "-12.4%",
+      change: drawdownPct ? Math.abs(drawdownPct) * 0.1 : 2.1,
       trend: "down",
       icon: TrendingDown,
-      description: "Largest peak-to-trough decline",
+      description: riskData
+        ? "Largest peak-to-trough portfolio decline"
+        : "Largest peak-to-trough decline (mock)",
     },
     {
       label: "Volatility",
-      value: "22.8%",
-      change: -1.8,
-      trend: "up",
+      value: volatilityPct ? `${volatilityPct.toFixed(1)}%` : "22.8%",
+      change: volatilityPct ? (volatilityPct > 100 ? -2.0 : -0.5) : -1.8,
+      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "up",
       icon: Activity,
-      description: "Portfolio standard deviation",
+      description: riskData
+        ? "Annualized portfolio volatility"
+        : "Portfolio standard deviation (mock)",
     },
     {
       label: "Active Positions",
@@ -213,10 +230,15 @@ export function getAnalyticsMetrics(sharpeRatio?: number): AnalyticsMetric[] {
 /**
  * Generate performance data for different time periods
  *
- * @param sharpeRatio - Optional real Sharpe ratio value for current period
- * @returns Array of performance period data
+ * @param riskData - Optional real risk data from API
+ * @returns Array of performance period data with real or mock values
  */
-export function getPerformanceData(sharpeRatio?: number): PerformancePeriod[] {
+export function getPerformanceData(
+  riskData?: ActualRiskSummaryResponse
+): PerformancePeriod[] {
+  const sharpeRatio =
+    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
+    riskData?.summary_metrics?.sharpe_ratio;
   return [
     {
       period: "1D",
