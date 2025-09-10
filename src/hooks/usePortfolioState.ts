@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { LandingPageResponse } from "../services/analyticsEngine";
+import type { LandingPageResponse } from "../services/analyticsService";
 import { PortfolioState, PortfolioStateType } from "../types/portfolioState";
 
 /**

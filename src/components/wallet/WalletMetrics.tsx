@@ -6,7 +6,7 @@ import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
-import type { LandingPageResponse } from "../../services/analyticsEngine";
+import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 import { BalanceLoading } from "../ui/UnifiedLoading";

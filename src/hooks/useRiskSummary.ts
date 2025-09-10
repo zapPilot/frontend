@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { getRiskSummary } from "../services/analyticsEngine";
+import { getRiskSummary } from "../services/analyticsService";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
 export interface UseRiskSummaryResult {
