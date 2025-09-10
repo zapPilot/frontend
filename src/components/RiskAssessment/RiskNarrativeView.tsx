@@ -6,7 +6,7 @@
  */
 
 import { useMemo } from "react";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingUp, TrendingDown, Target } from "lucide-react";
 import { ActualRiskSummaryResponse } from "../../types/risk";
 import { useReducedMotion } from "../../hooks/useReducedMotion";
 import {
@@ -18,6 +18,11 @@ import {
   generateKeyTakeaway,
   ANIMATION_DELAYS,
 } from "../../utils/risk";
+import {
+  formatSharpeRatio,
+  getSharpeRatioInterpretation,
+  formatAnnualReturn,
+} from "../../utils/risk/riskFormatting";
 import {
   KeyTakeaway,
   RiskMetricCard,
@@ -56,6 +61,20 @@ export function RiskNarrativeView({
       risk_summary.drawdown.period_info.end_date
     );
 
+    // Sharpe ratio calculations (if available)
+    const sharpeData = risk_summary.sharpe_ratio;
+    const sharpeRatio =
+      sharpeData?.sharpe_ratio || summary_metrics.sharpe_ratio;
+    const sharpeInterpretation = sharpeRatio
+      ? getSharpeRatioInterpretation(sharpeRatio)
+      : null;
+    const sharpePeriod = sharpeData
+      ? formatDateRange(
+          sharpeData.period_info.start_date,
+          sharpeData.period_info.end_date
+        )
+      : null;
+
     return {
       volatilityLevel,
       drawdownLevel,
@@ -63,8 +82,12 @@ export function RiskNarrativeView({
       keyTakeaway,
       volatilityPeriod,
       drawdownPeriod,
+      sharpeData,
+      sharpeRatio,
+      sharpeInterpretation,
+      sharpePeriod,
     };
-  }, [volatilityPct, drawdownPct, risk_summary]);
+  }, [volatilityPct, drawdownPct, risk_summary, summary_metrics]);
 
   return (
     <div className={`space-y-6 ${className}`}>
@@ -145,6 +168,54 @@ export function RiskNarrativeView({
           />
         </div>
       </section>
+
+      {/* Sharpe Ratio - Risk-Adjusted Returns Analysis */}
+      {calculations.sharpeRatio && (
+        <RiskMetricCard
+          title="Sharpe Ratio"
+          value={calculations.sharpeRatio}
+          unit=""
+          riskLevel={
+            calculations.sharpeInterpretation?.text
+              .toLowerCase()
+              .replace(" ", "-") as any
+          }
+          icon={Target}
+          explanation={`Your portfolio's Sharpe ratio of ${formatSharpeRatio(calculations.sharpeRatio)} measures risk-adjusted returns. This indicates how much excess return you receive for the volatility you endure. ${calculations.sharpeInterpretation?.text === "Very Good" ? "This is an excellent ratio, showing strong risk-adjusted performance." : calculations.sharpeInterpretation?.text === "Good" ? "This shows solid risk-adjusted performance." : calculations.sharpeInterpretation?.text === "Acceptable" ? "This shows positive but modest risk-adjusted returns." : "This suggests room for improvement in risk-adjusted returns."}`}
+          contextDescription={`The ratio compares your portfolio's excess return over the risk-free rate to its volatility, providing insight into whether the returns justify the risk taken.`}
+          supportingData={
+            calculations.sharpeData
+              ? [
+                  {
+                    label: "Portfolio Return",
+                    value: formatAnnualReturn(
+                      calculations.sharpeData.portfolio_return_annual
+                    ),
+                  },
+                  {
+                    label: "Risk-Free Rate",
+                    value: formatAnnualReturn(
+                      calculations.sharpeData.risk_free_rate_annual
+                    ),
+                  },
+                  {
+                    label: "Excess Return",
+                    value: formatAnnualReturn(
+                      calculations.sharpeData.excess_return
+                    ),
+                  },
+                ]
+              : []
+          }
+          periodInfo={{
+            dateRange: calculations.sharpePeriod || "N/A",
+            dataPoints: calculations.sharpeData?.data_points || 0,
+          }}
+          delay={
+            prefersReducedMotion ? 0 : ANIMATION_DELAYS.RECOMMENDATIONS - 0.1
+          }
+        />
+      )}
 
       {/* Risk Management Recommendations */}
       <RiskRecommendations

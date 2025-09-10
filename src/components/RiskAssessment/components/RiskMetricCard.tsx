@@ -6,15 +6,15 @@
 
 import { motion } from "framer-motion";
 import { Calendar, LucideIcon } from "lucide-react";
-import { GlassCard } from "../../ui";
 import {
-  RISK_COLORS,
   DRAWDOWN_COLORS,
-  RISK_LABELS,
   DRAWDOWN_LABELS,
-  RiskLevel,
   DrawdownLevel,
+  RISK_COLORS,
+  RISK_LABELS,
+  RiskLevel,
 } from "../../../utils/risk";
+import { GlassCard } from "../../ui";
 
 interface RiskMetricCardProps {
   title: string;
@@ -52,11 +52,16 @@ export function RiskMetricCard({
   const colors =
     riskLevel in RISK_COLORS
       ? RISK_COLORS[riskLevel as RiskLevel]
-      : DRAWDOWN_COLORS[riskLevel as DrawdownLevel];
+      : riskLevel in DRAWDOWN_COLORS
+        ? DRAWDOWN_COLORS[riskLevel as DrawdownLevel]
+        : RISK_COLORS.low; // Fallback to low risk colors
+
   const label =
     riskLevel in RISK_LABELS
       ? RISK_LABELS[riskLevel as RiskLevel]
-      : DRAWDOWN_LABELS[riskLevel as DrawdownLevel];
+      : riskLevel in DRAWDOWN_LABELS
+        ? DRAWDOWN_LABELS[riskLevel as DrawdownLevel]
+        : "Unknown"; // Fallback label
 
   return (
     <motion.div

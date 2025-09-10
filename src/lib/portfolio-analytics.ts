@@ -136,9 +136,10 @@ export function generateAssetAttribution(): AssetAttribution[] {
 /**
  * Generate analytics metrics
  *
+ * @param sharpeRatio - Optional real Sharpe ratio value to use instead of mock data
  * @returns Array of analytics metrics
  */
-export function getAnalyticsMetrics(): AnalyticsMetric[] {
+export function getAnalyticsMetrics(sharpeRatio?: number): AnalyticsMetric[] {
   return [
     {
       label: "Total Return",
@@ -166,11 +167,13 @@ export function getAnalyticsMetrics(): AnalyticsMetric[] {
     },
     {
       label: "Sharpe Ratio",
-      value: "1.34",
-      change: 0.15,
-      trend: "up",
+      value: sharpeRatio ? sharpeRatio.toFixed(2) : "1.34",
+      change: sharpeRatio ? (sharpeRatio > 1.5 ? 0.15 : -0.05) : 0.15,
+      trend: sharpeRatio ? (sharpeRatio > 1.5 ? "up" : "down") : "up",
       icon: Target,
-      description: "Risk-adjusted returns",
+      description: sharpeRatio
+        ? "Risk-adjusted returns"
+        : "Risk-adjusted returns (mock)",
     },
     {
       label: "Max Drawdown",
@@ -210,9 +213,10 @@ export function getAnalyticsMetrics(): AnalyticsMetric[] {
 /**
  * Generate performance data for different time periods
  *
+ * @param sharpeRatio - Optional real Sharpe ratio value for current period
  * @returns Array of performance period data
  */
-export function getPerformanceData(): PerformancePeriod[] {
+export function getPerformanceData(sharpeRatio?: number): PerformancePeriod[] {
   return [
     {
       period: "1D",
@@ -232,7 +236,7 @@ export function getPerformanceData(): PerformancePeriod[] {
       period: "1M",
       return: 12.45,
       volatility: 18.7,
-      sharpe: 0.67,
+      sharpe: sharpeRatio || 0.67,
       maxDrawdown: -8.9,
     },
     {

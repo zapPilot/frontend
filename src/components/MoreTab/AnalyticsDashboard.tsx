@@ -11,6 +11,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { memo, useMemo } from "react";
+import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import {
   generateAssetAttribution,
@@ -22,22 +23,30 @@ import {
   AssetAttribution,
   PerformancePeriod,
 } from "../../types/portfolio";
-import { APRMetrics, GlassCard } from "../ui";
 import { RiskAssessment } from "../RiskAssessment";
+import { APRMetrics, GlassCard } from "../ui";
 
 interface AnalyticsDashboardProps {
   userId?: string | undefined;
 }
 
 const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
-  // Mock analytics data - in real app this would come from API
+  // Fetch real risk data including Sharpe ratio
+  const { data: riskData } = useRiskSummary(userId || "");
+
+  // Extract Sharpe ratio from risk data
+  const sharpeRatio =
+    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
+    riskData?.summary_metrics?.sharpe_ratio;
+
+  // Generate analytics metrics with real Sharpe ratio data
   const portfolioMetrics: AnalyticsMetric[] = useMemo(
-    () => getAnalyticsMetrics(),
-    []
+    () => getAnalyticsMetrics(sharpeRatio),
+    [sharpeRatio]
   );
   const performanceData: PerformancePeriod[] = useMemo(
-    () => getPerformanceData(),
-    []
+    () => getPerformanceData(sharpeRatio),
+    [sharpeRatio]
   );
   const assetAttributionData: AssetAttribution[] = useMemo(
     () => generateAssetAttribution(),
@@ -75,28 +84,6 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
           Advanced metrics and performance insights
         </p>
       </motion.div>
-      {/* Risk Assessment */}
-      {userId && <RiskAssessment userId={userId} />}
-      {/* APR & Monthly Return Highlight */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
-            Portfolio Performance Highlights
-          </h3>
-          <APRMetrics
-            annualAPR={18.5}
-            monthlyReturn={1.4}
-            size="large"
-            className="justify-center"
-          />
-        </GlassCard>
-      </motion.div>
-
       {/* Key Metrics Grid */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -149,6 +136,27 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
               );
             })}
           </div>
+        </GlassCard>
+      </motion.div>
+      {/* Risk Assessment */}
+      {userId && <RiskAssessment userId={userId} />}
+      {/* APR & Monthly Return Highlight */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <GlassCard className="p-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
+            Portfolio Performance Highlights
+          </h3>
+          <APRMetrics
+            annualAPR={18.5}
+            monthlyReturn={1.4}
+            size="large"
+            className="justify-center"
+          />
         </GlassCard>
       </motion.div>
 

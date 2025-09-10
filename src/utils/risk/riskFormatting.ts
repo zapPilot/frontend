@@ -196,3 +196,97 @@ export function getRelativeTimeDescription(days: number): string {
     return days === 1 ? "1 day" : `${days} days`;
   }
 }
+
+/**
+ * Format Sharpe ratio value for display with appropriate precision
+ *
+ * @param sharpeRatio - The Sharpe ratio value to format
+ * @param decimals - The number of decimal places to display (default: 2)
+ * @returns Formatted Sharpe ratio string (e.g., "1.45", "0.89", "-0.12")
+ *
+ * @description
+ * Formats Sharpe ratio values with standard financial precision. Values above 1.0
+ * are generally considered good, above 2.0 very good, and above 3.0 excellent.
+ * Negative values indicate returns below the risk-free rate.
+ *
+ * @example
+ * ```typescript
+ * formatSharpeRatio(2.419);     // Returns: "2.42"
+ * formatSharpeRatio(0.856);     // Returns: "0.86"
+ * formatSharpeRatio(-0.234);    // Returns: "-0.23"
+ * formatSharpeRatio(1.5, 1);    // Returns: "1.5"
+ * ```
+ */
+export function formatSharpeRatio(
+  sharpeRatio: number,
+  decimals: number = 2
+): string {
+  return sharpeRatio.toFixed(decimals);
+}
+
+/**
+ * Get Sharpe ratio interpretation and color classification
+ *
+ * @param sharpeRatio - The Sharpe ratio value to interpret
+ * @returns Object containing interpretation text and CSS color class
+ *
+ * @description
+ * Provides standard interpretation of Sharpe ratio values:
+ * - Below 0: Poor (negative risk-adjusted returns)
+ * - 0 to 1: Acceptable (positive but modest risk-adjusted returns)
+ * - 1 to 2: Good (solid risk-adjusted returns)
+ * - 2 to 3: Very Good (excellent risk-adjusted returns)
+ * - Above 3: Exceptional (outstanding risk-adjusted returns)
+ *
+ * @example
+ * ```typescript
+ * getSharpeRatioInterpretation(2.42);
+ * // Returns: { text: "Very Good", colorClass: "text-blue-400" }
+ *
+ * getSharpeRatioInterpretation(0.75);
+ * // Returns: { text: "Acceptable", colorClass: "text-yellow-400" }
+ * ```
+ */
+export function getSharpeRatioInterpretation(sharpeRatio: number): {
+  text: string;
+  colorClass: string;
+} {
+  if (sharpeRatio < 0) {
+    return { text: "Poor", colorClass: "text-red-400" };
+  } else if (sharpeRatio < 1) {
+    return { text: "Acceptable", colorClass: "text-yellow-400" };
+  } else if (sharpeRatio < 2) {
+    return { text: "Good", colorClass: "text-green-400" };
+  } else if (sharpeRatio < 3) {
+    return { text: "Very Good", colorClass: "text-blue-400" };
+  } else {
+    return { text: "Exceptional", colorClass: "text-purple-400" };
+  }
+}
+
+/**
+ * Format portfolio annual return as a percentage for display
+ *
+ * @param returnValue - The annual return value (as decimal, e.g., 0.18 for 18%)
+ * @param decimals - The number of decimal places to display (default: 1)
+ * @returns Formatted return percentage string (e.g., "18.2%", "-5.3%")
+ *
+ * @description
+ * Converts decimal return values to percentage format for display purposes.
+ * Handles positive, negative, and zero returns appropriately with proper
+ * sign display and percentage symbol.
+ *
+ * @example
+ * ```typescript
+ * formatAnnualReturn(0.03819);   // Returns: "3.8%"
+ * formatAnnualReturn(-0.0534);   // Returns: "-5.3%"
+ * formatAnnualReturn(0.182, 2);  // Returns: "18.20%"
+ * ```
+ */
+export function formatAnnualReturn(
+  returnValue: number,
+  decimals: number = 1
+): string {
+  const percentage = returnValue * 100;
+  return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(decimals)}%`;
+}

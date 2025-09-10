@@ -77,6 +77,23 @@ function validateResponse(
     return false;
   }
 
+  // Validate optional sharpe_ratio data structure
+  if (riskSummary["sharpe_ratio"]) {
+    const sharpeRatio = riskSummary["sharpe_ratio"] as Record<string, unknown>;
+    if (
+      typeof sharpeRatio["sharpe_ratio"] !== "number" ||
+      typeof sharpeRatio["portfolio_return_annual"] !== "number" ||
+      typeof sharpeRatio["risk_free_rate_annual"] !== "number" ||
+      typeof sharpeRatio["excess_return"] !== "number" ||
+      typeof sharpeRatio["volatility_annual"] !== "number" ||
+      typeof sharpeRatio["interpretation"] !== "string" ||
+      typeof sharpeRatio["period_days"] !== "number" ||
+      typeof sharpeRatio["data_points"] !== "number"
+    ) {
+      return false;
+    }
+  }
+
   // Check summary_metrics object
   if (!obj["summary_metrics"] || typeof obj["summary_metrics"] !== "object") {
     return false;
@@ -92,20 +109,10 @@ function validateResponse(
     return false;
   }
 
-  // Validate risk_score object
+  // Validate optional sharpe_ratio in summary metrics
   if (
-    !summaryMetrics["risk_score"] ||
-    typeof summaryMetrics["risk_score"] !== "object"
-  ) {
-    return false;
-  }
-
-  const riskScore = summaryMetrics["risk_score"] as Record<string, unknown>;
-  if (
-    typeof riskScore["score"] !== "number" ||
-    typeof riskScore["level"] !== "string" ||
-    typeof riskScore["volatility_component"] !== "number" ||
-    typeof riskScore["drawdown_component"] !== "number"
+    summaryMetrics["sharpe_ratio"] !== undefined &&
+    typeof summaryMetrics["sharpe_ratio"] !== "number"
   ) {
     return false;
   }

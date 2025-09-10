@@ -78,22 +78,28 @@ export interface DrawdownData {
 }
 
 /**
- * Risk score components
- */
-export interface RiskScore {
-  score: number;
-  level: string;
-  volatility_component: number;
-  drawdown_component: number;
-}
-
-/**
  * Summary metrics for portfolio risk
  */
 export interface SummaryMetrics {
   annualized_volatility_percentage: number;
   max_drawdown_percentage: number;
-  risk_score: RiskScore;
+  sharpe_ratio?: number;
+}
+
+/**
+ * Sharpe ratio analysis data structure
+ */
+export interface SharpeRatioData {
+  user_id: string;
+  period_days: number;
+  data_points: number;
+  sharpe_ratio: number;
+  portfolio_return_annual: number;
+  risk_free_rate_annual: number;
+  excess_return: number;
+  volatility_annual: number;
+  interpretation: string;
+  period_info: PeriodInfo;
 }
 
 /**
@@ -102,6 +108,7 @@ export interface SummaryMetrics {
 export interface RiskSummaryData {
   volatility: VolatilityData;
   drawdown: DrawdownData;
+  sharpe_ratio?: SharpeRatioData;
 }
 
 /**
