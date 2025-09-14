@@ -73,6 +73,11 @@ export interface SwapSettings {
   slippageTolerance: number; // Percentage (0.1 = 0.1%)
   priceImpact?: number; // Calculated price impact
   minimumReceived?: string; // Minimum tokens received after slippage
+  // Optimization options (only for rebalance mode)
+  optimizationOptions?: {
+    dustZap: boolean;
+    rebalance: boolean;
+  };
 }
 
 export interface OperationConfig {
