@@ -9,7 +9,6 @@ import type {
   OperationMode,
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
-import { OptimizeTab } from "./OptimizeTab";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
 
@@ -187,9 +186,6 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               excludedCategoryIds={excludedCategoryIds}
               onToggleCategoryExclusion={toggleCategoryExclusion}
             />
-
-            {/* Integrated Optimization Tools */}
-            <OptimizeTab />
           </>
         ) : (
           /* Zap In/Out Operations */

@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from "../../test-utils";
+import { render, screen, fireEvent, act } from "../../test-utils";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { BundlePageClient } from "../../../src/app/bundle/BundlePageClient";
 import { useUser } from "../../../src/contexts/UserContext";
@@ -83,10 +83,12 @@ describe("BundlePageClient", () => {
   });
 
   describe("Banner dismissal persistence", () => {
-    it("should read dismissed state from localStorage on mount", () => {
+    it("should read dismissed state from localStorage on mount", async () => {
       localStorageMock.getItem.mockReturnValue("true");
 
-      render(<BundlePageClient userId="other-user" />);
+      await act(async () => {
+        render(<BundlePageClient userId="other-user" />);
+      });
 
       expect(localStorageMock.getItem).toHaveBeenCalledWith(
         "dismissed-switch-other-user"
@@ -100,11 +102,16 @@ describe("BundlePageClient", () => {
     it("should persist banner dismissal to localStorage", async () => {
       localStorageMock.getItem.mockReturnValue("false");
 
-      render(<BundlePageClient userId="other-user" />);
+      await act(async () => {
+        render(<BundlePageClient userId="other-user" />);
+      });
 
       // Wait for effects to run and banner to appear
       const stayButton = await screen.findByText("Stay");
-      fireEvent.click(stayButton);
+
+      await act(async () => {
+        fireEvent.click(stayButton);
+      });
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         "dismissed-switch-other-user",
@@ -112,13 +119,15 @@ describe("BundlePageClient", () => {
       );
     });
 
-    it("should not show banner when not connected", () => {
+    it("should not show banner when not connected", async () => {
       mockUseUser.mockReturnValue({
         userInfo: null,
         isConnected: false,
       } as any);
 
-      render(<BundlePageClient userId="other-user" />);
+      await act(async () => {
+        render(<BundlePageClient userId="other-user" />);
+      });
 
       expect(
         screen.queryByTestId("switch-to-my-bundle")

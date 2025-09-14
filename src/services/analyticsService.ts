@@ -5,6 +5,7 @@
 
 import { httpUtils } from "../lib/http-utils";
 import { PortfolioDataPoint } from "../types/portfolio";
+import { ActualRiskSummaryResponse } from "../types/risk";
 
 // API Response Types
 export interface UserResponse {
@@ -253,6 +254,21 @@ export const getLandingPagePortfolioData = async (
 ): Promise<LandingPageResponse> => {
   const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
+};
+
+/**
+ * Get risk summary for a user
+ *
+ * Retrieves comprehensive risk assessment including volatility analysis,
+ * drawdown metrics, and computed risk scores with component breakdown.
+ */
+export const getRiskSummary = async (
+  userId: string
+): Promise<ActualRiskSummaryResponse> => {
+  const endpoint = `/api/v1/risk/summary/${userId}`;
+  return await httpUtils.analyticsEngine.get<ActualRiskSummaryResponse>(
+    endpoint
+  );
 };
 
 /**

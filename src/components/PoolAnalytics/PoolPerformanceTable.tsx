@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { formatCurrency } from "../../lib/formatters";
-import type { PoolDetail } from "../../services/analyticsEngine";
+import type { PoolDetail } from "../../services/analyticsService";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/UnifiedLoading";
 

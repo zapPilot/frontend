@@ -88,7 +88,7 @@ export function AnalyticsTab({ categoryFilter }: AnalyticsTabProps = {}) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <AnalyticsDashboard />
+        <AnalyticsDashboard userId={userInfo?.userId} />
       </motion.div>
     </div>
   );

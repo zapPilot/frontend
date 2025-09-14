@@ -3,7 +3,7 @@ import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
   type LandingPageResponse,
-} from "../../services/analyticsEngine";
+} from "../../services/analyticsService";
 import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { portfolioLogger } from "../../utils/logger";
 

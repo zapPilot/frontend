@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { LandingPageResponse } from "../services/analyticsEngine";
+import type { LandingPageResponse } from "../services/analyticsService";
 import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
 import {
   createCategoriesFromApiData,

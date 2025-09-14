@@ -1,39 +1,36 @@
 "use client";
 
-import { motion } from "framer-motion";
-import {
-  TrendingUp,
-  BarChart3,
-  PieChart,
-  Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  AlertTriangle,
-} from "lucide-react";
-import { memo, useMemo } from "react";
 import { GRADIENTS } from "@/constants/design-system";
-import { GlassCard, APRMetrics } from "../ui";
-import {
-  getAnalyticsMetrics,
-  getPerformanceData,
-  generateAssetAttribution,
-} from "../../lib/portfolio-analytics";
+import { motion } from "framer-motion";
+import { PieChart, Target, TrendingUp } from "lucide-react";
+import { memo, useMemo } from "react";
+import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import {
-  AnalyticsMetric,
-  PerformancePeriod,
-  AssetAttribution,
-} from "../../types/portfolio";
+  generateAssetAttribution,
+  getAnalyticsMetrics,
+  getPerformanceData,
+} from "../../lib/portfolio-analytics";
+import { AssetAttribution, PerformancePeriod } from "../../types/portfolio";
+import { APRMetrics, GlassCard } from "../ui";
+import { KeyMetricsGrid } from "./components";
 
-const AnalyticsDashboardComponent = () => {
-  // Mock analytics data - in real app this would come from API
-  const portfolioMetrics: AnalyticsMetric[] = useMemo(
-    () => getAnalyticsMetrics(),
-    []
+interface AnalyticsDashboardProps {
+  userId?: string | undefined;
+}
+
+const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
+  // Fetch real risk data for Key Metrics Grid
+  const { data: riskData } = useRiskSummary(userId || "");
+
+  // Generate analytics metrics with real risk data
+  const portfolioMetrics = useMemo(
+    () => getAnalyticsMetrics(riskData || undefined),
+    [riskData]
   );
   const performanceData: PerformancePeriod[] = useMemo(
-    () => getPerformanceData(),
-    []
+    () => getPerformanceData(riskData || undefined),
+    [riskData]
   );
   const assetAttributionData: AssetAttribution[] = useMemo(
     () => generateAssetAttribution(),
@@ -71,7 +68,8 @@ const AnalyticsDashboardComponent = () => {
           Advanced metrics and performance insights
         </p>
       </motion.div>
-
+      {/* Key Metrics Grid - Now with real risk data */}
+      <KeyMetricsGrid metrics={portfolioMetrics} />
       {/* APR & Monthly Return Highlight */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -89,61 +87,6 @@ const AnalyticsDashboardComponent = () => {
             size="large"
             className="justify-center"
           />
-        </GlassCard>
-      </motion.div>
-
-      {/* Key Metrics Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <BarChart3 className="w-5 h-5 mr-2 text-purple-400" />
-            Key Metrics
-          </h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {portfolioMetrics.map((metric, index) => {
-              const Icon = metric.icon;
-              return (
-                <motion.div
-                  key={metric.label}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="p-4 glass-morphism rounded-xl border border-gray-800 hover:border-gray-700 transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <Icon className="w-5 h-5 text-purple-400" />
-                    <div
-                      className={`flex items-center text-xs ${getChangeColorClasses(metric.trend === "up" ? 1 : metric.trend === "down" ? -1 : 0)}`}
-                    >
-                      {metric.trend === "up" && (
-                        <ArrowUpRight className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.trend === "down" && (
-                        <ArrowDownRight className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.change !== 0 &&
-                        `${metric.change > 0 ? "+" : ""}${metric.change}%`}
-                    </div>
-                  </div>
-                  <div className="text-xl font-bold text-white mb-1">
-                    {metric.value}
-                  </div>
-                  <div className="text-xs text-gray-400 mb-1">
-                    {metric.label}
-                  </div>
-                  {metric.description && (
-                    <div className="text-xs text-gray-500">
-                      {metric.description}
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
         </GlassCard>
       </motion.div>
 
@@ -369,58 +312,6 @@ const AnalyticsDashboardComponent = () => {
                   this month.
                 </div>
               </div>
-            </div>
-          </div>
-        </GlassCard>
-      </motion.div>
-
-      {/* Risk Assessment */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-2 text-orange-400" />
-            Risk Assessment
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">
-                  Concentration Risk
-                </span>
-                <span className="text-xs bg-yellow-900/30 text-yellow-400 px-2 py-1 rounded-full">
-                  Medium
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">63.9%</div>
-              <div className="text-xs text-gray-500">Top 2 assets exposure</div>
-            </div>
-
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Correlation Risk</span>
-                <span className="text-xs bg-red-900/30 text-red-400 px-2 py-1 rounded-full">
-                  High
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">0.82</div>
-              <div className="text-xs text-gray-500">
-                Average asset correlation
-              </div>
-            </div>
-
-            <div className="p-4 glass-morphism rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-400">Liquidity Risk</span>
-                <span className="text-xs bg-green-900/30 text-green-400 px-2 py-1 rounded-full">
-                  Low
-                </span>
-              </div>
-              <div className="text-lg font-bold text-white mb-1">94.3%</div>
-              <div className="text-xs text-gray-500">Liquid assets ratio</div>
             </div>
           </div>
         </GlassCard>

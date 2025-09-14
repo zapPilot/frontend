@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "../../../test-utils";
@@ -85,8 +85,10 @@ describe("EmailReminderBanner behavior (no localStorage persistence)", () => {
     mockSetItem.mockClear();
   });
 
-  it("shows banner initially and does not touch localStorage on render", () => {
-    render(<BundlePageClient userId="OWNER123" />);
+  it("shows banner initially and does not touch localStorage on render", async () => {
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
 
     expect(screen.getByText(/subscribe to email reports/i)).toBeInTheDocument();
     // Note: BundlePageClient may call localStorage for switch banner functionality
@@ -95,8 +97,13 @@ describe("EmailReminderBanner behavior (no localStorage persistence)", () => {
   });
 
   it("hides when clicking Later, without using localStorage", async () => {
-    render(<BundlePageClient userId="OWNER123" />);
-    await userEvent.click(screen.getByText(/later/i));
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
+
+    await act(async () => {
+      await userEvent.click(screen.getByText(/later/i));
+    });
 
     expect(
       screen.queryByText(/subscribe to email reports/i)
@@ -105,26 +112,40 @@ describe("EmailReminderBanner behavior (no localStorage persistence)", () => {
   });
 
   it("does not persist dismissal across remounts", async () => {
-    const { unmount } = render(<BundlePageClient userId="OWNER123" />);
-    await userEvent.click(screen.getByText(/later/i));
+    const { unmount } = await act(async () => {
+      return render(<BundlePageClient userId="OWNER123" />);
+    });
+
+    await act(async () => {
+      await userEvent.click(screen.getByText(/later/i));
+    });
+
     expect(
       screen.queryByText(/subscribe to email reports/i)
     ).not.toBeInTheDocument();
 
     // Remount fresh
     unmount();
-    render(<BundlePageClient userId="OWNER123" />);
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
     expect(screen.getByText(/subscribe to email reports/i)).toBeInTheDocument();
   });
 
   it("hides after completing subscription via WalletManager (onEmailSubscribed)", async () => {
-    render(<BundlePageClient userId="OWNER123" />);
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
 
     // Open subscribe flow
-    await userEvent.click(screen.getByText(/subscribe now/i));
+    await act(async () => {
+      await userEvent.click(screen.getByText(/subscribe now/i));
+    });
 
     // Trigger mocked WalletManager success which calls onEmailSubscribed
-    await userEvent.click(screen.getByTestId("confirm-email-subscribe"));
+    await act(async () => {
+      await userEvent.click(screen.getByTestId("confirm-email-subscribe"));
+    });
 
     expect(
       screen.queryByText(/subscribe to email reports/i)

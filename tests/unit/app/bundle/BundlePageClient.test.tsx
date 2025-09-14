@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "../../../test-utils";
@@ -51,24 +51,30 @@ describe("BundlePageClient switch prompt", () => {
     mockIsConnected = true;
     mockUserId = "ME456"; // different user
 
-    render(<BundlePageClient userId="OWNER123" />);
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
 
     const switchBtn = await screen.findByTestId("switch-to-my-bundle");
     expect(switchBtn).toBeInTheDocument();
 
     // Click Stay
-    await userEvent.click(screen.getByText(/stay/i));
+    await act(async () => {
+      await userEvent.click(screen.getByText(/stay/i));
+    });
 
     // Prompt should disappear and no navigation
     expect(screen.queryByTestId("switch-to-my-bundle")).not.toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
-  it("does not show prompt when viewing own bundle", () => {
+  it("does not show prompt when viewing own bundle", async () => {
     mockIsConnected = true;
     mockUserId = "OWNER123"; // same as URL
 
-    render(<BundlePageClient userId="OWNER123" />);
+    await act(async () => {
+      render(<BundlePageClient userId="OWNER123" />);
+    });
 
     expect(screen.queryByTestId("switch-to-my-bundle")).not.toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();

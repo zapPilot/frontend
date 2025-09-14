@@ -4,8 +4,8 @@
  * Replaces IntentEngineClient with simpler service function approach
  */
 
-import { httpUtils } from "../lib/http-utils";
 import { createIntentServiceError } from "../lib/base-error";
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Intent Engine interfaces

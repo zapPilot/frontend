@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { SwapPage } from "../../../../src/components/SwapPage/SwapPage";
 import type { InvestmentOpportunity } from "../../../../src/types/investment";
 
@@ -153,19 +153,6 @@ describe("SwapPage", () => {
       );
     });
 
-    it("should switch to optimize mode content when optimize tab clicked", () => {
-      render(<SwapPage {...defaultProps} />);
-
-      // Click rebalance/optimize tab
-      const optimizeTabButton = screen.getByTestId("operation-rebalance");
-      fireEvent.click(optimizeTabButton);
-
-      // Should show optimize tab content - this switches to rebalance mode
-      // which includes both PortfolioAllocation and OptimizeTab
-      expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
-      expect(screen.getByTestId("optimize-tab-content")).toBeInTheDocument();
-    });
-
     it("should handle different navigation contexts correctly", () => {
       const zapOutStrategy = {
         ...mockStrategy,
@@ -215,32 +202,6 @@ describe("SwapPage", () => {
 
       // Content area
       expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
-    });
-
-    it("should handle tab switching between zapIn and rebalance modes", () => {
-      render(<SwapPage {...defaultProps} />);
-
-      // Initially on zapIn mode - should show portfolio allocation only
-      expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("optimize-tab-content")
-      ).not.toBeInTheDocument();
-
-      // Switch to rebalance/optimize mode
-      fireEvent.click(screen.getByTestId("operation-rebalance"));
-
-      // Should now show both portfolio allocation and optimize content
-      expect(screen.getByTestId("optimize-tab-content")).toBeInTheDocument();
-      expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
-
-      // Switch back to zapIn
-      fireEvent.click(screen.getByTestId("operation-zapIn"));
-
-      // Should show portfolio allocation only
-      expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("optimize-tab-content")
-      ).not.toBeInTheDocument();
     });
 
     it("should maintain proper component hierarchy", () => {

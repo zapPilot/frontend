@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   getPortfolioTrends,
   transformPortfolioTrends,
-} from "../services/analyticsEngine";
+} from "../services/analyticsService";
 import { PortfolioDataPoint } from "../types/portfolio";
 import { portfolioLogger } from "../utils/logger";
 

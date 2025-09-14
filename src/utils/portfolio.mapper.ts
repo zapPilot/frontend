@@ -4,7 +4,7 @@ import type {
   ApiPosition,
 } from "../schemas/portfolioApi";
 import type { AssetCategory, AssetDetail } from "../types/portfolio";
-import type { PoolDetail } from "../services/analyticsEngine";
+import type { PoolDetail } from "../services/analyticsService";
 import { getCategoryColor, getCategoryDisplayName } from "./categoryUtils";
 
 /**
