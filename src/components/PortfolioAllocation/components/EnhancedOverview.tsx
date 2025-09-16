@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useCategoryFilters, useTargetChartData } from "../hooks";
+import { usePortfolioAllocationViewModel } from "../hooks";
 import {
   ChartDataPoint,
   OperationMode,
@@ -35,10 +35,21 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   excludedCategoryIds,
   onToggleCategoryExclusion,
 }) => {
-  // Use hooks to extract business logic from UI components
-  const { includedCategories, excludedCategories } =
-    useCategoryFilters(processedCategories);
-  const targetChartData = useTargetChartData(rebalanceMode);
+  const {
+    includedCategories,
+    excludedCategories,
+    excludedCategoryIdsSet,
+    targetChartData,
+    rebalanceShiftMap,
+    rebalanceTargetMap,
+    isRebalanceEnabled,
+    totalCategories,
+  } = usePortfolioAllocationViewModel({
+    processedCategories,
+    rebalanceMode,
+    excludedCategoryIds,
+    chartData,
+  });
 
   return (
     <motion.div
@@ -50,7 +61,7 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       {/* Header spans full width */}
       <OverviewHeader
         rebalanceMode={rebalanceMode}
-        totalCategories={processedCategories.length}
+        totalCategories={totalCategories}
         includedCategories={includedCategories.length}
       />
 
@@ -107,9 +118,11 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
       <CategoryListSection
         categories={processedCategories}
-        excludedCategoryIds={excludedCategoryIds}
+        excludedCategoryIdsSet={excludedCategoryIdsSet}
         onToggleCategoryExclusion={onToggleCategoryExclusion}
-        rebalanceMode={rebalanceMode}
+        isRebalanceEnabled={isRebalanceEnabled}
+        {...(rebalanceShiftMap ? { rebalanceShiftMap } : {})}
+        {...(rebalanceTargetMap ? { rebalanceTargetMap } : {})}
       />
     </motion.div>
   );

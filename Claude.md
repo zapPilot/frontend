@@ -88,6 +88,11 @@ The application supports deep-linking to view any user's portfolio bundle via UR
 - Never commit secrets. Copy `.env.example` to `.env.local` and update locally.
 - Check `next.config.ts` for runtime/config flags. Do not commit `.next/` or `out/` artifacts.
 
+## Documentation
+
+- **Layer Management**: `docs/LAYERING.md` - Z-index standardization and header positioning
+- **Service Architecture**: `docs/SERVICES.md` - Backend integration patterns and conventions
+
 ## AI Agent Guidelines
 
 - Review `.serena/memories/architecture_overview.md` and `.serena/memories/component_inventory.md`
