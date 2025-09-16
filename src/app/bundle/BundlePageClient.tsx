@@ -7,7 +7,12 @@ import { BundleNotFound } from "@/components/ui";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { HEADER, Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
-import { bundleService, BundleUser } from "@/services/bundleService";
+import {
+  BundleUser,
+  generateBundleUrl,
+  getBundleUser,
+  isOwnBundle as isBundleOwned,
+} from "@/services/bundleService";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -44,8 +49,8 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
 
   // Computed values
-  const isOwnBundle = bundleService.isOwnBundle(userId, userInfo?.userId);
-  const bundleUrl = bundleService.generateBundleUrl(userId);
+  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
+  const bundleUrl = generateBundleUrl(userId);
   const showQuickSwitch = isConnected && !isOwnBundle && userInfo?.userId;
   const showEmailBanner =
     isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed;
@@ -68,7 +73,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
       }
 
       try {
-        const user = await bundleService.getBundleUser(userId);
+        const user = await getBundleUser(userId);
         if (user) {
           setBundleUser(user);
           setBundleNotFound(false);
