@@ -5,13 +5,15 @@ import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { memo } from "react";
-import { ProcessedAssetCategory, RebalanceMode } from "../../types";
+import { ProcessedAssetCategory, CategoryShift } from "../../types";
 
 interface AssetCategoryRowProps {
   category: ProcessedAssetCategory;
-  rebalanceMode?: RebalanceMode;
-  excludedCategoryIds: string[];
+  isExcluded: boolean;
   onToggleCategoryExclusion: (categoryId: string) => void;
+  isRebalanceEnabled?: boolean;
+  rebalanceShift?: CategoryShift;
+  rebalanceTarget?: ProcessedAssetCategory;
 }
 
 // Helper component to render token symbols with selective icons
@@ -53,22 +55,18 @@ const TokenSymbolsList = ({
 export const AssetCategoryRow = memo<AssetCategoryRowProps>(
   ({
     category,
-    rebalanceMode,
-    excludedCategoryIds,
+    isExcluded,
     onToggleCategoryExclusion,
+    isRebalanceEnabled,
+    rebalanceShift,
+    rebalanceTarget,
   }) => {
     const dropdown = useDropdown(false);
-    const excluded = excludedCategoryIds.includes(category.id);
+    const excluded = isExcluded;
 
-    // Get rebalance data for this category
-    const categoryShift = rebalanceMode?.data?.shifts.find(
-      s => s.categoryId === category.id
+    const showRebalanceInfo = Boolean(
+      isRebalanceEnabled && rebalanceShift && rebalanceTarget
     );
-    const targetCategory = rebalanceMode?.data?.target.find(
-      t => t.id === category.id
-    );
-    const isRebalanceMode =
-      rebalanceMode?.isEnabled && categoryShift && targetCategory;
 
     return (
       <motion.div
@@ -106,7 +104,7 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
             <div className="flex items-center space-x-3">
               {/* Allocation Percentage */}
               <div className="text-right">
-                {isRebalanceMode ? (
+                {showRebalanceInfo && rebalanceShift && rebalanceTarget ? (
                   // Rebalance Mode: Show Before -> After
                   <div className="space-y-1">
                     <div className="flex items-center space-x-2">
@@ -116,32 +114,32 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                       <span className="text-gray-500">→</span>
                       <div
                         className={`font-bold ${
-                          categoryShift!.action === "increase"
+                          rebalanceShift.action === "increase"
                             ? "text-green-400"
-                            : categoryShift!.action === "decrease"
+                            : rebalanceShift.action === "decrease"
                               ? "text-red-400"
                               : "text-white"
                         }`}
                       >
-                        {targetCategory!.activeAllocationPercentage.toFixed(1)}%
+                        {rebalanceTarget.activeAllocationPercentage.toFixed(1)}%
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-xs">
                       <div
                         className={`${
-                          categoryShift!.action === "increase"
+                          rebalanceShift.action === "increase"
                             ? "text-green-400"
-                            : categoryShift!.action === "decrease"
+                            : rebalanceShift.action === "decrease"
                               ? "text-red-400"
                               : "text-gray-400"
                         }`}
                       >
-                        {categoryShift!.changeAmount > 0 ? "+" : ""}
-                        {categoryShift!.changeAmount.toFixed(1)}%
+                        {rebalanceShift.changeAmount > 0 ? "+" : ""}
+                        {rebalanceShift.changeAmount.toFixed(1)}%
                       </div>
                       <div className="text-gray-500">•</div>
                       <div className="text-gray-400">
-                        {categoryShift!.actionDescription}
+                        {rebalanceShift.actionDescription}
                       </div>
                     </div>
                   </div>
