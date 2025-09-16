@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { ComponentType } from "react";
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
+import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
@@ -50,12 +51,9 @@ export function AnalyticsTab({
   const poolError = landingPageQuery.error?.message || null;
   const poolRefetch = landingPageQuery.refetch;
 
-  // Clear category filter handler
-  const handleClearCategoryFilter = () => {
-    // This would typically update URL params or parent state
-    // For now, we'll handle this via the parent component
-    // TODO: Implement proper category filter clearing
-  };
+  // Use centralized category filter context when available
+  const { selectedCategoryId, clearCategoryFilter } = useCategoryFilter();
+  const effectiveCategoryFilter = selectedCategoryId ?? categoryFilter ?? null;
 
   return (
     <div className="space-y-6">
@@ -87,9 +85,9 @@ export function AnalyticsTab({
           isLoading={poolLoading}
           error={poolError}
           onRetry={poolRefetch}
-          categoryFilter={categoryFilter || null}
-          {...(categoryFilter
-            ? { onClearCategoryFilter: handleClearCategoryFilter }
+          categoryFilter={effectiveCategoryFilter}
+          {...(effectiveCategoryFilter
+            ? { onClearCategoryFilter: clearCategoryFilter }
             : {})}
         />
       </motion.div>

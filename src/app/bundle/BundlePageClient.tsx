@@ -6,23 +6,9 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { BundleNotFound } from "@/components/ui";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { HEADER, Z_INDEX } from "@/constants/design-system";
-import { useUser } from "@/contexts/UserContext";
-import {
-  BundleUser,
-  generateBundleUrl,
-  getBundleUser,
-  isOwnBundle as isBundleOwned,
-} from "@/services/bundleService";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import {
-  ComponentType,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
-import { logger } from "@/utils/logger";
+import { ComponentType, useMemo } from "react";
+import { useBundlePage } from "@/hooks/useBundlePage";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>
@@ -39,115 +25,13 @@ interface BundlePageClientProps {
 }
 
 export function BundlePageClient({ userId }: BundlePageClientProps) {
-  const router = useRouter();
-  const { userInfo, isConnected } = useUser();
-  const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
-  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
-  const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
-  const [bundleNotFound, setBundleNotFound] = useState(false);
-  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
-  const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
-
-  // Computed values
-  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
-  const bundleUrl = generateBundleUrl(userId);
-  const showQuickSwitch = isConnected && !isOwnBundle && userInfo?.userId;
-  const showEmailBanner =
-    isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed;
-
-  // Read dismissed switch prompt from localStorage after mount
-  useEffect(() => {
-    if (typeof window !== "undefined" && userId) {
-      const dismissed =
-        localStorage.getItem(`dismissed-switch-${userId}`) === "true";
-      setDismissedSwitchPrompt(dismissed);
-    }
-  }, [userId]);
-
-  // Load bundle user info
-  useEffect(() => {
-    const loadBundleUser = async () => {
-      if (!userId) {
-        setBundleNotFound(true);
-        return;
-      }
-
-      try {
-        const user = await getBundleUser(userId);
-        if (user) {
-          setBundleUser(user);
-          setBundleNotFound(false);
-        } else {
-          setBundleNotFound(true);
-        }
-      } catch (error) {
-        logger.error("Failed to load bundle user:", error);
-        setBundleNotFound(true);
-      }
-    };
-    loadBundleUser();
-  }, [userId]);
-
-  // Redirect to home when user disconnects from their own bundle page
-  useEffect(() => {
-    const isOwnBundle = userInfo?.userId === userId;
-
-    // If this was the user's own bundle but they've disconnected, redirect to home
-    if (!isConnected && isOwnBundle) {
-      // Preserve query parameters
-      const searchParams = new URLSearchParams(window.location.search);
-      const queryString = searchParams.toString();
-      const newUrl = `/${queryString ? `?${queryString}` : ""}`;
-
-      // Replace current history entry to avoid navigation loops
-      router.replace(newUrl);
-    }
-  }, [isConnected, userInfo?.userId, userId, router]);
-
-  // Offer to switch to the connected user's own bundle when viewing someone else's
-  useEffect(() => {
-    const isDifferentUser = !!(
-      isConnected &&
-      userInfo?.userId &&
-      userInfo.userId !== userId
-    );
-    if (isDifferentUser && !dismissedSwitchPrompt) {
-      setShowSwitchPrompt(true);
-    } else {
-      setShowSwitchPrompt(false);
-    }
-  }, [isConnected, userInfo?.userId, userId, dismissedSwitchPrompt]);
-
-  const handleSwitchToMyBundle = useCallback(() => {
-    if (!userInfo?.userId) return;
-    const params = new URLSearchParams(window.location.search);
-    params.set("userId", userInfo.userId);
-    const queryString = params.toString();
-    router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
-  }, [router, userInfo?.userId]);
-
-  const handleStayHere = useCallback(() => {
-    setDismissedSwitchPrompt(true);
-    setShowSwitchPrompt(false);
-    // Persist dismissal to localStorage
-    if (typeof window !== "undefined" && userId) {
-      localStorage.setItem(`dismissed-switch-${userId}`, "true");
-    }
-  }, [userId]);
-
-  const handleEmailSubscribe = useCallback(() => {
-    setIsWalletManagerOpen(true);
-  }, []);
-
-  const handleEmailReminderDismiss = useCallback(() => {
-    setEmailBannerDismissed(true);
-  }, []);
+  const vm = useBundlePage(userId);
 
   // Header banners (switch prompt + email banner)
   const headerBanners = useMemo(
     () => (
       <>
-        {showSwitchPrompt && (
+        {vm.switchPrompt.show && (
           <div
             className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}
           >
@@ -158,13 +42,13 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
               </div>
               <div className="flex gap-2 justify-end">
                 <button
-                  onClick={handleStayHere}
+                  onClick={vm.switchPrompt.onStay}
                   className="px-3 py-1.5 text-sm rounded-md bg-white/10 hover:bg-white/20 transition"
                 >
                   Stay
                 </button>
                 <button
-                  onClick={handleSwitchToMyBundle}
+                  onClick={vm.switchPrompt.onSwitch}
                   className="px-3 py-1.5 text-sm rounded-md bg-indigo-500 hover:bg-indigo-400 text-white transition"
                   data-testid="switch-to-my-bundle"
                 >
@@ -175,47 +59,45 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
           </div>
         )}
 
-        {showEmailBanner && (
+        {vm.emailBanner.show && (
           <EmailReminderBanner
-            onSubscribe={handleEmailSubscribe}
-            onDismiss={handleEmailReminderDismiss}
+            onSubscribe={vm.emailBanner.onSubscribe}
+            onDismiss={vm.emailBanner.onDismiss}
           />
         )}
       </>
     ),
     [
-      showSwitchPrompt,
-      showEmailBanner,
-      handleStayHere,
-      handleSwitchToMyBundle,
-      handleEmailSubscribe,
-      handleEmailReminderDismiss,
+      vm.switchPrompt.show,
+      vm.emailBanner.show,
+      vm.switchPrompt.onStay,
+      vm.switchPrompt.onSwitch,
+      vm.emailBanner.onSubscribe,
+      vm.emailBanner.onDismiss,
     ]
   );
 
   // Footer overlays (quick switch FAB + wallet manager modal)
   const footerOverlays = (
     <>
-      {showQuickSwitch && (
-        <QuickSwitchFAB onSwitchToMyBundle={handleSwitchToMyBundle} />
+      {vm.overlays.showQuickSwitch && (
+        <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
       )}
       <WalletManager
-        isOpen={isWalletManagerOpen}
-        onClose={() => setIsWalletManagerOpen(false)}
-        onEmailSubscribed={() => {
-          setEmailBannerDismissed(true);
-        }}
+        isOpen={vm.overlays.isWalletManagerOpen}
+        onClose={vm.overlays.closeWalletManager}
+        onEmailSubscribed={vm.overlays.onEmailSubscribed}
       />
     </>
   );
 
   // Handle bundle not found case
-  if (bundleNotFound) {
+  if (vm.bundleNotFound) {
     return (
       <BundleNotFound
         message="Bundle not found"
-        showConnectCTA={!isConnected}
-        onConnectClick={() => setIsWalletManagerOpen(true)}
+        showConnectCTA={vm.showConnectCTA}
+        onConnectClick={vm.overlays.openWalletManager}
       />
     );
   }
@@ -223,11 +105,11 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   return (
     <DashboardShell
       urlUserId={userId}
-      isOwnBundle={isOwnBundle}
-      {...(bundleUser?.displayName && {
-        bundleUserName: bundleUser.displayName,
+      isOwnBundle={vm.isOwnBundle}
+      {...(vm.bundleUser?.displayName && {
+        bundleUserName: vm.bundleUser.displayName,
       })}
-      bundleUrl={bundleUrl}
+      bundleUrl={vm.bundleUrl}
       headerBanners={headerBanners}
       footerOverlays={footerOverlays}
     />
