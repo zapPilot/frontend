@@ -25,7 +25,11 @@ import {
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { GlassCard } from "./ui";
 
-const PortfolioChartComponent = () => {
+export interface PortfolioChartProps {
+  userId?: string | undefined;
+}
+
+const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
   const [selectedChart, setSelectedChart] = useState<
     "performance" | "allocation" | "drawdown"
@@ -41,13 +45,16 @@ const PortfolioChartComponent = () => {
   const lastIndexRef = useRef<number | null>(null);
 
   // Get user info from context
-  const { userInfo, isConnected } = useUser();
+  const { userInfo } = useUser();
+
+  // Resolve which userId to use: provided userId or fallback to context
+  const resolvedUserId = userId || userInfo?.userId;
 
   // Fetch real portfolio trends data
   const { data: apiPortfolioHistory } = usePortfolioTrends({
-    userId: userInfo?.userId,
+    userId: resolvedUserId,
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
-    enabled: isConnected && !!userInfo?.userId,
+    enabled: !!resolvedUserId,
   });
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {

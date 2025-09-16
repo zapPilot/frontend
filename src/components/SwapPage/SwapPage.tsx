@@ -5,109 +5,14 @@ import { useCallback, useState } from "react";
 import { InvestmentOpportunity } from "../../types/investment";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
-  AssetCategory,
   OperationMode,
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
+import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
+import { useUser } from "../../contexts/UserContext";
 
-// Mock asset categories for portfolio allocation
-const MOCK_ASSET_CATEGORIES: AssetCategory[] = [
-  {
-    id: "btc",
-    name: "BTC",
-    color: "#F59E0B",
-    protocols: [
-      {
-        id: "btc-1",
-        name: "Compound BTC",
-        allocationPercentage: 40,
-        chain: "Ethereum",
-        apy: 3.2,
-        tvl: 120000,
-      },
-      {
-        id: "btc-2",
-        name: "Aave WBTC",
-        allocationPercentage: 35,
-        chain: "Ethereum",
-        apy: 2.8,
-        tvl: 85000,
-      },
-      {
-        id: "btc-3",
-        name: "Curve WBTC",
-        allocationPercentage: 25,
-        chain: "Polygon",
-        apy: 4.1,
-        tvl: 65000,
-      },
-    ],
-  },
-  {
-    id: "eth",
-    name: "ETH",
-    color: "#8B5CF6",
-    protocols: [
-      {
-        id: "eth-1",
-        name: "Lido Staking",
-        allocationPercentage: 50,
-        chain: "Ethereum",
-        apy: 5.2,
-        tvl: 250000,
-      },
-      {
-        id: "eth-2",
-        name: "Rocket Pool",
-        allocationPercentage: 30,
-        chain: "Ethereum",
-        apy: 4.8,
-        tvl: 180000,
-      },
-      {
-        id: "eth-3",
-        name: "Frax ETH",
-        allocationPercentage: 20,
-        chain: "Arbitrum",
-        apy: 5.5,
-        tvl: 95000,
-      },
-    ],
-  },
-  {
-    id: "stablecoins",
-    name: "Stablecoins",
-    color: "#10B981",
-    protocols: [
-      {
-        id: "stable-1",
-        name: "USDC Compound",
-        allocationPercentage: 45,
-        chain: "Ethereum",
-        apy: 2.5,
-        tvl: 320000,
-      },
-      {
-        id: "stable-2",
-        name: "DAI Aave",
-        allocationPercentage: 30,
-        chain: "Polygon",
-        apy: 3.1,
-        tvl: 210000,
-      },
-      {
-        id: "stable-3",
-        name: "USDT Curve",
-        allocationPercentage: 25,
-        chain: "Arbitrum",
-        apy: 2.8,
-        tvl: 175000,
-      },
-    ],
-  },
-];
 
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
@@ -115,6 +20,20 @@ export interface SwapPageProps {
 }
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
+  // Get current user for portfolio data
+  const { userInfo } = useUser();
+
+  // Fetch strategies data with real portfolio data from API
+  const {
+    strategies,
+    isError,
+    error,
+    isInitialLoading,
+    refetch,
+    hasPoolData,
+    totalProtocols,
+  } = useStrategiesWithPortfolioData(userInfo?.id);
+
   // Initialize operation mode based on navigation context
   const getInitialOperationMode = (): OperationMode => {
     if (strategy.navigationContext === "zapIn") return "zapIn";
@@ -166,12 +85,58 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       0
     );
 
+    // Use real protocol count data from API instead of mock protocols array
+    const totalProtocolCount = action.includedCategories.reduce(
+      (sum, cat) => sum + (cat.enabledProtocolCount || 0), 
+      0
+    );
+
     alert(
-      `🚀 Zap Operation Initiated!\n\nMode: ${action.operationMode}\nCategories: ${categoryNames}\nTotal Value: $${totalValue.toLocaleString()}\nProtocols: ${action.includedCategories.reduce((sum, cat) => sum + cat.protocols.length, 0)}`
+      `🚀 Zap Operation Initiated!\n\nMode: ${action.operationMode}\nCategories: ${categoryNames}\nTotal Value: $${totalValue.toLocaleString()}\nProtocols: ${totalProtocolCount}`
     );
   };
 
   const renderTabContent = () => {
+    // Show loading state
+    if (isInitialLoading) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading strategies...</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show error state
+    if (isError) {
+      return (
+        <div className="space-y-6">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="text-red-500 text-6xl mb-4">⚠️</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Failed to Load Strategies
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {error?.message || "Unable to fetch portfolio strategies"}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Show strategies content
     return (
       <div className="space-y-6">
         {/* Rebalance Operation with Optimization */}
@@ -179,7 +144,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           <>
             {/* Portfolio Allocation Container */}
             <PortfolioAllocationContainer
-              assetCategories={MOCK_ASSET_CATEGORIES}
+              assetCategories={strategies}
               operationMode={activeOperationMode}
               isRebalanceMode={isRebalanceMode}
               onZapAction={handleZapAction}
@@ -192,7 +157,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           <>
             {/* Portfolio Allocation Container */}
             <PortfolioAllocationContainer
-              assetCategories={MOCK_ASSET_CATEGORIES}
+              assetCategories={strategies}
               operationMode={activeOperationMode}
               isRebalanceMode={isRebalanceMode}
               onZapAction={handleZapAction}

@@ -118,7 +118,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
   onRetry,
   categoryFilter,
   onClearCategoryFilter,
-  defaultTopN = null,
+  defaultTopN = 5,
   topNOptions = [5, 10, 20, 50],
 }) => {
   const [sortState, setSortState] = useState<SortState>({

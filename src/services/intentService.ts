@@ -6,6 +6,7 @@
 
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
+import { StrategiesApiResponse } from "../types/strategies";
 
 /**
  * Intent Engine interfaces
@@ -200,6 +201,20 @@ export const getUserIntentHistory = async (
       total: number;
       hasMore: boolean;
     }>(`/intents/history?${params}`);
+  } catch (error) {
+    throw createIntentServiceError(error);
+  }
+};
+
+// Strategy Operations
+
+/**
+ * Get available strategies for portfolio optimization
+ */
+export const getStrategies = async (): Promise<StrategiesApiResponse> => {
+  try {
+    const client = getIntentEngineClient();
+    return await client.get<StrategiesApiResponse>(`/api/v1/strategies`);
   } catch (error) {
     throw createIntentServiceError(error);
   }
