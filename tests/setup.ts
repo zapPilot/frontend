@@ -314,3 +314,18 @@ vi.mock("next/dynamic", () => {
 
 // Import React for the dynamic component mock
 import React from "react";
+
+// Provide a default mock for UserContext to avoid provider requirements in unit tests
+vi.mock("@/contexts/UserContext", () => {
+  return {
+    useUser: () => ({
+      userInfo: null,
+      loading: false,
+      error: null,
+      isConnected: false,
+      connectedWallet: null,
+      refetch: vi.fn(),
+    }),
+    UserProvider: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
