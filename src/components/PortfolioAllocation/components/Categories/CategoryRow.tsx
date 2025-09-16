@@ -14,34 +14,6 @@ interface AssetCategoryRowProps {
   onToggleCategoryExclusion: (categoryId: string) => void;
 }
 
-// Major tokens that should show icons instead of text only
-const MAJOR_TOKENS = new Set([
-  "eth",
-  "weth",
-  "steth",
-  "reth",
-  "btc",
-  "wbtc",
-  "usdc",
-  "usdt",
-  "dai",
-  "busd",
-  "frax",
-  "lusd",
-  "matic",
-  "avax",
-  "bnb",
-  "sol",
-  "ada",
-  "dot",
-  "uni",
-  "aave",
-  "comp",
-  "mkr",
-  "snx",
-  "crv",
-]);
-
 // Helper component to render token symbols with selective icons
 const TokenSymbolsList = ({
   tokens,
@@ -55,25 +27,21 @@ const TokenSymbolsList = ({
     <div className="flex items-center gap-1">
       {tokens.map((token, index) => {
         const isLast = index === tokens.length - 1;
-        const isMajor = MAJOR_TOKENS.has(token.toLowerCase());
 
         return (
           <span key={token} className="flex items-center">
-            {isMajor ? (
-              <div className="flex items-center gap-1">
-                <ImageWithFallback
-                  src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${token.toLowerCase()}.webp`}
-                  alt={`${token} token`}
-                  fallbackType="token"
-                  symbol={token}
-                  size={12}
-                  className="flex-shrink-0 max-sm:!w-[10px] max-sm:!h-[10px]"
-                />
-                <span className="text-xs">{token.toUpperCase()}</span>
-              </div>
-            ) : (
+            <div className="flex items-center gap-1">
+              <ImageWithFallback
+                src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${token.toLowerCase()}.webp`}
+                alt={`${token} token`}
+                fallbackType="token"
+                symbol={token}
+                size={12}
+                className="flex-shrink-0 max-sm:!w-[10px] max-sm:!h-[10px]"
+              />
               <span className="text-xs">{token.toUpperCase()}</span>
-            )}
+            </div>
+
             {!isLast && <span className="text-gray-500 mx-1">/</span>}
           </span>
         );
