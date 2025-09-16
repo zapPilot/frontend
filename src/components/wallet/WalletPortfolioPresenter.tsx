@@ -39,7 +39,12 @@ export function WalletPortfolioPresenter({
       }}
     >
       <div className="space-y-6">
-        <ErrorBoundary>
+        <ErrorBoundary
+          resetKeys={[
+            vm.resolvedUserId || "no-user",
+            vm.portfolioState.isConnected ? "connected" : "disconnected",
+          ]}
+        >
           <GlassCard>
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}

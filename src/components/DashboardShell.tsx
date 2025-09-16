@@ -149,32 +149,32 @@ export function DashboardShell({
     [selectedStrategy]
   );
 
+  const getOpportunity = useCallback(
+    (id: string) =>
+      mockInvestmentOpportunities.find(strategy => strategy.id === id) || null,
+    []
+  );
+
   const handleOptimizeClick = useCallback(() => {
-    const optimizeStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "optimize-portfolio"
-    );
-    if (optimizeStrategy) {
-      setSelectedStrategy({ ...optimizeStrategy, navigationContext: "invest" });
+    const strategy = getOpportunity("optimize-portfolio");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "invest" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const handleZapInClick = useCallback(() => {
-    const zapInStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "zap-in"
-    );
-    if (zapInStrategy) {
-      setSelectedStrategy({ ...zapInStrategy, navigationContext: "zapIn" });
+    const strategy = getOpportunity("zap-in");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "zapIn" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const handleZapOutClick = useCallback(() => {
-    const zapOutStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "zap-out"
-    );
-    if (zapOutStrategy) {
-      setSelectedStrategy({ ...zapOutStrategy, navigationContext: "zapOut" });
+    const strategy = getOpportunity("zap-out");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "zapOut" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const renderTabContent = () => {
     if (selectedStrategy) {
