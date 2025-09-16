@@ -68,17 +68,21 @@ export const CategoryListSection = memo<CategoryListSectionProps>(
 
     return (
       <div className="space-y-4" data-testid={testId}>
-        {categories.map(category => (
-          <AssetCategoryRow
-            key={category.id}
-            category={category}
-            isExcluded={excludedCategoryIdsSet.has(category.id)}
-            onToggleCategoryExclusion={onToggleCategoryExclusion}
-            isRebalanceEnabled={isRebalanceEnabled}
-            rebalanceShift={shiftMap?.get(category.id)}
-            rebalanceTarget={targetMap?.get(category.id)}
-          />
-        ))}
+        {categories.map(category => {
+          const shift = shiftMap?.get(category.id);
+          const target = targetMap?.get(category.id);
+          return (
+            <AssetCategoryRow
+              key={category.id}
+              category={category}
+              isExcluded={excludedCategoryIdsSet.has(category.id)}
+              onToggleCategoryExclusion={onToggleCategoryExclusion}
+              isRebalanceEnabled={isRebalanceEnabled}
+              {...(shift ? { rebalanceShift: shift } : {})}
+              {...(target ? { rebalanceTarget: target } : {})}
+            />
+          );
+        })}
       </div>
     );
   }
