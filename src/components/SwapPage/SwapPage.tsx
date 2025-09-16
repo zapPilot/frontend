@@ -13,7 +13,6 @@ import { TabNavigation } from "./TabNavigation";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
 import { useUser } from "../../contexts/UserContext";
 
-
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
@@ -24,15 +23,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   const { userInfo } = useUser();
 
   // Fetch strategies data with real portfolio data from API
-  const {
-    strategies,
-    isError,
-    error,
-    isInitialLoading,
-    refetch,
-    hasPoolData,
-    totalProtocols,
-  } = useStrategiesWithPortfolioData(userInfo?.id);
+  const { strategies, isError, error, isInitialLoading, refetch } =
+    useStrategiesWithPortfolioData(userInfo?.userId);
 
   // Initialize operation mode based on navigation context
   const getInitialOperationMode = (): OperationMode => {
@@ -87,7 +79,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
     // Use real protocol count data from API instead of mock protocols array
     const totalProtocolCount = action.includedCategories.reduce(
-      (sum, cat) => sum + (cat.enabledProtocolCount || 0), 
+      (sum, cat) => sum + (cat.enabledProtocolCount || 0),
       0
     );
 

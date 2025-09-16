@@ -39,7 +39,8 @@ export function useStrategiesQuery(
         }
 
         // Handle API errors from intentService
-        const message = error instanceof Error ? error.message : "Failed to fetch strategies";
+        const message =
+          error instanceof Error ? error.message : "Failed to fetch strategies";
         throw new StrategiesApiError(message, "FETCH_ERROR");
       }
     },
@@ -49,12 +50,16 @@ export function useStrategiesQuery(
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes when tab is active
     retry: (failureCount, error) => {
       // Don't retry on client errors (4xx)
-      if (error instanceof StrategiesApiError && error.statusCode && error.statusCode < 500) {
+      if (
+        error instanceof StrategiesApiError &&
+        error.statusCode &&
+        error.statusCode < 500
+      ) {
         return false;
       }
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
@@ -80,7 +85,10 @@ export function useStrategiesWithPortfolioQuery(
             return transformStrategiesResponse(strategiesResponse, poolDetails);
           } catch (portfolioError) {
             // Portfolio fetch failed - log warning but return strategies without portfolio data
-            console.warn('Portfolio data fetch failed, showing strategies without portfolio data:', portfolioError);
+            console.warn(
+              "Portfolio data fetch failed, showing strategies without portfolio data:",
+              portfolioError
+            );
             return transformStrategiesResponse(strategiesResponse, []);
           }
         }
@@ -94,7 +102,8 @@ export function useStrategiesWithPortfolioQuery(
         }
 
         // Handle API errors from intentService
-        const message = error instanceof Error ? error.message : "Failed to fetch strategies";
+        const message =
+          error instanceof Error ? error.message : "Failed to fetch strategies";
         throw new StrategiesApiError(message, "FETCH_ERROR");
       }
     },
@@ -105,12 +114,16 @@ export function useStrategiesWithPortfolioQuery(
     refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes for portfolio data
     retry: (failureCount, error) => {
       // Don't retry on client errors (4xx)
-      if (error instanceof StrategiesApiError && error.statusCode && error.statusCode < 500) {
+      if (
+        error instanceof StrategiesApiError &&
+        error.statusCode &&
+        error.statusCode < 500
+      ) {
         return false;
       }
       return failureCount < 3;
     },
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
@@ -159,8 +172,11 @@ export function useStrategiesWithPortfolioData(
     isInitialLoading: query.isLoading && !query.data,
     isReloading: query.isRefetching || (query.isLoading && !!query.data),
     // Portfolio-specific helpers
-    hasPoolData: query.data?.some(category => category.protocols?.length > 0) || false,
-    totalProtocols: query.data?.reduce((sum, cat) => sum + (cat.protocols?.length || 0), 0) || 0,
+    hasPoolData:
+      query.data?.some(category => category.protocols?.length > 0) || false,
+    totalProtocols:
+      query.data?.reduce((sum, cat) => sum + (cat.protocols?.length || 0), 0) ||
+      0,
   };
 }
 

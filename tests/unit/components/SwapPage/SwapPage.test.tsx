@@ -87,8 +87,8 @@ vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
             chain: "Ethereum",
             apy: 3.2,
             tvl: 120000,
-          }
-        ]
+          },
+        ],
       },
       {
         id: "eth",
@@ -102,8 +102,8 @@ vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
             chain: "Ethereum",
             apy: 5.2,
             tvl: 250000,
-          }
-        ]
+          },
+        ],
       },
       {
         id: "stablecoins",
@@ -117,9 +117,9 @@ vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
             chain: "Ethereum",
             apy: 2.5,
             tvl: 320000,
-          }
-        ]
-      }
+          },
+        ],
+      },
     ],
     isError: false,
     error: null,

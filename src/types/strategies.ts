@@ -65,12 +65,23 @@ export const transformPoolsToProtocols = (
       // Enhanced pool data
       poolSymbols: pool.pool_symbols,
       aprConfidence: getAPRConfidence(pool),
-      aprBreakdown: {
-        base: pool.apr_data.apr_base,
-        reward: pool.apr_data.apr_reward,
-        total: pool.final_apr,
-        updatedAt: pool.apr_data.apr_updated_at,
-      },
+      aprBreakdown: (() => {
+        const breakdown: {
+          total: number;
+          base?: number;
+          reward?: number;
+          updatedAt?: string;
+        } = {
+          total: pool.final_apr,
+        };
+        if (pool.apr_data.apr_base != null)
+          breakdown.base = pool.apr_data.apr_base as number;
+        if (pool.apr_data.apr_reward != null)
+          breakdown.reward = pool.apr_data.apr_reward as number;
+        if (pool.apr_data.apr_updated_at != null)
+          breakdown.updatedAt = pool.apr_data.apr_updated_at as string;
+        return breakdown;
+      })(),
     }));
 };
 

@@ -31,7 +31,10 @@ interface AnalyticsTabProps {
   categoryFilter?: string | null;
 }
 
-export function AnalyticsTab({ urlUserId, categoryFilter }: AnalyticsTabProps = {}) {
+export function AnalyticsTab({
+  urlUserId,
+  categoryFilter,
+}: AnalyticsTabProps = {}) {
   // Get user data for analytics
   const { userInfo } = useUser();
 
