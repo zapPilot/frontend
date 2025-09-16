@@ -1,9 +1,9 @@
 "use client";
 
+import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { memo } from "react";
-import { useDropdown } from "@/hooks/useDropdown";
 import { ProcessedAssetCategory, RebalanceMode } from "../../types";
 
 interface AssetCategoryRowProps {
@@ -179,34 +179,6 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                   </div>
                 )}
 
-                {/* Target Assets */}
-                {category.targetAssets && category.targetAssets.length > 0 && (
-                  <div className="p-3 rounded-lg bg-gray-800/50">
-                    <div className="text-xs text-gray-400 mb-2">Target Assets:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {category.targetAssets.map(asset => (
-                        <span key={asset} className="text-xs bg-gray-700 px-2 py-1 rounded text-gray-300">
-                          {asset}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Supported Chains */}
-                {category.chains && category.chains.length > 0 && (
-                  <div className="p-3 rounded-lg bg-gray-800/50">
-                    <div className="text-xs text-gray-400 mb-2">Supported Chains:</div>
-                    <div className="flex flex-wrap gap-2">
-                      {category.chains.map(chain => (
-                        <span key={chain} className="text-xs bg-blue-800 px-2 py-1 rounded text-blue-200">
-                          {chain.charAt(0).toUpperCase() + chain.slice(1)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* Individual Protocol Positions */}
                 {category.protocols && category.protocols.length > 0 && (
                   <div className="space-y-2">
@@ -230,38 +202,60 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                               </span>
                               {/* APR Confidence Indicator */}
                               {protocol.aprConfidence && (
-                                <span className={`text-xs px-2 py-1 rounded-full ${
-                                  protocol.aprConfidence === 'high'
-                                    ? 'bg-green-800/30 text-green-200'
-                                    : protocol.aprConfidence === 'medium'
-                                      ? 'bg-yellow-800/30 text-yellow-200'
-                                      : 'bg-red-800/30 text-red-200'
-                                }`}>
-                                  {protocol.aprConfidence === 'high' ? 'Verified APR' :
-                                   protocol.aprConfidence === 'medium' ? 'Estimated APR' : 'APR Unknown'}
+                                <span
+                                  className={`text-xs px-2 py-1 rounded-full ${
+                                    protocol.aprConfidence === "high"
+                                      ? "bg-green-800/30 text-green-200"
+                                      : protocol.aprConfidence === "medium"
+                                        ? "bg-yellow-800/30 text-yellow-200"
+                                        : "bg-red-800/30 text-red-200"
+                                  }`}
+                                >
+                                  {protocol.aprConfidence === "high"
+                                    ? "Verified APR"
+                                    : protocol.aprConfidence === "medium"
+                                      ? "Estimated APR"
+                                      : "APR Unknown"}
                                 </span>
                               )}
                             </div>
                             <div className="flex items-center space-x-4 mt-1 text-xs text-gray-400">
                               {protocol.tvl && (
-                                <span>Value: ${protocol.tvl.toLocaleString()}</span>
+                                <span>
+                                  Value: ${protocol.tvl.toLocaleString()}
+                                </span>
                               )}
                               {protocol.apy && (
                                 <span className="text-green-400">
                                   APR: {protocol.apy.toFixed(2)}%
-                                  {protocol.aprBreakdown && protocol.aprBreakdown.base && protocol.aprBreakdown.reward && (
-                                    <span className="ml-1 text-gray-500">
-                                      ({protocol.aprBreakdown.base.toFixed(1)}% + {protocol.aprBreakdown.reward.toFixed(1)}%)
-                                    </span>
-                                  )}
+                                  {protocol.aprBreakdown &&
+                                    protocol.aprBreakdown.base &&
+                                    protocol.aprBreakdown.reward && (
+                                      <span className="ml-1 text-gray-500">
+                                        ({protocol.aprBreakdown.base.toFixed(1)}
+                                        % +{" "}
+                                        {protocol.aprBreakdown.reward.toFixed(
+                                          1
+                                        )}
+                                        %)
+                                      </span>
+                                    )}
                                 </span>
                               )}
                               {/* Pool Composition */}
-                              {protocol.poolSymbols && protocol.poolSymbols.length > 0 && (
-                                <span>
-                                  Pool: {protocol.poolSymbols.join('/')}
-                                </span>
-                              )}
+                              {protocol.poolSymbols &&
+                                protocol.poolSymbols.length > 0 && (
+                                  <span>
+                                    Pool: {protocol.poolSymbols.join("/")}
+                                  </span>
+                                )}
+                              {/* Target Tokens from strategies API */}
+                              {protocol.targetTokens &&
+                                protocol.targetTokens.length > 0 && (
+                                  <span>
+                                    Targets: {protocol.targetTokens.join("/")}
+                                  </span>
+                                )}
                             </div>
                           </div>
                           <div className="text-right">
@@ -279,24 +273,6 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                     ))}
                   </div>
                 )}
-
-                {/* Protocol Count Summary */}
-                <div className="p-3 rounded-lg bg-gray-800/50">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Total Protocols:</span>
-                    <span className="text-white">{category.protocolCount || 0}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mt-1">
-                    <span className="text-gray-400">Enabled Protocols:</span>
-                    <span className="text-green-400">{category.enabledProtocolCount || 0}</span>
-                  </div>
-                  {category.protocols && category.protocols.length > 0 && (
-                    <div className="flex justify-between text-sm mt-1">
-                      <span className="text-gray-400">Your Positions:</span>
-                      <span className="text-blue-400">{category.protocols.length}</span>
-                    </div>
-                  )}
-                </div>
               </div>
             </motion.div>
           )}

@@ -12,13 +12,15 @@ export interface Protocol {
   riskScore?: number; // Risk assessment score (1-10)
   // Enhanced pool data
   poolSymbols?: string[]; // Token symbols in the pool
-  aprConfidence?: 'high' | 'medium' | 'low'; // APR data reliability
+  aprConfidence?: "high" | "medium" | "low"; // APR data reliability
   aprBreakdown?: {
     base?: number; // Base APR
     reward?: number; // Reward APR
     total: number; // Total APR
     updatedAt?: string; // Last update timestamp
   };
+  // Strategy protocol targets (from intent service)
+  targetTokens?: string[];
 }
 
 export interface AssetCategory {
