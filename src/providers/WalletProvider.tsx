@@ -26,6 +26,7 @@ import {
 } from "thirdweb/react";
 // Chain types are handled internally
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
+import { walletLogger } from "@/utils/logger";
 
 // Essential types for simplified wallet
 export interface SimplifiedWalletAccount {
@@ -140,7 +141,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
         throw new Error("No wallet available");
       }
     } catch (err) {
-      console.error("Failed to connect wallet:", err);
+      walletLogger.error("Failed to connect wallet:", err);
       throw err;
     }
   }, [connect, connectedWallets]);
@@ -152,7 +153,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     try {
       await disconnect(wallet);
     } catch (err) {
-      console.error("Failed to disconnect wallet:", err);
+      walletLogger.error("Failed to disconnect wallet:", err);
       throw err;
     }
   }, [disconnect, wallet]);
@@ -177,7 +178,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
         await switchChain(chainToSwitch);
       } catch (err) {
-        console.error("Failed to switch chain:", err);
+        walletLogger.error("Failed to switch chain:", err);
         throw err;
       }
     },
@@ -194,7 +195,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       try {
         return await account.signMessage({ message });
       } catch (err) {
-        console.error("Failed to sign message:", err);
+        walletLogger.error("Failed to sign message:", err);
         throw err;
       }
     },

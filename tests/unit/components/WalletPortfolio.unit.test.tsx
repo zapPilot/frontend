@@ -805,7 +805,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
             stablecoins: { total_value: 0, percentage_of_portfolio: 0 },
             others: { total_value: 0, percentage_of_portfolio: 0 },
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
         isLoading: false,
         error: null,

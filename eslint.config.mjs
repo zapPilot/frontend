@@ -49,10 +49,13 @@ const eslintConfig = [
       // Disable React hooks rules for test files since they use Playwright's 'use' parameter
       "react-hooks/rules-of-hooks": "off",
       "react-hooks/exhaustive-deps": "off",
+      // Allow using `any` in tests where strict typing is not critical
+      "@typescript-eslint/no-explicit-any": "off",
       // Relax unused vars rule for test files (mock functions often have unused parameters)
       "@typescript-eslint/no-unused-vars": ["warn", { 
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true 
       }],
       // Allow require() in tests

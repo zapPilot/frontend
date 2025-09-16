@@ -17,6 +17,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { logger } from "@/utils/logger";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>
@@ -75,7 +76,7 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
           setBundleNotFound(true);
         }
       } catch (error) {
-        console.error("Failed to load bundle user:", error);
+        logger.error("Failed to load bundle user:", error);
         setBundleNotFound(true);
       }
     };

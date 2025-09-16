@@ -2,6 +2,7 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { getStrategies } from "../../services/intentService";
 import { getLandingPagePortfolioData } from "../../services/analyticsService";
 import { AssetCategory } from "../../components/PortfolioAllocation/types";
+import { portfolioLogger } from "@/utils/logger";
 import {
   transformStrategiesResponse,
   StrategiesApiError,
@@ -85,7 +86,7 @@ export function useStrategiesWithPortfolioQuery(
             return transformStrategiesResponse(strategiesResponse, poolDetails);
           } catch (portfolioError) {
             // Portfolio fetch failed - log warning but return strategies without portfolio data
-            console.warn(
+            portfolioLogger.warn(
               "Portfolio data fetch failed, showing strategies without portfolio data:",
               portfolioError
             );

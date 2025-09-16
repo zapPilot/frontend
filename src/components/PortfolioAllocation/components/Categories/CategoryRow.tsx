@@ -1,10 +1,10 @@
 "use client";
 
+import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
 import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { memo } from "react";
-import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
 import { ProcessedAssetCategory, RebalanceMode } from "../../types";
 
 interface AssetCategoryRowProps {
@@ -260,14 +260,16 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                         className="p-3 rounded-lg bg-gray-800/30 border border-gray-700/30"
                         data-testid={`protocol-row-${protocol.id}`}
                       >
+                        {JSON.stringify(protocol)}
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
+                              {protocol.protocol}:
                               <ImageWithFallback
-                                src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${protocol.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.webp`}
-                                alt={`${protocol.name} logo`}
+                                src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${protocol.protocol}.webp`}
+                                alt={`${protocol.protocol} logo`}
                                 fallbackType="project"
-                                symbol={protocol.name}
+                                symbol={protocol.protocol}
                                 size={16}
                                 className="flex-shrink-0 max-sm:!w-[14px] max-sm:!h-[14px]"
                               />
@@ -279,7 +281,7 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                                 title={protocol.chain}
                               >
                                 <ImageWithFallback
-                                  src={`https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/${protocol.chain.toLowerCase()}.webp`}
+                                  src={`https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/${protocol.chain}.webp`}
                                   alt={`${protocol.chain} chain`}
                                   fallbackType="chain"
                                   symbol={protocol.chain}

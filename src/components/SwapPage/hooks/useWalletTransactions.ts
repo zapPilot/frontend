@@ -180,8 +180,8 @@ export function useWalletTransactions({
               });
             });
 
-            // Send batch to wallet - cast to any to bypass strict typing for now
-            const result = await sendCalls(calls as any);
+            // Send batch to wallet
+            const result = await sendCalls(calls as PreparedTransaction[]);
 
             // Extract transaction hash
             const txnHash = result?.transactionHash;

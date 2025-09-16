@@ -33,7 +33,7 @@ import {
 
 // Wallet API types
 interface SendCallsParameter {
-  calls: any[]; // This would need to be typed based on the actual thirdweb call structure
+  calls: unknown[]; // Thirdweb call structure opaque to app layer
 }
 
 // Wallet connection hook interface - using WalletConnectionState directly
@@ -146,7 +146,8 @@ const useWalletConnectionState = (): WalletConnectionState => {
     sendCalls: async calls => {
       const result = await sendCalls({ calls } as SendCallsParameter);
       return {
-        transactionHash: (result as any)?.transactionHash || "",
+        transactionHash: (result as { transactionHash?: string } | undefined)?.
+          transactionHash || "",
         status: "success" as const,
       };
     },
@@ -719,7 +720,9 @@ export function OptimizeTab() {
   // Effect to collect transactions only from complete event
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
-    const completeEvent = (events as any[]).find(
+    const completeEvent = (
+      events as Array<{ type?: string; data?: unknown }>
+    ).find(
       event => event.type === "complete"
     );
 

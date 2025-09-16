@@ -2,6 +2,8 @@
  * Bundle Service - Handles bundle metadata and sharing functionality
  */
 
+import { logger } from "@/utils/logger";
+
 export interface BundleUser {
   userId: string;
   displayName?: string;
@@ -28,7 +30,7 @@ class BundleService {
         displayName: this.generateDisplayName(userId),
       };
     } catch (error) {
-      console.error("Failed to fetch bundle user:", error);
+      logger.error("Failed to fetch bundle user:", error);
       return null;
     }
   }
@@ -84,7 +86,7 @@ class BundleService {
         updatedAt: new Date(),
       };
     } catch (error) {
-      console.error("Failed to fetch bundle metadata:", error);
+      logger.error("Failed to fetch bundle metadata:", error);
       return null;
     }
   }

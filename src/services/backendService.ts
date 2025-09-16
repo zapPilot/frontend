@@ -24,7 +24,7 @@ export interface DiscordAlert {
   severity: "info" | "warning" | "error" | "success";
   title: string;
   message: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   timestamp: string;
 }
 

@@ -62,7 +62,11 @@ export interface WalletProviderInterface {
 
   // Signing
   signMessage: (message: string) => Promise<string>;
-  signTypedData?: (domain: any, types: any, value: any) => Promise<string>;
+  signTypedData?: (
+    domain: unknown,
+    types: unknown,
+    value: unknown
+  ) => Promise<string>;
 
   // Utilities
   isChainSupported: (chainId: number) => boolean;
