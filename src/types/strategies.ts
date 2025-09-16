@@ -15,6 +15,7 @@ import { PoolDetail } from "../services/analyticsService";
  */
 export interface StrategyProtocolResponse {
   name: string;
+  protocol?: string; // Protocol identifier (e.g., 'aave-v3', 'uniswap-v3')
   chain: string; // e.g., 'base'
   weight: number; // percentage weight
   targetTokens: string[]; // e.g., ['usdc']
@@ -59,6 +60,7 @@ export const transformPoolsToProtocols = (
       name: formatProtocolName(pool),
       allocationPercentage: pool.contribution_to_portfolio,
       chain: capitalizeChain(pool.chain),
+      protocol: pool.protocol, // Map protocol field from PoolDetail
       tvl: pool.asset_usd_value,
       apy: pool.final_apr,
       riskScore: pool.protocol_matched ? 1 : 3, // Lower risk for verified APR
@@ -105,6 +107,7 @@ export const transformStrategyProtocols = (
     name: p.name,
     allocationPercentage: p.weight,
     chain: p.chain,
+    ...(p.protocol && { protocol: p.protocol }), // Only include if defined
     // Map targetTokens for display in UI
     targetTokens: p.targetTokens,
   }));

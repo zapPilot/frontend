@@ -7,6 +7,7 @@ export interface Protocol {
   name: string;
   allocationPercentage: number; // Percentage within its parent category
   chain: string; // e.g., 'Ethereum', 'Polygon', 'Arbitrum'
+  protocol?: string; // Protocol identifier from API (e.g., 'aave-v3', 'uniswap-v3')
   tvl?: number; // Total Value Locked
   apy?: number; // Annual Percentage Yield
   riskScore?: number; // Risk assessment score (1-10)
