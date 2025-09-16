@@ -393,7 +393,6 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
           stablecoins: 0,
           others: 0,
         },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
 
       mockUseLandingPageData.mockReturnValue({

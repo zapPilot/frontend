@@ -25,7 +25,7 @@ const eslintConfig = [
       
       // React Hooks rules
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "error",
       
       // General rules
       "no-console": "warn",
@@ -37,15 +37,25 @@ const eslintConfig = [
     }
   },
   {
+    files: ["src/utils/logger.ts"],
+    rules: {
+      // Centralized logger is allowed to use console
+      "no-console": "off"
+    }
+  },
+  {
     files: ["tests/**/*", "**/*.test.*", "**/*.spec.*"],
     rules: {
       // Disable React hooks rules for test files since they use Playwright's 'use' parameter
       "react-hooks/rules-of-hooks": "off",
       "react-hooks/exhaustive-deps": "off",
+      // Allow using `any` in tests where strict typing is not critical
+      "@typescript-eslint/no-explicit-any": "off",
       // Relax unused vars rule for test files (mock functions often have unused parameters)
       "@typescript-eslint/no-unused-vars": ["warn", { 
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_",
         "ignoreRestSiblings": true 
       }],
       // Allow require() in tests
@@ -67,8 +77,9 @@ const eslintConfig = [
       }
     },
     rules: {
-      // Scripts may use require()
-      "@typescript-eslint/no-require-imports": "off"
+      // Scripts may use require() and console output
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": "off"
     }
   },
   {
@@ -77,6 +88,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "dist/**",
+      "coverage/**",
       "public/**",
       "node_modules/**",
       "*.config.js",

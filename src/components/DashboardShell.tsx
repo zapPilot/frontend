@@ -11,7 +11,10 @@ import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
 
 // Dynamic imports for code splitting
-const AnalyticsTab: ComponentType<{ categoryFilter?: string | null }> = dynamic(
+const AnalyticsTab: ComponentType<{
+  urlUserId?: string | undefined;
+  categoryFilter?: string | null;
+}> = dynamic(
   () =>
     import("@/components/AnalyticsTab").then(mod => ({
       default: mod.AnalyticsTab,
@@ -194,7 +197,12 @@ export function DashboardShell({
           />
         );
       case "analytics":
-        return <AnalyticsTab categoryFilter={selectedCategoryFilter} />;
+        return (
+          <AnalyticsTab
+            urlUserId={urlUserId}
+            categoryFilter={selectedCategoryFilter}
+          />
+        );
       case "community":
         return <CommunityTab />;
       case "airdrop":

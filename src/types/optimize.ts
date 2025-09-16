@@ -72,7 +72,8 @@ export interface WalletConnectionState {
       default: { name: string; url: string };
     };
   } | null;
-  sendCalls: (calls: TransactionCall[]) => Promise<TransactionResult>;
+  // Prepared calls for EIP-5792; opaque to app layer
+  sendCalls: (calls: ReadonlyArray<unknown>) => Promise<TransactionResult>;
   userAddress: string | undefined;
   chainId: number | undefined;
   chainName: string | undefined;

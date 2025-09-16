@@ -16,7 +16,7 @@ import { ThirdWebAccount, ThirdWebChain } from "../../../types/api";
 
 interface UseWalletTransactionsProps {
   sendCalls: (
-    calls: PreparedTransaction[]
+    calls: ReadonlyArray<unknown>
   ) => Promise<{ transactionHash: string }>;
   activeAccount: ThirdWebAccount;
   activeChain: ThirdWebChain;
@@ -180,8 +180,8 @@ export function useWalletTransactions({
               });
             });
 
-            // Send batch to wallet - cast to any to bypass strict typing for now
-            const result = await sendCalls(calls as any);
+            // Send batch to wallet (prepared calls for EIP-5792)
+            const result = await sendCalls(calls as unknown[]);
 
             // Extract transaction hash
             const txnHash = result?.transactionHash;

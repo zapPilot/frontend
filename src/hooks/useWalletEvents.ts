@@ -9,6 +9,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useWallet } from "./useWallet";
+import { walletLogger } from "@/utils/logger";
 
 // Wallet-specific event data types
 export interface AccountEventData {
@@ -109,7 +110,7 @@ export function useWalletEvents(
         try {
           callback(account || {});
         } catch (error) {
-          console.error("Error in account change callback:", error);
+          walletLogger.error("Error in account change callback:", error);
         }
       });
       prevAccountRef.current = account;
@@ -122,7 +123,7 @@ export function useWalletEvents(
         try {
           callback(chain || {});
         } catch (error) {
-          console.error("Error in chain change callback:", error);
+          walletLogger.error("Error in chain change callback:", error);
         }
       });
       prevChainRef.current = chain;
@@ -135,7 +136,7 @@ export function useWalletEvents(
         try {
           callback(isConnected);
         } catch (error) {
-          console.error("Error in connection change callback:", error);
+          walletLogger.error("Error in connection change callback:", error);
         }
       });
       prevConnectionRef.current = isConnected;

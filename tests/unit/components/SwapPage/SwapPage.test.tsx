@@ -71,6 +71,116 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock strategies hooks
+vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
+  useStrategiesData: vi.fn(() => ({
+    strategies: [
+      {
+        id: "btc",
+        name: "BTC",
+        color: "#F59E0B",
+        protocols: [
+          {
+            id: "btc-1",
+            name: "Compound BTC",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 3.2,
+            tvl: 120000,
+          },
+        ],
+      },
+      {
+        id: "eth",
+        name: "ETH",
+        color: "#8B5CF6",
+        protocols: [
+          {
+            id: "eth-1",
+            name: "Lido Staking",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 5.2,
+            tvl: 250000,
+          },
+        ],
+      },
+      {
+        id: "stablecoins",
+        name: "Stablecoins",
+        color: "#10B981",
+        protocols: [
+          {
+            id: "stable-1",
+            name: "USDC Compound",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 2.5,
+            tvl: 320000,
+          },
+        ],
+      },
+    ],
+    isError: false,
+    error: null,
+    isInitialLoading: false,
+    refetch: vi.fn(),
+  })),
+  useStrategiesWithPortfolioData: vi.fn((_userId?: string) => ({
+    strategies: [
+      {
+        id: "btc",
+        name: "BTC",
+        color: "#F59E0B",
+        protocols: [
+          {
+            id: "btc-1",
+            name: "Compound BTC",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 3.2,
+            tvl: 120000,
+          },
+        ],
+      },
+      {
+        id: "eth",
+        name: "ETH",
+        color: "#8B5CF6",
+        protocols: [
+          {
+            id: "eth-1",
+            name: "Lido Staking",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 5.2,
+            tvl: 250000,
+          },
+        ],
+      },
+      {
+        id: "stablecoins",
+        name: "Stablecoins",
+        color: "#10B981",
+        protocols: [
+          {
+            id: "stable-1",
+            name: "USDC Compound",
+            allocationPercentage: 100,
+            chain: "Ethereum",
+            apy: 2.5,
+            tvl: 320000,
+          },
+        ],
+      },
+    ],
+    isError: false,
+    error: null,
+    isInitialLoading: false,
+    refetch: vi.fn(),
+  })),
+}));
+
 describe("SwapPage", () => {
   const mockStrategy: InvestmentOpportunity = {
     id: "test-strategy",

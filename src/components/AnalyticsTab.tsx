@@ -9,8 +9,11 @@ import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
 import { LoadingSpinner } from "./ui/LoadingSpinner";
 
+// Import component props interface for proper typing
+import type { PortfolioChartProps } from "./PortfolioChart";
+
 // Dynamic import for heavy chart component
-const PortfolioChart: ComponentType = dynamic(
+const PortfolioChart: ComponentType<PortfolioChartProps> = dynamic(
   () =>
     import("./PortfolioChart").then(mod => ({ default: mod.PortfolioChart })),
   {
@@ -24,15 +27,24 @@ const PortfolioChart: ComponentType = dynamic(
 );
 
 interface AnalyticsTabProps {
+  urlUserId?: string | undefined;
   categoryFilter?: string | null;
 }
 
-export function AnalyticsTab({ categoryFilter }: AnalyticsTabProps = {}) {
-  // Get user data for pool analytics
+export function AnalyticsTab({
+  urlUserId,
+  categoryFilter,
+}: AnalyticsTabProps = {}) {
+  // Get user data for analytics
   const { userInfo } = useUser();
 
+  // Resolve which userId to use for data fetching
+  // Prefer explicit urlUserId (shared view), else fallback to connected user's id
+  // For bundle viewing: urlUserId should work regardless of connection state
+  const resolvedUserId = urlUserId || userInfo?.userId;
+
   // Fetch unified landing page data (includes pool_details)
-  const landingPageQuery = useLandingPageData(userInfo?.userId);
+  const landingPageQuery = useLandingPageData(resolvedUserId);
   const poolDetails = landingPageQuery.data?.pool_details || [];
   const poolLoading = landingPageQuery.isLoading;
   const poolError = landingPageQuery.error?.message || null;
@@ -62,7 +74,7 @@ export function AnalyticsTab({ categoryFilter }: AnalyticsTabProps = {}) {
       </motion.div>
 
       {/* Historical Performance Chart */}
-      <PortfolioChart />
+      <PortfolioChart userId={resolvedUserId} />
 
       {/* Pool Performance Analytics */}
       <motion.div
@@ -88,7 +100,7 @@ export function AnalyticsTab({ categoryFilter }: AnalyticsTabProps = {}) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <AnalyticsDashboard userId={userInfo?.userId} />
+        <AnalyticsDashboard userId={resolvedUserId} />
       </motion.div>
     </div>
   );

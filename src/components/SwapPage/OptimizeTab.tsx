@@ -6,6 +6,14 @@ import {
   useActiveWalletChain,
   useSendAndConfirmCalls,
 } from "thirdweb/react";
+// Minimal local type compatible with thirdweb prepared calls
+type MinimalPreparedCall = Readonly<
+  { chain: unknown; client: unknown } & {
+    to?: string;
+    data?: string;
+    value?: unknown;
+  }
+>;
 import { useDustZapStream } from "../../hooks/useDustZapStream";
 import { useToast } from "../../hooks/useToast";
 import { formatSmallNumber } from "../../lib/formatters";
@@ -32,9 +40,7 @@ import {
 // ===== EXTRACTED HOOKS AND INTERFACES =====
 
 // Wallet API types
-interface SendCallsParameter {
-  calls: any[]; // This would need to be typed based on the actual thirdweb call structure
-}
+// Calls type comes from thirdweb's EIP-5792 utilities
 
 // Wallet connection hook interface - using WalletConnectionState directly
 
@@ -100,7 +106,7 @@ interface TokenGridProps {
 const useWalletConnectionState = (): WalletConnectionState => {
   const activeAccount = useActiveAccount();
   const activeChain = useActiveWalletChain();
-  const { mutate: sendCalls } = useSendAndConfirmCalls();
+  const { mutate: sendAndConfirmCalls } = useSendAndConfirmCalls();
 
   const getExplorerUrl = useCallback(
     (txnHash: string) => {
@@ -143,12 +149,13 @@ const useWalletConnectionState = (): WalletConnectionState => {
           }),
         }
       : null,
-    sendCalls: async calls => {
-      const result = await sendCalls({ calls } as SendCallsParameter);
-      return {
-        transactionHash: (result as any)?.transactionHash || "",
-        status: "success" as const,
-      };
+    sendCalls: async (calls: ReadonlyArray<unknown>) => {
+      const mutate = sendAndConfirmCalls as unknown as (args: {
+        calls: MinimalPreparedCall[];
+      }) => Promise<{ receipts?: Array<{ transactionHash?: string }> }>;
+      const result = await mutate({ calls: calls as MinimalPreparedCall[] });
+      const transactionHash = result?.receipts?.[0]?.transactionHash || "";
+      return { transactionHash, status: "success" as const };
     },
     userAddress: activeAccount?.address,
     chainId: activeChain?.id,
@@ -719,9 +726,9 @@ export function OptimizeTab() {
   // Effect to collect transactions only from complete event
   useEffect(() => {
     // Only use the authoritative complete event for wallet transactions
-    const completeEvent = (events as any[]).find(
-      event => event.type === "complete"
-    );
+    const completeEvent = (
+      events as Array<{ type?: string; data?: unknown }>
+    ).find(event => event.type === "complete");
 
     if (
       completeEvent &&

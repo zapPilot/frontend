@@ -7,16 +7,34 @@ export interface Protocol {
   name: string;
   allocationPercentage: number; // Percentage within its parent category
   chain: string; // e.g., 'Ethereum', 'Polygon', 'Arbitrum'
+  protocol?: string; // Protocol identifier from API (e.g., 'aave-v3', 'uniswap-v3')
   tvl?: number; // Total Value Locked
   apy?: number; // Annual Percentage Yield
   riskScore?: number; // Risk assessment score (1-10)
+  // Enhanced pool data
+  poolSymbols?: string[]; // Token symbols in the pool
+  aprConfidence?: "high" | "medium" | "low"; // APR data reliability
+  aprBreakdown?: {
+    base?: number; // Base APR
+    reward?: number; // Reward APR
+    total: number; // Total APR
+    updatedAt?: string; // Last update timestamp
+  };
+  // Strategy protocol targets (from intent service)
+  targetTokens?: string[];
 }
 
 export interface AssetCategory {
   id: string;
   name: string;
-  protocols: Protocol[];
+  protocols: Protocol[]; // Restored for individual pool position rows
   color: string; // For consistent theming across charts
+  // Real API data from strategies endpoint
+  description?: string;
+  targetAssets?: string[]; // e.g., ['USDC', 'USDT', 'DAI']
+  chains?: string[]; // e.g., ['arbitrum', 'base', 'optimism']
+  protocolCount?: number; // Total protocols available
+  enabledProtocolCount?: number; // Currently active protocols
 }
 
 // Interface for the processed data that UI components will consume
