@@ -25,7 +25,7 @@ const eslintConfig = [
       
       // React Hooks rules
       "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "warn",
+      "react-hooks/exhaustive-deps": "error",
       
       // General rules
       "no-console": "warn",
@@ -34,6 +34,13 @@ const eslintConfig = [
       "prefer-const": "error",
       "no-var": "error",
       "object-shorthand": "error"
+    }
+  },
+  {
+    files: ["src/utils/logger.ts"],
+    rules: {
+      // Centralized logger is allowed to use console
+      "no-console": "off"
     }
   },
   {
@@ -67,8 +74,9 @@ const eslintConfig = [
       }
     },
     rules: {
-      // Scripts may use require()
-      "@typescript-eslint/no-require-imports": "off"
+      // Scripts may use require() and console output
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": "off"
     }
   },
   {
@@ -77,6 +85,7 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "dist/**",
+      "coverage/**",
       "public/**",
       "node_modules/**",
       "*.config.js",

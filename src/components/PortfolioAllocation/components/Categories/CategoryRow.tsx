@@ -4,6 +4,7 @@ import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { memo } from "react";
+import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
 import { ProcessedAssetCategory, RebalanceMode } from "../../types";
 
 interface AssetCategoryRowProps {
@@ -12,6 +13,74 @@ interface AssetCategoryRowProps {
   excludedCategoryIds: string[];
   onToggleCategoryExclusion: (categoryId: string) => void;
 }
+
+// Major tokens that should show icons instead of text only
+const MAJOR_TOKENS = new Set([
+  "eth",
+  "weth",
+  "steth",
+  "reth",
+  "btc",
+  "wbtc",
+  "usdc",
+  "usdt",
+  "dai",
+  "busd",
+  "frax",
+  "lusd",
+  "matic",
+  "avax",
+  "bnb",
+  "sol",
+  "ada",
+  "dot",
+  "uni",
+  "aave",
+  "comp",
+  "mkr",
+  "snx",
+  "crv",
+]);
+
+// Helper component to render token symbols with selective icons
+const TokenSymbolsList = ({
+  tokens,
+  label,
+}: {
+  tokens: string[];
+  label: string;
+}) => (
+  <span className="flex items-center gap-1">
+    <span className="text-gray-400">{label}:</span>
+    <div className="flex items-center gap-1">
+      {tokens.map((token, index) => {
+        const isLast = index === tokens.length - 1;
+        const isMajor = MAJOR_TOKENS.has(token.toLowerCase());
+
+        return (
+          <span key={token} className="flex items-center">
+            {isMajor ? (
+              <div className="flex items-center gap-1">
+                <ImageWithFallback
+                  src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${token.toLowerCase()}.webp`}
+                  alt={`${token} token`}
+                  fallbackType="token"
+                  symbol={token}
+                  size={12}
+                  className="flex-shrink-0 max-sm:!w-[10px] max-sm:!h-[10px]"
+                />
+                <span className="text-xs">{token.toUpperCase()}</span>
+              </div>
+            ) : (
+              <span className="text-xs">{token.toUpperCase()}</span>
+            )}
+            {!isLast && <span className="text-gray-500 mx-1">/</span>}
+          </span>
+        );
+      })}
+    </div>
+  </span>
+);
 
 export const AssetCategoryRow = memo<AssetCategoryRowProps>(
   ({
@@ -194,12 +263,30 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center space-x-2">
+                              <ImageWithFallback
+                                src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${protocol.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.webp`}
+                                alt={`${protocol.name} logo`}
+                                fallbackType="project"
+                                symbol={protocol.name}
+                                size={16}
+                                className="flex-shrink-0 max-sm:!w-[14px] max-sm:!h-[14px]"
+                              />
                               <span className="font-medium text-white text-sm">
                                 {protocol.name}
                               </span>
-                              <span className="text-xs px-2 py-1 rounded-full bg-blue-800/30 text-blue-200">
-                                {protocol.chain}
-                              </span>
+                              <div
+                                className="flex items-center justify-center px-2 py-1 rounded-full bg-blue-800/30"
+                                title={protocol.chain}
+                              >
+                                <ImageWithFallback
+                                  src={`https://zap-assets-worker.davidtnfsh.workers.dev/chainPicturesWebp/${protocol.chain.toLowerCase()}.webp`}
+                                  alt={`${protocol.chain} chain`}
+                                  fallbackType="chain"
+                                  symbol={protocol.chain}
+                                  size={14}
+                                  className="flex-shrink-0 max-sm:!w-[12px] max-sm:!h-[12px]"
+                                />
+                              </div>
                               {/* APR Confidence Indicator */}
                               {protocol.aprConfidence && (
                                 <span
@@ -245,16 +332,18 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                               {/* Pool Composition */}
                               {protocol.poolSymbols &&
                                 protocol.poolSymbols.length > 0 && (
-                                  <span>
-                                    Pool: {protocol.poolSymbols.join("/")}
-                                  </span>
+                                  <TokenSymbolsList
+                                    tokens={protocol.poolSymbols}
+                                    label="Pool"
+                                  />
                                 )}
                               {/* Target Tokens from strategies API */}
                               {protocol.targetTokens &&
                                 protocol.targetTokens.length > 0 && (
-                                  <span>
-                                    Targets: {protocol.targetTokens.join("/")}
-                                  </span>
+                                  <TokenSymbolsList
+                                    tokens={protocol.targetTokens}
+                                    label="Targets"
+                                  />
                                 )}
                             </div>
                           </div>

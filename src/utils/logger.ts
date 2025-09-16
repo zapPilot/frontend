@@ -114,19 +114,15 @@ class Logger {
 
       switch (level) {
         case LogLevel.DEBUG:
-          // eslint-disable-next-line no-console
           console.debug(formattedMessage);
           break;
         case LogLevel.INFO:
-          // eslint-disable-next-line no-console
           console.info(formattedMessage);
           break;
         case LogLevel.WARN:
-          // eslint-disable-next-line no-console
           console.warn(formattedMessage);
           break;
         case LogLevel.ERROR:
-          // eslint-disable-next-line no-console
           console.error(formattedMessage);
           break;
       }
@@ -136,7 +132,7 @@ class Logger {
     if (this.config.enableRemote && this.config.remoteEndpoint) {
       this.sendToRemote(entry).catch(err => {
         // Fallback to console if remote fails
-        // eslint-disable-next-line no-console
+
         console.error("Failed to send log to remote endpoint:", err);
       });
     }
