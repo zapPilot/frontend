@@ -35,10 +35,11 @@ export function WalletPortfolioPresenter({
     () => setBalanceHidden(prev => !prev),
     []
   );
+  const onToggleBalance = vm.onToggleBalance;
   const combinedToggle = useCallback(() => {
     toggleBalanceVisibility();
-    vm.onToggleBalance?.();
-  }, [toggleBalanceVisibility, vm.onToggleBalance]);
+    onToggleBalance?.();
+  }, [toggleBalanceVisibility, onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
