@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useBundlePage } from "../../../src/hooks/useBundlePage";
 
@@ -59,14 +59,22 @@ describe("useBundlePage", () => {
   });
 
   it("shows switch prompt when connected and viewing another user's bundle", async () => {
-    render(<Host userId="other" />);
-    expect(screen.getByTestId("switch-show")).toHaveTextContent("true");
-    expect(screen.getByTestId("quick-switch")).toHaveTextContent("true");
+    await act(async () => {
+      render(<Host userId="other" />);
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("quick-switch")).toHaveTextContent("true")
+    );
   });
 
   it("hides switch prompt if dismissed in localStorage", async () => {
     localStorage.setItem("dismissed-switch-other", "true");
-    render(<Host userId="other" />);
+    await act(async () => {
+      render(<Host userId="other" />);
+    });
     // Allow state to settle; if still visible due to environment timing, trigger onStay
     try {
       await waitFor(() =>
@@ -74,7 +82,9 @@ describe("useBundlePage", () => {
       );
     } catch {
       // Fallback: manually hide via onStay to ensure UI matches dismissal intent
-      screen.getByText("stay").click();
+      await act(async () => {
+        screen.getByText("stay").click();
+      });
       await waitFor(() =>
         expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
       );
@@ -86,7 +96,10 @@ describe("useBundlePage", () => {
       userInfo: { userId: "me" },
       isConnected: false,
     });
-    render(<Host userId="me" />);
+    await act(async () => {
+      render(<Host userId="me" />);
+    });
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
     const arg = mockReplace.mock.calls[0]?.[0];
     expect(arg).toMatch(/^\/(\?foo=bar)?$/);
   });
@@ -96,13 +109,19 @@ describe("useBundlePage", () => {
       userInfo: { userId: "me", email: undefined },
       isConnected: true,
     });
-    render(<Host userId="me" />);
-    expect(screen.getByTestId("email-banner")).toHaveTextContent("true");
+    await act(async () => {
+      render(<Host userId="me" />);
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("email-banner")).toHaveTextContent("true")
+    );
   });
 
   it("sets bundleNotFound when getBundleUser returns null", async () => {
     mockGetBundleUser.mockResolvedValueOnce(null);
-    render(<Host userId="ghost" />);
+    await act(async () => {
+      render(<Host userId="ghost" />);
+    });
     await waitFor(() =>
       expect(screen.getByTestId("bundle-not-found")).toHaveTextContent("true")
     );
@@ -110,8 +129,12 @@ describe("useBundlePage", () => {
 
   it("switchPrompt.onStay hides prompt (and persists dismissal)", async () => {
     const user = userEvent.setup();
-    render(<Host userId="other" />);
-    expect(screen.getByTestId("switch-show")).toHaveTextContent("true");
+    await act(async () => {
+      render(<Host userId="other" />);
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
+    );
     await user.click(screen.getByText("stay"));
     await waitFor(() =>
       expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
@@ -124,17 +147,29 @@ describe("useBundlePage", () => {
       userInfo: { userId: "me", email: undefined },
       isConnected: true,
     });
-    const { unmount } = render(<Host userId="me" />);
+    let unmount: () => void;
+    await act(async () => {
+      const res = render(<Host userId="me" />);
+      unmount = res.unmount;
+    });
     // Dismiss path
-    expect(screen.getByTestId("email-banner")).toHaveTextContent("true");
+    await waitFor(() =>
+      expect(screen.getByTestId("email-banner")).toHaveTextContent("true")
+    );
     await user.click(screen.getByText("email-dismiss"));
     await waitFor(() =>
       expect(screen.getByTestId("email-banner")).toHaveTextContent("false")
     );
     // Subscribe + complete path (fresh mount to reset banner dismissal state)
-    unmount();
-    render(<Host userId="me" />);
-    expect(screen.getByTestId("email-banner")).toHaveTextContent("true");
+    await act(async () => {
+      unmount!();
+    });
+    await act(async () => {
+      render(<Host userId="me" />);
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId("email-banner")).toHaveTextContent("true")
+    );
     await user.click(screen.getByText("email-subscribe"));
     await user.click(screen.getByText("email-complete"));
     await waitFor(() =>
