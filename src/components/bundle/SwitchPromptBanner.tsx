@@ -7,13 +7,20 @@ interface SwitchPromptBannerProps {
   onSwitch: () => void;
 }
 
-export function SwitchPromptBanner({ show, onStay, onSwitch }: SwitchPromptBannerProps) {
+export function SwitchPromptBanner({
+  show,
+  onStay,
+  onSwitch,
+}: SwitchPromptBannerProps) {
   if (!show) return null;
   return (
-    <div className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}>
+    <div
+      className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}
+    >
       <div className="rounded-lg border border-indigo-500/30 bg-indigo-950/40 backdrop-blur px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="text-sm">
-          You&apos;re viewing another user&apos;s bundle. Switch to your own bundle?
+          You&apos;re viewing another user&apos;s bundle. Switch to your own
+          bundle?
         </div>
         <div className="flex gap-2 justify-end">
           <button
@@ -34,4 +41,3 @@ export function SwitchPromptBanner({ show, onStay, onSwitch }: SwitchPromptBanne
     </div>
   );
 }
-

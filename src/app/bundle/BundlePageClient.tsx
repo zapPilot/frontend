@@ -29,28 +29,31 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   const vm = useBundlePage(userId);
 
   // Header banners (switch prompt + email banner)
-  const headerBanners = useMemo(() => (
-    <>
-      <SwitchPromptBanner
-        show={vm.switchPrompt.show}
-        onStay={vm.switchPrompt.onStay}
-        onSwitch={vm.switchPrompt.onSwitch}
-      />
-      {vm.emailBanner.show && (
-        <EmailReminderBanner
-          onSubscribe={vm.emailBanner.onSubscribe}
-          onDismiss={vm.emailBanner.onDismiss}
+  const headerBanners = useMemo(
+    () => (
+      <>
+        <SwitchPromptBanner
+          show={vm.switchPrompt.show}
+          onStay={vm.switchPrompt.onStay}
+          onSwitch={vm.switchPrompt.onSwitch}
         />
-      )}
-    </>
-  ), [
-    vm.switchPrompt.show,
-    vm.emailBanner.show,
-    vm.switchPrompt.onStay,
-    vm.switchPrompt.onSwitch,
-    vm.emailBanner.onSubscribe,
-    vm.emailBanner.onDismiss,
-  ]);
+        {vm.emailBanner.show && (
+          <EmailReminderBanner
+            onSubscribe={vm.emailBanner.onSubscribe}
+            onDismiss={vm.emailBanner.onDismiss}
+          />
+        )}
+      </>
+    ),
+    [
+      vm.switchPrompt.show,
+      vm.emailBanner.show,
+      vm.switchPrompt.onStay,
+      vm.switchPrompt.onSwitch,
+      vm.emailBanner.onSubscribe,
+      vm.emailBanner.onDismiss,
+    ]
+  );
 
   // Footer overlays (quick switch FAB + wallet manager modal)
   const footerOverlays = (

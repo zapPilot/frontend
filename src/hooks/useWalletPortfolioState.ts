@@ -99,7 +99,6 @@ export function useWalletPortfolioState(
     hasZeroData,
   });
 
-
   // Wallet manager modal controls
   const {
     isOpen: isWalletManagerOpen,
