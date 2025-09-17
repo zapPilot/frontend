@@ -1,15 +1,16 @@
-import { Z_INDEX } from "@/constants/design-system";
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
-import React, { useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import React, { useCallback, useRef, useState } from "react";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { WalletMetricsSkeleton } from "../ui/LoadingState";
 import { BalanceLoading } from "../ui/UnifiedLoading";
+import { WelcomeNewUser } from "./WelcomeNewUser";
+import { ROITooltip } from "./ROITooltip";
 
 interface WalletMetricsProps {
   portfolioState: PortfolioState;
@@ -20,102 +21,7 @@ interface WalletMetricsProps {
   landingPageData?: LandingPageResponse | null | undefined;
 }
 
-interface WelcomeNewUserProps {
-  onGetStarted?: () => void;
-}
-
-function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
-  return (
-    <div className="flex flex-col space-y-4 p-6 rounded-lg bg-purple-900/20 border border-purple-600/30 backdrop-blur-sm">
-      <div className="flex items-center space-x-3 text-purple-400">
-        <div className="p-2 bg-purple-600/20 rounded-lg">
-          <div className="w-6 h-6 text-purple-400">✨</div>
-        </div>
-        <div>
-          <h3 className="font-semibold text-lg text-white">
-            Welcome to Zap Pilot!
-          </h3>
-          <p className="text-sm text-purple-300">
-            Ready to start your DeFi journey?
-          </p>
-        </div>
-      </div>
-
-      <p className="text-sm text-gray-300 leading-relaxed">
-        Connect your wallet to create your personalized portfolio and explore
-        automated yield strategies across multiple DeFi protocols. Start
-        optimizing your crypto investments today!
-      </p>
-
-      <div className="flex flex-col sm:flex-row gap-3 pt-2">
-        <button
-          onClick={onGetStarted}
-          className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105"
-        >
-          Get Started
-        </button>
-        <button className="px-4 py-2 border border-purple-500/50 hover:border-purple-400 text-purple-300 hover:text-purple-200 font-medium rounded-lg transition-colors">
-          Learn More
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Removed unused types and functions - now using direct API response structure
-
-const deriveRoiWindowSortScore = (key: string) => {
-  const period = key.replace(/^roi_/, "");
-  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
-  if (!match) {
-    return Number.MAX_SAFE_INTEGER;
-  }
-
-  const [, amountStr, unit] = match;
-  const amount = Number(amountStr);
-  if (!Number.isFinite(amount)) {
-    return Number.MAX_SAFE_INTEGER;
-  }
-
-  switch (unit) {
-    case "d":
-      return amount;
-    case "w":
-      return amount * 7;
-    case "m":
-      return amount * 30;
-    case "y":
-      return amount * 365;
-    default:
-      return Number.MAX_SAFE_INTEGER;
-  }
-};
-
-const formatRoiWindowLabel = (key: string) => {
-  const period = key.replace(/^roi_/, "");
-  if (period === "all") {
-    return "All time";
-  }
-
-  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
-  if (!match) {
-    return period;
-  }
-
-  const [, amount, unit] = match;
-  switch (unit) {
-    case "d":
-      return `${amount} days`;
-    case "w":
-      return `${amount} weeks`;
-    case "m":
-      return `${amount} months`;
-    case "y":
-      return `${amount} years`;
-    default:
-      return period;
-  }
-};
+// Removed unused types and functions - using ROI helpers from lib
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
@@ -138,7 +44,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     }>({ top: 0, left: 0 });
     const infoIconRef = useRef<HTMLSpanElement | null>(null);
 
-    const openRoiTooltip = () => {
+    const openRoiTooltip = useCallback(() => {
       const el = infoIconRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -147,8 +53,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         left: rect.left + rect.width / 2 + window.scrollX,
       });
       setRoiTooltipVisible(true);
-    };
-    const closeRoiTooltip = () => setRoiTooltipVisible(false);
+    }, []);
+    const closeRoiTooltip = useCallback(() => setRoiTooltipVisible(false), []);
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -351,61 +257,18 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 </span>
-                {roiTooltipVisible &&
-                  createPortal(
-                    <div
-                      onMouseEnter={openRoiTooltip}
-                      onMouseLeave={closeRoiTooltip}
-                      style={{
-                        position: "fixed",
-                        top: roiTooltipPos.top,
-                        left: roiTooltipPos.left,
-                        transform: "translateX(-50%)",
-                      }}
-                      className={`bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700 ${Z_INDEX.TOOLTIP}`}
-                    >
-                      <div className="font-semibold text-gray-200 mb-2 text-center">
-                        📊 Portfolio ROI Estimation
-                      </div>
-
-                      {portfolioROI?.recommended_period && (
-                        <div className="text-gray-300 text-xs mb-2 text-center">
-                          Based on{" "}
-                          {portfolioROI.recommended_period.replace("roi_", "")}{" "}
-                          performance data
-                        </div>
-                      )}
-
-                      {/* ROI Windows */}
-                      {roiWindows.length > 0 && (
-                        <div className="mb-3 p-2 bg-gray-800 rounded">
-                          <div className="text-gray-300 font-medium mb-2">
-                            ROI by Time Period
-                          </div>
-                          {roiWindows.map(entry => (
-                            <div
-                              key={entry.key}
-                              className="flex justify-between text-gray-300 mb-1 last:mb-0"
-                            >
-                              <span>
-                                {entry.label} ({entry.dataPoints} data points)
-                              </span>
-                              <span>{entry.value.toFixed(2)}%</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Methodology Note */}
-                      <div className="text-gray-400 text-xs leading-relaxed border-t border-gray-700 pt-2">
-                        💡 <strong>Methodology:</strong> ROI estimates use
-                        recent performance windows and scale linearly to yearly
-                        projections. Estimates become more accurate as data
-                        points increase over time.
-                      </div>
-                    </div>,
-                    document.body
-                  )}
+                {roiTooltipVisible && (
+                  <ROITooltip
+                    position={roiTooltipPos}
+                    windows={roiWindows}
+                    recommendedPeriodLabel={
+                      portfolioROI?.recommended_period?.replace("roi_", "") ||
+                      null
+                    }
+                    onMouseEnter={openRoiTooltip}
+                    onMouseLeave={closeRoiTooltip}
+                  />
+                )}
               </div>
             )}
           </div>
