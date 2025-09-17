@@ -62,6 +62,119 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
   );
 }
 
+type PortfolioRoiWindow = {
+  value: number;
+  data_points: number;
+};
+
+type RoiWindowEntry = {
+  key: string;
+  label: string;
+  value: number;
+  dataPoints: number;
+};
+
+const ROI_WINDOW_PREFIX = "roi_";
+
+const isPortfolioRoiWindow = (value: unknown): value is PortfolioRoiWindow => {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<PortfolioRoiWindow>;
+  return (
+    typeof candidate.value === "number" &&
+    typeof candidate.data_points === "number"
+  );
+};
+
+const deriveRoiWindowSortScore = (key: string) => {
+  const period = key.replace(/^roi_/, "");
+  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
+  if (!match) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const [, amountStr, unit] = match;
+  const amount = Number(amountStr);
+  if (!Number.isFinite(amount)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  switch (unit) {
+    case "d":
+      return amount;
+    case "w":
+      return amount * 7;
+    case "m":
+      return amount * 30;
+    case "y":
+      return amount * 365;
+    default:
+      return Number.MAX_SAFE_INTEGER;
+  }
+};
+
+const formatRoiWindowLabel = (key: string) => {
+  const period = key.replace(/^roi_/, "");
+  if (period === "all") {
+    return "All time";
+  }
+
+  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
+  if (!match) {
+    return period;
+  }
+
+  const [, amount, unit] = match;
+  switch (unit) {
+    case "d":
+      return `${amount} days`;
+    case "w":
+      return `${amount} weeks`;
+    case "m":
+      return `${amount} months`;
+    case "y":
+      return `${amount} years`;
+    default:
+      return period;
+  }
+};
+
+const buildRoiWindowEntries = (
+  roi?: LandingPageResponse["portfolio_roi"]
+): RoiWindowEntry[] => {
+  if (!roi) {
+    return [];
+  }
+
+  const entries: Array<RoiWindowEntry & { sortScore: number }> = [];
+
+  for (const [key, value] of Object.entries(roi)) {
+    if (!key.startsWith(ROI_WINDOW_PREFIX) || key === "roi_windows") {
+      continue;
+    }
+
+    if (isPortfolioRoiWindow(value)) {
+      entries.push({
+        key,
+        label: formatRoiWindowLabel(key),
+        value: value.value,
+        dataPoints: value.data_points,
+        sortScore: deriveRoiWindowSortScore(key),
+      });
+    }
+  }
+
+  return entries
+    .sort((a, b) => a.sortScore - b.sortScore)
+    .map(entry => {
+      const { sortScore, ...rest } = entry;
+      void sortScore;
+      return rest;
+    });
+};
+
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
     portfolioState,
@@ -114,6 +227,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
 
     const roiWindows = portfolioROI;
+    const roiWindowEntries = buildRoiWindowEntries(roiWindows);
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -293,42 +407,22 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                       </div>
 
                       {/* ROI Windows */}
-                      {roiWindows && (
+                      {roiWindowEntries.length > 0 && (
                         <div className="mb-3 p-2 bg-gray-800 rounded">
                           <div className="text-gray-300 font-medium mb-2">
                             ROI by Time Period
                           </div>
-                          {roiWindows.roi_7d && (
-                            <div className="flex justify-between text-gray-300 mb-1">
+                          {roiWindowEntries.map(entry => (
+                            <div
+                              key={entry.key}
+                              className="flex justify-between text-gray-300 mb-1 last:mb-0"
+                            >
                               <span>
-                                7 days ({roiWindows.roi_7d.data_points} data
-                                points)
+                                {entry.label} ({entry.dataPoints} data points)
                               </span>
-                              <span>{roiWindows.roi_7d.value.toFixed(2)}%</span>
+                              <span>{entry.value.toFixed(2)}%</span>
                             </div>
-                          )}
-                          {roiWindows.roi_30d && (
-                            <div className="flex justify-between text-gray-300 mb-1">
-                              <span>
-                                30 days ({roiWindows.roi_30d.data_points} data
-                                points)
-                              </span>
-                              <span>
-                                {roiWindows.roi_30d.value.toFixed(2)}%
-                              </span>
-                            </div>
-                          )}
-                          {roiWindows.roi_365d && (
-                            <div className="flex justify-between text-gray-300">
-                              <span>
-                                365 days ({roiWindows.roi_365d.data_points} data
-                                points)
-                              </span>
-                              <span>
-                                {roiWindows.roi_365d.value.toFixed(2)}%
-                              </span>
-                            </div>
-                          )}
+                          ))}
                         </div>
                       )}
 

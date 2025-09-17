@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import {
   BundleUser,
@@ -41,30 +41,41 @@ export interface UseBundlePageResult {
 export function useBundlePage(userId: string): UseBundlePageResult {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
-  const [showSwitchPrompt, setShowSwitchPrompt] = useState(false);
-  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] = useState(false);
+  const initialDismissed =
+    typeof window !== "undefined" && userId
+      ? localStorage.getItem(`dismissed-switch-${userId}`) === "true"
+      : false;
+  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] =
+    useState<boolean>(initialDismissed);
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
-
-  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
-  const bundleUrl = generateBundleUrl(userId);
-  const showQuickSwitch = Boolean(
-    isConnected && !isOwnBundle && userInfo?.userId
+  const isDifferentUser = Boolean(
+    isConnected && userInfo?.userId && userInfo.userId !== userId
   );
-  const showEmailBanner = Boolean(
-    isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed
+  const [showSwitchPrompt, setShowSwitchPrompt] = useState<boolean>(
+    isDifferentUser && !initialDismissed
   );
 
-  // Local storage sync: dismissed switch prompt
-  useEffect(() => {
-    if (typeof window !== "undefined" && userId) {
-      const dismissed =
-        localStorage.getItem(`dismissed-switch-${userId}`) === "true";
-      setDismissedSwitchPrompt(dismissed);
-    }
-  }, [userId]);
+  const isOwnBundle = useMemo(
+    () => isBundleOwned(userId, userInfo?.userId),
+    [userId, userInfo?.userId]
+  );
+  const bundleUrl = useMemo(() => generateBundleUrl(userId), [userId]);
+  const showQuickSwitch = useMemo(
+    () => Boolean(isConnected && !isOwnBundle && userInfo?.userId),
+    [isConnected, isOwnBundle, userInfo?.userId]
+  );
+  const showEmailBanner = useMemo(
+    () =>
+      Boolean(
+        isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed
+      ),
+    [isConnected, isOwnBundle, userInfo?.email, emailBannerDismissed]
+  );
+
+  // Local storage sync eliminated via lazy initializer above
 
   // Load bundle user info
   useEffect(() => {
@@ -89,7 +100,7 @@ export function useBundlePage(userId: string): UseBundlePageResult {
     loadBundleUser();
   }, [userId]);
 
-  // Redirect when disconnected from own bundle
+  // Redirect when disconnected from own bundle + switch prompt visibility
   useEffect(() => {
     const ownsBundle = userInfo?.userId === userId;
     if (!isConnected && ownsBundle) {
@@ -98,19 +109,16 @@ export function useBundlePage(userId: string): UseBundlePageResult {
       const newUrl = `/${queryString ? `?${queryString}` : ""}`;
       router.replace(newUrl);
     }
-  }, [isConnected, userInfo?.userId, userId, router]);
 
-  // Switch prompt visibility
-  useEffect(() => {
-    const isDifferentUser = Boolean(
-      isConnected && userInfo?.userId && userInfo.userId !== userId
-    );
-    if (isDifferentUser && !dismissedSwitchPrompt) {
-      setShowSwitchPrompt(true);
-    } else {
-      setShowSwitchPrompt(false);
-    }
-  }, [isConnected, userInfo?.userId, userId, dismissedSwitchPrompt]);
+    setShowSwitchPrompt(isDifferentUser && !dismissedSwitchPrompt);
+  }, [
+    isConnected,
+    userInfo?.userId,
+    userId,
+    dismissedSwitchPrompt,
+    isDifferentUser,
+    router,
+  ]);
 
   const handleSwitchToMyBundle = useCallback(() => {
     if (!userInfo?.userId) return;
