@@ -75,7 +75,9 @@ vi.mock("../../../src/lib/http-utils", () => ({
       this.name = "TimeoutError";
     }
   },
-  handleHTTPError: vi.fn().mockReturnValue("Mock HTTP error"),
+  handleHTTPError: vi
+    .fn()
+    .mockReturnValue("An unexpected error occurred. Please try again."),
 }));
 
 // No longer needed - userService now uses handleHTTPError from http-utils
@@ -320,6 +322,9 @@ describe("userService - Pure Functions", () => {
         "Invalid wallet address format. Address must be 42 characters long.",
         400
       );
+      // Ensure the error has the correct name property
+      expect(accountError.name).toBe("AccountServiceError");
+
       const result = handleWalletError(accountError);
       expect(result).toBe(
         "Invalid wallet address format. Address must be 42 characters long."
@@ -365,12 +370,12 @@ describe("userService - Pure Functions", () => {
     it("falls back to generic error handling for non-AccountApiError", () => {
       const genericError = new Error("Network connection failed");
       const result = handleWalletError(genericError);
-      expect(result).toBe("Mock HTTP error");
+      expect(result).toBe("An unexpected error occurred. Please try again.");
     });
 
     it("handles unknown error types", () => {
       const result = handleWalletError("string error");
-      expect(result).toBe("Mock HTTP error");
+      expect(result).toBe("An unexpected error occurred. Please try again.");
     });
   });
 

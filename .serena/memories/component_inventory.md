@@ -5,33 +5,44 @@
 ### **Button Components**
 
 - **`GradientButton`** - Primary action button with gradient styling and loading states
-- **`ActionButton`** - ✅ CONSOLIDATED: Now uses GradientButton internally with enhanced animations
+- **`LoadingButton`** - Button with integrated loading spinner and disabled states
+- **`TabButton`** - Navigation tab button with active state styling
 
 ### **Layout Components**
 
 - **`GlassCard`** - Glass morphism container with backdrop blur effects
-- **`AnimatedContainer`** - Motion wrapper with preset animation variants
-- **`FadeInUp`**, **`FadeInScale`**, **`StaggerContainer`** - Animation convenience components
+- **`LoadingCard`** - Card component with skeleton loading animation
+- **`EmptyStateCard`** - Empty state display with icon and message
+- **`ErrorStateCard`** - Error state display with retry functionality
 
 ### **Data Display Components**
 
 - **`APRMetrics`** - Annual percentage return display with styling variants
 - **`ToastNotification`** - Success/error notification system with auto-dismiss
+- **`LoadingSkeleton`** - Skeleton loading animation for content placeholders
+- **`UnifiedLoading`** - Centralized loading state management
+- **`LoadingState`** - Generic loading indicator component
+
+### **Utility Components**
+
+- **`Portal`** - React portal for modal and overlay rendering
+- **`WalletConnectionPrompt`** - Prompt for wallet connection
+- **`BundleNotFound`** - Error page for invalid bundle URLs
 
 ## 📊 Chart & Visualization (`src/components/`)
 
 ### **Chart Components**
 
-- **`PieChart`** + **`PieChartLegend`** - Interactive pie chart with click handlers
+- **`PieChart`** - Interactive pie chart with click handlers and legend
 - **`PortfolioChart`** - Multi-tab chart (performance, allocation, drawdown)
 - **`PortfolioCharts`** (in PortfolioAllocation) - Feature-specific chart container
-- **`PerformanceTrendChart`** - ✅ NEW: Historical APR trend chart with category filtering support,
+- **`PerformanceTrendChart`** - Historical APR trend chart with category filtering support,
   SVG-based, mobile-responsive with interactive tooltips
 
 ### **Data Tables**
 
 - **`AssetCategoriesDetail`** - Detailed asset breakdown with balance hiding
-- **`CategoryRow`** - Expandable row showing protocols and allocations
+- **`CategoryItem`** - Individual category display component
 
 ## 🔗 Web3 Components (`src/components/Web3/`)
 
@@ -42,34 +53,37 @@
 
 ### **Chain Management**
 
-- **`ChainSwitcher`** - ✅ ACTIVE: Canonical chain switching component (simple, effective,
-  production-ready)
-- ~~**`ChainSelector`**~~ - ❌ REMOVED: Unused over-engineered alternative (500 lines eliminated)
+- **`ChainSwitcher`** - Canonical chain switching component (simple, effective, production-ready)
 
 ## 🏦 Portfolio Management (`src/components/PortfolioAllocation/`)
 
 ### **Core Portfolio Components**
 
 - **`PortfolioAllocationContainer`** - Main feature container orchestrating portfolio logic
-- **`EnhancedOverview`** - ✅ ENHANCED: Comprehensive portfolio overview with performance trend
-  chart, premium UI animations, and multi-data views
+- **`EnhancedOverview`** - Comprehensive portfolio overview with performance trend chart, premium UI
+  animations, and multi-data views
 
 ### **Control Components**
 
 - **`SwapControls`** - Token selection, amount input, and validation
-- **`SlippageComponent`** - ✅ CONSOLIDATED: Unified slippage configuration with context-aware
-  behavior (replaces SlippageSettings + SlippageSelector)
-- **`TokenSelector`** - Token selection dropdown with search
-- **`ValidationMessages`** - Form validation error/warning display
-- **`AmountInput`** - ✅ NEW: Modular amount input with balance display, max buttons, and operation
-  mode support (extracted from SwapControls and ActionCenter)
+- **`SlippageComponent`** - Unified slippage configuration with context-aware behavior
+- **`AmountButtons`** - Quick percentage amount selection (25%, 50%, 75%, 100%)
 
 ### **Display Components**
 
 - **`OverviewHeader`** - Portfolio summary header with metrics
 - **`CategoryListSection`** - Asset category listing and management
+- **`CategoryRow`** - Expandable row showing protocols and allocations
+- **`CategoryRowHeader`** - Category section headers
+- **`CategoryAllocationSummary`** - Category allocation overview
+- **`CategoryProtocolList`** - Protocol listings within categories
 - **`RebalanceSummary`** - Rebalancing action summary and preview
 - **`ExcludedCategoriesChips`** - Visual tags for excluded categories
+
+### **Action Components**
+
+- **`ActionsAndControls`** - Main action interface
+- **`ActionCenter`** - Centralized action management
 
 ## 💱 Trading & Swap (`src/components/SwapPage/`)
 
@@ -78,40 +92,36 @@
 - **`SwapPage`** - Main swap interface container
 - **`SwapTab`** - Basic token swapping interface
 - **`OptimizeTab`** - Portfolio optimization and dust conversion
+- **`SwapPageHeader`** - Swap page navigation with back button
 
 ### **Trading Controls**
 
-- **`AmountButtons`** - Quick percentage amount selection (25%, 50%, 75%, 100%)
 - **`TabNavigation`** - Operation mode switching (swap, optimize)
+- **`OptimizationSelector`** - Optimization options selector
 
 ### **Progress & Status**
 
-- **`UnifiedProgressModal`** - ✅ ACTIVE IN PRODUCTION: Mode-based progress modal supporting
-  'intent' and 'optimization' workflows (replaced IntentProgressModal + OptimizationProgress).
-  Currently used in SwapTab.tsx.
-- **`StreamingProgress`** - Real-time operation progress display with technical details (inline
-  component)
-- **`WalletTransactionProgress`** - Wallet transaction batch progress (inline component)
+- **`UnifiedProgressModal`** - Mode-based progress modal supporting 'intent' and 'optimization'
+  workflows, currently used in production
+- **`StreamingProgress`** - Real-time operation progress display with technical details
+- **`WalletTransactionProgress`** - Wallet transaction batch progress
 
 ### **Data Components**
 
 - **`TradingSummary`** - Transaction summary with technical details
 - **`EventsList`** - Trading event log with impact calculations
 - **`OptimizationPreview`** - Preview of optimization actions
-- **`OptimizationSelector`** - ✅ DISTINCT: Optimization options selector (not a duplicate of
-  TokenSelector - different purpose)
 
 ## 🧭 Navigation & Layout (`src/components/`)
 
-### **Navigation Components**
+### **Core Layout**
 
+- **`DashboardShell`** - Main application shell with navigation
 - **`Navigation`** - Main tab-based navigation system
-- **`SwapPageHeader`** - Swap page navigation with back button
 
 ### **Tab Components**
 
-- **`AnalyticsTab`** - ✅ ENHANCED: Analytics and metrics dashboard with integrated pool performance
-  analytics
+- **`AnalyticsTab`** - Analytics and metrics dashboard with integrated pool performance analytics
 - **`AirdropTab`** - Token airdrop information and eligibility
 - **`CommunityTab`** - Community links and engagement
 - **`SettingsTab`** - Application settings and configuration
@@ -123,10 +133,10 @@
 
 ## 📊 Pool Analytics (`src/components/PoolAnalytics/`)
 
-### **Pool Performance Components** ✅ NEW (2025)
+### **Pool Performance Components**
 
-- **`PoolPerformanceTable`** - ✅ NEW: Comprehensive pool analytics table with sorting, filtering,
-  and underperforming pool identification
+- **`PoolPerformanceTable`** - Comprehensive pool analytics table with sorting, filtering, and
+  underperforming pool identification
   - **Purpose**: Display detailed pool performance metrics from APR API endpoint
   - **Features**: Sortable columns (APR, value, contribution, protocol), mobile-responsive cards,
     visual status indicators
@@ -137,22 +147,17 @@
 
 ## 🌟 Analytics & Community Support (`src/components/MoreTab/`)
 
-### **Shared Components**
+### **Analytics Components**
+
+- **`AnalyticsDashboard`** - Advanced analytics visualization
+- **`KeyMetricsGrid`** - Grid layout for key metrics
+- **`KeyMetricCard`** - Individual metric card display
+
+### **Community Components**
 
 - **`SocialLinks`** - Social media and external links
 - **`PodcastSection`** - Podcast links and media
-- **`AnalyticsDashboard`** - Advanced analytics visualization
 - **`CommunityStats`** - Community metrics and statistics
-
-These legacy-named components support the Analytics and Community tabs.
-
-## 🎓 Onboarding (`src/components/Onboarding/`)
-
-### **Guidance Components**
-
-- **`TooltipHint`** - Contextual hints with positioning
-- **`WalletConnectHint`**, **`ChainSwitchHint`**, **`NavigationHint`** - Pre-configured guidance
-- **`MobileNavigationHint`** - Mobile-specific navigation guidance
 
 ## 🔧 Utility Components (`src/components/shared/`)
 
@@ -161,12 +166,68 @@ These legacy-named components support the Analytics and Community tabs.
 - **`ImageWithFallback`** - Robust image loading with fallback strategies
 - **`TokenImage`** - Token logo display with symbol fallbacks
 
+### **Interface Components**
+
+- **`SlippageComponent`** - Slippage tolerance configuration
+- **`UnifiedProgressModal`** - Universal progress modal for operations
+
 ### **Portfolio Display**
 
-- **`WalletPortfolio`** - ✅ ENHANCED: Main portfolio overview with balance controls and integrated
-  APR data
+- **`WalletPortfolio`** - Main portfolio overview with balance controls and integrated APR data
 - **`PortfolioOverview`** - Portfolio summary with category expansion
+
+## 🏦 Wallet Management (`src/components/WalletManager/`)
+
+### **Core Components**
+
 - **`WalletManager`** - Multi-wallet management interface
+- **`WalletManagerSkeleton`** - Loading skeleton for wallet manager
+
+### **Wallet Display**
+
+- **`WalletCard`** - Individual wallet card display
+- **`WalletList`** - List of user wallets
+- **`WalletActionMenu`** - Wallet action dropdown menu
+
+### **Wallet Operations**
+
+- **`AddWalletForm`** - Form for adding new wallets
+- **`EditWalletModal`** - Modal for editing wallet details
+- **`EmailSubscription`** - Email notification subscription
+
+### **Wallet Info Components**
+
+- **`WalletActions`** - Wallet-specific action buttons
+- **`WalletHeader`** - Wallet overview header
+- **`WalletMetrics`** - Wallet performance metrics
+- **`WalletPortfolioPresenter`** - Wallet portfolio presentation
+- **`WelcomeNewUser`** - New user onboarding
+- **`ROITooltip`** - ROI information tooltip
+
+## 🎁 Bundle Sharing (`src/components/bundle/`)
+
+### **Bundle Components**
+
+- **`SwitchPromptBanner`** - Banner for switching between bundles
+- **`QuickSwitchFAB`** - Floating action button for quick bundle switching
+
+## 🔧 Error Handling (`src/components/errors/`)
+
+### **Error Components**
+
+- **`ErrorBoundary`** - React error boundary wrapper
+- **`AsyncErrorBoundary`** - Async operation error boundary
+- **`GlobalErrorHandler`** - Application-wide error handling
+
+## 🐛 Debug Components (`src/components/debug/`)
+
+### **Debug Tools**
+
+- **`LogViewer`** - Development log viewing interface
+
+## 📱 Notification Components
+
+- **`EmailReminderBanner`** - Email subscription reminder banner
 
 ## 🎣 Custom Hooks Inventory (`src/hooks/`)
 
@@ -174,38 +235,34 @@ These legacy-named components support the Analytics and Community tabs.
 
 - **`useWallet`** - Wallet connection and state management
 - **`useChain`** - Blockchain network management
-- **`useWalletConnection`** - Connection lifecycle management
+- **`useWalletModal`** - Wallet connection modal management
 - **`useWalletEvents`** - Wallet event monitoring
 
-### **Portfolio Hooks** ✅ CLEANED UP (2025)
+### **Portfolio Hooks**
 
 - **`usePortfolio`** - Portfolio data and calculations
-- **`useStrategyPortfolio`** - Strategy-specific portfolio logic
+- **`usePortfolioData`** - Portfolio data processing
+- **`usePortfolioState`** - Portfolio state management
+- **`usePortfolioTrends`** - Portfolio trend analysis
 - **`useDustZap`** - Dust token conversion functionality
 - **`useDustZapStream`** - Streaming dust conversion
-- **`useWalletPortfolioState`** - ✅ UPDATED: Consolidates wallet portfolio state with simplified
-  data dependencies
+- **`useWalletPortfolioState`** - Consolidates wallet portfolio state with simplified data
+  dependencies
+- **`useWalletPortfolioTransform`** - Portfolio data transformation
 
 ### **Query Hooks (`src/hooks/queries/`)**
 
-- **`usePortfolioQuery`** - Contains `usePortfolioDisplayData` (renamed from duplicate
-  `usePortfolioData`) and related portfolio query hooks
-
-### **APR & Analytics Hooks** ✅ NEW (2025)
-
-- **`usePortfolioAPR`** - ✅ NEW: Real-time APR data fetching with pool details
-  - **Purpose**: Fetch portfolio APR summary and individual pool performance data
-  - **Features**: React Query integration, automatic refetching, error handling, loading states
-  - **Integration**: Used in WalletMetrics for accurate Portfolio APR display and AnalyticsTab for
-    pool analytics
-  - **Technical**: Connects to `/api/v1/apr/portfolio/{userId}/summary` endpoint with caching and
-    retry logic
+- **`usePortfolioQuery`** - Portfolio data fetching with React Query
+- **`useUserQuery`** - User data fetching
+- **`useStrategiesQuery`** - Investment strategies data
 
 ### **Feature-Specific Hooks**
 
 - **`useToast`** - Toast notification system
-- **`useCancellableOperation`** - Async operation cancellation
-- **`useDropdown`** - ✅ CONSOLIDATED: Common dropdown state patterns (used by 5+ components)
+- **`useDropdown`** - Common dropdown state patterns
+- **`useRiskSummary`** - Risk assessment calculations
+- **`useBundlePage`** - Bundle page state management
+- **`useReducedMotion`** - Motion preference detection
 
 ### **PortfolioAllocation Hooks**
 
@@ -215,13 +272,23 @@ These legacy-named components support the Analytics and Community tabs.
 - **`useTargetChartData`** - Target allocation visualization
 - **`useChartDataTransforms`** - Chart data transformations
 - **`useCategoryFilters`** - Category filtering logic
+- **`usePortfolioAllocationViewModel`** - Main allocation view model
 
 ### **SwapPage Hooks**
 
 - **`useOptimizationData`** - Portfolio optimization logic
 - **`useWalletTransactions`** - Transaction batch management
 - **`useUIState`** - UI state management
-- **`useTokenState`** - Token selection and management
+- **`useTokenData`** - Token data management
+- **`useTokenFilters`** - Token filtering logic
+- **`useTokenActions`** - Token action handlers
+- **`useTokenManagement`** - Token management operations
+
+### **WalletManager Hooks**
+
+- **`useEmailSubscription`** - Email subscription management
+- **`useWalletOperations`** - Wallet CRUD operations
+- **`useDropdownMenu`** - Dropdown menu state management
 
 ## 🔍 Component Usage Patterns
 
@@ -230,8 +297,8 @@ These legacy-named components support the Analytics and Community tabs.
 - `GlassCard` - Layout container used throughout
 - `GradientButton` - Primary action button across features
 - `TokenImage` - Token display in multiple contexts
-- `AnimatedContainer` - Animation wrapper used widely
-- `AmountInput` - ✅ NEW: Reusable amount input across swap and portfolio features
+- `UnifiedProgressModal` - Progress tracking across operations
+- `SlippageComponent` - Slippage settings across trading features
 
 ### **Feature-Specific Components** (Single-use)
 
@@ -248,92 +315,34 @@ These legacy-named components support the Analytics and Community tabs.
 - Hook components encapsulate business logic
 - Utility components provide cross-cutting concerns
 
-## 🧹 Recent Cleanup (Component Consolidation)
+## 🧹 Architecture Benefits
 
 ### **Successfully Consolidated:**
 
-1. **SlippageComponent** - Unified slippage settings (eliminated SlippageSettings +
-   SlippageSelector)
-2. **UnifiedProgressModal** - Consolidated progress tracking (eliminated IntentProgressModal +
-   OptimizationProgress)
+1. **SlippageComponent** - Unified slippage settings
+2. **UnifiedProgressModal** - Consolidated progress tracking
 3. **useDropdown** - Common dropdown patterns (5+ components now use shared hook)
-4. **ChainSwitcher** - Canonical chain switching (eliminated unused ChainSelector - 500 lines
-   removed)
-5. **AmountInput** - ✅ NEW (2025): Modular amount input component (extracted from SwapControls and
-   ActionCenter duplicates)
-6. **usePortfolioData Hook Cleanup** - ✅ COMPLETED (2025): Eliminated duplicate hook names
-   - **Issue**: Two different `usePortfolioData` hooks causing confusion
-   - **Solution**: Removed wrapper hook `src/hooks/usePortfolioData.ts`, renamed query hook to
-     `usePortfolioDisplayData`
-   - **Benefits**: Clearer architecture, explicit data dependencies, reduced confusion
-   - **Impact**: Updated `useWalletPortfolioState` to use `usePortfolioDisplayData` directly with
-     `useUser` context
+4. **ChainSwitcher** - Canonical chain switching
 
 ### **Recent Additions:**
 
-1. **PerformanceTrendChart** - ✅ NEW (2025): Historical APR visualization for transaction decision
-   support
+1. **PerformanceTrendChart** - Historical APR visualization for transaction decision support
    - **Purpose**: Shows historical portfolio performance to aid zapin/zapout/rebalance decisions
    - **Features**: Category filtering integration, SVG-based custom charts, mobile-responsive design
    - **Integration**: Seamlessly integrated into EnhancedOverview between header and actions
-   - **Technical**: Uses existing chart utilities (generateSVGPath, generateAreaPath) for
-     consistency
-   - **UX**: Follows decision-making psychology: Current state → Historical context → Action
-     decision
 
-2. **AmountInput** - ✅ NEW (2025): Modular amount input for financial transactions
-   - **Purpose**: Unified amount input across all swap, zap, and rebalance operations
-   - **Features**: Operation mode-aware labels, currency symbol display, balance/portfolio info, max
-     buttons
-   - **Integration**: Extracted from duplicate code in SwapControls.tsx and ActionCenter.tsx
-   - **Technical**: Supports zapIn (token balance), zapOut/rebalance (portfolio value) modes
-   - **UX**: Consistent input experience across all financial operations
-
-3. **PoolPerformanceTable** - ✅ NEW (2025): Pool-level performance analytics with real APR data
+2. **PoolPerformanceTable** - Pool-level performance analytics with real APR data
    - **Purpose**: Display and analyze individual pool performance metrics to identify
      underperforming positions
    - **Features**: Real-time APR data, sortable table, mobile-responsive cards, visual performance
-     indicators, chain/protocol identification
+     indicators
    - **Integration**: Integrated into AnalyticsTab alongside existing performance charts
-   - **Technical**: Uses new APR API endpoint with React Query integration for caching and real-time
-     updates
-   - **UX**: Color-coded performance states, detailed pool information, contribution percentage
-     analysis
-
-4. **usePortfolioAPR Hook** - ✅ NEW (2025): Real APR data integration replacing hardcoded values
-   - **Purpose**: Fetch accurate portfolio-wide APR and individual pool performance data
-   - **Features**: React Query integration, automatic caching, error handling, monthly income
-     calculations
-   - **Integration**: Used in WalletMetrics for accurate Portfolio APR display and AnalyticsTab for
-     pool analytics
-   - **Technical**: Connects to `/api/v1/apr/portfolio/{userId}/summary` endpoint with optimized
-     query strategies
-   - **UX**: Real-time APR updates, accurate estimated monthly income, loading states
-
-### **API Integration Enhancements:**
-
-1. **WalletMetrics APR Enhancement** - ✅ ENHANCED (2025): Real APR data integration
-   - **Features**: Real Portfolio APR display, accurate Est.Yearly Income calculations, fallback to
-     default APR when API unavailable
-   - **Integration**: Seamless integration with existing loading/error states
-   - **UX**: More accurate financial projections based on actual pool performance
-
-2. **AnalyticsTab Pool Analytics** - ✅ ENHANCED (2025): Added pool-level performance analysis
-   - **Change**: Added comprehensive pool performance section with detailed analytics
-   - **Features**: Pool performance table, underperforming pool identification, sortable metrics,
-     mobile-responsive design
-   - **Integration**: Integrated alongside existing portfolio charts and analytics dashboard
-   - **UX**: Enhanced decision-making capabilities with pool-level insights
 
 ### **Architecture Benefits:**
 
-- **Reduced Duplication**: Eliminated 6 duplicate components/hooks
-- **Improved Consistency**: Unified patterns across features, consistent financial input experience
+- **Reduced Duplication**: Eliminated duplicate components/hooks
+- **Improved Consistency**: Unified patterns across features
 - **Better Maintainability**: Single source of truth for common functionality
-- **Cleaner Codebase**: 700+ lines of duplicate code removed
+- **Cleaner Codebase**: Significant code reduction through consolidation
 - **Enhanced Decision Support**: Users now have historical context for financial decisions
-- **Modular Financial Controls**: Reusable amount input component across all transaction types
 - **Real APR Data**: Accurate portfolio performance metrics replacing static calculations
-- **Pool-Level Analytics**: Granular performance insights for optimization decisions
-- **Simplified Hook Architecture**: Clear data flow with explicit dependencies and no naming
-  confusion
