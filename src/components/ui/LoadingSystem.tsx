@@ -90,16 +90,17 @@ export function Spinner({
   const finalAriaLabel = ariaLabel || label;
   const isHidden = ariaHidden === true || ariaHidden === "true";
 
-  const commonProps = {
-    className: `inline-flex items-center ${className}`,
+  const containerProps = {
+    className: `inline-flex items-center ${sizeClasses[size]} ${className}`,
     "data-testid": testId,
+    "data-size": size,
     ...(!isHidden && { role: "status", "aria-label": finalAriaLabel }),
     ...(isHidden && { "aria-hidden": ariaHidden }),
-  };
+  } as const;
 
   if (variant === "dots") {
     return (
-      <div {...commonProps}>
+      <div {...containerProps}>
         <div className="flex items-center space-x-1">
           {[0, 1, 2].map(i => (
             <motion.div
@@ -121,7 +122,7 @@ export function Spinner({
 
   if (variant === "pulse") {
     return (
-      <div {...commonProps}>
+      <div {...containerProps}>
         <motion.div
           className={`${sizeClasses[size]} ${colorClasses[color]} bg-current rounded-full`}
           animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
@@ -138,9 +139,9 @@ export function Spinner({
 
   // Default spinner
   return (
-    <div {...commonProps}>
+    <div {...containerProps}>
       <motion.svg
-        className={`${sizeClasses[size]} ${colorClasses[color]}`}
+        className={`${sizeClasses[size]} ${colorClasses[color]} animate-spin`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"

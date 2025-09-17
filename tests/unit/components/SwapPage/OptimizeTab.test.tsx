@@ -26,7 +26,10 @@ vi.mock("../../../../src/hooks/useDustZapStream", () => ({
 }));
 
 vi.mock("../../../../src/hooks/useToast", () => ({
-  useToast: vi.fn(() => ({ toast: vi.fn() })),
+  useToast: vi.fn(() => ({
+    showToast: vi.fn(),
+    hideToast: vi.fn(),
+  })),
 }));
 
 vi.mock(

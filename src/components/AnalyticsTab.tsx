@@ -8,7 +8,7 @@ import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
-import { LoadingSpinner } from "./ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui";
 
 // Import component props interface for proper typing
 import type { PortfolioChartProps } from "./PortfolioChart";

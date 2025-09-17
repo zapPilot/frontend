@@ -100,20 +100,17 @@ vi.mock("../../../src/components/ui", () => ({
       {children}
     </button>
   ),
+  LoadingSpinner: ({ size, color }: any) => (
+    <div data-testid="loading-spinner" data-size={size} data-color={color}>
+      Spinner
+    </div>
+  ),
 }));
 
 vi.mock("../../../src/components/ui/UnifiedLoading", () => ({
   UnifiedLoading: ({ "aria-label": ariaLabel }: any) => (
     <div data-testid="unified-loading" aria-label={ariaLabel}>
       Loading...
-    </div>
-  ),
-}));
-
-vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
-  LoadingSpinner: ({ size, color }: any) => (
-    <div data-testid="loading-spinner" data-size={size} data-color={color}>
-      Spinner
     </div>
   ),
 }));

@@ -6,7 +6,7 @@ import {
   LoadingSkeleton,
   MetricsSkeleton,
 } from "./LoadingSkeleton";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { LoadingSpinner } from "./LoadingSystem";
 
 export interface LoadingStateProps {
   variant?: "spinner" | "card" | "skeleton" | "inline";
