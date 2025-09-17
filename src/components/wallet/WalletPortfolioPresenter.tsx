@@ -24,12 +24,10 @@ const WalletManager: ComponentType<WalletManagerProps> = dynamic(
 
 interface WalletPortfolioPresenterProps {
   vm: WalletPortfolioViewModel;
-  onCategoryClick?: (categoryId: string) => void;
 }
 
 export function WalletPortfolioPresenter({
   vm,
-  onCategoryClick,
 }: WalletPortfolioPresenterProps) {
   return (
     <BalanceVisibilityProvider
@@ -81,7 +79,7 @@ export function WalletPortfolioPresenter({
             title="Asset Distribution"
             onRetry={vm.onRetry}
             testId="wallet-portfolio-overview"
-            {...(onCategoryClick && { onCategoryClick })}
+            {...(vm.onCategoryClick && { onCategoryClick: vm.onCategoryClick })}
           />
         </ErrorBoundary>
 
