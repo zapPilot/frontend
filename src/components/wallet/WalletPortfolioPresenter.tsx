@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ComponentType } from "react";
+import { ComponentType, useCallback, useState } from "react";
 import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { GlassCard } from "@/components/ui";
@@ -10,6 +10,7 @@ import { WalletMetrics } from "@/components/wallet/WalletMetrics";
 import { WalletActions } from "@/components/wallet/WalletActions";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
 import type { WalletManagerProps } from "@/components/WalletManager";
+import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
 import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
@@ -18,7 +19,7 @@ const WalletManager: ComponentType<WalletManagerProps> = dynamic(
       default: mod.WalletManager,
     })),
   {
-    loading: () => null,
+    loading: () => <WalletManagerSkeleton />,
   }
 );
 
@@ -29,11 +30,20 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   vm,
 }: WalletPortfolioPresenterProps) {
+  const [balanceHidden, setBalanceHidden] = useState(false);
+  const toggleBalanceVisibility = useCallback(
+    () => setBalanceHidden(prev => !prev),
+    []
+  );
+  const combinedToggle = useCallback(() => {
+    toggleBalanceVisibility();
+    vm.onToggleBalance?.();
+  }, [toggleBalanceVisibility, vm.onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
-        balanceHidden: vm.balanceHidden,
-        toggleBalanceVisibility: vm.toggleBalanceVisibility,
+        balanceHidden,
+        toggleBalanceVisibility,
       }}
     >
       <div className="space-y-6">
@@ -46,6 +56,7 @@ export function WalletPortfolioPresenter({
           <GlassCard>
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}
+              onToggleBalance={combinedToggle}
               isOwnBundle={vm.isOwnBundle}
               bundleUserName={vm.bundleUserName}
               bundleUrl={vm.bundleUrl}
@@ -75,7 +86,6 @@ export function WalletPortfolioPresenter({
             categorySummaries={vm.categorySummaries}
             debtCategorySummaries={vm.debtCategorySummaries}
             pieChartData={vm.pieChartData || []}
-            balanceHidden={vm.balanceHidden}
             title="Asset Distribution"
             onRetry={vm.onRetry}
             testId="wallet-portfolio-overview"
