@@ -62,6 +62,61 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
   );
 }
 
+// Removed unused types and functions - now using direct API response structure
+
+const deriveRoiWindowSortScore = (key: string) => {
+  const period = key.replace(/^roi_/, "");
+  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
+  if (!match) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const [, amountStr, unit] = match;
+  const amount = Number(amountStr);
+  if (!Number.isFinite(amount)) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  switch (unit) {
+    case "d":
+      return amount;
+    case "w":
+      return amount * 7;
+    case "m":
+      return amount * 30;
+    case "y":
+      return amount * 365;
+    default:
+      return Number.MAX_SAFE_INTEGER;
+  }
+};
+
+const formatRoiWindowLabel = (key: string) => {
+  const period = key.replace(/^roi_/, "");
+  if (period === "all") {
+    return "All time";
+  }
+
+  const match = period.match(/^(\d+(?:\.\d+)?)([a-zA-Z]+)$/);
+  if (!match) {
+    return period;
+  }
+
+  const [, amount, unit] = match;
+  switch (unit) {
+    case "d":
+      return `${amount} days`;
+    case "w":
+      return `${amount} weeks`;
+    case "m":
+      return `${amount} months`;
+    case "y":
+      return `${amount} years`;
+    default:
+      return period;
+  }
+};
+
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
     portfolioState,
@@ -113,7 +168,21 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
 
-    const roiWindows = portfolioROI;
+    // Convert windows object to array format expected by the UI
+    // Sort by time period (ascending) to show shorter periods first
+    const roiWindows = portfolioROI?.windows
+      ? Object.entries(portfolioROI.windows)
+          .map(([key, value]) => ({
+            key,
+            label: formatRoiWindowLabel(key),
+            value: value.value,
+            dataPoints: value.data_points,
+          }))
+          .sort(
+            (a, b) =>
+              deriveRoiWindowSortScore(a.key) - deriveRoiWindowSortScore(b.key)
+          ) // Shortest period first
+      : [];
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -179,6 +248,15 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       }
 
       // Normal display with data
+      const recommendedPeriodLabel =
+        portfolioROI?.recommended_period?.replace("roi_", "") ||
+        (portfolioROI?.windows &&
+        Object.prototype.hasOwnProperty.call(portfolioROI.windows, "roi_30d")
+          ? "30d"
+          : !portfolioState.isConnected
+            ? "30d"
+            : undefined);
+
       return (
         <div className="flex flex-col">
           <div
@@ -192,11 +270,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               est.
             </span>
           </div>
-          {portfolioROI?.recommended_roi_period && (
+          {recommendedPeriodLabel && (
             <span className="text-xs text-gray-500 font-normal mt-1">
-              Based on{" "}
-              {portfolioROI?.recommended_roi_period.replace("roi_", "")}{" "}
-              performance data
+              Based on {recommendedPeriodLabel} performance data
             </span>
           )}
         </div>
@@ -269,8 +345,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               <div className="relative">
                 <span
                   ref={infoIconRef}
-                  onMouseEnter={openRoiTooltip}
-                  onMouseLeave={closeRoiTooltip}
+                  onMouseOver={openRoiTooltip}
+                  onMouseOut={closeRoiTooltip}
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
@@ -292,43 +368,31 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                         📊 Portfolio ROI Estimation
                       </div>
 
+                      {portfolioROI?.recommended_period && (
+                        <div className="text-gray-300 text-xs mb-2 text-center">
+                          Based on{" "}
+                          {portfolioROI.recommended_period.replace("roi_", "")}{" "}
+                          performance data
+                        </div>
+                      )}
+
                       {/* ROI Windows */}
-                      {roiWindows && (
+                      {roiWindows.length > 0 && (
                         <div className="mb-3 p-2 bg-gray-800 rounded">
                           <div className="text-gray-300 font-medium mb-2">
                             ROI by Time Period
                           </div>
-                          {roiWindows.roi_7d && (
-                            <div className="flex justify-between text-gray-300 mb-1">
+                          {roiWindows.map(entry => (
+                            <div
+                              key={entry.key}
+                              className="flex justify-between text-gray-300 mb-1 last:mb-0"
+                            >
                               <span>
-                                7 days ({roiWindows.roi_7d.data_points} data
-                                points)
+                                {entry.label} ({entry.dataPoints} data points)
                               </span>
-                              <span>{roiWindows.roi_7d.value.toFixed(2)}%</span>
+                              <span>{entry.value.toFixed(2)}%</span>
                             </div>
-                          )}
-                          {roiWindows.roi_30d && (
-                            <div className="flex justify-between text-gray-300 mb-1">
-                              <span>
-                                30 days ({roiWindows.roi_30d.data_points} data
-                                points)
-                              </span>
-                              <span>
-                                {roiWindows.roi_30d.value.toFixed(2)}%
-                              </span>
-                            </div>
-                          )}
-                          {roiWindows.roi_365d && (
-                            <div className="flex justify-between text-gray-300">
-                              <span>
-                                365 days ({roiWindows.roi_365d.data_points} data
-                                points)
-                              </span>
-                              <span>
-                                {roiWindows.roi_365d.value.toFixed(2)}%
-                              </span>
-                            </div>
-                          )}
+                          ))}
                         </div>
                       )}
 

@@ -6,6 +6,7 @@
 
 import { httpUtils } from "../lib/http-utils";
 import { createBackendServiceError } from "../lib/base-error";
+import { executeServiceCall } from "./serviceHelpers";
 
 /**
  * Backend interfaces
@@ -48,41 +49,37 @@ export interface EmailReport {
 }
 
 // Get configured client
-const getBackendApiClient = () => {
-  return httpUtils.backendApi;
-};
+const backendApiClient = httpUtils.backendApi;
+
+const callBackendApi = <T>(call: () => Promise<T>) =>
+  executeServiceCall(call, { mapError: createBackendServiceError });
 
 // Notification Operations
 
 /**
  * Send Discord alert
  */
-export const sendDiscordAlert = async (
+export const sendDiscordAlert = (
   alert: DiscordAlert
-): Promise<{ success: boolean; messageId?: string }> => {
-  try {
-    const client = getBackendApiClient();
-    return await client.post<{ success: boolean; messageId?: string }>(
+): Promise<{ success: boolean; messageId?: string }> =>
+  callBackendApi(() =>
+    backendApiClient.post<{ success: boolean; messageId?: string }>(
       `/notifications/discord`,
       alert
-    );
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+    )
+  );
 
 /**
  * Send email notification
  */
-export const sendEmailNotification = async (
+export const sendEmailNotification = (
   email: string,
   subject: string,
   content: string,
   template?: "portfolio_update" | "transaction_alert" | "price_alert"
-): Promise<{ success: boolean; messageId?: string }> => {
-  try {
-    const client = getBackendApiClient();
-    return await client.post<{ success: boolean; messageId?: string }>(
+): Promise<{ success: boolean; messageId?: string }> =>
+  callBackendApi(() =>
+    backendApiClient.post<{ success: boolean; messageId?: string }>(
       `/notifications/email`,
       {
         email,
@@ -90,78 +87,63 @@ export const sendEmailNotification = async (
         content,
         template,
       }
-    );
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+    )
+  );
 
 /**
  * Get user notification settings
  */
-export const getNotificationSettings = async (
+export const getNotificationSettings = (
   userId: string
-): Promise<NotificationSettings> => {
-  try {
-    const client = getBackendApiClient();
-    return await client.get<NotificationSettings>(
+): Promise<NotificationSettings> =>
+  callBackendApi(() =>
+    backendApiClient.get<NotificationSettings>(
       `/notifications/settings/${userId}`
-    );
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+    )
+  );
 
 /**
  * Update user notification settings
  */
-export const updateNotificationSettings = async (
+export const updateNotificationSettings = (
   userId: string,
   settings: Partial<NotificationSettings>
-): Promise<NotificationSettings> => {
-  try {
-    const client = getBackendApiClient();
-    return await client.put<NotificationSettings>(
+): Promise<NotificationSettings> =>
+  callBackendApi(() =>
+    backendApiClient.put<NotificationSettings>(
       `/notifications/settings/${userId}`,
       settings
-    );
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+    )
+  );
 
 // Reporting Operations
 
 /**
  * Generate portfolio report
  */
-export const generatePortfolioReport = async (
+export const generatePortfolioReport = (
   userId: string,
   reportType: "daily" | "weekly" | "monthly",
   startDate?: string,
   endDate?: string
-): Promise<EmailReport> => {
-  try {
-    const client = getBackendApiClient();
+): Promise<EmailReport> =>
+  callBackendApi(() => {
     const params = new URLSearchParams({
       type: reportType,
     });
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
 
-    return await client.post<EmailReport>(
+    return backendApiClient.post<EmailReport>(
       `/reports/portfolio/${userId}?${params}`,
       {}
     );
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+  });
 
 /**
  * Get report history
  */
-export const getReportHistory = async (
+export const getReportHistory = (
   userId: string,
   limit = 50,
   offset = 0
@@ -169,23 +151,19 @@ export const getReportHistory = async (
   reports: EmailReport[];
   total: number;
   hasMore: boolean;
-}> => {
-  try {
-    const client = getBackendApiClient();
+}> =>
+  callBackendApi(() => {
     const params = new URLSearchParams({
       limit: limit.toString(),
       offset: offset.toString(),
     });
 
-    return await client.get<{
+    return backendApiClient.get<{
       reports: EmailReport[];
       total: number;
       hasMore: boolean;
     }>(`/reports/history/${userId}?${params}`);
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+  });
 
 // Data Export Operations
 
@@ -194,7 +172,7 @@ export const getReportHistory = async (
 /**
  * Health check
  */
-export const checkBackendServiceHealth = async (): Promise<{
+export const checkBackendServiceHealth = (): Promise<{
   status: string;
   timestamp: string;
   services: {
@@ -202,10 +180,9 @@ export const checkBackendServiceHealth = async (): Promise<{
     email: boolean;
     database: boolean;
   };
-}> => {
-  try {
-    const client = getBackendApiClient();
-    return await client.get<{
+}> =>
+  callBackendApi(() =>
+    backendApiClient.get<{
       status: string;
       timestamp: string;
       services: {
@@ -213,8 +190,5 @@ export const checkBackendServiceHealth = async (): Promise<{
         email: boolean;
         database: boolean;
       };
-    }>(`/health`);
-  } catch (error) {
-    throw createBackendServiceError(error);
-  }
-};
+    }>(`/health`)
+  );

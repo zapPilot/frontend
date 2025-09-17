@@ -91,9 +91,9 @@ describe("CategoryListSection", () => {
     render(
       <CategoryListSection
         categories={baseCategories}
-        excludedCategoryIds={["growth"]}
+        excludedCategoryIdsSet={new Set(["growth"])}
         onToggleCategoryExclusion={handleToggle}
-        rebalanceMode={undefined}
+        isRebalanceEnabled={false}
         testId="allocation-test"
       />
     );
@@ -108,12 +108,20 @@ describe("CategoryListSection", () => {
   });
 
   it("displays rebalance data when provided", () => {
+    const rebalanceData = createRebalanceData();
+
     render(
       <CategoryListSection
         categories={baseCategories}
-        excludedCategoryIds={[]}
+        excludedCategoryIdsSet={new Set()}
         onToggleCategoryExclusion={vi.fn()}
-        rebalanceMode={{ isEnabled: true, data: createRebalanceData() }}
+        isRebalanceEnabled={true}
+        rebalanceShiftMap={
+          new Map(rebalanceData.shifts.map(shift => [shift.categoryId, shift]))
+        }
+        rebalanceTargetMap={
+          new Map(rebalanceData.target.map(target => [target.id, target]))
+        }
       />
     );
 
@@ -134,7 +142,7 @@ describe("CategoryListSection", () => {
     render(
       <CategoryListSection
         categories={[]}
-        excludedCategoryIds={[]}
+        excludedCategoryIdsSet={new Set()}
         onToggleCategoryExclusion={vi.fn()}
       />
     );

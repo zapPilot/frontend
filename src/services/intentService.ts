@@ -7,6 +7,7 @@
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
 import { StrategiesApiResponse } from "../types/strategies";
+import { executeServiceCall } from "./serviceHelpers";
 
 /**
  * Intent Engine interfaces
@@ -49,79 +50,64 @@ export interface IntentStatus {
 }
 
 // Get configured client
-const getIntentEngineClient = () => {
-  return httpUtils.intentEngine;
-};
+const intentEngineClient = httpUtils.intentEngine;
+
+const callIntentService = <T>(call: () => Promise<T>) =>
+  executeServiceCall(call, { mapError: createIntentServiceError });
 
 // Intent Execution Operations
 
 /**
  * Execute a swap intent
  */
-export const executeSwap = async (
+export const executeSwap = (
   intent: Omit<ExecutionIntent, "type">
-): Promise<ExecutionResult> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>("/intents/swap", {
+): Promise<ExecutionResult> =>
+  callIntentService(() =>
+    intentEngineClient.post<ExecutionResult>("/intents/swap", {
       ...intent,
       type: "swap",
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    })
+  );
 
 /**
  * Execute a zapIn intent
  */
-export const executeZapIn = async (
+export const executeZapIn = (
   intent: Omit<ExecutionIntent, "type">
-): Promise<ExecutionResult> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(`/intents/zapIn`, {
+): Promise<ExecutionResult> =>
+  callIntentService(() =>
+    intentEngineClient.post<ExecutionResult>(`/intents/zapIn`, {
       ...intent,
       type: "zapIn",
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    })
+  );
 
 /**
  * Execute a zapOut intent
  */
-export const executeZapOut = async (
+export const executeZapOut = (
   intent: Omit<ExecutionIntent, "type">
-): Promise<ExecutionResult> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(`/intents/zapOut`, {
+): Promise<ExecutionResult> =>
+  callIntentService(() =>
+    intentEngineClient.post<ExecutionResult>(`/intents/zapOut`, {
       ...intent,
       type: "zapOut",
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    })
+  );
 
 /**
  * Execute a rebalance intent
  */
-export const executeRebalance = async (
+export const executeRebalance = (
   intent: Omit<ExecutionIntent, "type" | "fromToken" | "toToken">
-): Promise<ExecutionResult> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<ExecutionResult>(`/intents/rebalance`, {
+): Promise<ExecutionResult> =>
+  callIntentService(() =>
+    intentEngineClient.post<ExecutionResult>(`/intents/rebalance`, {
       ...intent,
       type: "rebalance",
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    })
+  );
 
 /**
  * Dust token conversion interface for intent service
@@ -138,7 +124,7 @@ export interface DustTokenParams {
 /**
  * Execute dust token conversion to ETH
  */
-export const executeDustZap = async (
+export const executeDustZap = (
   userAddress: string,
   chainId: number,
   params: {
@@ -147,39 +133,29 @@ export const executeDustZap = async (
     toTokenAddress: string;
     toTokenDecimals: number;
   }
-): Promise<{ intentId: string }> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.post<{ intentId: string }>("/api/v1/intents/dustZap", {
+): Promise<{ intentId: string }> =>
+  callIntentService(() =>
+    intentEngineClient.post<{ intentId: string }>("/api/v1/intents/dustZap", {
       userAddress,
       chainId,
       params,
-    });
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    })
+  );
 
 // Intent Monitoring Operations
 
 /**
  * Get intent execution status
  */
-export const getIntentStatus = async (
-  intentId: string
-): Promise<IntentStatus> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.get<IntentStatus>(`/intents/${intentId}/status`);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+export const getIntentStatus = (intentId: string): Promise<IntentStatus> =>
+  callIntentService(() =>
+    intentEngineClient.get<IntentStatus>(`/intents/${intentId}/status`)
+  );
 
 /**
  * Get user's intent history
  */
-export const getUserIntentHistory = async (
+export const getUserIntentHistory = (
   walletAddress: string,
   limit = 50,
   offset = 0
@@ -187,57 +163,45 @@ export const getUserIntentHistory = async (
   intents: ExecutionResult[];
   total: number;
   hasMore: boolean;
-}> => {
-  try {
-    const client = getIntentEngineClient();
+}> =>
+  callIntentService(() => {
     const params = new URLSearchParams({
       wallet: walletAddress,
       limit: limit.toString(),
       offset: offset.toString(),
     });
 
-    return await client.get<{
+    return intentEngineClient.get<{
       intents: ExecutionResult[];
       total: number;
       hasMore: boolean;
     }>(`/intents/history?${params}`);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+  });
 
 // Strategy Operations
 
 /**
  * Get available strategies for portfolio optimization
  */
-export const getStrategies = async (): Promise<StrategiesApiResponse> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.get<StrategiesApiResponse>(`/api/v1/strategies`);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+export const getStrategies = (): Promise<StrategiesApiResponse> =>
+  callIntentService(() =>
+    intentEngineClient.get<StrategiesApiResponse>(`/api/v1/strategies`)
+  );
 
 // Utility Operations
 
 /**
  * Health check
  */
-export const checkIntentServiceHealth = async (): Promise<{
+export const checkIntentServiceHealth = (): Promise<{
   status: string;
   timestamp: string;
   processingQueue: number;
-}> => {
-  try {
-    const client = getIntentEngineClient();
-    return await client.get<{
+}> =>
+  callIntentService(() =>
+    intentEngineClient.get<{
       status: string;
       timestamp: string;
       processingQueue: number;
-    }>(`/health`);
-  } catch (error) {
-    throw createIntentServiceError(error);
-  }
-};
+    }>(`/health`)
+  );

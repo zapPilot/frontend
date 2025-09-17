@@ -12,6 +12,7 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
+import { executeServiceCall } from "./serviceHelpers";
 
 /**
  * Account Service Error Details
@@ -102,171 +103,130 @@ const createAccountServiceError = (error: unknown): AccountServiceError => {
   );
 };
 
+const accountApiClient = httpUtils.accountApi;
+const backendApiClient = httpUtils.backendApi;
+
+const callAccountApi = <T>(call: () => Promise<T>) =>
+  executeServiceCall(call, { mapError: createAccountServiceError });
+
 // User Management Operations
 
 /**
  * Connect wallet and create/retrieve user
  */
-export const connectWallet = async (
+export const connectWallet = (
   walletAddress: string
-): Promise<ConnectWalletResponse> => {
-  try {
-    const response = await httpUtils.accountApi.post<ConnectWalletResponse>(
-      "/users/connect-wallet",
-      {
-        wallet: walletAddress,
-      }
-    );
-    return response;
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+): Promise<ConnectWalletResponse> =>
+  callAccountApi(() =>
+    accountApiClient.post<ConnectWalletResponse>("/users/connect-wallet", {
+      wallet: walletAddress,
+    })
+  );
 
 /**
  * Get complete user profile
  */
-export const getUserProfile = async (
-  userId: string
-): Promise<UserProfileResponse> => {
-  try {
-    return await httpUtils.accountApi.get<UserProfileResponse>(
-      `/users/${userId}`
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+export const getUserProfile = (userId: string): Promise<UserProfileResponse> =>
+  callAccountApi(() =>
+    accountApiClient.get<UserProfileResponse>(`/users/${userId}`)
+  );
 
 /**
  * Update user email
  */
-export const updateUserEmail = async (
+export const updateUserEmail = (
   userId: string,
   email: string
-): Promise<UpdateEmailResponse> => {
-  try {
-    return await httpUtils.accountApi.put<UpdateEmailResponse>(
-      `/users/${userId}/email`,
-      { email }
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+): Promise<UpdateEmailResponse> =>
+  callAccountApi(() =>
+    accountApiClient.put<UpdateEmailResponse>(`/users/${userId}/email`, {
+      email,
+    })
+  );
 
 /**
  * Remove user email (unsubscribe from email-based reports)
  */
-export const removeUserEmail = async (
-  userId: string
-): Promise<UpdateEmailResponse> => {
-  try {
-    return await httpUtils.accountApi.delete<UpdateEmailResponse>(
-      `/users/${userId}/email`
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+export const removeUserEmail = (userId: string): Promise<UpdateEmailResponse> =>
+  callAccountApi(() =>
+    accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}/email`)
+  );
 
 // Wallet Management Operations
 
 /**
  * Get all user wallets
  */
-export const getUserWallets = async (
-  userId: string
-): Promise<UserCryptoWallet[]> => {
-  try {
-    return await httpUtils.accountApi.get<UserCryptoWallet[]>(
-      `/users/${userId}/wallets`
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+export const getUserWallets = (userId: string): Promise<UserCryptoWallet[]> =>
+  callAccountApi(() =>
+    accountApiClient.get<UserCryptoWallet[]>(`/users/${userId}/wallets`)
+  );
 
 /**
  * Add wallet to user bundle
  */
-export const addWalletToBundle = async (
+export const addWalletToBundle = (
   userId: string,
   walletAddress: string,
   label?: string
-): Promise<AddWalletResponse> => {
-  try {
-    return await httpUtils.accountApi.post<AddWalletResponse>(
-      `/users/${userId}/wallets`,
-      {
-        wallet: walletAddress,
-        label,
-      }
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+): Promise<AddWalletResponse> =>
+  callAccountApi(() =>
+    accountApiClient.post<AddWalletResponse>(`/users/${userId}/wallets`, {
+      wallet: walletAddress,
+      label,
+    })
+  );
 
 /**
  * Remove wallet from user bundle
  */
-export const removeWalletFromBundle = async (
+export const removeWalletFromBundle = (
   userId: string,
   walletId: string
-): Promise<{ message: string }> => {
-  try {
-    return await httpUtils.accountApi.delete<{ message: string }>(
+): Promise<{ message: string }> =>
+  callAccountApi(() =>
+    accountApiClient.delete<{ message: string }>(
       `/users/${userId}/wallets/${walletId}`
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+    )
+  );
 
 /**
  * Update wallet label
  */
-export const updateWalletLabel = async (
+export const updateWalletLabel = (
   userId: string,
   walletAddress: string,
   label: string
-): Promise<{ message: string }> => {
-  try {
-    return await httpUtils.accountApi.put<{ message: string }>(
+): Promise<{ message: string }> =>
+  callAccountApi(() =>
+    accountApiClient.put<{ message: string }>(
       `/users/${userId}/wallets/${walletAddress}/label`,
       {
         label,
       }
-    );
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+    )
+  );
 
 // Utility Functions
 
 /**
  * Health check for account service
  */
-export const checkAccountServiceHealth = async (): Promise<{
+export const checkAccountServiceHealth = (): Promise<{
   status: string;
   timestamp: string;
-}> => {
-  try {
-    return await httpUtils.accountApi.get<{
+}> =>
+  callAccountApi(() =>
+    accountApiClient.get<{
       status: string;
       timestamp: string;
-    }>("/health");
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+    }>("/health")
+  );
 
 /**
  * Get user tokens for a specific chain
  */
-export const getUserTokens = async (
+export const getUserTokens = (
   accountAddress: string,
   chainName: string
 ): Promise<
@@ -287,28 +247,27 @@ export const getUserTokens = async (
     time_at: number;
     amount: number;
   }>
-> => {
-  try {
-    return await httpUtils.backendApi.get<
-      Array<{
-        id: string;
-        chain: string;
-        name: string;
-        symbol: string;
-        display_symbol: string;
-        optimized_symbol: string;
-        decimals: number;
-        logo_url: string;
-        protocol_id: string;
-        price: number;
-        is_verified: boolean;
-        is_core: boolean;
-        is_wallet: boolean;
-        time_at: number;
-        amount: number;
-      }>
-    >(`/user/${accountAddress}/${chainName}/tokens`);
-  } catch (error) {
-    throw createAccountServiceError(error);
-  }
-};
+> =>
+  executeServiceCall(
+    () =>
+      backendApiClient.get<
+        Array<{
+          id: string;
+          chain: string;
+          name: string;
+          symbol: string;
+          display_symbol: string;
+          optimized_symbol: string;
+          decimals: number;
+          logo_url: string;
+          protocol_id: string;
+          price: number;
+          is_verified: boolean;
+          is_core: boolean;
+          is_wallet: boolean;
+          time_at: number;
+          amount: number;
+        }>
+      >(`/user/${accountAddress}/${chainName}/tokens`),
+    { mapError: createAccountServiceError }
+  );

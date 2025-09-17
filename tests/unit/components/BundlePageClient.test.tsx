@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from "../../test-utils";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { BundlePageClient } from "../../../src/app/bundle/BundlePageClient";
 import { useUser } from "../../../src/contexts/UserContext";
-import { bundleService } from "../../../src/services/bundleService";
+import * as bundleService from "../../../src/services/bundleService";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
@@ -14,12 +14,9 @@ vi.mock("next/navigation", () => ({
 
 // Mock the bundleService
 vi.mock("../../../src/services/bundleService", () => ({
-  bundleService: {
-    isOwnBundle: vi.fn(),
-    generateBundleUrl: vi.fn(),
-    getBundleUser: vi.fn(),
-  },
-  BundleUser: {},
+  isOwnBundle: vi.fn(),
+  generateBundleUrl: vi.fn(),
+  getBundleUser: vi.fn(),
 }));
 
 // Mock DashboardShell to focus on banner logic

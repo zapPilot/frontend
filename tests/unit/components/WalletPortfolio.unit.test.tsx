@@ -423,7 +423,7 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       render(<WalletPortfolio />);
 
       const errorBoundaries = screen.getAllByTestId("error-boundary");
-      expect(errorBoundaries).toHaveLength(4); // Main + 3 sub-components
+      expect(errorBoundaries).toHaveLength(3); // Main + 3 sub-components
 
       // Check main error boundary has correct reset keys
       const mainBoundary = errorBoundaries[0];

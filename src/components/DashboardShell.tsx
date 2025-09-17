@@ -9,6 +9,7 @@ import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
+import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 
 // Dynamic imports for code splitting
 const AnalyticsTab: ComponentType<{
@@ -148,32 +149,32 @@ export function DashboardShell({
     [selectedStrategy]
   );
 
+  const getOpportunity = useCallback(
+    (id: string) =>
+      mockInvestmentOpportunities.find(strategy => strategy.id === id) || null,
+    []
+  );
+
   const handleOptimizeClick = useCallback(() => {
-    const optimizeStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "optimize-portfolio"
-    );
-    if (optimizeStrategy) {
-      setSelectedStrategy({ ...optimizeStrategy, navigationContext: "invest" });
+    const strategy = getOpportunity("optimize-portfolio");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "invest" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const handleZapInClick = useCallback(() => {
-    const zapInStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "zap-in"
-    );
-    if (zapInStrategy) {
-      setSelectedStrategy({ ...zapInStrategy, navigationContext: "zapIn" });
+    const strategy = getOpportunity("zap-in");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "zapIn" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const handleZapOutClick = useCallback(() => {
-    const zapOutStrategy = mockInvestmentOpportunities.find(
-      strategy => strategy.id === "zap-out"
-    );
-    if (zapOutStrategy) {
-      setSelectedStrategy({ ...zapOutStrategy, navigationContext: "zapOut" });
+    const strategy = getOpportunity("zap-out");
+    if (strategy) {
+      setSelectedStrategy({ ...strategy, navigationContext: "zapOut" });
     }
-  }, []);
+  }, [getOpportunity]);
 
   const renderTabContent = () => {
     if (selectedStrategy) {
@@ -244,34 +245,42 @@ export function DashboardShell({
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 relative overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
+    <CategoryFilterProvider
+      value={{
+        selectedCategoryId: selectedCategoryFilter,
+        setSelectedCategoryId: setSelectedCategoryFilter,
+        clearCategoryFilter: () => setSelectedCategoryFilter(null),
+      }}
+    >
+      <div className="min-h-screen bg-gray-950 relative overflow-hidden">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
 
-      {/* Navigation */}
-      <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
+        {/* Navigation */}
+        <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
 
-      {/* Main content */}
-      <div className={`relative ${Z_INDEX.CONTENT} lg:pl-72`}>
-        {/* Header banners (optional) */}
-        {headerBanners}
+        {/* Main content */}
+        <div className={`relative ${Z_INDEX.CONTENT} lg:pl-72`}>
+          {/* Header banners (optional) */}
+          {headerBanners}
 
-        {/* Mobile header spacing */}
-        <div className="lg:hidden h-16" />
+          {/* Mobile header spacing */}
+          <div className="lg:hidden h-16" />
 
-        {/* Desktop header spacing */}
-        <div className="hidden lg:block h-16" />
+          {/* Desktop header spacing */}
+          <div className="hidden lg:block h-16" />
 
-        <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
-          <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
-        </main>
+          <main className="px-4 py-8 lg:px-8 pb-20 lg:pb-8">
+            <div className="max-w-7xl mx-auto">{renderTabContent()}</div>
+          </main>
 
-        {/* Mobile bottom nav spacing */}
-        <div className="lg:hidden h-20" />
+          {/* Mobile bottom nav spacing */}
+          <div className="lg:hidden h-20" />
+        </div>
+
+        {/* Footer overlays (optional) */}
+        {footerOverlays}
       </div>
-
-      {/* Footer overlays (optional) */}
-      {footerOverlays}
-    </div>
+    </CategoryFilterProvider>
   );
 }
