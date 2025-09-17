@@ -38,12 +38,53 @@ export interface UseBundlePageResult {
   };
 }
 
+// Pure helpers extracted for clarity and testability
+export function computeIsDifferentUser(
+  isConnected: boolean,
+  currentUserId: string | undefined,
+  viewedUserId: string
+): boolean {
+  return Boolean(
+    isConnected && currentUserId && currentUserId !== viewedUserId
+  );
+}
+
+export function computeShowQuickSwitch(
+  isConnected: boolean,
+  isOwnBundle: boolean,
+  currentUserId: string | undefined
+): boolean {
+  return Boolean(isConnected && !isOwnBundle && currentUserId);
+}
+
+export function computeShowEmailBanner(
+  isConnected: boolean,
+  isOwnBundle: boolean,
+  email: string | undefined,
+  emailBannerDismissed: boolean
+): boolean {
+  return Boolean(isConnected && isOwnBundle && !email && !emailBannerDismissed);
+}
+
+export function getDismissedStorageKey(userId: string) {
+  return `dismissed-switch-${userId}`;
+}
+
+export function readSwitchDismissed(storage: Storage, userId: string): boolean {
+  return storage.getItem(getDismissedStorageKey(userId)) === "true";
+}
+
+export function computeRedirectUrl(search: string): string {
+  const s = search || "";
+  return `/${s ? (s.startsWith("?") ? s : `?${s}`) : ""}`;
+}
+
 export function useBundlePage(userId: string): UseBundlePageResult {
   const router = useRouter();
   const { userInfo, isConnected } = useUser();
   const initialDismissed =
     typeof window !== "undefined" && userId
-      ? localStorage.getItem(`dismissed-switch-${userId}`) === "true"
+      ? readSwitchDismissed(localStorage, userId)
       : false;
   const [dismissedSwitchPrompt, setDismissedSwitchPrompt] =
     useState<boolean>(initialDismissed);
@@ -51,8 +92,10 @@ export function useBundlePage(userId: string): UseBundlePageResult {
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
-  const isDifferentUser = Boolean(
-    isConnected && userInfo?.userId && userInfo.userId !== userId
+  const isDifferentUser = computeIsDifferentUser(
+    isConnected,
+    userInfo?.userId,
+    userId
   );
   const [showSwitchPrompt, setShowSwitchPrompt] = useState<boolean>(
     isDifferentUser && !initialDismissed
@@ -64,13 +107,16 @@ export function useBundlePage(userId: string): UseBundlePageResult {
   );
   const bundleUrl = useMemo(() => generateBundleUrl(userId), [userId]);
   const showQuickSwitch = useMemo(
-    () => Boolean(isConnected && !isOwnBundle && userInfo?.userId),
+    () => computeShowQuickSwitch(isConnected, isOwnBundle, userInfo?.userId),
     [isConnected, isOwnBundle, userInfo?.userId]
   );
   const showEmailBanner = useMemo(
     () =>
-      Boolean(
-        isConnected && isOwnBundle && !userInfo?.email && !emailBannerDismissed
+      computeShowEmailBanner(
+        isConnected,
+        isOwnBundle,
+        userInfo?.email,
+        emailBannerDismissed
       ),
     [isConnected, isOwnBundle, userInfo?.email, emailBannerDismissed]
   );
@@ -104,9 +150,7 @@ export function useBundlePage(userId: string): UseBundlePageResult {
   useEffect(() => {
     const ownsBundle = userInfo?.userId === userId;
     if (!isConnected && ownsBundle) {
-      const searchParams = new URLSearchParams(window.location.search);
-      const queryString = searchParams.toString();
-      const newUrl = `/${queryString ? `?${queryString}` : ""}`;
+      const newUrl = computeRedirectUrl(window.location.search);
       router.replace(newUrl);
     }
 
@@ -132,7 +176,7 @@ export function useBundlePage(userId: string): UseBundlePageResult {
     setDismissedSwitchPrompt(true);
     setShowSwitchPrompt(false);
     if (typeof window !== "undefined" && userId) {
-      localStorage.setItem(`dismissed-switch-${userId}`, "true");
+      localStorage.setItem(getDismissedStorageKey(userId), "true");
     }
   }, [userId]);
 

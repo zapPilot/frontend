@@ -123,9 +123,17 @@ export interface LandingPageResponse {
   estimated_monthly_income: number;
   portfolio_roi: {
     recommended_roi: number;
-    recommended_roi_period: string;
+    recommended_period: string;
     recommended_yearly_roi: number;
     estimated_yearly_pnl_usd: number;
+    windows?: {
+      [key: string]: {
+        value: number;
+        data_points: number;
+        start_balance?: number;
+      };
+    };
+    // Legacy fields for backward compatibility
     roi_7d?: {
       value: number;
       data_points: number;

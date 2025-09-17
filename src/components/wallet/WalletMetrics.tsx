@@ -62,31 +62,7 @@ function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
   );
 }
 
-type PortfolioRoiWindow = {
-  value: number;
-  data_points: number;
-};
-
-type RoiWindowEntry = {
-  key: string;
-  label: string;
-  value: number;
-  dataPoints: number;
-};
-
-const ROI_WINDOW_PREFIX = "roi_";
-
-const isPortfolioRoiWindow = (value: unknown): value is PortfolioRoiWindow => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  const candidate = value as Partial<PortfolioRoiWindow>;
-  return (
-    typeof candidate.value === "number" &&
-    typeof candidate.data_points === "number"
-  );
-};
+// Removed unused types and functions - now using direct API response structure
 
 const deriveRoiWindowSortScore = (key: string) => {
   const period = key.replace(/^roi_/, "");
@@ -141,40 +117,6 @@ const formatRoiWindowLabel = (key: string) => {
   }
 };
 
-const buildRoiWindowEntries = (
-  roi?: LandingPageResponse["portfolio_roi"]
-): RoiWindowEntry[] => {
-  if (!roi) {
-    return [];
-  }
-
-  const entries: Array<RoiWindowEntry & { sortScore: number }> = [];
-
-  for (const [key, value] of Object.entries(roi)) {
-    if (!key.startsWith(ROI_WINDOW_PREFIX) || key === "roi_windows") {
-      continue;
-    }
-
-    if (isPortfolioRoiWindow(value)) {
-      entries.push({
-        key,
-        label: formatRoiWindowLabel(key),
-        value: value.value,
-        dataPoints: value.data_points,
-        sortScore: deriveRoiWindowSortScore(key),
-      });
-    }
-  }
-
-  return entries
-    .sort((a, b) => a.sortScore - b.sortScore)
-    .map(entry => {
-      const { sortScore, ...rest } = entry;
-      void sortScore;
-      return rest;
-    });
-};
-
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
     portfolioState,
@@ -226,8 +168,21 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
 
-    const roiWindows = portfolioROI;
-    const roiWindowEntries = buildRoiWindowEntries(roiWindows);
+    // Convert windows object to array format expected by the UI
+    // Sort by time period (ascending) to show shorter periods first
+    const roiWindows = portfolioROI?.windows
+      ? Object.entries(portfolioROI.windows)
+          .map(([key, value]) => ({
+            key,
+            label: formatRoiWindowLabel(key),
+            value: value.value,
+            dataPoints: value.data_points,
+          }))
+          .sort(
+            (a, b) =>
+              deriveRoiWindowSortScore(a.key) - deriveRoiWindowSortScore(b.key)
+          ) // Shortest period first
+      : [];
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -293,6 +248,15 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       }
 
       // Normal display with data
+      const recommendedPeriodLabel =
+        portfolioROI?.recommended_period?.replace("roi_", "") ||
+        (portfolioROI?.windows &&
+        Object.prototype.hasOwnProperty.call(portfolioROI.windows, "roi_30d")
+          ? "30d"
+          : !portfolioState.isConnected
+            ? "30d"
+            : undefined);
+
       return (
         <div className="flex flex-col">
           <div
@@ -306,11 +270,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               est.
             </span>
           </div>
-          {portfolioROI?.recommended_roi_period && (
+          {recommendedPeriodLabel && (
             <span className="text-xs text-gray-500 font-normal mt-1">
-              Based on{" "}
-              {portfolioROI?.recommended_roi_period.replace("roi_", "")}{" "}
-              performance data
+              Based on {recommendedPeriodLabel} performance data
             </span>
           )}
         </div>
@@ -383,8 +345,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               <div className="relative">
                 <span
                   ref={infoIconRef}
-                  onMouseEnter={openRoiTooltip}
-                  onMouseLeave={closeRoiTooltip}
+                  onMouseOver={openRoiTooltip}
+                  onMouseOut={closeRoiTooltip}
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
@@ -406,13 +368,21 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                         📊 Portfolio ROI Estimation
                       </div>
 
+                      {portfolioROI?.recommended_period && (
+                        <div className="text-gray-300 text-xs mb-2 text-center">
+                          Based on{" "}
+                          {portfolioROI.recommended_period.replace("roi_", "")}{" "}
+                          performance data
+                        </div>
+                      )}
+
                       {/* ROI Windows */}
-                      {roiWindowEntries.length > 0 && (
+                      {roiWindows.length > 0 && (
                         <div className="mb-3 p-2 bg-gray-800 rounded">
                           <div className="text-gray-300 font-medium mb-2">
                             ROI by Time Period
                           </div>
-                          {roiWindowEntries.map(entry => (
+                          {roiWindows.map(entry => (
                             <div
                               key={entry.key}
                               className="flex justify-between text-gray-300 mb-1 last:mb-0"
