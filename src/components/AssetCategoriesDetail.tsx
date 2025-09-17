@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { TrendingUp } from "lucide-react";
 import React from "react";
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { ErrorStateCard } from "./ui/ErrorStateCard";
 import { AssetCategorySkeleton } from "./ui/LoadingState";
@@ -14,7 +13,6 @@ type TabType = "assets" | "borrowing";
 interface AssetCategoriesDetailProps {
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];
-  balanceHidden?: boolean;
   className?: string;
   isLoading?: boolean;
   error?: string | null;
@@ -29,7 +27,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
   ({
     categorySummaries,
     debtCategorySummaries = [],
-    balanceHidden,
     className = "",
     isLoading = false,
     error = null,
@@ -39,9 +36,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
     onCategoryClick,
     isNavigating = false,
   }) => {
-    const { balanceHidden: ctxHidden } = useBalanceVisibility();
-    const resolvedHidden = balanceHidden ?? ctxHidden;
-
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -92,7 +86,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                     <CategoryItem
                       key={category.id}
                       category={category}
-                      balanceHidden={resolvedHidden}
                       {...(onCategoryClick ? { onCategoryClick } : {})}
                       isNavigating={isNavigating}
                       variant="assets"
@@ -118,7 +111,6 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                     <CategoryItem
                       key={category.id}
                       category={category}
-                      balanceHidden={resolvedHidden}
                       {...(onCategoryClick ? { onCategoryClick } : {})}
                       isNavigating={isNavigating}
                       variant="borrowing"

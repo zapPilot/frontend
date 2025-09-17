@@ -22,7 +22,6 @@ export interface PortfolioOverviewProps {
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
-  balanceHidden?: boolean;
   renderBalanceDisplay?: () => React.ReactNode;
   title?: string;
   className?: string;

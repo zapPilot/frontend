@@ -4,23 +4,18 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 import { formatCurrency } from "../lib/formatters";
 import type { CategorySummary } from "../utils/portfolio.utils";
+import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 
 interface CategoryItemProps {
   category: CategorySummary;
-  balanceHidden: boolean;
   onCategoryClick?: (id: string) => void;
   isNavigating?: boolean;
   variant: "assets" | "borrowing";
 }
 
 export const CategoryItem = React.memo(
-  ({
-    category,
-    balanceHidden,
-    onCategoryClick,
-    isNavigating,
-    variant,
-  }: CategoryItemProps) => {
+  ({ category, onCategoryClick, isNavigating, variant }: CategoryItemProps) => {
+    const { balanceHidden } = useBalanceVisibility();
     const isAssets = variant === "assets";
     const cardClasses = isAssets
       ? "border border-gray-800 rounded-2xl p-4 bg-gray-900/20 transition-all duration-200"
@@ -120,7 +115,6 @@ export const CategoryItem = React.memo(
       prev.category.id === next.category.id &&
       prev.category.totalValue === next.category.totalValue &&
       prev.category.percentage === next.category.percentage &&
-      prev.balanceHidden === next.balanceHidden &&
       prev.isNavigating === next.isNavigating &&
       prev.onCategoryClick === next.onCategoryClick &&
       prev.variant === next.variant
