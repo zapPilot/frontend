@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { GlassCard } from "./GlassCard";
-import { LoadingSpinner } from "./LoadingSpinner";
+import { LoadingSpinner } from "./LoadingSystem";
 
 export interface LoadingCardProps {
   title?: string;

@@ -14,7 +14,6 @@ export { useWalletConnection } from "./useWallet";
 
 // Portfolio hooks
 export { usePortfolio } from "./usePortfolio";
-export { useStrategyPortfolio } from "./useStrategyPortfolio";
 export { useDustZap } from "./useDustZap";
 
 // UI/Interaction hooks

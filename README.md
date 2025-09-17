@@ -1,140 +1,282 @@
-# Zap Pilot - Portfolio Management UI
+# Zap Pilot - DeFi Portfolio Management
 
-A modern, mobile-first Progressive Web App (PWA) for managing DeFi portfolios using intent-based
-execution.
+A modern, mobile-first Progressive Web App (PWA) for intelligent DeFi portfolio management using
+intent-based execution and real-time analytics.
 
 ## Features
 
 - 📱 **PWA Support** - Install as mobile app with offline capabilities
 - 🎨 **Modern Design** - Glass morphism effects with purple/blue gradient theme
-- 💼 **Wallet Interface** - Professional wallet-style portfolio management
-- 📊 **Smart Navigation** - Responsive navigation (sidebar for web, bottom for mobile)
+- 💼 **Portfolio Management** - Professional portfolio interface with real-time APR data
+- 📊 **Smart Navigation** - Responsive navigation (sidebar for desktop, bottom tabs for mobile)
 - 🥧 **Asset Categories** - Visual pie chart for BTC, ETH, STABLECOIN, ALTCOIN categories
-- 🔍 **Detailed Analytics** - Expandable asset details with pool information and APR
-- 🔄 **Intent-Based Actions** - ZapIn, ZapOut, and Optimize operations
-- 🧑‍🤝‍🧑 **Community Hub** - Stats, podcasts, and social links
-- ⚙️ **Settings** - Comprehensive preferences and help section
-- 📱 **Mobile Responsive** - Optimized for all screen sizes
-- ⚡ **Performance** - Built with Next.js 15 and Turbopack
-- 🎭 **Animations** - Smooth Framer Motion transitions
+- 🔍 **Pool Analytics** - Detailed pool performance analysis with sortable metrics
+- 📈 **Historical Charts** - Performance trend charts for informed decision-making
+- 🔄 **Intent-Based Actions** - ZapIn, ZapOut, and Optimize operations with progress tracking
+- 🌐 **Multi-Chain Support** - Ethereum, Polygon, and other EVM chains
+- 🔗 **Bundle Sharing** - Deep-linking to share and view portfolios
+- 🛡️ **Security-First** - Comprehensive CSP headers and security best practices
+- ⚡ **Performance** - Built with Next.js 15, React Query, and optimized for speed
 
 ## Technology Stack
 
-- **Framework**: Next.js 15 with App Router
-- **Styling**: Tailwind CSS v4
-- **Animations**: Framer Motion
+- **Framework**: Next.js 15 with App Router and Turbopack
+- **Frontend**: React 19, TypeScript 5, Tailwind CSS v4
+- **Web3**: ThirdWeb SDK v5 for wallet connectivity and transactions
+- **State Management**: React Query, React Context
+- **Animations**: Framer Motion with GPU-accelerated transitions
 - **Icons**: Lucide React
-- **PWA**: next-pwa
-- **TypeScript**: Full type safety
+- **PWA**: next-pwa with service worker support
+- **Testing**: Vitest, Playwright, Testing Library
+- **Development**: ESLint 9, Prettier, Husky pre-commit hooks
 
-## Portfolio Metrics
+## Portfolio Features
 
-The dashboard displays key portfolio metrics:
+### Real-Time Portfolio Analytics
 
-- **Total Balance**: Current USD value with daily change
-- **Portfolio APR**: Annual percentage return
-- **Max Drawdown**: Peak-to-trough decline percentage
-- **Risk Score**: Portfolio risk assessment (1-10 scale)
-- **Composition**: Asset allocation breakdown
+- **Total Balance**: Current USD value with 24h change tracking
+- **Portfolio APR**: Real annual percentage return from connected pools
+- **Risk Assessment**: Multi-factor risk scoring and analysis
+- **Performance Trends**: Historical APR charts with category filtering
+- **Pool Analytics**: Individual pool performance with underperforming position identification
+
+### Asset Management
+
+- **Category Breakdown**: Interactive visualization of:
+  - **BTC**: Bitcoin and wrapped Bitcoin assets
+  - **ETH**: Ethereum, staked ETH, and liquid staking tokens
+  - **STABLECOIN**: USDC, USDT, DAI, and stable pools
+  - **ALTCOIN**: LINK, AAVE, and other alternative tokens
+- **Protocol Integration**: Lido, Aave, Uniswap, Compound support
+- **Detailed Views**: Expandable categories with balance hiding options
+
+### Intent-Based Operations
+
+Three core portfolio actions with unified progress tracking:
+
+1. **ZapIn** - Optimal liquidity deployment across protocols
+2. **ZapOut** - Efficient position exits with slippage minimization
+3. **Optimize** - Portfolio rebalancing and dust token conversion
 
 ## Application Structure
 
-### 📱 Navigation
+### 📱 Responsive Navigation
 
-- **Desktop**: Left sidebar with detailed navigation
-- **Mobile**: Bottom tab bar with swipe gestures
-- **Sections**: Portfolio, Analytics, Community, Airdrop, Settings
+- **Desktop**: Sidebar navigation with detailed sections
+- **Mobile**: Bottom tab bar with swipe-friendly interface
+- **Deep Linking**: URL-based portfolio sharing (`/bundle?userId=0x...`)
 
-### 💼 Portfolio Tab (Wallet Interface)
+### 💼 Portfolio Tab
 
-- **Balance Overview**: Total value, 24h change, portfolio metrics
-- **Asset Categories**: Interactive pie chart showing:
-  - **BTC**: All Bitcoin-related assets (WBTC, BTC, etc.)
-  - **ETH**: Ethereum assets (stETH, ETH, LSTs)
-  - **STABLECOIN**: USDC, USDT, DAI pools
-  - **ALTCOIN**: LINK, AAVE, and other tokens
-- **Detailed View**: Expandable categories showing:
-  - Individual assets and pools
-  - Protocol information (Lido, Aave, Uniswap)
-  - APR rates and asset types
-  - Pool performance metrics
+- **Enhanced Overview**: Real-time metrics with performance trend visualization
+- **Interactive Charts**: Multi-tab charts (performance, allocation, drawdown)
+- **Category Management**: Expandable asset categories with protocol details
+- **Action Center**: Context-aware ZapIn/ZapOut/Optimize controls
 
 ### 📊 Analytics Tab
 
-- **Performance Charts**: Historical portfolio analytics and metrics
-- **Dashboards**: Interactive analytics dashboard components
+- **Pool Performance Table**: Sortable pool metrics with performance indicators
+- **Historical Analytics**: Performance charts and trend analysis
+- **Risk Metrics**: Portfolio risk assessment and breakdown
 
 ### 🧑‍🤝‍🧑 Community Tab
 
-- **Community Stats**: Ecosystem metrics and engagement
-- **Resources**: Podcast links and social media connections
-
-### 🎁 Airdrop Tab
-
-- **Rewards Overview**: Token reward programs for early users
+- **Community Statistics**: Ecosystem engagement metrics
+- **Social Integration**: Twitter, Discord, and community links
+- **Educational Resources**: Podcast links and learning materials
 
 ### ⚙️ Settings Tab
 
-- **Account Preferences**: Configuration options and personalization
-- **Help & Support**: Documentation and community links
+- **Wallet Management**: Multi-wallet support with labeling
+- **Email Notifications**: Subscription management
+- **App Preferences**: Balance visibility, display options
 
-## Quick Actions
+## Bundle Sharing & Deep Linking
 
-Three main intent-based actions available:
+### URL-Based Portfolio Access
 
-1. **ZapIn** - Add liquidity optimally across protocols
-2. **ZapOut** - Exit positions with minimal slippage
-3. **Optimize** - Rebalance portfolio for maximum yield
+- **Owner View**: `/bundle?userId=<connected-wallet>` - Full functionality
+- **Visitor View**: `/bundle?userId=<any-wallet>` - Read-only portfolio access
+- **Error Handling**: Friendly "Bundle not found" for invalid addresses
 
-## Getting Started
+### Visitor Mode Features
 
-```bash
-# Install dependencies
-npm install
+- **Data Visualization**: Full access to charts, metrics, and breakdowns
+- **Action Restrictions**: ZapIn/ZapOut/Optimize disabled for security
+- **Switch Banner**: Connected users can switch to their own bundle
+- **Persistent UI**: Banner dismissal saved per userId
 
-# Start development server
-npm run dev
+## Architecture
 
-# Build for production
-npm run build
+### Service-First Architecture
 
-# Start production server
-npm start
+```
+src/services/
+├── accountService.ts     # User & wallet management
+├── intentService.ts      # Transaction execution
+├── analyticsService.ts   # Portfolio analytics & APR data
+├── userService.ts        # User data transformations
+└── bundleService.ts      # URL generation & sharing
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Component Organization
 
-## Design System
+```
+src/components/
+├── ui/                   # Reusable design system components
+├── PortfolioAllocation/  # Main portfolio management feature
+├── SwapPage/            # Trading and optimization interface
+├── Web3/                # Wallet connectivity and chain management
+├── PoolAnalytics/       # Pool performance analysis
+├── shared/              # Cross-feature shared components
+└── bundle/              # Bundle sharing functionality
+```
 
-Following the Zap Pilot design language:
+### State Management Pattern
 
-- **Colors**: Purple-blue gradients (#8b5cf6 to #3b82f6)
-- **Background**: Dark theme (#0a0a0f)
-- **Glass Morphism**: Backdrop blur with transparency
-- **Animations**: Subtle hover effects and micro-interactions
-- **Typography**: Geist Sans font family
+1. **React Query** - API state, caching, and synchronization
+2. **React Context** - Global application state (wallet, user)
+3. **Custom Hooks** - Feature-specific business logic
+4. **Service Functions** - All API operations with error handling
 
-## Mobile Features
+## Development Commands
 
-- Touch-friendly button sizes
-- Responsive grid layouts
-- Swipe gestures ready
-- Optimized for iOS and Android
-- Apple Web App metadata
+### Core Development
+
+```bash
+npm run dev          # Start development server (Turbopack)
+npm run build        # Production build
+npm run start        # Serve production build
+```
+
+### Code Quality
+
+```bash
+npm run lint         # ESLint check with auto-fix
+npm run lint:fix     # Fix all auto-fixable issues
+npm run format       # Prettier formatting
+npm run format:check # Check formatting without changes
+npm run type-check   # TypeScript type checking
+```
+
+### Testing
+
+```bash
+npm test             # Run all Vitest tests
+npm run test:unit    # Unit tests only
+npm run test:e2e     # Playwright end-to-end tests
+npm run test:coverage # Coverage report with thresholds
+npm run test:safe    # Memory-optimized test runner
+```
+
+## Environment Setup
+
+### Required Environment Variables
+
+```env
+# Web3 Configuration
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=your_client_id
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
+
+# API Endpoints
+NEXT_PUBLIC_API_BASE_URL=https://api.example.com
+NEXT_PUBLIC_DEBANK_API_URL=https://api.debank.com
+
+# Feature Flags
+NODE_ENV=development
+NEXT_PUBLIC_ENABLE_DEBUG=false
+```
+
+### Local Development Setup
+
+1. **Clone and Install**:
+
+   ```bash
+   git clone <repository-url>
+   cd frontend
+   npm install
+   ```
+
+2. **Environment Configuration**:
+
+   ```bash
+   cp .env.example .env.local
+   # Edit .env.local with your API keys
+   ```
+
+3. **Start Development**:
+
+   ```bash
+   npm run dev
+   ```
+
+4. **Access Application**:
+   - Web: http://localhost:3000
+   - API Docs: Available in deployed environment
+
+## Security Features
+
+### Content Security Policy
+
+- **Strict CSP**: Comprehensive headers preventing XSS attacks
+- **Development Mode**: Relaxed policies for hot reloading
+- **Production Mode**: Hardened security with minimal allowed sources
+- **Web3 Integration**: Secure wallet connection with approved domains
+
+### Additional Security Headers
+
+- **X-Frame-Options**: Prevents clickjacking attacks
+- **HSTS**: Enforces HTTPS connections
+- **Permissions Policy**: Restricts browser feature access
+- **Cross-Origin Policies**: Secure resource sharing
+
+## Performance Optimizations
+
+### Build Optimizations
+
+- **Static Export**: Pre-rendered static site generation
+- **Image Optimization**: Next.js image optimization with remote patterns
+- **Code Splitting**: Route-based and component-level splitting
+- **Tree Shaking**: Unused code elimination
+
+### Runtime Optimizations
+
+- **React Query Caching**: Intelligent API response caching
+- **Component Memoization**: React.memo for expensive renders
+- **Animation Performance**: GPU-accelerated CSS transforms
+- **Lazy Loading**: Dynamic imports for non-critical components
 
 ## Browser Support
 
-- Chrome/Edge 88+
-- Firefox 85+
-- Safari 14+
-- Mobile Safari 14+
-- Chrome Mobile 88+
+- **Desktop**: Chrome 88+, Firefox 85+, Safari 14+, Edge 88+
+- **Mobile**: iOS Safari 14+, Chrome Mobile 88+, Samsung Internet
+- **PWA**: Service worker support for offline functionality
 
-## AI Collaboration
+## Deployment
 
-This repository includes configuration and guidance for automated agents:
+### Static Export Configuration
 
-- `.serena/` holds project memories and configuration for the Serena agent.
-- `.claude/` and `Claude.md` document workflows and commands for Anthropic's Claude.
+The app is configured for static export deployment:
 
-Keep these resources updated as the codebase evolves.
+- **Output**: Static HTML, CSS, JS files
+- **CDN Ready**: Optimized for edge deployment
+- **Environment Agnostic**: Runtime environment detection
+
+### Deployment Targets
+
+- **Cloudflare Pages**: Recommended with Worker integration
+- **Vercel**: Full Next.js support with edge functions
+- **Netlify**: Static hosting with form handling
+- **AWS S3/CloudFront**: Traditional static hosting
+
+## AI Development Support
+
+This project includes comprehensive AI agent integration:
+
+- **`.serena/memories/`**: Project architecture and component documentation
+- **`CLAUDE.md`**: Claude Code integration and development workflows
+- **Service Documentation**: `docs/SERVICES.md` for backend integration patterns
+- **Component Inventory**: Comprehensive component catalog for development
+
+The architecture is designed to be AI-friendly with clear patterns, comprehensive documentation, and
+consistent conventions.

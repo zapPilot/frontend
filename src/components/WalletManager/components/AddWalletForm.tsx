@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { GRADIENTS } from "@/constants/design-system";
-import { GradientButton } from "@/components/ui";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GradientButton, LoadingSpinner } from "@/components/ui";
 import type { NewWallet, WalletOperations } from "../types/wallet.types";
 
 interface AddWalletFormProps {

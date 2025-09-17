@@ -7,7 +7,7 @@ import {
 } from "../../../../src/components/ui/LoadingState";
 
 // Mock child components
-vi.mock("../../../../src/components/ui/LoadingSpinner", () => ({
+vi.mock("../../../../src/components/ui/LoadingSystem", () => ({
   LoadingSpinner: vi.fn(({ size }) => (
     <div data-testid="loading-spinner" data-size={size}>
       Spinner

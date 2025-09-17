@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { LoadingSpinner } from "@/components/ui";
 import { WalletService } from "../services/WalletService";
 import { WalletActionMenu } from "./WalletActionMenu";
 import type { WalletData } from "@/services/userService";

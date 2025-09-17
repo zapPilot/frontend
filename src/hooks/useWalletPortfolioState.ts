@@ -3,10 +3,10 @@
 import { useUser } from "@/contexts/UserContext";
 import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioData } from "@/hooks/usePortfolioData";
-import { usePortfolio } from "@/hooks/usePortfolio";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletModal } from "@/hooks/useWalletModal";
 import type { LandingPageResponse } from "@/services/analyticsService";
+import { usePortfolio } from "@/hooks/usePortfolio";
 
 export interface UseWalletPortfolioStateParams {
   urlUserId?: string;
@@ -33,14 +33,13 @@ export interface WalletPortfolioViewModel {
   portfolioMetrics: ReturnType<typeof usePortfolioData>["portfolioMetrics"];
   // Aggregated portfolio state
   portfolioState: ReturnType<typeof usePortfolioState>;
-  // Balance visibility
-  balanceHidden: boolean;
-  toggleBalanceVisibility: () => void;
   // Actions (effective with visitor gating applied)
   onOptimizeClick?: () => void;
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
   onCategoryClick?: (categoryId: string) => void;
+  // Optional balance toggle passthrough for compatibility
+  onToggleBalance?: () => void;
   // Bundle display context (pass-through)
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
@@ -100,15 +99,15 @@ export function useWalletPortfolioState(
     hasZeroData,
   });
 
-  // Balance visibility (kept for compatibility with existing contexts/tests)
-  const { balanceHidden, toggleBalanceVisibility } = usePortfolio([]);
-
   // Wallet manager modal controls
   const {
     isOpen: isWalletManagerOpen,
     openModal: openWalletManager,
     closeModal: closeWalletManager,
   } = useWalletModal();
+
+  // Balance toggle (compatibility passthrough for tests and existing mocks)
+  const { toggleBalanceVisibility } = usePortfolio([]);
 
   // Gate action handlers when in visitor mode
   const gatedOnOptimize = !isVisitorMode ? onOptimizeClick : undefined;
@@ -124,12 +123,11 @@ export function useWalletPortfolioState(
     debtCategorySummaries,
     portfolioMetrics,
     portfolioState,
-    balanceHidden,
-    toggleBalanceVisibility,
     ...(gatedOnOptimize ? { onOptimizeClick: gatedOnOptimize } : {}),
     ...(gatedOnZapIn ? { onZapInClick: gatedOnZapIn } : {}),
     ...(gatedOnZapOut ? { onZapOutClick: gatedOnZapOut } : {}),
     ...(onCategoryClick ? { onCategoryClick } : {}),
+    onToggleBalance: toggleBalanceVisibility,
     ...(typeof isOwnBundle !== "undefined" ? { isOwnBundle } : {}),
     ...(bundleUserName ? { bundleUserName } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),

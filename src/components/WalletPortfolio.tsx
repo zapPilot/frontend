@@ -35,10 +35,5 @@ export function WalletPortfolio({
     ...(bundleUrl ? { bundleUrl } : {}),
   });
 
-  return (
-    <WalletPortfolioPresenter
-      vm={vm}
-      {...(onCategoryClick ? { onCategoryClick } : {})}
-    />
-  );
+  return <WalletPortfolioPresenter vm={vm} />;
 }

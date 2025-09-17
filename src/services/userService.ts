@@ -242,9 +242,13 @@ export const getMainWallet = (
  */
 export const handleWalletError = (error: unknown): string => {
   // Use service-specific error handling first
-  if (error instanceof AccountServiceError) {
+  // Check both instanceof and name property for better test compatibility
+  if (
+    error instanceof AccountServiceError ||
+    (error instanceof Error && error.name === "AccountServiceError")
+  ) {
     // AccountService already provides enhanced error messages
-    return error.message;
+    return (error as Error).message;
   }
 
   // Fallback to generic error handling
