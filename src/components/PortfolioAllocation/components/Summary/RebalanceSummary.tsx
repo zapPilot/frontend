@@ -10,7 +10,10 @@ interface RebalanceSummaryProps {
 export const RebalanceSummary = memo<RebalanceSummaryProps>(
   ({ rebalanceData }) => {
     return (
-      <div className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4">
+      <div
+        className="bg-gray-900/30 rounded-2xl border border-gray-700 p-4"
+        data-testid="rebalance-summary"
+      >
         <h4 className="text-sm font-medium text-white mb-3">
           Rebalance Summary
         </h4>

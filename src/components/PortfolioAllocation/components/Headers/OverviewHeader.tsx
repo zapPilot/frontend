@@ -16,13 +16,16 @@ export const OverviewHeader = memo<OverviewHeaderProps>(
       0;
 
     return (
-      <div className="flex items-center justify-between">
+      <div
+        className="flex items-center justify-between"
+        data-testid="overview-header"
+      >
         <h3 className="text-xl font-bold gradient-text">
           {rebalanceMode?.isEnabled
             ? "Portfolio Rebalancing"
             : "Portfolio Allocation"}
         </h3>
-        <div className="text-sm text-gray-400">
+        <div className="text-sm text-gray-400" data-testid="total-categories">
           {rebalanceMode?.isEnabled
             ? `${changesCount} changes planned`
             : `${includedCategories} of ${totalCategories} categories active`}
