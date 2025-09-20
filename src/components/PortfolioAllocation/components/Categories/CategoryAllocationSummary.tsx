@@ -79,7 +79,10 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
     };
 
     const targetAllocation = excluded ? 0 : allocationValue;
-    const formattedCategoryValue = formatCurrency(category.totalValue);
+    const formattedCategoryValue = formatCurrency(category.totalValue, {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
 
     const valueSummary = (
       <div className="flex items-center gap-3 text-xs text-gray-400">
@@ -127,10 +130,10 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
         <div className="flex items-center justify-between">
           <div className="text-xs text-gray-500">
             {excluded
-              ? "Category excluded"
+              ? "0%"
               : `Current: ${category.activeAllocationPercentage.toFixed(1)}%`}
           </div>
-          {valueSummary}
+          {!excluded && valueSummary}
         </div>
       </div>
     );
