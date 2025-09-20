@@ -115,36 +115,48 @@ export const generateRebalanceData = (
   };
 };
 
+interface ProcessAssetCategoriesOptions {
+  allocationOverrides?: Record<string, number>;
+  totalPortfolioValue?: number;
+}
+
+const DEFAULT_TOTAL_VALUE = 100_000;
+
 // Data processing utility
 export const processAssetCategories = (
   assetCategories: AssetCategory[],
-  excludedCategoryIds: string[]
+  excludedCategoryIds: string[],
+  options: ProcessAssetCategoriesOptions = {}
 ): {
   processedCategories: ProcessedAssetCategory[];
   chartData: ChartDataPoint[];
 } => {
-  // Calculate total portfolio value
-  const totalPortfolioValue = assetCategories.reduce(sum => {
-    // Mock calculation - in real app this would use actual portfolio values
-    return sum + 10000; // Placeholder value per category
-  }, 0);
+  const {
+    allocationOverrides = {},
+    totalPortfolioValue = DEFAULT_TOTAL_VALUE,
+  } = options;
 
-  // Calculate base percentages
   const categoriesWithBasePercentages = assetCategories.map(category => {
     const isExcluded = excludedCategoryIds.includes(category.id);
-    const mockValue = 10000; // Placeholder - use real values in production
-    const totalAllocationPercentage = (mockValue / totalPortfolioValue) * 100;
+    const override = allocationOverrides[category.id];
+
+    const targetPercentage =
+      override !== undefined
+        ? Math.max(0, override)
+        : 100 / Math.max(assetCategories.length, 1);
+
+    // If overrides don't sum to 100, treat them as-is. The remainder will be shown as unallocated.
+    const categoryValue = (targetPercentage / 100) * totalPortfolioValue;
 
     return {
       ...category,
       isExcluded,
-      totalAllocationPercentage,
-      totalValue: mockValue,
+      totalAllocationPercentage: targetPercentage,
+      totalValue: categoryValue,
       activeAllocationPercentage: 0, // Will be calculated below
     };
   });
 
-  // Calculate active percentages (only among included categories)
   const includedCategories = categoriesWithBasePercentages.filter(
     cat => !cat.isExcluded
   );
@@ -156,15 +168,18 @@ export const processAssetCategories = (
   const processedCategories: ProcessedAssetCategory[] =
     categoriesWithBasePercentages.map(category => ({
       ...category,
-      activeAllocationPercentage: category.isExcluded
-        ? 0
-        : (category.totalValue / totalIncludedValue) * 100,
+      activeAllocationPercentage:
+        category.isExcluded || totalIncludedValue === 0
+          ? 0
+          : (category.totalValue / totalIncludedValue) * 100,
     }));
 
-  // Generate chart data (only for included categories)
   const chartData: ChartDataPoint[] = includedCategories.map(category => ({
     name: category.name,
-    value: (category.totalValue / totalIncludedValue) * 100,
+    value:
+      totalIncludedValue === 0
+        ? 0
+        : (category.totalValue / totalIncludedValue) * 100,
     id: category.id,
     color: category.color,
     isExcluded: false,

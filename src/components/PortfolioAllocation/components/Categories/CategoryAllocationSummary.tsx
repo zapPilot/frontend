@@ -1,7 +1,11 @@
 "use client";
 
+import {
+  MAX_ALLOCATION_PERCENT,
+  MIN_ALLOCATION_PERCENT,
+} from "@/constants/portfolio-allocation";
 import { memo } from "react";
-import { ProcessedAssetCategory, CategoryShift } from "../../types";
+import { CategoryShift, ProcessedAssetCategory } from "../../types";
 
 interface CategoryAllocationSummaryProps {
   category: ProcessedAssetCategory;
@@ -9,6 +13,8 @@ interface CategoryAllocationSummaryProps {
   showRebalanceInfo: boolean;
   rebalanceShift?: CategoryShift;
   rebalanceTarget?: ProcessedAssetCategory;
+  allocation?: number | undefined;
+  onAllocationChange?: ((value: number) => void) | undefined;
 }
 
 export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
@@ -18,6 +24,8 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
     showRebalanceInfo,
     rebalanceShift,
     rebalanceTarget,
+    allocation,
+    onAllocationChange,
   }) => {
     if (showRebalanceInfo && rebalanceShift && rebalanceTarget) {
       return (
@@ -61,8 +69,19 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
       );
     }
 
+    const allocationValue = allocation ?? category.totalAllocationPercentage;
+
+    const handleAllocationInput = (value: number) => {
+      if (!onAllocationChange) return;
+      if (Number.isNaN(value)) return;
+      onAllocationChange(value);
+    };
+
     return (
-      <div data-testid={`allocation-${category.id}`}>
+      <div
+        data-testid={`allocation-${category.id}`}
+        className="flex flex-col items-end gap-2"
+      >
         <div
           className={`font-bold ${excluded ? "text-gray-500" : "text-white"}`}
         >
@@ -71,9 +90,27 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
             : `${category.activeAllocationPercentage.toFixed(1)}%`}
         </div>
         {!excluded && (
-          <div className="text-sm text-gray-400">
-            ${category.totalValue.toLocaleString()}
-          </div>
+          <>
+            <div className="text-sm text-gray-400">
+              ${category.totalValue.toLocaleString()}
+            </div>
+            {onAllocationChange && (
+              <div className="flex w-full items-center gap-2">
+                <input
+                  type="range"
+                  min={MIN_ALLOCATION_PERCENT}
+                  max={MAX_ALLOCATION_PERCENT}
+                  step={0.5}
+                  value={allocationValue}
+                  onChange={event =>
+                    handleAllocationInput(Number(event.target.value))
+                  }
+                  className="h-2 w-44 flex-1 cursor-pointer appearance-none rounded-full bg-gray-700"
+                  data-testid={`allocation-slider-${category.id}`}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
     );

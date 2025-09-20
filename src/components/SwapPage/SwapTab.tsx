@@ -80,7 +80,9 @@ export function SwapTab({
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm text-gray-400">From</span>
             <span className="text-sm text-gray-400" data-testid="token-balance">
-              {formatCurrency(fromToken.balance * fromToken.price)}
+              {fromToken.balance !== undefined && fromToken.price !== undefined
+                ? formatCurrency(fromToken.balance * fromToken.price)
+                : "--"}
             </span>
           </div>
           <div className="space-y-3">

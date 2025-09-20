@@ -11,6 +11,10 @@ interface CategoryListSectionProps {
   rebalanceShiftMap?: Map<string, CategoryShift>;
   rebalanceTargetMap?: Map<string, ProcessedAssetCategory>;
   isRebalanceEnabled?: boolean;
+  allocations?: Record<string, number> | undefined;
+  onAllocationChange?:
+    | ((categoryId: string, value: number) => void)
+    | undefined;
   testId?: string;
 }
 
@@ -22,6 +26,8 @@ export const CategoryListSection = memo<CategoryListSectionProps>(
     rebalanceShiftMap,
     rebalanceTargetMap,
     isRebalanceEnabled = false,
+    allocations,
+    onAllocationChange,
     testId = "allocation-list",
   }) => {
     if (categories.length === 0) {
@@ -47,6 +53,14 @@ export const CategoryListSection = memo<CategoryListSectionProps>(
               isExcluded={excludedCategoryIdsSet.has(category.id)}
               onToggleCategoryExclusion={onToggleCategoryExclusion}
               isRebalanceEnabled={isRebalanceEnabled}
+              allocation={
+                allocations?.[category.id] ?? category.totalAllocationPercentage
+              }
+              onAllocationChange={
+                onAllocationChange
+                  ? value => onAllocationChange(category.id, value)
+                  : undefined
+              }
               {...(shift ? { rebalanceShift: shift } : {})}
               {...(target ? { rebalanceTarget: target } : {})}
             />

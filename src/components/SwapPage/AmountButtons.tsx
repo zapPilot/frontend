@@ -19,8 +19,10 @@ export function AmountButtons({
   onAmountChange,
 }: AmountButtonsProps) {
   const handlePercentageClick = (percentage: number) => {
-    const amount = (fromToken.balance * percentage).toString();
-    onAmountChange(amount);
+    if (fromToken.balance !== undefined) {
+      const amount = (fromToken.balance * percentage).toString();
+      onAmountChange(amount);
+    }
   };
 
   return (

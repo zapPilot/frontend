@@ -15,6 +15,8 @@ interface AssetCategoryRowProps {
   isRebalanceEnabled?: boolean;
   rebalanceShift?: CategoryShift;
   rebalanceTarget?: ProcessedAssetCategory;
+  allocation?: number | undefined;
+  onAllocationChange?: ((value: number) => void) | undefined;
 }
 
 export const AssetCategoryRow = memo<AssetCategoryRowProps>(
@@ -25,6 +27,8 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
     isRebalanceEnabled,
     rebalanceShift,
     rebalanceTarget,
+    allocation,
+    onAllocationChange,
   }) => {
     const dropdown = useDropdown(false);
     const excluded = isExcluded;
@@ -57,6 +61,8 @@ export const AssetCategoryRow = memo<AssetCategoryRowProps>(
                   category={category}
                   excluded={excluded}
                   showRebalanceInfo={showRebalanceInfo}
+                  allocation={allocation}
+                  onAllocationChange={onAllocationChange}
                   {...(rebalanceShift ? { rebalanceShift } : {})}
                   {...(rebalanceTarget ? { rebalanceTarget } : {})}
                 />

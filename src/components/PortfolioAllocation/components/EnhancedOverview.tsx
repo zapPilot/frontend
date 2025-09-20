@@ -14,6 +14,12 @@ import { PerformanceTrendChart, PortfolioCharts } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
+interface AllocationStatusSummary {
+  totalAllocated: number;
+  remaining: number;
+  isBalanced: boolean;
+}
+
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];
   chartData: ChartDataPoint[];
@@ -23,6 +29,11 @@ interface EnhancedOverviewProps {
   operationMode?: OperationMode;
   excludedCategoryIds: string[];
   onToggleCategoryExclusion: (categoryId: string) => void;
+  allocations?: Record<string, number> | undefined;
+  onAllocationChange?:
+    | ((categoryId: string, value: number) => void)
+    | undefined;
+  allocationStatus?: AllocationStatusSummary | undefined;
 }
 
 export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
@@ -34,6 +45,9 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   operationMode = "zapIn",
   excludedCategoryIds,
   onToggleCategoryExclusion,
+  allocations,
+  onAllocationChange,
+  allocationStatus,
 }) => {
   const {
     includedCategories,
@@ -50,6 +64,10 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
     excludedCategoryIds,
     chartData,
   });
+
+  const totalAllocated = allocationStatus?.totalAllocated ?? 0;
+  const remaining = allocationStatus?.remaining ?? 0;
+  const isBalanced = allocationStatus?.isBalanced ?? true;
 
   return (
     <motion.div
@@ -71,6 +89,27 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         className="col-span-full"
       />
 
+      {/* Allocation Summary */}
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-700/40 bg-slate-900/40 px-4 py-3 text-sm">
+        <div className="font-medium text-white">Allocation Status</div>
+        <div className="text-gray-400">
+          Allocated: {totalAllocated.toFixed(1)}%
+        </div>
+        <div
+          className={
+            remaining > 0
+              ? "text-yellow-400"
+              : remaining < 0
+                ? "text-red-400"
+                : "text-green-400"
+          }
+        >
+          {remaining > 0 && `${remaining.toFixed(1)}% unallocated`}
+          {remaining < 0 && `${Math.abs(remaining).toFixed(1)}% over-allocated`}
+          {remaining === 0 && "Balanced"}
+        </div>
+      </div>
+
       {/* Main Content: Responsive Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 xl:gap-8">
         {/* Left Column: Action Controls */}
@@ -88,6 +127,12 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             includedCategories={includedCategories}
             rebalanceMode={rebalanceMode}
             onAction={onZapAction}
+            isEnabled={isBalanced}
+            disabledReason={
+              !isBalanced
+                ? "Adjust category weights so totals equal 100%."
+                : undefined
+            }
           />
         </div>
 
@@ -121,6 +166,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         excludedCategoryIdsSet={excludedCategoryIdsSet}
         onToggleCategoryExclusion={onToggleCategoryExclusion}
         isRebalanceEnabled={isRebalanceEnabled}
+        allocations={allocations}
+        onAllocationChange={onAllocationChange}
         {...(rebalanceShiftMap ? { rebalanceShiftMap } : {})}
         {...(rebalanceTargetMap ? { rebalanceTargetMap } : {})}
       />

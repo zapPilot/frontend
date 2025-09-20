@@ -98,6 +98,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
         className="rounded-full object-cover"
         key={imageState.currentSrc} // Force re-render on src change
         onError={handleImageError}
+        loading={size <= 48 ? "eager" : "lazy"}
         unoptimized // Disable Next.js optimization for external URLs
       />
     </div>

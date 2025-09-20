@@ -53,6 +53,7 @@ interface ActionCenterProps {
   dustTokens?: DustToken[];
   loadingTokens?: boolean;
   className?: string;
+  chainId?: number;
 }
 
 // Action definitions
@@ -114,6 +115,7 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
   dustTokens = [],
   loadingTokens = false,
   className = "",
+  chainId,
 }) => {
   // Determine current action based on operation mode and optimization options
   const getCurrentAction = (): ActionType => {
@@ -263,7 +265,8 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
       if (
         selectedAction === "zapIn" &&
         swapSettings.fromToken &&
-        swapSettings.amount
+        swapSettings.amount &&
+        swapSettings.fromToken.balance !== undefined
       ) {
         const amount = parseFloat(swapSettings.amount);
         if (amount > swapSettings.fromToken.balance) {
@@ -383,6 +386,7 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
                     {...(swapSettings.fromToken
                       ? { selectedToken: swapSettings.fromToken }
                       : {})}
+                    {...(chainId !== undefined ? { chainId } : {})}
                     onTokenSelect={token =>
                       handleTokenChange("fromToken", token)
                     }
@@ -396,6 +400,7 @@ export const ActionCenter: React.FC<ActionCenterProps> = ({
                     {...(swapSettings.toToken
                       ? { selectedToken: swapSettings.toToken }
                       : {})}
+                    {...(chainId !== undefined ? { chainId } : {})}
                     onTokenSelect={token => handleTokenChange("toToken", token)}
                     label="To Token"
                     placeholder="Select token to receive"

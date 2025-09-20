@@ -12,6 +12,7 @@ import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
 import { useUser } from "../../contexts/UserContext";
+import { useChain } from "../../hooks";
 
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
@@ -21,6 +22,9 @@ export interface SwapPageProps {
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
   // Get current user for portfolio data
   const { userInfo } = useUser();
+
+  // Get current chain for token operations
+  const { chain } = useChain();
 
   // Fetch strategies data with real portfolio data from API
   const { strategies, isError, error, isInitialLoading, refetch } =
@@ -142,6 +146,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               onZapAction={handleZapAction}
               excludedCategoryIds={excludedCategoryIds}
               onToggleCategoryExclusion={toggleCategoryExclusion}
+              {...(chain?.id !== undefined ? { chainId: chain.id } : {})}
             />
           </>
         ) : (
@@ -155,6 +160,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
               onZapAction={handleZapAction}
               excludedCategoryIds={excludedCategoryIds}
               onToggleCategoryExclusion={toggleCategoryExclusion}
+              {...(chain?.id !== undefined ? { chainId: chain.id } : {})}
             />
           </>
         )}

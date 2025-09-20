@@ -23,6 +23,7 @@ interface SwapControlsProps {
   onSwapSettingsChange: (settings: SwapSettings) => void;
   includedCategories: ProcessedAssetCategory[];
   className?: string;
+  chainId?: number;
 }
 
 export const SwapControls: React.FC<SwapControlsProps> = ({
@@ -31,6 +32,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
   onSwapSettingsChange,
   includedCategories,
   className = "",
+  chainId,
 }) => {
   const handleTokenChange = useCallback(
     (field: "fromToken" | "toToken", token: SwapToken) => {
@@ -108,7 +110,8 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
     if (
       operationMode === "zapIn" &&
       swapSettings.fromToken &&
-      swapSettings.amount
+      swapSettings.amount &&
+      swapSettings.fromToken.balance !== undefined
     ) {
       const amount = parseFloat(swapSettings.amount);
       if (amount > swapSettings.fromToken.balance) {
@@ -308,6 +311,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
             {...(swapSettings.fromToken
               ? { selectedToken: swapSettings.fromToken }
               : {})}
+            {...(chainId !== undefined ? { chainId } : {})}
             onTokenSelect={token => handleTokenChange("fromToken", token)}
             label={modeConfig.fromLabel!}
             placeholder={modeConfig.fromPlaceholder!}
@@ -319,6 +323,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
             {...(swapSettings.toToken
               ? { selectedToken: swapSettings.toToken }
               : {})}
+            {...(chainId !== undefined ? { chainId } : {})}
             onTokenSelect={token => handleTokenChange("toToken", token)}
             label={modeConfig.toLabel!}
             placeholder={modeConfig.toPlaceholder!}
