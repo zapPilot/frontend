@@ -92,32 +92,46 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
 
     if (!excluded && onAllocationChange) {
       return (
-        <div
-          data-testid={`allocation-${category.id}`}
-          className="flex flex-col gap-3"
-        >
-          <div className="text-xs text-gray-500">
-            Current: {category.activeAllocationPercentage.toFixed(1)}%
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
+        <div data-testid={`allocation-${category.id}`} className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 whitespace-nowrap">
+                Current:
+              </span>
               <input
-                type="range"
+                type="number"
                 min={MIN_ALLOCATION_PERCENT}
                 max={MAX_ALLOCATION_PERCENT}
-                step={0.5}
-                value={targetAllocation}
-                onChange={event =>
-                  handleAllocationInput(Number(event.target.value))
-                }
-                className="h-2 flex-1 cursor-pointer appearance-none rounded-full bg-gray-700 hover:bg-gray-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
-                data-testid={`allocation-slider-${category.id}`}
-                aria-label="Adjust target allocation"
+                step={0.1}
+                value={category.activeAllocationPercentage.toFixed(1)}
+                onChange={event => {
+                  const value = Number(event.target.value);
+                  if (!Number.isNaN(value) && onAllocationChange) {
+                    onAllocationChange(value);
+                  }
+                }}
+                className="w-16 px-2 py-1 text-xs text-gray-300 bg-gray-800 border border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                data-testid={`current-allocation-input-${category.id}`}
+                aria-label="Current allocation percentage"
               />
-              {valueSummary}
+              <span className="text-xs text-gray-500">%</span>
             </div>
+            {valueSummary}
           </div>
+
+          <input
+            type="range"
+            min={MIN_ALLOCATION_PERCENT}
+            max={MAX_ALLOCATION_PERCENT}
+            step={0.5}
+            value={targetAllocation}
+            onChange={event =>
+              handleAllocationInput(Number(event.target.value))
+            }
+            className="w-full h-2 cursor-pointer appearance-none rounded-full bg-gray-700 hover:bg-gray-600 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500/30"
+            data-testid={`allocation-slider-${category.id}`}
+            aria-label="Adjust target allocation"
+          />
         </div>
       );
     }

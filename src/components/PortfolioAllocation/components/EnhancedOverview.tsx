@@ -16,8 +16,6 @@ import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
 interface AllocationStatusSummary {
   totalAllocated: number;
-  // remaining intentionally unused; sliders ensure totals are consistent
-  remaining?: number;
 }
 
 interface EnhancedOverviewProps {
