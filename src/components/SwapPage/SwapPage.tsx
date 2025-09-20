@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useCallback, useState } from "react";
+import { formatCurrency } from "../../lib/formatters";
 import { InvestmentOpportunity } from "../../types/investment";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
@@ -88,7 +89,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     );
 
     alert(
-      `🚀 Zap Operation Initiated!\n\nMode: ${action.operationMode}\nCategories: ${categoryNames}\nTotal Value: $${totalValue.toLocaleString()}\nProtocols: ${totalProtocolCount}`
+      `🚀 Zap Operation Initiated!\n\nMode: ${action.operationMode}\nCategories: ${categoryNames}\nTotal Value: ${formatCurrency(totalValue)}\nProtocols: ${totalProtocolCount}`
     );
   };
 

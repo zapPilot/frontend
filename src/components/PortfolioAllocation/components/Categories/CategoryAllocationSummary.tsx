@@ -4,10 +4,9 @@ import {
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
+import { formatCurrency } from "@/lib/formatters";
 import { memo } from "react";
 import { CategoryShift, ProcessedAssetCategory } from "../../types";
-
-const formatCurrency = (value: number) => `$${value.toLocaleString()}`;
 
 interface CategoryAllocationSummaryProps {
   category: ProcessedAssetCategory;

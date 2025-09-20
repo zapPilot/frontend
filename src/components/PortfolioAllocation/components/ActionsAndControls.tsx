@@ -5,6 +5,7 @@ import { GradientButton } from "@/components/ui";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
 import { useZapTokensWithStates } from "@/hooks/queries/useZapTokensQuery";
+import { formatCurrency } from "@/lib/formatters";
 import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
 import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
@@ -267,7 +268,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                         </div>
                         {token.price && (
                           <div className="text-xs text-gray-500">
-                            ${(token.balance * token.price).toLocaleString()}
+                            {formatCurrency(token.balance * token.price)}
                           </div>
                         )}
                       </div>
@@ -383,9 +384,7 @@ export const AmountInput = memo<AmountInputProps>(
           )}
 
           {showPortfolioValue && (
-            <span>
-              Portfolio Value: ${totalPortfolioValue.toLocaleString()}
-            </span>
+            <span>Portfolio Value: {formatCurrency(totalPortfolioValue)}</span>
           )}
 
           <button
