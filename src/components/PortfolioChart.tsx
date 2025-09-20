@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Calendar, PieChart, TrendingUp, BarChart3, Target } from "lucide-react";
+import {
+  Activity,
+  Calendar,
+  PieChart,
+  TrendingUp,
+  BarChart3,
+  Target,
+} from "lucide-react";
 import {
   memo,
   useCallback,
@@ -32,7 +39,12 @@ export interface PortfolioChartProps {
 const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
   const [selectedChart, setSelectedChart] = useState<
-    "performance" | "allocation" | "drawdown" | "sharpe" | "volatility" | "underwater"
+    | "performance"
+    | "allocation"
+    | "drawdown"
+    | "sharpe"
+    | "volatility"
+    | "underwater"
   >("performance");
   const [hoveredPoint, setHoveredPoint] = useState<{
     x: number;
@@ -152,7 +164,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
   // Mock data for Rolling Sharpe Ratio
   const sharpeData = useMemo(() => {
-    const days = CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
+    const days =
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
     const data: { date: string; sharpe: number }[] = [];
 
     for (let i = days; i >= 0; i--) {
@@ -168,7 +181,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
       data.push({
         date: date.toISOString().split("T")[0]!,
-        sharpe
+        sharpe,
       });
     }
 
@@ -177,7 +190,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
   // Mock data for Rolling Volatility
   const volatilityData = useMemo(() => {
-    const days = CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
+    const days =
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
     const data: { date: string; volatility: number }[] = [];
 
     for (let i = days; i >= 0; i--) {
@@ -193,7 +207,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
       data.push({
         date: date.toISOString().split("T")[0]!,
-        volatility: volatility * 100 // Convert to percentage
+        volatility: volatility * 100, // Convert to percentage
       });
     }
 
@@ -202,7 +216,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
   // Mock data for Underwater Chart (enhanced drawdown)
   const underwaterData = useMemo(() => {
-    const days = CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
+    const days =
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
     const data: { date: string; underwater: number; recovery: boolean }[] = [];
     let currentDrawdown = 0;
     let isInDrawdown = false;
@@ -213,7 +228,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
       // Simulate drawdown periods
 
-      if (!isInDrawdown && Math.random() < 0.02) { // 2% chance to start drawdown
+      if (!isInDrawdown && Math.random() < 0.02) {
+        // 2% chance to start drawdown
         isInDrawdown = true;
         currentDrawdown = -Math.random() * 0.15; // Up to 15% drawdown
       }
@@ -221,7 +237,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       if (isInDrawdown) {
         // Gradual recovery
         currentDrawdown = currentDrawdown * 0.95 + Math.random() * 0.01;
-        if (currentDrawdown > -0.005) { // Within 0.5% of recovery
+        if (currentDrawdown > -0.005) {
+          // Within 0.5% of recovery
           currentDrawdown = 0;
           isInDrawdown = false;
         }
@@ -230,7 +247,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       data.push({
         date: date.toISOString().split("T")[0]!,
         underwater: currentDrawdown * 100, // Convert to percentage
-        recovery: !isInDrawdown && i < days - 1
+        recovery: !isInDrawdown && i < days - 1,
       });
     }
 
@@ -678,9 +695,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             <span className="text-white">Rolling Sharpe Ratio</span>
           </div>
           <div className="flex items-center space-x-2 mt-1">
-            <div className="w-3 h-0.5 bg-gray-500 opacity-50" style={{
-              backgroundImage: "repeating-linear-gradient(to right, #6b7280, #6b7280 2px, transparent 2px, transparent 4px)"
-            }}></div>
+            <div
+              className="w-3 h-0.5 bg-gray-500 opacity-50"
+              style={{
+                backgroundImage:
+                  "repeating-linear-gradient(to right, #6b7280, #6b7280 2px, transparent 2px, transparent 4px)",
+              }}
+            ></div>
             <span className="text-gray-400">Sharpe = 1.0</span>
           </div>
         </div>
@@ -910,7 +931,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                 key={key}
                 onClick={() =>
                   setSelectedChart(
-                    key as "performance" | "allocation" | "drawdown" | "sharpe" | "volatility" | "underwater"
+                    key as
+                      | "performance"
+                      | "allocation"
+                      | "drawdown"
+                      | "sharpe"
+                      | "volatility"
+                      | "underwater"
                   )
                 }
                 className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
@@ -981,7 +1008,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               <div className="text-center">
                 <div className="text-sm text-gray-400">Current Sharpe</div>
                 <div className="text-lg font-bold text-green-400">
-                  {sharpeData[sharpeData.length - 1]?.sharpe.toFixed(2) || "0.00"}
+                  {sharpeData[sharpeData.length - 1]?.sharpe.toFixed(2) ||
+                    "0.00"}
                 </div>
               </div>
               <div className="text-center">
@@ -993,13 +1021,21 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               <div className="text-center">
                 <div className="text-sm text-gray-400">Avg Sharpe</div>
                 <div className="text-lg font-bold text-gray-300">
-                  {(sharpeData.reduce((sum, d) => sum + d.sharpe, 0) / sharpeData.length).toFixed(2)}
+                  {(
+                    sharpeData.reduce((sum, d) => sum + d.sharpe, 0) /
+                    sharpeData.length
+                  ).toFixed(2)}
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-400">Above 1.0</div>
                 <div className="text-lg font-bold text-blue-400">
-                  {Math.round((sharpeData.filter(d => d.sharpe > 1.0).length / sharpeData.length) * 100)}%
+                  {Math.round(
+                    (sharpeData.filter(d => d.sharpe > 1.0).length /
+                      sharpeData.length) *
+                      100
+                  )}
+                  %
                 </div>
               </div>
             </>
@@ -1010,25 +1046,38 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               <div className="text-center">
                 <div className="text-sm text-gray-400">Current Vol</div>
                 <div className="text-lg font-bold text-amber-400">
-                  {volatilityData[volatilityData.length - 1]?.volatility.toFixed(1) || "0.0"}%
+                  {volatilityData[
+                    volatilityData.length - 1
+                  ]?.volatility.toFixed(1) || "0.0"}
+                  %
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-400">Highest Vol</div>
                 <div className="text-lg font-bold text-red-400">
-                  {Math.max(...volatilityData.map(d => d.volatility)).toFixed(1)}%
+                  {Math.max(...volatilityData.map(d => d.volatility)).toFixed(
+                    1
+                  )}
+                  %
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-400">Lowest Vol</div>
                 <div className="text-lg font-bold text-green-400">
-                  {Math.min(...volatilityData.map(d => d.volatility)).toFixed(1)}%
+                  {Math.min(...volatilityData.map(d => d.volatility)).toFixed(
+                    1
+                  )}
+                  %
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-400">Avg Vol</div>
                 <div className="text-lg font-bold text-gray-300">
-                  {(volatilityData.reduce((sum, d) => sum + d.volatility, 0) / volatilityData.length).toFixed(1)}%
+                  {(
+                    volatilityData.reduce((sum, d) => sum + d.volatility, 0) /
+                    volatilityData.length
+                  ).toFixed(1)}
+                  %
                 </div>
               </div>
             </>
@@ -1039,7 +1088,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               <div className="text-center">
                 <div className="text-sm text-gray-400">Max Drawdown</div>
                 <div className="text-lg font-bold text-red-400">
-                  {Math.min(...underwaterData.map(d => d.underwater)).toFixed(1)}%
+                  {Math.min(...underwaterData.map(d => d.underwater)).toFixed(
+                    1
+                  )}
+                  %
                 </div>
               </div>
               <div className="text-center">
@@ -1051,13 +1103,21 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               <div className="text-center">
                 <div className="text-sm text-gray-400">Time Underwater</div>
                 <div className="text-lg font-bold text-blue-400">
-                  {Math.round((underwaterData.filter(d => d.underwater < -0.5).length / underwaterData.length) * 100)}%
+                  {Math.round(
+                    (underwaterData.filter(d => d.underwater < -0.5).length /
+                      underwaterData.length) *
+                      100
+                  )}
+                  %
                 </div>
               </div>
               <div className="text-center">
                 <div className="text-sm text-gray-400">Current Status</div>
                 <div className="text-lg font-bold text-gray-300">
-                  {(underwaterData[underwaterData.length - 1]?.underwater ?? 0) < -0.5 ? "Underwater" : "Above Water"}
+                  {(underwaterData[underwaterData.length - 1]?.underwater ??
+                    0) < -0.5
+                    ? "Underwater"
+                    : "Above Water"}
                 </div>
               </div>
             </>
