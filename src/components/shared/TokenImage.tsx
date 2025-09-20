@@ -11,6 +11,9 @@ interface TokenImageProps {
   className?: string;
 }
 
+const ZAP_ASSET_WORKER_BASE_URL =
+  "https://zap-assets-worker.davidtnfsh.workers.dev";
+
 export const TokenImage: React.FC<TokenImageProps> = ({
   token,
   size = 32,
@@ -26,9 +29,8 @@ export const TokenImage: React.FC<TokenImageProps> = ({
       return token.logo_url;
     }
 
-    // Fallback to a placeholder or generate from symbol
     const symbol = getTokenSymbol().toLowerCase();
-    return `/tokenPictures/${symbol}.webp`;
+    return `${ZAP_ASSET_WORKER_BASE_URL}/tokenPictures/${symbol}.webp`;
   };
 
   return (
