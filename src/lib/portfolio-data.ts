@@ -13,11 +13,6 @@ import type {
   UnvalidatedAssetCategory,
   UnvalidatedPortfolioData,
 } from "../types/portfolio";
-import {
-  transformForDisplay,
-  validatePieChartWeights,
-  type BorrowingDisplayData,
-} from "../utils/borrowingUtils";
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -31,10 +26,6 @@ export interface PortfolioDataResult {
     percentage: number;
     color: string;
   }[];
-}
-
-export interface EnhancedPortfolioDataResult extends PortfolioDataResult {
-  borrowingData: BorrowingDisplayData;
 }
 
 export interface PortfolioState {
@@ -51,44 +42,6 @@ export interface PortfolioMetrics {
 // =============================================================================
 // DATA PREPARATION FUNCTIONS
 // =============================================================================
-
-/**
- * Enhanced portfolio data preparation with borrowing support
- *
- * Separates assets from borrowing and provides all display data.
- * This version is borrowing-aware and provides accurate pie chart weights.
- *
- * @deprecated Use the unified useLandingPageData hook instead - server provides pre-formatted data
- * @param apiCategoriesData - Portfolio category data from API
- * @param _totalValue - Total portfolio value (unused but kept for interface compatibility)
- * @param debugContext - Optional debug context for validation logging
- * @returns Complete portfolio display data including borrowing separation
- */
-export function preparePortfolioDataWithBorrowing(
-  apiCategoriesData: AssetCategory[] | null,
-  _totalValue: number | null,
-  debugContext?: string
-): EnhancedPortfolioDataResult {
-  // Safe data preparation - handle null/undefined gracefully
-  const portfolioData = apiCategoriesData || [];
-
-  // Get borrowing-aware display data
-  const borrowingData = transformForDisplay(portfolioData);
-
-  // Create pie chart data from assets only (positive values)
-  const pieChartData = borrowingData.assetsPieData;
-
-  // Validate pie chart weights
-  if (debugContext && pieChartData.length > 0) {
-    validatePieChartWeights(pieChartData, debugContext);
-  }
-
-  return {
-    portfolioData,
-    pieChartData,
-    borrowingData,
-  };
-}
 
 // =============================================================================
 // PORTFOLIO CALCULATIONS

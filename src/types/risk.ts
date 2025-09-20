@@ -5,40 +5,6 @@
 export type RiskLevel = "Low" | "Medium" | "High" | "Very High";
 
 /**
- * Individual risk metric data structure
- * @deprecated Use ActualRiskSummaryResponse for new implementations
- */
-export interface RiskMetric {
-  /** Unique identifier for the risk metric (e.g., 'concentration', 'correlation') */
-  id: string;
-  /** Display name for the metric (e.g., 'Concentration Risk') */
-  name: string;
-  /** Numeric value of the risk metric */
-  value: number;
-  /** Unit of measurement ('%', 'ratio', or null for unitless) */
-  unit: "%" | "ratio" | null;
-  /** Risk severity level */
-  level: RiskLevel;
-  /** Brief description for tooltips or additional context */
-  description: string;
-}
-
-/**
- * Legacy API response structure for risk summary endpoint
- * @deprecated Use ActualRiskSummaryResponse for new implementations
- */
-export interface RiskSummaryResponse {
-  /** User ID this risk assessment belongs to */
-  user_id: string;
-  /** Overall portfolio risk level (optional for partial responses) */
-  overall_risk_level?: RiskLevel;
-  /** Array of individual risk metrics (optional for partial responses) */
-  metrics?: RiskMetric[];
-  /** Timestamp of when the assessment was last updated (optional) */
-  last_updated?: string;
-}
-
-/**
  * Period information for risk analysis
  */
 export interface PeriodInfo {
