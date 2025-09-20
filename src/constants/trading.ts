@@ -28,12 +28,44 @@ export const TRADING_FEES = {
   MIN_GAS_PRICE: 1, // in gwei
 } as const;
 
-// Mock Trading Data
+// Mock Trading Data - Deprecated: Use backend API tokens instead
 export const MOCK_TOKENS: SwapToken[] = [
-  { symbol: "USDC", name: "USD Coin", balance: 1500.0, price: 1.0 },
-  { symbol: "USDT", name: "Tether", balance: 800.0, price: 1.0 },
-  { symbol: "ETH", name: "Ethereum", balance: 2.5, price: 2400.0 },
-  { symbol: "BTC", name: "Bitcoin", balance: 0.1, price: 45000.0 },
+  {
+    symbol: "USDC",
+    name: "USD Coin",
+    address: "0xA0b86a33E6825611b54C8C8A7e2Ba4A8e4cF4631",
+    chainId: 1,
+    decimals: 6,
+    balance: 1500.0,
+    price: 1.0,
+  },
+  {
+    symbol: "USDT",
+    name: "Tether",
+    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    chainId: 1,
+    decimals: 6,
+    balance: 800.0,
+    price: 1.0,
+  },
+  {
+    symbol: "ETH",
+    name: "Ethereum",
+    address: "native",
+    chainId: 1,
+    decimals: 18,
+    balance: 2.5,
+    price: 2400.0,
+  },
+  {
+    symbol: "BTC",
+    name: "Bitcoin",
+    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+    chainId: 1,
+    decimals: 8,
+    balance: 0.1,
+    price: 45000.0,
+  },
 ] as const;
 
 export const PERFORMANCE_MOCK_DATA = [

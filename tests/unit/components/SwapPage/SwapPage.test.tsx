@@ -71,6 +71,17 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
+// Mock chain hook to avoid wallet provider dependency
+vi.mock("../../../../src/hooks/useChain", () => ({
+  useChain: () => ({
+    chain: { id: 8453, name: "Base", symbol: "ETH" },
+    switchChain: vi.fn(),
+    isChainSupported: vi.fn().mockReturnValue(true),
+    getChainInfo: vi.fn(),
+    getSupportedChains: vi.fn(),
+  }),
+}));
+
 // Mock strategies hooks
 vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
   useStrategiesData: vi.fn(() => ({

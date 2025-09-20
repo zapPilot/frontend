@@ -18,6 +18,7 @@ export const PortfolioAllocationContainer: React.FC<
   onZapAction,
   excludedCategoryIds,
   onToggleCategoryExclusion,
+  chainId,
 }) => {
   const [swapSettings, setSwapSettings] = useState<SwapSettings>({
     amount: "",
@@ -61,6 +62,7 @@ export const PortfolioAllocationContainer: React.FC<
     swapSettings,
     onSwapSettingsChange: setSwapSettings,
     includedCategories,
+    ...(chainId !== undefined ? { chainId } : {}),
   };
 
   return (

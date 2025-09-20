@@ -1,13 +1,14 @@
 "use client";
 
-import { memo } from "react";
-import { motion } from "framer-motion";
-import { ChevronDown } from "lucide-react";
-import { Z_INDEX, GRADIENTS } from "@/constants/design-system";
+import { TokenImage } from "@/components/shared/TokenImage";
 import { GradientButton } from "@/components/ui";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
-import { MOCK_TOKENS } from "@/constants/trading";
+import { useZapTokensWithStates } from "@/hooks/queries/useZapTokensQuery";
 import type { SwapToken } from "@/types/swap";
+import { motion } from "framer-motion";
+import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
+import { memo } from "react";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -90,11 +91,22 @@ interface TokenSelectorProps {
   onTokenSelect: (token: SwapToken) => void;
   label: string;
   placeholder: string;
+  chainId?: number;
 }
 
 export const TokenSelector = memo<TokenSelectorProps>(
-  ({ selectedToken, onTokenSelect, label, placeholder }) => {
+  ({ selectedToken, onTokenSelect, label, placeholder, chainId }) => {
     const dropdown = useDropdown(false);
+    const {
+      tokens,
+      hasTokens,
+      isEmpty,
+      isInitialLoading,
+      isError,
+      error,
+      refetch,
+      isRefetching,
+    } = useZapTokensWithStates(chainId);
 
     return (
       <div className="relative">
@@ -109,11 +121,19 @@ export const TokenSelector = memo<TokenSelectorProps>(
           <div className="flex items-center space-x-3">
             {selectedToken ? (
               <>
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                  <span className="text-sm font-bold text-white">
-                    {selectedToken.symbol.charAt(0)}
-                  </span>
-                </div>
+                <TokenImage
+                  token={{
+                    symbol: selectedToken.symbol,
+                    ...(selectedToken.optimized_symbol && {
+                      optimized_symbol: selectedToken.optimized_symbol,
+                    }),
+                    ...(selectedToken.logo_url && {
+                      logo_url: selectedToken.logo_url,
+                    }),
+                  }}
+                  size={32}
+                  className="w-8 h-8"
+                />
                 <div className="text-left">
                   <div className="text-white font-medium">
                     {selectedToken.symbol}
@@ -138,40 +158,105 @@ export const TokenSelector = memo<TokenSelectorProps>(
               exit={{ opacity: 0, y: -10 }}
               className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
-              {MOCK_TOKENS.map(token => (
-                <button
-                  key={token.symbol}
-                  onClick={() => {
-                    onTokenSelect(token);
-                    dropdown.close();
-                  }}
-                  className="w-full flex items-center space-x-3 p-3 hover:bg-gray-800 transition-colors"
-                  data-testid={`token-option-${token.symbol}`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-                    <span className="text-sm font-bold text-white">
-                      {token.symbol.charAt(0)}
-                    </span>
+              {/* Loading State */}
+              {isInitialLoading && (
+                <div className="space-y-2 p-2">
+                  {Array(4)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div key={i} className="flex items-center space-x-3 p-3">
+                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse" />
+                        <div className="flex-1">
+                          <div className="h-4 bg-gray-700 rounded animate-pulse mb-1" />
+                          <div className="h-3 bg-gray-700 rounded animate-pulse w-2/3" />
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+
+              {/* Error State */}
+              {isError && (
+                <div className="p-4 text-center">
+                  <AlertCircle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                  <div className="text-sm text-red-400 mb-2">
+                    Failed to load tokens
                   </div>
-                  <div className="flex-1 text-left">
-                    <div className="text-white font-medium">{token.symbol}</div>
-                    <div className="text-xs text-gray-400">{token.name}</div>
+                  <div className="text-xs text-gray-500 mb-3">
+                    {error?.message || "Unknown error"}
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-300">
-                      {token.balance.toFixed(
-                        token.symbol.includes("BTC") ||
-                          token.symbol.includes("ETH")
-                          ? 4
-                          : 2
-                      )}
+                  <button
+                    onClick={() => refetch()}
+                    disabled={isRefetching}
+                    className="inline-flex items-center space-x-2 px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw
+                      className={`w-3 h-3 ${isRefetching ? "animate-spin" : ""}`}
+                    />
+                    <span>{isRefetching ? "Retrying..." : "Retry"}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {isEmpty && (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="text-sm mb-1">No tokens available</div>
+                  <div className="text-xs">
+                    Try switching to a different network
+                  </div>
+                </div>
+              )}
+
+              {/* Token List */}
+              {hasTokens &&
+                tokens.map(token => (
+                  <button
+                    key={`${token.chainId}-${token.address}`}
+                    onClick={() => {
+                      onTokenSelect(token);
+                      dropdown.close();
+                    }}
+                    className="w-full flex items-center space-x-3 p-3 hover:bg-gray-800 transition-colors"
+                    data-testid={`token-option-${token.symbol}`}
+                  >
+                    <TokenImage
+                      token={{
+                        symbol: token.symbol,
+                        ...(token.optimized_symbol && {
+                          optimized_symbol: token.optimized_symbol,
+                        }),
+                        ...(token.logo_url && { logo_url: token.logo_url }),
+                      }}
+                      size={32}
+                      className="w-8 h-8"
+                    />
+                    <div className="flex-1 text-left">
+                      <div className="text-white font-medium">
+                        {token.symbol}
+                      </div>
+                      <div className="text-xs text-gray-400">{token.name}</div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      ${(token.balance * token.price).toLocaleString()}
-                    </div>
-                  </div>
-                </button>
-              ))}
+                    {/* Balance display when available */}
+                    {token.balance !== undefined && (
+                      <div className="text-right">
+                        <div className="text-sm text-gray-300">
+                          {token.balance.toFixed(
+                            token.symbol.includes("BTC") ||
+                              token.symbol.includes("ETH")
+                              ? 4
+                              : 2
+                          )}
+                        </div>
+                        {token.price && (
+                          <div className="text-xs text-gray-500">
+                            ${(token.balance * token.price).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </button>
+                ))}
             </motion.div>
             <div
               className={`fixed inset-0 ${Z_INDEX.HEADER}`}
@@ -232,7 +317,11 @@ export const AmountInput = memo<AmountInputProps>(
 
     // Handle max button click
     const handleMaxClick = () => {
-      if (operationMode === "zapIn" && fromToken) {
+      if (
+        operationMode === "zapIn" &&
+        fromToken &&
+        fromToken.balance !== undefined
+      ) {
         onAmountChange(fromToken.balance.toString());
       } else if (operationMode === "zapOut" || operationMode === "rebalance") {
         onAmountChange(totalPortfolioValue.toString());
@@ -270,7 +359,7 @@ export const AmountInput = memo<AmountInputProps>(
 
         {/* Balance/Portfolio Info */}
         <div className="flex justify-between text-xs text-gray-400">
-          {showBalance && (
+          {showBalance && fromToken!.balance !== undefined && (
             <span>
               Balance: {fromToken!.balance.toFixed(4)} {fromToken!.symbol}
             </span>
@@ -285,7 +374,10 @@ export const AmountInput = memo<AmountInputProps>(
           <button
             onClick={handleMaxClick}
             className="text-purple-400 hover:text-purple-300 transition-colors"
-            disabled={operationMode === "zapIn" && !fromToken}
+            disabled={
+              operationMode === "zapIn" &&
+              (!fromToken || fromToken.balance === undefined)
+            }
           >
             Max
           </button>

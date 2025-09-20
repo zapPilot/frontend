@@ -127,4 +127,5 @@ export interface PortfolioAllocationContainerProps {
   onZapAction?: (action: PortfolioSwapAction) => void;
   excludedCategoryIds: string[];
   onToggleCategoryExclusion: (categoryId: string) => void;
+  chainId?: number;
 }
