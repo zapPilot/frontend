@@ -1,8 +1,7 @@
 "use client";
 
-import { GRADIENTS } from "@/constants/design-system";
 import { motion } from "framer-motion";
-import { PieChart, Target, TrendingUp } from "lucide-react";
+import { Target, TrendingUp } from "lucide-react";
 import { memo, useMemo } from "react";
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getChangeColorClasses } from "../../lib/color-utils";
@@ -89,137 +88,6 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
           />
         </GlassCard>
       </motion.div>
-
-      {/* Performance Periods */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
-            Performance by Period
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left py-3 text-sm font-medium text-gray-400">
-                    Period
-                  </th>
-                  <th className="text-right py-3 text-sm font-medium text-gray-400">
-                    Return
-                  </th>
-                  <th className="text-right py-3 text-sm font-medium text-gray-400">
-                    Volatility
-                  </th>
-                  <th className="text-right py-3 text-sm font-medium text-gray-400">
-                    Sharpe
-                  </th>
-                  <th className="text-right py-3 text-sm font-medium text-gray-400">
-                    Max DD
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {performanceData.map((period, index) => (
-                  <motion.tr
-                    key={period.period}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 + index * 0.05 }}
-                    className="border-b border-gray-800/50 hover:bg-white/5 transition-colors"
-                  >
-                    <td className="py-3 text-sm font-medium text-white">
-                      {period.period}
-                    </td>
-                    <td
-                      className={`py-3 text-sm text-right font-medium ${getChangeColorClasses(period.return)}`}
-                    >
-                      {period.return > 0 ? "+" : ""}
-                      {period.return.toFixed(2)}%
-                    </td>
-                    <td className="py-3 text-sm text-right text-gray-300">
-                      {period.volatility.toFixed(1)}%
-                    </td>
-                    <td
-                      className={`py-3 text-sm text-right font-medium ${period.sharpe > 1 ? "text-green-400" : period.sharpe > 0.5 ? "text-yellow-400" : "text-red-400"}`}
-                    >
-                      {period.sharpe.toFixed(2)}
-                    </td>
-                    <td className="py-3 text-sm text-right text-red-400 font-medium">
-                      {period.maxDrawdown.toFixed(1)}%
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </GlassCard>
-      </motion.div>
-
-      {/* Asset Allocation Analysis */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <PieChart className="w-5 h-5 mr-2 text-blue-400" />
-            Asset Allocation Analysis
-          </h3>
-          <div className="space-y-3">
-            {allocationData.map((asset, index) => (
-              <motion.div
-                key={asset.asset}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.4 + index * 0.05 }}
-                className="flex items-center justify-between p-3 glass-morphism rounded-lg"
-              >
-                <div className="flex items-center space-x-3">
-                  <div className="text-sm font-medium text-white min-w-[80px]">
-                    {asset.asset}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-16 h-2 bg-gray-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full bg-gradient-to-r ${GRADIENTS.PRIMARY} rounded-full`}
-                        style={{ width: `${asset.allocation * 2.5}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-gray-400 min-w-[40px]">
-                      {asset.allocation.toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div
-                    className={`text-sm font-medium ${getChangeColorClasses(asset.performance)}`}
-                  >
-                    {asset.performance > 0 ? "+" : ""}
-                    {asset.performance.toFixed(1)}%
-                  </div>
-                  <div
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      asset.risk === "Low"
-                        ? "bg-green-900/30 text-green-400"
-                        : asset.risk === "Medium"
-                          ? "bg-yellow-900/30 text-yellow-400"
-                          : "bg-red-900/30 text-red-400"
-                    }`}
-                  >
-                    {asset.risk}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </GlassCard>
-      </motion.div>
-
       {/* Asset Attribution Analysis */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
