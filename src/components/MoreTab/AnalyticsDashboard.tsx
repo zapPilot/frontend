@@ -1,17 +1,16 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Target, TrendingUp } from "lucide-react";
+import { Target } from "lucide-react";
 import { memo, useMemo } from "react";
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import {
   generateAssetAttribution,
   getAnalyticsMetrics,
-  getPerformanceData,
 } from "../../lib/portfolio-analytics";
-import { AssetAttribution, PerformancePeriod } from "../../types/portfolio";
-import { APRMetrics, GlassCard } from "../ui";
+import { AssetAttribution } from "../../types/portfolio";
+import { GlassCard } from "../ui";
 import { KeyMetricsGrid } from "./components";
 
 interface AnalyticsDashboardProps {
@@ -27,28 +26,8 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
     () => getAnalyticsMetrics(riskData || undefined),
     [riskData]
   );
-  const performanceData: PerformancePeriod[] = useMemo(
-    () => getPerformanceData(riskData || undefined),
-    [riskData]
-  );
   const assetAttributionData: AssetAttribution[] = useMemo(
     () => generateAssetAttribution(),
-    []
-  );
-
-  const allocationData = useMemo(
-    () => [
-      { asset: "BTC", allocation: 35.2, performance: 21.4, risk: "Medium" },
-      { asset: "ETH", allocation: 28.7, performance: 18.9, risk: "Medium" },
-      { asset: "Stablecoins", allocation: 20.1, performance: 4.2, risk: "Low" },
-      {
-        asset: "DeFi Tokens",
-        allocation: 12.4,
-        performance: 45.7,
-        risk: "High",
-      },
-      { asset: "Altcoins", allocation: 3.6, performance: -8.3, risk: "High" },
-    ],
     []
   );
 
@@ -69,25 +48,6 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
       <KeyMetricsGrid metrics={portfolioMetrics} />
-      {/* APR & Monthly Return Highlight */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-      >
-        <GlassCard className="p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <TrendingUp className="w-5 h-5 mr-2 text-green-400" />
-            Portfolio Performance Highlights
-          </h3>
-          <APRMetrics
-            annualAPR={18.5}
-            monthlyReturn={1.4}
-            size="large"
-            className="justify-center"
-          />
-        </GlassCard>
-      </motion.div>
       {/* Asset Attribution Analysis */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
