@@ -16,8 +16,6 @@ import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
 interface AllocationStatusSummary {
   totalAllocated: number;
-  remaining: number;
-  isBalanced: boolean;
 }
 
 interface EnhancedOverviewProps {
@@ -66,8 +64,6 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   });
 
   const totalAllocated = allocationStatus?.totalAllocated ?? 0;
-  const remaining = allocationStatus?.remaining ?? 0;
-  const isBalanced = allocationStatus?.isBalanced ?? true;
 
   return (
     <motion.div
@@ -89,25 +85,10 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         className="col-span-full"
       />
 
-      {/* Allocation Summary */}
+      {/* Allocation Summary (simplified) */}
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-700/40 bg-slate-900/40 px-4 py-3 text-sm">
-        <div className="font-medium text-white">Allocation Status</div>
-        <div className="text-gray-400">
-          Allocated: {totalAllocated.toFixed(1)}%
-        </div>
-        <div
-          className={
-            remaining > 0
-              ? "text-yellow-400"
-              : remaining < 0
-                ? "text-red-400"
-                : "text-green-400"
-          }
-        >
-          {remaining > 0 && `${remaining.toFixed(1)}% unallocated`}
-          {remaining < 0 && `${Math.abs(remaining).toFixed(1)}% over-allocated`}
-          {remaining === 0 && "Balanced"}
-        </div>
+        <div className="font-medium text-white">Allocation</div>
+        <div className="text-gray-400">{totalAllocated.toFixed(1)}%</div>
       </div>
 
       {/* Main Content: Responsive Layout */}
@@ -127,12 +108,6 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             includedCategories={includedCategories}
             rebalanceMode={rebalanceMode}
             onAction={onZapAction}
-            isEnabled={isBalanced}
-            disabledReason={
-              !isBalanced
-                ? "Adjust category weights so totals equal 100%."
-                : undefined
-            }
           />
         </div>
 
