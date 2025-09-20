@@ -25,6 +25,8 @@ interface ActionButtonProps {
   includedCategories: ProcessedAssetCategory[];
   rebalanceMode?: RebalanceMode | undefined;
   onAction?: (() => void) | undefined;
+  isEnabled?: boolean | undefined;
+  disabledReason?: string | undefined;
 }
 
 const getActionButtonText = (
@@ -54,7 +56,14 @@ const getActionButtonText = (
 };
 
 export const ActionButton = memo<ActionButtonProps>(
-  ({ operationMode, includedCategories, rebalanceMode, onAction }) => {
+  ({
+    operationMode,
+    includedCategories,
+    rebalanceMode,
+    onAction,
+    isEnabled = true,
+    disabledReason,
+  }) => {
     const changesCount =
       rebalanceMode?.data?.shifts.filter(s => s.action !== "maintain").length ||
       0;
@@ -69,12 +78,20 @@ export const ActionButton = memo<ActionButtonProps>(
         <GradientButton
           {...(onAction && { onClick: onAction })}
           gradient={GRADIENTS.PRIMARY}
-          disabled={includedCategories.length === 0}
-          className="w-full py-4 px-6 hover:from-purple-500 hover:to-blue-500"
+          disabled={includedCategories.length === 0 || !isEnabled}
+          className="w-full py-4 px-6 hover:from-purple-500 hover:to-blue-500 disabled:opacity-60"
           testId="zap-action-button"
         >
           {buttonText}
         </GradientButton>
+        {!isEnabled && disabledReason && (
+          <p
+            className="mt-2 text-xs text-red-400"
+            data-testid="action-disabled-reason"
+          >
+            {disabledReason}
+          </p>
+        )}
       </div>
     );
   }
