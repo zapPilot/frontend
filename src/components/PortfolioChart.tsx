@@ -19,6 +19,11 @@ import {
 } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
+import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
+import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
+import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
+import { useRollingSharpe } from "../hooks/useRollingSharpe";
+import { useRollingVolatility } from "../hooks/useRollingVolatility";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -68,12 +73,120 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
     enabled: !!resolvedUserId,
   });
+
+  // Fetch Phase 1 real analytics data
+  const { data: apiAllocationData } = useAllocationTimeseries({
+    userId: resolvedUserId,
+    days: Math.min(
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 40,
+      40
+    ),
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: apiDrawdownData } = useEnhancedDrawdown({
+    userId: resolvedUserId,
+    days: Math.min(
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 40,
+      40
+    ),
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: apiUnderwaterData } = useUnderwaterRecovery({
+    userId: resolvedUserId,
+    days: Math.min(
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 40,
+      40
+    ),
+    enabled: !!resolvedUserId,
+  });
+
+  // Fetch Phase 2 real analytics data
+  const { data: apiSharpeData } = useRollingSharpe({
+    userId: resolvedUserId,
+    days: Math.min(
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 40,
+      40
+    ),
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: apiVolatilityData } = useRollingVolatility({
+    userId: resolvedUserId,
+    days: Math.min(
+      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 40,
+      40
+    ),
+    enabled: !!resolvedUserId,
+  });
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     return apiPortfolioHistory;
   }, [apiPortfolioHistory]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
+    // Use real allocation data if available, otherwise fallback to mock
+    if (
+      apiAllocationData?.allocation_data &&
+      apiAllocationData.allocation_data.length > 0
+    ) {
+      // Transform real API data to match expected format
+      const grouped = apiAllocationData.allocation_data.reduce(
+        (acc, item) => {
+          if (!acc[item.date]) {
+            acc[item.date] = {
+              date: item.date,
+              btc: 0,
+              eth: 0,
+              stablecoin: 0,
+              defi: 0,
+              altcoin: 0,
+            };
+          }
+
+          // Categorize protocols into asset types
+          const protocol = item.protocol?.toLowerCase() || "";
+          const chain = item.chain?.toLowerCase() || "";
+          const percentage = item.percentage || 0;
+
+          if (protocol.includes("bitcoin") || protocol.includes("btc")) {
+            acc[item.date]!.btc += percentage;
+          } else if (
+            protocol.includes("ethereum") ||
+            protocol.includes("eth") ||
+            chain === "eth"
+          ) {
+            acc[item.date]!.eth += percentage;
+          } else if (
+            protocol.includes("usdc") ||
+            protocol.includes("usdt") ||
+            protocol.includes("dai") ||
+            protocol.includes("stable")
+          ) {
+            acc[item.date]!.stablecoin += percentage;
+          } else if (
+            protocol.includes("uniswap") ||
+            protocol.includes("aave") ||
+            protocol.includes("compound") ||
+            protocol.includes("curve")
+          ) {
+            acc[item.date]!.defi += percentage;
+          } else {
+            acc[item.date]!.altcoin += percentage;
+          }
+
+          return acc;
+        },
+        {} as Record<string, AssetAllocationPoint>
+      );
+
+      return Object.values(grouped).sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+    }
+
+    // Fallback to mock data if no real data available
     const days = Math.min(
       CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
       90
@@ -81,11 +194,9 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     const data: AssetAllocationPoint[] = [];
 
     for (let i = days; i >= 0; i -= 7) {
-      // Weekly snapshots
       const date = new Date();
       date.setDate(date.getDate() - i);
 
-      // Simulate gradual shifts in allocation
       const progress = (days - i) / days;
       data.push({
         date: date.toISOString().split("T")[0]!,
@@ -98,7 +209,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     }
 
     return data;
-  }, [selectedPeriod]);
+  }, [apiAllocationData, selectedPeriod]);
 
   const currentValue =
     portfolioHistory[portfolioHistory.length - 1]?.value || 0;
@@ -159,14 +270,48 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   );
 
   const drawdownData = useMemo(() => {
-    return calculateDrawdownData(portfolioHistory);
-  }, [portfolioHistory]);
+    // Use real enhanced drawdown data if available
+    if (
+      apiDrawdownData?.drawdown_data &&
+      apiDrawdownData.drawdown_data.length > 0
+    ) {
+      return apiDrawdownData.drawdown_data.map(item => ({
+        date: item.date,
+        value: item.portfolio_value,
+        peak: item.peak_value,
+        drawdown: item.drawdown_pct,
+        underwater: item.is_underwater,
+      }));
+    }
 
-  // Mock data for Rolling Sharpe Ratio
+    // Fallback to calculated drawdown from portfolio history
+    return calculateDrawdownData(portfolioHistory);
+  }, [apiDrawdownData, portfolioHistory]);
+
+  // Real data for Rolling Sharpe Ratio with fallback
   const sharpeData = useMemo(() => {
+    // Use real Sharpe ratio data if available
+    if (
+      apiSharpeData?.rolling_sharpe_data &&
+      apiSharpeData.rolling_sharpe_data.length > 0
+    ) {
+      return apiSharpeData.rolling_sharpe_data.map(item => ({
+        date: item.date,
+        sharpe: item.rolling_sharpe_ratio || 0,
+        isReliable: item.is_statistically_reliable,
+        windowSize: item.window_size,
+      }));
+    }
+
+    // Fallback to mock data if no real data available
     const days =
       CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: { date: string; sharpe: number }[] = [];
+    const data: {
+      date: string;
+      sharpe: number;
+      isReliable?: boolean;
+      windowSize?: number;
+    }[] = [];
 
     for (let i = days; i >= 0; i--) {
       const date = new Date();
@@ -182,17 +327,43 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       data.push({
         date: date.toISOString().split("T")[0]!,
         sharpe,
+        isReliable: false, // Mock data is not statistically reliable
+        windowSize: 30,
       });
     }
 
     return data;
-  }, [selectedPeriod]);
+  }, [apiSharpeData, selectedPeriod]);
 
-  // Mock data for Rolling Volatility
+  // Real data for Rolling Volatility with fallback
   const volatilityData = useMemo(() => {
+    // Use real volatility data if available
+    if (
+      apiVolatilityData?.rolling_volatility_data &&
+      apiVolatilityData.rolling_volatility_data.length > 0
+    ) {
+      return apiVolatilityData.rolling_volatility_data.map(item => ({
+        date: item.date,
+        volatility:
+          item.annualized_volatility_pct ||
+          item.rolling_volatility_daily_pct * 100 ||
+          0,
+        dailyVolatility: item.rolling_volatility_daily_pct || 0,
+        isReliable: item.is_statistically_reliable,
+        windowSize: item.window_size,
+      }));
+    }
+
+    // Fallback to mock data if no real data available
     const days =
       CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: { date: string; volatility: number }[] = [];
+    const data: {
+      date: string;
+      volatility: number;
+      dailyVolatility?: number;
+      isReliable?: boolean;
+      windowSize?: number;
+    }[] = [];
 
     for (let i = days; i >= 0; i--) {
       const date = new Date();
@@ -208,14 +379,30 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       data.push({
         date: date.toISOString().split("T")[0]!,
         volatility: volatility * 100, // Convert to percentage
+        dailyVolatility: volatility / Math.sqrt(252), // Estimate daily volatility
+        isReliable: false, // Mock data is not statistically reliable
+        windowSize: 30,
       });
     }
 
     return data;
-  }, [selectedPeriod]);
+  }, [apiVolatilityData, selectedPeriod]);
 
-  // Mock data for Underwater Chart (enhanced drawdown)
+  // Real data for Underwater Chart (enhanced drawdown)
   const underwaterData = useMemo(() => {
+    // Use real underwater recovery data if available
+    if (
+      apiUnderwaterData?.underwater_data &&
+      apiUnderwaterData.underwater_data.length > 0
+    ) {
+      return apiUnderwaterData.underwater_data.map(item => ({
+        date: item.date,
+        underwater: item.underwater_pct,
+        recovery: item.recovery_point,
+      }));
+    }
+
+    // Fallback to mock data if no real data available
     const days =
       CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
     const data: { date: string; underwater: number; recovery: boolean }[] = [];
@@ -226,19 +413,14 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
 
-      // Simulate drawdown periods
-
       if (!isInDrawdown && Math.random() < 0.02) {
-        // 2% chance to start drawdown
         isInDrawdown = true;
-        currentDrawdown = -Math.random() * 0.15; // Up to 15% drawdown
+        currentDrawdown = -Math.random() * 0.15;
       }
 
       if (isInDrawdown) {
-        // Gradual recovery
         currentDrawdown = currentDrawdown * 0.95 + Math.random() * 0.01;
         if (currentDrawdown > -0.005) {
-          // Within 0.5% of recovery
           currentDrawdown = 0;
           isInDrawdown = false;
         }
@@ -246,13 +428,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
       data.push({
         date: date.toISOString().split("T")[0]!,
-        underwater: currentDrawdown * 100, // Convert to percentage
+        underwater: currentDrawdown * 100,
         recovery: !isInDrawdown && i < days - 1,
       });
     }
 
     return data;
-  }, [selectedPeriod]);
+  }, [apiUnderwaterData, selectedPeriod]);
 
   // Mouse event handlers for performance chart hover
   const handleMouseMove = useCallback(
@@ -979,6 +1161,84 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           {selectedChart === "volatility" && renderVolatilityChart}
           {selectedChart === "underwater" && renderUnderwaterChart}
         </div>
+
+        {/* Statistical Disclaimers for Phase 2 Charts */}
+        {(selectedChart === "sharpe" || selectedChart === "volatility") && (
+          <div className="mt-4 p-4 rounded-lg bg-amber-500/10 border border-amber-500/20">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <svg
+                  className="w-5 h-5 text-amber-400"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-medium text-amber-300 mb-2">
+                  Statistical Disclaimer:{" "}
+                  {selectedChart === "sharpe"
+                    ? "30-Day Rolling Sharpe Ratio"
+                    : "30-Day Rolling Volatility"}
+                </h4>
+                <div className="text-xs text-amber-200/80 space-y-1">
+                  {selectedChart === "sharpe" && (
+                    <>
+                      <p>
+                        ⚠️ <strong>Directional Indicator Only:</strong> 30-day
+                        Sharpe ratios provide trend direction but lack
+                        statistical robustness.
+                      </p>
+                      <p>
+                        📊 <strong>Recommended Minimum:</strong> 90+ days of
+                        data needed for statistically reliable Sharpe ratio
+                        analysis.
+                      </p>
+                      <p>
+                        🎯 <strong>Educational Purpose:</strong> Use for
+                        portfolio pattern recognition, not standalone investment
+                        decisions.
+                      </p>
+                      {apiSharpeData?.educational_context && (
+                        <p>
+                          💡 <strong>Current Assessment:</strong>{" "}
+                          {apiSharpeData.educational_context.interpretation}
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {selectedChart === "volatility" && (
+                    <>
+                      <p>
+                        💡 <strong>Short-term Nature:</strong> DeFi market
+                        volatility can be highly variable over short periods.
+                      </p>
+                      <p>
+                        📈 <strong>Methodology:</strong> 30-day rolling standard
+                        deviation of daily returns, annualized using √252.
+                      </p>
+                      <p>
+                        🔍 <strong>Context:</strong> Shows both daily volatility
+                        and annualized projections for trend analysis.
+                      </p>
+                      {apiVolatilityData?.educational_context && (
+                        <p>
+                          📊 <strong>Current Level:</strong>{" "}
+                          {apiVolatilityData.educational_context.interpretation}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Chart Summary */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">

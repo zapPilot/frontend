@@ -341,6 +341,225 @@ export const transformPortfolioTrends = (
   });
 };
 
+// Phase 1 Analytics API Response Types
+export interface AllocationTimeseriesResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  allocation_data: Array<{
+    date: string;
+    protocol: string;
+    chain: string;
+    protocol_value: number;
+    percentage: number;
+  }>;
+  data_points: number;
+  summary: {
+    unique_dates: number;
+    unique_protocols: number;
+    unique_chains: number;
+  };
+}
+
+export interface EnhancedDrawdownResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  drawdown_data: Array<{
+    date: string;
+    portfolio_value: number;
+    peak_value: number;
+    drawdown_pct: number;
+    is_underwater: boolean;
+  }>;
+  data_points: number;
+  summary: {
+    max_drawdown_pct: number;
+    current_drawdown_pct: number;
+    peak_value: number;
+    current_value: number;
+  };
+}
+
+export interface UnderwaterRecoveryResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  underwater_data: Array<{
+    date: string;
+    underwater_pct: number;
+    is_underwater: boolean;
+    recovery_point: boolean;
+    portfolio_value: number;
+    peak_value: number;
+  }>;
+  data_points: number;
+  summary: {
+    total_underwater_days: number;
+    underwater_percentage: number;
+    recovery_points: number;
+    current_underwater_pct: number;
+    is_currently_underwater: boolean;
+  };
+}
+
+/**
+ * Get portfolio allocation breakdown over time by protocol and chain
+ */
+export const getAllocationTimeseries = async (
+  userId: string,
+  days: number = 40
+): Promise<AllocationTimeseriesResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+  return await httpUtils.analyticsEngine.get<AllocationTimeseriesResponse>(
+    `/api/v1/allocation/timeseries/${userId}?${params}`
+  );
+};
+
+/**
+ * Get enhanced drawdown analysis with daily portfolio values and running peaks
+ */
+export const getEnhancedDrawdownAnalysis = async (
+  userId: string,
+  days: number = 40
+): Promise<EnhancedDrawdownResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+  return await httpUtils.analyticsEngine.get<EnhancedDrawdownResponse>(
+    `/api/v1/risk/drawdown/enhanced/${userId}?${params}`
+  );
+};
+
+/**
+ * Get underwater periods and recovery point analysis
+ */
+export const getUnderwaterRecoveryAnalysis = async (
+  userId: string,
+  days: number = 40
+): Promise<UnderwaterRecoveryResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+  return await httpUtils.analyticsEngine.get<UnderwaterRecoveryResponse>(
+    `/api/v1/risk/underwater/${userId}?${params}`
+  );
+};
+
+// Phase 2 Analytics API Response Types
+export interface RollingSharpeResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  rolling_sharpe_data: Array<{
+    date: string;
+    portfolio_value: number;
+    daily_return_pct: number;
+    rolling_avg_return_pct: number;
+    rolling_volatility_pct: number;
+    rolling_sharpe_ratio: number | null;
+    window_size: number;
+    is_statistically_reliable: boolean;
+  }>;
+  data_points: number;
+  summary: {
+    latest_sharpe_ratio: number;
+    avg_sharpe_ratio: number;
+    reliable_data_points: number;
+    statistical_reliability: string;
+  };
+  educational_context: {
+    reliability_warning: string;
+    recommended_minimum: string;
+    window_size: number;
+    interpretation: string;
+  };
+}
+
+export interface RollingVolatilityResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  rolling_volatility_data: Array<{
+    date: string;
+    portfolio_value: number;
+    daily_return_pct: number;
+    rolling_volatility_daily_pct: number;
+    annualized_volatility_pct: number | null;
+    rolling_avg_return_pct: number;
+    window_size: number;
+    is_statistically_reliable: boolean;
+  }>;
+  data_points: number;
+  summary: {
+    latest_daily_volatility: number;
+    latest_annualized_volatility: number;
+    avg_daily_volatility: number;
+    avg_annualized_volatility: number;
+    reliable_data_points: number;
+  };
+  educational_context: {
+    volatility_note: string;
+    calculation_method: string;
+    annualization_factor: string;
+    window_size: number;
+    interpretation: string;
+  };
+}
+
+/**
+ * Get 30-day rolling Sharpe ratio analysis with statistical reliability indicators
+ *
+ * ⚠️ Statistical Disclaimer: 30-day Sharpe ratios are directional indicators only.
+ * Statistically robust analysis typically requires 90+ days of data.
+ */
+export const getRollingSharpeAnalysis = async (
+  userId: string,
+  days: number = 40
+): Promise<RollingSharpeResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+  return await httpUtils.analyticsEngine.get<RollingSharpeResponse>(
+    `/api/v1/risk/sharpe/rolling/${userId}?${params}`
+  );
+};
+
+/**
+ * Get 30-day rolling volatility analysis with both daily and annualized metrics
+ *
+ * 💡 Educational Note: Shows both daily volatility and annualized projections.
+ * Short-term volatility can be highly variable in DeFi markets.
+ */
+export const getRollingVolatilityAnalysis = async (
+  userId: string,
+  days: number = 40
+): Promise<RollingVolatilityResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+  });
+  return await httpUtils.analyticsEngine.get<RollingVolatilityResponse>(
+    `/api/v1/risk/volatility/rolling/${userId}?${params}`
+  );
+};
+
 /**
  * Transform bundle addresses API response to WalletAddress format
  */
