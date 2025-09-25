@@ -19,6 +19,11 @@ import {
 } from "react";
 import { useUser } from "../contexts/UserContext";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
+import { useRollingSharpe } from "../hooks/useRollingSharpe";
+import { useRollingVolatility } from "../hooks/useRollingVolatility";
+import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
+import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
+import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -68,37 +73,125 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
     enabled: !!resolvedUserId,
   });
+
+  // Fetch Phase 2 analytics data
+  const { data: rollingSharpeData } = useRollingSharpe({
+    userId: resolvedUserId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: rollingVolatilityData } = useRollingVolatility({
+    userId: resolvedUserId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: enhancedDrawdownData } = useEnhancedDrawdown({
+    userId: resolvedUserId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: underwaterRecoveryData } = useUnderwaterRecovery({
+    userId: resolvedUserId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: !!resolvedUserId,
+  });
+
+  const { data: allocationTimeseriesData } = useAllocationTimeseries({
+    userId: resolvedUserId,
+    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    enabled: !!resolvedUserId,
+  });
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     return apiPortfolioHistory;
   }, [apiPortfolioHistory]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
-    const days = Math.min(
-      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
-      90
-    );
-    const data: AssetAllocationPoint[] = [];
+    if (
+      !allocationTimeseriesData?.allocation_data ||
+      allocationTimeseriesData.allocation_data.length === 0
+    ) {
+      // Fallback to mock data if no real data available
+      const days = Math.min(
+        CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+        90
+      );
+      const data: AssetAllocationPoint[] = [];
 
-    for (let i = days; i >= 0; i -= 7) {
-      // Weekly snapshots
-      const date = new Date();
-      date.setDate(date.getDate() - i);
+      for (let i = days; i >= 0; i -= 7) {
+        // Weekly snapshots
+        const date = new Date();
+        date.setDate(date.getDate() - i);
 
-      // Simulate gradual shifts in allocation
-      const progress = (days - i) / days;
-      data.push({
-        date: date.toISOString().split("T")[0]!,
-        btc: 35 + Math.sin(progress * Math.PI) * 5,
-        eth: 25 + Math.cos(progress * Math.PI) * 3,
-        stablecoin: 20 + progress * 5,
-        defi: 15 - progress * 3,
-        altcoin: 5 - Math.sin(progress * Math.PI * 2) * 2,
-      });
+        // Simulate gradual shifts in allocation
+        const progress = (days - i) / days;
+        data.push({
+          date: date.toISOString().split("T")[0]!,
+          btc: 35 + Math.sin(progress * Math.PI) * 5,
+          eth: 25 + Math.cos(progress * Math.PI) * 3,
+          stablecoin: 20 + progress * 5,
+          defi: 15 - progress * 3,
+          altcoin: 5 - Math.sin(progress * Math.PI * 2) * 2,
+        });
+      }
+
+      return data;
     }
 
-    return data;
-  }, [selectedPeriod]);
+    // Transform real allocation data to AssetAllocationPoint format
+    const allocationByDate = allocationTimeseriesData.allocation_data.reduce(
+      (acc, point) => {
+        if (!acc[point.date]) {
+          acc[point.date] = {
+            date: point.date,
+            btc: 0,
+            eth: 0,
+            stablecoin: 0,
+            defi: 0,
+            altcoin: 0,
+          };
+        }
+
+        const protocol = (point.protocol || "").toLowerCase();
+        const dayData = acc[point.date]!; // Safe because we just ensured it exists above
+        const allocationShare = Number(point.percentage_of_portfolio ?? 0);
+
+        if (Number.isNaN(allocationShare)) {
+          return acc;
+        }
+
+        if (protocol.includes("bitcoin") || protocol.includes("btc")) {
+          dayData.btc += allocationShare;
+        } else if (protocol.includes("ethereum") || protocol.includes("eth")) {
+          dayData.eth += allocationShare;
+        } else if (
+          protocol.includes("usdc") ||
+          protocol.includes("usdt") ||
+          protocol.includes("dai")
+        ) {
+          dayData.stablecoin += allocationShare;
+        } else if (
+          protocol.includes("uniswap") ||
+          protocol.includes("aave") ||
+          protocol.includes("compound")
+        ) {
+          dayData.defi += allocationShare;
+        } else {
+          dayData.altcoin += allocationShare;
+        }
+
+        return acc;
+      },
+      {} as Record<string, AssetAllocationPoint>
+    );
+
+    return Object.values(allocationByDate).sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+  }, [allocationTimeseriesData, selectedPeriod]);
 
   const currentValue =
     portfolioHistory[portfolioHistory.length - 1]?.value || 0;
@@ -159,100 +252,76 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   );
 
   const drawdownData = useMemo(() => {
-    return calculateDrawdownData(portfolioHistory);
-  }, [portfolioHistory]);
+    if (
+      !enhancedDrawdownData?.drawdown_data ||
+      enhancedDrawdownData.drawdown_data.length === 0
+    ) {
+      return calculateDrawdownData(portfolioHistory);
+    }
 
-  // Mock data for Rolling Sharpe Ratio
+    return enhancedDrawdownData.drawdown_data.map(point => ({
+      date: point.date,
+      drawdown: Number(point.drawdown_pct ?? 0),
+    }));
+  }, [enhancedDrawdownData, portfolioHistory]);
+
+  // Real data for Rolling Sharpe Ratio
   const sharpeData = useMemo(() => {
-    const days =
-      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: { date: string; sharpe: number }[] = [];
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // Generate realistic Sharpe ratio data (0.5 to 2.0 range)
-      const progress = (days - i) / days;
-      const baseValue = 1.2; // Base Sharpe ratio
-      const trend = 0.3 * Math.sin(progress * Math.PI); // Upward trend
-      const noise = 0.2 * (Math.random() - 0.5); // Some randomness
-      const sharpe = Math.max(0.1, baseValue + trend + noise);
-
-      data.push({
-        date: date.toISOString().split("T")[0]!,
-        sharpe,
-      });
+    if (
+      !rollingSharpeData?.rolling_sharpe_data ||
+      rollingSharpeData.rolling_sharpe_data.length === 0
+    ) {
+      return [];
     }
 
-    return data;
-  }, [selectedPeriod]);
+    return rollingSharpeData.rolling_sharpe_data
+      .filter(point => point.rolling_sharpe_ratio != null)
+      .map(point => ({
+        date: point.date,
+        sharpe: Number(point.rolling_sharpe_ratio ?? 0),
+      }));
+  }, [rollingSharpeData]);
 
-  // Mock data for Rolling Volatility
+  // Real data for Rolling Volatility
   const volatilityData = useMemo(() => {
-    const days =
-      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: { date: string; volatility: number }[] = [];
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // Generate realistic volatility data (15% to 35% annualized)
-      const progress = (days - i) / days;
-      const baseValue = 0.25; // Base 25% volatility
-      const cyclical = 0.08 * Math.sin(progress * Math.PI * 2); // Market cycles
-      const noise = 0.03 * (Math.random() - 0.5); // Volatility clustering
-      const volatility = Math.max(0.1, baseValue + cyclical + noise);
-
-      data.push({
-        date: date.toISOString().split("T")[0]!,
-        volatility: volatility * 100, // Convert to percentage
-      });
+    if (
+      !rollingVolatilityData?.rolling_volatility_data ||
+      rollingVolatilityData.rolling_volatility_data.length === 0
+    ) {
+      return [];
     }
 
-    return data;
-  }, [selectedPeriod]);
+    return rollingVolatilityData.rolling_volatility_data
+      .filter(
+        point =>
+          point.annualized_volatility_pct != null ||
+          point.rolling_volatility_daily_pct != null
+      )
+      .map(point => ({
+        date: point.date,
+        volatility: Number(
+          point.annualized_volatility_pct ??
+            point.rolling_volatility_daily_pct ??
+            0
+        ), // Already in percentage terms
+      }));
+  }, [rollingVolatilityData]);
 
-  // Mock data for Underwater Chart (enhanced drawdown)
+  // Real data for Underwater Chart (enhanced drawdown)
   const underwaterData = useMemo(() => {
-    const days =
-      CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
-    const data: { date: string; underwater: number; recovery: boolean }[] = [];
-    let currentDrawdown = 0;
-    let isInDrawdown = false;
-
-    for (let i = days; i >= 0; i--) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-
-      // Simulate drawdown periods
-
-      if (!isInDrawdown && Math.random() < 0.02) {
-        // 2% chance to start drawdown
-        isInDrawdown = true;
-        currentDrawdown = -Math.random() * 0.15; // Up to 15% drawdown
-      }
-
-      if (isInDrawdown) {
-        // Gradual recovery
-        currentDrawdown = currentDrawdown * 0.95 + Math.random() * 0.01;
-        if (currentDrawdown > -0.005) {
-          // Within 0.5% of recovery
-          currentDrawdown = 0;
-          isInDrawdown = false;
-        }
-      }
-
-      data.push({
-        date: date.toISOString().split("T")[0]!,
-        underwater: currentDrawdown * 100, // Convert to percentage
-        recovery: !isInDrawdown && i < days - 1,
-      });
+    if (
+      !underwaterRecoveryData?.underwater_data ||
+      underwaterRecoveryData.underwater_data.length === 0
+    ) {
+      return [];
     }
 
-    return data;
-  }, [selectedPeriod]);
+    return underwaterRecoveryData.underwater_data.map(point => ({
+      date: point.date,
+      underwater: Number(point.underwater_pct ?? 0),
+      recovery: point.recovery_point,
+    }));
+  }, [underwaterRecoveryData]);
 
   // Mouse event handlers for performance chart hover
   const handleMouseMove = useCallback(

@@ -1,19 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "../../test-utils";
 
-// Mock account and user services used by the hook
-vi.mock("../../../src/services/accountService", () => ({
-  connectWallet: vi.fn(),
-}));
-
+// Mock user service functions used by the hook
 vi.mock("../../../src/services/userService", () => ({
+  connectWallet: vi.fn(),
   getUserProfile: vi.fn(),
   getUserWallets: vi.fn(), // ensure not called by the hook
 }));
 
 import { useUserByWallet } from "../../../src/hooks/queries/useUserQuery";
-import { connectWallet as connectWalletService } from "../../../src/services/accountService";
 import {
+  connectWallet as connectWalletService,
   getUserProfile as getUserProfileService,
   getUserWallets as getUserWalletsService,
 } from "../../../src/services/userService";
@@ -66,7 +63,7 @@ describe("useUserByWallet", () => {
       wallets: profileWallets,
     };
 
-    mockConnectWallet.mockResolvedValue(mockConnect);
+    mockConnectWallet.mockResolvedValue({ success: true, data: mockConnect });
     mockGetUserProfile.mockResolvedValue({ success: true, data: mockProfile });
 
     const { result } = renderHook(() => useUserByWallet(walletAddress));

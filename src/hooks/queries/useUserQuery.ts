@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
-// Use account service to connect, and user service to fetch profile + wallets in a single call
-import { connectWallet } from "../../services/accountService";
-import { getUserProfile } from "../../services/userService";
+// Use user service wrappers to connect and fetch the aggregated profile data
+import { connectWallet, getUserProfile } from "../../services/userService";
 import type {
   UserCryptoWallet,
   UserProfileResponse,
@@ -38,16 +37,23 @@ export function useUserByWallet(walletAddress: string | null) {
       }
 
       // Connect wallet to create/retrieve user
-      const connectResponse = await connectWallet(walletAddress);
+      const connectResult = await connectWallet(walletAddress);
+      if (!connectResult.success || !connectResult.data) {
+        throw new Error(connectResult.error || "Failed to connect wallet");
+      }
+
+      const { user_id: userId } = connectResult.data;
 
       // Fetch complete user profile once (includes wallets and email)
       let wallets: UserCryptoWallet[] = [];
       let userEmail = "";
-      const profileResponse = await getUserProfile(connectResponse.user_id);
-      if (profileResponse.success && profileResponse.data) {
-        const data: UserProfileResponse = profileResponse.data;
+      const profileResult = await getUserProfile(userId);
+      if (profileResult.success && profileResult.data) {
+        const data: UserProfileResponse = profileResult.data;
         wallets = data.wallets || [];
         userEmail = data.user?.email || "";
+      } else if (profileResult.error) {
+        throw new Error(profileResult.error);
       }
 
       // Derive fields compatible with previous structure
@@ -69,7 +75,7 @@ export function useUserByWallet(walletAddress: string | null) {
         }));
 
       return {
-        userId: connectResponse.user_id,
+        userId,
         email: userEmail, // Now populated from getUserProfile
         primaryWallet,
         bundleWallets,
