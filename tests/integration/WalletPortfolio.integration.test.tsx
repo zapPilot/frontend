@@ -45,7 +45,7 @@ vi.mock("next/dynamic", () => ({
       return vi.fn(({ isOpen, onClose }) =>
         isOpen ? (
           <div data-testid="wallet-manager-modal">
-            <h2>Bundle Wallets</h2>
+            <h2>Bundled Wallets</h2>
             <button data-testid="close-wallet-manager" onClick={onClose}>
               Close
             </button>
@@ -57,7 +57,7 @@ vi.mock("next/dynamic", () => ({
     return vi.fn(({ isOpen, onClose }) =>
       isOpen ? (
         <div data-testid="wallet-manager-modal">
-          <h2>Bundle Wallets</h2>
+          <h2>Bundled Wallets</h2>
           <button data-testid="close-wallet-manager" onClick={onClose}>
             Close
           </button>
@@ -73,7 +73,7 @@ vi.mock("../../src/components/WalletManager", () => ({
     isOpen ? (
       <div data-testid="wallet-manager-modal">
         <div data-testid="wallet-manager-content">
-          <h2>Bundle Wallets</h2>
+          <h2>Bundled Wallets</h2>
           <div data-testid="wallet-list">
             <div data-testid="wallet-item">Main Wallet: 0x123...456</div>
             <div data-testid="wallet-item">Secondary Wallet: 0x789...abc</div>
@@ -377,7 +377,7 @@ describe("WalletPortfolio - Integration Tests", () => {
       await waitFor(() => {
         expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
       });
-      expect(screen.getByText("Bundle Wallets")).toBeInTheDocument();
+      expect(screen.getByText("Bundled Wallets")).toBeInTheDocument();
 
       // Close modal
       await user.click(screen.getByTestId("close-wallet-manager"));

@@ -122,6 +122,39 @@ export interface DustTokenParams {
 }
 
 /**
+ * UnifiedZap interfaces for multi-strategy allocation
+ */
+export interface UnifiedZapParams {
+  strategyAllocations: Array<{
+    strategyId: string;
+    percentage: number;
+  }>;
+  inputToken: string;
+  inputAmount: string;
+  slippage: number;
+}
+
+export interface UnifiedZapRequest {
+  userAddress: string;
+  chainId: number;
+  params: UnifiedZapParams;
+}
+
+export interface UnifiedZapResponse {
+  success: boolean;
+  intentType: "unifiedZap";
+  mode: "streaming";
+  intentId: string;
+  streamUrl: string;
+  metadata: {
+    totalStrategies: number;
+    totalProtocols: number;
+    estimatedDuration: string;
+    streamingEnabled: boolean;
+  };
+}
+
+/**
  * Execute dust token conversion to ETH
  */
 export const executeDustZap = (
@@ -140,6 +173,19 @@ export const executeDustZap = (
       chainId,
       params,
     })
+  );
+
+/**
+ * Execute UnifiedZap intent for multi-strategy allocation
+ */
+export const executeUnifiedZap = (
+  request: UnifiedZapRequest
+): Promise<UnifiedZapResponse> =>
+  callIntentService(() =>
+    intentEngineClient.post<UnifiedZapResponse>(
+      "/api/v1/intents/unifiedZap",
+      request
+    )
   );
 
 // Intent Monitoring Operations
