@@ -1,19 +1,19 @@
 "use client";
 
-import { memo, useCallback } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { AlertTriangle, Wallet, X } from "lucide-react";
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
-import { useUser } from "@/contexts/UserContext";
 import { GlassCard } from "@/components/ui";
 import { UnifiedLoading } from "@/components/ui/UnifiedLoading";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { useUser } from "@/contexts/UserContext";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, Wallet, X } from "lucide-react";
+import { memo, useCallback } from "react";
 
-import { useWalletOperations } from "./hooks/useWalletOperations";
-import { useEmailSubscription } from "./hooks/useEmailSubscription";
-import { useDropdownMenu } from "./hooks/useDropdownMenu";
-import { WalletList } from "./components/WalletList";
-import { EmailSubscription } from "./components/EmailSubscription";
 import { EditWalletModal } from "./components/EditWalletModal";
+import { EmailSubscription } from "./components/EmailSubscription";
+import { WalletList } from "./components/WalletList";
+import { useDropdownMenu } from "./hooks/useDropdownMenu";
+import { useEmailSubscription } from "./hooks/useEmailSubscription";
+import { useWalletOperations } from "./hooks/useWalletOperations";
 import type { WalletManagerProps } from "./types/wallet.types";
 
 const WalletManagerComponent = ({
@@ -104,7 +104,7 @@ const WalletManagerComponent = ({
                     id="wallet-manager-title"
                     className="text-xl font-bold text-white"
                   >
-                    Bundle Wallets
+                    Bundled Wallets
                   </h2>
                   <p
                     id="wallet-manager-description"
@@ -140,7 +140,7 @@ const WalletManagerComponent = ({
                 <p className="text-gray-400 text-sm">
                   {walletOperations.isRefreshing
                     ? "Refreshing wallets..."
-                    : "Loading bundle wallets..."}
+                    : "Loading bundled wallets..."}
                 </p>
               </div>
             )}

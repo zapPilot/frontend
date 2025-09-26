@@ -242,20 +242,20 @@ describe("WalletManager", () => {
   describe("Rendering and Initial State", () => {
     it("renders nothing when modal is closed", async () => {
       await renderWalletManager(false);
-      expect(screen.queryByText("Bundle Wallets")).not.toBeInTheDocument();
+      expect(screen.queryByText("Bundled Wallets")).not.toBeInTheDocument();
     });
 
     it("renders modal when open", async () => {
       await renderWalletManager();
 
-      expect(screen.getByText("Bundle Wallets")).toBeInTheDocument();
+      expect(screen.getByText("Bundled Wallets")).toBeInTheDocument();
       expect(screen.getByText("Manage your wallet bundle")).toBeInTheDocument();
     });
 
     it("shows correct user context information", async () => {
       await renderWalletManager();
 
-      expect(screen.getByText("Bundle Wallets")).toBeInTheDocument();
+      expect(screen.getByText("Bundled Wallets")).toBeInTheDocument();
       expect(screen.getByText("Manage your wallet bundle")).toBeInTheDocument();
     });
 
@@ -285,7 +285,7 @@ describe("WalletManager", () => {
       // When the component loads, it immediately triggers loadWallets() which sets isRefreshing
       // This results in "Refreshing wallets..." being shown even on initial load
       expect(
-        screen.getByText(/Loading bundle wallets|Refreshing wallets/)
+        screen.getByText(/Loading bundled wallets|Refreshing wallets/)
       ).toBeInTheDocument();
       expect(screen.getByTestId("unified-loading")).toBeInTheDocument();
     });
@@ -804,7 +804,7 @@ describe("WalletManager", () => {
         });
 
         // The component should handle copy failure gracefully without crashing
-        expect(screen.getByText("Bundle Wallets")).toBeInTheDocument();
+        expect(screen.getByText("Bundled Wallets")).toBeInTheDocument();
       });
     });
   });
@@ -847,7 +847,7 @@ describe("WalletManager", () => {
 
       await renderWalletManager(true, mockOnClose);
 
-      const modalContent = screen.getByText("Bundle Wallets");
+      const modalContent = screen.getByText("Bundled Wallets");
       await act(async () => {
         await user.click(modalContent);
       });

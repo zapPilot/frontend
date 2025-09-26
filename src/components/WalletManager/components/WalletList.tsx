@@ -1,10 +1,10 @@
-import { Plus, Wallet } from "lucide-react";
-import { GRADIENTS } from "@/constants/design-system";
 import { GradientButton } from "@/components/ui";
-import { WalletCard } from "./WalletCard";
-import { AddWalletForm } from "./AddWalletForm";
+import { GRADIENTS } from "@/constants/design-system";
 import type { WalletData } from "@/services/userService";
-import type { WalletOperations, NewWallet } from "../types/wallet.types";
+import { Plus, Wallet } from "lucide-react";
+import type { NewWallet, WalletOperations } from "../types/wallet.types";
+import { AddWalletForm } from "./AddWalletForm";
+import { WalletCard } from "./WalletCard";
 
 interface WalletListProps {
   wallets: WalletData[];
@@ -50,7 +50,7 @@ export const WalletList = ({
       <div className="p-6 border-b border-gray-700/50">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-300">
-            Bundle Wallets (0)
+            Bundled Wallets (0)
           </h3>
         </div>
         <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
@@ -80,7 +80,7 @@ export const WalletList = ({
       <div className="p-6 border-b border-gray-700/50">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-medium text-gray-300">
-            Bundle Wallets ({wallets.length})
+            Bundled Wallets ({wallets.length})
           </h3>
         </div>
 
