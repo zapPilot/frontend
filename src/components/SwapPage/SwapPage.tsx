@@ -11,6 +11,7 @@ import {
   type UnifiedZapRequest,
 } from "../../services/intentService";
 import { InvestmentOpportunity } from "../../types/investment";
+import { swapLogger } from "../../utils/logger";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
   OperationMode,
@@ -19,7 +20,6 @@ import type {
 import { ZapExecutionProgress } from "../shared/ZapExecutionProgress";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
-import { swapLogger } from "../../utils/logger";
 
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
@@ -93,13 +93,29 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         percentage: category.activeAllocationPercentage,
       }));
 
+      // Ensure we have a valid token address - throw error if missing
+      const inputToken = action.swapSettings.fromToken?.address;
+      if (!inputToken) {
+        throw new Error(
+          "Input token address is required for UnifiedZap execution"
+        );
+      }
+
+      // Ensure inputAmount is a valid positive integer string (no decimals)
+      const rawAmount = action.swapSettings.amount || "0";
+      const inputAmount = Math.floor(parseFloat(rawAmount)).toString();
+
+      if (parseFloat(inputAmount) <= 0) {
+        throw new Error("Input amount must be a positive value");
+      }
+
       return {
         userAddress,
         chainId,
         params: {
           strategyAllocations,
-          inputToken: action.swapSettings.fromToken?.address || "ETH",
-          inputAmount: action.swapSettings.amount || "0",
+          inputToken,
+          inputAmount,
           slippage: action.swapSettings.slippageTolerance || 0.5,
         },
       };
