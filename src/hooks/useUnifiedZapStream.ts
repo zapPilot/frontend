@@ -10,38 +10,114 @@ import { logger } from "../utils/logger";
 
 const zapStreamLogger = logger.createContextLogger("UnifiedZapStream");
 
-export interface UnifiedZapStreamEvent {
-  type:
-    | "connected"
-    | "strategy_parsing"
-    | "token_analysis"
-    | "swap_preparation"
-    | "transaction_building"
-    | "gas_estimation"
-    | "final_assembly"
-    | "complete"
-    | "error";
-  intentId: string;
-  progress: number; // 0-1
+interface UnifiedZapRawEventChainBreakdownEntry {
+  name?: string;
+  chainId?: number;
+  protocolCount?: number;
+  [key: string]: unknown;
+}
+
+interface UnifiedZapRawEventMetadata {
+  phase?: string;
+  totalStrategies?: number;
+  strategyCount?: number;
+  totalProtocols?: number;
+  protocolCount?: number;
+  estimatedDuration?: string;
+  processedStrategies?: number;
+  processedProtocols?: number;
+  chainBreakdown?: UnifiedZapRawEventChainBreakdownEntry[];
+  chains?: UnifiedZapRawEventChainBreakdownEntry[];
+  message?: string;
+  progressPercent?: number;
+  [key: string]: unknown;
+}
+
+interface UnifiedZapRawEventError {
+  code?: string;
+  message?: string;
+  details?: unknown;
+  [key: string]: unknown;
+}
+
+interface UnifiedZapRawEvent {
+  type?: string;
+  intentId?: string;
+  progress?: number;
+  progressPercent?: number;
   currentStep?: string;
-  metadata?: {
-    totalStrategies?: number;
-    totalProtocols?: number;
-    estimatedDuration?: string;
-    processedStrategies?: number;
-    processedProtocols?: number;
-    chainBreakdown?: Array<{
-      name: string;
-      chainId: number;
-      protocolCount: number;
-    }>;
-  };
+  currentOperation?: string;
+  phase?: string;
+  metadata?: UnifiedZapRawEventMetadata | null;
+  processedTokens?: number;
+  totalTokens?: number;
+  message?: string;
+  additionalData?: { message?: string } | null;
+  additionalInfo?: { message?: string } | null;
+  error?: UnifiedZapRawEventError | string | null;
+  errorCode?: string;
+  timestamp?: string;
+  rawTimestamp?: string;
+  totalStrategies?: number;
+  strategyCount?: number;
+  totalProtocols?: number;
+  protocolCount?: number;
+  chainBreakdown?: UnifiedZapRawEventChainBreakdownEntry[];
+  chains?: UnifiedZapRawEventChainBreakdownEntry[];
+  processedStrategies?: number;
+  processedProtocols?: number;
+  estimatedDuration?: string;
+  [key: string]: unknown;
+}
+
+export const UNIFIED_ZAP_PHASES = [
+  "connected",
+  "strategy_parsing",
+  "token_analysis",
+  "swap_preparation",
+  "transaction_building",
+  "gas_estimation",
+  "final_assembly",
+  "complete",
+  "error",
+] as const;
+
+export type UnifiedZapPhase = (typeof UNIFIED_ZAP_PHASES)[number];
+
+export interface UnifiedZapStreamEventMetadata {
+  totalStrategies?: number;
+  totalProtocols?: number;
+  estimatedDuration?: string;
+  processedStrategies?: number;
+  processedProtocols?: number;
+  chainBreakdown?: Array<{
+    name: string;
+    chainId: number;
+    protocolCount: number;
+  }>;
+  message?: string;
+  progressPercent?: number;
+}
+
+export interface UnifiedZapStreamEvent {
+  type: string;
+  intentId?: string;
+  progress: number; // normalized 0-1 value
+  currentStep?: UnifiedZapPhase | null;
+  phase?: string;
+  currentOperation?: string;
+  progressPercent?: number;
+  processedTokens?: number;
+  totalTokens?: number;
+  message?: string;
+  metadata?: UnifiedZapStreamEventMetadata;
   error?: {
-    code: string;
+    code?: string;
     message: string;
     details?: unknown;
-  };
+  } | null;
   timestamp: string;
+  rawEvent?: unknown;
 }
 
 export interface UseUnifiedZapStreamReturn {
@@ -71,6 +147,7 @@ export function useUnifiedZapStream(
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const hasTerminalEventRef = useRef(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   // Derived state
@@ -102,6 +179,8 @@ export function useUnifiedZapStream(
         closeStream();
       }
 
+      hasTerminalEventRef.current = false;
+
       try {
         // Construct stream URL using the configured intent engine endpoint
         const sanitizedBaseUrl = API_ENDPOINTS.intentEngine.replace(/\/$/, "");
@@ -110,11 +189,21 @@ export function useUnifiedZapStream(
           ? `${sanitizedBaseUrl}${streamPath}`
           : streamPath;
 
+        zapStreamLogger.info("Attempting SSE connection", {
+          intentId,
+          streamUrl,
+          baseUrl: API_ENDPOINTS.intentEngine,
+        });
+
         const eventSource = new EventSource(streamUrl);
         eventSourceRef.current = eventSource;
 
         eventSource.onopen = () => {
-          zapStreamLogger.info("SSE connected", { intentId });
+          zapStreamLogger.info("SSE connected successfully", {
+            intentId,
+            streamUrl,
+            readyState: eventSource.readyState,
+          });
           setIsConnected(true);
           setError(null);
           setReconnectAttempts(0);
@@ -122,14 +211,284 @@ export function useUnifiedZapStream(
 
         eventSource.onmessage = event => {
           try {
-            const data: UnifiedZapStreamEvent = JSON.parse(event.data);
+            const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
 
-            zapStreamLogger.debug("Received SSE event", data);
+            const normalizeProgress = (
+              value: unknown,
+              fallback: number = 0
+            ) => {
+              if (typeof value !== "number" || Number.isNaN(value)) {
+                return fallback;
+              }
 
-            setEvents(prev => [...prev, data]);
+              if (value > 1) {
+                return Math.min(value / 100, 1);
+              }
 
-            // Auto-close on completion or error
-            if (data.type === "complete" || data.type === "error") {
+              if (value < 0) {
+                return 0;
+              }
+
+              return value;
+            };
+
+            const getPhase = (
+              data: UnifiedZapRawEvent
+            ): UnifiedZapPhase | null => {
+              const candidates = [
+                data?.phase,
+                data?.currentStep,
+                data?.currentOperation,
+                data?.metadata?.phase,
+                data?.type,
+              ]
+                .map(candidate => {
+                  if (
+                    typeof candidate === "string" ||
+                    typeof candidate === "number"
+                  ) {
+                    return candidate.toString().toLowerCase();
+                  }
+                  return null;
+                })
+                .filter((value): value is string => value !== null);
+
+              for (const candidate of candidates) {
+                if (
+                  (UNIFIED_ZAP_PHASES as ReadonlyArray<string>).includes(
+                    candidate
+                  )
+                ) {
+                  return candidate as UnifiedZapPhase;
+                }
+              }
+
+              if (data?.type === "complete") {
+                return "complete";
+              }
+
+              if (data?.type === "error") {
+                return "error";
+              }
+
+              return null;
+            };
+
+            const resolvedPhase = getPhase(rawData);
+
+            const progressValue =
+              typeof rawData.progress === "number"
+                ? rawData.progress
+                : typeof rawData.progressPercent === "number"
+                  ? rawData.progressPercent / 100
+                  : 0;
+
+            const safeString = (value: unknown): string | undefined =>
+              typeof value === "string" && value.length > 0 ? value : undefined;
+
+            const safeNumber = (value: unknown): number | undefined =>
+              typeof value === "number" && !Number.isNaN(value)
+                ? value
+                : undefined;
+
+            const metadata = rawData.metadata ?? undefined;
+            const metadataMessage =
+              safeString(metadata?.message) ??
+              safeString(rawData.message) ??
+              safeString(rawData.additionalData?.message) ??
+              safeString(rawData.additionalInfo?.message);
+
+            const chainBreakdownSource =
+              metadata?.chainBreakdown ??
+              rawData.chainBreakdown ??
+              rawData.chains;
+
+            const normalizedChainBreakdown = Array.isArray(chainBreakdownSource)
+              ? chainBreakdownSource
+                  .map(entry => {
+                    if (!entry || typeof entry !== "object") {
+                      return null;
+                    }
+
+                    const name = safeString(
+                      (entry as UnifiedZapRawEventChainBreakdownEntry).name
+                    );
+                    const chainId = safeNumber(
+                      (entry as UnifiedZapRawEventChainBreakdownEntry).chainId
+                    );
+                    const protocolCount = safeNumber(
+                      (entry as UnifiedZapRawEventChainBreakdownEntry)
+                        .protocolCount
+                    );
+
+                    if (
+                      name &&
+                      chainId !== undefined &&
+                      protocolCount !== undefined
+                    ) {
+                      return { name, chainId, protocolCount } as const;
+                    }
+
+                    return null;
+                  })
+                  .filter(
+                    (
+                      entry
+                    ): entry is {
+                      name: string;
+                      chainId: number;
+                      protocolCount: number;
+                    } => entry !== null
+                  )
+              : undefined;
+
+            const normalizedMetadata: UnifiedZapStreamEventMetadata = {};
+
+            const totalStrategies =
+              safeNumber(metadata?.totalStrategies) ??
+              safeNumber(rawData.totalStrategies) ??
+              safeNumber(rawData.strategyCount);
+            const totalProtocols =
+              safeNumber(metadata?.totalProtocols) ??
+              safeNumber(rawData.totalProtocols) ??
+              safeNumber(rawData.protocolCount);
+            const estimatedDuration =
+              safeString(metadata?.estimatedDuration) ??
+              safeString(rawData.estimatedDuration);
+            const processedStrategies =
+              safeNumber(metadata?.processedStrategies) ??
+              safeNumber(rawData.processedStrategies);
+            const processedProtocols =
+              safeNumber(metadata?.processedProtocols) ??
+              safeNumber(rawData.processedProtocols);
+            const metadataProgressPercent =
+              safeNumber(metadata?.progressPercent) ??
+              safeNumber(rawData.progressPercent);
+
+            if (totalStrategies !== undefined) {
+              normalizedMetadata.totalStrategies = totalStrategies;
+            }
+            if (totalProtocols !== undefined) {
+              normalizedMetadata.totalProtocols = totalProtocols;
+            }
+            if (estimatedDuration) {
+              normalizedMetadata.estimatedDuration = estimatedDuration;
+            }
+            if (processedStrategies !== undefined) {
+              normalizedMetadata.processedStrategies = processedStrategies;
+            }
+            if (processedProtocols !== undefined) {
+              normalizedMetadata.processedProtocols = processedProtocols;
+            }
+            if (
+              normalizedChainBreakdown &&
+              normalizedChainBreakdown.length > 0
+            ) {
+              normalizedMetadata.chainBreakdown = normalizedChainBreakdown;
+            }
+            if (metadataMessage) {
+              normalizedMetadata.message = metadataMessage;
+            }
+            if (metadataProgressPercent !== undefined) {
+              normalizedMetadata.progressPercent = metadataProgressPercent;
+            }
+
+            const normalizedEvent: UnifiedZapStreamEvent = {
+              type: safeString(rawData.type) ?? "progress",
+              intentId,
+              progress:
+                rawData.type === "complete"
+                  ? 1
+                  : normalizeProgress(progressValue, 0),
+              currentStep: resolvedPhase,
+              timestamp:
+                safeString(rawData.timestamp) ??
+                safeString(rawData.rawTimestamp) ??
+                new Date().toISOString(),
+              rawEvent: rawData,
+            };
+
+            const normalizedPhase =
+              safeString(rawData.phase) ??
+              safeString(metadata?.phase) ??
+              safeString(rawData.currentOperation);
+
+            if (normalizedPhase) {
+              normalizedEvent.phase = normalizedPhase;
+            }
+
+            const normalizedOperation = safeString(rawData.currentOperation);
+            if (normalizedOperation) {
+              normalizedEvent.currentOperation = normalizedOperation;
+            }
+
+            const normalizedProgressPercent = safeNumber(
+              rawData.progressPercent
+            );
+            if (normalizedProgressPercent !== undefined) {
+              normalizedEvent.progressPercent = normalizedProgressPercent;
+            }
+
+            const normalizedProcessedTokens = safeNumber(
+              rawData.processedTokens
+            );
+            if (normalizedProcessedTokens !== undefined) {
+              normalizedEvent.processedTokens = normalizedProcessedTokens;
+            }
+
+            const normalizedTotalTokens = safeNumber(rawData.totalTokens);
+            if (normalizedTotalTokens !== undefined) {
+              normalizedEvent.totalTokens = normalizedTotalTokens;
+            }
+
+            if (metadataMessage) {
+              normalizedEvent.message = metadataMessage;
+            }
+
+            if (Object.keys(normalizedMetadata).length > 0) {
+              normalizedEvent.metadata = normalizedMetadata;
+            }
+
+            const normalizedError = rawData.error
+              ? typeof rawData.error === "string"
+                ? {
+                    code: safeString(rawData.errorCode) ?? "STREAM_ERROR",
+                    message: rawData.error,
+                    details: rawData,
+                  }
+                : {
+                    code:
+                      safeString(rawData.error?.code) ??
+                      safeString(rawData.errorCode) ??
+                      "STREAM_ERROR",
+                    message:
+                      safeString(rawData.error?.message) ??
+                      "Stream reported an error",
+                    details: rawData.error?.details ?? rawData,
+                  }
+              : null;
+
+            if (normalizedError) {
+              normalizedEvent.error = normalizedError;
+            }
+
+            zapStreamLogger.debug("Received SSE event", normalizedEvent);
+
+            setEvents(prev => [...prev, normalizedEvent]);
+
+            if (
+              normalizedEvent.type === "error" &&
+              normalizedEvent.error?.message
+            ) {
+              setError(normalizedEvent.error.message);
+            }
+
+            if (
+              normalizedEvent.type === "complete" ||
+              normalizedEvent.type === "error"
+            ) {
+              hasTerminalEventRef.current = true;
+
               setTimeout(() => {
                 closeStream();
               }, 5000); // Keep connection open for 5 seconds after completion
@@ -141,7 +500,23 @@ export function useUnifiedZapStream(
         };
 
         eventSource.onerror = event => {
-          zapStreamLogger.warn("SSE connection error", event);
+          if (hasTerminalEventRef.current) {
+            zapStreamLogger.info("SSE closed after terminal event", {
+              intentId,
+              streamUrl,
+              readyState: eventSource.readyState,
+            });
+            closeStream();
+            return;
+          }
+
+          zapStreamLogger.warn("SSE connection error", {
+            event,
+            intentId,
+            streamUrl,
+            readyState: eventSource.readyState,
+            reconnectAttempts,
+          });
           setIsConnected(false);
 
           // Attempt reconnection if we haven't exceeded max attempts
@@ -160,7 +535,9 @@ export function useUnifiedZapStream(
               connectToStream(intentId);
             }, RECONNECT_DELAY);
           } else {
-            setError("Stream connection failed");
+            setError(
+              `Stream connection failed after ${reconnectAttempts} attempts`
+            );
             closeStream();
           }
         };
@@ -179,6 +556,7 @@ export function useUnifiedZapStream(
     if (intentId) {
       setEvents([]); // Clear previous events on manual reconnect
       setError(null);
+      hasTerminalEventRef.current = false;
       setReconnectAttempts(0);
       connectToStream(intentId);
     }

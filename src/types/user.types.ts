@@ -4,6 +4,7 @@ export interface User {
   id: string;
   email?: string;
   is_active: boolean;
+  is_subscribed_to_reports: boolean;
   created_at: string;
 }
 
