@@ -7,16 +7,26 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { prepareTransaction } from "thirdweb";
+import { useSendAndConfirmCalls } from "thirdweb/react";
+import {
+  getChainBlockExplorer,
+  getChainById,
+  toThirdWebChain,
+} from "../../config/chains";
+import { useToast } from "../../hooks/useToast";
 import {
   useUnifiedZapStream,
   type UnifiedZapStreamEvent,
+  type UnifiedZapStreamTransaction,
 } from "../../hooks/useUnifiedZapStream";
 import { formatCurrency } from "../../lib/formatters";
-import { API_ENDPOINTS } from "../../lib/http-utils";
+import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
 export interface ZapExecutionProgressProps {
   intentId: string;
+  chainId: number;
   totalValue: number;
   strategyCount: number;
   onComplete?: () => void;
@@ -92,103 +102,84 @@ const STEP_CONFIG = {
   },
 };
 
-// Step timeline component
-function StepTimeline({
-  events,
-  currentStep,
-  isComplete,
-  hasError,
-}: {
-  events: UnifiedZapStreamEvent[];
-  currentStep: string | null;
-  isComplete: boolean;
-  hasError: boolean;
-}) {
-  const allSteps = Object.entries(STEP_CONFIG)
-    .filter(([key]) => key !== "error")
-    .sort(([, a], [, b]) => a.order - b.order);
+type TransactionDispatchStatus = "idle" | "pending" | "success" | "error";
 
-  const resolveEventStep = (event: UnifiedZapStreamEvent) => {
-    if (event.currentStep) {
-      return event.currentStep;
+const shortenHash = (hash: string) =>
+  hash.length <= 12 ? hash : `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+
+const parseBigIntValue = (value?: string): bigint | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  try {
+    if (value.startsWith("0x") || value.startsWith("0X")) {
+      return BigInt(value);
     }
+    return BigInt(value);
+  } catch {
+    return undefined;
+  }
+};
 
-    if (typeof event.phase === "string") {
-      return event.phase;
-    }
-
-    if (typeof event.type === "string" && event.type in STEP_CONFIG) {
-      return event.type;
-    }
-
-    return null;
-  };
-
-  const getStepStatus = (stepKey: string) => {
-    if (hasError) return "error";
-    if (isComplete) return "completed";
-    if (stepKey === currentStep) return "active";
-
-    // Check if this step was completed in previous events
-    const stepCompleted = events.some(event => {
-      const eventStep = resolveEventStep(event);
-      return eventStep === stepKey && event.progress >= 0.8;
-    });
-
-    return stepCompleted ? "completed" : "pending";
-  };
-
-  return (
-    <div className="flex items-center justify-between py-4">
-      {allSteps.map(([stepKey, config], index) => {
-        const status = getStepStatus(stepKey);
-        const isLast = index === allSteps.length - 1;
-
-        return (
-          <div key={stepKey} className="flex items-center flex-1">
-            {/* Step Circle */}
-            <div className="flex flex-col items-center">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
-                  status === "completed"
-                    ? "bg-green-500 text-white"
-                    : status === "active"
-                      ? "bg-purple-500 text-white animate-pulse"
-                      : status === "error"
-                        ? "bg-red-500 text-white"
-                        : "bg-gray-200 text-gray-500"
-                }`}
-              >
-                {status === "completed" ? "✓" : config.icon}
-              </div>
-              <span
-                className={`text-xs mt-1 text-center max-w-16 ${
-                  status === "active"
-                    ? "text-purple-600 font-medium"
-                    : "text-gray-500"
-                }`}
-              >
-                {config.title.split(" ")[0]}
-              </span>
-            </div>
-
-            {/* Connector Line */}
-            {!isLast && (
-              <div className="flex-1 h-0.5 mx-2 bg-gray-200 relative">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    status === "completed" ? "bg-green-500" : "bg-gray-200"
-                  }`}
-                  style={{ width: status === "completed" ? "100%" : "0%" }}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
+const createTransactionSignature = (
+  txs: UnifiedZapStreamTransaction[]
+): string =>
+  JSON.stringify(
+    txs.map(tx => ({
+      to: tx.to,
+      data: tx.data,
+      value: tx.value ?? null,
+      gas: tx.gas ?? null,
+      gasPrice: tx.gasPrice ?? null,
+      maxFeePerGas: tx.maxFeePerGas ?? null,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas ?? null,
+      chainId: tx.chainId ?? null,
+    }))
   );
-}
+
+const buildExplorerUrl = (chainId: number, txHash: string): string | null => {
+  const baseUrl = getChainBlockExplorer(chainId);
+  if (!baseUrl) {
+    return null;
+  }
+
+  const sanitizedBase = baseUrl.endsWith("/")
+    ? baseUrl.slice(0, -1)
+    : baseUrl;
+
+  return `${sanitizedBase}/tx/${txHash}`;
+};
+
+const deriveErrorMessage = (error: unknown): string => {
+  if (!error) {
+    return "Failed to dispatch transaction bundle.";
+  }
+
+  if (error instanceof Error) {
+    const normalizedMessage = error.message?.trim();
+    if (normalizedMessage?.length) {
+      if (normalizedMessage.includes("wallet_sendCalls")) {
+        return "Connected wallet does not support EIP-5792 (wallet_sendCalls). Switch to a thirdweb Smart Wallet or other compatible provider.";
+      }
+      if (normalizedMessage.includes("wallet_getCapabilities")) {
+        return "Wallet capabilities could not be fetched. Ensure the wallet supports EIP-5792.";
+      }
+      return normalizedMessage;
+    }
+  }
+
+  if (typeof error === "string" && error.trim().length > 0) {
+    return error.trim();
+  }
+
+  if (typeof (error as { message?: string }).message === "string") {
+    return (error as { message?: string }).message as string;
+  }
+
+  return "Failed to dispatch transaction bundle.";
+};
+
 
 function EventStreamDebug({ events }: { events: UnifiedZapStreamEvent[] }) {
   return (
@@ -229,6 +220,7 @@ function EventStreamDebug({ events }: { events: UnifiedZapStreamEvent[] }) {
 
 export function ZapExecutionProgress({
   intentId,
+  chainId,
   totalValue,
   strategyCount,
   onComplete,
@@ -247,11 +239,26 @@ export function ZapExecutionProgress({
     error,
     closeStream,
     reconnect,
+    transactions: streamTransactions,
   } = useUnifiedZapStream(intentId);
+
+  const { mutate: sendCalls } = useSendAndConfirmCalls();
+  const { showToast } = useToast();
+
+  const lastSentSignatureRef = useRef<string | null>(null);
+  const [transactionStatus, setTransactionStatus] =
+    useState<TransactionDispatchStatus>("idle");
+  const [transactionError, setTransactionError] = useState<string | null>(null);
 
   const [showStepTimeline, setShowStepTimeline] = useState(true);
   const [executionStartTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+
+  useEffect(() => {
+    lastSentSignatureRef.current = null;
+    setTransactionStatus("idle");
+    setTransactionError(null);
+  }, [intentId]);
 
   // Update elapsed time
   useEffect(() => {
@@ -300,7 +307,204 @@ export function ZapExecutionProgress({
     return `${seconds}s`;
   };
 
+  const transactions = useMemo(
+    () => streamTransactions ?? [],
+    [streamTransactions]
+  );
+
+  const transactionSignature = useMemo(
+    () => (transactions.length > 0 ? createTransactionSignature(transactions) : null),
+    [transactions]
+  );
+
+  const executionChainId = latestEvent?.chainId ?? chainId;
+
+  const transactionStatusLabel = useMemo(() => {
+    switch (transactionStatus) {
+      case "pending":
+        return "Dispatching";
+      case "success":
+        return "Submitted";
+      case "error":
+        return "Needs attention";
+      default:
+        return transactions.length > 0 ? "Ready" : "Awaiting bundle";
+    }
+  }, [transactionStatus, transactions.length]);
+
+  const transactionStatusClass = useMemo(() => {
+    switch (transactionStatus) {
+      case "pending":
+        return "text-purple-600";
+      case "success":
+        return "text-green-600";
+      case "error":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
+    }
+  }, [transactionStatus]);
+
   const progressPercentage = Math.round(progress * 100);
+
+  const handleSendTransactions = useCallback(
+    (
+      txs: UnifiedZapStreamTransaction[],
+      eventChainId: number | undefined,
+      signature: string
+    ) => {
+      if (!txs.length) {
+        return;
+      }
+
+      const chainIdForTx = eventChainId ?? chainId;
+      const baseChain = getChainById(chainIdForTx);
+
+      if (!baseChain) {
+        const message = `Unsupported chain ${chainIdForTx}`;
+        setTransactionStatus("error");
+        setTransactionError(message);
+        showToast({ type: "error", title: "Unsupported chain", message });
+        lastSentSignatureRef.current = null;
+        return;
+      }
+
+      try {
+        const thirdwebChain = toThirdWebChain(baseChain);
+
+        const preparedCalls = txs
+          .map<ReturnType<typeof prepareTransaction> | null>(tx => {
+            if (!tx.to || !tx.data) {
+              return null;
+            }
+
+            try {
+              const prepared = prepareTransaction({
+                to: tx.to as `0x${string}`,
+                data: tx.data as `0x${string}`,
+                value: parseBigIntValue(tx.value),
+                gas: parseBigIntValue(tx.gas),
+                gasPrice: parseBigIntValue(tx.gasPrice),
+                maxFeePerGas: parseBigIntValue(tx.maxFeePerGas),
+                maxPriorityFeePerGas: parseBigIntValue(
+                  tx.maxPriorityFeePerGas
+                ),
+                chain: thirdwebChain,
+                client: THIRDWEB_CLIENT,
+              });
+              return prepared;
+            } catch {
+              return null;
+            }
+          })
+          .filter(
+            (call): call is ReturnType<typeof prepareTransaction> =>
+              call !== null
+          );
+
+        if (preparedCalls.length === 0) {
+          const message =
+            "No executable transactions were provided by the intent stream.";
+          setTransactionStatus("error");
+          setTransactionError(message);
+          showToast({ type: "error", title: "No transactions", message });
+          lastSentSignatureRef.current = null;
+          return;
+        }
+
+        lastSentSignatureRef.current = signature;
+        setTransactionStatus("pending");
+        setTransactionError(null);
+
+        type SendCallsVariables = Parameters<typeof sendCalls>[0];
+
+        const sendVariables: SendCallsVariables = {
+          calls: preparedCalls as SendCallsVariables["calls"],
+          atomicRequired: true,
+        };
+
+        sendCalls(
+          sendVariables,
+          {
+            onSuccess: async result => {
+              setTransactionStatus("success");
+              const receiptHash = result?.receipts?.[0]?.transactionHash;
+              const explorerUrl =
+                receiptHash && chainIdForTx
+                  ? buildExplorerUrl(chainIdForTx, receiptHash)
+                  : null;
+
+              showToast({
+                type: "success",
+                title: "Transactions submitted",
+                message: receiptHash
+                  ? `Bundle sent. First transaction ${shortenHash(receiptHash)}.`
+                  : "Bundle dispatched to wallet.",
+                ...(explorerUrl
+                  ? {
+                      link: {
+                        url: explorerUrl,
+                        text: "View on explorer",
+                      },
+                    }
+                  : {}),
+              });
+            },
+            onError: async err => {
+              lastSentSignatureRef.current = null;
+              setTransactionStatus("error");
+              const message = deriveErrorMessage(err);
+              setTransactionError(message);
+              showToast({
+                type: "error",
+                title: "Transaction dispatch failed",
+                message,
+              });
+            },
+          }
+        );
+      } catch (dispatchError) {
+        lastSentSignatureRef.current = null;
+        setTransactionStatus("error");
+        const message = deriveErrorMessage(dispatchError);
+        setTransactionError(message);
+        showToast({
+          type: "error",
+          title: "Dispatch error",
+          message,
+        });
+      }
+    },
+    [chainId, sendCalls, showToast]
+  );
+
+  useEffect(() => {
+    if (!transactions.length || !transactionSignature) {
+      return;
+    }
+
+    if (transactionStatus === "pending" || transactionStatus === "error") {
+      return;
+    }
+
+    if (lastSentSignatureRef.current === transactionSignature) {
+      return;
+    }
+
+    handleSendTransactions(transactions, latestEvent?.chainId, transactionSignature);
+  }, [
+    transactions,
+    transactionSignature,
+    handleSendTransactions,
+    latestEvent?.chainId,
+    transactionStatus,
+  ]);
+
+  const handleRetryDispatch = useCallback(() => {
+    setTransactionStatus("idle");
+    setTransactionError(null);
+    lastSentSignatureRef.current = null;
+  }, []);
 
   return (
     <div
@@ -409,141 +613,7 @@ export function ZapExecutionProgress({
           </div>
         </div>
 
-        {/* Step Timeline */}
-        {showStepTimeline && (
-          <div className="border-t border-gray-100 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <h5 className="text-sm font-medium text-gray-700">
-                Execution Steps
-              </h5>
-              <button
-                onClick={() => setShowStepTimeline(!showStepTimeline)}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                {showStepTimeline ? "Hide" : "Show"} Timeline
-              </button>
-            </div>
-            <StepTimeline
-              events={events}
-              currentStep={currentStep}
-              isComplete={isComplete}
-              hasError={hasError}
-            />
-          </div>
-        )}
-
         <EventStreamDebug events={events} />
-
-        {/* Basic Execution Info */}
-        <div className="flex items-center justify-between text-sm text-gray-500 border-t border-gray-100 pt-4">
-          <span>Elapsed: {formatElapsedTime(elapsedTime)}</span>
-          <span>Intent ID: {intentId.slice(-8)}</span>
-          <div className="flex items-center space-x-2">
-            <div
-              className={`w-2 h-2 rounded-full ${isConnected ? "bg-green-500" : "bg-red-500"}`}
-            />
-            <span className={isConnected ? "text-green-600" : "text-red-600"}>
-              {isConnected ? "Live" : "Disconnected"}
-            </span>
-            {error && (
-              <span className="text-red-500 text-xs ml-2" title={error}>
-                ⚠️
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Debug Info - Only show when disconnected */}
-        {!isConnected && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs">
-            <div className="flex items-center space-x-2 mb-2">
-              <span className="text-yellow-600">🐛</span>
-              <span className="font-medium text-yellow-800">Debug Info</span>
-            </div>
-            <div className="space-y-1 text-yellow-700">
-              <div>
-                Intent ID:{" "}
-                <code className="bg-yellow-100 px-1 rounded">{intentId}</code>
-              </div>
-              <div>
-                Stream URL:{" "}
-                <code className="bg-yellow-100 px-1 rounded break-all">
-                  {API_ENDPOINTS.intentEngine}/api/unifiedzap/{intentId}/stream
-                </code>
-              </div>
-              <div>Status: {error || "Connection failed"}</div>
-              <div className="mt-2">
-                <button
-                  onClick={reconnect}
-                  className="text-yellow-700 hover:text-yellow-900 underline"
-                >
-                  Retry Connection
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Error Display */}
-        {hasError && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-50 border border-red-200 rounded-lg p-4"
-          >
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center justify-center w-8 h-8 bg-red-100 rounded-full">
-                <span className="text-red-500">❌</span>
-              </div>
-              <div>
-                <h4 className="font-medium text-red-800">Execution Error</h4>
-                <p className="text-xs text-red-600">
-                  {latestEvent?.error?.code &&
-                    `Error Code: ${latestEvent.error.code}`}
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-red-700 mt-3">
-              {error || latestEvent?.error?.message || "Unknown error occurred"}
-            </p>
-            <div className="flex items-center space-x-3 mt-4">
-              <button
-                onClick={reconnect}
-                className="px-3 py-1.5 text-sm bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition-colors"
-              >
-                Retry Connection
-              </button>
-              <button
-                onClick={onCancel}
-                className="px-3 py-1.5 text-sm text-red-600 hover:text-red-800 underline"
-              >
-                Cancel
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Success Display */}
-        {isComplete && !hasError && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-green-50 border border-green-200 rounded-lg p-4"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-10 h-10 bg-green-100 rounded-full">
-                <motion.span
-                  className="text-green-500 text-xl"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                >
-                  ✅
-                </motion.span>
-              </div>
-            </div>
-          </motion.div>
-        )}
       </div>
     </div>
   );

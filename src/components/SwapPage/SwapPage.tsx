@@ -71,6 +71,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     isExecuting: boolean;
     totalValue: number;
     strategyCount: number;
+    chainId: number;
     error?: string;
   } | null>(null);
 
@@ -146,6 +147,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           isExecuting: true,
           totalValue,
           strategyCount,
+          chainId: chain.id,
         });
 
         swapLogger.debug("Executing UnifiedZap with action", action);
@@ -170,6 +172,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           isExecuting: true,
           totalValue,
           strategyCount,
+          chainId: chain.id,
         });
       } catch (error) {
         swapLogger.error("UnifiedZap execution error", error);
@@ -182,6 +185,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           isExecuting: false,
           totalValue,
           strategyCount,
+          chainId: chain.id,
           error: errorMessage,
         });
       }
@@ -262,6 +266,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         {zapExecution && zapExecution.intentId && (
           <ZapExecutionProgress
             intentId={zapExecution.intentId}
+            chainId={zapExecution.chainId}
             totalValue={zapExecution.totalValue}
             strategyCount={zapExecution.strategyCount}
             onComplete={handleExecutionComplete}

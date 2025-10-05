@@ -30,6 +30,8 @@ interface UnifiedZapRawEventMetadata {
   chains?: UnifiedZapRawEventChainBreakdownEntry[];
   message?: string;
   progressPercent?: number;
+  chainId?: number;
+  transactions?: unknown;
   [key: string]: unknown;
 }
 
@@ -99,6 +101,17 @@ export interface UnifiedZapStreamEventMetadata {
   progressPercent?: number;
 }
 
+export interface UnifiedZapStreamTransaction {
+  to: string;
+  data: string;
+  value?: string;
+  gas?: string;
+  gasPrice?: string;
+  maxFeePerGas?: string;
+  maxPriorityFeePerGas?: string;
+  chainId?: number;
+}
+
 export interface UnifiedZapStreamEvent {
   type: string;
   intentId?: string;
@@ -118,6 +131,8 @@ export interface UnifiedZapStreamEvent {
   } | null;
   timestamp: string;
   rawEvent?: unknown;
+  transactions?: UnifiedZapStreamTransaction[];
+  chainId?: number;
 }
 
 export interface UseUnifiedZapStreamReturn {
@@ -131,6 +146,7 @@ export interface UseUnifiedZapStreamReturn {
   error: string | null;
   closeStream: () => void;
   reconnect: () => void;
+  transactions: UnifiedZapStreamTransaction[];
 }
 
 /**
@@ -156,6 +172,7 @@ export function useUnifiedZapStream(
   const hasError = latestEvent?.type === "error" || error !== null;
   const progress = latestEvent?.progress ?? 0;
   const currentStep = latestEvent?.currentStep ?? null;
+  const transactions = latestEvent?.transactions ?? [];
 
   // Maximum reconnection attempts
   const MAX_RECONNECT_ATTEMPTS = 3;
@@ -210,6 +227,7 @@ export function useUnifiedZapStream(
         };
 
         eventSource.onmessage = event => {
+          console.log("on messege event", event)
           try {
             const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
 
@@ -283,13 +301,121 @@ export function useUnifiedZapStream(
                   ? rawData.progressPercent / 100
                   : 0;
 
-            const safeString = (value: unknown): string | undefined =>
-              typeof value === "string" && value.length > 0 ? value : undefined;
+            const safeString = (value: unknown): string | undefined => {
+              if (typeof value === "string" && value.length > 0) {
+                return value;
+              }
+              return undefined;
+            };
 
-            const safeNumber = (value: unknown): number | undefined =>
-              typeof value === "number" && !Number.isNaN(value)
-                ? value
-                : undefined;
+            const safeNumber = (value: unknown): number | undefined => {
+              if (typeof value === "number" && !Number.isNaN(value)) {
+                return value;
+              }
+
+              if (typeof value === "string" && value.trim().length > 0) {
+                const parsed = Number(value);
+                return Number.isFinite(parsed) ? parsed : undefined;
+              }
+
+              if (typeof value === "bigint") {
+                const converted = Number(value);
+                return Number.isFinite(converted) ? converted : undefined;
+              }
+
+              return undefined;
+            };
+
+            const safeHexishString = (
+              value: unknown
+            ): string | undefined => {
+              if (typeof value === "string" && value.length > 0) {
+                return value;
+              }
+
+              if (typeof value === "number" && Number.isFinite(value)) {
+                return value.toString();
+              }
+
+              if (typeof value === "bigint") {
+                return value.toString();
+              }
+
+              return undefined;
+            };
+
+            const normalizeTransactions = (
+              input: unknown
+            ): UnifiedZapStreamTransaction[] | undefined => {
+              if (!Array.isArray(input)) {
+                return undefined;
+              }
+
+              const mapped = input
+                .map(item => {
+                  if (!item || typeof item !== "object") {
+                    return null;
+                  }
+
+                  const tx = item as Record<string, unknown>;
+                  const to = safeString(tx["to"]);
+                  const data = safeString(tx["data"]);
+
+                  if (!to || !data) {
+                    return null;
+                  }
+
+                  const chainId = safeNumber(tx["chainId"]);
+                  const valueStr = safeHexishString(tx["value"]);
+                  const gasStr =
+                    safeHexishString(tx["gas"]) ??
+                    safeHexishString(tx["gasLimit"]);
+                  const gasPriceStr = safeHexishString(tx["gasPrice"]);
+                  const maxFeePerGas = safeHexishString(tx["maxFeePerGas"]);
+                  const maxPriorityFeePerGas = safeHexishString(
+                    tx["maxPriorityFeePerGas"]
+                  );
+
+                  const normalizedTx: UnifiedZapStreamTransaction = {
+                    to,
+                    data,
+                  };
+
+                  if (valueStr) {
+                    normalizedTx.value = valueStr;
+                  }
+
+                  if (gasStr) {
+                    normalizedTx.gas = gasStr;
+                  }
+
+                  if (gasPriceStr) {
+                    normalizedTx.gasPrice = gasPriceStr;
+                  }
+
+                  if (maxFeePerGas) {
+                    normalizedTx.maxFeePerGas = maxFeePerGas;
+                  }
+
+                  if (maxPriorityFeePerGas) {
+                    normalizedTx.maxPriorityFeePerGas =
+                      maxPriorityFeePerGas;
+                  }
+
+                  if (chainId !== undefined) {
+                    normalizedTx.chainId = chainId;
+                  }
+
+                  return normalizedTx;
+                })
+                .filter(
+                  (
+                    tx
+                  ): tx is UnifiedZapStreamTransaction => tx !== null
+                );
+
+              return mapped.length > 0 ? mapped : undefined;
+            };
 
             const metadata = rawData.metadata ?? undefined;
             const metadataMessage =
@@ -393,6 +519,15 @@ export function useUnifiedZapStream(
               normalizedMetadata.progressPercent = metadataProgressPercent;
             }
 
+            const normalizedTransactions =
+              normalizeTransactions((rawData as Record<string, unknown>)[
+                "transactions"
+              ]) ?? normalizeTransactions(metadata?.transactions);
+
+            const normalizedChainId =
+              safeNumber((rawData as Record<string, unknown>)["chainId"]) ??
+              safeNumber(metadata?.chainId);
+
             const normalizedEvent: UnifiedZapStreamEvent = {
               type: safeString(rawData.type) ?? "progress",
               intentId,
@@ -447,6 +582,35 @@ export function useUnifiedZapStream(
 
             if (Object.keys(normalizedMetadata).length > 0) {
               normalizedEvent.metadata = normalizedMetadata;
+            }
+
+            let transactionsWithChain: UnifiedZapStreamTransaction[] | undefined;
+
+            if (normalizedTransactions) {
+              transactionsWithChain = normalizedTransactions.map(tx => {
+                if (tx.chainId !== undefined) {
+                  return tx;
+                }
+
+                if (normalizedChainId !== undefined) {
+                  return { ...tx, chainId: normalizedChainId };
+                }
+
+                return tx;
+              });
+
+              if (transactionsWithChain.length > 0) {
+                normalizedEvent.transactions = transactionsWithChain;
+              }
+            }
+
+            const resolvedChainId =
+              normalizedChainId ??
+              transactionsWithChain?.find(tx => tx.chainId !== undefined)
+                ?.chainId;
+
+            if (typeof resolvedChainId === "number") {
+              normalizedEvent.chainId = resolvedChainId;
             }
 
             const normalizedError = rawData.error
@@ -596,5 +760,6 @@ export function useUnifiedZapStream(
     error,
     closeStream,
     reconnect,
+    transactions,
   };
 }
