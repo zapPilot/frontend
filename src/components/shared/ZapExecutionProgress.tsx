@@ -144,9 +144,7 @@ const buildExplorerUrl = (chainId: number, txHash: string): string | null => {
     return null;
   }
 
-  const sanitizedBase = baseUrl.endsWith("/")
-    ? baseUrl.slice(0, -1)
-    : baseUrl;
+  const sanitizedBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 
   return `${sanitizedBase}/tx/${txHash}`;
 };
@@ -179,7 +177,6 @@ const deriveErrorMessage = (error: unknown): string => {
 
   return "Failed to dispatch transaction bundle.";
 };
-
 
 function EventStreamDebug({ events }: { events: UnifiedZapStreamEvent[] }) {
   return (
@@ -238,7 +235,6 @@ export function ZapExecutionProgress({
     currentStep,
     error,
     closeStream,
-    reconnect,
     transactions: streamTransactions,
   } = useUnifiedZapStream(intentId);
 
@@ -248,26 +244,11 @@ export function ZapExecutionProgress({
   const lastSentSignatureRef = useRef<string | null>(null);
   const [transactionStatus, setTransactionStatus] =
     useState<TransactionDispatchStatus>("idle");
-  const [transactionError, setTransactionError] = useState<string | null>(null);
-
-  const [showStepTimeline, setShowStepTimeline] = useState(true);
-  const [executionStartTime] = useState(Date.now());
-  const [elapsedTime, setElapsedTime] = useState(0);
 
   useEffect(() => {
     lastSentSignatureRef.current = null;
     setTransactionStatus("idle");
-    setTransactionError(null);
   }, [intentId]);
-
-  // Update elapsed time
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsedTime(Date.now() - executionStartTime);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [executionStartTime]);
 
   // Handle completion
   useEffect(() => {
@@ -297,55 +278,26 @@ export function ZapExecutionProgress({
       STEP_CONFIG.connected
     : STEP_CONFIG.connected;
 
-  const formatElapsedTime = (ms: number) => {
-    const seconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(seconds / 60);
-
-    if (minutes > 0) {
-      return `${minutes}m ${seconds % 60}s`;
-    }
-    return `${seconds}s`;
-  };
-
   const transactions = useMemo(
     () => streamTransactions ?? [],
     [streamTransactions]
   );
 
   const transactionSignature = useMemo(
-    () => (transactions.length > 0 ? createTransactionSignature(transactions) : null),
+    () =>
+      transactions.length > 0 ? createTransactionSignature(transactions) : null,
     [transactions]
   );
 
-  const executionChainId = latestEvent?.chainId ?? chainId;
-
-  const transactionStatusLabel = useMemo(() => {
-    switch (transactionStatus) {
-      case "pending":
-        return "Dispatching";
-      case "success":
-        return "Submitted";
-      case "error":
-        return "Needs attention";
-      default:
-        return transactions.length > 0 ? "Ready" : "Awaiting bundle";
-    }
-  }, [transactionStatus, transactions.length]);
-
-  const transactionStatusClass = useMemo(() => {
-    switch (transactionStatus) {
-      case "pending":
-        return "text-purple-600";
-      case "success":
-        return "text-green-600";
-      case "error":
-        return "text-red-600";
-      default:
-        return "text-gray-600";
-    }
-  }, [transactionStatus]);
-
   const progressPercentage = Math.round(progress * 100);
+
+  const currentEventMessage = useMemo(() => {
+    const message = latestEvent?.message;
+    if (typeof message === "string" && message.trim().length > 0) {
+      return message.trim();
+    }
+    return null;
+  }, [latestEvent?.message]);
 
   const handleSendTransactions = useCallback(
     (
@@ -363,9 +315,7 @@ export function ZapExecutionProgress({
       if (!baseChain) {
         const message = `Unsupported chain ${chainIdForTx}`;
         setTransactionStatus("error");
-        setTransactionError(message);
         showToast({ type: "error", title: "Unsupported chain", message });
-        lastSentSignatureRef.current = null;
         return;
       }
 
@@ -386,9 +336,7 @@ export function ZapExecutionProgress({
                 gas: parseBigIntValue(tx.gas),
                 gasPrice: parseBigIntValue(tx.gasPrice),
                 maxFeePerGas: parseBigIntValue(tx.maxFeePerGas),
-                maxPriorityFeePerGas: parseBigIntValue(
-                  tx.maxPriorityFeePerGas
-                ),
+                maxPriorityFeePerGas: parseBigIntValue(tx.maxPriorityFeePerGas),
                 chain: thirdwebChain,
                 client: THIRDWEB_CLIENT,
               });
@@ -406,68 +354,65 @@ export function ZapExecutionProgress({
           const message =
             "No executable transactions were provided by the intent stream.";
           setTransactionStatus("error");
-          setTransactionError(message);
           showToast({ type: "error", title: "No transactions", message });
-          lastSentSignatureRef.current = null;
           return;
         }
 
         lastSentSignatureRef.current = signature;
         setTransactionStatus("pending");
-        setTransactionError(null);
 
         type SendCallsVariables = Parameters<typeof sendCalls>[0];
 
         const sendVariables: SendCallsVariables = {
-          calls: preparedCalls as SendCallsVariables["calls"],
+          // calls: preparedCalls as SendCallsVariables["calls"],
+          // keep this testing settings
+          calls: [
+            {
+              to: "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+              data: "0x095ea7b3000000000000000000000000fb1b08ba6ba284934d817ea3c9d18f592cc59a50000000000000000000000000000000000000000000000000000407da105a96d0",
+            },
+          ] as SendCallsVariables["calls"],
           atomicRequired: true,
         };
 
-        sendCalls(
-          sendVariables,
-          {
-            onSuccess: async result => {
-              setTransactionStatus("success");
-              const receiptHash = result?.receipts?.[0]?.transactionHash;
-              const explorerUrl =
-                receiptHash && chainIdForTx
-                  ? buildExplorerUrl(chainIdForTx, receiptHash)
-                  : null;
+        sendCalls(sendVariables, {
+          onSuccess: async result => {
+            setTransactionStatus("success");
+            const receiptHash = result?.receipts?.[0]?.transactionHash;
+            const explorerUrl =
+              receiptHash && chainIdForTx
+                ? buildExplorerUrl(chainIdForTx, receiptHash)
+                : null;
 
-              showToast({
-                type: "success",
-                title: "Transactions submitted",
-                message: receiptHash
-                  ? `Bundle sent. First transaction ${shortenHash(receiptHash)}.`
-                  : "Bundle dispatched to wallet.",
-                ...(explorerUrl
-                  ? {
-                      link: {
-                        url: explorerUrl,
-                        text: "View on explorer",
-                      },
-                    }
-                  : {}),
-              });
-            },
-            onError: async err => {
-              lastSentSignatureRef.current = null;
-              setTransactionStatus("error");
-              const message = deriveErrorMessage(err);
-              setTransactionError(message);
-              showToast({
-                type: "error",
-                title: "Transaction dispatch failed",
-                message,
-              });
-            },
-          }
-        );
+            showToast({
+              type: "success",
+              title: "Transactions submitted",
+              message: receiptHash
+                ? `Bundle sent. First transaction ${shortenHash(receiptHash)}.`
+                : "Bundle dispatched to wallet.",
+              ...(explorerUrl
+                ? {
+                    link: {
+                      url: explorerUrl,
+                      text: "View on explorer",
+                    },
+                  }
+                : {}),
+            });
+          },
+          onError: async err => {
+            setTransactionStatus("error");
+            const message = deriveErrorMessage(err);
+            showToast({
+              type: "error",
+              title: "Transaction dispatch failed",
+              message,
+            });
+          },
+        });
       } catch (dispatchError) {
-        lastSentSignatureRef.current = null;
         setTransactionStatus("error");
         const message = deriveErrorMessage(dispatchError);
-        setTransactionError(message);
         showToast({
           type: "error",
           title: "Dispatch error",
@@ -483,7 +428,7 @@ export function ZapExecutionProgress({
       return;
     }
 
-    if (transactionStatus === "pending" || transactionStatus === "error") {
+    if (transactionStatus === "pending") {
       return;
     }
 
@@ -491,7 +436,11 @@ export function ZapExecutionProgress({
       return;
     }
 
-    handleSendTransactions(transactions, latestEvent?.chainId, transactionSignature);
+    handleSendTransactions(
+      transactions,
+      latestEvent?.chainId,
+      transactionSignature
+    );
   }, [
     transactions,
     transactionSignature,
@@ -499,12 +448,6 @@ export function ZapExecutionProgress({
     latestEvent?.chainId,
     transactionStatus,
   ]);
-
-  const handleRetryDispatch = useCallback(() => {
-    setTransactionStatus("idle");
-    setTransactionError(null);
-    lastSentSignatureRef.current = null;
-  }, []);
 
   return (
     <div
@@ -580,6 +523,11 @@ export function ZapExecutionProgress({
             <p className="text-sm text-gray-600">
               {currentStepConfig.description}
             </p>
+            {currentEventMessage && (
+              <p className="text-sm text-purple-700 mt-1">
+                {currentEventMessage}
+              </p>
+            )}
           </div>
         </div>
 

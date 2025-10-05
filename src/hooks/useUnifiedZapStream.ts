@@ -29,6 +29,7 @@ interface UnifiedZapRawEventMetadata {
   chainBreakdown?: UnifiedZapRawEventChainBreakdownEntry[];
   chains?: UnifiedZapRawEventChainBreakdownEntry[];
   message?: string;
+  description?: string;
   progressPercent?: number;
   chainId?: number;
   transactions?: unknown;
@@ -54,6 +55,7 @@ interface UnifiedZapRawEvent {
   processedTokens?: number;
   totalTokens?: number;
   message?: string;
+  description?: string;
   additionalData?: { message?: string } | null;
   additionalInfo?: { message?: string } | null;
   error?: UnifiedZapRawEventError | string | null;
@@ -98,6 +100,7 @@ export interface UnifiedZapStreamEventMetadata {
     protocolCount: number;
   }>;
   message?: string;
+  description?: string;
   progressPercent?: number;
 }
 
@@ -123,6 +126,7 @@ export interface UnifiedZapStreamEvent {
   processedTokens?: number;
   totalTokens?: number;
   message?: string;
+  description?: string;
   metadata?: UnifiedZapStreamEventMetadata;
   error?: {
     code?: string;
@@ -227,7 +231,6 @@ export function useUnifiedZapStream(
         };
 
         eventSource.onmessage = event => {
-          console.log("on messege event", event)
           try {
             const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
 
@@ -326,9 +329,7 @@ export function useUnifiedZapStream(
               return undefined;
             };
 
-            const safeHexishString = (
-              value: unknown
-            ): string | undefined => {
+            const safeHexishString = (value: unknown): string | undefined => {
               if (typeof value === "string" && value.length > 0) {
                 return value;
               }
@@ -398,8 +399,7 @@ export function useUnifiedZapStream(
                   }
 
                   if (maxPriorityFeePerGas) {
-                    normalizedTx.maxPriorityFeePerGas =
-                      maxPriorityFeePerGas;
+                    normalizedTx.maxPriorityFeePerGas = maxPriorityFeePerGas;
                   }
 
                   if (chainId !== undefined) {
@@ -408,11 +408,7 @@ export function useUnifiedZapStream(
 
                   return normalizedTx;
                 })
-                .filter(
-                  (
-                    tx
-                  ): tx is UnifiedZapStreamTransaction => tx !== null
-                );
+                .filter((tx): tx is UnifiedZapStreamTransaction => tx !== null);
 
               return mapped.length > 0 ? mapped : undefined;
             };
@@ -420,6 +416,8 @@ export function useUnifiedZapStream(
             const metadata = rawData.metadata ?? undefined;
             const metadataMessage =
               safeString(metadata?.message) ??
+              safeString(metadata?.description) ??
+              safeString(rawData.description) ??
               safeString(rawData.message) ??
               safeString(rawData.additionalData?.message) ??
               safeString(rawData.additionalInfo?.message);
@@ -520,9 +518,9 @@ export function useUnifiedZapStream(
             }
 
             const normalizedTransactions =
-              normalizeTransactions((rawData as Record<string, unknown>)[
-                "transactions"
-              ]) ?? normalizeTransactions(metadata?.transactions);
+              normalizeTransactions(
+                (rawData as Record<string, unknown>)["transactions"]
+              ) ?? normalizeTransactions(metadata?.transactions);
 
             const normalizedChainId =
               safeNumber((rawData as Record<string, unknown>)["chainId"]) ??
@@ -584,7 +582,9 @@ export function useUnifiedZapStream(
               normalizedEvent.metadata = normalizedMetadata;
             }
 
-            let transactionsWithChain: UnifiedZapStreamTransaction[] | undefined;
+            let transactionsWithChain:
+              | UnifiedZapStreamTransaction[]
+              | undefined;
 
             if (normalizedTransactions) {
               transactionsWithChain = normalizedTransactions.map(tx => {
