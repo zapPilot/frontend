@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { getTokenBalances, type NormalizedTokenBalance } from "../../services/balanceService";
+import {
+  getTokenBalances,
+  type NormalizedTokenBalance,
+} from "../../services/balanceService";
 
 const BALANCE_STALE_TIME = 3 * 60 * 1000; // 3 minutes – aligns with cache TTL guidance
 const BALANCE_GC_TIME = 6 * 60 * 1000; // Retain shortly after stale for smoother UX
@@ -38,11 +41,8 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
   );
 
   const queryEnabled = Boolean(
-    enabled &&
-      chainId &&
-      chainId > 0 &&
-      normalizedWallet
-      // Removed normalizedTokens.length > 0 to allow fetching native balances
+    enabled && chainId && chainId > 0 && normalizedWallet
+    // Removed normalizedTokens.length > 0 to allow fetching native balances
   );
 
   const query = useQuery({
@@ -93,7 +93,7 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
       {}
     );
   }, [query.data]);
-  console.log("balancesByAddress", balancesByAddress);
+
   return {
     balances: query.data,
     balancesByAddress,
