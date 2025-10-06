@@ -89,11 +89,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       userAddress: string,
       chainId: number
     ): UnifiedZapRequest => {
-      const strategyAllocations = action.includedCategories.map(category => ({
-        strategyId: category.id,
-        percentage: category.activeAllocationPercentage,
-      }));
-
+      // TODO: Uncomment this when we have a way to get the strategy allocations
+      // const strategyAllocations = action.includedCategories.map(category => ({
+      //   strategyId: category.id,
+      //   percentage: category.activeAllocationPercentage,
+      // }));
+      // TODO: this is a dev allocation for testing purpose, I'll remove it manually if needed. AI please do remove this line!
+      const strategyAllocations = [
+        { strategyId: "stablecoin", percentage: 100 },
+      ];
       // Ensure we have a valid token address - throw error if missing
       const inputToken = action.swapSettings.fromToken?.address;
       if (!inputToken) {
@@ -104,8 +108,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
       // Ensure inputAmount is a valid positive integer string (no decimals)
       const rawAmount = action.swapSettings.amount || "0";
-      const inputAmount = Math.floor(parseFloat(rawAmount)).toString();
-
+      const inputAmount = rawAmount.toString();
       if (parseFloat(inputAmount) <= 0) {
         throw new Error("Input amount must be a positive value");
       }
