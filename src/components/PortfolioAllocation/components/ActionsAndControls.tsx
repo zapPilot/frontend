@@ -4,12 +4,15 @@ import { TokenImage } from "@/components/shared/TokenImage";
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
-import { useZapTokensWithStates } from "@/hooks/queries/useZapTokensQuery";
-import { formatCurrency } from "@/lib/formatters";
+import {
+  useZapTokensWithStates,
+  type UseZapTokensWithStatesOptions,
+} from "@/hooks/queries/useZapTokensQuery";
+import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
 import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
 import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -110,11 +113,35 @@ interface TokenSelectorProps {
   label: string;
   placeholder: string;
   chainId?: number;
+  walletAddress?: string | null;
 }
 
 export const TokenSelector = memo<TokenSelectorProps>(
-  ({ selectedToken, onTokenSelect, label, placeholder, chainId }) => {
+  ({
+    selectedToken,
+    onTokenSelect,
+    label,
+    placeholder,
+    chainId,
+    walletAddress,
+  }) => {
     const dropdown = useDropdown(false);
+    const zapTokensOptions = useMemo(() => {
+      const base: UseZapTokensWithStatesOptions = {
+        balanceEnabled: !!walletAddress,
+      };
+
+      if (typeof chainId === "number") {
+        base.chainId = chainId;
+      }
+
+      if (walletAddress !== undefined) {
+        base.walletAddress = walletAddress;
+      }
+
+      return base;
+    }, [walletAddress, chainId]);
+
     const {
       tokens,
       hasTokens,
@@ -124,8 +151,11 @@ export const TokenSelector = memo<TokenSelectorProps>(
       error,
       refetch,
       isRefetching,
-    } = useZapTokensWithStates(chainId);
-
+      isBalanceLoading,
+      isBalanceFetching,
+      balanceError,
+    } = useZapTokensWithStates(zapTokensOptions);
+    console.log("tokens", tokens);
     return (
       <div className="relative">
         <label className="block text-xs font-medium text-gray-400 mb-2">
@@ -152,13 +182,26 @@ export const TokenSelector = memo<TokenSelectorProps>(
                   size={32}
                   className="w-8 h-8"
                 />
-                <div className="text-left">
+                <div className="text-left flex flex-col space-y-0.5">
                   <div className="text-white font-medium">
                     {selectedToken.symbol}
                   </div>
                   <div className="text-xs text-gray-400">
                     {selectedToken.name}
                   </div>
+                  {selectedToken.balance !== undefined && (
+                    <div className="text-xs text-gray-300">
+                      {formatTokenAmount(
+                        selectedToken.balance,
+                        selectedToken.symbol
+                      )}
+                    </div>
+                  )}
+                  {selectedToken.price && selectedToken.balance !== undefined && (
+                    <div className="text-xs text-gray-500">
+                      {formatCurrency(selectedToken.balance * selectedToken.price)}
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
@@ -259,12 +302,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                     {token.balance !== undefined && (
                       <div className="text-right">
                         <div className="text-sm text-gray-300">
-                          {token.balance.toFixed(
-                            token.symbol.includes("BTC") ||
-                              token.symbol.includes("ETH")
-                              ? 4
-                              : 2
-                          )}
+                          {formatTokenAmount(token.balance, token.symbol)}
                         </div>
                         {token.price && (
                           <div className="text-xs text-gray-500">
@@ -275,6 +313,19 @@ export const TokenSelector = memo<TokenSelectorProps>(
                     )}
                   </button>
                 ))}
+
+              {/* Balance Loading Indicator */}
+              {(isBalanceLoading || isBalanceFetching) && !isInitialLoading && (
+                <div className="p-3 text-xs text-gray-500">
+                  Fetching balances...
+                </div>
+              )}
+
+              {balanceError && !isBalanceLoading && !isBalanceFetching && (
+                <div className="p-3 text-xs text-red-400">
+                  Unable to refresh token balances. Balances may be outdated.
+                </div>
+              )}
             </motion.div>
             <div
               className={`fixed inset-0 ${Z_INDEX.HEADER}`}

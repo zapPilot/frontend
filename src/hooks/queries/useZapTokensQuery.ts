@@ -1,5 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { tokenService } from "../../services";
+import {
+  useTokenBalancesQuery,
+  type UseTokenBalancesParams,
+} from "./useTokenBalancesQuery";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain
@@ -31,15 +36,92 @@ export const useZapTokensQuery = (chainId?: number) => {
  * Hook variant that provides additional computed states
  * Useful for components that need more detailed loading/error information
  */
-export const useZapTokensWithStates = (chainId?: number) => {
+export interface UseZapTokensWithStatesOptions {
+  chainId?: number;
+  walletAddress?: string | null;
+  skipBalanceCache?: boolean;
+  balanceEnabled?: boolean;
+  tokenAddressesOverride?: string[];
+}
+
+export const useZapTokensWithStates = (
+  options: UseZapTokensWithStatesOptions = {}
+) => {
+  const {
+    chainId,
+    walletAddress,
+    skipBalanceCache = false,
+    balanceEnabled = true,
+    tokenAddressesOverride,
+  } = options;
+
   const query = useZapTokensQuery(chainId);
+
+  const tokens = query.data || [];
+
+  const balanceAddresses = useMemo(() => {
+    if (tokenAddressesOverride && tokenAddressesOverride.length > 0) {
+      return tokenAddressesOverride;
+    }
+
+    return tokens
+      .map(token => token.address)
+      .filter((address): address is string => typeof address === "string");
+  }, [tokenAddressesOverride, tokens]);
+
+  const balanceQueryOptions: UseTokenBalancesParams = {
+    tokenAddresses: balanceAddresses,
+    skipCache: skipBalanceCache,
+    enabled: balanceEnabled,
+  };
+
+  if (typeof chainId === "number") {
+    balanceQueryOptions.chainId = chainId;
+  }
+
+  if (walletAddress !== undefined) {
+    balanceQueryOptions.walletAddress = walletAddress;
+  }
+
+  const balances = useTokenBalancesQuery(balanceQueryOptions);
+  console.log("balances", balances);
+
+  const tokensWithBalances = useMemo(() => {
+    if (tokens.length === 0) {
+      return tokens;
+    }
+
+    const balanceMap = balances.balancesByAddress;
+
+    return tokens.map(token => {
+      const tokenAddress = token.address?.toLowerCase();
+      if (!tokenAddress) {
+        return token;
+      }
+
+      const balanceEntry = balanceMap[tokenAddress];
+      if (!balanceEntry) {
+        return token;
+      }
+
+      return {
+        ...token,
+        balance: balanceEntry.balance,
+      };
+    });
+  }, [tokens, balances.balancesByAddress]);
 
   return {
     ...query,
-    tokens: query.data || [],
-    hasTokens: (query.data?.length || 0) > 0,
-    isEmpty: query.isSuccess && (query.data?.length || 0) === 0,
+    tokens: tokensWithBalances,
+    hasTokens: tokensWithBalances.length > 0,
+    isEmpty: query.isSuccess && tokensWithBalances.length === 0,
     isInitialLoading: query.isLoading && !query.data,
     isRefetching: query.isFetching && !!query.data,
+    isBalanceLoading: balances.isLoading,
+    isBalanceFetching: balances.isFetching,
+    balanceError: balances.isError ? balances.error : null,
+    refetchBalances: balances.refetch,
+    balances: balances.balances,
   };
 };

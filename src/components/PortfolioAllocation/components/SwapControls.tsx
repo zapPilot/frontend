@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
 import { useCallback, useMemo } from "react";
+import { useUser } from "../../../contexts/UserContext";
 import type { SwapToken } from "../../../types/swap";
 import { SlippageComponent } from "../../shared/SlippageComponent";
 import type {
@@ -34,6 +35,9 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
   className = "",
   chainId,
 }) => {
+  const { userInfo } = useUser();
+  const walletAddress = userInfo?.primaryWallet ?? null;
+
   const handleTokenChange = useCallback(
     (field: "fromToken" | "toToken", token: SwapToken) => {
       onSwapSettingsChange({
@@ -312,6 +316,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
               ? { selectedToken: swapSettings.fromToken }
               : {})}
             {...(chainId !== undefined ? { chainId } : {})}
+            walletAddress={walletAddress}
             onTokenSelect={token => handleTokenChange("fromToken", token)}
             label={modeConfig.fromLabel!}
             placeholder={modeConfig.fromPlaceholder!}
@@ -324,6 +329,7 @@ export const SwapControls: React.FC<SwapControlsProps> = ({
               ? { selectedToken: swapSettings.toToken }
               : {})}
             {...(chainId !== undefined ? { chainId } : {})}
+            walletAddress={walletAddress}
             onTokenSelect={token => handleTokenChange("toToken", token)}
             label={modeConfig.toLabel!}
             placeholder={modeConfig.toPlaceholder!}

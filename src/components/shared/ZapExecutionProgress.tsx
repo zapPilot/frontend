@@ -364,14 +364,14 @@ export function ZapExecutionProgress({
         type SendCallsVariables = Parameters<typeof sendCalls>[0];
 
         const sendVariables: SendCallsVariables = {
-          // calls: preparedCalls as SendCallsVariables["calls"],
+          calls: preparedCalls as SendCallsVariables["calls"],
           // keep this testing settings
-          calls: [
-            {
-              to: "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
-              data: "0x095ea7b3000000000000000000000000fb1b08ba6ba284934d817ea3c9d18f592cc59a50000000000000000000000000000000000000000000000000000407da105a96d0",
-            },
-          ] as SendCallsVariables["calls"],
+          // calls: [
+          //   {
+          //     to: "0xf97f4df75117a78c1a5a0dbb814af92458539fb4",
+          //     data: "0x095ea7b3000000000000000000000000fb1b08ba6ba284934d817ea3c9d18f592cc59a50000000000000000000000000000000000000000000000000000407da105a96d0",
+          //   },
+          // ] as SendCallsVariables["calls"],
           atomicRequired: true,
         };
 
