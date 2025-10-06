@@ -266,17 +266,17 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     return (
       <div className="space-y-6">
         {/* UnifiedZap Execution Progress */}
-        {zapExecution && zapExecution.intentId && (
-          <ZapExecutionProgress
-            intentId={zapExecution.intentId}
-            chainId={zapExecution.chainId}
-            totalValue={zapExecution.totalValue}
-            strategyCount={zapExecution.strategyCount}
-            onComplete={handleExecutionComplete}
-            onError={handleExecutionError}
-            onCancel={handleExecutionCancel}
-          />
-        )}
+        <ZapExecutionProgress
+          isOpen={!!(zapExecution && zapExecution.intentId)}
+          onClose={handleExecutionCancel}
+          intentId={zapExecution?.intentId || ""}
+          chainId={zapExecution?.chainId || 1}
+          totalValue={zapExecution?.totalValue || 0}
+          strategyCount={zapExecution?.strategyCount || 0}
+          onComplete={handleExecutionComplete}
+          onError={handleExecutionError}
+          onCancel={handleExecutionCancel}
+        />
 
         {/* Execution Error Display (when no intent ID) */}
         {zapExecution && zapExecution.error && !zapExecution.intentId && (

@@ -6,6 +6,7 @@
 
 "use client";
 
+import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { prepareTransaction } from "thirdweb";
@@ -15,6 +16,7 @@ import {
   getChainById,
   toThirdWebChain,
 } from "../../config/chains";
+import { Z_INDEX } from "../../constants/design-system";
 import { useToast } from "../../hooks/useToast";
 import {
   useUnifiedZapStream,
@@ -22,17 +24,26 @@ import {
   type UnifiedZapStreamTransaction,
 } from "../../hooks/useUnifiedZapStream";
 import { formatCurrency } from "../../lib/formatters";
+import {
+  type BaseModalProps,
+  type ZapExecutionResult,
+} from "../../types/modal.types";
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
-export interface ZapExecutionProgressProps {
+export interface ZapExecutionProgressProps
+  extends Omit<
+    BaseModalProps<ZapExecutionResult>,
+    "children" | "a11y" | "size"
+  > {
   intentId: string;
   chainId: number;
   totalValue: number;
   strategyCount: number;
+  closeOnBackdropClick?: boolean;
+  closeOnEsc?: boolean;
   onComplete?: () => void;
   onError?: (error: string) => void;
   onCancel?: () => void;
-  className?: string;
 }
 
 // Step display configuration with enhanced details
@@ -216,10 +227,14 @@ function EventStreamDebug({ events }: { events: UnifiedZapStreamEvent[] }) {
 }
 
 export function ZapExecutionProgress({
+  isOpen,
+  onClose,
   intentId,
   chainId,
   totalValue,
   strategyCount,
+  closeOnBackdropClick = false,
+  closeOnEsc = true,
   onComplete,
   onError,
   onCancel,
@@ -266,12 +281,35 @@ export function ZapExecutionProgress({
     }
   }, [hasError, error, latestEvent?.error?.message, onError]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     closeStream();
     if (onCancel) {
       onCancel();
     }
-  };
+    onClose();
+  }, [closeStream, onCancel, onClose]);
+
+  // Handle Radix Dialog open state changes
+  const handleOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        // Only allow close if execution is complete or failed
+        if (isComplete || hasError) {
+          onClose();
+        } else if (closeOnBackdropClick || closeOnEsc) {
+          handleCancel();
+        }
+      }
+    },
+    [
+      isComplete,
+      hasError,
+      closeOnBackdropClick,
+      closeOnEsc,
+      onClose,
+      handleCancel,
+    ]
+  );
 
   const currentStepConfig = currentStep
     ? STEP_CONFIG[currentStep as keyof typeof STEP_CONFIG] ||
@@ -450,119 +488,145 @@ export function ZapExecutionProgress({
   ]);
 
   return (
-    <div
-      className={`bg-white rounded-xl shadow-lg border border-gray-200 p-6 ${className}`}
-      data-testid="zap-execution-progress"
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full text-white text-lg">
-            🚀
-          </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">
-              UnifiedZap Execution
-            </h3>
-            <p className="text-sm text-gray-600">
-              {formatCurrency(totalValue)} • {strategyCount} strategies
-            </p>
-          </div>
-        </div>
+    <Dialog.Root open={isOpen} onOpenChange={handleOpenChange}>
+      <Dialog.Portal>
+        {/* Backdrop with Framer Motion */}
+        <Dialog.Overlay asChild>
+          <motion.div
+            className={`fixed inset-0 bg-black/40 backdrop-blur-sm ${Z_INDEX.MODAL}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        </Dialog.Overlay>
 
-        <div className="flex items-center space-x-2">
-          {/* Connection status */}
-          <div className="flex items-center space-x-2">
+        {/* Modal Content */}
+        <Dialog.Content asChild>
+          <motion.div
+            className={`fixed inset-0 flex items-center justify-center px-4 py-10 ${Z_INDEX.MODAL}`}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
             <div
-              className={`w-2 h-2 rounded-full ${
-                isConnected ? "bg-green-500" : "bg-red-500"
-              }`}
-            />
-            <span className="text-xs text-gray-500">
-              {isConnected ? "Connected" : "Disconnected"}
-            </span>
-          </div>
-
-          {/* Cancel button */}
-          {!isComplete && !hasError && (
-            <button
-              onClick={handleCancel}
-              className="text-gray-400 hover:text-gray-600 text-sm"
-              data-testid="cancel-button"
+              className={`w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 p-6 ${className}`}
+              data-testid="zap-execution-progress"
             >
-              Cancel
-            </button>
-          )}
-        </div>
-      </div>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full text-white text-lg">
+                    🚀
+                  </div>
+                  <div>
+                    <Dialog.Title className="font-semibold text-gray-900">
+                      UnifiedZap Execution
+                    </Dialog.Title>
+                    <Dialog.Description className="text-sm text-gray-600">
+                      {formatCurrency(totalValue)} • {strategyCount} strategies
+                    </Dialog.Description>
+                  </div>
+                </div>
 
-      {/* Progress Section */}
-      <div className="space-y-6">
-        {/* Current Step */}
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <span className="text-2xl">{currentStepConfig.icon}</span>
-            {currentStep ===
-              (latestEvent?.currentStep ??
-                latestEvent?.phase ??
-                latestEvent?.type) &&
-              !isComplete &&
-              !hasError && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
-              )}
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">
-                {currentStepConfig.title}
-              </h4>
-              <span className="text-sm font-medium text-purple-600">
-                {progressPercentage}%
-              </span>
+                <div className="flex items-center space-x-2">
+                  {/* Connection status */}
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        isConnected ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    />
+                    <span className="text-xs text-gray-500">
+                      {isConnected ? "Connected" : "Disconnected"}
+                    </span>
+                  </div>
+
+                  {/* Close/Cancel button - always visible */}
+                  <Dialog.Close asChild>
+                    <button
+                      className="text-gray-400 hover:text-gray-600 text-sm transition-colors"
+                      data-testid="close-button"
+                      aria-label="Close modal"
+                    >
+                      {!isComplete && !hasError ? "Cancel" : "✕"}
+                    </button>
+                  </Dialog.Close>
+                </div>
+              </div>
+
+              {/* Progress Section */}
+              <div className="space-y-6">
+                {/* Current Step */}
+                <div className="flex items-center space-x-3">
+                  <div className="relative">
+                    <span className="text-2xl">{currentStepConfig.icon}</span>
+                    {currentStep ===
+                      (latestEvent?.currentStep ??
+                        latestEvent?.phase ??
+                        latestEvent?.type) &&
+                      !isComplete &&
+                      !hasError && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+                      )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-gray-900">
+                        {currentStepConfig.title}
+                      </h4>
+                      <span className="text-sm font-medium text-purple-600">
+                        {progressPercentage}%
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">
+                      {currentStepConfig.description}
+                    </p>
+                    {currentEventMessage && (
+                      <p className="text-sm text-purple-700 mt-1">
+                        {currentEventMessage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Enhanced Progress Bar */}
+                <div className="relative">
+                  <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
+                    <motion.div
+                      className={`h-3 rounded-full bg-gradient-to-r ${
+                        hasError
+                          ? "from-red-500 to-red-600"
+                          : isComplete
+                            ? "from-green-500 to-green-600"
+                            : "from-purple-500 to-blue-600"
+                      }`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercentage}%` }}
+                      transition={{ duration: 0.8, ease: "easeInOut" }}
+                    />
+                    {/* Progress glow effect */}
+                    <motion.div
+                      className="absolute top-0 h-3 rounded-full bg-white opacity-30"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressPercentage}%` }}
+                      transition={{ duration: 0.8, ease: "easeInOut" }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>0%</span>
+                    <span className="font-medium">{progressPercentage}%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                <EventStreamDebug events={events} />
+              </div>
             </div>
-            <p className="text-sm text-gray-600">
-              {currentStepConfig.description}
-            </p>
-            {currentEventMessage && (
-              <p className="text-sm text-purple-700 mt-1">
-                {currentEventMessage}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Enhanced Progress Bar */}
-        <div className="relative">
-          <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden shadow-inner">
-            <motion.div
-              className={`h-3 rounded-full bg-gradient-to-r ${
-                hasError
-                  ? "from-red-500 to-red-600"
-                  : isComplete
-                    ? "from-green-500 to-green-600"
-                    : "from-purple-500 to-blue-600"
-              }`}
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-            {/* Progress glow effect */}
-            <motion.div
-              className="absolute top-0 h-3 rounded-full bg-white opacity-30"
-              initial={{ width: 0 }}
-              animate={{ width: `${progressPercentage}%` }}
-              transition={{ duration: 0.8, ease: "easeInOut" }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>0%</span>
-            <span className="font-medium">{progressPercentage}%</span>
-            <span>100%</span>
-          </div>
-        </div>
-
-        <EventStreamDebug events={events} />
-      </div>
-    </div>
+          </motion.div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
