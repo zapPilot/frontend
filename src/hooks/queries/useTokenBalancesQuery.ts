@@ -41,8 +41,8 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
     enabled &&
       chainId &&
       chainId > 0 &&
-      normalizedWallet &&
-      normalizedTokens.length > 0
+      normalizedWallet
+      // Removed normalizedTokens.length > 0 to allow fetching native balances
   );
 
   const query = useQuery({

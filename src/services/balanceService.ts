@@ -40,13 +40,34 @@ export interface WalletTokenBalances {
 
 const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
   const record = (token ?? {}) as Record<string, unknown>;
+  console.log("normalizeTokenBalance input:", record);
 
   const addressCandidate =
     (record["address"] as string | undefined) ??
     (record["tokenAddress"] as string | undefined) ??
     (record["token_address"] as string | undefined) ??
     "";
-  const address = addressCandidate.toLowerCase();
+  
+  // Handle native tokens - if no address is provided, check if it's a native token
+  let address = addressCandidate.toLowerCase();
+  if (!addressCandidate || addressCandidate === "") {
+    // Check if this is a native token by looking at symbol or other indicators
+    const symbol = (record["symbol"] as string | undefined)?.toLowerCase();
+    const name = (record["name"] as string | undefined)?.toLowerCase();
+    
+    // Common native token patterns
+    if (symbol === "eth" || name?.includes("ethereum") || name?.includes("ether")) {
+      address = "native";
+    } else if (symbol === "arb" || name?.includes("arbitrum")) {
+      address = "native";
+    } else if (symbol === "op" || name?.includes("optimism")) {
+      address = "native";
+    } else if (symbol === "base" || name?.includes("base")) {
+      address = "native";
+    }
+  }
+  
+  console.log("normalized address:", address, "from candidate:", addressCandidate);
 
   const decimalsRaw =
     record["decimals"] ?? record["tokenDecimals"] ?? record["token_decimals"];
@@ -204,13 +225,20 @@ const normalizeWalletResponse = (
   // Check if we have the data object with balances
   const data = record["data"] as Record<string, unknown> | undefined;
   if (data) {
+    console.log(
+      "data",
+      data,
+      data["nativeBalance"],
+      typeof data["nativeBalance"] === "object"
+    );
     // Check for balances array (token metadata)
     if (Array.isArray(data["balances"])) {
       tokensSource = data["balances"] as unknown[];
     }
-    // Also check for nativeBalances (single object, not array)
-    if (data["nativeBalances"] && typeof data["nativeBalances"] === "object") {
-      tokensSource.push(data["nativeBalances"]);
+    // Also check for nativeBalance (single object, not array)
+    if (data["nativeBalance"] && typeof data["nativeBalance"] === "object") {
+      console.log("nativeBalance", data["nativeBalance"]);
+      tokensSource.push(data["nativeBalance"]);
     }
   }
   
@@ -225,6 +253,8 @@ const normalizeWalletResponse = (
 
   const tokens = tokensSource.map(normalizeTokenBalance);
   console.log("tokens in normalizeWalletResponse", tokens);
+  console.log("tokensSource length:", tokensSource.length);
+  console.log("tokens length after normalization:", tokens.length);
   const fromCacheFlag =
     Boolean(record["fromCache"]) ||
     Boolean(record["cacheHit"]) ||

@@ -44,6 +44,64 @@ export interface UseZapTokensWithStatesOptions {
   tokenAddressesOverride?: string[];
 }
 
+const NATIVE_ADDRESS_KEYS = [
+  "native",
+  "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "0x0000000000000000000000000000000000000000",
+];
+
+const isHexAddress = (address: string): boolean =>
+  /^0x[0-9a-f]{40}$/i.test(address);
+
+const isNativeAddress = (address: string | null | undefined): boolean =>
+  !!address && NATIVE_ADDRESS_KEYS.includes(address.toLowerCase());
+
+const resolveNativeAddressSentinel = (
+  address: string | null | undefined,
+  type?: string | null
+): string[] => {
+  if (
+    type === "native" ||
+    isNativeAddress(address) ||
+    address === "" ||
+    address === null ||
+    address === undefined
+  ) {
+    return ["native"];
+  }
+
+  return [];
+};
+
+const normalizeBalanceLookupKeys = (
+  token: { address?: string | null; type?: string | null }
+): string[] => {
+  const keys: string[] = [];
+
+  const address = token.address?.toLowerCase();
+  if (address) {
+    keys.push(address);
+  }
+
+  const isNativeToken =
+    token.type === "native" ||
+    address === "native" ||
+    address === "" ||
+    address === null ||
+    address === undefined;
+
+  if (isNativeToken) {
+    keys.push(...NATIVE_ADDRESS_KEYS);
+  } else if (
+    address &&
+    NATIVE_ADDRESS_KEYS.includes(address)
+  ) {
+    keys.push(...NATIVE_ADDRESS_KEYS);
+  }
+
+  return Array.from(new Set(keys));
+};
+
 export const useZapTokensWithStates = (
   options: UseZapTokensWithStatesOptions = {}
 ) => {
@@ -61,12 +119,41 @@ export const useZapTokensWithStates = (
 
   const balanceAddresses = useMemo(() => {
     if (tokenAddressesOverride && tokenAddressesOverride.length > 0) {
-      return tokenAddressesOverride;
+      const normalizedOverride = tokenAddressesOverride
+        .map(address => address?.toLowerCase())
+        .filter((address): address is string => Boolean(address))
+        .flatMap(address =>
+          isNativeAddress(address)
+            ? ["native", address]
+            : [address]
+        )
+        .filter(
+          (address): address is string =>
+            Boolean(address) && (isHexAddress(address) || address === "native")
+        );
+
+      return Array.from(new Set(normalizedOverride));
     }
 
-    return tokens
-      .map(token => token.address)
-      .filter((address): address is string => typeof address === "string");
+    const candidateAddresses = tokens.flatMap(token => {
+      const addresses: string[] = [];
+      const tokenAddress = token.address?.toLowerCase();
+
+      if (tokenAddress) {
+        addresses.push(tokenAddress);
+      }
+
+      addresses.push(...resolveNativeAddressSentinel(tokenAddress, token.type));
+
+      return addresses;
+    });
+
+    const filtered = candidateAddresses.filter(
+      (address): address is string =>
+        Boolean(address) && (isHexAddress(address) || address === "native")
+    );
+
+    return Array.from(new Set(filtered));
   }, [tokenAddressesOverride, tokens]);
 
   const balanceQueryOptions: UseTokenBalancesParams = {
@@ -84,7 +171,6 @@ export const useZapTokensWithStates = (
   }
 
   const balances = useTokenBalancesQuery(balanceQueryOptions);
-  console.log("balances", balances);
 
   const tokensWithBalances = useMemo(() => {
     if (tokens.length === 0) {
@@ -94,12 +180,12 @@ export const useZapTokensWithStates = (
     const balanceMap = balances.balancesByAddress;
 
     return tokens.map(token => {
-      const tokenAddress = token.address?.toLowerCase();
-      if (!tokenAddress) {
-        return token;
-      }
+      const candidateKeys = normalizeBalanceLookupKeys(token);
 
-      const balanceEntry = balanceMap[tokenAddress];
+      const balanceEntry = candidateKeys
+        .map(key => balanceMap[key])
+        .find(entry => entry !== undefined);
+
       if (!balanceEntry) {
         return token;
       }
