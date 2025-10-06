@@ -60,6 +60,8 @@ const resolveNativeAddressSentinel = (
   address: string | null | undefined,
   type?: string | null
 ): string[] => {
+  console.log(`resolveNativeAddressSentinel: address="${address}", type="${type}"`);
+  
   if (
     type === "native" ||
     isNativeAddress(address) ||
@@ -67,9 +69,11 @@ const resolveNativeAddressSentinel = (
     address === null ||
     address === undefined
   ) {
+    console.log("Resolved to native address");
     return ["native"];
   }
 
+  console.log("Not resolved to native address");
   return [];
 };
 
@@ -90,6 +94,13 @@ const normalizeBalanceLookupKeys = (
     address === null ||
     address === undefined;
 
+  console.log(`normalizeBalanceLookupKeys for token:`, {
+    address: token.address,
+    type: token.type,
+    isNativeToken,
+    addressLower: address
+  });
+
   if (isNativeToken) {
     keys.push(...NATIVE_ADDRESS_KEYS);
   } else if (
@@ -99,7 +110,9 @@ const normalizeBalanceLookupKeys = (
     keys.push(...NATIVE_ADDRESS_KEYS);
   }
 
-  return Array.from(new Set(keys));
+  const result = Array.from(new Set(keys));
+  console.log(`normalizeBalanceLookupKeys result:`, result);
+  return result;
 };
 
 export const useZapTokensWithStates = (
@@ -132,6 +145,7 @@ export const useZapTokensWithStates = (
             Boolean(address) && (isHexAddress(address) || address === "native")
         );
 
+      console.log("balanceAddresses (override):", Array.from(new Set(normalizedOverride)));
       return Array.from(new Set(normalizedOverride));
     }
 
@@ -153,6 +167,7 @@ export const useZapTokensWithStates = (
         Boolean(address) && (isHexAddress(address) || address === "native")
     );
 
+    console.log("balanceAddresses (from tokens):", Array.from(new Set(filtered)));
     return Array.from(new Set(filtered));
   }, [tokenAddressesOverride, tokens]);
 
@@ -178,18 +193,27 @@ export const useZapTokensWithStates = (
     }
 
     const balanceMap = balances.balancesByAddress;
+    console.log("useZapTokensWithStates - balanceMap:", balanceMap);
+    console.log("useZapTokensWithStates - tokens:", tokens);
 
     return tokens.map(token => {
       const candidateKeys = normalizeBalanceLookupKeys(token);
+      console.log(`Token ${token.symbol} (${token.address}) candidate keys:`, candidateKeys);
 
       const balanceEntry = candidateKeys
-        .map(key => balanceMap[key])
+        .map(key => {
+          const entry = balanceMap[key];
+          console.log(`Looking for key "${key}" in balanceMap:`, entry);
+          return entry;
+        })
         .find(entry => entry !== undefined);
 
       if (!balanceEntry) {
+        console.log(`No balance found for token ${token.symbol}`);
         return token;
       }
 
+      console.log(`Found balance for token ${token.symbol}:`, balanceEntry.balance);
       return {
         ...token,
         balance: balanceEntry.balance,
