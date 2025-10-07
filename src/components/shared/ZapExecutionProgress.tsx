@@ -39,8 +39,6 @@ export interface ZapExecutionProgressProps
   chainId: number;
   totalValue: number;
   strategyCount: number;
-  closeOnBackdropClick?: boolean;
-  closeOnEsc?: boolean;
   onComplete?: () => void;
   onError?: (error: string) => void;
   onCancel?: () => void;
@@ -233,8 +231,6 @@ export function ZapExecutionProgress({
   chainId,
   totalValue,
   strategyCount,
-  closeOnBackdropClick = false,
-  closeOnEsc = true,
   onComplete,
   onError,
   onCancel,
@@ -296,19 +292,13 @@ export function ZapExecutionProgress({
         // Only allow close if execution is complete or failed
         if (isComplete || hasError) {
           onClose();
-        } else if (closeOnBackdropClick || closeOnEsc) {
+        } else {
+          // During execution, allow backdrop/ESC to cancel
           handleCancel();
         }
       }
     },
-    [
-      isComplete,
-      hasError,
-      closeOnBackdropClick,
-      closeOnEsc,
-      onClose,
-      handleCancel,
-    ]
+    [isComplete, hasError, onClose, handleCancel]
   );
 
   const currentStepConfig = currentStep
@@ -502,9 +492,15 @@ export function ZapExecutionProgress({
         </Dialog.Overlay>
 
         {/* Modal Content */}
-        <Dialog.Content asChild>
+        <Dialog.Content asChild onEscapeKeyDown={() => handleOpenChange(false)}>
           <motion.div
             className={`fixed inset-0 flex items-center justify-center px-4 py-10 ${Z_INDEX.MODAL}`}
+            style={{ cursor: "pointer" }}
+            onClick={e => {
+              if (e.target === e.currentTarget) {
+                handleOpenChange(false);
+              }
+            }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -512,6 +508,8 @@ export function ZapExecutionProgress({
           >
             <div
               className={`w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 p-6 ${className}`}
+              style={{ cursor: "default" }}
+              onClick={e => e.stopPropagation()}
               data-testid="zap-execution-progress"
             >
               {/* Header */}

@@ -64,6 +64,12 @@ vi.mock("../../../../src/components/SwapPage/OptimizeTab", () => ({
   )),
 }));
 
+vi.mock("../../../../src/components/shared/ZapExecutionProgress", () => ({
+  ZapExecutionProgress: vi.fn(() => (
+    <div data-testid="zap-execution-progress">Zap Execution Progress</div>
+  )),
+}));
+
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
@@ -71,16 +77,44 @@ vi.mock("framer-motion", () => ({
   },
 }));
 
-// Mock chain hook to avoid wallet provider dependency
-vi.mock("../../../../src/hooks/useChain", () => ({
-  useChain: () => ({
-    chain: { id: 8453, name: "Base", symbol: "ETH" },
-    switchChain: vi.fn(),
-    isChainSupported: vi.fn().mockReturnValue(true),
-    getChainInfo: vi.fn(),
-    getSupportedChains: vi.fn(),
+// Mock user context to avoid thirdweb provider dependency
+vi.mock("../../../../src/contexts/UserContext", () => ({
+  useUser: () => ({
+    userInfo: {
+      userId: "test-user",
+      email: "user@example.com",
+      primaryWallet: "0x123",
+      bundleWallets: ["0x123"],
+      additionalWallets: [],
+      visibleWallets: ["0x123"],
+      totalWallets: 1,
+      totalVisibleWallets: 1,
+    },
+    loading: false,
+    error: null,
+    isConnected: true,
+    connectedWallet: "0x123",
+    refetch: vi.fn(),
   }),
 }));
+
+// Mock chain hook to avoid wallet provider dependency
+vi.mock("../../../../src/hooks", async () => {
+  const actual = await vi.importActual<typeof import("../../../../src/hooks")>(
+    "../../../../src/hooks"
+  );
+
+  return {
+    ...actual,
+    useChain: () => ({
+      chain: { id: 8453, name: "Base", symbol: "ETH" },
+      switchChain: vi.fn(),
+      isChainSupported: vi.fn().mockReturnValue(true),
+      getChainInfo: vi.fn(),
+      getSupportedChains: vi.fn(),
+    }),
+  };
+});
 
 // Mock strategies hooks
 vi.mock("../../../../src/hooks/queries/useStrategiesQuery", () => ({
