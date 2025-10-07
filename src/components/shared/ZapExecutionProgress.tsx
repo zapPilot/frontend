@@ -43,77 +43,30 @@ export interface ZapExecutionProgressProps
   onCancel?: () => void;
 }
 
-// Step display configuration with enhanced details
-const STEP_CONFIG = {
-  connected: {
-    title: "Initializing",
-    description: "Connecting to execution service",
-    icon: "🔌",
-    order: 0,
-    color: "blue",
-  },
-  strategy_parsing: {
-    title: "Parsing Strategies",
-    description: "Analyzing strategy allocations",
-    icon: "📊",
-    order: 1,
-    color: "purple",
-  },
-  token_analysis: {
-    title: "Token Analysis",
-    description: "Analyzing token requirements",
-    icon: "🔍",
-    order: 2,
-    color: "indigo",
-  },
-  swap_preparation: {
-    title: "Swap Preparation",
-    description: "Preparing token swaps",
-    icon: "🔄",
-    order: 3,
-    color: "cyan",
-  },
-  transaction_building: {
-    title: "Building Transactions",
-    description: "Constructing protocol transactions",
-    icon: "⚙️",
-    order: 4,
-    color: "orange",
-  },
-  gas_estimation: {
-    title: "Gas Estimation",
-    description: "Calculating gas costs",
-    icon: "⛽",
-    order: 5,
-    color: "yellow",
-  },
-  final_assembly: {
-    title: "Final Assembly",
-    description: "Finalizing transaction bundle",
-    icon: "📦",
-    order: 6,
-    color: "green",
-  },
-  complete: {
-    title: "Complete",
-    description: "All operations completed successfully",
-    icon: "✅",
-    order: 7,
-    color: "emerald",
-  },
-  error: {
-    title: "Error",
-    description: "Execution encountered an error",
-    icon: "❌",
-    order: -1,
-    color: "red",
-  },
-};
-
 type TransactionDispatchStatus = "idle" | "pending" | "success" | "error";
 
 const shortenHash = (hash: string) =>
   hash.length <= 12 ? hash : `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+
+/**
+ * Maximum number of transactions per EIP-5792 bundle
+ * wallet_sendCalls has a limit of 10 transactions per bundle
+ */
+const MAX_BUNDLE_SIZE = 10;
+
+/**
+ * Formats a phase string from snake_case to Title Case
+ * E.g., "strategy_parsing" -> "Strategy Parsing"
+ */
+const formatPhaseString = (phase: string | undefined | null): string => {
+  if (!phase) {
+    return "Initializing";
+  }
+  return phase
+    .split("_")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 const parseBigIntValue = (value?: string): bigint | undefined => {
   if (!value) {
@@ -217,9 +170,17 @@ export function ZapExecutionProgress({
   const [transactionStatus, setTransactionStatus] =
     useState<TransactionDispatchStatus>("idle");
 
+  // Chunk execution state
+  const [currentChunkIndex, setCurrentChunkIndex] = useState(0);
+  const [completedChunks, setCompletedChunks] = useState(0);
+  const [failedAtChunk, setFailedAtChunk] = useState<number | null>(null);
+
   useEffect(() => {
     lastSentSignatureRef.current = null;
     setTransactionStatus("idle");
+    setCurrentChunkIndex(0);
+    setCompletedChunks(0);
+    setFailedAtChunk(null);
   }, [intentId]);
 
   // Handle completion
@@ -262,11 +223,6 @@ export function ZapExecutionProgress({
     [isComplete, hasError, onClose, handleCancel]
   );
 
-  const currentStepConfig = currentStep
-    ? STEP_CONFIG[currentStep as keyof typeof STEP_CONFIG] ||
-      STEP_CONFIG.connected
-    : STEP_CONFIG.connected;
-
   const transactions = useMemo(
     () => streamTransactions ?? [],
     [streamTransactions]
@@ -278,21 +234,25 @@ export function ZapExecutionProgress({
     [transactions]
   );
 
-  const progressPercentage = Math.round(progress * 100);
-
-  const currentEventMessage = useMemo(() => {
-    const message = latestEvent?.message;
-    if (typeof message === "string" && message.trim().length > 0) {
-      return message.trim();
+  // Split transactions into chunks of MAX_BUNDLE_SIZE
+  const chunks = useMemo(() => {
+    if (!transactions.length) return [];
+    const result: UnifiedZapStreamTransaction[][] = [];
+    for (let i = 0; i < transactions.length; i += MAX_BUNDLE_SIZE) {
+      result.push(transactions.slice(i, i + MAX_BUNDLE_SIZE));
     }
-    return null;
-  }, [latestEvent?.message]);
+    return result;
+  }, [transactions]);
+
+  const progressPercentage = Math.round(progress * 100);
 
   const handleSendTransactions = useCallback(
     (
       txs: UnifiedZapStreamTransaction[],
       eventChainId: number | undefined,
-      signature: string
+      signature: string,
+      chunkIndex: number,
+      totalChunks: number
     ) => {
       if (!txs.length) {
         return;
@@ -366,76 +326,125 @@ export function ZapExecutionProgress({
 
         sendCalls(sendVariables, {
           onSuccess: async result => {
-            setTransactionStatus("success");
             const receiptHash = result?.receipts?.[0]?.transactionHash;
             const explorerUrl =
               receiptHash && chainIdForTx
                 ? buildExplorerUrl(chainIdForTx, receiptHash)
                 : null;
 
-            showToast({
-              type: "success",
-              title: "Transactions submitted",
-              message: receiptHash
-                ? `Bundle sent. First transaction ${shortenHash(receiptHash)}.`
-                : "Bundle dispatched to wallet.",
-              ...(explorerUrl
-                ? {
-                    link: {
-                      url: explorerUrl,
-                      text: "View on explorer",
-                    },
-                  }
-                : {}),
-            });
+            // Update chunk completion state
+            setCompletedChunks(prev => prev + 1);
+
+            // Check if this is the last chunk
+            if (chunkIndex === totalChunks - 1) {
+              setTransactionStatus("success");
+              showToast({
+                type: "success",
+                title: "All transactions submitted",
+                message:
+                  totalChunks > 1
+                    ? `All ${totalChunks} batches completed successfully.`
+                    : receiptHash
+                      ? `Bundle sent. First transaction ${shortenHash(receiptHash)}.`
+                      : "Bundle dispatched to wallet.",
+                ...(explorerUrl
+                  ? {
+                      link: {
+                        url: explorerUrl,
+                        text: "View on explorer",
+                      },
+                    }
+                  : {}),
+              });
+            } else {
+              // More chunks to process, set status to idle to trigger next chunk
+              setTransactionStatus("idle");
+              setCurrentChunkIndex(chunkIndex + 1);
+              showToast({
+                type: "success",
+                title: `Batch ${chunkIndex + 1} of ${totalChunks} completed`,
+                message: receiptHash
+                  ? `Transactions ${chunkIndex * MAX_BUNDLE_SIZE + 1}-${(chunkIndex + 1) * MAX_BUNDLE_SIZE} submitted. ${shortenHash(receiptHash)}`
+                  : `Proceeding to batch ${chunkIndex + 2}...`,
+              });
+            }
           },
           onError: async err => {
             setTransactionStatus("error");
+            setFailedAtChunk(chunkIndex);
             const message = deriveErrorMessage(err);
+            const partialSuccessInfo =
+              chunkIndex > 0
+                ? ` Successfully executed ${chunkIndex * MAX_BUNDLE_SIZE} transactions before failure.`
+                : "";
             showToast({
               type: "error",
-              title: "Transaction dispatch failed",
-              message,
+              title: `Batch ${chunkIndex + 1} of ${totalChunks} failed`,
+              message: `${message}${partialSuccessInfo}`,
             });
           },
         });
       } catch (dispatchError) {
         setTransactionStatus("error");
+        setFailedAtChunk(chunkIndex);
         const message = deriveErrorMessage(dispatchError);
+        const partialSuccessInfo =
+          chunkIndex > 0
+            ? ` Successfully executed ${chunkIndex * MAX_BUNDLE_SIZE} transactions before failure.`
+            : "";
         showToast({
           type: "error",
-          title: "Dispatch error",
-          message,
+          title: `Dispatch error in batch ${chunkIndex + 1}`,
+          message: `${message}${partialSuccessInfo}`,
         });
       }
     },
     [chainId, sendCalls, showToast]
   );
 
+  // Chunk execution effect
   useEffect(() => {
-    if (!transactions.length || !transactionSignature) {
+    // Don't execute if no chunks or signature
+    if (!chunks.length || !transactionSignature) {
       return;
     }
 
+    // Don't execute if currently processing
     if (transactionStatus === "pending") {
       return;
     }
 
-    if (lastSentSignatureRef.current === transactionSignature) {
+    // Don't execute if we've already sent this signature for this chunk
+    const currentChunkSignature = `${transactionSignature}-chunk-${currentChunkIndex}`;
+    if (lastSentSignatureRef.current === currentChunkSignature) {
       return;
     }
 
+    // Don't execute if we've completed all chunks or failed
+    if (currentChunkIndex >= chunks.length || failedAtChunk !== null) {
+      return;
+    }
+
+    // Execute current chunk
+    const currentChunk = chunks[currentChunkIndex];
+    if (!currentChunk) return; // Type safety: ensure chunk exists
+    lastSentSignatureRef.current = currentChunkSignature;
+
     handleSendTransactions(
-      transactions,
+      currentChunk,
       latestEvent?.chainId,
-      transactionSignature
+      currentChunkSignature,
+      currentChunkIndex,
+      chunks.length
     );
   }, [
-    transactions,
+    chunks,
     transactionSignature,
+    currentChunkIndex,
+    transactionStatus,
+    failedAtChunk,
     handleSendTransactions,
     latestEvent?.chainId,
-    transactionStatus,
   ]);
 
   return (
@@ -520,33 +529,29 @@ export function ZapExecutionProgress({
                 {/* Current Step */}
                 <div className="flex items-center space-x-3">
                   <div className="relative">
-                    <span className="text-2xl">{currentStepConfig.icon}</span>
-                    {currentStep ===
-                      (latestEvent?.currentStep ??
-                        latestEvent?.phase ??
-                        latestEvent?.type) &&
-                      !isComplete &&
-                      !hasError && (
-                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
-                      )}
+                    <span className="text-2xl">
+                      {hasError ? "❌" : isComplete ? "✅" : "⏳"}
+                    </span>
+                    {!isComplete && !hasError && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping" />
+                    )}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h4 className="font-medium text-gray-900">
-                        {currentStepConfig.title}
+                        {formatPhaseString(latestEvent?.phase ?? currentStep)}
                       </h4>
                       <span className="text-sm font-medium text-purple-600">
                         {progressPercentage}%
                       </span>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {currentStepConfig.description}
+                      {chunks.length > 1 && transactionStatus === "pending"
+                        ? `Executing batch ${currentChunkIndex + 1} of ${chunks.length} (${currentChunkIndex * MAX_BUNDLE_SIZE + 1}-${Math.min((currentChunkIndex + 1) * MAX_BUNDLE_SIZE, transactions.length)} of ${transactions.length} transactions)`
+                        : chunks.length > 1 && completedChunks > 0
+                          ? `Completed ${completedChunks} of ${chunks.length} batches`
+                          : latestEvent?.phase || "Waiting for updates..."}
                     </p>
-                    {currentEventMessage && (
-                      <p className="text-sm text-purple-700 mt-1">
-                        {currentEventMessage}
-                      </p>
-                    )}
                   </div>
                 </div>
 
