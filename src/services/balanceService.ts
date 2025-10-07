@@ -79,14 +79,7 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
         ? Number.parseInt(decimalsRaw, 10)
         : null;
 
-  const formattedCandidate =
-    record["formattedBalance"] ??
-    record["formatted_balance"] ??
-    record["normalizedBalance"] ??
-    record["normalized_balance"] ??
-    record["balanceFormatted"] ??
-    record["balance_formatted"];
-
+  const formattedCandidate = record["balanceFormatted"];
   let formattedBalance: number | undefined;
   if (typeof formattedCandidate === "number") {
     formattedBalance = formattedCandidate;
@@ -97,13 +90,7 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
     }
   }
 
-  const rawBalanceCandidate =
-    record["rawBalance"] ??
-    record["raw_balance"] ??
-    record["balance"] ??
-    record["tokenBalance"] ??
-    record["token_balance"] ??
-    record["balance_raw"];
+  const rawBalanceCandidate = record["balance"];
 
   const rawBalance =
     typeof rawBalanceCandidate === "string"

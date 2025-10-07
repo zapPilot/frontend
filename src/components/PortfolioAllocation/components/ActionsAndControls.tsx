@@ -485,12 +485,14 @@ export const AmountInput = memo<AmountInputProps>(
       onAmountChange(formatted);
     }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
 
-    // Max button handler
+    // Max button handler - use exact amount to avoid precision loss
     const handleMax = useCallback(() => {
-      const formatted = formatCryptoAmount(maxAmount);
+      // Use the exact maxAmount without formatting to prevent transaction failures
+      // due to insufficient balance from rounding
+      const exactAmount = maxAmount.toString();
 
-      setInputValue(formatted);
-      onAmountChange(formatted);
+      setInputValue(exactAmount);
+      onAmountChange(exactAmount);
     }, [maxAmount, onAmountChange]);
 
     // Keyboard navigation for increment/decrement

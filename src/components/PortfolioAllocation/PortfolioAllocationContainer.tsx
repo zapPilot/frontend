@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { EnhancedOverview, SwapControls } from "./components";
-import { usePortfolioData, useRebalanceData } from "./hooks";
-import {
-  PortfolioAllocationContainerProps,
-  PortfolioSwapAction,
-  SwapSettings,
-} from "./types";
 import {
   DEFAULT_CATEGORY_WEIGHTS,
   DEFAULT_PORTFOLIO_TOTAL_VALUE,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EnhancedOverview, SwapControls } from "./components";
+import type { SwapControlsRef } from "./components/SwapControls";
+import { usePortfolioData, useRebalanceData } from "./hooks";
+import {
+  PortfolioAllocationContainerProps,
+  PortfolioSwapAction,
+  SwapSettings,
+} from "./types";
 
 export const PortfolioAllocationContainer: React.FC<
   PortfolioAllocationContainerProps
@@ -26,6 +27,7 @@ export const PortfolioAllocationContainer: React.FC<
   onToggleCategoryExclusion,
   chainId,
 }) => {
+  const swapControlsRef = useRef<SwapControlsRef>(null);
   const [swapSettings, setSwapSettings] = useState<SwapSettings>({
     amount: "",
     slippageTolerance: 0.5, // Default 0.5%
@@ -141,6 +143,9 @@ export const PortfolioAllocationContainer: React.FC<
 
   // Enhanced zap action handler
   const handleEnhancedZapAction = () => {
+    // Trigger validation attempt first
+    swapControlsRef.current?.attemptValidation();
+
     const includedCategories = processedCategories.filter(
       cat => !cat.isExcluded
     );
@@ -165,6 +170,7 @@ export const PortfolioAllocationContainer: React.FC<
 
   // Common SwapControls props
   const swapControlsProps = {
+    ref: swapControlsRef,
     operationMode,
     swapSettings,
     onSwapSettingsChange: setSwapSettings,
