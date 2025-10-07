@@ -11,8 +11,8 @@ import {
 import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
 import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
-import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
-import { memo, useMemo } from "react";
+import { AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -155,7 +155,6 @@ export const TokenSelector = memo<TokenSelectorProps>(
       isBalanceFetching,
       balanceError,
     } = useZapTokensWithStates(zapTokensOptions);
-    console.log("tokens", tokens);
     return (
       <div className="relative">
         <label className="block text-xs font-medium text-gray-400 mb-2">
@@ -197,11 +196,14 @@ export const TokenSelector = memo<TokenSelectorProps>(
                       )}
                     </div>
                   )}
-                  {selectedToken.price && selectedToken.balance !== undefined && (
-                    <div className="text-xs text-gray-500">
-                      {formatCurrency(selectedToken.balance * selectedToken.price)}
-                    </div>
-                  )}
+                  {selectedToken.price &&
+                    selectedToken.balance !== undefined && (
+                      <div className="text-xs text-gray-500">
+                        {formatCurrency(
+                          selectedToken.balance * selectedToken.price
+                        )}
+                      </div>
+                    )}
                 </div>
               </>
             ) : (
@@ -344,6 +346,21 @@ TokenSelector.displayName = "TokenSelector";
 // AMOUNT INPUT COMPONENT (was in Controls/AmountInput.tsx)
 // =============================================================================
 
+// Helper functions for precise decimal handling
+function roundToStep(value: number, step: number): number {
+  const decimals = (step.toString().split(".")[1] || "").length;
+  return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+}
+
+function constrainValue(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function parseInputValue(input: string): number {
+  const parsed = parseFloat(input);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 interface AmountInputProps {
   operationMode: OperationMode;
   amount: string;
@@ -351,6 +368,11 @@ interface AmountInputProps {
   fromToken?: SwapToken;
   totalPortfolioValue: number;
   className?: string;
+  // Enhanced props with smart defaults
+  step?: number;
+  minAmount?: number;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 export const AmountInput = memo<AmountInputProps>(
@@ -361,93 +383,258 @@ export const AmountInput = memo<AmountInputProps>(
     fromToken,
     totalPortfolioValue,
     className = "",
+    step = 0.01,
+    minAmount = 0,
+    disabled = false,
+    placeholder = "0.00",
   }) => {
-    // Dynamic label based on operation mode
-    const getLabel = () => {
-      switch (operationMode) {
-        case "zapIn":
-          return "Amount to Zap In";
-        case "zapOut":
-          return "Portfolio Value to Convert";
-        case "rebalance":
-          return "Amount to Rebalance";
-        default:
-          return "Amount";
+    // Determine max value based on operation mode
+    const maxAmount = useMemo(() => {
+      if (operationMode === "zapOut") {
+        return totalPortfolioValue;
       }
-    };
-
-    // Currency symbol display
-    const getCurrencySymbol = () => {
-      if (operationMode === "zapIn" && fromToken) {
-        return fromToken.symbol;
-      }
-      return "USD";
-    };
-
-    // Handle max button click
-    const handleMaxClick = () => {
       if (
         operationMode === "zapIn" &&
         fromToken &&
         fromToken.balance !== undefined
       ) {
-        onAmountChange(fromToken.balance.toString());
-      } else if (operationMode === "zapOut" || operationMode === "rebalance") {
-        onAmountChange(totalPortfolioValue.toString());
+        return fromToken.balance;
       }
-    };
+      return Infinity;
+    }, [operationMode, totalPortfolioValue, fromToken]);
 
-    // Show balance info for zapIn mode
-    const showBalance = operationMode === "zapIn" && fromToken;
+    // Local state for input display (allows partial input like "0.")
+    const [inputValue, setInputValue] = useState(amount);
 
-    // Show portfolio info for zapOut/rebalance modes
-    const showPortfolioValue =
-      operationMode === "zapOut" || operationMode === "rebalance";
+    // Sync with external amount prop
+    useEffect(() => {
+      setInputValue(amount);
+    }, [amount]);
+
+    // Handle input change with validation
+    const handleInputChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value;
+
+        // Allow empty input
+        if (rawValue === "") {
+          setInputValue("");
+          onAmountChange("0");
+          return;
+        }
+
+        // Allow partial decimal input (e.g., "0.", "10.")
+        if (/^\d*\.?\d*$/.test(rawValue)) {
+          setInputValue(rawValue);
+
+          // Only update parent if it's a valid number
+          const numValue = parseFloat(rawValue);
+          if (!isNaN(numValue)) {
+            const constrained = constrainValue(numValue, minAmount, maxAmount);
+            onAmountChange(constrained.toString());
+          }
+        }
+      },
+      [onAmountChange, minAmount, maxAmount]
+    );
+
+    // Handle blur - cleanup partial inputs
+    const handleBlur = useCallback(() => {
+      const numValue = parseInputValue(inputValue);
+      const constrained = constrainValue(numValue, minAmount, maxAmount);
+      const rounded = roundToStep(constrained, step);
+      const formatted = rounded.toFixed(2);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, minAmount, maxAmount, step, onAmountChange]);
+
+    // Increment handler
+    const handleIncrement = useCallback(() => {
+      const current = parseInputValue(inputValue);
+      const incremented = current + step;
+      const constrained = constrainValue(incremented, minAmount, maxAmount);
+      const rounded = roundToStep(constrained, step);
+      const formatted = rounded.toFixed(2);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
+
+    // Decrement handler
+    const handleDecrement = useCallback(() => {
+      const current = parseInputValue(inputValue);
+      const decremented = current - step;
+      const constrained = constrainValue(decremented, minAmount, maxAmount);
+      const rounded = roundToStep(constrained, step);
+      const formatted = rounded.toFixed(2);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
+
+    // Max button handler
+    const handleMax = useCallback(() => {
+      const rounded = roundToStep(maxAmount, step);
+      const formatted = rounded.toFixed(2);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [maxAmount, step, onAmountChange]);
+
+    // Keyboard navigation for increment/decrement
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          handleIncrement();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          handleDecrement();
+        }
+      },
+      [handleIncrement, handleDecrement]
+    );
+
+    // Check if at boundaries
+    const isAtMin = parseInputValue(inputValue) <= minAmount;
+    const isAtMax = parseInputValue(inputValue) >= maxAmount;
+
+    // Display label and balance based on operation mode
+    const balanceLabel =
+      operationMode === "zapOut" ? "Portfolio Value" : "Balance";
+    const displayBalance =
+      operationMode === "zapOut"
+        ? formatCurrency(totalPortfolioValue)
+        : fromToken && fromToken.balance !== undefined
+          ? `${formatTokenAmount(fromToken.balance, fromToken.symbol)}`
+          : formatCurrency(0);
 
     return (
       <div className={`space-y-2 ${className}`}>
-        <label className="block text-xs font-medium text-gray-400">
-          {getLabel()}
-        </label>
-
-        <div className="relative">
-          <input
-            type="number"
-            value={amount}
-            onChange={e => onAmountChange(e.target.value)}
-            placeholder="0.0"
-            min="0"
-            step="0.01"
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-500 focus:outline-none focus:border-purple-500"
-            data-testid="amount-input"
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-            {getCurrencySymbol()}
+        {/* Label row */}
+        <div className="flex justify-between items-center text-sm">
+          <label htmlFor="amount-input" className="text-gray-400 font-medium">
+            Amount
+          </label>
+          <div className="text-gray-400">
+            {balanceLabel}: <span className="text-white">{displayBalance}</span>
           </div>
         </div>
 
-        {/* Balance/Portfolio Info */}
-        <div className="flex justify-between text-xs text-gray-400">
-          {showBalance && fromToken!.balance !== undefined && (
-            <span>
-              Balance: {fromToken!.balance.toFixed(4)} {fromToken!.symbol}
-            </span>
-          )}
-
-          {showPortfolioValue && (
-            <span>Portfolio Value: {formatCurrency(totalPortfolioValue)}</span>
-          )}
-
-          <button
-            onClick={handleMaxClick}
-            className="text-purple-400 hover:text-purple-300 transition-colors"
-            disabled={
-              operationMode === "zapIn" &&
-              (!fromToken || fromToken.balance === undefined)
-            }
+        {/* Input row with controls */}
+        <div className="relative">
+          {/* Decrement button */}
+          <motion.button
+            type="button"
+            onClick={handleDecrement}
+            disabled={disabled || isAtMin}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`
+              absolute left-3 top-1/2 -translate-y-1/2 z-10
+              w-8 h-8 rounded-lg
+              flex items-center justify-center
+              transition-all duration-200
+              ${
+                disabled || isAtMin
+                  ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+              }
+            `}
+            aria-label="Decrease amount"
+            aria-disabled={disabled || isAtMin}
           >
-            Max
-          </button>
+            <ChevronDown className="w-4 h-4" />
+          </motion.button>
+
+          {/* Input field */}
+          <input
+            id="amount-input"
+            type="number"
+            inputMode="decimal"
+            role="spinbutton"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={placeholder}
+            step={step}
+            min={minAmount}
+            max={maxAmount}
+            className={`
+              w-full h-14 px-14
+              bg-black/30 backdrop-blur-sm
+              border border-purple-500/20
+              rounded-xl
+              text-white text-center text-lg font-medium
+              placeholder:text-gray-600
+              focus:outline-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/20
+              transition-all duration-200
+              disabled:opacity-50 disabled:cursor-not-allowed
+              [appearance:textfield]
+              [&::-webkit-outer-spin-button]:appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none
+            `}
+            aria-label="Amount input"
+            aria-describedby="amount-balance"
+            aria-valuemin={minAmount}
+            aria-valuemax={maxAmount}
+            aria-valuenow={parseInputValue(inputValue)}
+            data-testid="amount-input"
+          />
+
+          {/* Increment button */}
+          <motion.button
+            type="button"
+            onClick={handleIncrement}
+            disabled={disabled || isAtMax}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`
+              absolute right-3 top-1/2 -translate-y-1/2 z-10
+              w-8 h-8 rounded-lg
+              flex items-center justify-center
+              transition-all duration-200
+              ${
+                disabled || isAtMax
+                  ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+              }
+            `}
+            aria-label="Increase amount"
+            aria-disabled={disabled || isAtMax}
+          >
+            <ChevronUp className="w-4 h-4" />
+          </motion.button>
+        </div>
+
+        {/* Max button */}
+        <motion.button
+          type="button"
+          onClick={handleMax}
+          disabled={disabled || isAtMax}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`
+            w-full h-10 rounded-lg
+            text-sm font-medium
+            transition-all duration-200
+            ${
+              disabled || isAtMax
+                ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-300 hover:from-purple-500/20 hover:to-blue-500/20"
+            }
+          `}
+          aria-label="Set to maximum amount"
+        >
+          Max: {displayBalance}
+        </motion.button>
+
+        {/* Screen reader announcements */}
+        <div id="amount-balance" className="sr-only">
+          Current {balanceLabel.toLowerCase()}: {displayBalance}
         </div>
       </div>
     );
