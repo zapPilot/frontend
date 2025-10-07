@@ -347,11 +347,6 @@ TokenSelector.displayName = "TokenSelector";
 // =============================================================================
 
 // Helper functions for precise decimal handling
-function roundToStep(value: number, step: number): number {
-  const decimals = (step.toString().split(".")[1] || "").length;
-  return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
-}
-
 function constrainValue(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
 }
@@ -359,6 +354,26 @@ function constrainValue(value: number, min: number, max: number): number {
 function parseInputValue(input: string): number {
   const parsed = parseFloat(input);
   return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Smart decimal formatter for crypto amounts
+ * - Values >= 1: show 2 decimals (e.g., 10.25)
+ * - Values < 1: show up to 6 decimals (e.g., 0.001234)
+ * - Removes trailing zeros (e.g., 0.001000 → 0.001)
+ */
+function formatCryptoAmount(value: number): string {
+  if (value === 0) return "0";
+
+  // For values >= 1, use 2 decimals
+  if (value >= 1) {
+    return value.toFixed(2);
+  }
+
+  // For values < 1, use up to 6 decimals and remove trailing zeros
+  const formatted = value.toFixed(6);
+  // Remove trailing zeros and trailing decimal point
+  return formatted.replace(/\.?0+$/, "");
 }
 
 interface AmountInputProps {
@@ -442,20 +457,18 @@ export const AmountInput = memo<AmountInputProps>(
     const handleBlur = useCallback(() => {
       const numValue = parseInputValue(inputValue);
       const constrained = constrainValue(numValue, minAmount, maxAmount);
-      const rounded = roundToStep(constrained, step);
-      const formatted = rounded.toFixed(2);
+      const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);
       onAmountChange(formatted);
-    }, [inputValue, minAmount, maxAmount, step, onAmountChange]);
+    }, [inputValue, minAmount, maxAmount, onAmountChange]);
 
     // Increment handler
     const handleIncrement = useCallback(() => {
       const current = parseInputValue(inputValue);
       const incremented = current + step;
       const constrained = constrainValue(incremented, minAmount, maxAmount);
-      const rounded = roundToStep(constrained, step);
-      const formatted = rounded.toFixed(2);
+      const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);
       onAmountChange(formatted);
@@ -466,8 +479,7 @@ export const AmountInput = memo<AmountInputProps>(
       const current = parseInputValue(inputValue);
       const decremented = current - step;
       const constrained = constrainValue(decremented, minAmount, maxAmount);
-      const rounded = roundToStep(constrained, step);
-      const formatted = rounded.toFixed(2);
+      const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);
       onAmountChange(formatted);
@@ -475,12 +487,11 @@ export const AmountInput = memo<AmountInputProps>(
 
     // Max button handler
     const handleMax = useCallback(() => {
-      const rounded = roundToStep(maxAmount, step);
-      const formatted = rounded.toFixed(2);
+      const formatted = formatCryptoAmount(maxAmount);
 
       setInputValue(formatted);
       onAmountChange(formatted);
-    }, [maxAmount, step, onAmountChange]);
+    }, [maxAmount, onAmountChange]);
 
     // Keyboard navigation for increment/decrement
     const handleKeyDown = useCallback(

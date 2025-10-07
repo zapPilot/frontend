@@ -20,7 +20,6 @@ import { Z_INDEX } from "../../constants/design-system";
 import { useToast } from "../../hooks/useToast";
 import {
   useUnifiedZapStream,
-  type UnifiedZapStreamEvent,
   type UnifiedZapStreamTransaction,
 } from "../../hooks/useUnifiedZapStream";
 import { formatCurrency } from "../../lib/formatters";
@@ -187,43 +186,6 @@ const deriveErrorMessage = (error: unknown): string => {
   return "Failed to dispatch transaction bundle.";
 };
 
-function EventStreamDebug({ events }: { events: UnifiedZapStreamEvent[] }) {
-  return (
-    <div className="border border-dashed border-gray-200 rounded-lg p-3 bg-gray-50">
-      <div className="flex items-center justify-between mb-2">
-        <h5 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-          Event Stream (debug)
-        </h5>
-        <span className="text-[10px] text-gray-400">
-          {events.length} event{events.length === 1 ? "" : "s"}
-        </span>
-      </div>
-      <div className="max-h-48 overflow-y-auto space-y-2">
-        {events.length === 0 ? (
-          <div className="text-xs text-gray-400">No events received yet</div>
-        ) : (
-          events.map((event, index) => (
-            <div
-              key={`${event.intentId ?? event.type ?? event.phase ?? "event"}-${index}`}
-              className="bg-white border border-gray-200 rounded-md px-2 py-1 text-xs text-gray-700"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-600">#{index + 1}</span>
-                <span className="text-[11px] text-gray-400">
-                  {event.type ?? event.phase ?? "event"}
-                </span>
-              </div>
-              <pre className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-gray-600">
-                {JSON.stringify(event, null, 2)}
-              </pre>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
-
 export function ZapExecutionProgress({
   isOpen,
   onClose,
@@ -237,7 +199,6 @@ export function ZapExecutionProgress({
   className = "",
 }: ZapExecutionProgressProps) {
   const {
-    events,
     latestEvent,
     isConnected,
     isComplete,
@@ -618,8 +579,6 @@ export function ZapExecutionProgress({
                     <span>100%</span>
                   </div>
                 </div>
-
-                <EventStreamDebug events={events} />
               </div>
             </div>
           </motion.div>
