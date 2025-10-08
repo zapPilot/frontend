@@ -22,12 +22,6 @@
  */
 
 import { describe, expect, it } from "vitest";
-import type {
-  FilteredTokenResult,
-  Token,
-  TokenWithValue,
-  UnvalidatedTokenInput,
-} from "../../../src/utils/tokenUtils";
 import {
   calculateTokenAllocations,
   calculateTotalTokenValue,
@@ -42,38 +36,14 @@ import {
   sanitizeToken,
   sanitizeTokens,
   validateToken,
+  type Token,
+  type UnvalidatedTokenInput,
 } from "../../../src/utils/tokenUtils";
 
 describe("tokenUtils", () => {
   // =============================================================================
   // TEST DATA FIXTURES
   // =============================================================================
-
-  const mockTokens: Token[] = [
-    {
-      symbol: "ETH",
-      optimized_symbol: "WETH",
-      amount: 10,
-      price: 2000,
-      decimals: 18,
-      address: "0x123",
-      raw_amount_hex_str: "0xa",
-    },
-    {
-      symbol: "USDC",
-      optimized_symbol: "USDC",
-      amount: 5000,
-      price: 1,
-      decimals: 6,
-      address: "0x456",
-    },
-    {
-      symbol: "DAI",
-      amount: 1000,
-      price: 1,
-      decimals: 18,
-    },
-  ];
 
   const tokenWithName = {
     symbol: "ETH",
@@ -354,10 +324,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array for undefined input", () => {
-      const result = filterTokensByValue(
-        undefined as unknown as Token[],
-        100
-      );
+      const result = filterTokensByValue(undefined as unknown as Token[], 100);
 
       expect(result).toEqual([]);
     });
@@ -381,9 +348,7 @@ describe("tokenUtils", () => {
     });
 
     it("should handle negative minimum value", () => {
-      const tokens: Token[] = [
-        { symbol: "ETH", amount: 1, price: 2000 },
-      ];
+      const tokens: Token[] = [{ symbol: "ETH", amount: 1, price: 2000 }];
 
       const result = filterTokensByValue(tokens, -100);
 
@@ -391,9 +356,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array when all tokens below threshold", () => {
-      const tokens: Token[] = [
-        { symbol: "LOW", amount: 1, price: 1 },
-      ];
+      const tokens: Token[] = [{ symbol: "LOW", amount: 1, price: 1 }];
 
       const result = filterTokensByValue(tokens, 1000);
 
@@ -416,9 +379,7 @@ describe("tokenUtils", () => {
     });
 
     it("should include value property in returned tokens", () => {
-      const tokens: Token[] = [
-        { symbol: "DUST", amount: 2, price: 3 },
-      ];
+      const tokens: Token[] = [{ symbol: "DUST", amount: 2, price: 3 }];
 
       const result = getDustTokens(tokens, 10);
 
@@ -481,9 +442,7 @@ describe("tokenUtils", () => {
     });
 
     it("should handle zero maximum value", () => {
-      const tokens: Token[] = [
-        { symbol: "ANY", amount: 1, price: 1 },
-      ];
+      const tokens: Token[] = [{ symbol: "ANY", amount: 1, price: 1 }];
 
       const result = getDustTokens(tokens, 0);
 
@@ -491,9 +450,7 @@ describe("tokenUtils", () => {
     });
 
     it("should handle negative maximum value", () => {
-      const tokens: Token[] = [
-        { symbol: "ANY", amount: 1, price: 1 },
-      ];
+      const tokens: Token[] = [{ symbol: "ANY", amount: 1, price: 1 }];
 
       const result = getDustTokens(tokens, -10);
 
@@ -527,9 +484,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array when limit is zero", () => {
-      const tokens: Token[] = [
-        { symbol: "A", amount: 1, price: 100 },
-      ];
+      const tokens: Token[] = [{ symbol: "A", amount: 1, price: 100 }];
 
       const result = getTopTokensByValue(tokens, 0);
 
@@ -537,9 +492,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array when limit is negative", () => {
-      const tokens: Token[] = [
-        { symbol: "A", amount: 1, price: 100 },
-      ];
+      const tokens: Token[] = [{ symbol: "A", amount: 1, price: 100 }];
 
       const result = getTopTokensByValue(tokens, -5);
 
@@ -582,9 +535,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return 0 for undefined input", () => {
-      expect(calculateTotalTokenValue(undefined as unknown as Token[])).toBe(
-        0
-      );
+      expect(calculateTotalTokenValue(undefined as unknown as Token[])).toBe(0);
     });
 
     it("should return 0 for non-array input", () => {
@@ -663,9 +614,7 @@ describe("tokenUtils", () => {
     });
 
     it("should handle single token with 100% allocation", () => {
-      const tokens: Token[] = [
-        { symbol: "ETH", amount: 10, price: 2000 },
-      ];
+      const tokens: Token[] = [{ symbol: "ETH", amount: 10, price: 2000 }];
 
       const result = calculateTokenAllocations(tokens);
 
@@ -706,10 +655,7 @@ describe("tokenUtils", () => {
       ];
 
       const result = calculateTokenAllocations(tokens);
-      const totalAllocation = result.reduce(
-        (sum, t) => sum + t.allocation,
-        0
-      );
+      const totalAllocation = result.reduce((sum, t) => sum + t.allocation, 0);
 
       expect(totalAllocation).toBeCloseTo(100, 10);
     });
@@ -733,9 +679,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return 0 for null input", () => {
-      expect(
-        calculateWeightedAveragePrice(null as unknown as Token[])
-      ).toBe(0);
+      expect(calculateWeightedAveragePrice(null as unknown as Token[])).toBe(0);
     });
 
     it("should return 0 for undefined input", () => {
@@ -754,9 +698,7 @@ describe("tokenUtils", () => {
     });
 
     it("should handle single token", () => {
-      const tokens: Token[] = [
-        { symbol: "A", amount: 10, price: 100 },
-      ];
+      const tokens: Token[] = [{ symbol: "A", amount: 10, price: 100 }];
 
       expect(calculateWeightedAveragePrice(tokens)).toBe(100);
     });
@@ -1311,9 +1253,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array for null input", () => {
-      const result = sanitizeTokens(
-        null as unknown as UnvalidatedTokenInput[]
-      );
+      const result = sanitizeTokens(null as unknown as UnvalidatedTokenInput[]);
 
       expect(result).toEqual([]);
     });
@@ -1327,9 +1267,7 @@ describe("tokenUtils", () => {
     });
 
     it("should return empty array for non-array input", () => {
-      const result = sanitizeTokens(
-        {} as unknown as UnvalidatedTokenInput[]
-      );
+      const result = sanitizeTokens({} as unknown as UnvalidatedTokenInput[]);
 
       expect(result).toEqual([]);
     });

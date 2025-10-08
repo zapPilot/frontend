@@ -1,5 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import {
   checkIntentServiceHealth,
   executeDustZap,
@@ -116,7 +115,7 @@ describe("intentService", () => {
       (executeServiceCall as Mock).mockImplementation(async call => {
         try {
           return await call();
-        } catch (error) {
+        } catch (_error) {
           throw new Error("Service error wrapper");
         }
       });
@@ -983,12 +982,52 @@ describe("intentService", () => {
   describe("Error Handling Integration", () => {
     it("should wrap all calls with executeServiceCall", async () => {
       const mockFunctions = [
-        () => executeSwap({ amount: "1", slippage: 1, walletAddress: "0x", chainId: 1 }),
-        () => executeZapIn({ amount: "1", slippage: 1, walletAddress: "0x", chainId: 1 }),
-        () => executeZapOut({ amount: "1", slippage: 1, walletAddress: "0x", chainId: 1 }),
-        () => executeRebalance({ amount: "1", slippage: 1, walletAddress: "0x", chainId: 1 }),
-        () => executeDustZap("0x", 1, { slippage: 1, dustTokens: [], toTokenAddress: "0x", toTokenDecimals: 18 }),
-        () => executeUnifiedZap({ userAddress: "0x", chainId: 1, params: { strategyAllocations: [], inputToken: "0x", inputAmount: "1", slippage: 1 } }),
+        () =>
+          executeSwap({
+            amount: "1",
+            slippage: 1,
+            walletAddress: "0x",
+            chainId: 1,
+          }),
+        () =>
+          executeZapIn({
+            amount: "1",
+            slippage: 1,
+            walletAddress: "0x",
+            chainId: 1,
+          }),
+        () =>
+          executeZapOut({
+            amount: "1",
+            slippage: 1,
+            walletAddress: "0x",
+            chainId: 1,
+          }),
+        () =>
+          executeRebalance({
+            amount: "1",
+            slippage: 1,
+            walletAddress: "0x",
+            chainId: 1,
+          }),
+        () =>
+          executeDustZap("0x", 1, {
+            slippage: 1,
+            dustTokens: [],
+            toTokenAddress: "0x",
+            toTokenDecimals: 18,
+          }),
+        () =>
+          executeUnifiedZap({
+            userAddress: "0x",
+            chainId: 1,
+            params: {
+              strategyAllocations: [],
+              inputToken: "0x",
+              inputAmount: "1",
+              slippage: 1,
+            },
+          }),
         () => getIntentStatus("intent-id"),
         () => getUserIntentHistory("0xWallet"),
         () => getStrategies(),
@@ -996,8 +1035,16 @@ describe("intentService", () => {
       ];
 
       // Mock all responses
-      (httpUtils.intentEngine.post as Mock).mockResolvedValue({ intentId: "test", status: "pending", transactions: [] });
-      (httpUtils.intentEngine.get as Mock).mockResolvedValue({ status: "healthy", timestamp: "now", processingQueue: 0 });
+      (httpUtils.intentEngine.post as Mock).mockResolvedValue({
+        intentId: "test",
+        status: "pending",
+        transactions: [],
+      });
+      (httpUtils.intentEngine.get as Mock).mockResolvedValue({
+        status: "healthy",
+        timestamp: "now",
+        processingQueue: 0,
+      });
 
       for (const fn of mockFunctions) {
         await fn();
@@ -1015,7 +1062,12 @@ describe("intentService", () => {
       });
 
       await expect(
-        executeSwap({ amount: "1", slippage: 1, walletAddress: "0x", chainId: 1 })
+        executeSwap({
+          amount: "1",
+          slippage: 1,
+          walletAddress: "0x",
+          chainId: 1,
+        })
       ).rejects.toThrow("Connection timeout");
     });
   });
@@ -1054,12 +1106,8 @@ describe("intentService", () => {
     });
 
     it("should handle all status types", async () => {
-      const statuses: Array<"pending" | "processing" | "completed" | "failed"> = [
-        "pending",
-        "processing",
-        "completed",
-        "failed",
-      ];
+      const statuses: Array<"pending" | "processing" | "completed" | "failed"> =
+        ["pending", "processing", "completed", "failed"];
 
       for (const status of statuses) {
         (httpUtils.intentEngine.get as Mock).mockResolvedValue({
@@ -1075,7 +1123,11 @@ describe("intentService", () => {
     });
 
     it("should handle all priority types", async () => {
-      const priorities: Array<"fast" | "normal" | "slow"> = ["fast", "normal", "slow"];
+      const priorities: Array<"fast" | "normal" | "slow"> = [
+        "fast",
+        "normal",
+        "slow",
+      ];
 
       (httpUtils.intentEngine.post as Mock).mockResolvedValue({
         intentId: "test",

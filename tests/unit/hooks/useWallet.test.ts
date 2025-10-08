@@ -14,7 +14,7 @@ import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useWallet } from "@/hooks/useWallet";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { SUPPORTED_CHAINS, isChainSupported, CHAIN_IDS } from "@/config/chains";
+import { isChainSupported } from "@/config/chains";
 
 // Mock the WalletProvider hook
 vi.mock("@/providers/WalletProvider", () => ({
@@ -371,7 +371,7 @@ describe("useWallet Hook", () => {
 
       const chains = result.current.getSupportedChains();
 
-      chains.forEach((chain) => {
+      chains.forEach(chain => {
         expect(chain).toHaveProperty("id");
         expect(chain).toHaveProperty("name");
         expect(chain).toHaveProperty("symbol");

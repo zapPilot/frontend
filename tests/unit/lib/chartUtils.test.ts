@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   generateSVGPath,
   generateAreaPath,
@@ -6,8 +6,6 @@ import {
   generateYAxisLabels,
   generateAllocationChartData,
   safeDivision,
-  type SVGPathPoint,
-  type AllocationChartPoint,
 } from "../../../src/lib/chartUtils";
 import type {
   PortfolioDataPoint,
@@ -556,7 +554,11 @@ describe("chartUtils", () => {
 
       const customWidth = 400;
       const customHeight = 200;
-      const result = generateAllocationChartData(data, customWidth, customHeight);
+      const result = generateAllocationChartData(
+        data,
+        customWidth,
+        customHeight
+      );
 
       const totalHeight = result.reduce((sum, point) => sum + point.height, 0);
       expect(totalHeight).toBeCloseTo(customHeight, 0);

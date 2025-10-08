@@ -11,8 +11,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   getTokenBalances,
   type GetTokenBalancesParams,
-  type WalletTokenBalances,
-  type NormalizedTokenBalance,
 } from "../../../src/services/balanceService";
 
 // Store original env values BEFORE mocking
