@@ -14,6 +14,7 @@ import { useSendAndConfirmCalls } from "thirdweb/react";
 import {
   getChainBlockExplorer,
   getChainById,
+  SUPPORTED_CHAINS,
   toThirdWebChain,
 } from "../../config/chains";
 import { Z_INDEX } from "../../constants/design-system";
@@ -262,7 +263,11 @@ export function ZapExecutionProgress({
       const baseChain = getChainById(chainIdForTx);
 
       if (!baseChain) {
-        const message = `Unsupported chain ${chainIdForTx}`;
+        const supportedChainNames = SUPPORTED_CHAINS.map(
+          c => `${c.name} (${c.id})`
+        ).join(", ");
+
+        const message = `Chain ${chainIdForTx} is not supported. Supported chains: ${supportedChainNames}`;
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useCallback, useState } from "react";
+import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
 import { useChain } from "../../hooks";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
@@ -143,6 +144,28 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       );
       const strategyCount = action.includedCategories.length;
 
+      // Validate chain is supported before proceeding
+      if (!isChainSupported(chain.id)) {
+        const supportedChainNames = SUPPORTED_CHAINS.map(
+          c => `${c.name} (${c.id})`
+        ).join(", ");
+
+        swapLogger.error(
+          `Unsupported chain ${chain.id}. Supported: ${supportedChainNames}`
+        );
+
+        // Set error state instead of proceeding
+        setZapExecution({
+          intentId: "",
+          isExecuting: false,
+          totalValue,
+          strategyCount,
+          chainId: chain.id,
+          error: `Chain ${chain.id} is not supported. Please switch to: ${supportedChainNames}`,
+        });
+        return; // Fail fast - don't call API
+      }
+
       try {
         // Set initial executing state
         setZapExecution({
@@ -265,18 +288,20 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     // Show strategies content
     return (
       <div className="space-y-6">
-        {/* UnifiedZap Execution Progress */}
-        <ZapExecutionProgress
-          isOpen={!!(zapExecution && zapExecution.intentId)}
-          onClose={handleExecutionCancel}
-          intentId={zapExecution?.intentId || ""}
-          chainId={zapExecution?.chainId || 1}
-          totalValue={zapExecution?.totalValue || 0}
-          strategyCount={zapExecution?.strategyCount || 0}
-          onComplete={handleExecutionComplete}
-          onError={handleExecutionError}
-          onCancel={handleExecutionCancel}
-        />
+        {/* UnifiedZap Execution Progress - Only render when we have valid intentId AND chainId */}
+        {zapExecution?.intentId && zapExecution?.chainId && (
+          <ZapExecutionProgress
+            isOpen={true}
+            onClose={handleExecutionCancel}
+            intentId={zapExecution.intentId}
+            chainId={zapExecution.chainId}
+            totalValue={zapExecution.totalValue}
+            strategyCount={zapExecution.strategyCount}
+            onComplete={handleExecutionComplete}
+            onError={handleExecutionError}
+            onCancel={handleExecutionCancel}
+          />
+        )}
 
         {/* Execution Error Display (when no intent ID) */}
         {zapExecution && zapExecution.error && !zapExecution.intentId && (
