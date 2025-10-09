@@ -129,6 +129,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
     const zapTokensOptions = useMemo(() => {
       const base: UseZapTokensWithStatesOptions = {
         balanceEnabled: !!walletAddress,
+        priceEnabled: true,
       };
 
       if (typeof chainId === "number") {
@@ -512,6 +513,12 @@ export const AmountInput = memo<AmountInputProps>(
     // Check if at boundaries
     const isAtMin = parseInputValue(inputValue) <= minAmount;
     const isAtMax = parseInputValue(inputValue) >= maxAmount;
+    const tokenPrice =
+      typeof fromToken?.price === "number" ? fromToken.price : undefined;
+    const usdValue =
+      tokenPrice !== undefined
+        ? parseInputValue(inputValue) * tokenPrice
+        : undefined;
 
     // Display label and balance based on operation mode
     const balanceLabel =
@@ -621,6 +628,17 @@ export const AmountInput = memo<AmountInputProps>(
           >
             <ChevronUp className="w-4 h-4" />
           </motion.button>
+        </div>
+
+        <div className="text-center text-xs text-gray-400 space-y-1">
+          {tokenPrice !== undefined ? (
+            <>
+              <div>Price: {`${formatCurrency(tokenPrice)}/token`}</div>
+              <div>≈ {`${formatCurrency(usdValue ?? 0)} USD`}</div>
+            </>
+          ) : (
+            <div>Price unavailable</div>
+          )}
         </div>
 
         {/* Max button */}

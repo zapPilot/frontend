@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { tokenService } from "../../services";
+import type { WalletTokenBalances } from "../../services/balanceService";
+import type { SwapToken } from "../../types/swap";
 import {
   useTokenBalancesQuery,
   type UseTokenBalancesParams,
 } from "./useTokenBalancesQuery";
+import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain
@@ -42,6 +45,40 @@ export interface UseZapTokensWithStatesOptions {
   skipBalanceCache?: boolean;
   balanceEnabled?: boolean;
   tokenAddressesOverride?: string[];
+  priceEnabled?: boolean; // Default: false for backward compatibility
+  priceRefetchInterval?: number | false; // Default: 2 minutes (from useTokenPricesQuery)
+}
+
+/**
+ * Return type for useZapTokensWithStates hook
+ * Includes token data enriched with balances and prices, plus loading/error states
+ */
+export interface UseZapTokensWithStatesResult {
+  tokens: SwapToken[];
+  hasTokens: boolean;
+  isEmpty: boolean;
+  isInitialLoading: boolean;
+  isRefetching: boolean;
+  // Balance states
+  isBalanceLoading: boolean;
+  isBalanceFetching: boolean;
+  balanceError: Error | null;
+  refetchBalances: () => void;
+  balances: WalletTokenBalances | undefined;
+  // Price states
+  isPriceLoading: boolean;
+  isPriceFetching: boolean;
+  priceError: Error | null;
+  refetchPrices: () => void;
+  priceMap: TokenPriceMap;
+  // React Query base states
+  data?: SwapToken[] | undefined;
+  error: Error | null;
+  isLoading: boolean;
+  isFetching: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  refetch: () => void;
 }
 
 const NATIVE_SENTINEL = "native";
@@ -96,13 +133,15 @@ const normalizeBalanceLookupKeys = (token: {
 
 export const useZapTokensWithStates = (
   options: UseZapTokensWithStatesOptions = {}
-) => {
+): UseZapTokensWithStatesResult => {
   const {
     chainId,
     walletAddress,
     skipBalanceCache = false,
     balanceEnabled = true,
     tokenAddressesOverride,
+    priceEnabled = false,
+    priceRefetchInterval,
   } = options;
 
   const query = useZapTokensQuery(chainId);
@@ -164,42 +203,92 @@ export const useZapTokensWithStates = (
 
   const balances = useTokenBalancesQuery(balanceQueryOptions);
 
+  // Extract symbols for price queries
+  const priceSymbols = useMemo(() => {
+    if (!priceEnabled || tokens.length === 0) {
+      return [];
+    }
+
+    // Extract and normalize symbols
+    const symbols = tokens
+      .map(token => token.symbol?.trim())
+      .filter(
+        (symbol): symbol is string => Boolean(symbol) && symbol.length > 0
+      );
+
+    // Deduplicate via Set
+    return Array.from(new Set(symbols));
+  }, [tokens, priceEnabled]);
+
+  // Fetch prices in parallel with balances
+  const prices = useTokenPricesQuery({
+    symbols: priceSymbols,
+    enabled: priceEnabled && priceSymbols.length > 0,
+    ...(priceRefetchInterval !== undefined && {
+      refetchInterval: priceRefetchInterval,
+    }),
+  });
+
   const tokensWithBalances = useMemo(() => {
     if (tokens.length === 0) {
       return tokens;
     }
 
     const balanceMap = balances.balancesByAddress;
+    const priceMap = prices.priceMap;
 
     return tokens.map(token => {
+      // Balance enrichment (existing logic)
       const candidateKeys = normalizeBalanceLookupKeys(token);
-
       const balanceEntry = candidateKeys
         .map(key => balanceMap[key])
         .find(entry => entry !== undefined);
 
-      if (!balanceEntry) {
-        return token;
-      }
+      // Price enrichment (NEW)
+      const normalizedSymbol = token.symbol?.trim().toUpperCase();
+      const priceEntry = normalizedSymbol
+        ? priceMap[normalizedSymbol]
+        : undefined;
 
       return {
         ...token,
-        balance: balanceEntry.balance,
+        // Add balance if available
+        ...(balanceEntry && { balance: balanceEntry.balance }),
+        // Add price if available and successful
+        ...(priceEntry?.success &&
+          priceEntry.price !== null && {
+            price: priceEntry.price,
+          }),
       };
     });
-  }, [tokens, balances.balancesByAddress]);
+  }, [tokens, balances.balancesByAddress, prices.priceMap]);
 
   return {
-    ...query,
+    // Token data
     tokens: tokensWithBalances,
     hasTokens: tokensWithBalances.length > 0,
     isEmpty: query.isSuccess && tokensWithBalances.length === 0,
     isInitialLoading: query.isLoading && !query.data,
     isRefetching: query.isFetching && !!query.data,
+    // Balance states
     isBalanceLoading: balances.isLoading,
     isBalanceFetching: balances.isFetching,
     balanceError: balances.isError ? balances.error : null,
     refetchBalances: balances.refetch,
     balances: balances.balances,
+    // Price states
+    isPriceLoading: prices.isLoading,
+    isPriceFetching: prices.isFetching,
+    priceError: prices.isError ? prices.error : null,
+    refetchPrices: prices.refetch,
+    priceMap: prices.priceMap,
+    // React Query base states
+    data: query.data,
+    error: query.error,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isSuccess: query.isSuccess,
+    isError: query.isError,
+    refetch: query.refetch,
   };
 };
