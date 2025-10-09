@@ -305,7 +305,7 @@ export function ZapExecutionProgress({
                 to: tx.to as `0x${string}`,
                 data: tx.data as `0x${string}`,
                 value: parseBigIntValue(tx.value),
-                gas: parseBigIntValue(tx.gas),
+                extraGas: parseBigIntValue(tx.gas),
                 gasPrice: parseBigIntValue(tx.gasPrice),
                 maxFeePerGas: parseBigIntValue(tx.maxFeePerGas),
                 maxPriorityFeePerGas: parseBigIntValue(tx.maxPriorityFeePerGas),
