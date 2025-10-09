@@ -116,6 +116,62 @@ interface TokenSelectorProps {
   walletAddress?: string | null;
 }
 
+interface TokenSummaryProps {
+  token: SwapToken;
+  className?: string;
+}
+
+const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
+  const containerClassName = className
+    ? `flex items-center gap-3 ${className}`
+    : "flex items-center gap-3";
+
+  const hasBalance = token.balance !== undefined;
+  const formattedBalance = hasBalance
+    ? formatTokenAmount(token.balance, token.symbol)
+    : null;
+  const formattedUsd =
+    hasBalance && typeof token.price === "number"
+      ? formatCurrency(token.balance * token.price)
+      : null;
+
+  return (
+    <div className={containerClassName}>
+      <TokenImage
+        token={{
+          symbol: token.symbol,
+          ...(token.optimized_symbol && {
+            optimized_symbol: token.optimized_symbol,
+          }),
+          ...(token.logo_url && {
+            logo_url: token.logo_url,
+          }),
+        }}
+        size={32}
+        className="w-8 h-8 flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0 text-left">
+        <div className="flex items-center gap-2 text-sm leading-tight">
+          <span className="truncate font-semibold text-white">
+            {token.symbol}
+          </span>
+          {formattedBalance && (
+            <span className="ml-auto text-sm font-medium text-white">
+              {formattedBalance}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-xs leading-tight">
+          <span className="truncate text-gray-400">{token.name}</span>
+          {formattedUsd && (
+            <span className="ml-auto text-gray-500">{formattedUsd}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const TokenSelector = memo<TokenSelectorProps>(
   ({
     selectedToken,
@@ -163,55 +219,17 @@ export const TokenSelector = memo<TokenSelectorProps>(
         </label>
         <button
           onClick={dropdown.toggle}
-          className="w-full flex items-center justify-between p-3 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+          className="w-full flex items-center justify-between gap-3 p-3 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
           data-testid={`token-selector-${label.toLowerCase().replace(" ", "-")}`}
         >
-          <div className="flex items-center space-x-3">
-            {selectedToken ? (
-              <>
-                <TokenImage
-                  token={{
-                    symbol: selectedToken.symbol,
-                    ...(selectedToken.optimized_symbol && {
-                      optimized_symbol: selectedToken.optimized_symbol,
-                    }),
-                    ...(selectedToken.logo_url && {
-                      logo_url: selectedToken.logo_url,
-                    }),
-                  }}
-                  size={32}
-                  className="w-8 h-8"
-                />
-                <div className="text-left flex flex-col space-y-0.5">
-                  <div className="text-white font-medium">
-                    {selectedToken.symbol}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {selectedToken.name}
-                  </div>
-                  {selectedToken.balance !== undefined && (
-                    <div className="text-xs text-gray-300">
-                      {formatTokenAmount(
-                        selectedToken.balance,
-                        selectedToken.symbol
-                      )}
-                    </div>
-                  )}
-                  {selectedToken.price &&
-                    selectedToken.balance !== undefined && (
-                      <div className="text-xs text-gray-500">
-                        {formatCurrency(
-                          selectedToken.balance * selectedToken.price
-                        )}
-                      </div>
-                    )}
-                </div>
-              </>
-            ) : (
-              <span className="text-gray-400">{placeholder}</span>
-            )}
-          </div>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          {selectedToken ? (
+            <TokenSummary token={selectedToken} className="flex-1 min-w-0" />
+          ) : (
+            <span className="flex-1 text-left text-gray-400">
+              {placeholder}
+            </span>
+          )}
+          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
         </button>
 
         {dropdown.isOpen && (
@@ -222,17 +240,24 @@ export const TokenSelector = memo<TokenSelectorProps>(
               exit={{ opacity: 0, y: -10 }}
               className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
-              {/* Loading State */}
+              {/* Loading State - Compact Skeleton */}
               {isInitialLoading && (
-                <div className="space-y-2 p-2">
-                  {Array(4)
+                <div className="space-y-1 p-2">
+                  {Array(5)
                     .fill(0)
                     .map((_, i) => (
-                      <div key={i} className="flex items-center space-x-3 p-3">
-                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse" />
-                        <div className="flex-1">
-                          <div className="h-4 bg-gray-700 rounded animate-pulse mb-1" />
-                          <div className="h-3 bg-gray-700 rounded animate-pulse w-2/3" />
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 py-2.5 px-3"
+                      >
+                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-16" />
+                          <div className="h-3 bg-gray-700 rounded animate-pulse w-24" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-20" />
+                          <div className="h-3 bg-gray-700 rounded animate-pulse w-16" />
                         </div>
                       </div>
                     ))}
@@ -272,7 +297,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                 </div>
               )}
 
-              {/* Token List */}
+              {/* Token List - COMPACT 2-LINE DESIGN */}
               {hasTokens &&
                 tokens.map(token => (
                   <button
@@ -281,39 +306,10 @@ export const TokenSelector = memo<TokenSelectorProps>(
                       onTokenSelect(token);
                       dropdown.close();
                     }}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-gray-800 transition-colors"
+                    className="w-full py-2.5 px-3 hover:bg-gray-800/70 transition-colors text-left"
                     data-testid={`token-option-${token.symbol}`}
                   >
-                    <TokenImage
-                      token={{
-                        symbol: token.symbol,
-                        ...(token.optimized_symbol && {
-                          optimized_symbol: token.optimized_symbol,
-                        }),
-                        ...(token.logo_url && { logo_url: token.logo_url }),
-                      }}
-                      size={32}
-                      className="w-8 h-8"
-                    />
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-medium">
-                        {token.symbol}
-                      </div>
-                      <div className="text-xs text-gray-400">{token.name}</div>
-                    </div>
-                    {/* Balance display when available */}
-                    {token.balance !== undefined && (
-                      <div className="text-right">
-                        <div className="text-sm text-gray-300">
-                          {formatTokenAmount(token.balance, token.symbol)}
-                        </div>
-                        {token.price && (
-                          <div className="text-xs text-gray-500">
-                            {formatCurrency(token.balance * token.price)}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <TokenSummary token={token} className="w-full" />
                   </button>
                 ))}
 
