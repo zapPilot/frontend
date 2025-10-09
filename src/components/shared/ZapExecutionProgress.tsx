@@ -432,8 +432,8 @@ export function ZapExecutionProgress({
       return;
     }
 
-    // Don't execute if currently processing
-    if (transactionStatus === "pending") {
+    // Don't execute if currently processing or in error state
+    if (transactionStatus === "pending" || transactionStatus === "error") {
       return;
     }
 
