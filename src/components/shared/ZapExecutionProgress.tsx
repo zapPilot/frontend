@@ -14,6 +14,7 @@ import { useSendAndConfirmCalls } from "thirdweb/react";
 import {
   getChainBlockExplorer,
   getChainById,
+  isChainSupported,
   SUPPORTED_CHAINS,
   toThirdWebChain,
 } from "../../config/chains";
@@ -259,15 +260,32 @@ export function ZapExecutionProgress({
         return;
       }
 
-      const chainIdForTx = eventChainId ?? chainId;
-      const baseChain = getChainById(chainIdForTx);
+      const resolvedChainId =
+        (typeof eventChainId === "number" && isChainSupported(eventChainId)
+          ? eventChainId
+          : undefined) ?? (isChainSupported(chainId) ? chainId : undefined);
+
+      if (resolvedChainId === undefined) {
+        const fallbackChainId =
+          typeof eventChainId === "number" ? eventChainId : chainId;
+        const supportedChainNames = SUPPORTED_CHAINS.map(
+          c => `${c.name} (${c.id})`
+        ).join(", ");
+
+        const message = `Chain ${fallbackChainId} is not supported. Supported chains: ${supportedChainNames}`;
+        setTransactionStatus("error");
+        showToast({ type: "error", title: "Unsupported chain", message });
+        return;
+      }
+
+      const baseChain = getChainById(resolvedChainId);
 
       if (!baseChain) {
         const supportedChainNames = SUPPORTED_CHAINS.map(
           c => `${c.name} (${c.id})`
         ).join(", ");
 
-        const message = `Chain ${chainIdForTx} is not supported. Supported chains: ${supportedChainNames}`;
+        const message = `Chain ${resolvedChainId} is not supported. Supported chains: ${supportedChainNames}`;
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;
@@ -333,8 +351,8 @@ export function ZapExecutionProgress({
           onSuccess: async result => {
             const receiptHash = result?.receipts?.[0]?.transactionHash;
             const explorerUrl =
-              receiptHash && chainIdForTx
-                ? buildExplorerUrl(chainIdForTx, receiptHash)
+              receiptHash && resolvedChainId
+                ? buildExplorerUrl(resolvedChainId, receiptHash)
                 : null;
 
             // Update chunk completion state
