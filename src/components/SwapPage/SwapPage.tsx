@@ -322,37 +322,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
         {/* Portfolio Allocation Interface */}
         {!zapExecution?.isExecuting && (
-          <>
-            {/* Rebalance Operation with Optimization */}
-            {activeOperationMode === "rebalance" ? (
-              <>
-                {/* Portfolio Allocation Container */}
-                <PortfolioAllocationContainer
-                  assetCategories={strategies}
-                  operationMode={activeOperationMode}
-                  isRebalanceMode={isRebalanceMode}
-                  onZapAction={handleZapAction}
-                  excludedCategoryIds={excludedCategoryIds}
-                  onToggleCategoryExclusion={toggleCategoryExclusion}
-                  {...(chain?.id !== undefined ? { chainId: chain.id } : {})}
-                />
-              </>
-            ) : (
-              /* Zap In/Out Operations */
-              <>
-                {/* Portfolio Allocation Container */}
-                <PortfolioAllocationContainer
-                  assetCategories={strategies}
-                  operationMode={activeOperationMode}
-                  isRebalanceMode={isRebalanceMode}
-                  onZapAction={handleZapAction}
-                  excludedCategoryIds={excludedCategoryIds}
-                  onToggleCategoryExclusion={toggleCategoryExclusion}
-                  {...(chain?.id !== undefined ? { chainId: chain.id } : {})}
-                />
-              </>
-            )}
-          </>
+          <PortfolioAllocationContainer
+            assetCategories={strategies}
+            operationMode={activeOperationMode}
+            isRebalanceMode={isRebalanceMode}
+            onZapAction={handleZapAction}
+            excludedCategoryIds={excludedCategoryIds}
+            onToggleCategoryExclusion={toggleCategoryExclusion}
+            {...(chain?.id !== undefined ? { chainId: chain.id } : {})}
+          />
         )}
 
         {/* Execution Loading State */}
