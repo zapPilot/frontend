@@ -123,24 +123,6 @@ export const PortfolioAllocationContainer: React.FC<
     });
   };
 
-  const totalAllocatedPercent = useMemo(() => {
-    return assetCategories.reduce((sum, category) => {
-      if (excludedCategoryIds.includes(category.id)) {
-        return sum;
-      }
-      return sum + (categoryAllocations[category.id] ?? 0);
-    }, 0);
-  }, [assetCategories, categoryAllocations, excludedCategoryIds]);
-
-  const allocationStatus = useMemo(() => {
-    const remaining = 100 - totalAllocatedPercent;
-    return {
-      totalAllocated: totalAllocatedPercent,
-      remaining,
-      isBalanced: Math.abs(remaining) < 0.01,
-    };
-  }, [totalAllocatedPercent]);
-
   // Enhanced zap action handler
   const handleEnhancedZapAction = () => {
     // Trigger validation attempt first
@@ -168,6 +150,46 @@ export const PortfolioAllocationContainer: React.FC<
 
   const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
 
+  const parsedAmount = Number.parseFloat(swapSettings.amount || "");
+  const hasPositiveAmount =
+    operationMode === "rebalance"
+      ? true
+      : Number.isFinite(parsedAmount) && parsedAmount > 0;
+
+  const hasRequiredToken = (() => {
+    if (operationMode === "zapIn") {
+      return Boolean(swapSettings.fromToken);
+    }
+
+    if (operationMode === "zapOut") {
+      return Boolean(swapSettings.toToken);
+    }
+
+    return true;
+  })();
+
+  const isActionEnabled = hasRequiredToken && hasPositiveAmount;
+
+  let actionDisabledReason: string | undefined;
+  if (!isActionEnabled && operationMode !== "rebalance") {
+    const needsTokenMessage = !hasRequiredToken
+      ? operationMode === "zapOut"
+        ? "select a token to receive"
+        : "select a token to zap in"
+      : undefined;
+    const needsAmountMessage = !hasPositiveAmount
+      ? "enter an amount"
+      : undefined;
+
+    const missingMessages = [needsTokenMessage, needsAmountMessage].filter(
+      Boolean
+    ) as string[];
+
+    if (missingMessages.length > 0) {
+      actionDisabledReason = `Please ${missingMessages.join(" and ")}.`;
+    }
+  }
+
   // Common SwapControls props
   const swapControlsProps = {
     ref: swapControlsRef,
@@ -191,7 +213,8 @@ export const PortfolioAllocationContainer: React.FC<
         onToggleCategoryExclusion={onToggleCategoryExclusion}
         allocations={categoryAllocations}
         onAllocationChange={handleAllocationChange}
-        allocationStatus={allocationStatus}
+        actionEnabled={isActionEnabled}
+        actionDisabledReason={actionDisabledReason}
       />
     </div>
   );

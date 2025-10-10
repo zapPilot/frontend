@@ -14,10 +14,6 @@ import { PerformanceTrendChart, PortfolioCharts } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 
-interface AllocationStatusSummary {
-  totalAllocated: number;
-}
-
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];
   chartData: ChartDataPoint[];
@@ -31,7 +27,8 @@ interface EnhancedOverviewProps {
   onAllocationChange?:
     | ((categoryId: string, value: number) => void)
     | undefined;
-  allocationStatus?: AllocationStatusSummary | undefined;
+  actionEnabled?: boolean;
+  actionDisabledReason?: string;
 }
 
 export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
@@ -45,7 +42,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   onToggleCategoryExclusion,
   allocations,
   onAllocationChange,
-  allocationStatus,
+  actionEnabled = true,
+  actionDisabledReason,
 }) => {
   const {
     includedCategories,
@@ -62,8 +60,6 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
     excludedCategoryIds,
     chartData,
   });
-
-  const totalAllocated = allocationStatus?.totalAllocated ?? 0;
 
   return (
     <motion.div
@@ -102,6 +98,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
             includedCategories={includedCategories}
             rebalanceMode={rebalanceMode}
             onAction={onZapAction}
+            isEnabled={actionEnabled}
+            disabledReason={actionDisabledReason}
           />
         </div>
 
