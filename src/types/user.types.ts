@@ -12,6 +12,7 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
+  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   label?: string;
   created_at: string;
 }

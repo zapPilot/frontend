@@ -87,8 +87,12 @@ describe("useUserByWallet", () => {
       })
     );
 
-    // Additional wallets derived from non-main entries
+    // Additional wallets now includes ALL wallets (no filtering)
     expect(result.current.data?.additionalWallets).toEqual([
+      expect.objectContaining({
+        wallet_address: walletAddress,
+        label: "Primary Wallet",
+      }),
       expect.objectContaining({
         wallet_address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         label: "Trading Wallet",

@@ -214,7 +214,7 @@ export const PortfolioAllocationContainer: React.FC<
         allocations={categoryAllocations}
         onAllocationChange={handleAllocationChange}
         actionEnabled={isActionEnabled}
-        actionDisabledReason={actionDisabledReason}
+        {...(actionDisabledReason ? { actionDisabledReason } : {})}
       />
     </div>
   );

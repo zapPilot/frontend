@@ -18,7 +18,7 @@ export interface UserResponse {
 export interface AdditionalWallet {
   wallet_address: string;
   label?: string;
-  is_main?: boolean;
+  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   created_at?: string;
 }
 
