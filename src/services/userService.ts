@@ -220,21 +220,11 @@ export const transformWalletData = (wallets: UserCryptoWallet[]) => {
   return wallets.map(wallet => ({
     id: wallet.id,
     address: wallet.wallet,
-    label:
-      wallet.label || (wallet.is_main ? "Primary Wallet" : "Additional Wallet"),
-    isMain: wallet.is_main,
-    isActive: wallet.is_main, // Only main wallet is considered active for now
+    label: wallet.label || "Wallet",
+    isMain: false, // Legacy field - no longer meaningful
+    isActive: false, // Legacy field - no longer meaningful
     createdAt: wallet.created_at,
   }));
-};
-
-/**
- * Get main wallet address from wallet list
- */
-export const getMainWallet = (
-  wallets: UserCryptoWallet[]
-): UserCryptoWallet | null => {
-  return wallets.find(wallet => wallet.is_main) || null;
 };
 
 /**

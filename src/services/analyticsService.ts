@@ -530,26 +530,19 @@ export const transformBundleWallets = (
 
   const wallets: WalletAddress[] = [];
 
-  // Add primary wallet first
-  wallets.push({
-    id: "primary",
-    address: bundleData.primary_wallet,
-    label: "Main Wallet",
-    isActive: true,
-    isMain: true,
+  // Use visible_wallets array - all wallets are equal
+  bundleData.visible_wallets?.forEach((walletAddress, index) => {
+    const additionalWallet = bundleData.additional_wallets?.find(
+      w => w.wallet_address === walletAddress
+    );
 
-    createdAt: null,
-  });
-
-  // Add additional wallets
-  bundleData.additional_wallets?.forEach((wallet, index) => {
     wallets.push({
-      id: wallet.wallet_address,
-      address: wallet.wallet_address,
-      label: wallet.label || `Wallet ${index + 2}`, // Auto-generate labels
-      isActive: false,
-      isMain: wallet.is_main ?? false,
-      createdAt: wallet.created_at ?? null,
+      id: walletAddress,
+      address: walletAddress,
+      label: additionalWallet?.label || `Wallet ${index + 1}`,
+      isActive: false, // No longer meaningful
+      isMain: false, // No longer meaningful
+      createdAt: additionalWallet?.created_at ?? null,
     });
   });
 

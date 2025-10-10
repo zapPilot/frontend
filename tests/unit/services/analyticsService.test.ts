@@ -1403,22 +1403,22 @@ describe("analyticsService", () => {
 
         expect(result).toHaveLength(1);
         expect(result[0]).toEqual({
-          id: "primary",
+          id: "0xPrimaryWallet",
           address: "0xPrimaryWallet",
-          label: "Main Wallet",
-          isActive: true,
-          isMain: true,
+          label: "Wallet 1",
+          isActive: false,
+          isMain: false,
           createdAt: null,
         });
       });
 
-      it("should always place primary wallet first in array", () => {
+      it("should respect visible_wallets array order", () => {
         const bundleData: BundleWalletsResponse = {
           user_id: "user123",
           primary_wallet: "0xPrimary",
           main_wallet: "0xMain",
-          visible_wallets: ["0xPrimary"],
-          bundle_wallets: ["0xPrimary"],
+          visible_wallets: ["0xPrimary", "0xWallet1", "0xWallet2"],
+          bundle_wallets: ["0xPrimary", "0xWallet1", "0xWallet2"],
           additional_wallets: [
             {
               wallet_address: "0xWallet1",
@@ -1431,7 +1431,7 @@ describe("analyticsService", () => {
 
         const result = transformBundleWallets(bundleData);
 
-        expect(result[0].id).toBe("primary");
+        expect(result[0].id).toBe("0xPrimary");
         expect(result[0].address).toBe("0xPrimary");
       });
     });
@@ -1532,7 +1532,7 @@ describe("analyticsService", () => {
     });
 
     describe("isMain Flag Handling", () => {
-      it("should set isMain to true when is_main is true", () => {
+      it("should set isMain to false for all wallets", () => {
         const bundleData: BundleWalletsResponse = {
           user_id: "user123",
           primary_wallet: "0xPrimary",
@@ -1542,14 +1542,13 @@ describe("analyticsService", () => {
           additional_wallets: [
             {
               wallet_address: "0xWallet1",
-              is_main: true,
             },
           ],
         };
 
         const result = transformBundleWallets(bundleData);
 
-        expect(result[1].isMain).toBe(true);
+        expect(result[1].isMain).toBe(false);
       });
 
       it("should set isMain to false when is_main is false", () => {
@@ -1562,7 +1561,6 @@ describe("analyticsService", () => {
           additional_wallets: [
             {
               wallet_address: "0xWallet1",
-              is_main: false,
             },
           ],
         };
@@ -1685,7 +1683,7 @@ describe("analyticsService", () => {
         const result = transformBundleWallets(bundleData);
 
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe("primary");
+        expect(result[0].id).toBe("0xPrimaryWallet");
       });
 
       it("should handle missing additional_wallets field", () => {
@@ -1701,7 +1699,7 @@ describe("analyticsService", () => {
         const result = transformBundleWallets(bundleData);
 
         expect(result).toHaveLength(1);
-        expect(result[0].id).toBe("primary");
+        expect(result[0].id).toBe("0xPrimaryWallet");
       });
     });
 
@@ -1731,7 +1729,6 @@ describe("analyticsService", () => {
             {
               wallet_address: "0xWallet1",
               label: "Trading",
-              is_main: true,
               created_at: "2025-01-01T00:00:00Z",
             },
             {
@@ -1741,16 +1738,13 @@ describe("analyticsService", () => {
             {
               wallet_address: "0xWallet3",
               label: "Savings",
-              is_main: false,
             },
             {
               wallet_address: "0xWallet4",
-              is_main: true,
             },
             {
               wallet_address: "0xWallet5",
               label: "DeFi Portfolio",
-              is_main: false,
               created_at: "2025-01-05T00:00:00Z",
             },
           ],
@@ -1760,27 +1754,27 @@ describe("analyticsService", () => {
 
         expect(result).toHaveLength(6);
 
-        // Primary wallet (always first)
+        // Wallet 1 (Primary - based on visible_wallets order)
         expect(result[0]).toEqual({
-          id: "primary",
+          id: "0xPrimary",
           address: "0xPrimary",
-          label: "Main Wallet",
-          isActive: true,
-          isMain: true,
+          label: "Wallet 1",
+          isActive: false,
+          isMain: false,
           createdAt: null,
         });
 
-        // Wallet 1 (custom label, is_main, has createdAt)
+        // Wallet 2 (custom label, has createdAt)
         expect(result[1]).toEqual({
           id: "0xWallet1",
           address: "0xWallet1",
           label: "Trading",
           isActive: false,
-          isMain: true,
+          isMain: false,
           createdAt: "2025-01-01T00:00:00Z",
         });
 
-        // Wallet 2 (auto-generated label, has createdAt)
+        // Wallet 3 (auto-generated label, has createdAt)
         expect(result[2]).toEqual({
           id: "0xWallet2",
           address: "0xWallet2",
@@ -1790,7 +1784,7 @@ describe("analyticsService", () => {
           createdAt: "2025-01-02T00:00:00Z",
         });
 
-        // Wallet 3 (custom label, explicit is_main: false)
+        // Wallet 4 (custom label)
         expect(result[3]).toEqual({
           id: "0xWallet3",
           address: "0xWallet3",
@@ -1800,17 +1794,17 @@ describe("analyticsService", () => {
           createdAt: null,
         });
 
-        // Wallet 4 (auto-generated label, is_main)
+        // Wallet 5 (auto-generated label)
         expect(result[4]).toEqual({
           id: "0xWallet4",
           address: "0xWallet4",
           label: "Wallet 5",
           isActive: false,
-          isMain: true,
+          isMain: false,
           createdAt: null,
         });
 
-        // Wallet 5 (custom label, all fields)
+        // Wallet 6 (custom label, has createdAt)
         expect(result[5]).toEqual({
           id: "0xWallet5",
           address: "0xWallet5",
@@ -1864,7 +1858,7 @@ describe("analyticsService", () => {
     });
 
     describe("isActive Flag", () => {
-      it("should set isActive to true only for primary wallet", () => {
+      it("should set isActive to false for all wallets", () => {
         const bundleData: BundleWalletsResponse = {
           user_id: "user123",
           primary_wallet: "0xPrimary",
@@ -1883,9 +1877,9 @@ describe("analyticsService", () => {
 
         const result = transformBundleWallets(bundleData);
 
-        expect(result[0].isActive).toBe(true); // Primary
-        expect(result[1].isActive).toBe(false); // Additional
-        expect(result[2].isActive).toBe(false); // Additional
+        expect(result[0].isActive).toBe(false);
+        expect(result[1].isActive).toBe(false);
+        expect(result[2].isActive).toBe(false);
       });
     });
   });

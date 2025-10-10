@@ -12,9 +12,7 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  is_main: boolean;
   label?: string;
-
   created_at: string;
 }
 

@@ -125,7 +125,6 @@ describe("WalletManager", () => {
       id: "wallet-1",
       user_id: "user-123",
       wallet: "0x1234567890123456789012345678901234567890",
-      is_main: true,
       label: "Primary Wallet",
 
       created_at: "2024-01-01T00:00:00Z",
@@ -134,7 +133,6 @@ describe("WalletManager", () => {
       id: "wallet-2",
       user_id: "user-123",
       wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-      is_main: false,
       label: "Trading Wallet",
 
       created_at: "2024-01-02T00:00:00Z",

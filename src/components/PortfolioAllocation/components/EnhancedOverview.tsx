@@ -85,12 +85,6 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
         className="col-span-full"
       />
 
-      {/* Allocation Summary (simplified) */}
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-700/40 bg-slate-900/40 px-4 py-3 text-sm">
-        <div className="font-medium text-white">Allocation</div>
-        <div className="text-gray-400">{totalAllocated.toFixed(1)}%</div>
-      </div>
-
       {/* Main Content: Responsive Layout */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 xl:gap-8">
         {/* Left Column: Action Controls */}

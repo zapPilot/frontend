@@ -240,7 +240,6 @@ describe("userService", () => {
           id: "wallet-1",
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
-          is_main: true,
           label: "Primary Wallet",
 
           created_at: "2024-01-01T00:00:00Z",
@@ -287,7 +286,6 @@ describe("userService", () => {
         id: "wallet-1",
         user_id: "user-123",
         wallet: "0x1234567890123456789012345678901234567890",
-        is_main: true,
         label: "Primary Wallet",
 
         created_at: "2024-01-01T00:00:00Z",
@@ -296,7 +294,6 @@ describe("userService", () => {
         id: "wallet-2",
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        is_main: false,
         label: "Trading Wallet",
 
         created_at: "2024-01-02T00:00:00Z",
@@ -547,7 +544,6 @@ describe("userService", () => {
         id: "wallet-1",
         user_id: "user-123",
         wallet: "0x1234567890123456789012345678901234567890",
-        is_main: true,
         label: "My Main Wallet",
 
         created_at: "2024-01-01T00:00:00Z",
@@ -556,7 +552,6 @@ describe("userService", () => {
         id: "wallet-2",
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        is_main: false,
 
         created_at: "2024-01-02T00:00:00Z",
       },
@@ -570,15 +565,15 @@ describe("userService", () => {
           id: "wallet-1",
           address: "0x1234567890123456789012345678901234567890",
           label: "My Main Wallet",
-          isMain: true,
-          isActive: true,
+          isMain: false,
+          isActive: false,
 
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
           id: "wallet-2",
           address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          label: "Additional Wallet",
+          label: "Wallet",
           isMain: false,
           isActive: false,
 
@@ -593,53 +588,6 @@ describe("userService", () => {
     });
   });
 
-  describe("getMainWallet", () => {
-    it("returns main wallet when present", () => {
-      const wallets: UserCryptoWallet[] = [
-        {
-          id: "wallet-1",
-          user_id: "user-123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          is_main: false,
-
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "wallet-2",
-          user_id: "user-123",
-          wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          is_main: true,
-          label: "Main Wallet",
-
-          created_at: "2024-01-02T00:00:00Z",
-        },
-      ];
-
-      const result = getMainWallet(wallets);
-      expect(result).toEqual(wallets[1]);
-    });
-
-    it("returns null when no main wallet present", () => {
-      const wallets: UserCryptoWallet[] = [
-        {
-          id: "wallet-1",
-          user_id: "user-123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          is_main: false,
-
-          created_at: "2024-01-01T00:00:00Z",
-        },
-      ];
-
-      const result = getMainWallet(wallets);
-      expect(result).toBeNull();
-    });
-
-    it("returns null for empty wallet list", () => {
-      const result = getMainWallet([]);
-      expect(result).toBeNull();
-    });
-  });
 
   describe("handleWalletError", () => {
     it("handles AccountServiceError by returning message directly", () => {

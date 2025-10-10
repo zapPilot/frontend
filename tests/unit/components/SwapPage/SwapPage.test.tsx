@@ -83,7 +83,6 @@ vi.mock("../../../../src/contexts/UserContext", () => ({
     userInfo: {
       userId: "test-user",
       email: "user@example.com",
-      primaryWallet: "0x123",
       bundleWallets: ["0x123"],
       additionalWallets: [],
       visibleWallets: ["0x123"],

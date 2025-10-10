@@ -344,7 +344,7 @@ export function ZapExecutionProgress({
           //     data: "0x095ea7b3000000000000000000000000fb1b08ba6ba284934d817ea3c9d18f592cc59a50000000000000000000000000000000000000000000000000000407da105a96d0",
           //   },
           // ] as SendCallsVariables["calls"],
-          atomicRequired: true,
+          atomicRequired: false,
         };
 
         sendCalls(sendVariables, {

@@ -128,11 +128,11 @@ const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
 
   const hasBalance = token.balance !== undefined;
   const formattedBalance = hasBalance
-    ? formatTokenAmount(token.balance, token.symbol)
+    ? formatTokenAmount(token.balance!, token.symbol)
     : null;
   const formattedUsd =
     hasBalance && typeof token.price === "number"
-      ? formatCurrency(token.balance * token.price)
+      ? formatCurrency(token.balance! * token.price)
       : null;
 
   return (

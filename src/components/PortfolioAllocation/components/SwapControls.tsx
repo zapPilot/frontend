@@ -52,8 +52,8 @@ export const SwapControls = forwardRef<SwapControlsRef, SwapControlsProps>(
     },
     ref: Ref<SwapControlsRef>
   ) => {
-    const { userInfo } = useUser();
-    const walletAddress = userInfo?.primaryWallet ?? null;
+    const { connectedWallet } = useUser();
+    const walletAddress = connectedWallet;
     const [validationAttempted, setValidationAttempted] = useState(false);
     const [validationMode, setValidationMode] = useState<
       "onSubmit" | "onChange"

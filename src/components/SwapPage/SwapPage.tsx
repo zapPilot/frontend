@@ -29,7 +29,7 @@ export interface SwapPageProps {
 
 export function SwapPage({ strategy, onBack }: SwapPageProps) {
   // Get current user for portfolio data
-  const { userInfo } = useUser();
+  const { userInfo, connectedWallet } = useUser();
 
   // Get current chain for token operations
   const { chain } = useChain();
@@ -130,9 +130,9 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   const handleZapAction = useCallback(
     async (action: PortfolioSwapAction) => {
-      if (!userInfo?.primaryWallet || !chain?.id) {
+      if (!connectedWallet || !chain?.id) {
         swapLogger.error(
-          "Missing user wallet address or chain ID for UnifiedZap execution"
+          "Missing connected wallet address or chain ID for UnifiedZap execution"
         );
         return;
       }
@@ -181,7 +181,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         // Transform to API request format
         const zapRequest = transformToUnifiedZapRequest(
           action,
-          userInfo.primaryWallet,
+          connectedWallet,
           chain.id
         );
 
@@ -216,7 +216,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         });
       }
     },
-    [userInfo?.primaryWallet, chain?.id, transformToUnifiedZapRequest]
+    [connectedWallet, chain?.id, transformToUnifiedZapRequest]
   );
 
   // Handle execution completion
