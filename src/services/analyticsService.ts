@@ -7,28 +7,11 @@ import { httpUtils } from "../lib/http-utils";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
 // API Response Types
-export interface UserResponse {
-  id: string;
-  email: string;
-  primary_wallet: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface AdditionalWallet {
   wallet_address: string;
   label?: string;
   is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   created_at?: string;
-}
-
-export interface BundleWalletsResponse {
-  user_id: string;
-  primary_wallet: string;
-  main_wallet: string;
-  visible_wallets: string[];
-  bundle_wallets: string[];
-  additional_wallets?: AdditionalWallet[];
 }
 
 export interface PortfolioSnapshot {
@@ -516,35 +499,4 @@ export const getAllocationTimeseries = async (
   return await httpUtils.analyticsEngine.get<AllocationTimeseriesResponse>(
     `/api/v1/portfolio/allocation/timeseries/${userId}?${params}`
   );
-};
-
-/**
- * Transform bundle addresses API response to WalletAddress format
- */
-export const transformBundleWallets = (
-  bundleData: BundleWalletsResponse | null | undefined
-): WalletAddress[] => {
-  if (!bundleData) {
-    return [];
-  }
-
-  const wallets: WalletAddress[] = [];
-
-  // Use visible_wallets array - all wallets are equal
-  bundleData.visible_wallets?.forEach((walletAddress, index) => {
-    const additionalWallet = bundleData.additional_wallets?.find(
-      w => w.wallet_address === walletAddress
-    );
-
-    wallets.push({
-      id: walletAddress,
-      address: walletAddress,
-      label: additionalWallet?.label || `Wallet ${index + 1}`,
-      isActive: false, // No longer meaningful
-      isMain: false, // No longer meaningful
-      createdAt: additionalWallet?.created_at ?? null,
-    });
-  });
-
-  return wallets;
 };
