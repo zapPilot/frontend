@@ -102,7 +102,6 @@ import type {
 import {
   addWalletToBundle,
   connectWallet,
-  getMainWallet,
   getUserProfile,
   getUserWallets,
   handleWalletError,
@@ -587,7 +586,6 @@ describe("userService", () => {
       expect(result).toEqual([]);
     });
   });
-
 
   describe("handleWalletError", () => {
     it("handles AccountServiceError by returning message directly", () => {

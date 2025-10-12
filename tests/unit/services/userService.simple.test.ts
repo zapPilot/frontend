@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  getMainWallet,
   handleWalletError,
   transformWalletData,
   validateWalletAddress,
@@ -239,7 +238,6 @@ describe("userService - Pure Functions", () => {
       expect(result).toEqual([]);
     });
   });
-
 
   describe("handleWalletError", () => {
     it("handles AccountServiceError by returning its message directly", () => {
