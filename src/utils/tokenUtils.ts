@@ -28,11 +28,6 @@ export interface Token {
   raw_amount_hex_str?: string | undefined;
 }
 
-export interface TokenWithValue extends Token {
-  /** Calculated USD value (amount * price) */
-  value: number;
-}
-
 export interface FilteredTokenResult {
   /** Filtered and sorted tokens */
   tokens: Token[];
@@ -132,59 +127,6 @@ export function getFilteredAndSortedTokens(
   };
 }
 
-/**
- * Filter tokens by minimum value threshold
- *
- * @param tokens - Array of tokens
- * @param minValue - Minimum USD value to include
- * @returns Tokens above the threshold
- */
-export function filterTokensByValue(
-  tokens: Token[],
-  minValue: number
-): Token[] {
-  if (!tokens || !Array.isArray(tokens)) return [];
-
-  return tokens.filter(token => {
-    const value = token.amount * token.price;
-    return value >= minValue;
-  });
-}
-
-/**
- * Get tokens below a certain value threshold (dust tokens)
- *
- * @param tokens - Array of tokens
- * @param maxValue - Maximum value to consider as dust
- * @returns Tokens below the threshold
- */
-export function getDustTokens(
-  tokens: Token[],
-  maxValue: number
-): TokenWithValue[] {
-  if (!tokens || !Array.isArray(tokens)) return [];
-
-  return tokens
-    .map(token => ({
-      ...token,
-      value: token.amount * token.price,
-    }))
-    .filter(token => token.value > 0 && token.value <= maxValue)
-    .sort((a, b) => a.value - b.value); // Sort by value ascending
-}
-
-/**
- * Get top tokens by value
- *
- * @param tokens - Array of tokens
- * @param limit - Maximum number of tokens to return
- * @returns Top tokens by value
- */
-export function getTopTokensByValue(tokens: Token[], limit: number): Token[] {
-  const { tokens: filtered } = getFilteredAndSortedTokens(tokens);
-  return filtered.slice(0, limit);
-}
-
 // =============================================================================
 // CALCULATION UTILITIES
 // =============================================================================
@@ -202,105 +144,6 @@ export function calculateTotalTokenValue(tokens: Token[]): number {
     const value = token.amount * token.price;
     return total + (isNaN(value) ? 0 : value);
   }, 0);
-}
-
-/**
- * Calculate portfolio allocation percentages
- *
- * @param tokens - Array of tokens
- * @returns Tokens with allocation percentages
- */
-export function calculateTokenAllocations(
-  tokens: Token[]
-): Array<Token & { allocation: number }> {
-  const totalValue = calculateTotalTokenValue(tokens);
-
-  if (totalValue === 0) {
-    return tokens.map(token => ({ ...token, allocation: 0 }));
-  }
-
-  return tokens.map(token => {
-    const value = token.amount * token.price;
-    const allocation = (value / totalValue) * 100;
-    return { ...token, allocation };
-  });
-}
-
-/**
- * Calculate weighted average price across tokens
- *
- * @param tokens - Array of tokens with amounts
- * @returns Weighted average price
- */
-export function calculateWeightedAveragePrice(tokens: Token[]): number {
-  if (!tokens || tokens.length === 0) return 0;
-
-  const totalAmount = tokens.reduce((sum, token) => sum + token.amount, 0);
-
-  if (totalAmount === 0) return 0;
-
-  const weightedSum = tokens.reduce((sum, token) => {
-    return sum + token.price * token.amount;
-  }, 0);
-
-  return weightedSum / totalAmount;
-}
-
-// =============================================================================
-// GROUPING AND CATEGORIZATION
-// =============================================================================
-
-/**
- * Group tokens by categories (stable, major, alt, etc.)
- *
- * @param tokens - Array of tokens
- * @returns Grouped tokens by category
- */
-export function groupTokensByCategory(
-  tokens: Token[]
-): Record<string, Token[]> {
-  const categories: Record<string, Token[]> = {
-    stablecoins: [],
-    major: [],
-    defi: [],
-    alt: [],
-    other: [],
-  };
-
-  // Define category mappings
-  const stablecoins = new Set(["USDT", "USDC", "DAI", "BUSD", "FRAX", "LUSD"]);
-  const major = new Set(["BTC", "ETH", "BNB", "ADA", "SOL", "DOT", "MATIC"]);
-  const defi = new Set(["UNI", "AAVE", "COMP", "SUSHI", "CRV", "YFI", "MKR"]);
-
-  tokens.forEach(token => {
-    const symbol = getTokenSymbol(token).toUpperCase();
-
-    if (stablecoins.has(symbol)) {
-      categories["stablecoins"]!.push(token);
-    } else if (major.has(symbol)) {
-      categories["major"]!.push(token);
-    } else if (defi.has(symbol)) {
-      categories["defi"]!.push(token);
-    } else if (
-      symbol.includes("ALT") ||
-      symbol.includes("SHIB") ||
-      symbol.includes("DOGE")
-    ) {
-      categories["alt"]!.push(token);
-    } else {
-      categories["other"]!.push(token);
-    }
-  });
-
-  // Sort each category by value
-  Object.keys(categories).forEach(category => {
-    const categoryKey = category as keyof typeof categories;
-    categories[categoryKey] = categories[categoryKey]!.sort(
-      (a, b) => b.amount * b.price - a.amount * a.price
-    );
-  });
-
-  return categories;
 }
 
 // =============================================================================
