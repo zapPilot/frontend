@@ -3,11 +3,11 @@
 import { motion } from "framer-motion";
 import {
   Activity,
+  BarChart3,
   Calendar,
   PieChart,
-  TrendingUp,
-  BarChart3,
   Target,
+  TrendingUp,
 } from "lucide-react";
 import {
   memo,
@@ -18,12 +18,12 @@ import {
   type MouseEvent,
 } from "react";
 import { useUser } from "../contexts/UserContext";
+import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
+import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import { useRollingSharpe } from "../hooks/useRollingSharpe";
 import { useRollingVolatility } from "../hooks/useRollingVolatility";
-import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
 import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
-import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -36,6 +36,120 @@ import {
 } from "../lib/portfolio-analytics";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { GlassCard } from "./ui";
+
+interface AllocationTimeseriesInputPoint {
+  date: string;
+  category?: string;
+  protocol?: string;
+  percentage?: number;
+  percentage_of_portfolio?: number;
+  category_value?: number;
+  total_value?: number;
+}
+
+export function buildAllocationHistory(
+  rawPoints: AllocationTimeseriesInputPoint[],
+  fallbackDays: number
+): AssetAllocationPoint[] {
+  if (!rawPoints || rawPoints.length === 0) {
+    const days = Math.max(0, fallbackDays);
+    const data: AssetAllocationPoint[] = [];
+
+    for (let i = days; i >= 0; i -= 7) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+
+      const progress = days === 0 ? 0 : (days - i) / days;
+      data.push({
+        date: date.toISOString().split("T")[0]!,
+        btc: 35 + Math.sin(progress * Math.PI) * 5,
+        eth: 25 + Math.cos(progress * Math.PI) * 3,
+        stablecoin: 20 + progress * 5,
+        defi: 15 - progress * 3,
+        altcoin: 5 - Math.sin(progress * Math.PI * 2) * 2,
+      });
+    }
+
+    return data;
+  }
+
+  const allocationByDate = rawPoints.reduce(
+    (acc, point) => {
+      const dateKey = point.date;
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          btc: 0,
+          eth: 0,
+          stablecoin: 0,
+          defi: 0,
+          altcoin: 0,
+        };
+      }
+
+      const dayData = acc[dateKey]!;
+      const categoryKey = (point.category ?? point.protocol ?? "")
+        .toString()
+        .toLowerCase();
+
+      const percentageValue = Number(
+        point.percentage_of_portfolio ?? point.percentage ?? 0
+      );
+
+      const categoryValue = Number(point.category_value ?? 0);
+      const totalValue = Number(point.total_value ?? 0);
+
+      const computedShare =
+        !Number.isNaN(percentageValue) && percentageValue !== 0
+          ? percentageValue
+          : totalValue > 0 && !Number.isNaN(categoryValue)
+            ? (categoryValue / totalValue) * 100
+            : 0;
+
+      if (Number.isNaN(computedShare) || computedShare === 0) {
+        return acc;
+      }
+
+      if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
+        dayData.btc += computedShare;
+      } else if (
+        categoryKey.includes("eth") ||
+        categoryKey.includes("ethereum")
+      ) {
+        dayData.eth += computedShare;
+      } else if (categoryKey.includes("stable")) {
+        dayData.stablecoin += computedShare;
+      } else if (categoryKey.includes("defi")) {
+        dayData.defi += computedShare;
+      } else {
+        dayData.altcoin += computedShare;
+      }
+
+      return acc;
+    },
+    {} as Record<string, AssetAllocationPoint>
+  );
+
+  return Object.values(allocationByDate)
+    .map(point => {
+      const total =
+        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+
+      if (total <= 0) {
+        return point;
+      }
+
+      return {
+        ...point,
+        btc: (point.btc / total) * 100,
+        eth: (point.eth / total) * 100,
+        stablecoin: (point.stablecoin / total) * 100,
+        defi: (point.defi / total) * 100,
+        altcoin: (point.altcoin / total) * 100,
+      };
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
 
 export interface PortfolioChartProps {
   userId?: string | undefined;
@@ -67,41 +181,45 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   // Resolve which userId to use: provided userId or fallback to context
   const resolvedUserId = userId || userInfo?.userId;
 
+  const selectedDays =
+    CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
+  const fallbackDays = Math.min(selectedDays, 90);
+
   // Fetch real portfolio trends data
   const { data: apiPortfolioHistory } = usePortfolioTrends({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   // Fetch Phase 2 analytics data
   const { data: rollingSharpeData } = useRollingSharpe({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: rollingVolatilityData } = useRollingVolatility({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: enhancedDrawdownData } = useEnhancedDrawdown({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: underwaterRecoveryData } = useUnderwaterRecovery({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: allocationTimeseriesData } = useAllocationTimeseries({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
   // Portfolio history with fallback logic
@@ -109,126 +227,14 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     return apiPortfolioHistory;
   }, [apiPortfolioHistory]);
 
-  const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
-    const rawPoints = allocationTimeseriesData?.allocation_data ?? [];
-
-    if (rawPoints.length === 0) {
-      // Fallback to mock data if no real data available
-      const days = Math.min(
-        CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
-        90
-      );
-      const data: AssetAllocationPoint[] = [];
-
-      for (let i = days; i >= 0; i -= 7) {
-        // Weekly snapshots
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-
-        // Simulate gradual shifts in allocation
-        const progress = days === 0 ? 0 : (days - i) / days;
-        data.push({
-          date: date.toISOString().split("T")[0]!,
-          btc: 35 + Math.sin(progress * Math.PI) * 5,
-          eth: 25 + Math.cos(progress * Math.PI) * 3,
-          stablecoin: 20 + progress * 5,
-          defi: 15 - progress * 3,
-          altcoin: 5 - Math.sin(progress * Math.PI * 2) * 2,
-        });
-      }
-
-      return data;
-    }
-
-    const allocationByDate = rawPoints.reduce(
-      (acc, point) => {
-        const dateKey = point.date;
-        if (!acc[dateKey]) {
-          acc[dateKey] = {
-            date: dateKey,
-            btc: 0,
-            eth: 0,
-            stablecoin: 0,
-            defi: 0,
-            altcoin: 0,
-          };
-        }
-
-        const dayData = acc[dateKey]!;
-        const categoryKey = (
-          (point as { category?: string }).category ||
-          (point as { protocol?: string }).protocol ||
-          ""
-        )
-          .toString()
-          .toLowerCase();
-
-        const percentageValue = Number(
-          (point as { percentage_of_portfolio?: number })
-            .percentage_of_portfolio ??
-            (point as { percentage?: number }).percentage ??
-            0
-        );
-
-        const categoryValue = Number(
-          (point as { category_value?: number }).category_value ?? 0
-        );
-        const totalValue = Number(
-          (point as { total_value?: number }).total_value ?? 0
-        );
-
-        const computedShare =
-          !Number.isNaN(percentageValue) && percentageValue !== 0
-            ? percentageValue
-            : totalValue > 0 && !Number.isNaN(categoryValue)
-              ? (categoryValue / totalValue) * 100
-              : 0;
-
-        if (Number.isNaN(computedShare) || computedShare === 0) {
-          return acc;
-        }
-
-        if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
-          dayData.btc += computedShare;
-        } else if (
-          categoryKey.includes("eth") ||
-          categoryKey.includes("ethereum")
-        ) {
-          dayData.eth += computedShare;
-        } else if (categoryKey.includes("stable")) {
-          dayData.stablecoin += computedShare;
-        } else if (categoryKey.includes("defi")) {
-          dayData.defi += computedShare;
-        } else {
-          dayData.altcoin += computedShare;
-        }
-
-        return acc;
-      },
-      {} as Record<string, AssetAllocationPoint>
-    );
-
-    return Object.values(allocationByDate)
-      .map(point => {
-        const total =
-          point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
-
-        if (total <= 0) {
-          return point;
-        }
-
-        // Normalize to ensure stacked chart sums to 100%
-        return {
-          ...point,
-          btc: (point.btc / total) * 100,
-          eth: (point.eth / total) * 100,
-          stablecoin: (point.stablecoin / total) * 100,
-          defi: (point.defi / total) * 100,
-          altcoin: (point.altcoin / total) * 100,
-        };
-      })
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [allocationTimeseriesData, selectedPeriod]);
+  const allocationHistory: AssetAllocationPoint[] = useMemo(
+    () =>
+      buildAllocationHistory(
+        allocationTimeseriesData?.allocation_data ?? [],
+        fallbackDays
+      ),
+    [allocationTimeseriesData, fallbackDays]
+  );
 
   const currentValue =
     portfolioHistory[portfolioHistory.length - 1]?.value || 0;
@@ -1088,27 +1094,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
         {/* Chart Summary */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {selectedChart === "performance" && (
-            <>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Best Day</div>
-                <div className="text-lg font-bold text-green-400">+5.2%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Worst Day</div>
-                <div className="text-lg font-bold text-red-400">-3.8%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Avg Daily</div>
-                <div className="text-lg font-bold text-gray-300">+0.12%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Win Rate</div>
-                <div className="text-lg font-bold text-blue-400">64.2%</div>
-              </div>
-            </>
-          )}
-
           {selectedChart === "sharpe" && (
             <>
               <div className="text-center">
@@ -1225,27 +1210,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                     ? "Underwater"
                     : "Above Water"}
                 </div>
-              </div>
-            </>
-          )}
-
-          {(selectedChart === "allocation" || selectedChart === "drawdown") && (
-            <>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Best Day</div>
-                <div className="text-lg font-bold text-green-400">+5.2%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Worst Day</div>
-                <div className="text-lg font-bold text-red-400">-3.8%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Avg Daily</div>
-                <div className="text-lg font-bold text-gray-300">+0.12%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Win Rate</div>
-                <div className="text-lg font-bold text-blue-400">64.2%</div>
               </div>
             </>
           )}
