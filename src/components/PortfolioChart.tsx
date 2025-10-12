@@ -110,10 +110,9 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   }, [apiPortfolioHistory]);
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
-    if (
-      !allocationTimeseriesData?.allocation_data ||
-      allocationTimeseriesData.allocation_data.length === 0
-    ) {
+    const rawPoints = allocationTimeseriesData?.allocation_data ?? [];
+
+    if (rawPoints.length === 0) {
       // Fallback to mock data if no real data available
       const days = Math.min(
         CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
@@ -127,7 +126,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         date.setDate(date.getDate() - i);
 
         // Simulate gradual shifts in allocation
-        const progress = (days - i) / days;
+        const progress = days === 0 ? 0 : (days - i) / days;
         data.push({
           date: date.toISOString().split("T")[0]!,
           btc: 35 + Math.sin(progress * Math.PI) * 5,
@@ -141,12 +140,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       return data;
     }
 
-    // Transform real allocation data to AssetAllocationPoint format
-    const allocationByDate = allocationTimeseriesData.allocation_data.reduce(
+    const allocationByDate = rawPoints.reduce(
       (acc, point) => {
-        if (!acc[point.date]) {
-          acc[point.date] = {
-            date: point.date,
+        const dateKey = point.date;
+        if (!acc[dateKey]) {
+          acc[dateKey] = {
+            date: dateKey,
             btc: 0,
             eth: 0,
             stablecoin: 0,
@@ -155,32 +154,53 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           };
         }
 
-        const protocol = (point.protocol || "").toLowerCase();
-        const dayData = acc[point.date]!; // Safe because we just ensured it exists above
-        const allocationShare = Number(point.percentage_of_portfolio ?? 0);
+        const dayData = acc[dateKey]!;
+        const categoryKey = (
+          (point as { category?: string }).category ||
+          (point as { protocol?: string }).protocol ||
+          ""
+        )
+          .toString()
+          .toLowerCase();
 
-        if (Number.isNaN(allocationShare)) {
+        const percentageValue = Number(
+          (point as { percentage_of_portfolio?: number })
+            .percentage_of_portfolio ??
+            (point as { percentage?: number }).percentage ??
+            0
+        );
+
+        const categoryValue = Number(
+          (point as { category_value?: number }).category_value ?? 0
+        );
+        const totalValue = Number(
+          (point as { total_value?: number }).total_value ?? 0
+        );
+
+        const computedShare =
+          !Number.isNaN(percentageValue) && percentageValue !== 0
+            ? percentageValue
+            : totalValue > 0 && !Number.isNaN(categoryValue)
+              ? (categoryValue / totalValue) * 100
+              : 0;
+
+        if (Number.isNaN(computedShare) || computedShare === 0) {
           return acc;
         }
 
-        if (protocol.includes("bitcoin") || protocol.includes("btc")) {
-          dayData.btc += allocationShare;
-        } else if (protocol.includes("ethereum") || protocol.includes("eth")) {
-          dayData.eth += allocationShare;
+        if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
+          dayData.btc += computedShare;
         } else if (
-          protocol.includes("usdc") ||
-          protocol.includes("usdt") ||
-          protocol.includes("dai")
+          categoryKey.includes("eth") ||
+          categoryKey.includes("ethereum")
         ) {
-          dayData.stablecoin += allocationShare;
-        } else if (
-          protocol.includes("uniswap") ||
-          protocol.includes("aave") ||
-          protocol.includes("compound")
-        ) {
-          dayData.defi += allocationShare;
+          dayData.eth += computedShare;
+        } else if (categoryKey.includes("stable")) {
+          dayData.stablecoin += computedShare;
+        } else if (categoryKey.includes("defi")) {
+          dayData.defi += computedShare;
         } else {
-          dayData.altcoin += allocationShare;
+          dayData.altcoin += computedShare;
         }
 
         return acc;
@@ -188,9 +208,26 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       {} as Record<string, AssetAllocationPoint>
     );
 
-    return Object.values(allocationByDate).sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    return Object.values(allocationByDate)
+      .map(point => {
+        const total =
+          point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+
+        if (total <= 0) {
+          return point;
+        }
+
+        // Normalize to ensure stacked chart sums to 100%
+        return {
+          ...point,
+          btc: (point.btc / total) * 100,
+          eth: (point.eth / total) * 100,
+          stablecoin: (point.stablecoin / total) * 100,
+          defi: (point.defi / total) * 100,
+          altcoin: (point.altcoin / total) * 100,
+        };
+      })
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [allocationTimeseriesData, selectedPeriod]);
 
   const currentValue =

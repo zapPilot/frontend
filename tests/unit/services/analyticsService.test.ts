@@ -105,7 +105,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=100`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -131,7 +131,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 60);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=60&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=60&limit=100`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -157,7 +157,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 30, 200);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=30&limit=200`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=200`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -183,7 +183,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 90, 500);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=90&limit=500`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=90&limit=500`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -202,7 +202,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 1);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=1&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=1&limit=100`
         );
       });
 
@@ -218,7 +218,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 30, 1);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=30&limit=1`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=1`
         );
       });
 
@@ -234,7 +234,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 0);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${testUserId}?days=0&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=0&limit=100`
         );
       });
     });
@@ -253,7 +253,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(specialUserId);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/${specialUserId}?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/${specialUserId}?days=30&limit=100`
         );
       });
 
@@ -269,7 +269,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends("");
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio-trends/by-user/?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/?days=30&limit=100`
         );
       });
     });

@@ -238,7 +238,7 @@ export const getPortfolioTrends = async (
     limit: limit.toString(),
   });
   return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
-    `/api/v1/portfolio-trends/by-user/${userId}?${params}`
+    `/api/v1/portfolio/trends/by-user/${userId}?${params}`
   );
 };
 
