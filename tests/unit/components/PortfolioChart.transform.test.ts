@@ -29,7 +29,7 @@ describe("buildAllocationHistory", () => {
       },
     ];
 
-    const result = buildAllocationHistory(rawPoints, 90);
+    const result = buildAllocationHistory(rawPoints);
 
     expect(result).toHaveLength(1);
     const [point] = result;
@@ -60,7 +60,7 @@ describe("buildAllocationHistory", () => {
       },
     ];
 
-    const result = buildAllocationHistory(rawPoints, 90);
+    const result = buildAllocationHistory(rawPoints);
 
     expect(result).toHaveLength(1);
     const [point] = result;
@@ -72,15 +72,9 @@ describe("buildAllocationHistory", () => {
     );
   });
 
-  it("falls back to generated data when no API points are available", () => {
-    const result = buildAllocationHistory([], 0);
+  it("returns empty allocation history when no API points are available", () => {
+    const result = buildAllocationHistory([]);
 
-    expect(result).toHaveLength(1);
-    const [point] = result;
-    expect(point.btc).toBeCloseTo(35, CLOSE_PRECISION);
-    expect(point.eth).toBeCloseTo(28, CLOSE_PRECISION);
-    expect(point.stablecoin).toBeCloseTo(20, CLOSE_PRECISION);
-    expect(point.defi).toBeCloseTo(15, CLOSE_PRECISION);
-    expect(point.altcoin).toBeCloseTo(5, CLOSE_PRECISION);
+    expect(result).toHaveLength(0);
   });
 });
