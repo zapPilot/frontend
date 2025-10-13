@@ -7,6 +7,7 @@ import { createWallet, Wallet } from "thirdweb/wallets";
 
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
+import { formatAddress } from "@/lib/formatters";
 
 const WALLETS = [
   createWallet("com.ambire"),
@@ -21,11 +22,7 @@ const AddressDisplay = memo(function AddressDisplay({
   address?: string;
 }) {
   if (!address) return <span className="font-mono inline">No Address</span>;
-  return (
-    <span className="font-mono inline">
-      {`${address.slice(0, 5)}...${address.slice(-4)}`}
-    </span>
-  );
+  return <span className="font-mono inline">{formatAddress(address)}</span>;
 });
 
 const DetailsButton = memo(function DetailsButton({

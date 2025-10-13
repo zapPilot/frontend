@@ -2,7 +2,10 @@ import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError } from "@/services/userService";
 import { useCallback, useEffect, useState } from "react";
-import { WalletService } from "../services/WalletService";
+import {
+  updateUserEmailSubscription,
+  unsubscribeUserEmail,
+} from "../services/WalletService";
 import type { OperationState } from "../types/wallet.types";
 import { validateEmail } from "../utils/validation";
 interface UseEmailSubscriptionParams {
@@ -66,7 +69,7 @@ export const useEmailSubscription = ({
     setSubscriptionOperation({ isLoading: true, error: null });
 
     try {
-      await WalletService.updateUserEmailSubscription(realUserId, email);
+      await updateUserEmailSubscription(realUserId, email);
 
       setSubscriptionOperation({ isLoading: false, error: null });
       setSubscribedEmail(email);
@@ -100,7 +103,7 @@ export const useEmailSubscription = ({
 
     try {
       // Use dedicated endpoint to remove email
-      await WalletService.unsubscribeUserEmail(realUserId);
+      await unsubscribeUserEmail(realUserId);
 
       setSubscriptionOperation({ isLoading: false, error: null });
       setSubscribedEmail(null);

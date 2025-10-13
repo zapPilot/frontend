@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { Z_INDEX } from "@/constants/design-system";
 import { GlassCard, GradientButton, LoadingSpinner } from "@/components/ui";
-import { WalletService } from "../services/WalletService";
+import { formatAddress } from "@/lib/formatters";
 import type { EditingWallet, WalletOperations } from "../types/wallet.types";
 import type { WalletData } from "@/services/userService";
 
@@ -78,7 +78,7 @@ export const EditWalletModal = ({
 
           <p className="text-sm text-gray-400 mb-4">
             Update the display name for{" "}
-            {wallet ? WalletService.formatAddress(wallet.address) : ""}
+            {wallet ? formatAddress(wallet.address) : ""}
           </p>
 
           <div className="space-y-4">

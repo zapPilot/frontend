@@ -125,36 +125,6 @@ export function transformForDisplay(
 }
 
 /**
- * Format borrowing amount for display
- */
-export function formatBorrowingAmount(amount: number): string {
-  return `-$${Math.abs(amount).toLocaleString()}`;
-}
-
-/**
- * Get borrowing percentage relative to total portfolio
- */
-export function getBorrowingPercentage(
-  borrowingAmount: number,
-  totalPortfolioValue: number
-): number {
-  if (totalPortfolioValue <= 0) return 0;
-  return (Math.abs(borrowingAmount) / totalPortfolioValue) * 100;
-}
-
-/**
- * Check if portfolio has significant borrowing (threshold-based)
- */
-export function hasSignificantBorrowing(
-  totalBorrowing: number,
-  totalAssets: number
-): boolean {
-  const BORROWING_THRESHOLD = 0.01; // 1% threshold
-  if (totalAssets <= 0) return false;
-  return totalBorrowing / totalAssets > BORROWING_THRESHOLD;
-}
-
-/**
  * Separate individual positions into assets and borrowing at the position level
  * This extracts negative AssetDetail positions as individual borrowing items
  */
@@ -215,39 +185,6 @@ export function separatePositionsAndBorrowing(
     totalBorrowing,
     netValue: totalAssets - totalBorrowing,
     hasBorrowing: borrowingPositions.length > 0,
-  };
-}
-
-/**
- * Transform position-level data for display with borrowing context
- */
-export function transformPositionsForDisplay(categories: AssetCategory[]): {
-  assetsPieData: PieChartData[];
-  assetsForDisplay: AssetCategory[];
-  borrowingPositions: AssetDetail[];
-  netValue: number;
-  totalBorrowing: number;
-  hasBorrowing: boolean;
-} {
-  const positionData = separatePositionsAndBorrowing(categories);
-
-  // Create pie chart data from asset categories only
-  const assetsPieData: PieChartData[] = positionData.assetsForDisplay.map(
-    category => ({
-      label: category.name,
-      value: category.totalValue,
-      percentage: category.percentage,
-      color: category.color,
-    })
-  );
-
-  return {
-    assetsPieData,
-    assetsForDisplay: positionData.assetsForDisplay,
-    borrowingPositions: positionData.borrowingPositions,
-    netValue: positionData.netValue,
-    totalBorrowing: positionData.totalBorrowing,
-    hasBorrowing: positionData.hasBorrowing,
   };
 }
 

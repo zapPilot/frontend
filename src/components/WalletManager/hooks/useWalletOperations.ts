@@ -3,8 +3,15 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError, type WalletData } from "@/services/userService";
-import { WalletService } from "../services/WalletService";
+import {
+  addWallet as addWalletToBundle,
+  loadWallets as fetchWallets,
+  removeWallet as removeWalletFromBundle,
+  updateWalletLabel as updateWalletLabelRequest,
+} from "../services/WalletService";
 import { validateNewWallet } from "../utils/validation";
+import { formatAddress } from "@/lib/formatters";
+import { copyTextToClipboard } from "@/utils/clipboard";
 import type {
   WalletOperations,
   NewWallet,
@@ -57,7 +64,7 @@ export const useWalletOperations = ({
       }
 
       try {
-        const loadedWallets = await WalletService.loadWallets(viewingUserId);
+        const loadedWallets = await fetchWallets(viewingUserId);
         setWallets(loadedWallets);
       } catch {
         // Handle silently - error state is managed by service response
@@ -103,7 +110,7 @@ export const useWalletOperations = ({
       }));
 
       try {
-        const response = await WalletService.removeWallet(realUserId, walletId);
+        const response = await removeWalletFromBundle(realUserId, walletId);
         if (response.success) {
           // Remove wallet from local state immediately (optimistic update)
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
@@ -180,7 +187,7 @@ export const useWalletOperations = ({
         setEditingWallet(null);
 
         // Call the API to update wallet label
-        const response = await WalletService.updateWalletLabel(
+        const response = await updateWalletLabelRequest(
           realUserId,
           wallet.address,
           newLabel
@@ -251,7 +258,7 @@ export const useWalletOperations = ({
     }));
 
     try {
-      const response = await WalletService.addWallet(
+      const response = await addWalletToBundle(
         realUserId,
         newWallet.address,
         newWallet.label
@@ -296,12 +303,12 @@ export const useWalletOperations = ({
   // Handle copy to clipboard
   const handleCopyAddress = useCallback(
     async (address: string) => {
-      const success = await WalletService.copyToClipboard(address);
+      const success = await copyTextToClipboard(address);
       if (success) {
         showToast({
           type: "success",
           title: "Address Copied",
-          message: `${WalletService.formatAddress(address)} copied to clipboard`,
+          message: `${formatAddress(address)} copied to clipboard`,
         });
       }
     },

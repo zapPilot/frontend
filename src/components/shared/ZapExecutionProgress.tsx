@@ -24,7 +24,7 @@ import {
   useUnifiedZapStream,
   type UnifiedZapStreamTransaction,
 } from "../../hooks/useUnifiedZapStream";
-import { formatCurrency } from "../../lib/formatters";
+import { formatCurrency, formatAddress } from "../../lib/formatters";
 import {
   type BaseModalProps,
   type ZapExecutionResult,
@@ -48,7 +48,7 @@ export interface ZapExecutionProgressProps
 type TransactionDispatchStatus = "idle" | "pending" | "success" | "error";
 
 const shortenHash = (hash: string) =>
-  hash.length <= 12 ? hash : `${hash.slice(0, 6)}…${hash.slice(-4)}`;
+  formatAddress(hash, { prefixLength: 6, suffixLength: 4 });
 
 /**
  * Maximum number of transactions per EIP-5792 bundle

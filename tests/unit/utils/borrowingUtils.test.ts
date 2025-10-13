@@ -1,13 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import {
-  formatBorrowingAmount,
-  getBorrowingPercentage,
-  hasSignificantBorrowing,
   separateAssetsAndBorrowing,
   separatePositionsAndBorrowing,
   transformForDisplay,
-  transformPositionsForDisplay,
   validatePieChartWeights,
 } from "../../../src/utils/borrowingUtils";
 
@@ -110,40 +106,6 @@ describe("borrowingUtils", () => {
       expect(result.netValue).toBe(0);
       expect(result.totalBorrowing).toBe(0);
       expect(result.hasBorrowing).toBe(false);
-    });
-  });
-
-  describe("formatBorrowingAmount", () => {
-    it("should format positive numbers with minus sign", () => {
-      expect(formatBorrowingAmount(1000)).toBe("-$1,000");
-    });
-
-    it("should format negative numbers with minus sign", () => {
-      expect(formatBorrowingAmount(-1000)).toBe("-$1,000");
-    });
-  });
-
-  describe("getBorrowingPercentage", () => {
-    it("should calculate borrowing percentage correctly", () => {
-      expect(getBorrowingPercentage(2000, 10000)).toBe(20);
-    });
-
-    it("should handle zero total value", () => {
-      expect(getBorrowingPercentage(1000, 0)).toBe(0);
-    });
-  });
-
-  describe("hasSignificantBorrowing", () => {
-    it("should return true for significant borrowing", () => {
-      expect(hasSignificantBorrowing(500, 10000)).toBe(true); // 5% > 1% threshold
-    });
-
-    it("should return false for insignificant borrowing", () => {
-      expect(hasSignificantBorrowing(50, 10000)).toBe(false); // 0.5% < 1% threshold
-    });
-
-    it("should handle zero assets", () => {
-      expect(hasSignificantBorrowing(1000, 0)).toBe(false);
     });
   });
 
@@ -300,42 +262,6 @@ describe("borrowingUtils", () => {
       const result = separatePositionsAndBorrowing(borrowingOnlyCategories);
       expect(result.assetsForDisplay).toHaveLength(0); // No categories with positive positions
       expect(result.borrowingPositions).toHaveLength(1); // One borrowed position
-    });
-  });
-
-  describe("transformPositionsForDisplay", () => {
-    it("should create proper position-level display data", () => {
-      const result = transformPositionsForDisplay(
-        mockCategoriesWithMixedPositions
-      );
-
-      expect(result.assetsPieData).toHaveLength(2); // Two categories with assets
-      expect(result.borrowingPositions).toHaveLength(1); // One borrowed position
-      expect(result.netValue).toBe(2500);
-      expect(result.totalBorrowing).toBe(2000);
-      expect(result.hasBorrowing).toBe(true);
-    });
-
-    it("should create pie chart data from asset categories only", () => {
-      const result = transformPositionsForDisplay(
-        mockCategoriesWithMixedPositions
-      );
-
-      const defiPieData = result.assetsPieData.find(
-        data => data.label === "DeFi"
-      );
-      expect(defiPieData?.value).toBe(3000); // Only positive positions
-      expect(defiPieData?.percentage).toBeCloseTo(66.67, 2); // Recalculated percentage
-    });
-
-    it("should handle empty portfolio", () => {
-      const result = transformPositionsForDisplay([]);
-
-      expect(result.assetsPieData).toHaveLength(0);
-      expect(result.borrowingPositions).toHaveLength(0);
-      expect(result.netValue).toBe(0);
-      expect(result.totalBorrowing).toBe(0);
-      expect(result.hasBorrowing).toBe(false);
     });
   });
 

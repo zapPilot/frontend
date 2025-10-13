@@ -27,7 +27,14 @@ export { useEmailSubscription } from "./hooks/useEmailSubscription";
 export { useDropdownMenu } from "./hooks/useDropdownMenu";
 
 // Services
-export { WalletService } from "./services/WalletService";
+export {
+  loadWallets,
+  addWallet,
+  removeWallet,
+  updateWalletLabel,
+  updateUserEmailSubscription,
+  unsubscribeUserEmail,
+} from "./services/WalletService";
 
 // Utils
 export {

@@ -3,6 +3,7 @@
  */
 
 import { logger } from "@/utils/logger";
+import { formatAddress } from "@/lib/formatters";
 
 export interface BundleUser {
   userId: string;
@@ -19,9 +20,17 @@ export interface BundleMetadata {
 
 const bundleLogger = logger.createContextLogger("BundleService");
 
-const generateDisplayName = (userId: string): string => {
-  if (userId.length <= 6) return userId;
-  return `${userId.slice(0, 6)}...${userId.slice(-4)}`;
+const resolveBaseUrl = (providedBaseUrl?: string): string => {
+  if (providedBaseUrl) {
+    return providedBaseUrl;
+  }
+
+  if (typeof window !== "undefined" && window.location?.origin) {
+    return window.location.origin;
+  }
+
+  const envBase = process.env["NEXT_PUBLIC_SITE_URL"]?.trim();
+  return envBase ?? "";
 };
 
 /**
@@ -35,7 +44,7 @@ export const getBundleUser = async (
     // For now, return basic user info based on userId
     return {
       userId,
-      displayName: generateDisplayName(userId),
+      displayName: formatAddress(userId),
     };
   } catch (error) {
     bundleLogger.error("Failed to fetch bundle user:", error);
@@ -46,10 +55,11 @@ export const getBundleUser = async (
 /**
  * Generate bundle URL for sharing
  */
-export const generateBundleUrl = (userId: string): string => {
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+export const generateBundleUrl = (userId: string, baseUrl?: string): string => {
+  const resolvedBaseUrl = resolveBaseUrl(baseUrl);
   const params = new URLSearchParams({ userId });
-  return `${baseUrl}/bundle?${params.toString()}`;
+  const path = `/bundle?${params.toString()}`;
+  return resolvedBaseUrl ? `${resolvedBaseUrl}${path}` : path;
 };
 
 /**

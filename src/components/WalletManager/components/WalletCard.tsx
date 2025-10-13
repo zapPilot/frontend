@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
 import { LoadingSpinner } from "@/components/ui";
-import { WalletService } from "../services/WalletService";
+import { formatAddress } from "@/lib/formatters";
 import { WalletActionMenu } from "./WalletActionMenu";
 import type { WalletData } from "@/services/userService";
 import type { WalletOperations } from "../types/wallet.types";
@@ -49,7 +49,7 @@ export const WalletCard = memo(
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-400">
               <code className="font-mono text-xs sm:text-sm truncate">
-                {WalletService.formatAddress(wallet.address)}
+                {formatAddress(wallet.address)}
               </code>
             </div>
           </div>

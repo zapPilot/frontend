@@ -61,6 +61,15 @@ export interface EthFormatOptions {
   };
 }
 
+export interface AddressFormatOptions {
+  /** Number of characters to keep from the start of the address */
+  prefixLength?: number;
+  /** Number of characters to keep from the end of the address */
+  suffixLength?: number;
+  /** Separator to use between the trimmed segments */
+  ellipsis?: string;
+}
+
 // =============================================================================
 // CURRENCY FORMATTING
 // =============================================================================
@@ -321,6 +330,38 @@ export function formatDuration(seconds: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
   return `${Math.floor(seconds / 86400)}d`;
+}
+
+// =============================================================================
+// ADDRESS & IDENTIFIER FORMATTING
+// =============================================================================
+
+/**
+ * Shorten wallet addresses or transaction hashes while preserving readability.
+ * Defaults to the common 0x123456...CDEF style but can be customised.
+ */
+export function formatAddress(
+  address?: string | null,
+  options: AddressFormatOptions = {}
+): string {
+  if (!address || typeof address !== "string") {
+    return "";
+  }
+
+  const normalized = address.trim();
+  if (normalized.length === 0) {
+    return "";
+  }
+
+  const { prefixLength = 6, suffixLength = 4, ellipsis = "..." } = options;
+
+  if (normalized.length <= prefixLength + suffixLength) {
+    return normalized;
+  }
+
+  return `${normalized.slice(0, prefixLength)}${ellipsis}${normalized.slice(
+    -suffixLength
+  )}`;
 }
 
 // =============================================================================
