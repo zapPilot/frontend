@@ -15,6 +15,16 @@ import type {
   UnderwaterHoverData,
   VolatilityHoverData,
 } from "../../types/chartHover";
+import {
+  getDrawdownSeverity,
+  getDrawdownSeverityColor,
+  getSharpeInterpretation,
+  getSharpeColor,
+  getVolatilityRiskLevel,
+  getVolatilityRiskColor,
+  calculateDailyVolatility,
+  getRecoveryStatusColor,
+} from "@/lib/chartHoverUtils";
 
 interface ChartTooltipProps {
   /** Current hover state or null */
@@ -23,109 +33,6 @@ interface ChartTooltipProps {
   chartWidth?: number;
   /** Chart height for positioning calculations */
   chartHeight?: number;
-}
-
-/**
- * Get severity badge color based on drawdown percentage
- */
-function getDrawdownSeverity(drawdown: number): {
-  label: string;
-  color: string;
-  bgColor: string;
-} {
-  const absDrawdown = Math.abs(drawdown);
-  if (absDrawdown < 5)
-    return {
-      label: "Minor",
-      color: "text-green-400",
-      bgColor: "bg-green-500/20",
-    };
-  if (absDrawdown < 10)
-    return {
-      label: "Moderate",
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-500/20",
-    };
-  if (absDrawdown < 20)
-    return {
-      label: "Significant",
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/20",
-    };
-  return { label: "Severe", color: "text-red-400", bgColor: "bg-red-500/20" };
-}
-
-/**
- * Get Sharpe ratio interpretation and color (5-level system)
- */
-function getSharpeInterpretation(sharpe: number): {
-  label: string;
-  color: string;
-  indicatorColor: string;
-} {
-  if (sharpe > 2.0)
-    return {
-      label: "Excellent",
-      color: "text-green-400",
-      indicatorColor: "#10b981",
-    };
-  if (sharpe > 1.0)
-    return { label: "Good", color: "text-lime-400", indicatorColor: "#84cc16" };
-  if (sharpe > 0.5)
-    return {
-      label: "Fair",
-      color: "text-yellow-400",
-      indicatorColor: "#eab308",
-    };
-  if (sharpe > 0)
-    return {
-      label: "Poor",
-      color: "text-orange-400",
-      indicatorColor: "#f97316",
-    };
-  return {
-    label: "Very Poor",
-    color: "text-red-400",
-    indicatorColor: "#ef4444",
-  };
-}
-
-/**
- * Get risk level assessment based on volatility
- */
-function getRiskLevel(volatility: number): {
-  label: string;
-  color: string;
-  bgColor: string;
-  isHighRisk: boolean;
-} {
-  if (volatility < 15)
-    return {
-      label: "Low",
-      color: "text-green-400",
-      bgColor: "bg-green-500/20",
-      isHighRisk: false,
-    };
-  if (volatility < 25)
-    return {
-      label: "Moderate",
-      color: "text-yellow-400",
-      bgColor: "bg-yellow-500/20",
-      isHighRisk: false,
-    };
-  if (volatility < 35)
-    return {
-      label: "High",
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/20",
-      isHighRisk: false,
-    };
-  return {
-    label: "Very High",
-    color: "text-red-400",
-    bgColor: "bg-red-500/20",
-    isHighRisk: true,
-  };
 }
 
 /**
@@ -191,7 +98,8 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
  * Render Drawdown chart tooltip content with severity badge
  */
 function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
-  const severity = getDrawdownSeverity(data.drawdown);
+  const severityLabel = getDrawdownSeverity(data.drawdown);
+  const severityColors = getDrawdownSeverityColor(severityLabel);
 
   return (
     <>
@@ -206,9 +114,9 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Severity</span>
           <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded ${severity.bgColor} ${severity.color}`}
+            className={`text-xs font-semibold px-2 py-0.5 rounded ${severityColors.bgColor} ${severityColors.color}`}
           >
-            {severity.label}
+            {severityLabel}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -231,6 +139,19 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
  */
 function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
   const interpretation = getSharpeInterpretation(data.sharpe);
+  const indicatorColor = getSharpeColor(data.sharpe);
+
+  // Map interpretation to text color class
+  const textColorClass =
+    interpretation === "Excellent"
+      ? "text-green-400"
+      : interpretation === "Good"
+        ? "text-lime-400"
+        : interpretation === "Fair"
+          ? "text-yellow-400"
+          : interpretation === "Poor"
+            ? "text-orange-400"
+            : "text-red-400";
 
   return (
     <>
@@ -240,7 +161,7 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
           <div className="flex items-center gap-2">
             <div
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: interpretation.indicatorColor }}
+              style={{ backgroundColor: indicatorColor }}
             />
             <span className="text-xs text-gray-300">Sharpe Ratio</span>
           </div>
@@ -250,8 +171,8 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Rating</span>
-          <span className={`text-sm font-semibold ${interpretation.color}`}>
-            {interpretation.label}
+          <span className={`text-sm font-semibold ${textColorClass}`}>
+            {interpretation}
           </span>
         </div>
       </div>
@@ -263,8 +184,10 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
  * Render Volatility chart tooltip content with risk badge and values
  */
 function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
-  const riskLevel = getRiskLevel(data.volatility);
-  const dailyVol = data.volatility / Math.sqrt(252); // Approximate daily from annualized
+  const riskLevel = getVolatilityRiskLevel(data.volatility);
+  const riskColors = getVolatilityRiskColor(riskLevel);
+  const dailyVol = calculateDailyVolatility(data.volatility);
+  const isHighRisk = data.volatility >= 25;
 
   return (
     <>
@@ -285,12 +208,12 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Risk Level</span>
           <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded ${riskLevel.bgColor} ${riskLevel.color}`}
+            className={`text-xs font-semibold px-2 py-0.5 rounded ${riskColors.bgColor} ${riskColors.color}`}
           >
-            {riskLevel.label}
+            {riskLevel}
           </span>
         </div>
-        {riskLevel.isHighRisk && (
+        {isHighRisk && (
           <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-gray-700">
             <span className="text-xs text-red-400">
               ⚠ High volatility warning
@@ -306,12 +229,7 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
  * Render Underwater chart tooltip content with recovery flag
  */
 function UnderwaterTooltipContent({ data }: { data: UnderwaterHoverData }) {
-  const statusColor =
-    data.recoveryStatus === "Recovered"
-      ? "text-green-400"
-      : data.recoveryStatus === "Near Peak"
-        ? "text-yellow-400"
-        : "text-red-400";
+  const statusColors = getRecoveryStatusColor(data.recoveryStatus);
 
   // Calculate approximate days underwater (assuming daily data)
   const daysUnderwater = Math.abs(data.underwater) > 0.5 ? "Ongoing" : "0";
@@ -334,7 +252,7 @@ function UnderwaterTooltipContent({ data }: { data: UnderwaterHoverData }) {
         </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Status</span>
-          <span className={`text-sm font-semibold ${statusColor}`}>
+          <span className={`text-sm font-semibold ${statusColors.color}`}>
             {data.recoveryStatus}
           </span>
         </div>

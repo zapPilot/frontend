@@ -7,6 +7,7 @@
 
 import { motion } from "framer-motion";
 import type { ChartHoverState } from "../../types/chartHover";
+import { getSharpeColor } from "@/lib/chartHoverUtils";
 
 interface ChartIndicatorProps {
   /** Current hover state or null */
@@ -39,17 +40,6 @@ function getIndicatorColor(chartType: string): string {
     default:
       return "#8b5cf6"; // Purple fallback
   }
-}
-
-/**
- * Get dynamic Sharpe color based on value (5-level system)
- */
-function getSharpeColor(sharpe: number): string {
-  if (sharpe > 2.0) return "#10b981"; // Excellent - Green
-  if (sharpe > 1.0) return "#84cc16"; // Good - Lime
-  if (sharpe > 0.5) return "#eab308"; // Fair - Yellow
-  if (sharpe > 0) return "#f97316"; // Poor - Orange
-  return "#ef4444"; // Very Poor - Red
 }
 
 /**

@@ -28,9 +28,16 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
+import {
+  getSharpeInterpretation,
+  getVolatilityRiskLevel,
+  getRecoveryStatus,
+  findPeakDate,
+  calculateDaysSincePeak,
+} from "../lib/chartHoverUtils";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { ChartIndicator, ChartTooltip } from "./charts";
-import { GlassCard } from "./ui";
+import { GlassCard, Skeleton, ButtonSkeleton } from "./ui";
 
 interface AllocationTimeseriesInputPoint {
   date: string;
@@ -131,6 +138,72 @@ export interface PortfolioChartProps {
   userId?: string | undefined;
 }
 
+/**
+ * Loading skeleton for PortfolioChart
+ * Matches the layout of the actual chart component
+ */
+function PortfolioChartSkeleton() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.1 }}
+    >
+      <GlassCard className="p-6">
+        {/* Header skeleton */}
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
+          <div className="mb-4 lg:mb-0">
+            <Skeleton variant="text" width={250} height={28} className="mb-2" />
+            <Skeleton variant="text" width={200} height={20} />
+          </div>
+
+          {/* Chart type selector skeleton */}
+          <div className="flex flex-wrap gap-2 mb-4 lg:mb-0">
+            {[...Array(6)].map((_, i) => (
+              <ButtonSkeleton key={i} width={120} height={40} />
+            ))}
+          </div>
+        </div>
+
+        {/* Period selector skeleton */}
+        <div className="flex space-x-2 mb-6">
+          {[...Array(6)].map((_, i) => (
+            <ButtonSkeleton key={i} width={60} height={32} />
+          ))}
+        </div>
+
+        {/* Chart area skeleton */}
+        <Skeleton
+          variant="rectangular"
+          width="100%"
+          height={320}
+          className="mb-6"
+        />
+
+        {/* Summary metrics skeleton */}
+        <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="text-center">
+              <Skeleton
+                variant="text"
+                width="60%"
+                height={16}
+                className="mx-auto mb-1"
+              />
+              <Skeleton
+                variant="text"
+                width="80%"
+                height={24}
+                className="mx-auto"
+              />
+            </div>
+          ))}
+        </div>
+      </GlassCard>
+    </motion.div>
+  );
+}
+
 const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
   const [selectedChart, setSelectedChart] = useState<
@@ -152,42 +225,57 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
 
   // Fetch real portfolio trends data
-  const { data: apiPortfolioHistory } = usePortfolioTrends({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: apiPortfolioHistory, loading: portfolioLoading } =
+    usePortfolioTrends({
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    });
 
   // Fetch Phase 2 analytics data
-  const { data: rollingSharpeData } = useRollingSharpe({
+  const { data: rollingSharpeData, loading: sharpeLoading } = useRollingSharpe({
     userId: resolvedUserId,
     days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
-  const { data: rollingVolatilityData } = useRollingVolatility({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: rollingVolatilityData, loading: volatilityLoading } =
+    useRollingVolatility({
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    });
 
-  const { data: enhancedDrawdownData } = useEnhancedDrawdown({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: enhancedDrawdownData, loading: drawdownLoading } =
+    useEnhancedDrawdown({
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    });
 
-  const { data: underwaterRecoveryData } = useUnderwaterRecovery({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: underwaterRecoveryData, loading: underwaterLoading } =
+    useUnderwaterRecovery({
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    });
 
-  const { data: allocationTimeseriesData } = useAllocationTimeseries({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: allocationTimeseriesData, loading: allocationLoading } =
+    useAllocationTimeseries({
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    });
+
+  // Combine all loading states
+  const isLoadingData =
+    portfolioLoading ||
+    sharpeLoading ||
+    volatilityLoading ||
+    drawdownLoading ||
+    underwaterLoading ||
+    allocationLoading;
+
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     return apiPortfolioHistory;
@@ -462,12 +550,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     maxValue: 0,
     getYValue: point => point.drawdown_pct,
     buildHoverData: (point, x, y, index) => {
-      // Find peak value before this point
-      const priorData = drawdownHistory.slice(0, index + 1);
-      const peak = Math.max(...priorData.map(p => p.portfolio_value || 0));
-      const peakIndex = priorData.findIndex(p => p.portfolio_value === peak);
-      const peakDate = priorData[peakIndex]?.date || point.date;
-
       return {
         chartType: "drawdown" as const,
         x,
@@ -478,11 +560,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           year: "numeric",
         }),
         drawdown: point.drawdown_pct,
-        peakDate: new Date(peakDate).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        }),
-        distanceFromPeak: index - peakIndex,
+        peakDate: findPeakDate(drawdownHistory, index),
+        distanceFromPeak: calculateDaysSincePeak(drawdownHistory, index),
       };
     },
   });
@@ -498,12 +577,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     getYValue: point => point.rolling_sharpe_ratio,
     buildHoverData: (point, x, y) => {
       const sharpe = point.rolling_sharpe_ratio || 0;
-      let interpretation: "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor";
-      if (sharpe > 2.0) interpretation = "Excellent";
-      else if (sharpe > 1.0) interpretation = "Good";
-      else if (sharpe > 0.5) interpretation = "Fair";
-      else if (sharpe > 0) interpretation = "Poor";
-      else interpretation = "Very Poor";
 
       return {
         chartType: "sharpe" as const,
@@ -515,7 +588,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           year: "numeric",
         }),
         sharpe,
-        interpretation,
+        interpretation: getSharpeInterpretation(sharpe),
       };
     },
   });
@@ -531,11 +604,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     getYValue: point => point.annualized_volatility_pct,
     buildHoverData: (point, x, y) => {
       const vol = point.annualized_volatility_pct || 0;
-      let riskLevel: "Low" | "Moderate" | "High" | "Very High";
-      if (vol < 15) riskLevel = "Low";
-      else if (vol < 25) riskLevel = "Moderate";
-      else if (vol < 35) riskLevel = "High";
-      else riskLevel = "Very High";
 
       return {
         chartType: "volatility" as const,
@@ -547,7 +615,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           year: "numeric",
         }),
         volatility: vol,
-        riskLevel,
+        riskLevel: getVolatilityRiskLevel(vol),
       };
     },
   });
@@ -563,10 +631,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     getYValue: point => point.underwater_pct,
     buildHoverData: (point, x, y) => {
       const isRecovery = point.recovery_point || false;
-      let recoveryStatus: "Recovered" | "Underwater" | "Near Peak";
-      if (point.underwater_pct === 0) recoveryStatus = "Recovered";
-      else if (point.underwater_pct > -0.5) recoveryStatus = "Near Peak";
-      else recoveryStatus = "Underwater";
 
       return {
         chartType: "underwater" as const,
@@ -579,7 +643,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         }),
         underwater: point.underwater_pct,
         isRecoveryPoint: isRecovery,
-        recoveryStatus,
+        recoveryStatus: getRecoveryStatus(point.underwater_pct, isRecovery),
       };
     },
   });
@@ -1232,6 +1296,11 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       underwaterHover.handleMouseLeave,
     ]
   );
+
+  // Show skeleton while data is loading
+  if (isLoadingData) {
+    return <PortfolioChartSkeleton />;
+  }
 
   return (
     <motion.div
