@@ -541,14 +541,14 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   });
 
   // Drawdown chart hover
-  const drawdownHover = useChartHover(drawdownHistory, {
+  const drawdownHover = useChartHover(drawdownData, {
     chartType: "drawdown",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: -20,
     maxValue: 0,
-    getYValue: point => point.drawdown_pct,
+    getYValue: point => point.drawdown,
     buildHoverData: (point, x, y, index) => {
       return {
         chartType: "drawdown" as const,
@@ -559,7 +559,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           day: "numeric",
           year: "numeric",
         }),
-        drawdown: point.drawdown_pct,
+        drawdown: point.drawdown,
         peakDate: findPeakDate(drawdownHistory, index),
         distanceFromPeak: calculateDaysSincePeak(drawdownHistory, index),
       };
