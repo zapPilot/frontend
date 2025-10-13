@@ -633,7 +633,7 @@ describe("useChain Hook", () => {
 
       const chains = result.current.getSupportedChains();
 
-      chains.forEach((chain) => {
+      chains.forEach(chain => {
         const info = result.current.getChainInfo(chain.id);
         expect(info).toBeDefined();
         expect(info?.id).toBe(chain.id);
