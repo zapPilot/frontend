@@ -764,6 +764,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       performanceHover.hoveredPoint,
       performanceHover.handleMouseMove,
       performanceHover.handleMouseLeave,
+      performanceHover.handleTouchMove,
+      performanceHover.handleTouchEnd,
       portfolioPath,
       benchmarkPath,
       portfolioAreaPath,
@@ -880,6 +882,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     allocationHover.hoveredPoint,
     allocationHover.handleMouseMove,
     allocationHover.handleMouseLeave,
+    allocationHover.handleTouchMove,
+    allocationHover.handleTouchEnd,
   ]);
 
   const renderDrawdownChart = useMemo(
@@ -971,6 +975,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       drawdownHover.hoveredPoint,
       drawdownHover.handleMouseMove,
       drawdownHover.handleMouseLeave,
+      drawdownHover.handleTouchMove,
+      drawdownHover.handleTouchEnd,
     ]
   );
 
@@ -1091,6 +1097,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       sharpeHover.hoveredPoint,
       sharpeHover.handleMouseMove,
       sharpeHover.handleMouseLeave,
+      sharpeHover.handleTouchMove,
+      sharpeHover.handleTouchEnd,
     ]
   );
 
@@ -1188,6 +1196,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       volatilityHover.hoveredPoint,
       volatilityHover.handleMouseMove,
       volatilityHover.handleMouseLeave,
+      volatilityHover.handleTouchMove,
+      volatilityHover.handleTouchEnd,
     ]
   );
 
@@ -1318,6 +1328,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       underwaterHover.hoveredPoint,
       underwaterHover.handleMouseMove,
       underwaterHover.handleMouseLeave,
+      underwaterHover.handleTouchMove,
+      underwaterHover.handleTouchEnd,
     ]
   );
 

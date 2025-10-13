@@ -17,8 +17,10 @@ const mockCancelRaf = vi.fn();
 
 describe("useChartHover", () => {
   beforeEach(() => {
-    global.requestAnimationFrame = mockRaf as unknown as typeof requestAnimationFrame;
-    global.cancelAnimationFrame = mockCancelRaf as unknown as typeof cancelAnimationFrame;
+    global.requestAnimationFrame =
+      mockRaf as unknown as typeof requestAnimationFrame;
+    global.cancelAnimationFrame =
+      mockCancelRaf as unknown as typeof cancelAnimationFrame;
     mockRaf.mockClear();
     mockCancelRaf.mockClear();
   });
@@ -43,8 +45,13 @@ describe("useChartHover", () => {
     chartPadding: 10,
     minValue: 10000,
     maxValue: 13000,
-    getYValue: (point: typeof sampleData[0]) => point.value,
-    buildHoverData: (point: typeof sampleData[0], x: number, y: number, index: number): ChartHoverState => ({
+    getYValue: (point: (typeof sampleData)[0]) => point.value,
+    buildHoverData: (
+      point: (typeof sampleData)[0],
+      x: number,
+      y: number,
+      _index: number
+    ): ChartHoverState => ({
       chartType: "performance" as const,
       x,
       y,
@@ -56,13 +63,17 @@ describe("useChartHover", () => {
 
   describe("Initial State", () => {
     it("should initialize with null hoveredPoint", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
       expect(result.current.hoveredPoint).toBeNull();
     });
 
     it("should provide handleMouseMove and handleMouseLeave functions", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
       expect(typeof result.current.handleMouseMove).toBe("function");
       expect(typeof result.current.handleMouseLeave).toBe("function");
@@ -71,10 +82,15 @@ describe("useChartHover", () => {
 
   describe("Mouse Move Handling", () => {
     it("should update hoveredPoint on mouse move", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
       // Create mock SVG element and mouse event
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -104,9 +120,14 @@ describe("useChartHover", () => {
     });
 
     it("should use RAF for performance optimization", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -133,9 +154,14 @@ describe("useChartHover", () => {
     });
 
     it("should clamp index to data bounds", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -172,13 +198,20 @@ describe("useChartHover", () => {
         result.current.handleMouseMove(rightEvent);
       });
 
-      expect(result.current.hoveredPoint?.date).toBe(sampleData[sampleData.length - 1].date);
+      expect(result.current.hoveredPoint?.date).toBe(
+        sampleData[sampleData.length - 1].date
+      );
     });
 
     it("should not update if index has not changed", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -221,9 +254,14 @@ describe("useChartHover", () => {
 
   describe("Mouse Leave Handling", () => {
     it("should clear hoveredPoint on mouse leave", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -258,9 +296,14 @@ describe("useChartHover", () => {
     });
 
     it("should cancel pending RAF on mouse leave", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -293,9 +336,14 @@ describe("useChartHover", () => {
 
   describe("Touch Handling", () => {
     it("should update hoveredPoint on touch move and prevent default scrolling", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -326,9 +374,14 @@ describe("useChartHover", () => {
     });
 
     it("should clear hoveredPoint on touch end", () => {
-      const { result } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -373,7 +426,10 @@ describe("useChartHover", () => {
 
       const { result } = renderHook(() => useChartHover(sampleData, options));
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -397,7 +453,7 @@ describe("useChartHover", () => {
       });
 
       expect(buildHoverDataSpy).toHaveBeenCalled();
-      const [point, x, y, index] = buildHoverDataSpy.mock.calls[0];
+      const [point, _x, y, _index] = buildHoverDataSpy.mock.calls[0];
 
       // Verify Y calculation for minimum value
       expect(point.value).toBe(10000);
@@ -415,7 +471,10 @@ describe("useChartHover", () => {
         })
       );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -447,7 +506,10 @@ describe("useChartHover", () => {
     it("should handle empty data array gracefully", () => {
       const { result } = renderHook(() => useChartHover([], defaultOptions));
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -477,16 +539,21 @@ describe("useChartHover", () => {
   describe("Cleanup", () => {
     it("should cancel RAF on unmount", () => {
       // Use a real RAF implementation for this test
-      let rafCallback: FrameRequestCallback | null = null;
       const realRaf = vi.fn((cb: FrameRequestCallback) => {
-        rafCallback = cb;
+        cb(0);
         return 999;
       });
-      global.requestAnimationFrame = realRaf as unknown as typeof requestAnimationFrame;
+      global.requestAnimationFrame =
+        realRaf as unknown as typeof requestAnimationFrame;
 
-      const { result, unmount } = renderHook(() => useChartHover(sampleData, defaultOptions));
+      const { result, unmount } = renderHook(() =>
+        useChartHover(sampleData, defaultOptions)
+      );
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
@@ -525,7 +592,10 @@ describe("useChartHover", () => {
 
       const { result } = renderHook(() => useChartHover(sampleData, options));
 
-      const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      const mockSvg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+      );
       mockSvg.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,
