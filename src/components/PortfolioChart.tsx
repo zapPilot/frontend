@@ -924,8 +924,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               x2="0%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.45" />
             </linearGradient>
           </defs>
 
@@ -962,8 +962,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               })
               .join(" ")}`}
             fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
+            stroke="#f97316"
+            strokeWidth="2.5"
           />
 
           {/* Hover indicator */}
