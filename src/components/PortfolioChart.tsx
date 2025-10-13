@@ -665,6 +665,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           preserveAspectRatio="xMidYMid meet"
           onMouseMove={performanceHover.handleMouseMove}
           onMouseLeave={performanceHover.handleMouseLeave}
+          onTouchStart={performanceHover.handleTouchMove}
+          onTouchMove={performanceHover.handleTouchMove}
+          onTouchEnd={performanceHover.handleTouchEnd}
+          onTouchCancel={performanceHover.handleTouchEnd}
         >
           <defs>
             <linearGradient
@@ -783,6 +787,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             className="w-full h-full"
             onMouseMove={allocationHover.handleMouseMove}
             onMouseLeave={allocationHover.handleMouseLeave}
+            onTouchStart={allocationHover.handleTouchMove}
+            onTouchMove={allocationHover.handleTouchMove}
+            onTouchEnd={allocationHover.handleTouchEnd}
+            onTouchCancel={allocationHover.handleTouchEnd}
           >
             {allocationHistory.map((point, index) => {
               const total =
@@ -882,6 +890,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           className="w-full h-full"
           onMouseMove={drawdownHover.handleMouseMove}
           onMouseLeave={drawdownHover.handleMouseLeave}
+          onTouchStart={drawdownHover.handleTouchMove}
+          onTouchMove={drawdownHover.handleTouchMove}
+          onTouchEnd={drawdownHover.handleTouchEnd}
+          onTouchCancel={drawdownHover.handleTouchEnd}
         >
           <defs>
             <linearGradient
@@ -977,6 +989,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           className="w-full h-full"
           onMouseMove={sharpeHover.handleMouseMove}
           onMouseLeave={sharpeHover.handleMouseLeave}
+          onTouchStart={sharpeHover.handleTouchMove}
+          onTouchMove={sharpeHover.handleTouchMove}
+          onTouchEnd={sharpeHover.handleTouchEnd}
+          onTouchCancel={sharpeHover.handleTouchEnd}
         >
           <defs>
             <linearGradient
@@ -1093,6 +1109,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           className="w-full h-full"
           onMouseMove={volatilityHover.handleMouseMove}
           onMouseLeave={volatilityHover.handleMouseLeave}
+          onTouchStart={volatilityHover.handleTouchMove}
+          onTouchMove={volatilityHover.handleTouchMove}
+          onTouchEnd={volatilityHover.handleTouchEnd}
+          onTouchCancel={volatilityHover.handleTouchEnd}
         >
           <defs>
             <linearGradient
@@ -1179,6 +1199,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           className="w-full h-full"
           onMouseMove={underwaterHover.handleMouseMove}
           onMouseLeave={underwaterHover.handleMouseLeave}
+          onTouchStart={underwaterHover.handleTouchMove}
+          onTouchMove={underwaterHover.handleTouchMove}
+          onTouchEnd={underwaterHover.handleTouchEnd}
+          onTouchCancel={underwaterHover.handleTouchEnd}
         >
           <defs>
             <linearGradient

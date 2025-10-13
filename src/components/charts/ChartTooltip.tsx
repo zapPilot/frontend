@@ -26,6 +26,14 @@ import {
   getRecoveryStatusColor,
 } from "@/lib/chartHoverUtils";
 
+const CHARTS_WITH_TOP_LEGEND = new Set([
+  "performance",
+  "allocation",
+  "sharpe",
+  "volatility",
+  "underwater",
+]);
+
 interface ChartTooltipProps {
   /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
@@ -295,15 +303,44 @@ export function ChartTooltip({
   const leftPercentage = (hoveredPoint.x / chartWidth) * 100;
   const topPercentage = (hoveredPoint.y / chartHeight) * 100;
 
-  // Adjust left position to keep tooltip in bounds
-  const adjustedLeft = Math.min(leftPercentage, 75);
+  const TOOLTIP_MIN_WIDTH = 180;
+  const TOOLTIP_MIN_HEIGHT = 120;
 
-  // Adjust top position to keep tooltip visible
-  const adjustedTop = Math.max(topPercentage, 10);
+  const halfWidthPercent =
+    chartWidth > 0
+      ? Math.min(45, (TOOLTIP_MIN_WIDTH / 2 / chartWidth) * 100)
+      : 10;
+  const leftClampMin = Math.max(halfWidthPercent, 8);
+  const leftClampMax = Math.min(100 - halfWidthPercent, 92);
+
+  let adjustedLeft = Math.min(
+    Math.max(leftPercentage, leftClampMin),
+    leftClampMax
+  );
+
+  const topOffsetPercent =
+    chartHeight > 0
+      ? Math.min(40, (TOOLTIP_MIN_HEIGHT / chartHeight) * 100)
+      : 12;
+  let adjustedTop = Math.min(
+    Math.max(topPercentage, topOffsetPercent),
+    92
+  );
+
+  if (CHARTS_WITH_TOP_LEGEND.has(hoveredPoint.chartType)) {
+    const isNearbyLegend = adjustedLeft > 60 && topPercentage < 32;
+    if (isNearbyLegend) {
+      adjustedLeft = Math.min(adjustedLeft, 60);
+      adjustedTop = Math.max(adjustedTop, 34);
+    }
+  }
 
   return (
     <motion.div
       className="absolute z-10 pointer-events-none"
+      role="tooltip"
+      aria-live="polite"
+      data-chart-type={hoveredPoint.chartType}
       style={{
         left: `${adjustedLeft}%`,
         top: `${adjustedTop}%`,

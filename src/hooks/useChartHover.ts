@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
+  type TouchEvent,
 } from "react";
 import type { ChartHoverState } from "../types/chartHover";
 
@@ -51,8 +52,12 @@ export interface UseChartHoverReturn {
   hoveredPoint: ChartHoverState | null;
   /** Mouse move handler to attach to SVG element */
   handleMouseMove: (event: MouseEvent<SVGSVGElement>) => void;
+  /** Touch move handler for mobile interactions */
+  handleTouchMove: (event: TouchEvent<SVGSVGElement>) => void;
   /** Mouse leave handler to attach to SVG element */
   handleMouseLeave: () => void;
+  /** Touch end handler to clear hover state on touch end/cancel */
+  handleTouchEnd: () => void;
 }
 
 /**
@@ -112,16 +117,15 @@ export function useChartHover<T>(
    * Mouse move handler with RAF optimization
    * Calculates hover position and builds chart-specific hover state
    */
-  const handleMouseMove = useCallback(
-    (event: MouseEvent<SVGSVGElement>) => {
+  const updateHoverFromClientX = useCallback(
+    (clientX: number, svg: SVGSVGElement) => {
       if (!enabled || data.length === 0) return;
 
-      const svg = event.currentTarget;
       const rect = svg.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
+      const mouseX = clientX - rect.left;
       const svgWidth = rect.width || 1;
 
-      // Calculate the data index based on mouse position
+      // Calculate the data index based on pointer position
       const rawIndex = (mouseX / svgWidth) * (data.length - 1);
       const clampedIndex = Math.max(
         0,
@@ -167,6 +171,13 @@ export function useChartHover<T>(
     ]
   );
 
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<SVGSVGElement>) => {
+      updateHoverFromClientX(event.clientX, event.currentTarget);
+    },
+    [updateHoverFromClientX]
+  );
+
   /**
    * Mouse leave handler
    * Cancels pending RAF and clears hover state
@@ -177,6 +188,23 @@ export function useChartHover<T>(
     lastIndexRef.current = null;
     setHoveredPoint(null);
   }, []);
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent<SVGSVGElement>) => {
+      const touch = event.touches[0] ?? event.changedTouches[0];
+      if (!touch) return;
+      if (event.cancelable) {
+        event.preventDefault();
+      }
+
+      updateHoverFromClientX(touch.clientX, event.currentTarget);
+    },
+    [updateHoverFromClientX]
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    handleMouseLeave();
+  }, [handleMouseLeave]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -190,6 +218,8 @@ export function useChartHover<T>(
   return {
     hoveredPoint,
     handleMouseMove,
+    handleTouchMove,
     handleMouseLeave,
+    handleTouchEnd,
   };
 }

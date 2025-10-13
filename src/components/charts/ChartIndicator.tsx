@@ -6,8 +6,17 @@
  */
 
 import { motion } from "framer-motion";
-import type { ChartHoverState } from "../../types/chartHover";
-import { getSharpeColor } from "@/lib/chartHoverUtils";
+import type { ReactNode } from "react";
+import {
+  isAllocationHover,
+  isDrawdownHover,
+  isPerformanceHover,
+  isSharpeHover,
+  isUnderwaterHover,
+  isVolatilityHover,
+  type ChartHoverState,
+} from "@/types/chartHover";
+import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
 
 interface ChartIndicatorProps {
   /** Current hover state or null */
@@ -18,6 +27,104 @@ interface ChartIndicatorProps {
   radius?: number;
   /** Custom stroke width */
   strokeWidth?: number;
+}
+
+const currencyFormatter = new Intl.NumberFormat("en-US", {
+  style: "currency",
+  currency: "USD",
+  maximumFractionDigits: 0,
+});
+
+function formatCurrency(value: number): string {
+  return currencyFormatter.format(Math.round(value));
+}
+
+function formatPercent(value: number, fractionDigits = 1): string {
+  return `${value.toFixed(fractionDigits)}%`;
+}
+
+function formatDateLabel(date: string): string {
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) {
+    return date;
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
+  const formattedDate = formatDateLabel(hoveredPoint.date);
+
+  if (isPerformanceHover(hoveredPoint)) {
+    return `Portfolio value on ${formattedDate} is ${formatCurrency(hoveredPoint.value)}.`;
+  }
+
+  if (isAllocationHover(hoveredPoint)) {
+    const allocations = [
+      { label: "BTC", value: hoveredPoint.btc },
+      { label: "ETH", value: hoveredPoint.eth },
+      { label: "Stablecoin", value: hoveredPoint.stablecoin },
+      { label: "DeFi", value: hoveredPoint.defi },
+      { label: "Altcoin", value: hoveredPoint.altcoin },
+    ];
+
+    const significantAllocations = allocations
+      .filter(item => item.value >= 1)
+      .map(item => `${item.label} ${formatPercent(item.value)}`)
+      .join(", ");
+
+    return significantAllocations
+      ? `Allocation on ${formattedDate}: ${significantAllocations}.`
+      : `Allocation on ${formattedDate} has minimal distribution across categories.`;
+  }
+
+  if (isDrawdownHover(hoveredPoint)) {
+    const severity = getDrawdownSeverity(hoveredPoint.drawdown);
+    return `Drawdown on ${formattedDate} is ${formatPercent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity.`;
+  }
+
+  if (isSharpeHover(hoveredPoint)) {
+    return `Sharpe ratio on ${formattedDate} is ${hoveredPoint.sharpe.toFixed(2)}, rated ${hoveredPoint.interpretation}.`;
+  }
+
+  if (isVolatilityHover(hoveredPoint)) {
+    return `Volatility on ${formattedDate} is ${formatPercent(hoveredPoint.volatility, 1)} with ${hoveredPoint.riskLevel} risk.`;
+  }
+
+  if (isUnderwaterHover(hoveredPoint)) {
+    const recoveryText = hoveredPoint.isRecoveryPoint
+      ? " and marks a recovery point"
+      : "";
+    return `Underwater level on ${formattedDate} is ${formatPercent(Math.abs(hoveredPoint.underwater), 2)} with status ${hoveredPoint.recoveryStatus}${recoveryText}.`;
+  }
+
+  return `Chart value on ${formattedDate}.`;
+}
+
+function IndicatorWrapper({
+  hoveredPoint,
+  children,
+}: {
+  hoveredPoint: ChartHoverState;
+  children: ReactNode;
+}) {
+  const ariaLabel = getIndicatorAriaLabel(hoveredPoint);
+
+  return (
+    <g
+      role="img"
+      aria-label={ariaLabel}
+      style={{ pointerEvents: "none" }}
+      data-chart-type={hoveredPoint.chartType}
+    >
+      <title>{ariaLabel}</title>
+      {children}
+    </g>
+  );
 }
 
 /**
@@ -66,7 +173,7 @@ function SingleCircleIndicator({
     hoveredPoint.chartType === "volatility" && hoveredPoint.volatility > 25;
 
   return (
-    <>
+    <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {/* Main indicator circle */}
       <motion.circle
         cx={hoveredPoint.x}
@@ -101,7 +208,7 @@ function SingleCircleIndicator({
           }}
         />
       )}
-    </>
+    </IndicatorWrapper>
   );
 }
 
@@ -142,25 +249,27 @@ function MultiCircleIndicator({
   // If only one significant allocation, show single circle
   if (significantColors.length === 1 && significantColors[0]) {
     return (
-      <motion.circle
-        cx={hoveredPoint.x}
-        cy={hoveredPoint.y}
-        r={radius}
-        fill={significantColors[0].color}
-        stroke="#ffffff"
-        strokeWidth={strokeWidth}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0 }}
-        transition={{ duration: 0.2 }}
-        className="drop-shadow-lg"
-      />
+      <IndicatorWrapper hoveredPoint={hoveredPoint}>
+        <motion.circle
+          cx={hoveredPoint.x}
+          cy={hoveredPoint.y}
+          r={radius}
+          fill={significantColors[0].color}
+          stroke="#ffffff"
+          strokeWidth={strokeWidth}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0 }}
+          transition={{ duration: 0.2 }}
+          className="drop-shadow-lg"
+        />
+      </IndicatorWrapper>
     );
   }
 
   // Multiple allocations - show stacked circles
   return (
-    <g>
+    <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {significantColors.slice(0, 3).map((item, index) => (
         <motion.circle
           key={index}
@@ -177,7 +286,7 @@ function MultiCircleIndicator({
           className="drop-shadow-lg"
         />
       ))}
-    </g>
+    </IndicatorWrapper>
   );
 }
 
@@ -201,7 +310,7 @@ function FlaggedCircleIndicator({
       : false;
 
   return (
-    <g>
+    <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {/* Main circle */}
       <motion.circle
         cx={hoveredPoint.x}
@@ -243,7 +352,7 @@ function FlaggedCircleIndicator({
           />
         </motion.g>
       )}
-    </g>
+    </IndicatorWrapper>
   );
 }
 
