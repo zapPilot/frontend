@@ -1,8 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  getPortfolioTrends,
-  transformPortfolioTrends,
-} from "../services/analyticsService";
+import { getPortfolioTrends } from "../services/analyticsService";
 import { PortfolioDataPoint } from "../types/portfolio";
 import { portfolioLogger } from "../utils/logger";
 
@@ -44,12 +41,52 @@ export function usePortfolioTrends({
 
     try {
       // Fetch portfolio trends directly with provided user ID
-      const trendsData = (await getPortfolioTrends(userId, days))?.trend_data;
-      // Transform data for charts
-      const transformedData = transformPortfolioTrends(
-        Array.isArray(trendsData) ? trendsData : []
+      const trendResponse = await getPortfolioTrends(userId, days);
+      const dailyTotals = Array.isArray(trendResponse?.daily_totals)
+        ? trendResponse.daily_totals
+        : [];
+
+      const normalizedData: PortfolioDataPoint[] = dailyTotals.map(
+        dailyTotal => {
+          const totalValue =
+            typeof dailyTotal.total_value_usd === "number"
+              ? dailyTotal.total_value_usd
+              : 0;
+          const changePercentage =
+            typeof dailyTotal.change_percentage === "number"
+              ? dailyTotal.change_percentage
+              : 0;
+
+          const protocols = Array.isArray(dailyTotal.protocols)
+            ? dailyTotal.protocols.map(protocol => ({
+                protocol: protocol?.protocol ?? "",
+                chain: protocol?.chain ?? "",
+                value:
+                  typeof protocol?.value_usd === "number"
+                    ? protocol.value_usd
+                    : 0,
+                pnl:
+                  typeof protocol?.pnl_usd === "number" ? protocol.pnl_usd : 0,
+              }))
+            : [];
+
+          const dataPoint: PortfolioDataPoint = {
+            date: dailyTotal.date,
+            value: totalValue,
+            change: changePercentage,
+            benchmark: totalValue * 0.95,
+            protocols,
+          };
+
+          if (typeof dailyTotal.chains_count === "number") {
+            dataPoint.chainsCount = dailyTotal.chains_count;
+          }
+
+          return dataPoint;
+        }
       );
-      setData(transformedData);
+
+      setData(normalizedData);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch portfolio trends";

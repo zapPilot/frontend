@@ -4,6 +4,7 @@ export interface User {
   id: string;
   email?: string;
   is_active: boolean;
+  is_subscribed_to_reports: boolean;
   created_at: string;
 }
 
@@ -11,9 +12,8 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  is_main: boolean;
+  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   label?: string;
-
   created_at: string;
 }
 

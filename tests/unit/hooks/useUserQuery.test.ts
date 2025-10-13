@@ -40,7 +40,6 @@ describe("useUserByWallet", () => {
         id: "w1",
         user_id: "user-123",
         wallet: walletAddress,
-        is_main: true,
         label: "Primary Wallet",
         created_at: "2024-01-01T00:00:00Z",
       },
@@ -48,7 +47,6 @@ describe("useUserByWallet", () => {
         id: "w2",
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        is_main: false,
         label: "Trading Wallet",
         created_at: "2024-01-02T00:00:00Z",
       },
@@ -80,7 +78,6 @@ describe("useUserByWallet", () => {
       expect.objectContaining({
         userId: "user-123",
         email: "test@example.com",
-        primaryWallet: walletAddress,
         bundleWallets: [
           walletAddress,
           "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
@@ -90,12 +87,15 @@ describe("useUserByWallet", () => {
       })
     );
 
-    // Additional wallets derived from non-main entries
+    // Additional wallets now includes ALL wallets (no filtering)
     expect(result.current.data?.additionalWallets).toEqual([
+      expect.objectContaining({
+        wallet_address: walletAddress,
+        label: "Primary Wallet",
+      }),
       expect.objectContaining({
         wallet_address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
         label: "Trading Wallet",
-        is_main: false,
       }),
     ]);
   });

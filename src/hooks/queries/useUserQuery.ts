@@ -10,16 +10,19 @@ import type {
 
 // Removed ApiBundleResponse in favor of account API wallets
 
+// Feature flag for Phase 5 rollback protection
+// Set NEXT_PUBLIC_USE_LEGACY_WALLET=true to re-enable legacy primaryWallet field computation
+const USE_LEGACY_WALLET_FIELDS =
+  process.env["NEXT_PUBLIC_USE_LEGACY_WALLET"] === "true";
+
 export interface UserInfo {
   userId: string;
   email: string;
-  primaryWallet: string;
+  primaryWallet?: string; // DEPRECATED: Optional for backward compatibility during migration
   bundleWallets: string[];
   additionalWallets: Array<{
     wallet_address: string;
     label: string | null;
-    is_main: boolean;
-
     created_at: string;
   }>;
   visibleWallets: string[];
@@ -57,33 +60,36 @@ export function useUserByWallet(walletAddress: string | null) {
       }
 
       // Derive fields compatible with previous structure
-      const primaryWallet =
-        wallets.find(w => w.is_main)?.wallet ||
-        wallets[0]?.wallet ||
-        walletAddress;
-
       const bundleWallets =
         wallets.length > 0 ? wallets.map(w => w.wallet) : [walletAddress];
 
-      const additionalWallets = wallets
-        .filter(w => !w.is_main)
-        .map(w => ({
-          wallet_address: w.wallet,
-          label: w.label ?? null,
-          is_main: w.is_main,
-          created_at: w.created_at,
-        }));
+      const additionalWallets = wallets.map(w => ({
+        wallet_address: w.wallet,
+        label: w.label ?? null,
+        created_at: w.created_at,
+      }));
 
-      return {
+      const result: UserInfo = {
         userId,
         email: userEmail, // Now populated from getUserProfile
-        primaryWallet,
         bundleWallets,
         additionalWallets,
         visibleWallets: bundleWallets,
         totalWallets: bundleWallets.length,
         totalVisibleWallets: bundleWallets.length,
       };
+
+      // Add primaryWallet only if legacy mode enabled (Phase 5 rollback protection)
+      if (USE_LEGACY_WALLET_FIELDS) {
+        const primaryWallet =
+          wallets.find(w => w.is_main)?.wallet ||
+          walletAddress ||
+          wallets[0]?.wallet ||
+          "";
+        result.primaryWallet = primaryWallet;
+      }
+
+      return result;
     },
     enabled: !!walletAddress, // Only run when wallet address is available
     staleTime: 2 * 60 * 1000, // User data is stale after 2 minutes

@@ -7,6 +7,3 @@ export * from "./riskConstants";
 
 // Classification utilities
 export * from "./riskClassification";
-
-// Formatting utilities
-export * from "./riskFormatting";

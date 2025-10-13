@@ -46,13 +46,14 @@ vi.mock("next/navigation", async () => {
 let mockIsConnected = false;
 let mockUserId: string | null = null;
 let mockEmail: string | undefined = undefined;
+let mockConnectedWallet: string | null = null;
 vi.mock("@/contexts/UserContext", () => ({
   useUser: () => ({
     userInfo: mockUserId ? { userId: mockUserId, email: mockEmail } : null,
     isConnected: mockIsConnected,
     loading: false,
     error: null,
-    connectedWallet: null,
+    connectedWallet: mockConnectedWallet,
     refetch: () => {},
   }),
 }));
@@ -78,6 +79,7 @@ describe("EmailReminderBanner behavior (no localStorage persistence)", () => {
     mockIsConnected = true;
     mockUserId = "OWNER123"; // viewing own bundle
     mockEmail = undefined; // no email saved → banner eligible
+    mockConnectedWallet = "0xOWNER123";
     window.history.pushState({}, "", "/bundle?userId=OWNER123");
 
     // Clear mock call counts, but allow the component to work normally

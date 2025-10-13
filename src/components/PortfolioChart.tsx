@@ -3,27 +3,21 @@
 import { motion } from "framer-motion";
 import {
   Activity,
+  BarChart3,
   Calendar,
   PieChart,
-  TrendingUp,
-  BarChart3,
   Target,
+  TrendingUp,
 } from "lucide-react";
-import {
-  memo,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  type MouseEvent,
-} from "react";
+import { memo, useMemo, useState } from "react";
 import { useUser } from "../contexts/UserContext";
+import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
+import { useChartHover } from "../hooks/useChartHover";
+import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import { useRollingSharpe } from "../hooks/useRollingSharpe";
 import { useRollingVolatility } from "../hooks/useRollingVolatility";
-import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
 import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
-import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -35,7 +29,103 @@ import {
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
+import { ChartIndicator, ChartTooltip } from "./charts";
 import { GlassCard } from "./ui";
+
+interface AllocationTimeseriesInputPoint {
+  date: string;
+  category?: string;
+  protocol?: string;
+  percentage?: number;
+  percentage_of_portfolio?: number;
+  category_value?: number;
+  total_value?: number;
+}
+
+export function buildAllocationHistory(
+  rawPoints: AllocationTimeseriesInputPoint[]
+): AssetAllocationPoint[] {
+  if (!rawPoints || rawPoints.length === 0) {
+    return [];
+  }
+
+  const allocationByDate = rawPoints.reduce(
+    (acc, point) => {
+      const dateKey = point.date;
+      if (!acc[dateKey]) {
+        acc[dateKey] = {
+          date: dateKey,
+          btc: 0,
+          eth: 0,
+          stablecoin: 0,
+          defi: 0,
+          altcoin: 0,
+        };
+      }
+
+      const dayData = acc[dateKey]!;
+      const categoryKey = (point.category ?? point.protocol ?? "")
+        .toString()
+        .toLowerCase();
+
+      const percentageValue = Number(
+        point.percentage_of_portfolio ?? point.percentage ?? 0
+      );
+
+      const categoryValue = Number(point.category_value ?? 0);
+      const totalValue = Number(point.total_value ?? 0);
+
+      const computedShare =
+        !Number.isNaN(percentageValue) && percentageValue !== 0
+          ? percentageValue
+          : totalValue > 0 && !Number.isNaN(categoryValue)
+            ? (categoryValue / totalValue) * 100
+            : 0;
+
+      if (Number.isNaN(computedShare) || computedShare === 0) {
+        return acc;
+      }
+
+      if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
+        dayData.btc += computedShare;
+      } else if (
+        categoryKey.includes("eth") ||
+        categoryKey.includes("ethereum")
+      ) {
+        dayData.eth += computedShare;
+      } else if (categoryKey.includes("stable")) {
+        dayData.stablecoin += computedShare;
+      } else if (categoryKey.includes("defi")) {
+        dayData.defi += computedShare;
+      } else {
+        dayData.altcoin += computedShare;
+      }
+
+      return acc;
+    },
+    {} as Record<string, AssetAllocationPoint>
+  );
+
+  return Object.values(allocationByDate)
+    .map(point => {
+      const total =
+        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+
+      if (total <= 0) {
+        return point;
+      }
+
+      return {
+        ...point,
+        btc: (point.btc / total) * 100,
+        eth: (point.eth / total) * 100,
+        stablecoin: (point.stablecoin / total) * 100,
+        defi: (point.defi / total) * 100,
+        altcoin: (point.altcoin / total) * 100,
+      };
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+}
 
 export interface PortfolioChartProps {
   userId?: string | undefined;
@@ -51,15 +141,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     | "volatility"
     | "underwater"
   >("performance");
-  const [hoveredPoint, setHoveredPoint] = useState<{
-    x: number;
-    y: number;
-    value: number;
-    benchmark: number;
-    date: string;
-  } | null>(null);
-  const rafId = useRef<number | null>(null);
-  const lastIndexRef = useRef<number | null>(null);
 
   // Get user info from context
   const { userInfo } = useUser();
@@ -67,41 +148,44 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   // Resolve which userId to use: provided userId or fallback to context
   const resolvedUserId = userId || userInfo?.userId;
 
+  const selectedDays =
+    CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90;
+
   // Fetch real portfolio trends data
   const { data: apiPortfolioHistory } = usePortfolioTrends({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   // Fetch Phase 2 analytics data
   const { data: rollingSharpeData } = useRollingSharpe({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: rollingVolatilityData } = useRollingVolatility({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: enhancedDrawdownData } = useEnhancedDrawdown({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: underwaterRecoveryData } = useUnderwaterRecovery({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
 
   const { data: allocationTimeseriesData } = useAllocationTimeseries({
     userId: resolvedUserId,
-    days: CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
+    days: selectedDays,
     enabled: !!resolvedUserId,
   });
   // Portfolio history with fallback logic
@@ -109,89 +193,11 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     return apiPortfolioHistory;
   }, [apiPortfolioHistory]);
 
-  const allocationHistory: AssetAllocationPoint[] = useMemo(() => {
-    if (
-      !allocationTimeseriesData?.allocation_data ||
-      allocationTimeseriesData.allocation_data.length === 0
-    ) {
-      // Fallback to mock data if no real data available
-      const days = Math.min(
-        CHART_PERIODS.find(p => p.value === selectedPeriod)?.days || 90,
-        90
-      );
-      const data: AssetAllocationPoint[] = [];
-
-      for (let i = days; i >= 0; i -= 7) {
-        // Weekly snapshots
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-
-        // Simulate gradual shifts in allocation
-        const progress = (days - i) / days;
-        data.push({
-          date: date.toISOString().split("T")[0]!,
-          btc: 35 + Math.sin(progress * Math.PI) * 5,
-          eth: 25 + Math.cos(progress * Math.PI) * 3,
-          stablecoin: 20 + progress * 5,
-          defi: 15 - progress * 3,
-          altcoin: 5 - Math.sin(progress * Math.PI * 2) * 2,
-        });
-      }
-
-      return data;
-    }
-
-    // Transform real allocation data to AssetAllocationPoint format
-    const allocationByDate = allocationTimeseriesData.allocation_data.reduce(
-      (acc, point) => {
-        if (!acc[point.date]) {
-          acc[point.date] = {
-            date: point.date,
-            btc: 0,
-            eth: 0,
-            stablecoin: 0,
-            defi: 0,
-            altcoin: 0,
-          };
-        }
-
-        const protocol = (point.protocol || "").toLowerCase();
-        const dayData = acc[point.date]!; // Safe because we just ensured it exists above
-        const allocationShare = Number(point.percentage_of_portfolio ?? 0);
-
-        if (Number.isNaN(allocationShare)) {
-          return acc;
-        }
-
-        if (protocol.includes("bitcoin") || protocol.includes("btc")) {
-          dayData.btc += allocationShare;
-        } else if (protocol.includes("ethereum") || protocol.includes("eth")) {
-          dayData.eth += allocationShare;
-        } else if (
-          protocol.includes("usdc") ||
-          protocol.includes("usdt") ||
-          protocol.includes("dai")
-        ) {
-          dayData.stablecoin += allocationShare;
-        } else if (
-          protocol.includes("uniswap") ||
-          protocol.includes("aave") ||
-          protocol.includes("compound")
-        ) {
-          dayData.defi += allocationShare;
-        } else {
-          dayData.altcoin += allocationShare;
-        }
-
-        return acc;
-      },
-      {} as Record<string, AssetAllocationPoint>
-    );
-
-    return Object.values(allocationByDate).sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
-  }, [allocationTimeseriesData, selectedPeriod]);
+  const allocationHistory: AssetAllocationPoint[] = useMemo(
+    () =>
+      buildAllocationHistory(allocationTimeseriesData?.allocation_data ?? []),
+    [allocationTimeseriesData]
+  );
 
   const currentValue =
     portfolioHistory[portfolioHistory.length - 1]?.value || 0;
@@ -201,7 +207,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
   const maxValue = Math.max(...portfolioHistory.map(d => d.value));
   const minValue = Math.min(...portfolioHistory.map(d => d.value));
-  const VALUE_RANGE = Math.max(maxValue - minValue, 1);
 
   // Chart dimensions (match viewBox)
   const CHART_WIDTH = 800;
@@ -323,64 +328,261 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     }));
   }, [underwaterRecoveryData]);
 
-  // Mouse event handlers for performance chart hover
-  const handleMouseMove = useCallback(
-    (event: MouseEvent<SVGSVGElement>) => {
-      if (portfolioHistory.length === 0) return;
+  // Prepare data for chart-specific calculations
+  const drawdownHistory = useMemo(() => {
+    if (
+      !enhancedDrawdownData?.drawdown_data ||
+      enhancedDrawdownData.drawdown_data.length === 0
+    ) {
+      return drawdownData.map(point => ({
+        date: point.date,
+        drawdown_pct: point.drawdown,
+        portfolio_value: 0,
+      }));
+    }
+    return enhancedDrawdownData.drawdown_data.map(point => ({
+      date: point.date,
+      drawdown_pct: Number(point.drawdown_pct ?? 0),
+      portfolio_value: Number(point.portfolio_value ?? 0),
+    }));
+  }, [enhancedDrawdownData, drawdownData]);
 
-      const svg = event.currentTarget;
-      const rect = svg.getBoundingClientRect();
-      const mouseX = event.clientX - rect.left;
-      const svgWidth = rect.width || 1;
+  const sharpeHistory = useMemo(() => {
+    if (
+      !rollingSharpeData?.rolling_sharpe_data ||
+      rollingSharpeData.rolling_sharpe_data.length === 0
+    ) {
+      return [];
+    }
+    return rollingSharpeData.rolling_sharpe_data
+      .filter(point => point.rolling_sharpe_ratio != null)
+      .map(point => ({
+        date: point.date,
+        rolling_sharpe_ratio: Number(point.rolling_sharpe_ratio ?? 0),
+      }));
+  }, [rollingSharpeData]);
 
-      // Calculate the data index based on mouse position
-      const rawIndex = (mouseX / svgWidth) * (portfolioHistory.length - 1);
-      const clampedIndex = Math.max(
-        0,
-        Math.min(Math.round(rawIndex), portfolioHistory.length - 1)
-      );
+  const volatilityHistory = useMemo(() => {
+    if (
+      !rollingVolatilityData?.rolling_volatility_data ||
+      rollingVolatilityData.rolling_volatility_data.length === 0
+    ) {
+      return [];
+    }
+    return rollingVolatilityData.rolling_volatility_data
+      .filter(
+        point =>
+          point.annualized_volatility_pct != null ||
+          point.rolling_volatility_daily_pct != null
+      )
+      .map(point => ({
+        date: point.date,
+        annualized_volatility_pct: Number(
+          point.annualized_volatility_pct ??
+            point.rolling_volatility_daily_pct ??
+            0
+        ),
+      }));
+  }, [rollingVolatilityData]);
 
-      // Drop updates if index didn't change (reduces state churn)
-      if (lastIndexRef.current === clampedIndex) return;
-      lastIndexRef.current = clampedIndex;
+  const underwaterHistory = useMemo(() => {
+    if (
+      !underwaterRecoveryData?.underwater_data ||
+      underwaterRecoveryData.underwater_data.length === 0
+    ) {
+      return [];
+    }
+    return underwaterRecoveryData.underwater_data.map(point => ({
+      date: point.date,
+      underwater_pct: Number(point.underwater_pct ?? 0),
+      recovery_point: point.recovery_point,
+    }));
+  }, [underwaterRecoveryData]);
 
-      // Schedule state update at next animation frame
-      if (rafId.current != null) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(() => {
-        const point = portfolioHistory[clampedIndex];
-        if (!point) return;
+  // Performance chart hover
+  const performanceHover = useChartHover(portfolioHistory, {
+    chartType: "performance",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue,
+    maxValue,
+    getYValue: point => point.value,
+    buildHoverData: (point, x, y) => ({
+      chartType: "performance" as const,
+      x,
+      y,
+      date: new Date(point.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      value: point.value,
+      benchmark: point.benchmark || 0,
+    }),
+  });
 
-        const x =
-          (clampedIndex / Math.max(portfolioHistory.length - 1, 1)) *
-          CHART_WIDTH;
-        const y =
-          CHART_HEIGHT -
-          CHART_PADDING -
-          ((point.value - minValue) / VALUE_RANGE) *
-            (CHART_HEIGHT - 2 * CHART_PADDING);
-
-        setHoveredPoint({
-          x,
-          y,
-          value: point.value,
-          benchmark: point.benchmark || 0,
-          date: new Date(point.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-        });
-      });
+  // Allocation chart hover
+  const allocationHover = useChartHover(allocationHistory, {
+    chartType: "allocation",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue: 0,
+    maxValue: 100,
+    getYValue: () => 50, // Mid-point for stacked chart
+    buildHoverData: (point, x, y) => {
+      const total =
+        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+      return {
+        chartType: "allocation" as const,
+        x,
+        y,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        btc: total > 0 ? (point.btc / total) * 100 : 0,
+        eth: total > 0 ? (point.eth / total) * 100 : 0,
+        stablecoin: total > 0 ? (point.stablecoin / total) * 100 : 0,
+        defi: total > 0 ? (point.defi / total) * 100 : 0,
+        altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
+      };
     },
-    [portfolioHistory, minValue, VALUE_RANGE]
-  );
+  });
 
-  const handleMouseLeave = useCallback(() => {
-    if (rafId.current != null) cancelAnimationFrame(rafId.current);
-    rafId.current = null;
-    lastIndexRef.current = null;
-    setHoveredPoint(null);
-  }, []);
+  // Drawdown chart hover
+  const drawdownHover = useChartHover(drawdownHistory, {
+    chartType: "drawdown",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue: -20,
+    maxValue: 0,
+    getYValue: point => point.drawdown_pct,
+    buildHoverData: (point, x, y, index) => {
+      // Find peak value before this point
+      const priorData = drawdownHistory.slice(0, index + 1);
+      const peak = Math.max(...priorData.map(p => p.portfolio_value || 0));
+      const peakIndex = priorData.findIndex(p => p.portfolio_value === peak);
+      const peakDate = priorData[peakIndex]?.date || point.date;
+
+      return {
+        chartType: "drawdown" as const,
+        x,
+        y,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        drawdown: point.drawdown_pct,
+        peakDate: new Date(peakDate).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        distanceFromPeak: index - peakIndex,
+      };
+    },
+  });
+
+  // Sharpe chart hover (5-level system)
+  const sharpeHover = useChartHover(sharpeHistory, {
+    chartType: "sharpe",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue: 0,
+    maxValue: 2.5,
+    getYValue: point => point.rolling_sharpe_ratio,
+    buildHoverData: (point, x, y) => {
+      const sharpe = point.rolling_sharpe_ratio || 0;
+      let interpretation: "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor";
+      if (sharpe > 2.0) interpretation = "Excellent";
+      else if (sharpe > 1.0) interpretation = "Good";
+      else if (sharpe > 0.5) interpretation = "Fair";
+      else if (sharpe > 0) interpretation = "Poor";
+      else interpretation = "Very Poor";
+
+      return {
+        chartType: "sharpe" as const,
+        x,
+        y,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        sharpe,
+        interpretation,
+      };
+    },
+  });
+
+  // Volatility chart hover with risk levels
+  const volatilityHover = useChartHover(volatilityHistory, {
+    chartType: "volatility",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue: 10,
+    maxValue: 40,
+    getYValue: point => point.annualized_volatility_pct,
+    buildHoverData: (point, x, y) => {
+      const vol = point.annualized_volatility_pct || 0;
+      let riskLevel: "Low" | "Moderate" | "High" | "Very High";
+      if (vol < 15) riskLevel = "Low";
+      else if (vol < 25) riskLevel = "Moderate";
+      else if (vol < 35) riskLevel = "High";
+      else riskLevel = "Very High";
+
+      return {
+        chartType: "volatility" as const,
+        x,
+        y,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        volatility: vol,
+        riskLevel,
+      };
+    },
+  });
+
+  // Underwater chart hover
+  const underwaterHover = useChartHover(underwaterHistory, {
+    chartType: "underwater",
+    chartWidth: CHART_WIDTH,
+    chartHeight: CHART_HEIGHT,
+    chartPadding: CHART_PADDING,
+    minValue: -20,
+    maxValue: 0,
+    getYValue: point => point.underwater_pct,
+    buildHoverData: (point, x, y) => {
+      const isRecovery = point.recovery_point || false;
+      let recoveryStatus: "Recovered" | "Underwater" | "Near Peak";
+      if (point.underwater_pct === 0) recoveryStatus = "Recovered";
+      else if (point.underwater_pct > -0.5) recoveryStatus = "Near Peak";
+      else recoveryStatus = "Underwater";
+
+      return {
+        chartType: "underwater" as const,
+        x,
+        y,
+        date: new Date(point.date).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }),
+        underwater: point.underwater_pct,
+        isRecoveryPoint: isRecovery,
+        recoveryStatus,
+      };
+    },
+  });
 
   const renderPerformanceChart = useMemo(
     () => (
@@ -397,8 +599,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           className="w-full h-full"
           preserveAspectRatio="xMidYMid meet"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          onMouseMove={performanceHover.handleMouseMove}
+          onMouseLeave={performanceHover.handleMouseLeave}
         >
           <defs>
             <linearGradient
@@ -451,22 +653,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             <path d={portfolioAreaPath} fill="url(#portfolioGradient)" />
           )}
 
-          {/* Hover cursor circle */}
-          {hoveredPoint && (
-            <motion.circle
-              cx={hoveredPoint.x}
-              cy={hoveredPoint.y}
-              r="6"
-              fill="#8b5cf6"
-              stroke="#ffffff"
-              strokeWidth="2"
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ duration: 0.2 }}
-              className="drop-shadow-lg"
-            />
-          )}
+          {/* Hover indicator */}
+          <ChartIndicator hoveredPoint={performanceHover.hoveredPoint} />
         </svg>
 
         {/* Y-axis labels */}
@@ -495,67 +683,60 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         </div>
 
         {/* Hover Tooltip */}
-        {hoveredPoint && (
-          <motion.div
-            className="absolute z-10 pointer-events-none"
-            style={{
-              left: `min(${hoveredPoint.x * (100 / CHART_WIDTH)}%, calc(100% - 200px))`,
-              top: `max(${hoveredPoint.y * (100 / CHART_HEIGHT)}%, 10px)`,
-              transform: "translateX(-50%) translateY(-100%)",
-            }}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="px-3 py-2 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl">
-              <div className="text-xs text-gray-300 mb-1">
-                {hoveredPoint.date}
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-purple-300">Portfolio</span>
-                  <span className="text-sm font-semibold text-white">
-                    ${(hoveredPoint.value / 1000).toFixed(1)}k
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-blue-300">Benchmark</span>
-                  <span className="text-sm font-semibold text-gray-300">
-                    Coming soon
-                  </span>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        )}
+        <ChartTooltip
+          hoveredPoint={performanceHover.hoveredPoint}
+          chartWidth={CHART_WIDTH}
+          chartHeight={CHART_HEIGHT}
+        />
       </div>
     ),
     [
       minValue,
       maxValue,
-      hoveredPoint,
+      performanceHover.hoveredPoint,
+      performanceHover.handleMouseMove,
+      performanceHover.handleMouseLeave,
       portfolioPath,
       benchmarkPath,
       portfolioAreaPath,
-      handleMouseMove,
-      handleMouseLeave,
     ]
   );
 
-  const renderAllocationChart = useMemo(
-    () => (
+  const renderAllocationChart = useMemo(() => {
+    if (allocationHistory.length === 0) {
+      return (
+        <div className="h-80 flex items-center justify-center text-sm text-gray-500">
+          No allocation history available for the selected period.
+        </div>
+      );
+    }
+
+    return (
       <div className="h-80">
         <div className="relative h-full">
-          <svg viewBox="0 0 800 300" className="w-full h-full">
+          <svg
+            viewBox="0 0 800 300"
+            className="w-full h-full"
+            onMouseMove={allocationHover.handleMouseMove}
+            onMouseLeave={allocationHover.handleMouseLeave}
+          >
             {allocationHistory.map((point, index) => {
-              const x = (index / (allocationHistory.length - 1)) * 800;
               const total =
                 point.btc +
                 point.eth +
                 point.stablecoin +
                 point.defi +
                 point.altcoin;
+
+              if (total <= 0) {
+                return null;
+              }
+
+              const x =
+                allocationHistory.length <= 1
+                  ? 400
+                  : (index / (allocationHistory.length - 1)) * 800;
+
               let yOffset = 300;
 
               // Stack areas
@@ -570,7 +751,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               return (
                 <g key={index}>
                   {assets.map((asset, assetIndex) => {
-                    const height = (asset.value / total) * 280;
+                    const height = total > 0 ? (asset.value / total) * 280 : 0;
                     const y = yOffset - height;
                     yOffset -= height;
 
@@ -589,10 +770,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                 </g>
               );
             })}
+
+            {/* Hover indicator */}
+            <ChartIndicator hoveredPoint={allocationHover.hoveredPoint} />
           </svg>
 
           {/* Legend */}
-          <div className="absolute top-4 right-4 space-y-1 text-xs">
+          <div className="absolute top-4 right-4 space-y-1 text-xs pointer-events-none">
             {[
               { label: "BTC", color: "#f59e0b" },
               { label: "ETH", color: "#6366f1" },
@@ -609,16 +793,32 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               </div>
             ))}
           </div>
+
+          {/* Hover Tooltip */}
+          <ChartTooltip
+            hoveredPoint={allocationHover.hoveredPoint}
+            chartWidth={CHART_WIDTH}
+            chartHeight={CHART_HEIGHT}
+          />
         </div>
       </div>
-    ),
-    [allocationHistory]
-  );
+    );
+  }, [
+    allocationHistory,
+    allocationHover.hoveredPoint,
+    allocationHover.handleMouseMove,
+    allocationHover.handleMouseLeave,
+  ]);
 
   const renderDrawdownChart = useMemo(
     () => (
       <div className="relative h-80">
-        <svg viewBox="0 0 800 300" className="w-full h-full">
+        <svg
+          viewBox="0 0 800 300"
+          className="w-full h-full"
+          onMouseMove={drawdownHover.handleMouseMove}
+          onMouseLeave={drawdownHover.handleMouseLeave}
+        >
           <defs>
             <linearGradient
               id="drawdownGradient"
@@ -668,19 +868,34 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             stroke="#ef4444"
             strokeWidth="2"
           />
+
+          {/* Hover indicator */}
+          <ChartIndicator hoveredPoint={drawdownHover.hoveredPoint} />
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
           <span>0%</span>
           <span>-5%</span>
           <span>-10%</span>
           <span>-15%</span>
           <span>-20%</span>
         </div>
+
+        {/* Hover Tooltip */}
+        <ChartTooltip
+          hoveredPoint={drawdownHover.hoveredPoint}
+          chartWidth={CHART_WIDTH}
+          chartHeight={CHART_HEIGHT}
+        />
       </div>
     ),
-    [drawdownData]
+    [
+      drawdownData,
+      drawdownHover.hoveredPoint,
+      drawdownHover.handleMouseMove,
+      drawdownHover.handleMouseLeave,
+    ]
   );
 
   const renderSharpeChart = useMemo(
@@ -693,7 +908,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           ))}
         </div>
 
-        <svg viewBox="0 0 800 300" className="w-full h-full">
+        <svg
+          viewBox="0 0 800 300"
+          className="w-full h-full"
+          onMouseMove={sharpeHover.handleMouseMove}
+          onMouseLeave={sharpeHover.handleMouseLeave}
+        >
           <defs>
             <linearGradient
               id="sharpeGradient"
@@ -745,10 +965,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             strokeDasharray="3,3"
             opacity="0.5"
           />
+
+          {/* Hover indicator */}
+          <ChartIndicator hoveredPoint={sharpeHover.hoveredPoint} />
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
           <span>2.5</span>
           <span>2.0</span>
           <span>1.5</span>
@@ -758,7 +981,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         </div>
 
         {/* Legend */}
-        <div className="absolute top-4 right-4 text-xs">
+        <div className="absolute top-4 right-4 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-0.5 bg-emerald-500"></div>
             <span className="text-white">Rolling Sharpe Ratio</span>
@@ -774,9 +997,21 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             <span className="text-gray-400">Sharpe = 1.0</span>
           </div>
         </div>
+
+        {/* Hover Tooltip */}
+        <ChartTooltip
+          hoveredPoint={sharpeHover.hoveredPoint}
+          chartWidth={CHART_WIDTH}
+          chartHeight={CHART_HEIGHT}
+        />
       </div>
     ),
-    [sharpeData]
+    [
+      sharpeData,
+      sharpeHover.hoveredPoint,
+      sharpeHover.handleMouseMove,
+      sharpeHover.handleMouseLeave,
+    ]
   );
 
   const renderVolatilityChart = useMemo(
@@ -789,7 +1024,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           ))}
         </div>
 
-        <svg viewBox="0 0 800 300" className="w-full h-full">
+        <svg
+          viewBox="0 0 800 300"
+          className="w-full h-full"
+          onMouseMove={volatilityHover.handleMouseMove}
+          onMouseLeave={volatilityHover.handleMouseLeave}
+        >
           <defs>
             <linearGradient
               id="volatilityGradient"
@@ -829,10 +1069,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               .join(" ")} L 800 250 Z`}
             fill="url(#volatilityGradient)"
           />
+
+          {/* Hover indicator */}
+          <ChartIndicator hoveredPoint={volatilityHover.hoveredPoint} />
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
           <span>40%</span>
           <span>32%</span>
           <span>25%</span>
@@ -841,21 +1084,38 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         </div>
 
         {/* Legend */}
-        <div className="absolute top-4 right-4 text-xs">
+        <div className="absolute top-4 right-4 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-0.5 bg-amber-500"></div>
             <span className="text-white">30-Day Volatility</span>
           </div>
         </div>
+
+        {/* Hover Tooltip */}
+        <ChartTooltip
+          hoveredPoint={volatilityHover.hoveredPoint}
+          chartWidth={CHART_WIDTH}
+          chartHeight={CHART_HEIGHT}
+        />
       </div>
     ),
-    [volatilityData]
+    [
+      volatilityData,
+      volatilityHover.hoveredPoint,
+      volatilityHover.handleMouseMove,
+      volatilityHover.handleMouseLeave,
+    ]
   );
 
   const renderUnderwaterChart = useMemo(
     () => (
       <div className="relative h-80">
-        <svg viewBox="0 0 800 300" className="w-full h-full">
+        <svg
+          viewBox="0 0 800 300"
+          className="w-full h-full"
+          onMouseMove={underwaterHover.handleMouseMove}
+          onMouseLeave={underwaterHover.handleMouseLeave}
+        >
           <defs>
             <linearGradient
               id="underwaterGradient"
@@ -931,10 +1191,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               />
             );
           })}
+
+          {/* Hover indicator */}
+          <ChartIndicator hoveredPoint={underwaterHover.hoveredPoint} />
         </svg>
 
         {/* Y-axis labels */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2">
+        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
           <span>0%</span>
           <span>-5%</span>
           <span>-10%</span>
@@ -943,7 +1206,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         </div>
 
         {/* Legend */}
-        <div className="absolute top-4 right-4 space-y-1 text-xs">
+        <div className="absolute top-4 right-4 space-y-1 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
             <div className="w-3 h-0.5 bg-red-500"></div>
             <span className="text-white">Underwater Periods</span>
@@ -953,9 +1216,21 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             <span className="text-gray-400">Recovery Points</span>
           </div>
         </div>
+
+        {/* Hover Tooltip */}
+        <ChartTooltip
+          hoveredPoint={underwaterHover.hoveredPoint}
+          chartWidth={CHART_WIDTH}
+          chartHeight={CHART_HEIGHT}
+        />
       </div>
     ),
-    [underwaterData]
+    [
+      underwaterData,
+      underwaterHover.hoveredPoint,
+      underwaterHover.handleMouseMove,
+      underwaterHover.handleMouseLeave,
+    ]
   );
 
   return (
@@ -1051,27 +1326,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 
         {/* Chart Summary */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {selectedChart === "performance" && (
-            <>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Best Day</div>
-                <div className="text-lg font-bold text-green-400">+5.2%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Worst Day</div>
-                <div className="text-lg font-bold text-red-400">-3.8%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Avg Daily</div>
-                <div className="text-lg font-bold text-gray-300">+0.12%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Win Rate</div>
-                <div className="text-lg font-bold text-blue-400">64.2%</div>
-              </div>
-            </>
-          )}
-
           {selectedChart === "sharpe" && (
             <>
               <div className="text-center">
@@ -1188,27 +1442,6 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                     ? "Underwater"
                     : "Above Water"}
                 </div>
-              </div>
-            </>
-          )}
-
-          {(selectedChart === "allocation" || selectedChart === "drawdown") && (
-            <>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Best Day</div>
-                <div className="text-lg font-bold text-green-400">+5.2%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Worst Day</div>
-                <div className="text-lg font-bold text-red-400">-3.8%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Avg Daily</div>
-                <div className="text-lg font-bold text-gray-300">+0.12%</div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-400">Win Rate</div>
-                <div className="text-lg font-bold text-blue-400">64.2%</div>
               </div>
             </>
           )}

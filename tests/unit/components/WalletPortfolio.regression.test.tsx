@@ -28,7 +28,7 @@ vi.mock("next/dynamic", () => ({
       return vi.fn(({ isOpen, onClose }) =>
         isOpen ? (
           <div data-testid="wallet-manager-modal">
-            <h2>Bundle Wallets</h2>
+            <h2>Bundled Wallets</h2>
             <div data-testid="wallet-manager-content">
               <div data-testid="wallet-list">
                 <div data-testid="wallet-item">Main Wallet: 0x123...456</div>

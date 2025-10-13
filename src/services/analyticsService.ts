@@ -4,32 +4,14 @@
  */
 
 import { httpUtils } from "../lib/http-utils";
-import { PortfolioDataPoint } from "../types/portfolio";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
 // API Response Types
-export interface UserResponse {
-  id: string;
-  email: string;
-  primary_wallet: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface AdditionalWallet {
   wallet_address: string;
   label?: string;
-  is_main?: boolean;
+  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   created_at?: string;
-}
-
-export interface BundleWalletsResponse {
-  user_id: string;
-  primary_wallet: string;
-  main_wallet: string;
-  visible_wallets: string[];
-  bundle_wallets: string[];
-  additional_wallets?: AdditionalWallet[];
 }
 
 export interface PortfolioSnapshot {
@@ -211,13 +193,6 @@ export interface WalletAddress {
   createdAt: string | null;
 }
 
-export interface ProtocolData {
-  protocol: string;
-  chain: string;
-  value: number;
-  pnl: number;
-}
-
 export interface PortfolioTrendsResponse {
   user_id: string;
   period: {
@@ -226,12 +201,28 @@ export interface PortfolioTrendsResponse {
     days: number;
   };
   trend_data: PortfolioTrend[];
+  daily_totals: PortfolioDailyTotal[];
   summary: {
     total_change_usd: number;
     total_change_percentage: number;
     best_day?: PortfolioTrend;
     worst_day?: PortfolioTrend;
   };
+}
+
+export interface PortfolioDailyProtocol {
+  protocol: string | null;
+  chain: string | null;
+  value_usd: number;
+  pnl_usd: number;
+}
+
+export interface PortfolioDailyTotal {
+  date: string;
+  total_value_usd: number;
+  change_percentage: number;
+  protocols: PortfolioDailyProtocol[];
+  chains_count: number;
 }
 
 /**
@@ -247,7 +238,7 @@ export const getPortfolioTrends = async (
     limit: limit.toString(),
   });
   return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
-    `/api/v1/portfolio-trends/by-user/${userId}?${params}`
+    `/api/v1/portfolio/trends/by-user/${userId}?${params}`
   );
 };
 
@@ -277,68 +268,6 @@ export const getRiskSummary = async (
   return await httpUtils.analyticsEngine.get<ActualRiskSummaryResponse>(
     endpoint
   );
-};
-
-/**
- * Transform analytics-engine portfolio trends data into PortfolioDataPoint format
- */
-export const transformPortfolioTrends = (
-  trendsData: PortfolioTrend[]
-): PortfolioDataPoint[] => {
-  // Group by date and sum net_value_usd
-  const groupedByDate = trendsData.reduce(
-    (acc, item) => {
-      const date = item.date;
-      if (!acc[date]) {
-        acc[date] = {
-          date,
-          totalValue: 0,
-          protocols: [] as ProtocolData[],
-          chains: new Set<string>(),
-        };
-      }
-      acc[date].totalValue += item.net_value_usd;
-      acc[date].protocols.push({
-        protocol: item.protocol,
-        chain: item.chain,
-        value: item.net_value_usd,
-        pnl: item.pnl_usd,
-      });
-      acc[date].chains.add(item.chain);
-      return acc;
-    },
-    {} as Record<
-      string,
-      {
-        date: string;
-        totalValue: number;
-        protocols: ProtocolData[];
-        chains: Set<string>;
-      }
-    >
-  );
-
-  // Convert to array and sort by date
-  const sortedData = Object.values(groupedByDate).sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-
-  // Calculate daily changes and format for chart
-  return sortedData.map((item, index) => {
-    const prevItem = index > 0 ? sortedData[index - 1] : null;
-    const prevValue = prevItem ? prevItem.totalValue : item.totalValue;
-    const change =
-      prevValue > 0 ? ((item.totalValue - prevValue) / prevValue) * 100 : 0;
-
-    return {
-      date: item.date,
-      value: item.totalValue,
-      change,
-      benchmark: item.totalValue * 0.95, // Mock benchmark - 5% below actual
-      protocols: item.protocols,
-      chainsCount: item.chains.size,
-    };
-  });
 };
 
 // Phase 2 Analytics - Rolling Sharpe Ratio Response
@@ -570,42 +499,4 @@ export const getAllocationTimeseries = async (
   return await httpUtils.analyticsEngine.get<AllocationTimeseriesResponse>(
     `/api/v1/portfolio/allocation/timeseries/${userId}?${params}`
   );
-};
-
-/**
- * Transform bundle addresses API response to WalletAddress format
- */
-export const transformBundleWallets = (
-  bundleData: BundleWalletsResponse | null | undefined
-): WalletAddress[] => {
-  if (!bundleData) {
-    return [];
-  }
-
-  const wallets: WalletAddress[] = [];
-
-  // Add primary wallet first
-  wallets.push({
-    id: "primary",
-    address: bundleData.primary_wallet,
-    label: "Main Wallet",
-    isActive: true,
-    isMain: true,
-
-    createdAt: null,
-  });
-
-  // Add additional wallets
-  bundleData.additional_wallets?.forEach((wallet, index) => {
-    wallets.push({
-      id: wallet.wallet_address,
-      address: wallet.wallet_address,
-      label: wallet.label || `Wallet ${index + 2}`, // Auto-generate labels
-      isActive: false,
-      isMain: wallet.is_main ?? false,
-      createdAt: wallet.created_at ?? null,
-    });
-  });
-
-  return wallets;
 };

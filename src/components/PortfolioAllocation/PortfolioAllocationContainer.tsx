@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { EnhancedOverview, SwapControls } from "./components";
-import { usePortfolioData, useRebalanceData } from "./hooks";
-import {
-  PortfolioAllocationContainerProps,
-  PortfolioSwapAction,
-  SwapSettings,
-} from "./types";
 import {
   DEFAULT_CATEGORY_WEIGHTS,
   DEFAULT_PORTFOLIO_TOTAL_VALUE,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { EnhancedOverview, SwapControls } from "./components";
+import type { SwapControlsRef } from "./components/SwapControls";
+import { usePortfolioData, useRebalanceData } from "./hooks";
+import {
+  PortfolioAllocationContainerProps,
+  PortfolioSwapAction,
+  SwapSettings,
+} from "./types";
 
 export const PortfolioAllocationContainer: React.FC<
   PortfolioAllocationContainerProps
@@ -26,6 +27,7 @@ export const PortfolioAllocationContainer: React.FC<
   onToggleCategoryExclusion,
   chainId,
 }) => {
+  const swapControlsRef = useRef<SwapControlsRef>(null);
   const [swapSettings, setSwapSettings] = useState<SwapSettings>({
     amount: "",
     slippageTolerance: 0.5, // Default 0.5%
@@ -121,26 +123,11 @@ export const PortfolioAllocationContainer: React.FC<
     });
   };
 
-  const totalAllocatedPercent = useMemo(() => {
-    return assetCategories.reduce((sum, category) => {
-      if (excludedCategoryIds.includes(category.id)) {
-        return sum;
-      }
-      return sum + (categoryAllocations[category.id] ?? 0);
-    }, 0);
-  }, [assetCategories, categoryAllocations, excludedCategoryIds]);
-
-  const allocationStatus = useMemo(() => {
-    const remaining = 100 - totalAllocatedPercent;
-    return {
-      totalAllocated: totalAllocatedPercent,
-      remaining,
-      isBalanced: Math.abs(remaining) < 0.01,
-    };
-  }, [totalAllocatedPercent]);
-
   // Enhanced zap action handler
   const handleEnhancedZapAction = () => {
+    // Trigger validation attempt first
+    swapControlsRef.current?.attemptValidation();
+
     const includedCategories = processedCategories.filter(
       cat => !cat.isExcluded
     );
@@ -163,8 +150,49 @@ export const PortfolioAllocationContainer: React.FC<
 
   const includedCategories = processedCategories.filter(cat => !cat.isExcluded);
 
+  const parsedAmount = Number.parseFloat(swapSettings.amount || "");
+  const hasPositiveAmount =
+    operationMode === "rebalance"
+      ? true
+      : Number.isFinite(parsedAmount) && parsedAmount > 0;
+
+  const hasRequiredToken = (() => {
+    if (operationMode === "zapIn") {
+      return Boolean(swapSettings.fromToken);
+    }
+
+    if (operationMode === "zapOut") {
+      return Boolean(swapSettings.toToken);
+    }
+
+    return true;
+  })();
+
+  const isActionEnabled = hasRequiredToken && hasPositiveAmount;
+
+  let actionDisabledReason: string | undefined;
+  if (!isActionEnabled && operationMode !== "rebalance") {
+    const needsTokenMessage = !hasRequiredToken
+      ? operationMode === "zapOut"
+        ? "select a token to receive"
+        : "select a token to zap in"
+      : undefined;
+    const needsAmountMessage = !hasPositiveAmount
+      ? "enter an amount"
+      : undefined;
+
+    const missingMessages = [needsTokenMessage, needsAmountMessage].filter(
+      Boolean
+    ) as string[];
+
+    if (missingMessages.length > 0) {
+      actionDisabledReason = `Please ${missingMessages.join(" and ")}.`;
+    }
+  }
+
   // Common SwapControls props
   const swapControlsProps = {
+    ref: swapControlsRef,
     operationMode,
     swapSettings,
     onSwapSettingsChange: setSwapSettings,
@@ -185,7 +213,8 @@ export const PortfolioAllocationContainer: React.FC<
         onToggleCategoryExclusion={onToggleCategoryExclusion}
         allocations={categoryAllocations}
         onAllocationChange={handleAllocationChange}
-        allocationStatus={allocationStatus}
+        actionEnabled={isActionEnabled}
+        {...(actionDisabledReason ? { actionDisabledReason } : {})}
       />
     </div>
   );

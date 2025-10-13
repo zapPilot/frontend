@@ -4,12 +4,15 @@ import { TokenImage } from "@/components/shared/TokenImage";
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
-import { useZapTokensWithStates } from "@/hooks/queries/useZapTokensQuery";
-import { formatCurrency } from "@/lib/formatters";
+import {
+  useZapTokensWithStates,
+  type UseZapTokensWithStatesOptions,
+} from "@/hooks/queries/useZapTokensQuery";
+import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
 import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
-import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
-import { memo } from "react";
+import { AlertCircle, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type {
   OperationMode,
   ProcessedAssetCategory,
@@ -110,11 +113,92 @@ interface TokenSelectorProps {
   label: string;
   placeholder: string;
   chainId?: number;
+  walletAddress?: string | null;
 }
 
+interface TokenSummaryProps {
+  token: SwapToken;
+  className?: string;
+}
+
+const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
+  const containerClassName = className
+    ? `flex items-center gap-3 ${className}`
+    : "flex items-center gap-3";
+
+  const hasBalance = token.balance !== undefined;
+  const formattedBalance = hasBalance
+    ? formatTokenAmount(token.balance!, token.symbol)
+    : null;
+  const formattedUsd =
+    hasBalance && typeof token.price === "number"
+      ? formatCurrency(token.balance! * token.price)
+      : null;
+
+  return (
+    <div className={containerClassName}>
+      <TokenImage
+        token={{
+          symbol: token.symbol,
+          ...(token.optimized_symbol && {
+            optimized_symbol: token.optimized_symbol,
+          }),
+          ...(token.logo_url && {
+            logo_url: token.logo_url,
+          }),
+        }}
+        size={32}
+        className="w-8 h-8 flex-shrink-0"
+      />
+      <div className="flex-1 min-w-0 text-left">
+        <div className="flex items-center gap-2 text-sm leading-tight">
+          <span className="truncate font-semibold text-white">
+            {token.symbol}
+          </span>
+          {formattedBalance && (
+            <span className="ml-auto text-sm font-medium text-white">
+              {formattedBalance}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 text-xs leading-tight">
+          <span className="truncate text-gray-400">{token.name}</span>
+          {formattedUsd && (
+            <span className="ml-auto text-gray-500">{formattedUsd}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const TokenSelector = memo<TokenSelectorProps>(
-  ({ selectedToken, onTokenSelect, label, placeholder, chainId }) => {
+  ({
+    selectedToken,
+    onTokenSelect,
+    label,
+    placeholder,
+    chainId,
+    walletAddress,
+  }) => {
     const dropdown = useDropdown(false);
+    const zapTokensOptions = useMemo(() => {
+      const base: UseZapTokensWithStatesOptions = {
+        balanceEnabled: !!walletAddress,
+        priceEnabled: true,
+      };
+
+      if (typeof chainId === "number") {
+        base.chainId = chainId;
+      }
+
+      if (walletAddress !== undefined) {
+        base.walletAddress = walletAddress;
+      }
+
+      return base;
+    }, [walletAddress, chainId]);
+
     const {
       tokens,
       hasTokens,
@@ -124,8 +208,10 @@ export const TokenSelector = memo<TokenSelectorProps>(
       error,
       refetch,
       isRefetching,
-    } = useZapTokensWithStates(chainId);
-
+      isBalanceLoading,
+      isBalanceFetching,
+      balanceError,
+    } = useZapTokensWithStates(zapTokensOptions);
     return (
       <div className="relative">
         <label className="block text-xs font-medium text-gray-400 mb-2">
@@ -133,39 +219,17 @@ export const TokenSelector = memo<TokenSelectorProps>(
         </label>
         <button
           onClick={dropdown.toggle}
-          className="w-full flex items-center justify-between p-3 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+          className="w-full flex items-center justify-between gap-3 p-3 bg-gray-800 border border-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
           data-testid={`token-selector-${label.toLowerCase().replace(" ", "-")}`}
         >
-          <div className="flex items-center space-x-3">
-            {selectedToken ? (
-              <>
-                <TokenImage
-                  token={{
-                    symbol: selectedToken.symbol,
-                    ...(selectedToken.optimized_symbol && {
-                      optimized_symbol: selectedToken.optimized_symbol,
-                    }),
-                    ...(selectedToken.logo_url && {
-                      logo_url: selectedToken.logo_url,
-                    }),
-                  }}
-                  size={32}
-                  className="w-8 h-8"
-                />
-                <div className="text-left">
-                  <div className="text-white font-medium">
-                    {selectedToken.symbol}
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {selectedToken.name}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <span className="text-gray-400">{placeholder}</span>
-            )}
-          </div>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          {selectedToken ? (
+            <TokenSummary token={selectedToken} className="flex-1 min-w-0" />
+          ) : (
+            <span className="flex-1 text-left text-gray-400">
+              {placeholder}
+            </span>
+          )}
+          <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
         </button>
 
         {dropdown.isOpen && (
@@ -176,17 +240,24 @@ export const TokenSelector = memo<TokenSelectorProps>(
               exit={{ opacity: 0, y: -10 }}
               className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
-              {/* Loading State */}
+              {/* Loading State - Compact Skeleton */}
               {isInitialLoading && (
-                <div className="space-y-2 p-2">
-                  {Array(4)
+                <div className="space-y-1 p-2">
+                  {Array(5)
                     .fill(0)
                     .map((_, i) => (
-                      <div key={i} className="flex items-center space-x-3 p-3">
-                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse" />
-                        <div className="flex-1">
-                          <div className="h-4 bg-gray-700 rounded animate-pulse mb-1" />
-                          <div className="h-3 bg-gray-700 rounded animate-pulse w-2/3" />
+                      <div
+                        key={i}
+                        className="flex items-center gap-3 py-2.5 px-3"
+                      >
+                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-16" />
+                          <div className="h-3 bg-gray-700 rounded animate-pulse w-24" />
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-20" />
+                          <div className="h-3 bg-gray-700 rounded animate-pulse w-16" />
                         </div>
                       </div>
                     ))}
@@ -226,7 +297,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                 </div>
               )}
 
-              {/* Token List */}
+              {/* Token List - COMPACT 2-LINE DESIGN */}
               {hasTokens &&
                 tokens.map(token => (
                   <button
@@ -235,46 +306,25 @@ export const TokenSelector = memo<TokenSelectorProps>(
                       onTokenSelect(token);
                       dropdown.close();
                     }}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-gray-800 transition-colors"
+                    className="w-full py-2.5 px-3 hover:bg-gray-800/70 transition-colors text-left"
                     data-testid={`token-option-${token.symbol}`}
                   >
-                    <TokenImage
-                      token={{
-                        symbol: token.symbol,
-                        ...(token.optimized_symbol && {
-                          optimized_symbol: token.optimized_symbol,
-                        }),
-                        ...(token.logo_url && { logo_url: token.logo_url }),
-                      }}
-                      size={32}
-                      className="w-8 h-8"
-                    />
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-medium">
-                        {token.symbol}
-                      </div>
-                      <div className="text-xs text-gray-400">{token.name}</div>
-                    </div>
-                    {/* Balance display when available */}
-                    {token.balance !== undefined && (
-                      <div className="text-right">
-                        <div className="text-sm text-gray-300">
-                          {token.balance.toFixed(
-                            token.symbol.includes("BTC") ||
-                              token.symbol.includes("ETH")
-                              ? 4
-                              : 2
-                          )}
-                        </div>
-                        {token.price && (
-                          <div className="text-xs text-gray-500">
-                            {formatCurrency(token.balance * token.price)}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <TokenSummary token={token} className="w-full" />
                   </button>
                 ))}
+
+              {/* Balance Loading Indicator */}
+              {(isBalanceLoading || isBalanceFetching) && !isInitialLoading && (
+                <div className="p-3 text-xs text-gray-500">
+                  Fetching balances...
+                </div>
+              )}
+
+              {balanceError && !isBalanceLoading && !isBalanceFetching && (
+                <div className="p-3 text-xs text-red-400">
+                  Unable to refresh token balances. Balances may be outdated.
+                </div>
+              )}
             </motion.div>
             <div
               className={`fixed inset-0 ${Z_INDEX.HEADER}`}
@@ -293,6 +343,36 @@ TokenSelector.displayName = "TokenSelector";
 // AMOUNT INPUT COMPONENT (was in Controls/AmountInput.tsx)
 // =============================================================================
 
+// Helper functions for precise decimal handling
+function constrainValue(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function parseInputValue(input: string): number {
+  const parsed = parseFloat(input);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Smart decimal formatter for crypto amounts
+ * - Values >= 1: show 2 decimals (e.g., 10.25)
+ * - Values < 1: show up to 6 decimals (e.g., 0.001234)
+ * - Removes trailing zeros (e.g., 0.001000 → 0.001)
+ */
+function formatCryptoAmount(value: number): string {
+  if (value === 0) return "0";
+
+  // For values >= 1, use 2 decimals
+  if (value >= 1) {
+    return value.toFixed(2);
+  }
+
+  // For values < 1, use up to 6 decimals and remove trailing zeros
+  const formatted = value.toFixed(6);
+  // Remove trailing zeros and trailing decimal point
+  return formatted.replace(/\.?0+$/, "");
+}
+
 interface AmountInputProps {
   operationMode: OperationMode;
   amount: string;
@@ -300,6 +380,11 @@ interface AmountInputProps {
   fromToken?: SwapToken;
   totalPortfolioValue: number;
   className?: string;
+  // Enhanced props with smart defaults
+  step?: number;
+  minAmount?: number;
+  disabled?: boolean;
+  placeholder?: string;
 }
 
 export const AmountInput = memo<AmountInputProps>(
@@ -310,93 +395,273 @@ export const AmountInput = memo<AmountInputProps>(
     fromToken,
     totalPortfolioValue,
     className = "",
+    step = 0.01,
+    minAmount = 0,
+    disabled = false,
+    placeholder = "0.00",
   }) => {
-    // Dynamic label based on operation mode
-    const getLabel = () => {
-      switch (operationMode) {
-        case "zapIn":
-          return "Amount to Zap In";
-        case "zapOut":
-          return "Portfolio Value to Convert";
-        case "rebalance":
-          return "Amount to Rebalance";
-        default:
-          return "Amount";
+    // Determine max value based on operation mode
+    const maxAmount = useMemo(() => {
+      if (operationMode === "zapOut") {
+        return totalPortfolioValue;
       }
-    };
-
-    // Currency symbol display
-    const getCurrencySymbol = () => {
-      if (operationMode === "zapIn" && fromToken) {
-        return fromToken.symbol;
-      }
-      return "USD";
-    };
-
-    // Handle max button click
-    const handleMaxClick = () => {
       if (
         operationMode === "zapIn" &&
         fromToken &&
         fromToken.balance !== undefined
       ) {
-        onAmountChange(fromToken.balance.toString());
-      } else if (operationMode === "zapOut" || operationMode === "rebalance") {
-        onAmountChange(totalPortfolioValue.toString());
+        return fromToken.balance;
       }
-    };
+      return Infinity;
+    }, [operationMode, totalPortfolioValue, fromToken]);
 
-    // Show balance info for zapIn mode
-    const showBalance = operationMode === "zapIn" && fromToken;
+    // Local state for input display (allows partial input like "0.")
+    const [inputValue, setInputValue] = useState(amount);
 
-    // Show portfolio info for zapOut/rebalance modes
-    const showPortfolioValue =
-      operationMode === "zapOut" || operationMode === "rebalance";
+    // Sync with external amount prop
+    useEffect(() => {
+      setInputValue(amount);
+    }, [amount]);
+
+    // Handle input change with validation
+    const handleInputChange = useCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawValue = e.target.value;
+
+        // Allow empty input
+        if (rawValue === "") {
+          setInputValue("");
+          onAmountChange("0");
+          return;
+        }
+
+        // Allow partial decimal input (e.g., "0.", "10.")
+        if (/^\d*\.?\d*$/.test(rawValue)) {
+          setInputValue(rawValue);
+
+          // Only update parent if it's a valid number
+          const numValue = parseFloat(rawValue);
+          if (!isNaN(numValue)) {
+            const constrained = constrainValue(numValue, minAmount, maxAmount);
+            onAmountChange(constrained.toString());
+          }
+        }
+      },
+      [onAmountChange, minAmount, maxAmount]
+    );
+
+    // Handle blur - cleanup partial inputs
+    const handleBlur = useCallback(() => {
+      const numValue = parseInputValue(inputValue);
+      const constrained = constrainValue(numValue, minAmount, maxAmount);
+      const formatted = formatCryptoAmount(constrained);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, minAmount, maxAmount, onAmountChange]);
+
+    // Increment handler
+    const handleIncrement = useCallback(() => {
+      const current = parseInputValue(inputValue);
+      const incremented = current + step;
+      const constrained = constrainValue(incremented, minAmount, maxAmount);
+      const formatted = formatCryptoAmount(constrained);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
+
+    // Decrement handler
+    const handleDecrement = useCallback(() => {
+      const current = parseInputValue(inputValue);
+      const decremented = current - step;
+      const constrained = constrainValue(decremented, minAmount, maxAmount);
+      const formatted = formatCryptoAmount(constrained);
+
+      setInputValue(formatted);
+      onAmountChange(formatted);
+    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
+
+    // Max button handler - use exact amount to avoid precision loss
+    const handleMax = useCallback(() => {
+      // Use the exact maxAmount without formatting to prevent transaction failures
+      // due to insufficient balance from rounding
+      const exactAmount = maxAmount.toString();
+
+      setInputValue(exactAmount);
+      onAmountChange(exactAmount);
+    }, [maxAmount, onAmountChange]);
+
+    // Keyboard navigation for increment/decrement
+    const handleKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowUp") {
+          e.preventDefault();
+          handleIncrement();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          handleDecrement();
+        }
+      },
+      [handleIncrement, handleDecrement]
+    );
+
+    // Check if at boundaries
+    const isAtMin = parseInputValue(inputValue) <= minAmount;
+    const isAtMax = parseInputValue(inputValue) >= maxAmount;
+    const tokenPrice =
+      typeof fromToken?.price === "number" ? fromToken.price : undefined;
+    const usdValue =
+      tokenPrice !== undefined
+        ? parseInputValue(inputValue) * tokenPrice
+        : undefined;
+
+    // Display label and balance based on operation mode
+    const balanceLabel =
+      operationMode === "zapOut" ? "Portfolio Value" : "Balance";
+    const displayBalance =
+      operationMode === "zapOut"
+        ? formatCurrency(totalPortfolioValue)
+        : fromToken && fromToken.balance !== undefined
+          ? `${formatTokenAmount(fromToken.balance, fromToken.symbol)}`
+          : formatCurrency(0);
 
     return (
       <div className={`space-y-2 ${className}`}>
-        <label className="block text-xs font-medium text-gray-400">
-          {getLabel()}
-        </label>
-
-        <div className="relative">
-          <input
-            type="number"
-            value={amount}
-            onChange={e => onAmountChange(e.target.value)}
-            placeholder="0.0"
-            min="0"
-            step="0.01"
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white text-lg placeholder-gray-500 focus:outline-none focus:border-purple-500"
-            data-testid="amount-input"
-          />
-          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-400">
-            {getCurrencySymbol()}
+        {/* Label row */}
+        <div className="flex justify-between items-center text-sm">
+          <label htmlFor="amount-input" className="text-gray-400 font-medium">
+            Amount
+          </label>
+          <div className="text-gray-400">
+            {balanceLabel}: <span className="text-white">{displayBalance}</span>
           </div>
         </div>
 
-        {/* Balance/Portfolio Info */}
-        <div className="flex justify-between text-xs text-gray-400">
-          {showBalance && fromToken!.balance !== undefined && (
-            <span>
-              Balance: {fromToken!.balance.toFixed(4)} {fromToken!.symbol}
-            </span>
-          )}
-
-          {showPortfolioValue && (
-            <span>Portfolio Value: {formatCurrency(totalPortfolioValue)}</span>
-          )}
-
-          <button
-            onClick={handleMaxClick}
-            className="text-purple-400 hover:text-purple-300 transition-colors"
-            disabled={
-              operationMode === "zapIn" &&
-              (!fromToken || fromToken.balance === undefined)
-            }
+        {/* Input row with controls */}
+        <div className="relative">
+          {/* Decrement button */}
+          <motion.button
+            type="button"
+            onClick={handleDecrement}
+            disabled={disabled || isAtMin}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`
+              absolute left-3 top-1/2 -translate-y-1/2 z-10
+              w-8 h-8 rounded-lg
+              flex items-center justify-center
+              transition-all duration-200
+              ${
+                disabled || isAtMin
+                  ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+              }
+            `}
+            aria-label="Decrease amount"
+            aria-disabled={disabled || isAtMin}
           >
-            Max
-          </button>
+            <ChevronDown className="w-4 h-4" />
+          </motion.button>
+
+          {/* Input field */}
+          <input
+            id="amount-input"
+            type="number"
+            inputMode="decimal"
+            role="spinbutton"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={placeholder}
+            step={step}
+            min={minAmount}
+            max={maxAmount}
+            className={`
+              w-full h-14 px-14
+              bg-black/30 backdrop-blur-sm
+              border border-purple-500/20
+              rounded-xl
+              text-white text-center text-lg font-medium
+              placeholder:text-gray-600
+              focus:outline-none focus:border-purple-500/40 focus:ring-2 focus:ring-purple-500/20
+              transition-all duration-200
+              disabled:opacity-50 disabled:cursor-not-allowed
+              [appearance:textfield]
+              [&::-webkit-outer-spin-button]:appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none
+            `}
+            aria-label="Amount input"
+            aria-describedby="amount-balance"
+            aria-valuemin={minAmount}
+            aria-valuemax={maxAmount}
+            aria-valuenow={parseInputValue(inputValue)}
+            data-testid="amount-input"
+          />
+
+          {/* Increment button */}
+          <motion.button
+            type="button"
+            onClick={handleIncrement}
+            disabled={disabled || isAtMax}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={`
+              absolute right-3 top-1/2 -translate-y-1/2 z-10
+              w-8 h-8 rounded-lg
+              flex items-center justify-center
+              transition-all duration-200
+              ${
+                disabled || isAtMax
+                  ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+              }
+            `}
+            aria-label="Increase amount"
+            aria-disabled={disabled || isAtMax}
+          >
+            <ChevronUp className="w-4 h-4" />
+          </motion.button>
+        </div>
+
+        <div className="text-center text-xs text-gray-400 space-y-1">
+          {tokenPrice !== undefined ? (
+            <>
+              <div>Price: {`${formatCurrency(tokenPrice)}/token`}</div>
+              <div>≈ {`${formatCurrency(usdValue ?? 0)} USD`}</div>
+            </>
+          ) : (
+            <div>Price unavailable</div>
+          )}
+        </div>
+
+        {/* Max button */}
+        <motion.button
+          type="button"
+          onClick={handleMax}
+          disabled={disabled || isAtMax}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className={`
+            w-full h-10 rounded-lg
+            text-sm font-medium
+            transition-all duration-200
+            ${
+              disabled || isAtMax
+                ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-300 hover:from-purple-500/20 hover:to-blue-500/20"
+            }
+          `}
+          aria-label="Set to maximum amount"
+        >
+          Max: {displayBalance}
+        </motion.button>
+
+        {/* Screen reader announcements */}
+        <div id="amount-balance" className="sr-only">
+          Current {balanceLabel.toLowerCase()}: {displayBalance}
         </div>
       </div>
     );

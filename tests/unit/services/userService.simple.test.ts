@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  getMainWallet,
   handleWalletError,
   transformWalletData,
   validateWalletAddress,
@@ -163,7 +162,6 @@ describe("userService - Pure Functions", () => {
         id: "wallet-1",
         user_id: "user-123",
         wallet: "0x1234567890123456789012345678901234567890",
-        is_main: true,
         label: "My Main Wallet",
 
         created_at: "2024-01-01T00:00:00Z",
@@ -172,7 +170,6 @@ describe("userService - Pure Functions", () => {
         id: "wallet-2",
         user_id: "user-123",
         wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-        is_main: false,
 
         created_at: "2024-01-02T00:00:00Z",
       },
@@ -180,7 +177,6 @@ describe("userService - Pure Functions", () => {
         id: "wallet-3",
         user_id: "user-123",
         wallet: "0x9876543210987654321098765432109876543210",
-        is_main: false,
         label: "Trading Wallet",
         created_at: "2024-01-03T00:00:00Z",
       },
@@ -194,15 +190,15 @@ describe("userService - Pure Functions", () => {
           id: "wallet-1",
           address: "0x1234567890123456789012345678901234567890",
           label: "My Main Wallet",
-          isMain: true,
-          isActive: true,
+          isMain: false,
+          isActive: false,
 
           createdAt: "2024-01-01T00:00:00Z",
         },
         {
           id: "wallet-2",
           address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          label: "Additional Wallet",
+          label: "Wallet",
           isMain: false,
           isActive: false,
 
@@ -219,13 +215,12 @@ describe("userService - Pure Functions", () => {
       ]);
     });
 
-    it("handles main wallet without label", () => {
+    it("handles wallet without label", () => {
       const walletWithoutLabel: UserCryptoWallet[] = [
         {
           id: "wallet-1",
           user_id: "user-123",
           wallet: "0x1234567890123456789012345678901234567890",
-          is_main: true,
 
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -233,86 +228,14 @@ describe("userService - Pure Functions", () => {
 
       const result = transformWalletData(walletWithoutLabel);
 
-      expect(result[0].label).toBe("Primary Wallet");
-      expect(result[0].isMain).toBe(true);
-      expect(result[0].isActive).toBe(true);
+      expect(result[0].label).toBe("Wallet");
+      expect(result[0].isMain).toBe(false);
+      expect(result[0].isActive).toBe(false);
     });
 
     it("handles empty wallet list", () => {
       const result = transformWalletData([]);
       expect(result).toEqual([]);
-    });
-  });
-
-  describe("getMainWallet", () => {
-    it("returns main wallet when present", () => {
-      const wallets: UserCryptoWallet[] = [
-        {
-          id: "wallet-1",
-          user_id: "user-123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          is_main: false,
-
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "wallet-2",
-          user_id: "user-123",
-          wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          is_main: true,
-          label: "Main Wallet",
-
-          created_at: "2024-01-02T00:00:00Z",
-        },
-      ];
-
-      const result = getMainWallet(wallets);
-      expect(result).toEqual(wallets[1]);
-    });
-
-    it("returns null when no main wallet present", () => {
-      const wallets: UserCryptoWallet[] = [
-        {
-          id: "wallet-1",
-          user_id: "user-123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          is_main: false,
-
-          created_at: "2024-01-01T00:00:00Z",
-        },
-      ];
-
-      const result = getMainWallet(wallets);
-      expect(result).toBeNull();
-    });
-
-    it("returns null for empty wallet list", () => {
-      const result = getMainWallet([]);
-      expect(result).toBeNull();
-    });
-
-    it("returns first main wallet when multiple marked as main", () => {
-      const wallets: UserCryptoWallet[] = [
-        {
-          id: "wallet-1",
-          user_id: "user-123",
-          wallet: "0x1234567890123456789012345678901234567890",
-          is_main: true,
-
-          created_at: "2024-01-01T00:00:00Z",
-        },
-        {
-          id: "wallet-2",
-          user_id: "user-123",
-          wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-          is_main: true,
-
-          created_at: "2024-01-02T00:00:00Z",
-        },
-      ];
-
-      const result = getMainWallet(wallets);
-      expect(result).toEqual(wallets[0]);
     });
   });
 
@@ -402,7 +325,6 @@ describe("userService - Pure Functions", () => {
           id: "test-id",
           user_id: "test-user",
           wallet: "0x1234567890123456789012345678901234567890",
-          is_main: true,
           label: "Test Wallet",
 
           created_at: "2024-01-01T00:00:00Z",
@@ -423,8 +345,8 @@ describe("userService - Pure Functions", () => {
         "0x1234567890123456789012345678901234567890"
       );
       expect(transformed[0].label).toBe("Test Wallet");
-      expect(transformed[0].isMain).toBe(true);
-      expect(transformed[0].isActive).toBe(true);
+      expect(transformed[0].isMain).toBe(false);
+      expect(transformed[0].isActive).toBe(false);
     });
 
     it("handles malformed wallet data gracefully", () => {
@@ -433,7 +355,6 @@ describe("userService - Pure Functions", () => {
           id: "",
           user_id: "",
           wallet: "",
-          is_main: false,
 
           created_at: "",
         },
@@ -444,7 +365,7 @@ describe("userService - Pure Functions", () => {
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe("");
       expect(result[0].address).toBe("");
-      expect(result[0].label).toBe("Additional Wallet");
+      expect(result[0].label).toBe("Wallet");
       expect(result[0].isMain).toBe(false);
       expect(result[0].isActive).toBe(false);
     });
@@ -458,7 +379,6 @@ describe("userService - Pure Functions", () => {
           id: `wallet-${i}`,
           user_id: "user-123",
           wallet: `0x${"1".repeat(40)}`,
-          is_main: i === 0,
           label: `Wallet ${i}`,
 
           created_at: "2024-01-01T00:00:00Z",
@@ -470,8 +390,6 @@ describe("userService - Pure Functions", () => {
       const endTime = Date.now();
 
       expect(result).toHaveLength(1000);
-      expect(result[0].isMain).toBe(true);
-      expect(result[1].isMain).toBe(false);
       expect(endTime - startTime).toBeLessThan(100); // Should be fast
     });
 

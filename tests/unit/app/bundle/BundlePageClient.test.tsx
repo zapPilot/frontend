@@ -25,13 +25,14 @@ vi.mock("next/navigation", async () => {
 // User context mock (we'll override return values per test)
 let mockIsConnected = false;
 let mockUserId: string | null = null;
+let mockConnectedWallet: string | null = null;
 vi.mock("@/contexts/UserContext", () => ({
   useUser: () => ({
     userInfo: mockUserId ? { userId: mockUserId } : null,
     isConnected: mockIsConnected,
     loading: false,
     error: null,
-    connectedWallet: null,
+    connectedWallet: mockConnectedWallet,
     refetch: () => {},
   }),
 }));
@@ -43,6 +44,7 @@ describe("BundlePageClient switch prompt", () => {
     replaceMock.mockReset();
     mockIsConnected = false;
     mockUserId = null;
+    mockConnectedWallet = null;
     // Default URL
     window.history.pushState({}, "", "/bundle?userId=OWNER123&foo=bar");
   });
@@ -50,6 +52,7 @@ describe("BundlePageClient switch prompt", () => {
   it("allows staying on the current bundle (hides prompt)", async () => {
     mockIsConnected = true;
     mockUserId = "ME456"; // different user
+    mockConnectedWallet = "0xME456";
 
     await act(async () => {
       render(<BundlePageClient userId="OWNER123" />);
@@ -71,6 +74,7 @@ describe("BundlePageClient switch prompt", () => {
   it("does not show prompt when viewing own bundle", async () => {
     mockIsConnected = true;
     mockUserId = "OWNER123"; // same as URL
+    mockConnectedWallet = "0xOWNER123";
 
     await act(async () => {
       render(<BundlePageClient userId="OWNER123" />);
