@@ -845,8 +845,25 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               );
             })}
 
-            {/* Hover indicator */}
-            <ChartIndicator hoveredPoint={allocationHover.hoveredPoint} />
+            {/* Vertical line indicator for stacked chart */}
+            {allocationHover.hoveredPoint && (
+              <motion.line
+                x1={allocationHover.hoveredPoint.x}
+                y1={10}
+                x2={allocationHover.hoveredPoint.x}
+                y2={290}
+                stroke="#8b5cf6"
+                strokeWidth="2"
+                strokeDasharray="4,4"
+                opacity="0.8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ pointerEvents: "none" }}
+                aria-hidden="true"
+              />
+            )}
           </svg>
 
           {/* Legend */}
