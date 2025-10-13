@@ -19,6 +19,13 @@ import { useRollingSharpe } from "../hooks/useRollingSharpe";
 import { useRollingVolatility } from "../hooks/useRollingVolatility";
 import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
 import {
+  calculateDaysSincePeak,
+  findPeakDate,
+  getRecoveryStatus,
+  getSharpeInterpretation,
+  getVolatilityRiskLevel,
+} from "../lib/chartHoverUtils";
+import {
   formatAxisLabel,
   generateAreaPath,
   generateSVGPath,
@@ -28,16 +35,9 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
-import {
-  getSharpeInterpretation,
-  getVolatilityRiskLevel,
-  getRecoveryStatus,
-  findPeakDate,
-  calculateDaysSincePeak,
-} from "../lib/chartHoverUtils";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { ChartIndicator, ChartTooltip } from "./charts";
-import { GlassCard, Skeleton, ButtonSkeleton } from "./ui";
+import { ButtonSkeleton, GlassCard, Skeleton } from "./ui";
 
 interface AllocationTimeseriesInputPoint {
   date: string;
@@ -945,7 +945,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M 0 50 ${drawdownData
               .map((point, index) => {
                 const x = (index / (drawdownData.length - 1)) * 800;
-                const y = 50 - (point.drawdown / -20) * 250; // Scale to -20% max
+                const y = 50 + (point.drawdown / -20) * 250; // Scale to -20% max
                 return `L ${x} ${y}`;
               })
               .join(" ")} L 800 50 Z`}
@@ -957,7 +957,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M ${drawdownData
               .map((point, index) => {
                 const x = (index / (drawdownData.length - 1)) * 800;
-                const y = 50 - (point.drawdown / -20) * 250;
+                const y = 50 + (point.drawdown / -20) * 250;
                 return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
               })
               .join(" ")}`}
@@ -1239,8 +1239,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               x2="0%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="#0891b2" stopOpacity="0" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.4" />
             </linearGradient>
             <linearGradient
               id="recoveryGradient"
@@ -1270,7 +1270,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M 0 50 ${underwaterData
               .map((point, index) => {
                 const x = (index / (underwaterData.length - 1)) * 800;
-                const y = 50 - (point.underwater / -20) * 250; // Scale to -20% max
+                const y = 50 + (point.underwater / -20) * 250; // Scale to -20% max
                 return `L ${x} ${y}`;
               })
               .join(" ")} L 800 50 Z`}
@@ -1282,12 +1282,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M ${underwaterData
               .map((point, index) => {
                 const x = (index / (underwaterData.length - 1)) * 800;
-                const y = 50 - (point.underwater / -20) * 250;
+                const y = 50 + (point.underwater / -20) * 250;
                 return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
               })
               .join(" ")}`}
             fill="none"
-            stroke="#ef4444"
+            stroke="#0891b2"
             strokeWidth="2.5"
           />
 
@@ -1295,15 +1295,29 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           {underwaterData.map((point, index) => {
             if (!point.recovery) return null;
             const x = (index / (underwaterData.length - 1)) * 800;
+            const y = 50 + (point.underwater / -20) * 250;
             return (
-              <circle
-                key={index}
-                cx={x}
-                cy="45"
-                r="3"
-                fill="#10b981"
-                opacity="0.8"
-              />
+              <g key={index}>
+                {/* Vertical recovery line from zero to curve */}
+                <line
+                  x1={x}
+                  y1="50"
+                  x2={x}
+                  y2={y}
+                  stroke="#10b981"
+                  strokeWidth="1.5"
+                  strokeDasharray="3,3"
+                  opacity="0.6"
+                />
+                {/* Recovery point circle at zero line */}
+                <circle
+                  cx={x}
+                  cy="50"
+                  r="5"
+                  fill="#10b981"
+                  opacity="0.8"
+                />
+              </g>
             );
           })}
 
@@ -1323,7 +1337,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         {/* Legend */}
         <div className="absolute top-4 right-4 space-y-1 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-0.5 bg-red-500"></div>
+            <div className="w-3 h-0.5 bg-cyan-600"></div>
             <span className="text-white">Underwater Periods</span>
           </div>
           <div className="flex items-center space-x-2">

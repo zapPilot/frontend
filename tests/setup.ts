@@ -1,6 +1,7 @@
 import { expect, afterEach, beforeEach, vi } from "vitest";
 import { cleanup, configure } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+import { chartMatchers } from "./utils/chartTypeGuards";
 
 // Configure React Testing Library to work better with React 18+
 configure({
@@ -39,6 +40,9 @@ vi.mock("@tanstack/react-query", async () => {
 
 // Extend Vitest's expect with testing-library matchers
 expect.extend(matchers);
+
+// Extend Vitest's expect with custom chart matchers
+expect.extend(chartMatchers);
 
 // Clean up after each test case
 afterEach(() => {
