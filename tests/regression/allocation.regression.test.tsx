@@ -22,7 +22,9 @@ vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     line: ({ children, ...props }: any) => <line {...props}>{children}</line>,
-    circle: ({ children, ...props }: any) => <circle {...props}>{children}</circle>,
+    circle: ({ children, ...props }: any) => (
+      <circle {...props}>{children}</circle>
+    ),
     g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -30,7 +32,16 @@ vi.mock("framer-motion", () => ({
 
 // Mock Next.js Image component
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <span
+      role="img"
+      aria-label={alt}
+      data-src={src}
+      data-testid="next-image-mock"
+      {...props}
+    />
+  ),
 }));
 
 describe("Allocation Chart - Cursor Regression Tests", () => {
@@ -43,10 +54,18 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         queries: { retry: false },
       },
     });
-    eventFactory = new SVGEventFactory({ left: 0, top: 0, width: 800, height: 300 });
+    eventFactory = new SVGEventFactory({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 300,
+    });
   });
 
-  const renderChart = (portfolioData = ChartTestFixtures.mediumPortfolioData(), allocationData = ChartTestFixtures.balancedAllocation()) => {
+  const renderChart = (
+    portfolioData = ChartTestFixtures.mediumPortfolioData(),
+    allocationData = ChartTestFixtures.balancedAllocation()
+  ) => {
     return render(
       <QueryClientProvider client={queryClient}>
         <PortfolioChart
@@ -66,9 +85,11 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       expect(svg).not.toBeNull();
 
       // Simulate mouse hover
-      const mouseEvent = eventFactory.mouseMove(400, 150);
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -86,7 +107,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       // Trigger hover
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -113,12 +137,19 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
         const line = container.querySelector('line[stroke="#8b5cf6"]');
-        expect(line).toBeVerticalLine(400, { y1: 10, y2: 290, stroke: "#8b5cf6" });
+        expect(line).toBeVerticalLine(400, {
+          y1: 10,
+          y2: 290,
+          stroke: "#8b5cf6",
+        });
       });
     });
 
@@ -127,12 +158,15 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
         // Should NOT find multiple stacked circles (old behavior)
-        const circles = container.querySelectorAll('circle');
+        const circles = container.querySelectorAll("circle");
         expect(circles.length).toBe(0); // No circles for allocation chart
       });
     });
@@ -146,7 +180,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       // Move to position 1
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 200, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 200, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -157,7 +194,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       // Move to position 2
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 600, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 600, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -174,11 +214,16 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       // Hover
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Leave
@@ -194,7 +239,7 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
   describe("Data Point Accuracy", () => {
     it("should display correct allocation percentages on hover", async () => {
-      const allocationData = AllocationDataFactory.createPoints(30, (i) => ({
+      const allocationData = AllocationDataFactory.createPoints(30, i => ({
         btc: 40 - i * 0.5,
         eth: 30 + i * 0.3,
         stablecoin: 15 + i * 0.1,
@@ -202,11 +247,17 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         altcoin: 5 + i * 0.05,
       }));
 
-      const { container } = renderChart(ChartTestFixtures.mediumPortfolioData(), allocationData);
+      const { container } = renderChart(
+        ChartTestFixtures.mediumPortfolioData(),
+        allocationData
+      );
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -225,11 +276,17 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         altcoin: 0,
       }));
 
-      const { container } = renderChart(ChartTestFixtures.smallPortfolioData(), zeroAllocationData);
+      const { container } = renderChart(
+        ChartTestFixtures.smallPortfolioData(),
+        zeroAllocationData
+      );
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 200, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 200, clientY: 150 },
+        });
       }
 
       // Should not crash and should show 0% for all categories
@@ -248,8 +305,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       if (svg) {
         // Simulate touch
-        const touchEvent = eventFactory.touchMove(400, 150);
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -265,10 +324,16 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       if (svg) {
         // Start touch
-        await userEvent.pointer({ target: svg, coords: { clientX: 200, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 200, clientY: 150 },
+        });
 
         // Drag to new position
-        await userEvent.pointer({ target: svg, coords: { clientX: 600, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 600, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -285,10 +350,15 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       if (svg) {
         // Touch move
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
 
         await waitFor(() => {
-          expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+          expect(
+            container.querySelector('line[stroke="#8b5cf6"]')
+          ).not.toBeNull();
         });
 
         // Touch end (unhover)
@@ -308,11 +378,16 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
 
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Simulate resize
@@ -327,9 +402,14 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       eventFactory.updateRect({ left: 0, top: 0, width: 400, height: 200 });
       const { container: smallContainer } = renderChart();
 
-      const smallSvg = smallContainer.querySelector('svg[data-chart-type="allocation"]');
+      const smallSvg = smallContainer.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (smallSvg) {
-        await userEvent.pointer({ target: smallSvg, coords: { clientX: 200, clientY: 100 } });
+        await userEvent.pointer({
+          target: smallSvg,
+          coords: { clientX: 200, clientY: 100 },
+        });
       }
 
       await waitFor(() => {
@@ -341,9 +421,14 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       eventFactory.updateRect({ left: 0, top: 0, width: 1200, height: 400 });
       const { container: largeContainer } = renderChart();
 
-      const largeSvg = largeContainer.querySelector('svg[data-chart-type="allocation"]');
+      const largeSvg = largeContainer.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (largeSvg) {
-        await userEvent.pointer({ target: largeSvg, coords: { clientX: 600, clientY: 200 } });
+        await userEvent.pointer({
+          target: largeSvg,
+          coords: { clientX: 600, clientY: 200 },
+        });
       }
 
       await waitFor(() => {
@@ -360,7 +445,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
 
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -368,7 +456,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         expect(line).not.toBeNull();
 
         // Verify animation props are present (from Framer Motion)
-        expect(line?.hasAttribute("animate") || line?.hasAttribute("style")).toBe(true);
+        expect(
+          line?.hasAttribute("animate") || line?.hasAttribute("style")
+        ).toBe(true);
       });
     });
 
@@ -382,7 +472,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         const positions = [100, 200, 300, 400, 500, 600, 700];
 
         for (const x of positions) {
-          await userEvent.pointer({ target: svg, coords: { clientX: x, clientY: 150 } });
+          await userEvent.pointer({
+            target: svg,
+            coords: { clientX: x, clientY: 150 },
+          });
         }
       }
 
@@ -401,7 +494,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -415,7 +511,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -428,7 +527,10 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty allocation data gracefully", () => {
-      const { container } = renderChart(ChartTestFixtures.mediumPortfolioData(), ChartTestFixtures.emptyAllocationData());
+      const { container } = renderChart(
+        ChartTestFixtures.mediumPortfolioData(),
+        ChartTestFixtures.emptyAllocationData()
+      );
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       expect(svg).not.toBeNull();
@@ -439,11 +541,17 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
     it("should handle single data point", async () => {
       const singlePoint = AllocationDataFactory.createPoints(1);
-      const { container } = renderChart(ChartTestFixtures.singlePortfolioPoint(), singlePoint);
+      const { container } = renderChart(
+        ChartTestFixtures.singlePortfolioPoint(),
+        singlePoint
+      );
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -457,11 +565,16 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
 
       const svg = container.querySelector('svg[data-chart-type="allocation"]');
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Switch to performance tab
@@ -476,7 +589,11 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       );
 
       // Allocation cursor should be gone
-      expect(container.querySelector('svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]')).toBeNull();
+      expect(
+        container.querySelector(
+          'svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]'
+        )
+      ).toBeNull();
     });
   });
 });

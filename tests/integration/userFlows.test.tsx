@@ -11,19 +11,20 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PortfolioChart from "@/components/PortfolioChart";
 import { ChartTestFixtures } from "../fixtures/chartTestData";
-import { SVGEventFactory } from "../utils/eventFactories";
 
 // Mock Framer Motion
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     line: ({ children, ...props }: any) => <line {...props}>{children}</line>,
-    circle: ({ children, ...props }: any) => <circle {...props}>{children}</circle>,
+    circle: ({ children, ...props }: any) => (
+      <circle {...props}>{children}</circle>
+    ),
     g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -31,12 +32,20 @@ vi.mock("framer-motion", () => ({
 
 // Mock Next.js Image
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <span
+      role="img"
+      aria-label={alt}
+      data-src={src}
+      data-testid="next-image-mock"
+      {...props}
+    />
+  ),
 }));
 
 describe("User Flows - Integration Tests", () => {
   let queryClient: QueryClient;
-  let eventFactory: SVGEventFactory;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -44,7 +53,6 @@ describe("User Flows - Integration Tests", () => {
         queries: { retry: false },
       },
     });
-    eventFactory = new SVGEventFactory({ left: 0, top: 0, width: 800, height: 300 });
   });
 
   const renderChart = (activeTab = "performance") => {
@@ -68,7 +76,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("performance");
 
       // Step 1: User views performance chart
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       expect(performanceSvg).not.toBeNull();
 
       // Step 2: User hovers to see portfolio value
@@ -102,11 +112,15 @@ describe("User Flows - Integration Tests", () => {
       }
 
       await waitFor(() => {
-        expect(container.querySelector('svg[data-chart-type="allocation"]')).not.toBeNull();
+        expect(
+          container.querySelector('svg[data-chart-type="allocation"]')
+        ).not.toBeNull();
       });
 
       // Step 4: User hovers on allocation to see percentages
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
         await userEvent.pointer({
           target: allocationSvg,
@@ -151,7 +165,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("performance");
 
       // View performance
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
         await userEvent.pointer({
           target: performanceSvg,
@@ -159,7 +175,8 @@ describe("User Flows - Integration Tests", () => {
         });
       }
 
-      const performanceValue = screen.queryByTestId("chart-tooltip")?.textContent;
+      const performanceValue =
+        screen.queryByTestId("chart-tooltip")?.textContent;
       expect(performanceValue).toBeTruthy();
 
       // Quickly switch to allocation
@@ -173,7 +190,9 @@ describe("User Flows - Integration Tests", () => {
         </QueryClientProvider>
       );
 
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
         await userEvent.pointer({
           target: allocationSvg,
@@ -187,7 +206,9 @@ describe("User Flows - Integration Tests", () => {
       });
 
       // User can now mentally compare the two
-      expect(performanceValue).not.toBe(screen.queryByTestId("chart-tooltip")?.textContent);
+      expect(performanceValue).not.toBe(
+        screen.queryByTestId("chart-tooltip")?.textContent
+      );
     });
   });
 
@@ -196,7 +217,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("drawdown");
 
       // Step 1: Check maximum drawdown
-      const drawdownSvg = container.querySelector('svg[data-chart-type="drawdown"]');
+      const drawdownSvg = container.querySelector(
+        'svg[data-chart-type="drawdown"]'
+      );
       if (drawdownSvg) {
         await userEvent.pointer({
           target: drawdownSvg,
@@ -221,10 +244,14 @@ describe("User Flows - Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector('svg[data-chart-type="sharpe"]')).not.toBeNull();
+        expect(
+          container.querySelector('svg[data-chart-type="sharpe"]')
+        ).not.toBeNull();
       });
 
-      const sharpeSvg = container.querySelector('svg[data-chart-type="sharpe"]');
+      const sharpeSvg = container.querySelector(
+        'svg[data-chart-type="sharpe"]'
+      );
       if (sharpeSvg) {
         await userEvent.pointer({
           target: sharpeSvg,
@@ -249,10 +276,14 @@ describe("User Flows - Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector('svg[data-chart-type="volatility"]')).not.toBeNull();
+        expect(
+          container.querySelector('svg[data-chart-type="volatility"]')
+        ).not.toBeNull();
       });
 
-      const volatilitySvg = container.querySelector('svg[data-chart-type="volatility"]');
+      const volatilitySvg = container.querySelector(
+        'svg[data-chart-type="volatility"]'
+      );
       if (volatilitySvg) {
         await userEvent.pointer({
           target: volatilitySvg,
@@ -277,11 +308,15 @@ describe("User Flows - Integration Tests", () => {
       );
 
       await waitFor(() => {
-        expect(container.querySelector('svg[data-chart-type="underwater"]')).not.toBeNull();
+        expect(
+          container.querySelector('svg[data-chart-type="underwater"]')
+        ).not.toBeNull();
       });
 
       // User has now completed full risk analysis
-      const underwaterSvg = container.querySelector('svg[data-chart-type="underwater"]');
+      const underwaterSvg = container.querySelector(
+        'svg[data-chart-type="underwater"]'
+      );
       expect(underwaterSvg).not.toBeNull();
     });
 
@@ -289,7 +324,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("drawdown");
 
       // Find worst drawdown
-      const drawdownSvg = container.querySelector('svg[data-chart-type="drawdown"]');
+      const drawdownSvg = container.querySelector(
+        'svg[data-chart-type="drawdown"]'
+      );
       if (drawdownSvg) {
         // Scan across the chart
         for (let x = 100; x <= 700; x += 100) {
@@ -316,7 +353,9 @@ describe("User Flows - Integration Tests", () => {
         </QueryClientProvider>
       );
 
-      const volatilitySvg = container.querySelector('svg[data-chart-type="volatility"]');
+      const volatilitySvg = container.querySelector(
+        'svg[data-chart-type="volatility"]'
+      );
       if (volatilitySvg) {
         await userEvent.pointer({
           target: volatilitySvg,
@@ -350,11 +389,12 @@ describe("User Flows - Integration Tests", () => {
     it("should support touch-based portfolio exploration", async () => {
       const { container } = renderChart("allocation");
 
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
 
       if (allocationSvg) {
         // Touch start
-        const touchStartEvent = eventFactory.touchStart(200, 150);
         await userEvent.pointer({
           target: allocationSvg,
           coords: { clientX: 200, clientY: 150 },
@@ -417,7 +457,13 @@ describe("User Flows - Integration Tests", () => {
     it("should support rapid tab switching on mobile", async () => {
       const { container, rerender } = renderChart("performance");
 
-      const tabs = ["allocation", "drawdown", "sharpe", "volatility", "underwater"];
+      const tabs = [
+        "allocation",
+        "drawdown",
+        "sharpe",
+        "volatility",
+        "underwater",
+      ];
 
       for (const tab of tabs) {
         rerender(
@@ -446,7 +492,9 @@ describe("User Flows - Integration Tests", () => {
     it("should support detailed trend analysis", async () => {
       const { container } = renderChart("performance");
 
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
 
       if (performanceSvg) {
         // Analyze start of period
@@ -485,7 +533,9 @@ describe("User Flows - Integration Tests", () => {
     it("should support allocation change tracking", async () => {
       const { container } = renderChart("allocation");
 
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
 
       if (allocationSvg) {
         // Check allocation at different points
@@ -515,7 +565,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("volatility");
 
       // Identify high volatility period
-      const volatilitySvg = container.querySelector('svg[data-chart-type="volatility"]');
+      const volatilitySvg = container.querySelector(
+        'svg[data-chart-type="volatility"]'
+      );
       if (volatilitySvg) {
         await userEvent.pointer({
           target: volatilitySvg,
@@ -539,7 +591,9 @@ describe("User Flows - Integration Tests", () => {
         </QueryClientProvider>
       );
 
-      const drawdownSvg = container.querySelector('svg[data-chart-type="drawdown"]');
+      const drawdownSvg = container.querySelector(
+        'svg[data-chart-type="drawdown"]'
+      );
       if (drawdownSvg) {
         await userEvent.pointer({
           target: drawdownSvg,
@@ -622,7 +676,9 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("allocation");
 
       // User hovers on specific point
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
         await userEvent.pointer({
           target: allocationSvg,
@@ -631,7 +687,9 @@ describe("User Flows - Integration Tests", () => {
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Data refreshes
@@ -684,8 +742,8 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("performance");
 
       // Check for ARIA live region or labels
-      const ariaLive = container.querySelector('[aria-live]');
-      const ariaLabels = container.querySelectorAll('[aria-label]');
+      const ariaLive = container.querySelector("[aria-live]");
+      const ariaLabels = container.querySelectorAll("[aria-label]");
 
       expect(ariaLive || ariaLabels.length > 0).toBe(true);
 
@@ -701,7 +759,7 @@ describe("User Flows - Integration Tests", () => {
       );
 
       // Should update ARIA labels
-      const newAriaLabels = container.querySelectorAll('[aria-label]');
+      const newAriaLabels = container.querySelectorAll("[aria-label]");
       expect(newAriaLabels.length).toBeGreaterThan(0);
     });
   });

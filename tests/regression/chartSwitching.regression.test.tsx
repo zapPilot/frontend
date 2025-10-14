@@ -17,14 +17,15 @@ import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PortfolioChart from "@/components/PortfolioChart";
 import { ChartTestFixtures } from "../fixtures/chartTestData";
-import { SVGEventFactory } from "../utils/eventFactories";
 
 // Mock Framer Motion
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     line: ({ children, ...props }: any) => <line {...props}>{children}</line>,
-    circle: ({ children, ...props }: any) => <circle {...props}>{children}</circle>,
+    circle: ({ children, ...props }: any) => (
+      <circle {...props}>{children}</circle>
+    ),
     g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -32,12 +33,20 @@ vi.mock("framer-motion", () => ({
 
 // Mock Next.js Image
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <span
+      role="img"
+      aria-label={alt}
+      data-src={src}
+      data-testid="next-image-mock"
+      {...props}
+    />
+  ),
 }));
 
 describe("Chart Switching - Regression Tests", () => {
   let queryClient: QueryClient;
-  let eventFactory: SVGEventFactory;
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -45,7 +54,6 @@ describe("Chart Switching - Regression Tests", () => {
         queries: { retry: false },
       },
     });
-    eventFactory = new SVGEventFactory({ left: 0, top: 0, width: 800, height: 300 });
   });
 
   const renderChart = (activeTab: string = "performance") => {
@@ -66,12 +74,17 @@ describe("Chart Switching - Regression Tests", () => {
 
   describe("Hover State Isolation", () => {
     it("should not carry over hover state when switching charts", async () => {
-      const { rerender, container } = renderChart("performance");
+      const { rerender } = renderChart("performance");
 
       // Hover on performance chart
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -99,14 +112,19 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Performance chart: multi-circle indicator
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
         // Performance should have circles
-        const circles = container.querySelectorAll('circle');
+        const circles = container.querySelectorAll("circle");
         expect(circles.length).toBeGreaterThan(0);
       });
 
@@ -122,9 +140,14 @@ describe("Chart Switching - Regression Tests", () => {
       );
 
       // Allocation chart: vertical line indicator
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
-        await userEvent.pointer({ target: allocationSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: allocationSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -138,9 +161,14 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Hover at position 1 on performance
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 200, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 200, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -159,9 +187,14 @@ describe("Chart Switching - Regression Tests", () => {
       );
 
       // Hover at position 2 on allocation
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
-        await userEvent.pointer({ target: allocationSvg, coords: { clientX: 600, clientY: 150 } });
+        await userEvent.pointer({
+          target: allocationSvg,
+          coords: { clientX: 600, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -181,7 +214,9 @@ describe("Chart Switching - Regression Tests", () => {
       );
 
       // Performance should not have allocation's hover position
-      const newPerformanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const newPerformanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       expect(newPerformanceSvg).not.toBeNull();
     });
   });
@@ -191,13 +226,20 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("allocation");
 
       // Create cursor on allocation
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
-        await userEvent.pointer({ target: allocationSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: allocationSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Switch to drawdown
@@ -213,7 +255,11 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Allocation cursor should be gone
       await waitFor(() => {
-        expect(container.querySelector('svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]')).toBeNull();
+        expect(
+          container.querySelector(
+            'svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]'
+          )
+        ).toBeNull();
       });
     });
 
@@ -221,9 +267,14 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Show tooltip
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -251,9 +302,14 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Hover performance
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       // Switch to allocation
@@ -268,17 +324,25 @@ describe("Chart Switching - Regression Tests", () => {
       );
 
       // Hover allocation
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
-        await userEvent.pointer({ target: allocationSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: allocationSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
         // Should only have ONE set of indicators visible
-        const indicators = container.querySelectorAll('[data-testid*="indicator"]');
+        const indicators = container.querySelectorAll(
+          '[data-testid*="indicator"]'
+        );
         const lines = container.querySelectorAll('line[stroke="#8b5cf6"]');
 
         // Should have allocation's vertical line only
+        expect(indicators.length).toBeLessThanOrEqual(1);
         expect(lines.length).toBe(1);
       });
     });
@@ -304,7 +368,9 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Verify allocation data
       await waitFor(() => {
-        expect(screen.queryByText(/Asset Allocation/i) || screen.queryByText(/BTC/i)).not.toBeNull();
+        expect(
+          screen.queryByText(/Asset Allocation/i) || screen.queryByText(/BTC/i)
+        ).not.toBeNull();
       });
     });
 
@@ -312,7 +378,13 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Switch through all chart types
-      const chartTypes = ["allocation", "drawdown", "sharpe", "volatility", "underwater"];
+      const chartTypes = [
+        "allocation",
+        "drawdown",
+        "sharpe",
+        "volatility",
+        "underwater",
+      ];
 
       for (const chartType of chartTypes) {
         rerender(
@@ -331,7 +403,9 @@ describe("Chart Switching - Regression Tests", () => {
 
         await waitFor(() => {
           // Each chart should have date labels
-          const dateLabels = container.querySelectorAll('[data-testid*="date"]');
+          const dateLabels = container.querySelectorAll(
+            '[data-testid*="date"]'
+          );
           expect(dateLabels.length).toBeGreaterThanOrEqual(0);
         });
       }
@@ -341,9 +415,14 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Hover on performance
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -364,9 +443,14 @@ describe("Chart Switching - Regression Tests", () => {
       );
 
       // Hover on sharpe
-      const sharpeSvg = container.querySelector('svg[data-chart-type="sharpe"]');
+      const sharpeSvg = container.querySelector(
+        'svg[data-chart-type="sharpe"]'
+      );
       if (sharpeSvg) {
-        await userEvent.pointer({ target: sharpeSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: sharpeSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -382,13 +466,20 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("allocation");
 
       // Hover to create animated indicator
-      const allocationSvg = container.querySelector('svg[data-chart-type="allocation"]');
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="allocation"]'
+      );
       if (allocationSvg) {
-        await userEvent.pointer({ target: allocationSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: allocationSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
-        expect(container.querySelector('line[stroke="#8b5cf6"]')).not.toBeNull();
+        expect(
+          container.querySelector('line[stroke="#8b5cf6"]')
+        ).not.toBeNull();
       });
 
       // Switch chart (triggers exit animation)
@@ -404,7 +495,9 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Should not have both charts visible during transition
       await waitFor(() => {
-        const allocationCharts = container.querySelectorAll('svg[data-chart-type="allocation"]');
+        const allocationCharts = container.querySelectorAll(
+          'svg[data-chart-type="allocation"]'
+        );
         expect(allocationCharts.length).toBe(0);
       });
     });
@@ -413,7 +506,13 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender } = renderChart("performance");
 
       // Rapidly switch through charts
-      const chartTypes = ["allocation", "drawdown", "sharpe", "performance", "volatility"];
+      const chartTypes = [
+        "allocation",
+        "drawdown",
+        "sharpe",
+        "performance",
+        "volatility",
+      ];
 
       for (const chartType of chartTypes) {
         rerender(
@@ -439,9 +538,10 @@ describe("Chart Switching - Regression Tests", () => {
 
   describe("Memory Management", () => {
     it("should clean up event listeners when switching charts", async () => {
-      const { rerender, container } = renderChart("performance");
+      const { rerender } = renderChart("performance");
 
-      const initialListenerCount = (window as any).getEventListeners?.("mousemove")?.length || 0;
+      const initialListenerCount =
+        (window as any).getEventListeners?.("mousemove")?.length || 0;
 
       // Switch to allocation
       rerender(
@@ -464,7 +564,8 @@ describe("Chart Switching - Regression Tests", () => {
         </QueryClientProvider>
       );
 
-      const finalListenerCount = (window as any).getEventListeners?.("mousemove")?.length || 0;
+      const finalListenerCount =
+        (window as any).getEventListeners?.("mousemove")?.length || 0;
 
       // Should not accumulate listeners
       expect(finalListenerCount).toBeLessThanOrEqual(initialListenerCount + 1);
@@ -521,9 +622,14 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Start hovering
-      const performanceSvg = container.querySelector('svg[data-chart-type="performance"]');
+      const performanceSvg = container.querySelector(
+        'svg[data-chart-type="performance"]'
+      );
       if (performanceSvg) {
-        await userEvent.pointer({ target: performanceSvg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: performanceSvg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       // Switch while hover is active

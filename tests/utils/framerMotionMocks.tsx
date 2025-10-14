@@ -48,7 +48,16 @@ export const mockFramerMotion = {
   /**
    * Mock motion.div component
    */
-  div: ({ children, initial, animate, exit, transition, whileHover, whileTap, ...rest }: MotionDivProps) => {
+  div: ({
+    children,
+    initial,
+    animate,
+    exit,
+    transition,
+    whileHover,
+    whileTap,
+    ...rest
+  }: MotionDivProps) => {
     return <div {...rest}>{children}</div>;
   },
 
@@ -62,14 +71,27 @@ export const mockFramerMotion = {
   /**
    * Mock motion.circle component
    */
-  circle: ({ initial, animate, exit, transition, ...rest }: MotionCircleProps) => {
+  circle: ({
+    initial,
+    animate,
+    exit,
+    transition,
+    ...rest
+  }: MotionCircleProps) => {
     return <circle {...rest} />;
   },
 
   /**
    * Mock motion.g component
    */
-  g: ({ children, initial, animate, exit, transition, ...rest }: MotionGProps) => {
+  g: ({
+    children,
+    initial,
+    animate,
+    exit,
+    transition,
+    ...rest
+  }: MotionGProps) => {
     return <g {...rest}>{children}</g>;
   },
 };

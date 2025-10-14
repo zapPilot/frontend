@@ -119,7 +119,8 @@ export const chartMatchers = {
     if (received.tagName !== "line") {
       return {
         pass: false,
-        message: () => `Expected element to be a line, but got ${received.tagName}`,
+        message: () =>
+          `Expected element to be a line, but got ${received.tagName}`,
         actual: received.tagName,
         expected: "line",
       };
@@ -186,10 +187,16 @@ export const chartMatchers = {
 
     // Check for data attributes that Framer Motion adds
     // In tests with mocked Framer Motion, we check for the original props
-    const hasInitial = received.hasAttribute("initial") || received.getAttribute("data-testid")?.includes("motion");
-    const hasAnimate = received.hasAttribute("animate") || received.hasAttribute("style");
+    const hasInitial =
+      received.hasAttribute("initial") ||
+      received.getAttribute("data-testid")?.includes("motion");
+    const hasAnimate =
+      received.hasAttribute("animate") || received.hasAttribute("style");
 
-    const pass = hasInitial || hasAnimate || received.tagName.toLowerCase().includes("motion");
+    const pass =
+      hasInitial ||
+      hasAnimate ||
+      received.tagName.toLowerCase().includes("motion");
 
     return {
       pass,

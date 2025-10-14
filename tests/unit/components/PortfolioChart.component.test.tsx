@@ -17,21 +17,16 @@ import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import PortfolioChart from "@/components/PortfolioChart";
 import { ChartTestFixtures } from "../../fixtures/chartTestData";
-import {
-  PortfolioDataFactory,
-  AllocationDataFactory,
-  DrawdownDataFactory,
-  SharpeDataFactory,
-  VolatilityDataFactory,
-  UnderwaterDataFactory,
-} from "../../utils/chartHoverTestFactories";
+import { PortfolioDataFactory } from "../../utils/chartHoverTestFactories";
 
 // Mock Framer Motion
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     line: ({ children, ...props }: any) => <line {...props}>{children}</line>,
-    circle: ({ children, ...props }: any) => <circle {...props}>{children}</circle>,
+    circle: ({ children, ...props }: any) => (
+      <circle {...props}>{children}</circle>
+    ),
     g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -39,7 +34,16 @@ vi.mock("framer-motion", () => ({
 
 // Mock Next.js Image
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <span
+      role="img"
+      aria-label={alt}
+      data-src={src}
+      data-testid="next-image-mock"
+      {...props}
+    />
+  ),
 }));
 
 describe("PortfolioChart Component", () => {
@@ -53,7 +57,9 @@ describe("PortfolioChart Component", () => {
     });
   });
 
-  const renderChart = (props: Partial<React.ComponentProps<typeof PortfolioChart>> = {}) => {
+  const renderChart = (
+    props: Partial<React.ComponentProps<typeof PortfolioChart>> = {}
+  ) => {
     const defaultProps = {
       portfolioData: ChartTestFixtures.mediumPortfolioData(),
       allocationData: ChartTestFixtures.balancedAllocation(),
@@ -123,7 +129,9 @@ describe("PortfolioChart Component", () => {
       renderChart();
 
       // Should have tabs for all chart types
-      expect(screen.queryByRole("tablist") || screen.queryByRole("navigation")).not.toBeNull();
+      expect(
+        screen.queryByRole("tablist") || screen.queryByRole("navigation")
+      ).not.toBeNull();
     });
 
     it("should highlight active tab", () => {
@@ -172,7 +180,9 @@ describe("PortfolioChart Component", () => {
     it("should respect activeTab prop", () => {
       const { container, rerender } = renderChart({ activeTab: "performance" });
 
-      expect(container.querySelector('svg[data-chart-type="performance"]')).not.toBeNull();
+      expect(
+        container.querySelector('svg[data-chart-type="performance"]')
+      ).not.toBeNull();
 
       rerender(
         <QueryClientProvider client={queryClient}>
@@ -184,7 +194,9 @@ describe("PortfolioChart Component", () => {
         </QueryClientProvider>
       );
 
-      expect(container.querySelector('svg[data-chart-type="allocation"]')).not.toBeNull();
+      expect(
+        container.querySelector('svg[data-chart-type="allocation"]')
+      ).not.toBeNull();
     });
 
     it("should handle different data sizes", () => {
@@ -241,7 +253,7 @@ describe("PortfolioChart Component", () => {
       // Should show skeleton or loading indicator
       expect(
         container.querySelector('[data-testid="chart-skeleton"]') ||
-        container.textContent?.match(/loading/i)
+          container.textContent?.match(/loading/i)
       ).toBeTruthy();
     });
 
@@ -311,7 +323,7 @@ describe("PortfolioChart Component", () => {
     });
 
     it("should handle negative values in data", () => {
-      const negativeData = PortfolioDataFactory.createPoints(10, (i) => ({
+      const negativeData = PortfolioDataFactory.createPoints(10, i => ({
         value: -1000 * i,
         change: -0.1,
       }));
@@ -330,7 +342,10 @@ describe("PortfolioChart Component", () => {
 
       const svg = container.querySelector("svg");
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
       }
 
       await waitFor(() => {
@@ -344,7 +359,10 @@ describe("PortfolioChart Component", () => {
 
       const svg = container.querySelector("svg");
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
 
         await waitFor(() => {
           expect(screen.queryByTestId("chart-tooltip")).not.toBeNull();
@@ -367,7 +385,9 @@ describe("PortfolioChart Component", () => {
         await userEvent.click(allocationTab);
 
         await waitFor(() => {
-          expect(container.querySelector('svg[data-chart-type="allocation"]')).not.toBeNull();
+          expect(
+            container.querySelector('svg[data-chart-type="allocation"]')
+          ).not.toBeNull();
         });
       }
     });
@@ -394,7 +414,8 @@ describe("PortfolioChart Component", () => {
       const { container } = renderChart();
 
       const svg = container.querySelector("svg");
-      const ariaLabel = svg?.getAttribute("aria-label") || svg?.getAttribute("role");
+      const ariaLabel =
+        svg?.getAttribute("aria-label") || svg?.getAttribute("role");
       expect(ariaLabel).toBeTruthy();
     });
 
@@ -412,7 +433,9 @@ describe("PortfolioChart Component", () => {
       const { container } = renderChart();
 
       // Cursor indicators should be aria-hidden
-      const decorativeElements = container.querySelectorAll('[aria-hidden="true"]');
+      const decorativeElements = container.querySelectorAll(
+        '[aria-hidden="true"]'
+      );
       expect(decorativeElements.length).toBeGreaterThan(0);
     });
 
@@ -458,7 +481,9 @@ describe("PortfolioChart Component", () => {
       );
 
       // Should have re-rendered (React 19 behavior)
-      expect(renderSpy.mock.calls.length).toBeGreaterThanOrEqual(initialRenderCount);
+      expect(renderSpy.mock.calls.length).toBeGreaterThanOrEqual(
+        initialRenderCount
+      );
     });
 
     it("should handle large datasets efficiently", () => {
@@ -482,12 +507,17 @@ describe("PortfolioChart Component", () => {
       if (svg) {
         // Rapid hover movements
         for (let x = 100; x <= 700; x += 50) {
-          await userEvent.pointer({ target: svg, coords: { clientX: x, clientY: 150 } });
+          await userEvent.pointer({
+            target: svg,
+            coords: { clientX: x, clientY: 150 },
+          });
         }
 
         // Should still work correctly after rapid movements
         await waitFor(() => {
-          const line = container.querySelector('line') || container.querySelector('circle');
+          const line =
+            container.querySelector("line") ||
+            container.querySelector("circle");
           expect(line).not.toBeNull();
         });
       }
@@ -539,14 +569,17 @@ describe("PortfolioChart Component", () => {
   describe("Data Formatting", () => {
     it("should format currency values correctly", async () => {
       const { container } = renderChart({
-        portfolioData: PortfolioDataFactory.createPoints(5, (i) => ({
+        portfolioData: PortfolioDataFactory.createPoints(5, i => ({
           value: 12345.67 + i * 100,
         })),
       });
 
       const svg = container.querySelector("svg");
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
 
         await waitFor(() => {
           const tooltip = screen.queryByTestId("chart-tooltip");
@@ -561,7 +594,10 @@ describe("PortfolioChart Component", () => {
 
       const svg = container.querySelector("svg");
       if (svg) {
-        await userEvent.pointer({ target: svg, coords: { clientX: 400, clientY: 150 } });
+        await userEvent.pointer({
+          target: svg,
+          coords: { clientX: 400, clientY: 150 },
+        });
 
         await waitFor(() => {
           const tooltip = screen.queryByTestId("chart-tooltip");
@@ -576,7 +612,7 @@ describe("PortfolioChart Component", () => {
 
       // Check x-axis labels
       const dateLabels = container.querySelectorAll("text");
-      const hasDateFormat = Array.from(dateLabels).some((label) =>
+      const hasDateFormat = Array.from(dateLabels).some(label =>
         /\w{3}\s+\d{1,2}/.test(label.textContent || "")
       );
 

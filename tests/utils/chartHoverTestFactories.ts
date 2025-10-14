@@ -12,7 +12,10 @@ import type {
   VolatilityHoverData,
   UnderwaterHoverData,
 } from "@/types/chartHover";
-import type { PortfolioDataPoint, AssetAllocationPoint } from "@/types/portfolio";
+import type {
+  PortfolioDataPoint,
+  AssetAllocationPoint,
+} from "@/types/portfolio";
 import type { UseChartHoverOptions } from "@/hooks/useChartHover";
 
 /**
@@ -60,31 +63,32 @@ export const PortfolioDataFactory: BaseChartDataFactory<PortfolioDataPoint> = {
 /**
  * Factory for AssetAllocationPoint test data
  */
-export const AllocationDataFactory: BaseChartDataFactory<AssetAllocationPoint> = {
-  createPoint(overrides = {}) {
-    return {
-      date: "2025-01-01",
-      btc: 40,
-      eth: 30,
-      stablecoin: 15,
-      defi: 10,
-      altcoin: 5,
-      ...overrides,
-    };
-  },
+export const AllocationDataFactory: BaseChartDataFactory<AssetAllocationPoint> =
+  {
+    createPoint(overrides = {}) {
+      return {
+        date: "2025-01-01",
+        btc: 40,
+        eth: 30,
+        stablecoin: 15,
+        defi: 10,
+        altcoin: 5,
+        ...overrides,
+      };
+    },
 
-  createPoints(count, generator) {
-    return Array.from({ length: count }, (_, i) => {
-      const baseDate = new Date("2025-01-01");
-      baseDate.setDate(baseDate.getDate() + i);
+    createPoints(count, generator) {
+      return Array.from({ length: count }, (_, i) => {
+        const baseDate = new Date("2025-01-01");
+        baseDate.setDate(baseDate.getDate() + i);
 
-      return this.createPoint({
-        date: baseDate.toISOString().split("T")[0],
-        ...(generator ? generator(i) : {}),
+        return this.createPoint({
+          date: baseDate.toISOString().split("T")[0],
+          ...(generator ? generator(i) : {}),
+        });
       });
-    });
-  },
-};
+    },
+  };
 
 /**
  * Drawdown data point interface matching production
@@ -159,28 +163,29 @@ export interface VolatilityDataPoint {
   annualized_volatility_pct: number;
 }
 
-export const VolatilityDataFactory: BaseChartDataFactory<VolatilityDataPoint> = {
-  createPoint(overrides = {}) {
-    return {
-      date: "2025-01-01",
-      annualized_volatility_pct: 25,
-      ...overrides,
-    };
-  },
+export const VolatilityDataFactory: BaseChartDataFactory<VolatilityDataPoint> =
+  {
+    createPoint(overrides = {}) {
+      return {
+        date: "2025-01-01",
+        annualized_volatility_pct: 25,
+        ...overrides,
+      };
+    },
 
-  createPoints(count, generator) {
-    return Array.from({ length: count }, (_, i) => {
-      const baseDate = new Date("2025-01-01");
-      baseDate.setDate(baseDate.getDate() + i);
+    createPoints(count, generator) {
+      return Array.from({ length: count }, (_, i) => {
+        const baseDate = new Date("2025-01-01");
+        baseDate.setDate(baseDate.getDate() + i);
 
-      return this.createPoint({
-        date: baseDate.toISOString().split("T")[0],
-        annualized_volatility_pct: 25 + (Math.random() - 0.5) * 10,
-        ...(generator ? generator(i) : {}),
+        return this.createPoint({
+          date: baseDate.toISOString().split("T")[0],
+          annualized_volatility_pct: 25 + (Math.random() - 0.5) * 10,
+          ...(generator ? generator(i) : {}),
+        });
       });
-    });
-  },
-};
+    },
+  };
 
 /**
  * Underwater data point
@@ -191,30 +196,31 @@ export interface UnderwaterDataPoint {
   recovery_point?: boolean;
 }
 
-export const UnderwaterDataFactory: BaseChartDataFactory<UnderwaterDataPoint> = {
-  createPoint(overrides = {}) {
-    return {
-      date: "2025-01-01",
-      underwater_pct: -10,
-      recovery_point: false,
-      ...overrides,
-    };
-  },
+export const UnderwaterDataFactory: BaseChartDataFactory<UnderwaterDataPoint> =
+  {
+    createPoint(overrides = {}) {
+      return {
+        date: "2025-01-01",
+        underwater_pct: -10,
+        recovery_point: false,
+        ...overrides,
+      };
+    },
 
-  createPoints(count, generator) {
-    return Array.from({ length: count }, (_, i) => {
-      const baseDate = new Date("2025-01-01");
-      baseDate.setDate(baseDate.getDate() + i);
+    createPoints(count, generator) {
+      return Array.from({ length: count }, (_, i) => {
+        const baseDate = new Date("2025-01-01");
+        baseDate.setDate(baseDate.getDate() + i);
 
-      return this.createPoint({
-        date: baseDate.toISOString().split("T")[0],
-        underwater_pct: -10 - i * 0.3,
-        recovery_point: i % 10 === 0 && i > 0,
-        ...(generator ? generator(i) : {}),
+        return this.createPoint({
+          date: baseDate.toISOString().split("T")[0],
+          underwater_pct: -10 - i * 0.3,
+          recovery_point: i % 10 === 0 && i > 0,
+          ...(generator ? generator(i) : {}),
+        });
       });
-    });
-  },
-};
+    },
+  };
 
 /**
  * Type-safe hover data builders for each chart type
@@ -223,7 +229,11 @@ export const HoverDataBuilders = {
   /**
    * Build performance hover data
    */
-  performance(point: PortfolioDataPoint, x: number, y: number): PerformanceHoverData {
+  performance(
+    point: PortfolioDataPoint,
+    x: number,
+    y: number
+  ): PerformanceHoverData {
     return {
       chartType: "performance" as const,
       x,
@@ -241,8 +251,13 @@ export const HoverDataBuilders = {
   /**
    * Build allocation hover data
    */
-  allocation(point: AssetAllocationPoint, x: number, y: number): AllocationHoverData {
-    const total = point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+  allocation(
+    point: AssetAllocationPoint,
+    x: number,
+    y: number
+  ): AllocationHoverData {
+    const total =
+      point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
     return {
       chartType: "allocation" as const,
       x,
@@ -271,8 +286,8 @@ export const HoverDataBuilders = {
     allPoints: DrawdownDataPoint[]
   ): DrawdownHoverData {
     const priorData = allPoints.slice(0, index + 1);
-    const peak = Math.max(...priorData.map((p) => p.portfolio_value));
-    const peakIndex = priorData.findIndex((p) => p.portfolio_value === peak);
+    const peak = Math.max(...priorData.map(p => p.portfolio_value));
+    const peakIndex = priorData.findIndex(p => p.portfolio_value === peak);
     const peakDate = priorData[peakIndex]?.date || point.date;
 
     return {
@@ -330,7 +345,11 @@ export const HoverDataBuilders = {
   /**
    * Build volatility hover data
    */
-  volatility(point: VolatilityDataPoint, x: number, y: number): VolatilityHoverData {
+  volatility(
+    point: VolatilityDataPoint,
+    x: number,
+    y: number
+  ): VolatilityHoverData {
     const vol = point.annualized_volatility_pct || 0;
     let riskLevel: string;
 
@@ -361,7 +380,11 @@ export const HoverDataBuilders = {
   /**
    * Build underwater hover data
    */
-  underwater(point: UnderwaterDataPoint, x: number, y: number): UnderwaterHoverData {
+  underwater(
+    point: UnderwaterDataPoint,
+    x: number,
+    y: number
+  ): UnderwaterHoverData {
     const isRecovery = point.recovery_point || false;
     const underwater = point.underwater_pct;
     let recoveryStatus: string;
@@ -461,13 +484,15 @@ export class ChartHoverOptionsBuilder<T> {
  */
 export const ChartHoverOptionsFactory = {
   performance(data: PortfolioDataPoint[]) {
-    const minValue = Math.min(...data.map((d) => d.value));
-    const maxValue = Math.max(...data.map((d) => d.value));
+    const minValue = Math.min(...data.map(d => d.value));
+    const maxValue = Math.max(...data.map(d => d.value));
 
     return new ChartHoverOptionsBuilder<PortfolioDataPoint>("performance")
       .withValueRange(minValue, maxValue)
-      .withYValueExtractor((point) => point.value)
-      .withHoverDataBuilder((point, x, y) => HoverDataBuilders.performance(point, x, y))
+      .withYValueExtractor(point => point.value)
+      .withHoverDataBuilder((point, x, y) =>
+        HoverDataBuilders.performance(point, x, y)
+      )
       .build();
   },
 
@@ -475,14 +500,16 @@ export const ChartHoverOptionsFactory = {
     return new ChartHoverOptionsBuilder<AssetAllocationPoint>("allocation")
       .withValueRange(0, 100)
       .withYValueExtractor(() => 50) // Mid-point for stacked chart
-      .withHoverDataBuilder((point, x, y) => HoverDataBuilders.allocation(point, x, y))
+      .withHoverDataBuilder((point, x, y) =>
+        HoverDataBuilders.allocation(point, x, y)
+      )
       .build();
   },
 
   drawdown(data: DrawdownDataPoint[]) {
     return new ChartHoverOptionsBuilder<DrawdownDataPoint>("drawdown")
       .withValueRange(-20, 0)
-      .withYValueExtractor((point) => point.drawdown_pct)
+      .withYValueExtractor(point => point.drawdown_pct)
       .withHoverDataBuilder((point, x, y, index) =>
         HoverDataBuilders.drawdown(point, x, y, index, data)
       )
@@ -492,24 +519,30 @@ export const ChartHoverOptionsFactory = {
   sharpe() {
     return new ChartHoverOptionsBuilder<SharpeDataPoint>("sharpe")
       .withValueRange(0, 2.5)
-      .withYValueExtractor((point) => point.rolling_sharpe_ratio)
-      .withHoverDataBuilder((point, x, y) => HoverDataBuilders.sharpe(point, x, y))
+      .withYValueExtractor(point => point.rolling_sharpe_ratio)
+      .withHoverDataBuilder((point, x, y) =>
+        HoverDataBuilders.sharpe(point, x, y)
+      )
       .build();
   },
 
   volatility() {
     return new ChartHoverOptionsBuilder<VolatilityDataPoint>("volatility")
       .withValueRange(10, 40)
-      .withYValueExtractor((point) => point.annualized_volatility_pct)
-      .withHoverDataBuilder((point, x, y) => HoverDataBuilders.volatility(point, x, y))
+      .withYValueExtractor(point => point.annualized_volatility_pct)
+      .withHoverDataBuilder((point, x, y) =>
+        HoverDataBuilders.volatility(point, x, y)
+      )
       .build();
   },
 
   underwater() {
     return new ChartHoverOptionsBuilder<UnderwaterDataPoint>("underwater")
       .withValueRange(-20, 0)
-      .withYValueExtractor((point) => point.underwater_pct)
-      .withHoverDataBuilder((point, x, y) => HoverDataBuilders.underwater(point, x, y))
+      .withYValueExtractor(point => point.underwater_pct)
+      .withHoverDataBuilder((point, x, y) =>
+        HoverDataBuilders.underwater(point, x, y)
+      )
       .build();
   },
 };

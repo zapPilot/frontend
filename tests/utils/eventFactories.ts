@@ -253,7 +253,12 @@ export class SVGEventFactory {
   /**
    * Update the SVG bounding rect (useful for responsive tests)
    */
-  updateRect(rect: { left: number; top: number; width: number; height: number }): void {
+  updateRect(rect: {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }): void {
     this.svg.getBoundingClientRect = vi.fn(
       (): DOMRect => ({
         left: rect.left,
@@ -286,7 +291,9 @@ export function createMouseMoveSequence(
   const deltaY = (endY - startY) / steps;
 
   for (let i = 0; i <= steps; i++) {
-    events.push(createMouseEvent(startX + deltaX * i, startY + deltaY * i, svg));
+    events.push(
+      createMouseEvent(startX + deltaX * i, startY + deltaY * i, svg)
+    );
   }
 
   return events;
@@ -308,7 +315,9 @@ export function createTouchMoveSequence(
   const deltaY = (endY - startY) / steps;
 
   for (let i = 0; i <= steps; i++) {
-    events.push(createTouchEvent(startX + deltaX * i, startY + deltaY * i, svg));
+    events.push(
+      createTouchEvent(startX + deltaX * i, startY + deltaY * i, svg)
+    );
   }
 
   return events;

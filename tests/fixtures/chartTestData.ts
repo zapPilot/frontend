@@ -3,7 +3,10 @@
  * Provides fluent builders and pre-built datasets for all chart types
  */
 
-import type { PortfolioDataPoint, AssetAllocationPoint } from "@/types/portfolio";
+import type {
+  PortfolioDataPoint,
+  AssetAllocationPoint,
+} from "@/types/portfolio";
 import {
   DrawdownDataPoint,
   SharpeDataPoint,
@@ -68,14 +71,19 @@ export class PortfolioDataBuilder {
   /**
    * Add volatile data with random fluctuations
    */
-  withVolatility(count: number, startValue: number, volatilityPercent: number): this {
+  withVolatility(
+    count: number,
+    startValue: number,
+    volatilityPercent: number
+  ): this {
     let currentValue = startValue;
 
     for (let i = 0; i < count; i++) {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
 
-      const change = (Math.random() - 0.5) * 2 * (volatilityPercent / 100) * startValue;
+      const change =
+        (Math.random() - 0.5) * 2 * (volatilityPercent / 100) * startValue;
       currentValue += change;
 
       this.add({
@@ -94,7 +102,7 @@ export class PortfolioDataBuilder {
    * Build the final portfolio data array
    */
   build(): PortfolioDataPoint[] {
-    return this.points.map((point) => ({
+    return this.points.map(point => ({
       date: point.date || "2025-01-01",
       value: point.value || 10000,
       change: point.change || 0,
@@ -133,7 +141,11 @@ export class AllocationDataBuilder {
     return this;
   }
 
-  withShift(count: number, from: keyof AssetAllocationPoint, to: keyof AssetAllocationPoint): this {
+  withShift(
+    count: number,
+    from: keyof AssetAllocationPoint,
+    to: keyof AssetAllocationPoint
+  ): this {
     for (let i = 0; i < count; i++) {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
@@ -241,7 +253,9 @@ export const ChartTestFixtures = {
    * Allocation data with shift to stablecoins
    */
   allocationToStables(): AssetAllocationPoint[] {
-    return new AllocationDataBuilder().withShift(30, "btc", "stablecoin").build();
+    return new AllocationDataBuilder()
+      .withShift(30, "btc", "stablecoin")
+      .build();
   },
 
   /**

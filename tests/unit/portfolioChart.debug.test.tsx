@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { vi } from "vitest";
+import { expect, vi } from "vitest";
 import PortfolioChart from "@/components/PortfolioChart";
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 
@@ -8,14 +8,25 @@ vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     line: ({ children, ...props }: any) => <line {...props}>{children}</line>,
-    circle: ({ children, ...props }: any) => <circle {...props}>{children}</circle>,
+    circle: ({ children, ...props }: any) => (
+      <circle {...props}>{children}</circle>
+    ),
     g: ({ children, ...props }: any) => <g {...props}>{children}</g>,
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
 vi.mock("next/image", () => ({
-  default: ({ src, alt, ...props }: any) => <img src={src} alt={alt} {...props} />,
+  __esModule: true,
+  default: ({ src, alt, ...props }: any) => (
+    <span
+      role="img"
+      aria-label={alt}
+      data-src={src}
+      data-testid="next-image-mock"
+      {...props}
+    />
+  ),
 }));
 
 describe("PortfolioChart debug", () => {
@@ -39,9 +50,6 @@ describe("PortfolioChart debug", () => {
     );
 
     const svg = container.querySelector('svg[data-chart-type="performance"]');
-    // eslint-disable-next-line no-console
-    console.log("has svg", Boolean(svg));
-    // eslint-disable-next-line no-console
-    console.log(container.innerHTML.slice(0, 500));
+    expect(svg).not.toBeNull();
   });
 });
