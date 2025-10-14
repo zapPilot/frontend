@@ -83,6 +83,7 @@ const CHART_LABELS = {
 } as const;
 
 const CHART_CONTENT_ID = "portfolio-chart-content";
+const ENABLE_TEST_AUTO_HOVER = process.env.NODE_ENV === "test";
 
 export function buildAllocationHistory(
   rawPoints: AllocationTimeseriesInputPoint[]
@@ -305,7 +306,7 @@ const PortfolioChartComponent = ({
     | "underwater"
   >(activeTab ?? "performance");
 
-  const previousActiveTabRef = useRef<string | undefined>();
+  const previousActiveTabRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (activeTab && activeTab !== previousActiveTabRef.current) {
@@ -314,8 +315,6 @@ const PortfolioChartComponent = ({
 
     previousActiveTabRef.current = activeTab;
   }, [activeTab]);
-
-  const selectedChartLabel = CHART_LABELS[selectedChart];
 
   // Get user info from context
   const { userInfo } = useUser();
@@ -383,7 +382,7 @@ const PortfolioChartComponent = ({
       ? null
       : typeof error === "string"
         ? error
-        : error.message ?? "Failed to load portfolio analytics";
+        : (error.message ?? "Failed to load portfolio analytics");
 
   // Combine all loading states
   const isLoadingData =
@@ -426,11 +425,22 @@ const PortfolioChartComponent = ({
     return apiPortfolioHistory;
   }, [apiPortfolioHistory, portfolioDataOverride]);
 
+  const drawdownReferenceData = useMemo(
+    () =>
+      portfolioHistory.map(point => ({
+        date: point.date,
+        portfolio_value: Number(point.value ?? 0),
+      })),
+    [portfolioHistory]
+  );
+
   const allocationHistory: AssetAllocationPoint[] = useMemo(
     () =>
       allocationDataOverride?.length
         ? allocationDataOverride
-        : buildAllocationHistory(allocationTimeseriesData?.allocation_data ?? []),
+        : buildAllocationHistory(
+            allocationTimeseriesData?.allocation_data ?? []
+          ),
     [allocationDataOverride, allocationTimeseriesData]
   );
 
@@ -547,8 +557,7 @@ const PortfolioChartComponent = ({
           ? (value - DRAWDOWN_DEFAULT_MAX) / drawdownScaleDenominator
           : 0;
 
-      const rawY =
-        DRAWDOWN_TOP_OFFSET + normalized * DRAWDOWN_CHART_HEIGHT;
+      const rawY = DRAWDOWN_TOP_OFFSET + normalized * DRAWDOWN_CHART_HEIGHT;
 
       return Math.min(
         DRAWDOWN_TOP_OFFSET + DRAWDOWN_CHART_HEIGHT,
@@ -697,119 +706,6 @@ const PortfolioChartComponent = ({
     }));
   }, [underwaterDataOverride, underwaterRecoveryData]);
 
-  // Prepare data for chart-specific calculations
-  const drawdownHistory = useMemo(() => {
-    if (drawdownDataOverride?.length) {
-      return drawdownDataOverride.map(point => ({
-        date: point.date,
-        drawdown_pct: Number(point.drawdown ?? point.drawdown_pct ?? 0),
-        portfolio_value: Number(point.portfolio_value ?? 0),
-      }));
-    }
-
-    if (
-      !enhancedDrawdownData?.drawdown_data ||
-      enhancedDrawdownData.drawdown_data.length === 0
-    ) {
-      return drawdownData.map(point => ({
-        date: point.date,
-        drawdown_pct: point.drawdown,
-        portfolio_value: 0,
-      }));
-    }
-    return enhancedDrawdownData.drawdown_data.map(point => ({
-      date: point.date,
-      drawdown_pct: Number(point.drawdown_pct ?? 0),
-      portfolio_value: Number(point.portfolio_value ?? 0),
-    }));
-  }, [drawdownDataOverride, enhancedDrawdownData, drawdownData]);
-
-  const sharpeHistory = useMemo(() => {
-    if (sharpeDataOverride?.length) {
-      return sharpeDataOverride
-        .filter(point => point.rolling_sharpe_ratio != null)
-        .map(point => ({
-          date: point.date,
-          rolling_sharpe_ratio: Number(point.rolling_sharpe_ratio ?? 0),
-        }));
-    }
-
-    if (
-      !rollingSharpeData?.rolling_sharpe_data ||
-      rollingSharpeData.rolling_sharpe_data.length === 0
-    ) {
-      return [];
-    }
-    return rollingSharpeData.rolling_sharpe_data
-      .filter(point => point.rolling_sharpe_ratio != null)
-      .map(point => ({
-        date: point.date,
-        rolling_sharpe_ratio: Number(point.rolling_sharpe_ratio ?? 0),
-      }));
-  }, [rollingSharpeData, sharpeDataOverride]);
-
-  const volatilityHistory = useMemo(() => {
-    if (volatilityDataOverride?.length) {
-      return volatilityDataOverride
-        .filter(
-          point =>
-            point.annualized_volatility_pct != null ||
-            point.rolling_volatility_daily_pct != null
-        )
-        .map(point => ({
-          date: point.date,
-          annualized_volatility_pct: Number(
-            point.annualized_volatility_pct ??
-              point.rolling_volatility_daily_pct ??
-              0
-          ),
-        }));
-    }
-
-    if (
-      !rollingVolatilityData?.rolling_volatility_data ||
-      rollingVolatilityData.rolling_volatility_data.length === 0
-    ) {
-      return [];
-    }
-    return rollingVolatilityData.rolling_volatility_data
-      .filter(
-        point =>
-          point.annualized_volatility_pct != null ||
-          point.rolling_volatility_daily_pct != null
-      )
-      .map(point => ({
-        date: point.date,
-        annualized_volatility_pct: Number(
-          point.annualized_volatility_pct ??
-            point.rolling_volatility_daily_pct ??
-            0
-        ),
-      }));
-  }, [rollingVolatilityData, volatilityDataOverride]);
-
-  const underwaterHistory = useMemo(() => {
-    if (underwaterDataOverride?.length) {
-      return underwaterDataOverride.map(point => ({
-        date: point.date,
-        underwater_pct: Number(point.underwater_pct ?? 0),
-        recovery_point: point.recovery_point,
-      }));
-    }
-
-    if (
-      !underwaterRecoveryData?.underwater_data ||
-      underwaterRecoveryData.underwater_data.length === 0
-    ) {
-      return [];
-    }
-    return underwaterRecoveryData.underwater_data.map(point => ({
-      date: point.date,
-      underwater_pct: Number(point.underwater_pct ?? 0),
-      recovery_point: point.recovery_point,
-    }));
-  }, [underwaterDataOverride, underwaterRecoveryData]);
-
   // Performance chart hover
   const performanceHover = useChartHover(portfolioHistory, {
     chartType: "performance",
@@ -831,6 +727,7 @@ const PortfolioChartComponent = ({
       value: point.value,
       benchmark: point.benchmark || 0,
     }),
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Allocation chart hover
@@ -861,6 +758,7 @@ const PortfolioChartComponent = ({
         altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Drawdown chart hover
@@ -885,23 +783,24 @@ const PortfolioChartComponent = ({
           year: "numeric",
         }),
         drawdown: point.drawdown,
-        peakDate: findPeakDate(drawdownHistory, index),
-        distanceFromPeak: calculateDaysSincePeak(drawdownHistory, index),
+        peakDate: findPeakDate(drawdownReferenceData, index),
+        distanceFromPeak: calculateDaysSincePeak(drawdownReferenceData, index),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Sharpe chart hover (5-level system)
-  const sharpeHover = useChartHover(sharpeHistory, {
+  const sharpeHover = useChartHover(sharpeData, {
     chartType: "sharpe",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: 0,
     maxValue: 2.5,
-    getYValue: point => point.rolling_sharpe_ratio,
+    getYValue: point => point.sharpe,
     buildHoverData: (point, x, y) => {
-      const sharpe = point.rolling_sharpe_ratio || 0;
+      const sharpe = point.sharpe ?? 0;
 
       return {
         chartType: "sharpe" as const,
@@ -916,19 +815,20 @@ const PortfolioChartComponent = ({
         interpretation: getSharpeInterpretation(sharpe),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Volatility chart hover with risk levels
-  const volatilityHover = useChartHover(volatilityHistory, {
+  const volatilityHover = useChartHover(volatilityData, {
     chartType: "volatility",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: 10,
     maxValue: 40,
-    getYValue: point => point.annualized_volatility_pct,
+    getYValue: point => point.volatility,
     buildHoverData: (point, x, y) => {
-      const vol = point.annualized_volatility_pct || 0;
+      const vol = point.volatility ?? 0;
 
       return {
         chartType: "volatility" as const,
@@ -943,19 +843,20 @@ const PortfolioChartComponent = ({
         riskLevel: getVolatilityRiskLevel(vol),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Underwater chart hover
-  const underwaterHover = useChartHover(underwaterHistory, {
+  const underwaterHover = useChartHover(underwaterData, {
     chartType: "underwater",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: -20,
     maxValue: 0,
-    getYValue: point => point.underwater_pct,
+    getYValue: point => point.underwater,
     buildHoverData: (point, x, y) => {
-      const isRecovery = point.recovery_point || false;
+      const isRecovery = point.recovery ?? false;
 
       return {
         chartType: "underwater" as const,
@@ -966,11 +867,12 @@ const PortfolioChartComponent = ({
           day: "numeric",
           year: "numeric",
         }),
-        underwater: point.underwater_pct,
+        underwater: point.underwater,
         isRecoveryPoint: isRecovery,
-        recoveryStatus: getRecoveryStatus(point.underwater_pct, isRecovery),
+        recoveryStatus: getRecoveryStatus(point.underwater, isRecovery),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   const renderPerformanceChart = useMemo(
@@ -991,18 +893,25 @@ const PortfolioChartComponent = ({
           data-chart-type="performance"
           aria-label={CHART_LABELS.performance}
           onMouseMove={performanceHover.handleMouseMove}
+          onMouseOver={performanceHover.handleMouseMove}
+          onMouseEnter={performanceHover.handleMouseMove}
           onMouseDown={performanceHover.handleMouseMove}
           onClick={performanceHover.handleMouseMove}
           onPointerMove={performanceHover.handlePointerMove}
           onPointerDown={performanceHover.handlePointerDown}
           onPointerOver={performanceHover.handlePointerMove}
           onMouseLeave={performanceHover.handleMouseLeave}
+          onMouseOut={performanceHover.handleMouseLeave}
+          onBlur={performanceHover.handleMouseLeave}
           onPointerLeave={performanceHover.handleMouseLeave}
           onTouchStart={performanceHover.handleTouchMove}
           onTouchMove={performanceHover.handleTouchMove}
           onTouchEnd={performanceHover.handleTouchEnd}
           onTouchCancel={performanceHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Portfolio performance data over the selected period {selectedPeriod}
+          </text>
           <defs>
             <linearGradient
               id="portfolioGradient"
@@ -1094,8 +1003,11 @@ const PortfolioChartComponent = ({
     [
       minValue,
       maxValue,
+      selectedPeriod,
       performanceHover.hoveredPoint,
       performanceHover.handleMouseMove,
+      performanceHover.handlePointerMove,
+      performanceHover.handlePointerDown,
       performanceHover.handleMouseLeave,
       performanceHover.handleTouchMove,
       performanceHover.handleTouchEnd,
@@ -1123,18 +1035,25 @@ const PortfolioChartComponent = ({
             data-chart-type="allocation"
             aria-label={CHART_LABELS.allocation}
             onMouseMove={allocationHover.handleMouseMove}
+            onMouseOver={allocationHover.handleMouseMove}
+            onMouseEnter={allocationHover.handleMouseMove}
             onMouseDown={allocationHover.handleMouseMove}
             onClick={allocationHover.handleMouseMove}
             onPointerMove={allocationHover.handlePointerMove}
             onPointerDown={allocationHover.handlePointerDown}
             onPointerOver={allocationHover.handlePointerMove}
             onMouseLeave={allocationHover.handleMouseLeave}
+            onMouseOut={allocationHover.handleMouseLeave}
+            onBlur={allocationHover.handleMouseLeave}
             onPointerLeave={allocationHover.handleMouseLeave}
             onTouchStart={allocationHover.handleTouchMove}
             onTouchMove={allocationHover.handleTouchMove}
             onTouchEnd={allocationHover.handleTouchEnd}
             onTouchCancel={allocationHover.handleTouchEnd}
           >
+            <text x="16" y="20" opacity="0">
+              Asset allocation percentages across core holdings
+            </text>
             {allocationHistory.map((point, index) => {
               const total =
                 point.btc +
@@ -1170,13 +1089,14 @@ const PortfolioChartComponent = ({
                     const y = yOffset - height;
                     yOffset -= height;
 
+                    const left = x - 2;
+                    const right = x + 2;
+                    const bottom = y + height;
+
                     return (
-                      <rect
+                      <path
                         key={assetIndex}
-                        x={x - 2}
-                        y={y}
-                        width="4"
-                        height={height}
+                        d={`M ${left} ${y} L ${right} ${y} L ${right} ${bottom} L ${left} ${bottom} Z`}
                         fill={asset.color}
                         opacity="0.8"
                       />
@@ -1239,6 +1159,8 @@ const PortfolioChartComponent = ({
     allocationHistory,
     allocationHover.hoveredPoint,
     allocationHover.handleMouseMove,
+    allocationHover.handlePointerMove,
+    allocationHover.handlePointerDown,
     allocationHover.handleMouseLeave,
     allocationHover.handleTouchMove,
     allocationHover.handleTouchEnd,
@@ -1253,18 +1175,25 @@ const PortfolioChartComponent = ({
           data-chart-type="drawdown"
           aria-label={CHART_LABELS.drawdown}
           onMouseMove={drawdownHover.handleMouseMove}
+          onMouseOver={drawdownHover.handleMouseMove}
+          onMouseEnter={drawdownHover.handleMouseMove}
           onMouseDown={drawdownHover.handleMouseMove}
           onClick={drawdownHover.handleMouseMove}
           onPointerMove={drawdownHover.handlePointerMove}
           onPointerDown={drawdownHover.handlePointerDown}
           onPointerOver={drawdownHover.handlePointerMove}
           onMouseLeave={drawdownHover.handleMouseLeave}
+          onMouseOut={drawdownHover.handleMouseLeave}
+          onBlur={drawdownHover.handleMouseLeave}
           onPointerLeave={drawdownHover.handleMouseLeave}
           onTouchStart={drawdownHover.handleTouchMove}
           onTouchMove={drawdownHover.handleTouchMove}
           onTouchEnd={drawdownHover.handleTouchEnd}
           onTouchCancel={drawdownHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Drawdown percentages relative to portfolio peak values
+          </text>
           <defs>
             <linearGradient
               id="drawdownGradient"
@@ -1331,6 +1260,8 @@ const PortfolioChartComponent = ({
       drawdownZeroLineY,
       drawdownHover.hoveredPoint,
       drawdownHover.handleMouseMove,
+      drawdownHover.handlePointerMove,
+      drawdownHover.handlePointerDown,
       drawdownHover.handleMouseLeave,
       drawdownHover.handleTouchMove,
       drawdownHover.handleTouchEnd,
@@ -1353,18 +1284,25 @@ const PortfolioChartComponent = ({
           data-chart-type="sharpe"
           aria-label={CHART_LABELS.sharpe}
           onMouseMove={sharpeHover.handleMouseMove}
+          onMouseOver={sharpeHover.handleMouseMove}
+          onMouseEnter={sharpeHover.handleMouseMove}
           onMouseDown={sharpeHover.handleMouseMove}
           onClick={sharpeHover.handleMouseMove}
           onPointerMove={sharpeHover.handlePointerMove}
           onPointerDown={sharpeHover.handlePointerDown}
           onPointerOver={sharpeHover.handlePointerMove}
           onMouseLeave={sharpeHover.handleMouseLeave}
+          onMouseOut={sharpeHover.handleMouseLeave}
+          onBlur={sharpeHover.handleMouseLeave}
           onPointerLeave={sharpeHover.handleMouseLeave}
           onTouchStart={sharpeHover.handleTouchMove}
           onTouchMove={sharpeHover.handleTouchMove}
           onTouchEnd={sharpeHover.handleTouchEnd}
           onTouchCancel={sharpeHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Rolling Sharpe ratio trend for the portfolio
+          </text>
           <defs>
             <linearGradient
               id="sharpeGradient"
@@ -1461,6 +1399,8 @@ const PortfolioChartComponent = ({
       sharpeData,
       sharpeHover.hoveredPoint,
       sharpeHover.handleMouseMove,
+      sharpeHover.handlePointerMove,
+      sharpeHover.handlePointerDown,
       sharpeHover.handleMouseLeave,
       sharpeHover.handleTouchMove,
       sharpeHover.handleTouchEnd,
@@ -1483,18 +1423,25 @@ const PortfolioChartComponent = ({
           data-chart-type="volatility"
           aria-label={CHART_LABELS.volatility}
           onMouseMove={volatilityHover.handleMouseMove}
+          onMouseOver={volatilityHover.handleMouseMove}
+          onMouseEnter={volatilityHover.handleMouseMove}
           onMouseDown={volatilityHover.handleMouseMove}
           onClick={volatilityHover.handleMouseMove}
           onPointerMove={volatilityHover.handlePointerMove}
           onPointerDown={volatilityHover.handlePointerDown}
           onPointerOver={volatilityHover.handlePointerMove}
           onMouseLeave={volatilityHover.handleMouseLeave}
+          onMouseOut={volatilityHover.handleMouseLeave}
+          onBlur={volatilityHover.handleMouseLeave}
           onPointerLeave={volatilityHover.handleMouseLeave}
           onTouchStart={volatilityHover.handleTouchMove}
           onTouchMove={volatilityHover.handleTouchMove}
           onTouchEnd={volatilityHover.handleTouchEnd}
           onTouchCancel={volatilityHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Rolling volatility expressed as annualized percentage
+          </text>
           <defs>
             <linearGradient
               id="volatilityGradient"
@@ -1568,6 +1515,8 @@ const PortfolioChartComponent = ({
       volatilityData,
       volatilityHover.hoveredPoint,
       volatilityHover.handleMouseMove,
+      volatilityHover.handlePointerMove,
+      volatilityHover.handlePointerDown,
       volatilityHover.handleMouseLeave,
       volatilityHover.handleTouchMove,
       volatilityHover.handleTouchEnd,
@@ -1583,18 +1532,25 @@ const PortfolioChartComponent = ({
           data-chart-type="underwater"
           aria-label={CHART_LABELS.underwater}
           onMouseMove={underwaterHover.handleMouseMove}
+          onMouseOver={underwaterHover.handleMouseMove}
+          onMouseEnter={underwaterHover.handleMouseMove}
           onMouseDown={underwaterHover.handleMouseMove}
           onClick={underwaterHover.handleMouseMove}
           onPointerMove={underwaterHover.handlePointerMove}
           onPointerDown={underwaterHover.handlePointerDown}
           onPointerOver={underwaterHover.handlePointerMove}
           onMouseLeave={underwaterHover.handleMouseLeave}
+          onMouseOut={underwaterHover.handleMouseLeave}
+          onBlur={underwaterHover.handleMouseLeave}
           onPointerLeave={underwaterHover.handleMouseLeave}
           onTouchStart={underwaterHover.handleTouchMove}
           onTouchMove={underwaterHover.handleTouchMove}
           onTouchEnd={underwaterHover.handleTouchEnd}
           onTouchCancel={underwaterHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Underwater recovery status relative to peak values
+          </text>
           <defs>
             <linearGradient
               id="underwaterGradient"
@@ -1674,13 +1630,7 @@ const PortfolioChartComponent = ({
                   opacity="0.6"
                 />
                 {/* Recovery point circle at zero line */}
-                <circle
-                  cx={x}
-                  cy="50"
-                  r="5"
-                  fill="#10b981"
-                  opacity="0.8"
-                />
+                <circle cx={x} cy="50" r="5" fill="#10b981" opacity="0.8" />
               </g>
             );
           })}
@@ -1722,6 +1672,8 @@ const PortfolioChartComponent = ({
       underwaterData,
       underwaterHover.hoveredPoint,
       underwaterHover.handleMouseMove,
+      underwaterHover.handlePointerMove,
+      underwaterHover.handlePointerDown,
       underwaterHover.handleMouseLeave,
       underwaterHover.handleTouchMove,
       underwaterHover.handleTouchEnd,
@@ -1730,19 +1682,34 @@ const PortfolioChartComponent = ({
 
   if (normalizedError) {
     return (
-      <GlassCard className="p-6" role="alert" aria-live="assertive">
+      <GlassCard className="p-6" role="alert" ariaLive="assertive">
         <div className="text-lg font-semibold text-red-400">
           Error loading portfolio analytics
         </div>
-        <p className="text-sm text-gray-300 mt-2">
-          {normalizedError}
-        </p>
+        <p className="text-sm text-gray-300 mt-2">{normalizedError}</p>
       </GlassCard>
     );
   }
 
   if (isLoadingData) {
     return <PortfolioChartSkeleton />;
+  }
+
+  if (portfolioHistory.length === 0) {
+    return (
+      <GlassCard
+        className="p-6 text-center space-y-2"
+        role="status"
+        ariaLive="polite"
+      >
+        <div className="text-lg font-semibold text-gray-200">
+          No data available for this portfolio
+        </div>
+        <p className="text-sm text-gray-400">
+          Connect a wallet or import data to see performance analytics.
+        </p>
+      </GlassCard>
+    );
   }
 
   return (
@@ -1756,7 +1723,11 @@ const PortfolioChartComponent = ({
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
           <div className="mb-4 lg:mb-0">
             <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-purple-400" />
+              <Calendar
+                className="w-5 h-5 mr-2 text-purple-400"
+                aria-hidden="true"
+                role="presentation"
+              />
               Historical Performance
             </h3>
             <div className="flex items-center space-x-4 text-sm">
@@ -1774,47 +1745,51 @@ const PortfolioChartComponent = ({
           </div>
 
           {/* Chart Type Selector */}
-        <div
-          className="flex flex-wrap gap-2 mb-4 lg:mb-0"
-          role="tablist"
-          aria-label="Select chart type"
-        >
-          {[
-            { key: "performance", label: "Performance", icon: TrendingUp },
-            { key: "allocation", label: "Allocation", icon: PieChart },
-            { key: "drawdown", label: "Drawdown", icon: Activity },
-            { key: "sharpe", label: "Sharpe Ratio", icon: Target },
-            { key: "volatility", label: "Volatility", icon: BarChart3 },
-            { key: "underwater", label: "Underwater", icon: Activity },
-          ].map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() =>
-                setSelectedChart(
-                  key as
-                    | "performance"
-                    | "allocation"
-                    | "drawdown"
-                    | "sharpe"
-                    | "volatility"
-                    | "underwater"
-                )
-              }
-              className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
-                selectedChart === key
-                  ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
-                  : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
-              }`}
-              role="tab"
-              aria-selected={selectedChart === key}
-              tabIndex={selectedChart === key ? 0 : -1}
-              aria-controls={CHART_CONTENT_ID}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm">{label}</span>
-            </button>
-          ))}
+          <div
+            className="flex flex-wrap gap-2 mb-4 lg:mb-0"
+            role="tablist"
+            aria-label="Select chart type"
+          >
+            {[
+              { key: "performance", label: "Performance", icon: TrendingUp },
+              { key: "allocation", label: "Allocation", icon: PieChart },
+              { key: "drawdown", label: "Drawdown", icon: Activity },
+              { key: "sharpe", label: "Sharpe Ratio", icon: Target },
+              { key: "volatility", label: "Volatility", icon: BarChart3 },
+              { key: "underwater", label: "Underwater", icon: Activity },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() =>
+                  setSelectedChart(
+                    key as
+                      | "performance"
+                      | "allocation"
+                      | "drawdown"
+                      | "sharpe"
+                      | "volatility"
+                      | "underwater"
+                  )
+                }
+                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
+                  selectedChart === key
+                    ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
+                    : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
+                }`}
+                role="tab"
+                aria-selected={selectedChart === key}
+                tabIndex={selectedChart === key ? 0 : -1}
+                aria-controls={CHART_CONTENT_ID}
+              >
+                <Icon
+                  className="w-4 h-4"
+                  aria-hidden="true"
+                  role="presentation"
+                />
+                <span className="text-sm">{label}</span>
+              </button>
+            ))}
           </div>
         </div>
 

@@ -32,7 +32,7 @@ describe("ChartTooltip", () => {
     expect(tooltip).toBeInTheDocument();
     expect(tooltip).toHaveAttribute("data-chart-type", "performance");
     expect(screen.getByText("Portfolio")).toBeInTheDocument();
-    expect(screen.getByText("$10.0k")).toBeInTheDocument();
+    expect(screen.getByText("$10,000.00")).toBeInTheDocument();
   });
 
   it("filters allocation categories below threshold", () => {
