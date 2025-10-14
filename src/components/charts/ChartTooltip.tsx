@@ -201,6 +201,9 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
     <>
       <div className="text-xs text-gray-300 mb-2">{data.date}</div>
       <div className="space-y-1.5">
+        <div className="text-sm font-semibold text-white">
+          Volatility overview
+        </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-amber-300">Annualized Vol</span>
           <span className="text-sm font-semibold text-white">
@@ -341,6 +344,7 @@ export function ChartTooltip({
       role="tooltip"
       aria-live="polite"
       data-chart-type={hoveredPoint.chartType}
+      data-testid="chart-tooltip"
       style={{
         left: `${adjustedLeft}%`,
         top: `${adjustedTop}%`,

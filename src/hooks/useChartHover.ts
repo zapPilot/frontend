@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
+  type PointerEvent,
   type TouchEvent,
 } from "react";
 import type { ChartHoverState } from "../types/chartHover";
@@ -123,7 +124,7 @@ export function useChartHover<T>(
 
       const rect = svg.getBoundingClientRect();
       const mouseX = clientX - rect.left;
-      const svgWidth = rect.width || 1;
+      const svgWidth = rect.width || chartWidth || 1;
 
       // Calculate the data index based on pointer position
       const rawIndex = (mouseX / svgWidth) * (data.length - 1);
@@ -143,7 +144,11 @@ export function useChartHover<T>(
         if (!point) return;
 
         // Calculate X position in SVG coordinates
-        const x = (clampedIndex / Math.max(data.length - 1, 1)) * chartWidth;
+        const boundedMouseX = Math.max(0, Math.min(mouseX, svgWidth));
+        const normalizedX = svgWidth
+          ? boundedMouseX / svgWidth
+          : clampedIndex / Math.max(data.length - 1, 1);
+        const x = normalizedX * chartWidth;
 
         // Calculate Y position in SVG coordinates based on value
         const yValue = getYValue(point);
@@ -156,6 +161,14 @@ export function useChartHover<T>(
         const hoverData = buildHoverData(point, x, y, clampedIndex);
 
         setHoveredPoint(hoverData);
+        if (process.env.NODE_ENV === "test") {
+          // eslint-disable-next-line no-console
+          console.log("hover update", {
+            chartType: options.chartType ?? "unknown",
+            x,
+            y,
+          });
+        }
       });
     },
     [
@@ -173,6 +186,24 @@ export function useChartHover<T>(
 
   const handleMouseMove = useCallback(
     (event: MouseEvent<SVGSVGElement>) => {
+      updateHoverFromClientX(event.clientX, event.currentTarget);
+    },
+    [updateHoverFromClientX]
+  );
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      updateHoverFromClientX(event.clientX, event.currentTarget);
+    },
+    [updateHoverFromClientX]
+  );
+
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      if (process.env.NODE_ENV === "test") {
+        // eslint-disable-next-line no-console
+        console.log("pointer down", options.chartType ?? "unknown");
+      }
       updateHoverFromClientX(event.clientX, event.currentTarget);
     },
     [updateHoverFromClientX]
@@ -218,6 +249,8 @@ export function useChartHover<T>(
   return {
     hoveredPoint,
     handleMouseMove,
+    handlePointerMove,
+    handlePointerDown,
     handleTouchMove,
     handleMouseLeave,
     handleTouchEnd,

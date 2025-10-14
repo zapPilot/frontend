@@ -364,10 +364,12 @@ export function ButtonSkeleton({
   width = "120px",
   height = 40,
   className = "",
+  ariaLabel = "Fetching content",
 }: {
   width?: string | number;
   height?: number;
   className?: string;
+  ariaLabel?: string;
 }) {
   return (
     <Skeleton
@@ -376,6 +378,7 @@ export function ButtonSkeleton({
       height={height}
       className={className}
       data-testid="button-skeleton"
+      aria-label={ariaLabel}
     />
   );
 }
