@@ -10,7 +10,7 @@ import { PortfolioState } from "../types/portfolioState";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
-import { WalletConnectionPrompt } from "./ui";
+import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 import { PieChartLoading } from "./ui/UnifiedLoading";
 import { TabButton } from "./ui/TabButton";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";

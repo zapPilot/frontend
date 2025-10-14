@@ -129,28 +129,6 @@ export function useStrategiesWithPortfolioQuery(
 }
 
 /**
- * Helper hook that provides commonly used query states
- */
-export function useStrategiesData(config?: StrategiesFetchConfig) {
-  const query = useStrategiesQuery(config);
-
-  return {
-    strategies: query.data || [],
-    isLoading: query.isLoading,
-    isError: query.isError,
-    error: query.error,
-    isRefetching: query.isRefetching,
-    refetch: query.refetch,
-    // Helper computed values
-    hasStrategies: (query.data?.length || 0) > 0,
-    totalStrategies: query.data?.length || 0,
-    // Loading state helpers
-    isInitialLoading: query.isLoading && !query.data,
-    isReloading: query.isRefetching || (query.isLoading && !!query.data),
-  };
-}
-
-/**
  * Helper hook for strategies with portfolio data
  */
 export function useStrategiesWithPortfolioData(
@@ -182,26 +160,6 @@ export function useStrategiesWithPortfolioData(
 }
 
 /**
- * Hook for strategies with error boundary integration
- */
-export function useStrategiesWithErrorBoundary(config?: StrategiesFetchConfig) {
-  const query = useStrategiesQuery(config);
-
-  // Throw error for error boundaries to catch
-  if (query.isError && query.error) {
-    throw query.error;
-  }
-
-  return {
-    strategies: query.data || [],
-    isLoading: query.isLoading,
-    isRefetching: query.isRefetching,
-    refetch: query.refetch,
-  };
-}
-
-/**
  * Type exports for external use
  */
 export type StrategiesQueryResult = ReturnType<typeof useStrategiesQuery>;
-export type StrategiesDataResult = ReturnType<typeof useStrategiesData>;

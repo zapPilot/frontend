@@ -16,76 +16,6 @@ export const GRADIENTS = {
   LIGHT: "from-gray-200 to-gray-300",
 } as const;
 
-// Glass Morphism Styles
-export const GLASS_MORPHISM = {
-  BASE: "glass-morphism",
-  WITH_BORDER: "glass-morphism border border-gray-800",
-  ROUNDED_LG: "glass-morphism rounded-2xl border border-gray-800",
-  ROUNDED_XL: "glass-morphism rounded-3xl border border-gray-800",
-  HOVER: "glass-morphism hover:bg-white/10 transition-all duration-300",
-} as const;
-
-// Animation Timing
-export const ANIMATION_DELAYS = {
-  NONE: 0,
-  FAST: 0.05,
-  NORMAL: 0.1,
-  SLOW: 0.2,
-  EXTRA_SLOW: 0.3,
-} as const;
-
-export const ANIMATION_DURATIONS = {
-  FAST: 0.2,
-  NORMAL: 0.5,
-  SLOW: 0.8,
-} as const;
-
-export const ANIMATION_CONFIG = {
-  STAGGER_DELAY: 0.05,
-  DEFAULT_DURATION: ANIMATION_DURATIONS.NORMAL,
-} as const;
-
-// Spacing and Layout
-export const LAYOUT = {
-  CONTAINER_PADDING: "p-6",
-  SECTION_SPACING: "space-y-6",
-  GRID_GAP: "gap-6",
-  CARD_PADDING: "p-4",
-} as const;
-
-// Utility functions for consistent styling
-export const getGradientClass = (gradient: keyof typeof GRADIENTS) =>
-  `bg-gradient-to-r ${GRADIENTS[gradient]}`;
-
-export const getGlassMorphismClass = (
-  variant: keyof typeof GLASS_MORPHISM = "BASE"
-) => GLASS_MORPHISM[variant];
-
-export const getAnimationDelay = (step: number) =>
-  ANIMATION_DELAYS.NORMAL * step;
-
-// Scrollbar Styling for Glass Morphism Design
-export const SCROLLBAR = {
-  DEFAULT: {
-    className:
-      "scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-transparent",
-    styles:
-      "scrollbar-width: thin; scrollbar-color: rgb(75 85 99) transparent;",
-  },
-  GLASS: {
-    className:
-      "scrollbar-thin scrollbar-thumb-gray-500/50 scrollbar-track-gray-900/10",
-    styles:
-      "scrollbar-width: thin; scrollbar-color: rgba(107 114 128 / 0.5) rgba(17 24 39 / 0.1);",
-  },
-  PORTFOLIO: {
-    className:
-      "scrollbar-thin scrollbar-thumb-purple-500/50 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/70",
-    styles:
-      "scrollbar-width: thin; scrollbar-color: rgba(168 85 247 / 0.5) transparent;",
-  },
-} as const;
-
 // Custom Scrollable Container Classes
 export const SCROLLABLE_CONTAINER = {
   BASE: "overflow-y-auto",
@@ -115,7 +45,4 @@ export const HEADER = {
 
 // Type exports for convenience
 export type GradientType = keyof typeof GRADIENTS;
-export type GlassMorphismVariant = keyof typeof GLASS_MORPHISM;
-export type AnimationDelay = keyof typeof ANIMATION_DELAYS;
-export type ScrollbarVariant = keyof typeof SCROLLBAR;
 export type ScrollableContainerVariant = keyof typeof SCROLLABLE_CONTAINER;

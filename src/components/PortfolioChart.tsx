@@ -12,12 +12,15 @@ import {
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUser } from "../contexts/UserContext";
 import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
+import { useAnalyticsData } from "../hooks/useAnalyticsData";
 import { useChartHover } from "../hooks/useChartHover";
-import { useEnhancedDrawdown } from "../hooks/useEnhancedDrawdown";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
-import { useRollingSharpe } from "../hooks/useRollingSharpe";
-import { useRollingVolatility } from "../hooks/useRollingVolatility";
-import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
+import {
+  getEnhancedDrawdown,
+  getRollingSharpe,
+  getRollingVolatility,
+  getUnderwaterRecovery,
+} from "../services/analyticsService";
 import {
   calculateDaysSincePeak,
   findPeakDate,
@@ -37,7 +40,8 @@ import {
 } from "../lib/portfolio-analytics";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { ChartIndicator, ChartTooltip } from "./charts";
-import { ButtonSkeleton, GlassCard, Skeleton } from "./ui";
+import { GlassCard } from "./ui";
+import { ButtonSkeleton, Skeleton } from "./ui/LoadingSystem";
 
 interface AllocationTimeseriesInputPoint {
   date: string;
@@ -334,28 +338,31 @@ const PortfolioChartComponent = ({
     });
 
   // Fetch Phase 2 analytics data
-  const { data: rollingSharpeData, loading: sharpeLoading } = useRollingSharpe({
-    userId: resolvedUserId,
-    days: selectedDays,
-    enabled: !!resolvedUserId,
-  });
+  const { data: rollingSharpeData, loading: sharpeLoading } = useAnalyticsData(
+    getRollingSharpe,
+    {
+      userId: resolvedUserId,
+      days: selectedDays,
+      enabled: !!resolvedUserId,
+    }
+  );
 
   const { data: rollingVolatilityData, loading: volatilityLoading } =
-    useRollingVolatility({
+    useAnalyticsData(getRollingVolatility, {
       userId: resolvedUserId,
       days: selectedDays,
       enabled: !!resolvedUserId,
     });
 
   const { data: enhancedDrawdownData, loading: drawdownLoading } =
-    useEnhancedDrawdown({
+    useAnalyticsData(getEnhancedDrawdown, {
       userId: resolvedUserId,
       days: selectedDays,
       enabled: !!resolvedUserId,
     });
 
   const { data: underwaterRecoveryData, loading: underwaterLoading } =
-    useUnderwaterRecovery({
+    useAnalyticsData(getUnderwaterRecovery, {
       userId: resolvedUserId,
       days: selectedDays,
       enabled: !!resolvedUserId,
