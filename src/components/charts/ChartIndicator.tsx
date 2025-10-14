@@ -137,7 +137,7 @@ function getIndicatorColor(chartType: string): string {
     case "allocation":
       return "#8b5cf6"; // Purple (base color, multi-circle has its own colors)
     case "drawdown":
-      return "#ef4444"; // Red
+      return "#f97316"; // Orange
     case "sharpe":
       return "#10b981"; // Green (default, can be dynamic)
     case "volatility":

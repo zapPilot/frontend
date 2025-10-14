@@ -47,6 +47,12 @@ interface ChartTooltipProps {
  * Render Performance chart tooltip content
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
+  const formattedValue = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  }).format(data.value);
+
   return (
     <>
       <div className="text-xs text-gray-300 mb-1">{data.date}</div>
@@ -54,7 +60,7 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-purple-300">Portfolio</span>
           <span className="text-sm font-semibold text-white">
-            ${(data.value / 1000).toFixed(1)}k
+            {formattedValue}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -201,6 +207,9 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
     <>
       <div className="text-xs text-gray-300 mb-2">{data.date}</div>
       <div className="space-y-1.5">
+        <div className="text-sm font-semibold text-white">
+          Volatility overview
+        </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-amber-300">Annualized Vol</span>
           <span className="text-sm font-semibold text-white">
@@ -322,10 +331,7 @@ export function ChartTooltip({
     chartHeight > 0
       ? Math.min(40, (TOOLTIP_MIN_HEIGHT / chartHeight) * 100)
       : 12;
-  let adjustedTop = Math.min(
-    Math.max(topPercentage, topOffsetPercent),
-    92
-  );
+  let adjustedTop = Math.min(Math.max(topPercentage, topOffsetPercent), 92);
 
   if (CHARTS_WITH_TOP_LEGEND.has(hoveredPoint.chartType)) {
     const isNearbyLegend = adjustedLeft > 60 && topPercentage < 32;
@@ -339,8 +345,8 @@ export function ChartTooltip({
     <motion.div
       className="absolute z-10 pointer-events-none"
       role="tooltip"
-      aria-live="polite"
       data-chart-type={hoveredPoint.chartType}
+      data-testid="chart-tooltip"
       style={{
         left: `${adjustedLeft}%`,
         top: `${adjustedTop}%`,

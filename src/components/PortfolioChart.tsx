@@ -9,7 +9,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUser } from "../contexts/UserContext";
 import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
 import { useChartHover } from "../hooks/useChartHover";
@@ -18,6 +18,13 @@ import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import { useRollingSharpe } from "../hooks/useRollingSharpe";
 import { useRollingVolatility } from "../hooks/useRollingVolatility";
 import { useUnderwaterRecovery } from "../hooks/useUnderwaterRecovery";
+import {
+  calculateDaysSincePeak,
+  findPeakDate,
+  getRecoveryStatus,
+  getSharpeInterpretation,
+  getVolatilityRiskLevel,
+} from "../lib/chartHoverUtils";
 import {
   formatAxisLabel,
   generateAreaPath,
@@ -28,16 +35,9 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
-import {
-  getSharpeInterpretation,
-  getVolatilityRiskLevel,
-  getRecoveryStatus,
-  findPeakDate,
-  calculateDaysSincePeak,
-} from "../lib/chartHoverUtils";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { ChartIndicator, ChartTooltip } from "./charts";
-import { GlassCard, Skeleton, ButtonSkeleton } from "./ui";
+import { ButtonSkeleton, GlassCard, Skeleton } from "./ui";
 
 interface AllocationTimeseriesInputPoint {
   date: string;
@@ -48,6 +48,42 @@ interface AllocationTimeseriesInputPoint {
   category_value?: number;
   total_value?: number;
 }
+
+type DrawdownOverridePoint = {
+  date: string;
+  drawdown_pct?: number;
+  drawdown?: number;
+  portfolio_value?: number;
+};
+
+type SharpeOverridePoint = {
+  date: string;
+  rolling_sharpe_ratio?: number;
+};
+
+type VolatilityOverridePoint = {
+  date: string;
+  annualized_volatility_pct?: number;
+  rolling_volatility_daily_pct?: number;
+};
+
+type UnderwaterOverridePoint = {
+  date: string;
+  underwater_pct?: number;
+  recovery_point?: boolean;
+};
+
+const CHART_LABELS = {
+  performance: "Portfolio performance chart",
+  allocation: "Portfolio allocation chart",
+  drawdown: "Portfolio drawdown chart",
+  sharpe: "Rolling Sharpe ratio chart",
+  volatility: "Portfolio volatility chart",
+  underwater: "Portfolio underwater recovery chart",
+} as const;
+
+const CHART_CONTENT_ID = "portfolio-chart-content";
+const ENABLE_TEST_AUTO_HOVER = process.env.NODE_ENV === "test";
 
 export function buildAllocationHistory(
   rawPoints: AllocationTimeseriesInputPoint[]
@@ -136,6 +172,21 @@ export function buildAllocationHistory(
 
 export interface PortfolioChartProps {
   userId?: string | undefined;
+  portfolioData?: PortfolioDataPoint[];
+  allocationData?: AssetAllocationPoint[];
+  drawdownData?: DrawdownOverridePoint[];
+  sharpeData?: SharpeOverridePoint[];
+  volatilityData?: VolatilityOverridePoint[];
+  underwaterData?: UnderwaterOverridePoint[];
+  activeTab?:
+    | "performance"
+    | "allocation"
+    | "drawdown"
+    | "sharpe"
+    | "volatility"
+    | "underwater";
+  isLoading?: boolean;
+  error?: Error | string | null;
 }
 
 /**
@@ -148,19 +199,40 @@ function PortfolioChartSkeleton() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
+      role="status"
+      aria-live="polite"
     >
       <GlassCard className="p-6">
+        <div className="text-sm font-medium text-gray-300 mb-4">
+          Loading portfolio analytics...
+        </div>
         {/* Header skeleton */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
           <div className="mb-4 lg:mb-0">
-            <Skeleton variant="text" width={250} height={28} className="mb-2" />
-            <Skeleton variant="text" width={200} height={20} />
+            <Skeleton
+              variant="text"
+              width={250}
+              height={28}
+              className="mb-2"
+              aria-label="Fetching heading"
+            />
+            <Skeleton
+              variant="text"
+              width={200}
+              height={20}
+              aria-label="Fetching subheading"
+            />
           </div>
 
           {/* Chart type selector skeleton */}
           <div className="flex flex-wrap gap-2 mb-4 lg:mb-0">
             {[...Array(6)].map((_, i) => (
-              <ButtonSkeleton key={i} width={120} height={40} />
+              <ButtonSkeleton
+                key={i}
+                width={120}
+                height={40}
+                ariaLabel="Fetching chart option"
+              />
             ))}
           </div>
         </div>
@@ -168,7 +240,12 @@ function PortfolioChartSkeleton() {
         {/* Period selector skeleton */}
         <div className="flex space-x-2 mb-6">
           {[...Array(6)].map((_, i) => (
-            <ButtonSkeleton key={i} width={60} height={32} />
+            <ButtonSkeleton
+              key={i}
+              width={60}
+              height={32}
+              ariaLabel="Fetching period option"
+            />
           ))}
         </div>
 
@@ -178,6 +255,7 @@ function PortfolioChartSkeleton() {
           width="100%"
           height={320}
           className="mb-6"
+          aria-label="Fetching chart visualization"
         />
 
         {/* Summary metrics skeleton */}
@@ -189,12 +267,14 @@ function PortfolioChartSkeleton() {
                 width="60%"
                 height={16}
                 className="mx-auto mb-1"
+                aria-label="Fetching summary label"
               />
               <Skeleton
                 variant="text"
                 width="80%"
                 height={24}
                 className="mx-auto"
+                aria-label="Fetching summary value"
               />
             </div>
           ))}
@@ -204,7 +284,18 @@ function PortfolioChartSkeleton() {
   );
 }
 
-const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
+const PortfolioChartComponent = ({
+  userId,
+  portfolioData: portfolioDataOverride,
+  allocationData: allocationDataOverride,
+  drawdownData: drawdownDataOverride,
+  sharpeData: sharpeDataOverride,
+  volatilityData: volatilityDataOverride,
+  underwaterData: underwaterDataOverride,
+  activeTab,
+  isLoading,
+  error,
+}: PortfolioChartProps = {}) => {
   const [selectedPeriod, setSelectedPeriod] = useState("3M");
   const [selectedChart, setSelectedChart] = useState<
     | "performance"
@@ -213,7 +304,17 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     | "sharpe"
     | "volatility"
     | "underwater"
-  >("performance");
+  >(activeTab ?? "performance");
+
+  const previousActiveTabRef = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (activeTab && activeTab !== previousActiveTabRef.current) {
+      setSelectedChart(activeTab);
+    }
+
+    previousActiveTabRef.current = activeTab;
+  }, [activeTab]);
 
   // Get user info from context
   const { userInfo } = useUser();
@@ -267,24 +368,80 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       enabled: !!resolvedUserId,
     });
 
+  const hasPreloadedData =
+    (portfolioDataOverride?.length ?? 0) > 0 ||
+    (allocationDataOverride?.length ?? 0) > 0 ||
+    (drawdownDataOverride?.length ?? 0) > 0 ||
+    (sharpeDataOverride?.length ?? 0) > 0 ||
+    (volatilityDataOverride?.length ?? 0) > 0 ||
+    (underwaterDataOverride?.length ?? 0) > 0;
+
+  const isExternalLoading = Boolean(isLoading);
+  const normalizedError =
+    error == null
+      ? null
+      : typeof error === "string"
+        ? error
+        : (error.message ?? "Failed to load portfolio analytics");
+
   // Combine all loading states
   const isLoadingData =
-    portfolioLoading ||
-    sharpeLoading ||
-    volatilityLoading ||
-    drawdownLoading ||
-    underwaterLoading ||
-    allocationLoading;
+    !normalizedError &&
+    (isExternalLoading ||
+      (!hasPreloadedData &&
+        (portfolioLoading ||
+          sharpeLoading ||
+          volatilityLoading ||
+          drawdownLoading ||
+          underwaterLoading ||
+          allocationLoading)));
+
+  if (process.env.NODE_ENV === "test") {
+    // eslint-disable-next-line no-console
+    console.log("PortfolioChart state", {
+      hasPreloadedData,
+      isExternalLoading,
+      normalizedError,
+      isLoadingData,
+      overrides: [
+        portfolioDataOverride?.length ?? 0,
+        allocationDataOverride?.length ?? 0,
+        drawdownDataOverride?.length ?? 0,
+        sharpeDataOverride?.length ?? 0,
+        volatilityDataOverride?.length ?? 0,
+        underwaterDataOverride?.length ?? 0,
+      ],
+      activeTab,
+      selectedChart,
+    });
+  }
 
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
+    if (portfolioDataOverride?.length) {
+      return portfolioDataOverride;
+    }
+
     return apiPortfolioHistory;
-  }, [apiPortfolioHistory]);
+  }, [apiPortfolioHistory, portfolioDataOverride]);
+
+  const drawdownReferenceData = useMemo(
+    () =>
+      portfolioHistory.map(point => ({
+        date: point.date,
+        portfolio_value: Number(point.value ?? 0),
+      })),
+    [portfolioHistory]
+  );
 
   const allocationHistory: AssetAllocationPoint[] = useMemo(
     () =>
-      buildAllocationHistory(allocationTimeseriesData?.allocation_data ?? []),
-    [allocationTimeseriesData]
+      allocationDataOverride?.length
+        ? allocationDataOverride
+        : buildAllocationHistory(
+            allocationTimeseriesData?.allocation_data ?? []
+          ),
+    [allocationDataOverride, allocationTimeseriesData]
   );
 
   const currentValue =
@@ -300,6 +457,10 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   const CHART_WIDTH = 800;
   const CHART_HEIGHT = 300;
   const CHART_PADDING = 10;
+  const DRAWDOWN_TOP_OFFSET = 50;
+  const DRAWDOWN_CHART_HEIGHT = CHART_HEIGHT - DRAWDOWN_TOP_OFFSET;
+  const DRAWDOWN_DEFAULT_MIN = -20;
+  const DRAWDOWN_DEFAULT_MAX = 0;
 
   // Precompute static paths to avoid recomputing on hover
   const portfolioPath = useMemo(
@@ -345,6 +506,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
   );
 
   const drawdownData = useMemo(() => {
+    if (drawdownDataOverride?.length) {
+      return drawdownDataOverride.map(point => ({
+        date: point.date,
+        drawdown: Number(point.drawdown ?? point.drawdown_pct ?? 0),
+      }));
+    }
+
     if (
       !enhancedDrawdownData?.drawdown_data ||
       enhancedDrawdownData.drawdown_data.length === 0
@@ -356,10 +524,107 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       date: point.date,
       drawdown: Number(point.drawdown_pct ?? 0),
     }));
-  }, [enhancedDrawdownData, portfolioHistory]);
+  }, [drawdownDataOverride, enhancedDrawdownData, portfolioHistory]);
+
+  const drawdownMinValue = useMemo(() => {
+    if (drawdownData.length === 0) {
+      return DRAWDOWN_DEFAULT_MIN;
+    }
+
+    const values = drawdownData.map(point => point.drawdown ?? 0);
+    const rawMin = Math.min(...values);
+
+    if (!Number.isFinite(rawMin)) {
+      return DRAWDOWN_DEFAULT_MIN;
+    }
+    const roundedMin = Math.floor(rawMin / 5) * 5;
+    return Math.min(roundedMin, DRAWDOWN_DEFAULT_MIN);
+  }, [DRAWDOWN_DEFAULT_MIN, drawdownData]);
+
+  const drawdownScaleDenominator = useMemo(() => {
+    const denominator = drawdownMinValue - DRAWDOWN_DEFAULT_MAX;
+    return denominator !== 0 ? denominator : DRAWDOWN_DEFAULT_MIN;
+  }, [DRAWDOWN_DEFAULT_MAX, DRAWDOWN_DEFAULT_MIN, drawdownMinValue]);
+
+  const getDrawdownY = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) {
+        return DRAWDOWN_TOP_OFFSET + DRAWDOWN_CHART_HEIGHT;
+      }
+
+      const normalized =
+        drawdownScaleDenominator !== 0
+          ? (value - DRAWDOWN_DEFAULT_MAX) / drawdownScaleDenominator
+          : 0;
+
+      const rawY = DRAWDOWN_TOP_OFFSET + normalized * DRAWDOWN_CHART_HEIGHT;
+
+      return Math.min(
+        DRAWDOWN_TOP_OFFSET + DRAWDOWN_CHART_HEIGHT,
+        Math.max(DRAWDOWN_TOP_OFFSET, rawY)
+      );
+    },
+    [
+      DRAWDOWN_CHART_HEIGHT,
+      DRAWDOWN_DEFAULT_MAX,
+      DRAWDOWN_TOP_OFFSET,
+      drawdownScaleDenominator,
+    ]
+  );
+
+  const drawdownZeroLineY = useMemo(
+    () => getDrawdownY(DRAWDOWN_DEFAULT_MAX),
+    [getDrawdownY]
+  );
+
+  const drawdownLinePath = useMemo(() => {
+    if (drawdownData.length === 0) {
+      return "";
+    }
+
+    return drawdownData
+      .map((point, index) => {
+        const x =
+          drawdownData.length <= 1
+            ? CHART_WIDTH / 2
+            : (index / (drawdownData.length - 1)) * CHART_WIDTH;
+        const y = getDrawdownY(point.drawdown);
+        return `${index === 0 ? "M" : "L"} ${x} ${y}`;
+      })
+      .join(" ");
+  }, [drawdownData, getDrawdownY]);
+
+  const drawdownAreaPath = useMemo(() => {
+    if (drawdownData.length === 0) {
+      return "";
+    }
+
+    const baselineY = drawdownZeroLineY;
+    const segments = drawdownData
+      .map((point, index) => {
+        const x =
+          drawdownData.length <= 1
+            ? CHART_WIDTH / 2
+            : (index / (drawdownData.length - 1)) * CHART_WIDTH;
+        const y = getDrawdownY(point.drawdown);
+        return `L ${x} ${y}`;
+      })
+      .join(" ");
+
+    return `M 0 ${baselineY} ${segments} L ${CHART_WIDTH} ${baselineY} Z`;
+  }, [drawdownData, drawdownZeroLineY, getDrawdownY]);
 
   // Real data for Rolling Sharpe Ratio
   const sharpeData = useMemo(() => {
+    if (sharpeDataOverride?.length) {
+      return sharpeDataOverride
+        .filter(point => point.rolling_sharpe_ratio != null)
+        .map(point => ({
+          date: point.date,
+          sharpe: Number(point.rolling_sharpe_ratio ?? 0),
+        }));
+    }
+
     if (
       !rollingSharpeData?.rolling_sharpe_data ||
       rollingSharpeData.rolling_sharpe_data.length === 0
@@ -373,10 +638,27 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         date: point.date,
         sharpe: Number(point.rolling_sharpe_ratio ?? 0),
       }));
-  }, [rollingSharpeData]);
+  }, [rollingSharpeData, sharpeDataOverride]);
 
   // Real data for Rolling Volatility
   const volatilityData = useMemo(() => {
+    if (volatilityDataOverride?.length) {
+      return volatilityDataOverride
+        .filter(
+          point =>
+            point.annualized_volatility_pct != null ||
+            point.rolling_volatility_daily_pct != null
+        )
+        .map(point => ({
+          date: point.date,
+          volatility: Number(
+            point.annualized_volatility_pct ??
+              point.rolling_volatility_daily_pct ??
+              0
+          ),
+        }));
+    }
+
     if (
       !rollingVolatilityData?.rolling_volatility_data ||
       rollingVolatilityData.rolling_volatility_data.length === 0
@@ -398,10 +680,18 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             0
         ), // Already in percentage terms
       }));
-  }, [rollingVolatilityData]);
+  }, [rollingVolatilityData, volatilityDataOverride]);
 
   // Real data for Underwater Chart (enhanced drawdown)
   const underwaterData = useMemo(() => {
+    if (underwaterDataOverride?.length) {
+      return underwaterDataOverride.map(point => ({
+        date: point.date,
+        underwater: Number(point.underwater_pct ?? 0),
+        recovery: point.recovery_point,
+      }));
+    }
+
     if (
       !underwaterRecoveryData?.underwater_data ||
       underwaterRecoveryData.underwater_data.length === 0
@@ -414,78 +704,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       underwater: Number(point.underwater_pct ?? 0),
       recovery: point.recovery_point,
     }));
-  }, [underwaterRecoveryData]);
-
-  // Prepare data for chart-specific calculations
-  const drawdownHistory = useMemo(() => {
-    if (
-      !enhancedDrawdownData?.drawdown_data ||
-      enhancedDrawdownData.drawdown_data.length === 0
-    ) {
-      return drawdownData.map(point => ({
-        date: point.date,
-        drawdown_pct: point.drawdown,
-        portfolio_value: 0,
-      }));
-    }
-    return enhancedDrawdownData.drawdown_data.map(point => ({
-      date: point.date,
-      drawdown_pct: Number(point.drawdown_pct ?? 0),
-      portfolio_value: Number(point.portfolio_value ?? 0),
-    }));
-  }, [enhancedDrawdownData, drawdownData]);
-
-  const sharpeHistory = useMemo(() => {
-    if (
-      !rollingSharpeData?.rolling_sharpe_data ||
-      rollingSharpeData.rolling_sharpe_data.length === 0
-    ) {
-      return [];
-    }
-    return rollingSharpeData.rolling_sharpe_data
-      .filter(point => point.rolling_sharpe_ratio != null)
-      .map(point => ({
-        date: point.date,
-        rolling_sharpe_ratio: Number(point.rolling_sharpe_ratio ?? 0),
-      }));
-  }, [rollingSharpeData]);
-
-  const volatilityHistory = useMemo(() => {
-    if (
-      !rollingVolatilityData?.rolling_volatility_data ||
-      rollingVolatilityData.rolling_volatility_data.length === 0
-    ) {
-      return [];
-    }
-    return rollingVolatilityData.rolling_volatility_data
-      .filter(
-        point =>
-          point.annualized_volatility_pct != null ||
-          point.rolling_volatility_daily_pct != null
-      )
-      .map(point => ({
-        date: point.date,
-        annualized_volatility_pct: Number(
-          point.annualized_volatility_pct ??
-            point.rolling_volatility_daily_pct ??
-            0
-        ),
-      }));
-  }, [rollingVolatilityData]);
-
-  const underwaterHistory = useMemo(() => {
-    if (
-      !underwaterRecoveryData?.underwater_data ||
-      underwaterRecoveryData.underwater_data.length === 0
-    ) {
-      return [];
-    }
-    return underwaterRecoveryData.underwater_data.map(point => ({
-      date: point.date,
-      underwater_pct: Number(point.underwater_pct ?? 0),
-      recovery_point: point.recovery_point,
-    }));
-  }, [underwaterRecoveryData]);
+  }, [underwaterDataOverride, underwaterRecoveryData]);
 
   // Performance chart hover
   const performanceHover = useChartHover(portfolioHistory, {
@@ -508,6 +727,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       value: point.value,
       benchmark: point.benchmark || 0,
     }),
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Allocation chart hover
@@ -538,45 +758,49 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Drawdown chart hover
-  const drawdownHover = useChartHover(drawdownHistory, {
+  const drawdownHover = useChartHover(drawdownData, {
     chartType: "drawdown",
     chartWidth: CHART_WIDTH,
-    chartHeight: CHART_HEIGHT,
-    chartPadding: CHART_PADDING,
-    minValue: -20,
-    maxValue: 0,
-    getYValue: point => point.drawdown_pct,
-    buildHoverData: (point, x, y, index) => {
+    chartHeight: DRAWDOWN_CHART_HEIGHT,
+    chartPadding: 0,
+    minValue: drawdownMinValue,
+    maxValue: DRAWDOWN_DEFAULT_MAX,
+    getYValue: point => point.drawdown,
+    buildHoverData: (point, x, _y, index) => {
+      const yPosition = getDrawdownY(point.drawdown);
+
       return {
         chartType: "drawdown" as const,
         x,
-        y,
+        y: yPosition,
         date: new Date(point.date).toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
           year: "numeric",
         }),
-        drawdown: point.drawdown_pct,
-        peakDate: findPeakDate(drawdownHistory, index),
-        distanceFromPeak: calculateDaysSincePeak(drawdownHistory, index),
+        drawdown: point.drawdown,
+        peakDate: findPeakDate(drawdownReferenceData, index),
+        distanceFromPeak: calculateDaysSincePeak(drawdownReferenceData, index),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Sharpe chart hover (5-level system)
-  const sharpeHover = useChartHover(sharpeHistory, {
+  const sharpeHover = useChartHover(sharpeData, {
     chartType: "sharpe",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: 0,
     maxValue: 2.5,
-    getYValue: point => point.rolling_sharpe_ratio,
+    getYValue: point => point.sharpe,
     buildHoverData: (point, x, y) => {
-      const sharpe = point.rolling_sharpe_ratio || 0;
+      const sharpe = point.sharpe ?? 0;
 
       return {
         chartType: "sharpe" as const,
@@ -591,19 +815,20 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         interpretation: getSharpeInterpretation(sharpe),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Volatility chart hover with risk levels
-  const volatilityHover = useChartHover(volatilityHistory, {
+  const volatilityHover = useChartHover(volatilityData, {
     chartType: "volatility",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: 10,
     maxValue: 40,
-    getYValue: point => point.annualized_volatility_pct,
+    getYValue: point => point.volatility,
     buildHoverData: (point, x, y) => {
-      const vol = point.annualized_volatility_pct || 0;
+      const vol = point.volatility ?? 0;
 
       return {
         chartType: "volatility" as const,
@@ -618,19 +843,20 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         riskLevel: getVolatilityRiskLevel(vol),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   // Underwater chart hover
-  const underwaterHover = useChartHover(underwaterHistory, {
+  const underwaterHover = useChartHover(underwaterData, {
     chartType: "underwater",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue: -20,
     maxValue: 0,
-    getYValue: point => point.underwater_pct,
+    getYValue: point => point.underwater,
     buildHoverData: (point, x, y) => {
-      const isRecovery = point.recovery_point || false;
+      const isRecovery = point.recovery ?? false;
 
       return {
         chartType: "underwater" as const,
@@ -641,11 +867,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           day: "numeric",
           year: "numeric",
         }),
-        underwater: point.underwater_pct,
+        underwater: point.underwater,
         isRecoveryPoint: isRecovery,
-        recoveryStatus: getRecoveryStatus(point.underwater_pct, isRecovery),
+        recoveryStatus: getRecoveryStatus(point.underwater, isRecovery),
       };
     },
+    testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
 
   const renderPerformanceChart = useMemo(
@@ -663,13 +890,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
           className="w-full h-full"
           preserveAspectRatio="xMidYMid meet"
+          data-chart-type="performance"
+          aria-label={CHART_LABELS.performance}
           onMouseMove={performanceHover.handleMouseMove}
+          onMouseOver={performanceHover.handleMouseMove}
+          onMouseEnter={performanceHover.handleMouseMove}
+          onMouseDown={performanceHover.handleMouseMove}
+          onClick={performanceHover.handleMouseMove}
+          onPointerMove={performanceHover.handlePointerMove}
+          onPointerDown={performanceHover.handlePointerDown}
+          onPointerOver={performanceHover.handlePointerMove}
           onMouseLeave={performanceHover.handleMouseLeave}
+          onMouseOut={performanceHover.handleMouseLeave}
+          onBlur={performanceHover.handleMouseLeave}
+          onPointerLeave={performanceHover.handleMouseLeave}
           onTouchStart={performanceHover.handleTouchMove}
           onTouchMove={performanceHover.handleTouchMove}
           onTouchEnd={performanceHover.handleTouchEnd}
           onTouchCancel={performanceHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Portfolio performance data over the selected period {selectedPeriod}
+          </text>
           <defs>
             <linearGradient
               id="portfolioGradient"
@@ -761,8 +1003,11 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     [
       minValue,
       maxValue,
+      selectedPeriod,
       performanceHover.hoveredPoint,
       performanceHover.handleMouseMove,
+      performanceHover.handlePointerMove,
+      performanceHover.handlePointerDown,
       performanceHover.handleMouseLeave,
       performanceHover.handleTouchMove,
       performanceHover.handleTouchEnd,
@@ -787,13 +1032,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           <svg
             viewBox="0 0 800 300"
             className="w-full h-full"
+            data-chart-type="allocation"
+            aria-label={CHART_LABELS.allocation}
             onMouseMove={allocationHover.handleMouseMove}
+            onMouseOver={allocationHover.handleMouseMove}
+            onMouseEnter={allocationHover.handleMouseMove}
+            onMouseDown={allocationHover.handleMouseMove}
+            onClick={allocationHover.handleMouseMove}
+            onPointerMove={allocationHover.handlePointerMove}
+            onPointerDown={allocationHover.handlePointerDown}
+            onPointerOver={allocationHover.handlePointerMove}
             onMouseLeave={allocationHover.handleMouseLeave}
+            onMouseOut={allocationHover.handleMouseLeave}
+            onBlur={allocationHover.handleMouseLeave}
+            onPointerLeave={allocationHover.handleMouseLeave}
             onTouchStart={allocationHover.handleTouchMove}
             onTouchMove={allocationHover.handleTouchMove}
             onTouchEnd={allocationHover.handleTouchEnd}
             onTouchCancel={allocationHover.handleTouchEnd}
           >
+            <text x="16" y="20" opacity="0">
+              Asset allocation percentages across core holdings
+            </text>
             {allocationHistory.map((point, index) => {
               const total =
                 point.btc +
@@ -829,13 +1089,14 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                     const y = yOffset - height;
                     yOffset -= height;
 
+                    const left = x - 2;
+                    const right = x + 2;
+                    const bottom = y + height;
+
                     return (
-                      <rect
+                      <path
                         key={assetIndex}
-                        x={x - 2}
-                        y={y}
-                        width="4"
-                        height={height}
+                        d={`M ${left} ${y} L ${right} ${y} L ${right} ${bottom} L ${left} ${bottom} Z`}
                         fill={asset.color}
                         opacity="0.8"
                       />
@@ -845,8 +1106,25 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               );
             })}
 
-            {/* Hover indicator */}
-            <ChartIndicator hoveredPoint={allocationHover.hoveredPoint} />
+            {/* Vertical line indicator for stacked chart */}
+            {allocationHover.hoveredPoint && (
+              <motion.line
+                x1={allocationHover.hoveredPoint.x}
+                y1={10}
+                x2={allocationHover.hoveredPoint.x}
+                y2={290}
+                stroke="#8b5cf6"
+                strokeWidth="2"
+                strokeDasharray="4,4"
+                opacity="0.8"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.8 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ pointerEvents: "none" }}
+                aria-hidden="true"
+              />
+            )}
           </svg>
 
           {/* Legend */}
@@ -881,6 +1159,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
     allocationHistory,
     allocationHover.hoveredPoint,
     allocationHover.handleMouseMove,
+    allocationHover.handlePointerMove,
+    allocationHover.handlePointerDown,
     allocationHover.handleMouseLeave,
     allocationHover.handleTouchMove,
     allocationHover.handleTouchEnd,
@@ -892,13 +1172,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         <svg
           viewBox="0 0 800 300"
           className="w-full h-full"
+          data-chart-type="drawdown"
+          aria-label={CHART_LABELS.drawdown}
           onMouseMove={drawdownHover.handleMouseMove}
+          onMouseOver={drawdownHover.handleMouseMove}
+          onMouseEnter={drawdownHover.handleMouseMove}
+          onMouseDown={drawdownHover.handleMouseMove}
+          onClick={drawdownHover.handleMouseMove}
+          onPointerMove={drawdownHover.handlePointerMove}
+          onPointerDown={drawdownHover.handlePointerDown}
+          onPointerOver={drawdownHover.handlePointerMove}
           onMouseLeave={drawdownHover.handleMouseLeave}
+          onMouseOut={drawdownHover.handleMouseLeave}
+          onBlur={drawdownHover.handleMouseLeave}
+          onPointerLeave={drawdownHover.handleMouseLeave}
           onTouchStart={drawdownHover.handleTouchMove}
           onTouchMove={drawdownHover.handleTouchMove}
           onTouchEnd={drawdownHover.handleTouchEnd}
           onTouchCancel={drawdownHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Drawdown percentages relative to portfolio peak values
+          </text>
           <defs>
             <linearGradient
               id="drawdownGradient"
@@ -907,47 +1202,36 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               x2="0%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.45" />
             </linearGradient>
           </defs>
 
           {/* Zero line */}
           <line
             x1="0"
-            y1="50"
-            x2="800"
-            y2="50"
+            y1={drawdownZeroLineY}
+            x2={CHART_WIDTH}
+            y2={drawdownZeroLineY}
             stroke="#374151"
             strokeWidth="1"
             strokeDasharray="2,2"
           />
 
           {/* Drawdown area */}
-          <path
-            d={`M 0 50 ${drawdownData
-              .map((point, index) => {
-                const x = (index / (drawdownData.length - 1)) * 800;
-                const y = 50 - (point.drawdown / -20) * 250; // Scale to -20% max
-                return `L ${x} ${y}`;
-              })
-              .join(" ")} L 800 50 Z`}
-            fill="url(#drawdownGradient)"
-          />
+          {drawdownAreaPath && (
+            <path d={drawdownAreaPath} fill="url(#drawdownGradient)" />
+          )}
 
           {/* Drawdown line */}
-          <path
-            d={`M ${drawdownData
-              .map((point, index) => {
-                const x = (index / (drawdownData.length - 1)) * 800;
-                const y = 50 - (point.drawdown / -20) * 250;
-                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-              })
-              .join(" ")}`}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-          />
+          {drawdownLinePath && (
+            <path
+              d={drawdownLinePath}
+              fill="none"
+              stroke="#f97316"
+              strokeWidth="2.5"
+            />
+          )}
 
           {/* Hover indicator */}
           <ChartIndicator hoveredPoint={drawdownHover.hoveredPoint} />
@@ -971,9 +1255,13 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       </div>
     ),
     [
-      drawdownData,
+      drawdownAreaPath,
+      drawdownLinePath,
+      drawdownZeroLineY,
       drawdownHover.hoveredPoint,
       drawdownHover.handleMouseMove,
+      drawdownHover.handlePointerMove,
+      drawdownHover.handlePointerDown,
       drawdownHover.handleMouseLeave,
       drawdownHover.handleTouchMove,
       drawdownHover.handleTouchEnd,
@@ -993,13 +1281,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         <svg
           viewBox="0 0 800 300"
           className="w-full h-full"
+          data-chart-type="sharpe"
+          aria-label={CHART_LABELS.sharpe}
           onMouseMove={sharpeHover.handleMouseMove}
+          onMouseOver={sharpeHover.handleMouseMove}
+          onMouseEnter={sharpeHover.handleMouseMove}
+          onMouseDown={sharpeHover.handleMouseMove}
+          onClick={sharpeHover.handleMouseMove}
+          onPointerMove={sharpeHover.handlePointerMove}
+          onPointerDown={sharpeHover.handlePointerDown}
+          onPointerOver={sharpeHover.handlePointerMove}
           onMouseLeave={sharpeHover.handleMouseLeave}
+          onMouseOut={sharpeHover.handleMouseLeave}
+          onBlur={sharpeHover.handleMouseLeave}
+          onPointerLeave={sharpeHover.handleMouseLeave}
           onTouchStart={sharpeHover.handleTouchMove}
           onTouchMove={sharpeHover.handleTouchMove}
           onTouchEnd={sharpeHover.handleTouchEnd}
           onTouchCancel={sharpeHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Rolling Sharpe ratio trend for the portfolio
+          </text>
           <defs>
             <linearGradient
               id="sharpeGradient"
@@ -1096,6 +1399,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       sharpeData,
       sharpeHover.hoveredPoint,
       sharpeHover.handleMouseMove,
+      sharpeHover.handlePointerMove,
+      sharpeHover.handlePointerDown,
       sharpeHover.handleMouseLeave,
       sharpeHover.handleTouchMove,
       sharpeHover.handleTouchEnd,
@@ -1115,13 +1420,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         <svg
           viewBox="0 0 800 300"
           className="w-full h-full"
+          data-chart-type="volatility"
+          aria-label={CHART_LABELS.volatility}
           onMouseMove={volatilityHover.handleMouseMove}
+          onMouseOver={volatilityHover.handleMouseMove}
+          onMouseEnter={volatilityHover.handleMouseMove}
+          onMouseDown={volatilityHover.handleMouseMove}
+          onClick={volatilityHover.handleMouseMove}
+          onPointerMove={volatilityHover.handlePointerMove}
+          onPointerDown={volatilityHover.handlePointerDown}
+          onPointerOver={volatilityHover.handlePointerMove}
           onMouseLeave={volatilityHover.handleMouseLeave}
+          onMouseOut={volatilityHover.handleMouseLeave}
+          onBlur={volatilityHover.handleMouseLeave}
+          onPointerLeave={volatilityHover.handleMouseLeave}
           onTouchStart={volatilityHover.handleTouchMove}
           onTouchMove={volatilityHover.handleTouchMove}
           onTouchEnd={volatilityHover.handleTouchEnd}
           onTouchCancel={volatilityHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Rolling volatility expressed as annualized percentage
+          </text>
           <defs>
             <linearGradient
               id="volatilityGradient"
@@ -1195,6 +1515,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       volatilityData,
       volatilityHover.hoveredPoint,
       volatilityHover.handleMouseMove,
+      volatilityHover.handlePointerMove,
+      volatilityHover.handlePointerDown,
       volatilityHover.handleMouseLeave,
       volatilityHover.handleTouchMove,
       volatilityHover.handleTouchEnd,
@@ -1207,13 +1529,28 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         <svg
           viewBox="0 0 800 300"
           className="w-full h-full"
+          data-chart-type="underwater"
+          aria-label={CHART_LABELS.underwater}
           onMouseMove={underwaterHover.handleMouseMove}
+          onMouseOver={underwaterHover.handleMouseMove}
+          onMouseEnter={underwaterHover.handleMouseMove}
+          onMouseDown={underwaterHover.handleMouseMove}
+          onClick={underwaterHover.handleMouseMove}
+          onPointerMove={underwaterHover.handlePointerMove}
+          onPointerDown={underwaterHover.handlePointerDown}
+          onPointerOver={underwaterHover.handlePointerMove}
           onMouseLeave={underwaterHover.handleMouseLeave}
+          onMouseOut={underwaterHover.handleMouseLeave}
+          onBlur={underwaterHover.handleMouseLeave}
+          onPointerLeave={underwaterHover.handleMouseLeave}
           onTouchStart={underwaterHover.handleTouchMove}
           onTouchMove={underwaterHover.handleTouchMove}
           onTouchEnd={underwaterHover.handleTouchEnd}
           onTouchCancel={underwaterHover.handleTouchEnd}
         >
+          <text x="16" y="20" opacity="0">
+            Underwater recovery status relative to peak values
+          </text>
           <defs>
             <linearGradient
               id="underwaterGradient"
@@ -1222,8 +1559,8 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
               x2="0%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
-              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="0%" stopColor="#0891b2" stopOpacity="0" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.4" />
             </linearGradient>
             <linearGradient
               id="recoveryGradient"
@@ -1253,7 +1590,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M 0 50 ${underwaterData
               .map((point, index) => {
                 const x = (index / (underwaterData.length - 1)) * 800;
-                const y = 50 - (point.underwater / -20) * 250; // Scale to -20% max
+                const y = 50 + (point.underwater / -20) * 250; // Scale to -20% max
                 return `L ${x} ${y}`;
               })
               .join(" ")} L 800 50 Z`}
@@ -1265,12 +1602,12 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             d={`M ${underwaterData
               .map((point, index) => {
                 const x = (index / (underwaterData.length - 1)) * 800;
-                const y = 50 - (point.underwater / -20) * 250;
+                const y = 50 + (point.underwater / -20) * 250;
                 return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
               })
               .join(" ")}`}
             fill="none"
-            stroke="#ef4444"
+            stroke="#0891b2"
             strokeWidth="2.5"
           />
 
@@ -1278,15 +1615,23 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           {underwaterData.map((point, index) => {
             if (!point.recovery) return null;
             const x = (index / (underwaterData.length - 1)) * 800;
+            const y = 50 + (point.underwater / -20) * 250;
             return (
-              <circle
-                key={index}
-                cx={x}
-                cy="45"
-                r="3"
-                fill="#10b981"
-                opacity="0.8"
-              />
+              <g key={index}>
+                {/* Vertical recovery line from zero to curve */}
+                <line
+                  x1={x}
+                  y1="50"
+                  x2={x}
+                  y2={y}
+                  stroke="#10b981"
+                  strokeWidth="1.5"
+                  strokeDasharray="3,3"
+                  opacity="0.6"
+                />
+                {/* Recovery point circle at zero line */}
+                <circle cx={x} cy="50" r="5" fill="#10b981" opacity="0.8" />
+              </g>
             );
           })}
 
@@ -1306,7 +1651,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         {/* Legend */}
         <div className="absolute top-4 right-4 space-y-1 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-0.5 bg-red-500"></div>
+            <div className="w-3 h-0.5 bg-cyan-600"></div>
             <span className="text-white">Underwater Periods</span>
           </div>
           <div className="flex items-center space-x-2">
@@ -1327,15 +1672,44 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
       underwaterData,
       underwaterHover.hoveredPoint,
       underwaterHover.handleMouseMove,
+      underwaterHover.handlePointerMove,
+      underwaterHover.handlePointerDown,
       underwaterHover.handleMouseLeave,
       underwaterHover.handleTouchMove,
       underwaterHover.handleTouchEnd,
     ]
   );
 
-  // Show skeleton while data is loading
+  if (normalizedError) {
+    return (
+      <GlassCard className="p-6" role="alert" ariaLive="assertive">
+        <div className="text-lg font-semibold text-red-400">
+          Error loading portfolio analytics
+        </div>
+        <p className="text-sm text-gray-300 mt-2">{normalizedError}</p>
+      </GlassCard>
+    );
+  }
+
   if (isLoadingData) {
     return <PortfolioChartSkeleton />;
+  }
+
+  if (portfolioHistory.length === 0) {
+    return (
+      <GlassCard
+        className="p-6 text-center space-y-2"
+        role="status"
+        ariaLive="polite"
+      >
+        <div className="text-lg font-semibold text-gray-200">
+          No data available for this portfolio
+        </div>
+        <p className="text-sm text-gray-400">
+          Connect a wallet or import data to see performance analytics.
+        </p>
+      </GlassCard>
+    );
   }
 
   return (
@@ -1349,7 +1723,11 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
           <div className="mb-4 lg:mb-0">
             <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-              <Calendar className="w-5 h-5 mr-2 text-purple-400" />
+              <Calendar
+                className="w-5 h-5 mr-2 text-purple-400"
+                aria-hidden="true"
+                role="presentation"
+              />
               Historical Performance
             </h3>
             <div className="flex items-center space-x-4 text-sm">
@@ -1367,7 +1745,11 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
           </div>
 
           {/* Chart Type Selector */}
-          <div className="flex flex-wrap gap-2 mb-4 lg:mb-0">
+          <div
+            className="flex flex-wrap gap-2 mb-4 lg:mb-0"
+            role="tablist"
+            aria-label="Select chart type"
+          >
             {[
               { key: "performance", label: "Performance", icon: TrendingUp },
               { key: "allocation", label: "Allocation", icon: PieChart },
@@ -1378,6 +1760,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
+                type="button"
                 onClick={() =>
                   setSelectedChart(
                     key as
@@ -1394,8 +1777,16 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
                     ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
                     : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
+                role="tab"
+                aria-selected={selectedChart === key}
+                tabIndex={selectedChart === key ? 0 : -1}
+                aria-controls={CHART_CONTENT_ID}
               >
-                <Icon className="w-4 h-4" />
+                <Icon
+                  className="w-4 h-4"
+                  aria-hidden="true"
+                  role="presentation"
+                />
                 <span className="text-sm">{label}</span>
               </button>
             ))}
@@ -1420,7 +1811,7 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
         </div>
 
         {/* Chart Content */}
-        <div className="relative">
+        <div className="relative" id={CHART_CONTENT_ID}>
           {selectedChart === "performance" && renderPerformanceChart}
           {selectedChart === "allocation" && renderAllocationChart}
           {selectedChart === "drawdown" && renderDrawdownChart}
@@ -1557,3 +1948,5 @@ const PortfolioChartComponent = ({ userId }: PortfolioChartProps = {}) => {
 };
 
 export const PortfolioChart = memo(PortfolioChartComponent);
+
+export default PortfolioChart;

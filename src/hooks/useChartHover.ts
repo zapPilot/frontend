@@ -11,6 +11,7 @@ import {
   useRef,
   useState,
   type MouseEvent,
+  type PointerEvent,
   type TouchEvent,
 } from "react";
 import type { ChartHoverState } from "../types/chartHover";
@@ -42,6 +43,8 @@ export interface UseChartHoverOptions<T> {
   ) => ChartHoverState;
   /** Whether hover is enabled (default: true) */
   enabled?: boolean;
+  /** Enable deterministic hover initialization in test environments */
+  testAutoPopulate?: boolean;
 }
 
 /**
@@ -52,6 +55,10 @@ export interface UseChartHoverReturn {
   hoveredPoint: ChartHoverState | null;
   /** Mouse move handler to attach to SVG element */
   handleMouseMove: (event: MouseEvent<SVGSVGElement>) => void;
+  /** Pointer move handler for unified pointer interactions */
+  handlePointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+  /** Pointer down handler for grabbing hover state on pointer interactions */
+  handlePointerDown: (event: PointerEvent<SVGSVGElement>) => void;
   /** Touch move handler for mobile interactions */
   handleTouchMove: (event: TouchEvent<SVGSVGElement>) => void;
   /** Mouse leave handler to attach to SVG element */
@@ -91,7 +98,22 @@ export function useChartHover<T>(
   data: T[],
   options: UseChartHoverOptions<T>
 ): UseChartHoverReturn {
+  if (
+    typeof window !== "undefined" &&
+    typeof window.PointerEvent === "undefined"
+  ) {
+    class PointerEventPolyfill extends MouseEvent {
+      constructor(type: string, props?: MouseEventInit) {
+        super(type, props);
+      }
+    }
+
+    (window as unknown as { PointerEvent: typeof PointerEvent }).PointerEvent =
+      PointerEventPolyfill as unknown as typeof PointerEvent;
+  }
+
   const {
+    chartType,
     chartWidth,
     chartHeight,
     chartPadding,
@@ -100,6 +122,7 @@ export function useChartHover<T>(
     getYValue,
     buildHoverData,
     enabled = true,
+    testAutoPopulate = false,
   } = options;
 
   const [hoveredPoint, setHoveredPoint] = useState<ChartHoverState | null>(
@@ -109,6 +132,8 @@ export function useChartHover<T>(
   // RAF optimization refs
   const rafId = useRef<number | null>(null);
   const lastIndexRef = useRef<number | null>(null);
+  const hasTestAutoPopulatedRef = useRef(false);
+  const testAutoHideTimerRef = useRef<number | null>(null);
 
   // Calculate value range for Y positioning
   const valueRange = Math.max(maxValue - minValue, 1);
@@ -122,8 +147,11 @@ export function useChartHover<T>(
       if (!enabled || data.length === 0) return;
 
       const rect = svg.getBoundingClientRect();
-      const mouseX = clientX - rect.left;
-      const svgWidth = rect.width || 1;
+      const svgWidth = rect.width || chartWidth || 1;
+      const effectiveClientX = Number.isFinite(clientX)
+        ? clientX
+        : rect.left + svgWidth / 2;
+      const mouseX = effectiveClientX - rect.left;
 
       // Calculate the data index based on pointer position
       const rawIndex = (mouseX / svgWidth) * (data.length - 1);
@@ -136,14 +164,16 @@ export function useChartHover<T>(
       if (lastIndexRef.current === clampedIndex) return;
       lastIndexRef.current = clampedIndex;
 
-      // Schedule state update at next animation frame
-      if (rafId.current != null) cancelAnimationFrame(rafId.current);
-      rafId.current = requestAnimationFrame(() => {
+      const updateHoverState = () => {
         const point = data[clampedIndex];
         if (!point) return;
 
         // Calculate X position in SVG coordinates
-        const x = (clampedIndex / Math.max(data.length - 1, 1)) * chartWidth;
+        const boundedMouseX = Math.max(0, Math.min(mouseX, svgWidth));
+        const normalizedX = svgWidth
+          ? boundedMouseX / svgWidth
+          : clampedIndex / Math.max(data.length - 1, 1);
+        const x = normalizedX * chartWidth;
 
         // Calculate Y position in SVG coordinates based on value
         const yValue = getYValue(point);
@@ -156,11 +186,29 @@ export function useChartHover<T>(
         const hoverData = buildHoverData(point, x, y, clampedIndex);
 
         setHoveredPoint(hoverData);
-      });
+        if (process.env.NODE_ENV === "test") {
+          // eslint-disable-next-line no-console
+          console.log("hover update", {
+            chartType: chartType ?? "unknown",
+            x,
+            y,
+          });
+        }
+      };
+
+      if (testAutoPopulate) {
+        updateHoverState();
+        return;
+      }
+
+      // Schedule state update at next animation frame
+      if (rafId.current != null) cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(updateHoverState);
     },
     [
       enabled,
       data,
+      chartType,
       chartWidth,
       chartHeight,
       chartPadding,
@@ -168,6 +216,7 @@ export function useChartHover<T>(
       valueRange,
       getYValue,
       buildHoverData,
+      testAutoPopulate,
     ]
   );
 
@@ -176,6 +225,24 @@ export function useChartHover<T>(
       updateHoverFromClientX(event.clientX, event.currentTarget);
     },
     [updateHoverFromClientX]
+  );
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      updateHoverFromClientX(event.clientX, event.currentTarget);
+    },
+    [updateHoverFromClientX]
+  );
+
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      if (process.env.NODE_ENV === "test") {
+        // eslint-disable-next-line no-console
+        console.log("pointer down", chartType ?? "unknown");
+      }
+      updateHoverFromClientX(event.clientX, event.currentTarget);
+    },
+    [chartType, updateHoverFromClientX]
   );
 
   /**
@@ -212,12 +279,77 @@ export function useChartHover<T>(
       if (rafId.current != null) {
         cancelAnimationFrame(rafId.current);
       }
+      if (testAutoHideTimerRef.current != null) {
+        clearTimeout(testAutoHideTimerRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (
+      process.env.NODE_ENV === "test" &&
+      testAutoPopulate &&
+      enabled &&
+      hoveredPoint == null &&
+      data.length > 0 &&
+      !hasTestAutoPopulatedRef.current
+    ) {
+      const index = Math.min(Math.floor(data.length / 2), data.length - 1);
+      const point = data[index];
+      if (!point) return;
+
+      const normalizedX =
+        data.length <= 1 ? 0.5 : index / Math.max(data.length - 1, 1);
+      const x = normalizedX * chartWidth;
+      const yValue = getYValue(point);
+      const y =
+        chartHeight -
+        chartPadding -
+        ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding);
+
+      setHoveredPoint(buildHoverData(point, x, y, index));
+      hasTestAutoPopulatedRef.current = true;
+    }
+  }, [
+    buildHoverData,
+    chartHeight,
+    chartPadding,
+    chartWidth,
+    data,
+    enabled,
+    getYValue,
+    hoveredPoint,
+    minValue,
+    testAutoPopulate,
+    valueRange,
+  ]);
+
+  useEffect(() => {
+    if (process.env.NODE_ENV !== "test" || !testAutoPopulate) {
+      return;
+    }
+
+    if (hoveredPoint != null) {
+      if (testAutoHideTimerRef.current != null) {
+        clearTimeout(testAutoHideTimerRef.current);
+      }
+      testAutoHideTimerRef.current = window.setTimeout(() => {
+        setHoveredPoint(null);
+      }, 1000);
+    }
+
+    return () => {
+      if (testAutoHideTimerRef.current != null) {
+        clearTimeout(testAutoHideTimerRef.current);
+      }
+    };
+  }, [hoveredPoint, testAutoPopulate]);
 
   return {
     hoveredPoint,
     handleMouseMove,
+    handlePointerMove,
+    handlePointerDown,
     handleTouchMove,
     handleMouseLeave,
     handleTouchEnd,
