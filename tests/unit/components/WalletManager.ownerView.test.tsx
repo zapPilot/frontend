@@ -1,4 +1,5 @@
 import { act, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
 import * as userService from "../../../src/services/userService";
@@ -152,15 +153,21 @@ describe("WalletManager owner/viewer behavior", () => {
     });
   });
 
-  it("hides action menus and subscription when not owner", async () => {
+  it("restricts action menus and subscription when not owner", async () => {
     await renderManager({ urlUserId: "viewer-xyz" });
 
     // Wait for wallets to render
     await screen.findByText("Primary Wallet");
 
-    // No action menus should be present
-    const menus = screen.queryAllByLabelText(/Actions for/);
-    expect(menus.length).toBe(0);
+    // Action menus still render for visitors but only expose read-only options
+    const menus = screen.getAllByLabelText(/Actions for/);
+    expect(menus.length).toBe(mockTransformed.length);
+
+    // Open first menu and verify owner-only actions are hidden
+    await userEvent.click(menus[0]!);
+    await screen.findByText("Copy Address");
+    expect(screen.queryByText("Edit Label")).not.toBeInTheDocument();
+    expect(screen.queryByText("Remove from Bundle")).not.toBeInTheDocument();
 
     // No Add Another Wallet section header
     expect(screen.queryByText("Add Another Wallet")).not.toBeInTheDocument();

@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ComponentType, useCallback, useState } from "react";
+import { ComponentType, useCallback } from "react";
 import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { GlassCard } from "@/components/ui";
@@ -12,6 +12,10 @@ import { PortfolioOverview } from "@/components/PortfolioOverview";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
 import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import type { AssetCategory } from "@/types/portfolio";
+
+const EMPTY_PORTFOLIO_DATA: AssetCategory[] = [];
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>
@@ -30,16 +34,18 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   vm,
 }: WalletPortfolioPresenterProps) {
-  const [balanceHidden, setBalanceHidden] = useState(false);
-  const toggleBalanceVisibility = useCallback(
-    () => setBalanceHidden(prev => !prev),
-    []
+  const { balanceHidden, toggleBalanceVisibility } = usePortfolio(
+    EMPTY_PORTFOLIO_DATA
   );
+  const combinedToggle = useCallback(() => {
+    toggleBalanceVisibility();
+    vm.onToggleBalance?.();
+  }, [toggleBalanceVisibility, vm.onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
         balanceHidden,
-        toggleBalanceVisibility,
+        toggleBalanceVisibility: combinedToggle,
       }}
     >
       <div className="space-y-6">
@@ -52,7 +58,7 @@ export function WalletPortfolioPresenter({
           <GlassCard>
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}
-              onToggleBalance={toggleBalanceVisibility}
+              onToggleBalance={combinedToggle}
               isOwnBundle={vm.isOwnBundle}
               bundleUserName={vm.bundleUserName}
               bundleUrl={vm.bundleUrl}

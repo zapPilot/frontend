@@ -5,7 +5,10 @@ import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { Z_INDEX } from "@/constants/design-system";
-import { InvestmentOpportunity } from "@/types/investment";
+import {
+  InvestmentOpportunity,
+  type NavigationContext,
+} from "@/types/investment";
 import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
 import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
@@ -97,6 +100,44 @@ const SwapPage: ComponentType<SwapPageProps> = dynamic(
   }
 );
 
+type StrategyPreset = Omit<InvestmentOpportunity, "navigationContext">;
+
+const STRATEGY_PRESETS: Record<
+  "optimize-portfolio" | "zap-in" | "zap-out",
+  StrategyPreset
+> = {
+  "optimize-portfolio": {
+    id: "optimize-portfolio",
+    name: "Portfolio Optimization",
+    apr: 0,
+    risk: "Medium",
+    category: "Portfolio",
+    description: "Optimize allocations across your positions for balanced performance.",
+    tvl: "$0",
+    color: "#8B5CF6",
+  },
+  "zap-in": {
+    id: "zap-in",
+    name: "ZapIn Strategy",
+    apr: 0,
+    risk: "Medium",
+    category: "Zap",
+    description: "Deploy capital into curated strategies in a single transaction.",
+    tvl: "$0",
+    color: "#10B981",
+  },
+  "zap-out": {
+    id: "zap-out",
+    name: "ZapOut Strategy",
+    apr: 0,
+    risk: "Medium",
+    category: "Zap",
+    description: "Exit positions efficiently while minimizing transaction steps.",
+    tvl: "$0",
+    color: "#F59E0B",
+  },
+};
+
 interface DashboardShellProps {
   urlUserId?: string;
   isOwnBundle?: boolean;
@@ -148,32 +189,30 @@ export function DashboardShell({
     [selectedStrategy]
   );
 
+  const selectStrategyPreset = useCallback(
+    (
+      presetId: keyof typeof STRATEGY_PRESETS,
+      navigationContext: NavigationContext
+    ) => {
+      setSelectedStrategy({
+        ...STRATEGY_PRESETS[presetId],
+        navigationContext,
+      });
+    },
+    []
+  );
+
   const handleOptimizeClick = useCallback(() => {
-    // Create minimal strategy object for Portfolio Optimization
-    setSelectedStrategy({
-      id: "optimize-portfolio",
-      name: "Portfolio Optimization",
-      navigationContext: "invest",
-    } as InvestmentOpportunity);
-  }, []);
+    selectStrategyPreset("optimize-portfolio", "invest");
+  }, [selectStrategyPreset]);
 
   const handleZapInClick = useCallback(() => {
-    // Create minimal strategy object for ZapIn
-    setSelectedStrategy({
-      id: "zap-in",
-      name: "ZapIn Strategy",
-      navigationContext: "zapIn",
-    } as InvestmentOpportunity);
-  }, []);
+    selectStrategyPreset("zap-in", "zapIn");
+  }, [selectStrategyPreset]);
 
   const handleZapOutClick = useCallback(() => {
-    // Create minimal strategy object for ZapOut
-    setSelectedStrategy({
-      id: "zap-out",
-      name: "ZapOut Strategy",
-      navigationContext: "zapOut",
-    } as InvestmentOpportunity);
-  }, []);
+    selectStrategyPreset("zap-out", "zapOut");
+  }, [selectStrategyPreset]);
 
   const renderTabContent = () => {
     if (selectedStrategy) {

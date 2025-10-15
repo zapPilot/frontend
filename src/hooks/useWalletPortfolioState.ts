@@ -13,6 +13,7 @@ export interface UseWalletPortfolioStateParams {
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
   onCategoryClick?: (categoryId: string) => void;
+  onToggleBalance?: () => void;
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
   bundleUrl?: string;
@@ -41,6 +42,7 @@ export interface WalletPortfolioViewModel {
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
   onCategoryClick?: (categoryId: string) => void;
+  onToggleBalance?: () => void;
   // Bundle display context (pass-through)
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
@@ -62,6 +64,7 @@ export function useWalletPortfolioState(
     onZapInClick,
     onZapOutClick,
     onCategoryClick,
+    onToggleBalance,
     isOwnBundle,
     bundleUserName,
     bundleUrl,
@@ -125,6 +128,7 @@ export function useWalletPortfolioState(
     ...(gatedOnZapIn ? { onZapInClick: gatedOnZapIn } : {}),
     ...(gatedOnZapOut ? { onZapOutClick: gatedOnZapOut } : {}),
     ...(onCategoryClick ? { onCategoryClick } : {}),
+    ...(onToggleBalance ? { onToggleBalance } : {}),
     ...(typeof isOwnBundle !== "undefined" ? { isOwnBundle } : {}),
     ...(bundleUserName ? { bundleUserName } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),
