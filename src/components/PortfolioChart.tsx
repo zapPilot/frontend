@@ -32,6 +32,7 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
+import { ASSET_CATEGORIES, CHART_COLORS } from "../constants/portfolio";
 import {
   getEnhancedDrawdown,
   getRollingSharpe,
@@ -1067,10 +1068,7 @@ const PortfolioChartComponent = ({
             </text>
             {allocationHistory.map((point, index) => {
               const total =
-                point.btc +
-                point.eth +
-                point.stablecoin +
-                point.altcoin;
+                point.btc + point.eth + point.stablecoin + point.altcoin;
 
               if (total <= 0) {
                 return null;
@@ -1085,10 +1083,10 @@ const PortfolioChartComponent = ({
 
               // Stack areas
               const assets = [
-                { value: point.btc, color: "#f59e0b" },
-                { value: point.eth, color: "#6366f1" },
-                { value: point.stablecoin, color: "#10b981" },
-                { value: point.altcoin, color: "#ef4444" },
+                { value: point.btc, color: CHART_COLORS.btc },
+                { value: point.eth, color: CHART_COLORS.eth },
+                { value: point.stablecoin, color: CHART_COLORS.stablecoin },
+                { value: point.altcoin, color: CHART_COLORS.altcoin },
               ];
 
               return (
@@ -1138,20 +1136,19 @@ const PortfolioChartComponent = ({
 
           {/* Legend */}
           <div className="absolute top-4 right-4 space-y-1 text-xs pointer-events-none">
-            {[
-              { label: "BTC", color: "#f59e0b" },
-              { label: "ETH", color: "#6366f1" },
-              { label: "Stablecoin", color: "#10b981" },
-              { label: "Altcoin", color: "#ef4444" },
-            ].map(asset => (
-              <div key={asset.label} className="flex items-center space-x-2">
-                <div
-                  className="w-3 h-3 rounded"
-                  style={{ backgroundColor: asset.color }}
-                ></div>
-                <span className="text-gray-300">{asset.label}</span>
-              </div>
-            ))}
+            {["btc", "eth", "stablecoin", "altcoin"].map(key => {
+              const category =
+                ASSET_CATEGORIES[key as keyof typeof ASSET_CATEGORIES];
+              return (
+                <div key={key} className="flex items-center space-x-2">
+                  <div
+                    className="w-3 h-3 rounded"
+                    style={{ backgroundColor: category.chartColor }}
+                  ></div>
+                  <span className="text-gray-300">{category.shortLabel}</span>
+                </div>
+              );
+            })}
           </div>
 
           {/* Hover Tooltip */}

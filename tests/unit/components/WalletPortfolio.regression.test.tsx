@@ -277,8 +277,6 @@ describe("WalletPortfolio - Regression Tests", () => {
   const mockUserInfo = { userId: "test-user-123" };
   const mockRefetch = vi.fn();
   const mockToggleBalance = vi.fn();
-  const mockOpenModal = vi.fn();
-  const mockCloseModal = vi.fn();
 
   const validPortfolioData = {
     total_net_usd: 25000,
@@ -380,7 +378,6 @@ describe("WalletPortfolio - Regression Tests", () => {
       toggleBalanceVisibility: mockToggleBalance,
       toggleCategoryExpansion: vi.fn(),
     });
-
 
     mockUsePortfolioState.mockReturnValue({
       type: "has_data",

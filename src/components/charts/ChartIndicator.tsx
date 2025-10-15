@@ -5,6 +5,7 @@
  * Supports single circles, multi-colored circles, and flagged circles for recovery points.
  */
 
+import { CHART_COLORS } from "@/constants/portfolio";
 import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
 import {
   isAllocationHover,
@@ -235,10 +236,10 @@ function MultiCircleIndicator({
   }
 
   const colors = [
-    { value: hoveredPoint.btc, color: "#f59e0b" }, // BTC - Amber
-    { value: hoveredPoint.eth, color: "#6366f1" }, // ETH - Indigo
-    { value: hoveredPoint.stablecoin, color: "#10b981" }, // Stablecoin - Green
-    { value: hoveredPoint.altcoin, color: "#ef4444" }, // Altcoin - Red
+    { value: hoveredPoint.btc, color: CHART_COLORS.btc },
+    { value: hoveredPoint.eth, color: CHART_COLORS.eth },
+    { value: hoveredPoint.stablecoin, color: CHART_COLORS.stablecoin },
+    { value: hoveredPoint.altcoin, color: CHART_COLORS.altcoin },
   ];
 
   // Filter to only show significant allocations

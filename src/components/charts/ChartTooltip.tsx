@@ -5,6 +5,7 @@
  * and chart-specific content rendering.
  */
 
+import { ASSET_CATEGORIES } from "@/constants/portfolio";
 import {
   calculateDailyVolatility,
   getDrawdownSeverity,
@@ -79,11 +80,26 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
  */
 function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
   const allocations = [
-    { label: "BTC", value: data.btc, color: "text-amber-400" },
-    { label: "ETH", value: data.eth, color: "text-indigo-400" },
-    { label: "DeFi", value: data.defi, color: "text-violet-400" },
-    { label: "Stablecoin", value: data.stablecoin, color: "text-emerald-400" },
-    { label: "Altcoin", value: data.altcoin, color: "text-red-400" },
+    {
+      label: ASSET_CATEGORIES.btc.shortLabel,
+      value: data.btc,
+      color: ASSET_CATEGORIES.btc.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.eth.shortLabel,
+      value: data.eth,
+      color: ASSET_CATEGORIES.eth.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.stablecoin.shortLabel,
+      value: data.stablecoin,
+      color: ASSET_CATEGORIES.stablecoin.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.altcoin.shortLabel,
+      value: data.altcoin,
+      color: ASSET_CATEGORIES.altcoin.tailwindColor,
+    },
   ];
 
   return (

@@ -7,6 +7,7 @@ import {
   AssetCategory,
   Protocol,
 } from "../components/PortfolioAllocation/types";
+import { ASSET_CATEGORIES } from "../constants/portfolio";
 import { PoolDetail } from "../services/analyticsService";
 
 /**
@@ -215,26 +216,29 @@ export const transformStrategiesResponse = (
 
 /**
  * Get default color for category based on name/type
+ * Uses centralized ASSET_CATEGORIES for consistent color mapping
  */
 export const getDefaultCategoryColor = (categoryName: string): string => {
+  const key = categoryName.toLowerCase();
+
+  // Direct mapping to asset categories
   const colorMap: Record<string, string> = {
-    btc: "#F59E0B",
-    bitcoin: "#F59E0B",
-    eth: "#8B5CF6",
-    ethereum: "#8B5CF6",
-    stablecoins: "#10B981",
-    stable: "#10B981",
-    usdc: "#10B981",
-    usdt: "#10B981",
-    dai: "#10B981",
-    defi: "#3B82F6",
-    yield: "#F59E0B",
-    lending: "#8B5CF6",
-    dex: "#10B981",
-    liquid: "#6366F1",
+    btc: ASSET_CATEGORIES.btc.brandColor,
+    bitcoin: ASSET_CATEGORIES.btc.brandColor,
+    eth: ASSET_CATEGORIES.eth.brandColor,
+    ethereum: ASSET_CATEGORIES.eth.brandColor,
+    stablecoins: ASSET_CATEGORIES.stablecoin.brandColor,
+    stable: ASSET_CATEGORIES.stablecoin.brandColor,
+    usdc: ASSET_CATEGORIES.stablecoin.brandColor,
+    usdt: ASSET_CATEGORIES.stablecoin.brandColor,
+    dai: ASSET_CATEGORIES.stablecoin.brandColor,
+    // Additional mappings for common strategy types
+    yield: ASSET_CATEGORIES.btc.brandColor,
+    lending: ASSET_CATEGORIES.eth.brandColor,
+    dex: ASSET_CATEGORIES.stablecoin.brandColor,
+    liquid: ASSET_CATEGORIES.eth.chartColor,
   };
 
-  const key = categoryName.toLowerCase();
   return (
     colorMap[key] ||
     Object.entries(colorMap).find(([name]) => key.includes(name))?.[1] ||

@@ -1,3 +1,8 @@
+import {
+  ALLOCATION_STACK_ORDER,
+  ASSET_LABELS,
+  CHART_COLORS,
+} from "../constants/portfolio";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { portfolioStateUtils } from "../utils/portfolio.utils";
 
@@ -8,29 +13,17 @@ export interface SVGPathPoint {
 
 type AllocationAssetKey = Exclude<keyof AssetAllocationPoint, "date">;
 
-const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = {
-  btc: "#f59e0b",
-  eth: "#6366f1",
-  stablecoin: "#10b981",
-  defi: "#8b5cf6",
-  altcoin: "#ef4444",
-};
+/**
+ * @deprecated Use CHART_COLORS from constants/portfolio.ts
+ * Kept for backwards compatibility
+ */
+const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = CHART_COLORS;
 
-const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = {
-  btc: "Bitcoin",
-  eth: "Ethereum",
-  stablecoin: "Stablecoins",
-  defi: "DeFi",
-  altcoin: "Altcoins",
-};
-
-const ALLOCATION_STACK_ORDER: AllocationAssetKey[] = [
-  "altcoin",
-  "defi",
-  "stablecoin",
-  "eth",
-  "btc",
-];
+/**
+ * @deprecated Use ASSET_LABELS from constants/portfolio.ts
+ * Kept for backwards compatibility
+ */
+const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = ASSET_LABELS;
 
 const ALLOCATION_BAR_OFFSET = 2;
 const ALLOCATION_BAR_WIDTH = 4;
@@ -150,7 +143,6 @@ export const generateAllocationChartData = (
       btc: Math.max(point.btc ?? 0, 0),
       eth: Math.max(point.eth ?? 0, 0),
       stablecoin: Math.max(point.stablecoin ?? 0, 0),
-      defi: Math.max(point.defi ?? 0, 0),
       altcoin: Math.max(point.altcoin ?? 0, 0),
     };
 
