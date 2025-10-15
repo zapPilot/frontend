@@ -93,7 +93,8 @@ export const clampToScale = (
   scale: { MIN: number; MAX: number }
 ) => {
   const clamped = Math.max(scale.MIN, Math.min(scale.MAX, value));
-  if (clamped !== value) {
+  if (clamped !== value && process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
     console.warn(
       `Chart value ${value} clamped to [${scale.MIN}, ${scale.MAX}]`
     );
