@@ -6,6 +6,7 @@
  */
 
 import { ASSET_CATEGORIES } from "@/constants/portfolio";
+import { formatters } from "@/lib/formatters";
 import {
   calculateDailyVolatility,
   getDrawdownSeverity,
@@ -48,11 +49,7 @@ interface ChartTooltipProps {
  * Render Performance chart tooltip content
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
-  const formattedValue = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(data.value);
+  const formattedValue = formatters.currencyPrecise(data.value);
 
   return (
     <>
@@ -115,7 +112,7 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
             >
               <span className={`text-xs ${color}`}>{label}</span>
               <span className="text-sm font-semibold text-white">
-                {value.toFixed(1)}%
+                {formatters.percent(value)}
               </span>
             </div>
           ))}
@@ -138,7 +135,7 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-red-300">Drawdown</span>
           <span className="text-sm font-semibold text-white">
-            {data.drawdown.toFixed(2)}%
+            {formatters.percent(data.drawdown, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -229,13 +226,13 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-amber-300">Annualized Vol</span>
           <span className="text-sm font-semibold text-white">
-            {data.volatility.toFixed(1)}%
+            {formatters.percent(data.volatility)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Daily Vol</span>
           <span className="text-sm font-semibold text-gray-300">
-            {dailyVol.toFixed(2)}%
+            {formatters.percent(dailyVol, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -274,7 +271,7 @@ function UnderwaterTooltipContent({ data }: { data: UnderwaterHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-red-300">Underwater</span>
           <span className="text-sm font-semibold text-white">
-            {data.underwater.toFixed(2)}%
+            {formatters.percent(data.underwater, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">

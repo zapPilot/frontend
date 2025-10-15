@@ -6,6 +6,7 @@
  */
 
 import { CHART_COLORS } from "@/constants/portfolio";
+import { formatters } from "@/lib/formatters";
 import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
 import {
   isAllocationHover,
@@ -30,38 +31,11 @@ interface ChartIndicatorProps {
   strokeWidth?: number;
 }
 
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(Math.round(value));
-}
-
-function formatPercent(value: number, fractionDigits = 1): string {
-  return `${value.toFixed(fractionDigits)}%`;
-}
-
-function formatDateLabel(date: string): string {
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) {
-    return date;
-  }
-
-  return parsed.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
 function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
-  const formattedDate = formatDateLabel(hoveredPoint.date);
+  const formattedDate = formatters.chartDate(hoveredPoint.date);
 
   if (isPerformanceHover(hoveredPoint)) {
-    return `Portfolio value on ${formattedDate} is ${formatCurrency(hoveredPoint.value)}.`;
+    return `Portfolio value on ${formattedDate} is ${formatters.currency(hoveredPoint.value)}.`;
   }
 
   if (isAllocationHover(hoveredPoint)) {
@@ -74,7 +48,7 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
 
     const significantAllocations = allocations
       .filter(item => item.value >= 1)
-      .map(item => `${item.label} ${formatPercent(item.value)}`)
+      .map(item => `${item.label} ${formatters.percent(item.value)}`)
       .join(", ");
 
     return significantAllocations
@@ -84,7 +58,7 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
 
   if (isDrawdownHover(hoveredPoint)) {
     const severity = getDrawdownSeverity(hoveredPoint.drawdown);
-    return `Drawdown on ${formattedDate} is ${formatPercent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity.`;
+    return `Drawdown on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity.`;
   }
 
   if (isSharpeHover(hoveredPoint)) {
@@ -92,14 +66,14 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
   }
 
   if (isVolatilityHover(hoveredPoint)) {
-    return `Volatility on ${formattedDate} is ${formatPercent(hoveredPoint.volatility, 1)} with ${hoveredPoint.riskLevel} risk.`;
+    return `Volatility on ${formattedDate} is ${formatters.percent(hoveredPoint.volatility)} with ${hoveredPoint.riskLevel} risk.`;
   }
 
   if (isUnderwaterHover(hoveredPoint)) {
     const recoveryText = hoveredPoint.isRecoveryPoint
       ? " and marks a recovery point"
       : "";
-    return `Underwater level on ${formattedDate} is ${formatPercent(Math.abs(hoveredPoint.underwater), 2)} with status ${hoveredPoint.recoveryStatus}${recoveryText}.`;
+    return `Underwater level on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.underwater), 2)} with status ${hoveredPoint.recoveryStatus}${recoveryText}.`;
   }
 
   return `Chart value on ${formattedDate}.`;

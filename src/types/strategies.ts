@@ -9,6 +9,7 @@ import {
 } from "../components/PortfolioAllocation/types";
 import { ASSET_CATEGORIES } from "../constants/portfolio";
 import { PoolDetail } from "../services/analyticsService";
+import { categorizePool } from "../utils/portfolio.utils";
 
 /**
  * Actual API Strategy Response from /api/v1/strategies
@@ -55,7 +56,7 @@ export const transformPoolsToProtocols = (
   categoryId: string
 ): Protocol[] => {
   return pools
-    .filter(pool => matchesCategory(pool, categoryId))
+    .filter(pool => categorizePool(pool.pool_symbols) === categoryId)
     .map(pool => ({
       id: pool.snapshot_id,
       name: formatProtocolName(pool),
@@ -112,38 +113,6 @@ export const transformStrategyProtocols = (
     // Map targetTokens for display in UI
     targetTokens: p.targetTokens,
   }));
-};
-
-/**
- * Determine if a pool belongs to a specific category based on its symbols
- */
-const matchesCategory = (pool: PoolDetail, categoryId: string): boolean => {
-  const symbols = pool.pool_symbols.map(s => s.toLowerCase());
-
-  switch (categoryId) {
-    case "btc":
-      return symbols.some(s => ["btc", "wbtc", "bitcoin"].includes(s));
-    case "eth":
-      return symbols.some(s =>
-        ["eth", "weth", "steth", "reth", "ethereum"].includes(s)
-      );
-    case "stablecoins":
-    case "stablecoin":
-      return symbols.some(s =>
-        ["usdc", "usdt", "dai", "busd", "frax", "lusd"].includes(s)
-      );
-    case "others":
-    default:
-      // If it doesn't match BTC, ETH, or stablecoins, it goes to others
-      const isBtc = symbols.some(s => ["btc", "wbtc", "bitcoin"].includes(s));
-      const isEth = symbols.some(s =>
-        ["eth", "weth", "steth", "reth", "ethereum"].includes(s)
-      );
-      const isStable = symbols.some(s =>
-        ["usdc", "usdt", "dai", "busd", "frax", "lusd"].includes(s)
-      );
-      return !isBtc && !isEth && !isStable;
-  }
 };
 
 /**

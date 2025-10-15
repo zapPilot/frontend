@@ -347,7 +347,6 @@ describe("chartUtils", () => {
         btc: number;
         eth: number;
         stablecoin: number;
-        defi: number;
         altcoin: number;
       }>
     ): AssetAllocationPoint[] => {
@@ -366,22 +365,20 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 200,
           stablecoin: 300,
-          defi: 150,
           altcoin: 50,
         },
       ]);
 
       const result = generateAllocationChartData(data, 800, 300);
 
-      // Should have 5 points (one per asset type)
-      expect(result).toHaveLength(5);
+      // Should have 4 points (one per asset type)
+      expect(result).toHaveLength(4);
 
       // Verify all assets are represented
       const assetKeys = result.map(point => point.assetKey);
       expect(assetKeys).toContain("btc");
       expect(assetKeys).toContain("eth");
       expect(assetKeys).toContain("stablecoin");
-      expect(assetKeys).toContain("defi");
       expect(assetKeys).toContain("altcoin");
     });
 
@@ -392,7 +389,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
         {
@@ -400,15 +396,14 @@ describe("chartUtils", () => {
           btc: 200,
           eth: 150,
           stablecoin: 100,
-          defi: 50,
           altcoin: 50,
         },
       ]);
 
       const result = generateAllocationChartData(data, 800, 300);
 
-      // Should have 10 points (5 assets × 2 time points)
-      expect(result).toHaveLength(10);
+      // Should have 8 points (4 assets × 2 time points)
+      expect(result).toHaveLength(8);
     });
 
     it("should assign correct colors to assets", () => {
@@ -418,7 +413,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
@@ -428,13 +422,11 @@ describe("chartUtils", () => {
       const btcPoint = result.find(p => p.assetKey === "btc");
       const ethPoint = result.find(p => p.assetKey === "eth");
       const stablecoinPoint = result.find(p => p.assetKey === "stablecoin");
-      const defiPoint = result.find(p => p.assetKey === "defi");
       const altcoinPoint = result.find(p => p.assetKey === "altcoin");
 
       expect(btcPoint?.color).toBe("#f59e0b");
       expect(ethPoint?.color).toBe("#6366f1");
       expect(stablecoinPoint?.color).toBe("#10b981");
-      expect(defiPoint?.color).toBe("#8b5cf6");
       expect(altcoinPoint?.color).toBe("#ef4444");
     });
 
@@ -445,7 +437,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
@@ -453,13 +444,13 @@ describe("chartUtils", () => {
       const height = 300;
       const result = generateAllocationChartData(data, 800, height);
 
-      // With equal values, each asset should take 1/5 of the height
+      // With equal values, each asset should take 1/4 of the height
       const totalHeight = result.reduce((sum, point) => sum + point.height, 0);
       expect(totalHeight).toBeCloseTo(height, 0);
 
       // Each asset should have approximately equal height
       result.forEach(point => {
-        expect(point.height).toBeCloseTo(height / 5, 0);
+        expect(point.height).toBeCloseTo(height / 4, 0);
       });
     });
 
@@ -470,7 +461,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
         {
@@ -478,7 +468,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
@@ -486,14 +475,14 @@ describe("chartUtils", () => {
       const width = 800;
       const result = generateAllocationChartData(data, width, 300);
 
-      // First 5 points should be at x = -2 (index 0)
-      const firstPoints = result.slice(0, 5);
+      // First 4 points should be at x = -2 (index 0)
+      const firstPoints = result.slice(0, 4);
       firstPoints.forEach(point => {
         expect(point.x).toBe(-2);
       });
 
-      // Last 5 points should be at x = width - 2 (index 1)
-      const lastPoints = result.slice(5, 10);
+      // Last 4 points should be at x = width - 2 (index 1)
+      const lastPoints = result.slice(4, 8);
       lastPoints.forEach(point => {
         expect(point.x).toBe(width - 2);
       });
@@ -506,7 +495,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
@@ -526,7 +514,6 @@ describe("chartUtils", () => {
           btc: 123,
           eth: 456,
           stablecoin: 789,
-          defi: 234,
           altcoin: 567,
         },
       ]);
@@ -547,7 +534,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
@@ -571,24 +557,20 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 0,
           stablecoin: 200,
-          defi: 0,
           altcoin: 100,
         },
       ]);
 
       const result = generateAllocationChartData(data, 800, 300);
 
-      // Should still generate 5 points
-      expect(result).toHaveLength(5);
+      // Should still generate 4 points
+      expect(result).toHaveLength(4);
 
       // Zero-value assets should have zero height
       const ethPoint = result.find(p => p.assetKey === "eth");
-      const defiPoint = result.find(p => p.assetKey === "defi");
 
       expect(ethPoint?.height).toBe(0);
       expect(ethPoint?.value).toBe(0);
-      expect(defiPoint?.height).toBe(0);
-      expect(defiPoint?.value).toBe(0);
     });
 
     it("should stack assets from bottom to top", () => {
@@ -598,7 +580,6 @@ describe("chartUtils", () => {
           btc: 100,
           eth: 100,
           stablecoin: 100,
-          defi: 100,
           altcoin: 100,
         },
       ]);
