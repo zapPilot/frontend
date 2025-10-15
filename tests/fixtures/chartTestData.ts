@@ -4,14 +4,14 @@
  */
 
 import type {
-  PortfolioDataPoint,
   AssetAllocationPoint,
+  PortfolioDataPoint,
 } from "@/types/portfolio";
 import {
   DrawdownDataPoint,
   SharpeDataPoint,
-  VolatilityDataPoint,
   UnderwaterDataPoint,
+  VolatilityDataPoint,
 } from "../utils/chartHoverTestFactories";
 
 /**
@@ -134,7 +134,6 @@ export class AllocationDataBuilder {
         btc: 30,
         eth: 25,
         stablecoin: 20,
-        defi: 15,
         altcoin: 10,
       });
     }
@@ -156,7 +155,6 @@ export class AllocationDataBuilder {
         btc: 30,
         eth: 25,
         stablecoin: 20,
-        defi: 15,
         altcoin: 10,
       };
 

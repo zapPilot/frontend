@@ -12,7 +12,6 @@ const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = {
   btc: "#f59e0b",
   eth: "#6366f1",
   stablecoin: "#10b981",
-  defi: "#8b5cf6",
   altcoin: "#ef4444",
 };
 
@@ -20,13 +19,11 @@ const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = {
   btc: "Bitcoin",
   eth: "Ethereum",
   stablecoin: "Stablecoins",
-  defi: "DeFi",
   altcoin: "Altcoins",
 };
 
 const ALLOCATION_STACK_ORDER: AllocationAssetKey[] = [
   "altcoin",
-  "defi",
   "stablecoin",
   "eth",
   "btc",

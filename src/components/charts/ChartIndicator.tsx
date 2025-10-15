@@ -5,8 +5,7 @@
  * Supports single circles, multi-colored circles, and flagged circles for recovery points.
  */
 
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
 import {
   isAllocationHover,
   isDrawdownHover,
@@ -16,7 +15,8 @@ import {
   isVolatilityHover,
   type ChartHoverState,
 } from "@/types/chartHover";
-import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 interface ChartIndicatorProps {
   /** Current hover state or null */
@@ -68,7 +68,6 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
       { label: "BTC", value: hoveredPoint.btc },
       { label: "ETH", value: hoveredPoint.eth },
       { label: "Stablecoin", value: hoveredPoint.stablecoin },
-      { label: "DeFi", value: hoveredPoint.defi },
       { label: "Altcoin", value: hoveredPoint.altcoin },
     ];
 
@@ -239,7 +238,6 @@ function MultiCircleIndicator({
     { value: hoveredPoint.btc, color: "#f59e0b" }, // BTC - Amber
     { value: hoveredPoint.eth, color: "#6366f1" }, // ETH - Indigo
     { value: hoveredPoint.stablecoin, color: "#10b981" }, // Stablecoin - Green
-    { value: hoveredPoint.defi, color: "#8b5cf6" }, // DeFi - Purple
     { value: hoveredPoint.altcoin, color: "#ef4444" }, // Altcoin - Red
   ];
 

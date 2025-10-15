@@ -9,7 +9,6 @@ export const PORTFOLIO_COLORS = {
   BTC: "#F7931A",
   ETH: "#627EEA",
   STABLECOIN: "#26A69A",
-  DEFI: "#8B5CF6",
   ALTCOIN: "#AB47BC",
 } as const;
 

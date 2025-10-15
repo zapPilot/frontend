@@ -16,12 +16,6 @@ import { useAnalyticsData } from "../hooks/useAnalyticsData";
 import { useChartHover } from "../hooks/useChartHover";
 import { usePortfolioTrends } from "../hooks/usePortfolioTrends";
 import {
-  getEnhancedDrawdown,
-  getRollingSharpe,
-  getRollingVolatility,
-  getUnderwaterRecovery,
-} from "../services/analyticsService";
-import {
   calculateDaysSincePeak,
   findPeakDate,
   getRecoveryStatus,
@@ -38,6 +32,12 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
+import {
+  getEnhancedDrawdown,
+  getRollingSharpe,
+  getRollingVolatility,
+  getUnderwaterRecovery,
+} from "../services/analyticsService";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { ChartIndicator, ChartTooltip } from "./charts";
 import { GlassCard } from "./ui";
@@ -105,7 +105,6 @@ export function buildAllocationHistory(
           btc: 0,
           eth: 0,
           stablecoin: 0,
-          defi: 0,
           altcoin: 0,
         };
       }
@@ -142,9 +141,7 @@ export function buildAllocationHistory(
         dayData.eth += computedShare;
       } else if (categoryKey.includes("stable")) {
         dayData.stablecoin += computedShare;
-      } else if (categoryKey.includes("defi")) {
-        dayData.defi += computedShare;
-      } else {
+      }  else {
         dayData.altcoin += computedShare;
       }
 
@@ -156,7 +153,7 @@ export function buildAllocationHistory(
   return Object.values(allocationByDate)
     .map(point => {
       const total =
-        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+        point.btc + point.eth + point.stablecoin + point.altcoin;
 
       if (total <= 0) {
         return point;
@@ -167,7 +164,6 @@ export function buildAllocationHistory(
         btc: (point.btc / total) * 100,
         eth: (point.eth / total) * 100,
         stablecoin: (point.stablecoin / total) * 100,
-        defi: (point.defi / total) * 100,
         altcoin: (point.altcoin / total) * 100,
       };
     })
@@ -748,7 +744,7 @@ const PortfolioChartComponent = ({
     getYValue: () => 50, // Mid-point for stacked chart
     buildHoverData: (point, x, y) => {
       const total =
-        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
+        point.btc + point.eth + point.stablecoin + point.altcoin;
       return {
         chartType: "allocation" as const,
         x,
@@ -761,7 +757,6 @@ const PortfolioChartComponent = ({
         btc: total > 0 ? (point.btc / total) * 100 : 0,
         eth: total > 0 ? (point.eth / total) * 100 : 0,
         stablecoin: total > 0 ? (point.stablecoin / total) * 100 : 0,
-        defi: total > 0 ? (point.defi / total) * 100 : 0,
         altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
       };
     },
@@ -1066,7 +1061,6 @@ const PortfolioChartComponent = ({
                 point.btc +
                 point.eth +
                 point.stablecoin +
-                point.defi +
                 point.altcoin;
 
               if (total <= 0) {
@@ -1085,7 +1079,6 @@ const PortfolioChartComponent = ({
                 { value: point.btc, color: "#f59e0b" },
                 { value: point.eth, color: "#6366f1" },
                 { value: point.stablecoin, color: "#10b981" },
-                { value: point.defi, color: "#8b5cf6" },
                 { value: point.altcoin, color: "#ef4444" },
               ];
 
@@ -1140,7 +1133,6 @@ const PortfolioChartComponent = ({
               { label: "BTC", color: "#f59e0b" },
               { label: "ETH", color: "#6366f1" },
               { label: "Stablecoin", color: "#10b981" },
-              { label: "DeFi", color: "#8b5cf6" },
               { label: "Altcoin", color: "#ef4444" },
             ].map(asset => (
               <div key={asset.label} className="flex items-center space-x-2">

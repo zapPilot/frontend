@@ -5,6 +5,16 @@
  * and chart-specific content rendering.
  */
 
+import {
+  calculateDailyVolatility,
+  getDrawdownSeverity,
+  getDrawdownSeverityColor,
+  getRecoveryStatusColor,
+  getSharpeColor,
+  getSharpeInterpretation,
+  getVolatilityRiskColor,
+  getVolatilityRiskLevel,
+} from "@/lib/chartHoverUtils";
 import { motion } from "framer-motion";
 import type {
   AllocationHoverData,
@@ -15,16 +25,6 @@ import type {
   UnderwaterHoverData,
   VolatilityHoverData,
 } from "../../types/chartHover";
-import {
-  getDrawdownSeverity,
-  getDrawdownSeverityColor,
-  getSharpeInterpretation,
-  getSharpeColor,
-  getVolatilityRiskLevel,
-  getVolatilityRiskColor,
-  calculateDailyVolatility,
-  getRecoveryStatusColor,
-} from "@/lib/chartHoverUtils";
 
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",
@@ -82,7 +82,6 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
     { label: "BTC", value: data.btc, color: "text-amber-400" },
     { label: "ETH", value: data.eth, color: "text-indigo-400" },
     { label: "Stablecoin", value: data.stablecoin, color: "text-emerald-400" },
-    { label: "DeFi", value: data.defi, color: "text-purple-400" },
     { label: "Altcoin", value: data.altcoin, color: "text-red-400" },
   ];
 

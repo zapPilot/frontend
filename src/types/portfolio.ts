@@ -65,7 +65,6 @@ export interface AssetAllocationPoint {
   btc: number;
   eth: number;
   stablecoin: number;
-  defi: number;
   altcoin: number;
 }
 
