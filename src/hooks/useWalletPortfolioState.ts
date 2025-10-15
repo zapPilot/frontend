@@ -2,11 +2,10 @@
 
 import { useUser } from "@/contexts/UserContext";
 import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
-import { usePortfolioData } from "@/hooks/usePortfolioData";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletModal } from "@/hooks/useWalletModal";
+import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
 import type { LandingPageResponse } from "@/services/analyticsService";
-import { usePortfolio } from "@/hooks/usePortfolio";
 
 export interface UseWalletPortfolioStateParams {
   urlUserId?: string;
@@ -25,12 +24,16 @@ export interface WalletPortfolioViewModel {
   isVisitorMode: boolean;
   // Data
   landingPageData: LandingPageResponse | undefined;
-  pieChartData: ReturnType<typeof usePortfolioData>["pieChartData"];
-  categorySummaries: ReturnType<typeof usePortfolioData>["categorySummaries"];
+  pieChartData: ReturnType<typeof useWalletPortfolioTransform>["pieChartData"];
+  categorySummaries: ReturnType<
+    typeof useWalletPortfolioTransform
+  >["categorySummaries"];
   debtCategorySummaries: ReturnType<
-    typeof usePortfolioData
+    typeof useWalletPortfolioTransform
   >["debtCategorySummaries"];
-  portfolioMetrics: ReturnType<typeof usePortfolioData>["portfolioMetrics"];
+  portfolioMetrics: ReturnType<
+    typeof useWalletPortfolioTransform
+  >["portfolioMetrics"];
   // Aggregated portfolio state
   portfolioState: ReturnType<typeof usePortfolioState>;
   // Actions (effective with visitor gating applied)
@@ -38,8 +41,6 @@ export interface WalletPortfolioViewModel {
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
   onCategoryClick?: (categoryId: string) => void;
-  // Optional balance toggle passthrough for compatibility
-  onToggleBalance?: () => void;
   // Bundle display context (pass-through)
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
@@ -87,7 +88,7 @@ export function useWalletPortfolioState(
     debtCategorySummaries,
     portfolioMetrics,
     hasZeroData,
-  } = usePortfolioData(landingPageData);
+  } = useWalletPortfolioTransform(landingPageData);
 
   // Aggregated UI state for portfolio
   const portfolioState = usePortfolioState({
@@ -105,9 +106,6 @@ export function useWalletPortfolioState(
     openModal: openWalletManager,
     closeModal: closeWalletManager,
   } = useWalletModal();
-
-  // Balance toggle (compatibility passthrough for tests and existing mocks)
-  const { toggleBalanceVisibility } = usePortfolio([]);
 
   // Gate action handlers when in visitor mode
   const gatedOnOptimize = !isVisitorMode ? onOptimizeClick : undefined;
@@ -127,7 +125,6 @@ export function useWalletPortfolioState(
     ...(gatedOnZapIn ? { onZapInClick: gatedOnZapIn } : {}),
     ...(gatedOnZapOut ? { onZapOutClick: gatedOnZapOut } : {}),
     ...(onCategoryClick ? { onCategoryClick } : {}),
-    onToggleBalance: toggleBalanceVisibility,
     ...(typeof isOwnBundle !== "undefined" ? { isOwnBundle } : {}),
     ...(bundleUserName ? { bundleUserName } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),

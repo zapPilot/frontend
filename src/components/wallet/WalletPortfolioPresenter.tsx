@@ -35,11 +35,6 @@ export function WalletPortfolioPresenter({
     () => setBalanceHidden(prev => !prev),
     []
   );
-  const onToggleBalance = vm.onToggleBalance;
-  const combinedToggle = useCallback(() => {
-    toggleBalanceVisibility();
-    onToggleBalance?.();
-  }, [toggleBalanceVisibility, onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
@@ -57,7 +52,7 @@ export function WalletPortfolioPresenter({
           <GlassCard>
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}
-              onToggleBalance={combinedToggle}
+              onToggleBalance={toggleBalanceVisibility}
               isOwnBundle={vm.isOwnBundle}
               bundleUserName={vm.bundleUserName}
               bundleUrl={vm.bundleUrl}

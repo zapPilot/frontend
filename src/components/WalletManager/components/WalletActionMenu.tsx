@@ -10,6 +10,7 @@ interface WalletActionMenuProps {
   isOpen: boolean;
   menuPosition: { top: number; left: number } | null;
   operations: WalletOperations;
+  isOwner: boolean;
   onCopyAddress: (address: string, walletId: string) => void;
   onEditWallet: (walletId: string, label: string) => void;
   onDeleteWallet: (walletId: string) => void;
@@ -23,6 +24,7 @@ export const WalletActionMenu = memo(
     isOpen,
     menuPosition,
     operations,
+    isOwner,
     onCopyAddress,
     onEditWallet,
     onDeleteWallet,
@@ -92,22 +94,26 @@ export const WalletActionMenu = memo(
                   <ExternalLink className="w-4 h-4" />
                   View on DeBank
                 </a>
-                <div className="border-t border-gray-700 my-1" />
-                <button
-                  onClick={handleEditWallet}
-                  className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  Edit Label
-                </button>
-                <button
-                  onClick={handleDeleteWallet}
-                  className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
-                  disabled={operations.removing[wallet.id]?.isLoading}
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Remove from Bundle
-                </button>
+                {isOwner && (
+                  <>
+                    <div className="border-t border-gray-700 my-1" />
+                    <button
+                      onClick={handleEditWallet}
+                      className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Edit Label
+                    </button>
+                    <button
+                      onClick={handleDeleteWallet}
+                      className="w-full px-3 py-2 text-left text-sm text-red-400 hover:bg-red-600/20 transition-colors flex items-center gap-2"
+                      disabled={operations.removing[wallet.id]?.isLoading}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Remove from Bundle
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </Portal>

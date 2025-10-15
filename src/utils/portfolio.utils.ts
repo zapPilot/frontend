@@ -122,7 +122,7 @@ export interface PoolDetail {
 import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
 import { PORTFOLIO_COLORS } from "@/constants/portfolio";
 
-function categorizePool(
+export function categorizePool(
   poolSymbols: string[]
 ): "btc" | "eth" | "stablecoins" | "others" {
   const symbols = poolSymbols.map(s => s.toLowerCase());

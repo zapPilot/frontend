@@ -67,19 +67,18 @@ export const WalletCard = memo(
                 <span className="hidden sm:inline">Removing...</span>
               </div>
             )}
-            {isOwner && (
-              <WalletActionMenu
-                wallet={wallet}
-                isOpen={openDropdown === wallet.id}
-                menuPosition={menuPosition}
-                operations={operations}
-                onCopyAddress={onCopyAddress}
-                onEditWallet={onEditWallet}
-                onDeleteWallet={onDeleteWallet}
-                onToggleDropdown={onToggleDropdown}
-                onCloseDropdown={onCloseDropdown}
-              />
-            )}
+            <WalletActionMenu
+              wallet={wallet}
+              isOpen={openDropdown === wallet.id}
+              menuPosition={menuPosition}
+              operations={operations}
+              isOwner={isOwner}
+              onCopyAddress={onCopyAddress}
+              onEditWallet={onEditWallet}
+              onDeleteWallet={onDeleteWallet}
+              onToggleDropdown={onToggleDropdown}
+              onCloseDropdown={onCloseDropdown}
+            />
           </div>
         </div>
 

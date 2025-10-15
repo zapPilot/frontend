@@ -11,6 +11,7 @@ import {
 import React, { useMemo, useState } from "react";
 import { formatCurrency } from "../../lib/formatters";
 import type { PoolDetail } from "../../services/analyticsService";
+import { categorizePool } from "../../utils/portfolio.utils";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/UnifiedLoading";
 
@@ -58,57 +59,6 @@ const isUnderperforming = (pool: PoolDetail): boolean => {
 
 const formatAPR = (apr: number): string => {
   return `${(apr * 100).toFixed(2)}%`;
-};
-
-// Category mapping for filtering - matches portfolio.utils.ts categorization
-const categorizePool = (
-  poolSymbols: string[]
-): "btc" | "eth" | "stablecoins" | "others" => {
-  const symbols = poolSymbols.map(s => s.toLowerCase());
-
-  // Bitcoin category
-  const btcSymbols = ["btc", "wbtc", "cbbtc", "tbtc"];
-  if (symbols.some(s => btcSymbols.includes(s))) {
-    return "btc";
-  }
-
-  // Ethereum category
-  const ethSymbols = [
-    "eth",
-    "weth",
-    "steth",
-    "wsteth",
-    "weeth",
-    "mseth",
-    "frxeth",
-  ];
-  if (symbols.some(s => ethSymbols.includes(s))) {
-    return "eth";
-  }
-
-  // Stablecoins category
-  const stableSymbols = [
-    "usdc",
-    "usdt",
-    "dai",
-    "frax",
-    "usd₮0",
-    "bold",
-    "msusd",
-    "openusdt",
-    "susd",
-    "gho",
-    "vst",
-    "frxusd",
-    "wfrax",
-    "legacy frax dollar",
-  ];
-  if (symbols.some(s => stableSymbols.includes(s))) {
-    return "stablecoins";
-  }
-
-  // Everything else
-  return "others";
 };
 
 export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({

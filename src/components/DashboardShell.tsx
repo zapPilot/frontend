@@ -5,7 +5,6 @@ import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { Z_INDEX } from "@/constants/design-system";
-import { mockInvestmentOpportunities } from "@/data/mockInvestments";
 import { InvestmentOpportunity } from "@/types/investment";
 import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
@@ -149,32 +148,32 @@ export function DashboardShell({
     [selectedStrategy]
   );
 
-  const getOpportunity = useCallback(
-    (id: string) =>
-      mockInvestmentOpportunities.find(strategy => strategy.id === id) || null,
-    []
-  );
-
   const handleOptimizeClick = useCallback(() => {
-    const strategy = getOpportunity("optimize-portfolio");
-    if (strategy) {
-      setSelectedStrategy({ ...strategy, navigationContext: "invest" });
-    }
-  }, [getOpportunity]);
+    // Create minimal strategy object for Portfolio Optimization
+    setSelectedStrategy({
+      id: "optimize-portfolio",
+      name: "Portfolio Optimization",
+      navigationContext: "invest",
+    } as InvestmentOpportunity);
+  }, []);
 
   const handleZapInClick = useCallback(() => {
-    const strategy = getOpportunity("zap-in");
-    if (strategy) {
-      setSelectedStrategy({ ...strategy, navigationContext: "zapIn" });
-    }
-  }, [getOpportunity]);
+    // Create minimal strategy object for ZapIn
+    setSelectedStrategy({
+      id: "zap-in",
+      name: "ZapIn Strategy",
+      navigationContext: "zapIn",
+    } as InvestmentOpportunity);
+  }, []);
 
   const handleZapOutClick = useCallback(() => {
-    const strategy = getOpportunity("zap-out");
-    if (strategy) {
-      setSelectedStrategy({ ...strategy, navigationContext: "zapOut" });
-    }
-  }, [getOpportunity]);
+    // Create minimal strategy object for ZapOut
+    setSelectedStrategy({
+      id: "zap-out",
+      name: "ZapOut Strategy",
+      navigationContext: "zapOut",
+    } as InvestmentOpportunity);
+  }, []);
 
   const renderTabContent = () => {
     if (selectedStrategy) {

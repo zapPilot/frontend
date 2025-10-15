@@ -21,7 +21,6 @@ import {
 import type {
   PortfolioDataPoint,
   ChartPeriod,
-  AssetAttribution,
   AnalyticsMetric,
   PerformancePeriod,
 } from "../types/portfolio";
@@ -44,96 +43,8 @@ export const CHART_PERIODS: ChartPeriod[] = [
 // =============================================================================
 // MOCK DATA GENERATION
 // =============================================================================
-
-/**
- * Generate portfolio performance history for charts
- *
- * @param period - Time period to generate data for
- * @param baseValue - Starting portfolio value
- * @returns Array of portfolio data points
- */
-export function generatePortfolioHistory(
-  period: string,
-  baseValue = 100000
-): PortfolioDataPoint[] {
-  const days = CHART_PERIODS.find(p => p.value === period)?.days || 90;
-  const data: PortfolioDataPoint[] = [];
-
-  for (let i = days; i >= 0; i--) {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-
-    // Simulate portfolio performance with some volatility
-    const progress = (days - i) / days;
-    const trend = Math.sin(progress * Math.PI * 3) * 0.1 + progress * 0.25;
-    const noise = (Math.random() - 0.5) * 0.05;
-    const value = baseValue * (1 + trend + noise);
-
-    // Simulate benchmark (more stable growth)
-    const benchmarkTrend = progress * 0.15;
-    const benchmarkNoise = (Math.random() - 0.5) * 0.02;
-    const benchmark = baseValue * (1 + benchmarkTrend + benchmarkNoise);
-
-    const change =
-      i === days
-        ? 0
-        : ((value - (data[data.length - 1]?.value || value)) / value) * 100;
-
-    data.push({
-      date: date.toISOString().split("T")[0]!,
-      value,
-      change,
-      benchmark,
-    });
-  }
-
-  return data;
-}
-
-/**
- * Generate asset attribution data
- *
- * @returns Array of asset attribution data
- */
-export function generateAssetAttribution(): AssetAttribution[] {
-  return [
-    {
-      asset: "BTC",
-      contribution: 8.2,
-      allocation: 35.2,
-      performance: 23.4,
-      color: "bg-orange-500",
-    },
-    {
-      asset: "ETH",
-      contribution: 5.3,
-      allocation: 28.7,
-      performance: 18.6,
-      color: "bg-blue-500",
-    },
-    {
-      asset: "DeFi Tokens",
-      contribution: 4.1,
-      allocation: 12.4,
-      performance: 33.2,
-      color: "bg-purple-500",
-    },
-    {
-      asset: "Stablecoins",
-      contribution: 0.8,
-      allocation: 20.1,
-      performance: 4.2,
-      color: "bg-green-500",
-    },
-    {
-      asset: "Altcoins",
-      contribution: -1.8,
-      allocation: 3.6,
-      performance: -48.9,
-      color: "bg-red-500",
-    },
-  ];
-}
+// Mock data generation functions removed in Phase 1 cleanup
+// TODO: Replace with real API data when endpoints are available
 
 /**
  * Generate analytics metrics with real risk data
