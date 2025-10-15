@@ -81,6 +81,7 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
   const allocations = [
     { label: "BTC", value: data.btc, color: "text-amber-400" },
     { label: "ETH", value: data.eth, color: "text-indigo-400" },
+    { label: "DeFi", value: data.defi, color: "text-violet-400" },
     { label: "Stablecoin", value: data.stablecoin, color: "text-emerald-400" },
     { label: "Altcoin", value: data.altcoin, color: "text-red-400" },
   ];

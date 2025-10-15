@@ -99,13 +99,6 @@ vi.mock("../../../src/hooks/usePortfolio", () => ({
   }),
 }));
 
-vi.mock("../../../src/hooks/useWalletModal", () => ({
-  useWalletModal: () => ({
-    isOpen: false,
-    openModal: vi.fn(),
-    closeModal: vi.fn(),
-  }),
-}));
 
 vi.mock("../../../src/components/WalletManager", () => ({
   WalletManager: vi.fn(() => null),

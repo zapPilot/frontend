@@ -8,13 +8,11 @@ import {
   usePortfolioState,
   usePortfolioStateHelpers,
 } from "../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { render } from "../test-utils";
 
 // Mock dependencies
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/usePortfolio");
-vi.mock("../../src/hooks/useWalletModal");
 vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 vi.mock("../../src/services/analyticsEngine");
@@ -215,7 +213,6 @@ vi.mock("../../src/components/PortfolioOverview", () => {
 const mockUseUser = vi.mocked(useUser);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUsePortfolio = vi.mocked(usePortfolio);
-const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockUsePortfolioState = vi.mocked(usePortfolioState);
 const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
 
@@ -312,13 +309,6 @@ describe("WalletPortfolio - Balance Hiding Integration", () => {
       portfolioMetrics: { totalValue: 25000, changePercent: 5.2 },
       toggleBalanceVisibility: mockToggleBalance,
       toggleCategoryExpansion: vi.fn(),
-    });
-
-    // Setup wallet modal mock
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
     });
 
     // Setup portfolio state mock

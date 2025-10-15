@@ -43,6 +43,8 @@ export interface AllocationHoverData extends BaseHoverData {
   eth: number;
   /** Stablecoin allocation percentage (0-100) */
   stablecoin: number;
+  /** DeFi allocation percentage (0-100) */
+  defi: number;
   /** Altcoin allocation percentage (0-100) */
   altcoin: number;
 }

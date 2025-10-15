@@ -105,6 +105,7 @@ export function buildAllocationHistory(
           btc: 0,
           eth: 0,
           stablecoin: 0,
+          defi: 0,
           altcoin: 0,
         };
       }
@@ -141,7 +142,13 @@ export function buildAllocationHistory(
         dayData.eth += computedShare;
       } else if (categoryKey.includes("stable")) {
         dayData.stablecoin += computedShare;
-      }  else {
+      } else if (
+        categoryKey.includes("defi") ||
+        categoryKey.includes("dex") ||
+        categoryKey.includes("liquidity")
+      ) {
+        dayData.defi += computedShare;
+      } else {
         dayData.altcoin += computedShare;
       }
 
@@ -153,7 +160,7 @@ export function buildAllocationHistory(
   return Object.values(allocationByDate)
     .map(point => {
       const total =
-        point.btc + point.eth + point.stablecoin + point.altcoin;
+        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
 
       if (total <= 0) {
         return point;
@@ -164,6 +171,7 @@ export function buildAllocationHistory(
         btc: (point.btc / total) * 100,
         eth: (point.eth / total) * 100,
         stablecoin: (point.stablecoin / total) * 100,
+        defi: (point.defi / total) * 100,
         altcoin: (point.altcoin / total) * 100,
       };
     })
@@ -744,7 +752,7 @@ const PortfolioChartComponent = ({
     getYValue: () => 50, // Mid-point for stacked chart
     buildHoverData: (point, x, y) => {
       const total =
-        point.btc + point.eth + point.stablecoin + point.altcoin;
+        point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
       return {
         chartType: "allocation" as const,
         x,
@@ -757,6 +765,7 @@ const PortfolioChartComponent = ({
         btc: total > 0 ? (point.btc / total) * 100 : 0,
         eth: total > 0 ? (point.eth / total) * 100 : 0,
         stablecoin: total > 0 ? (point.stablecoin / total) * 100 : 0,
+        defi: total > 0 ? (point.defi / total) * 100 : 0,
         altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
       };
     },

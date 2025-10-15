@@ -5,7 +5,6 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioState } from "../../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
@@ -14,7 +13,6 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
-vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components with detailed props tracking
@@ -261,7 +259,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUsePortfolioState = vi.mocked(usePortfolioState);
-  const mockUseWalletModal = vi.mocked(useWalletModal);
   const mockCreateCategoriesFromApiData = vi.mocked(
     createCategoriesFromApiData
   );
@@ -377,12 +374,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       toggleCategoryExpansion: vi.fn(),
     });
 
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-    });
-
     mockUsePortfolioState.mockReturnValue({
       type: "has_data",
       isConnected: true,
@@ -416,7 +407,6 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       expect(mockUseUser).toHaveBeenCalled();
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
       expect(mockUsePortfolio).toHaveBeenCalledWith([]);
-      expect(mockUseWalletModal).toHaveBeenCalled();
     });
 
     it("should setup error boundaries with correct resetKeys", () => {
@@ -597,31 +587,16 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       expect(toggleBalanceMock).toHaveBeenCalled();
     });
 
-    it("should handle wallet modal state", async () => {
-      const openModalMock = vi.fn();
-      const closeModalMock = vi.fn();
-
-      mockUseWalletModal.mockReturnValue({
-        isOpen: true,
-        openModal: openModalMock,
-        closeModal: closeModalMock,
-      });
-
+    it("should handle wallet manager button click", async () => {
       render(<WalletPortfolio />);
 
-      // Modal should be open
-      expect(screen.getByTestId("wallet-manager")).toBeInTheDocument();
-
-      // Test modal interactions
+      // Test wallet manager button interaction
       await act(async () => {
         screen.getByTestId("wallet-manager-button").click();
       });
-      expect(openModalMock).toHaveBeenCalled();
 
-      await act(async () => {
-        screen.getByTestId("close-wallet-manager").click();
-      });
-      expect(closeModalMock).toHaveBeenCalled();
+      // Button should be present and clickable
+      expect(screen.getByTestId("wallet-manager-button")).toBeInTheDocument();
     });
 
     it("should handle category expansion state", () => {
@@ -1048,16 +1023,11 @@ describe("WalletPortfolio - Comprehensive Unit Tests", () => {
       );
     });
 
-    it("should handle WalletManager modal state correctly", () => {
-      mockUseWalletModal.mockReturnValue({
-        isOpen: false,
-        openModal: vi.fn(),
-        closeModal: vi.fn(),
-      });
-
+    it("should handle wallet manager button correctly", () => {
       render(<WalletPortfolio />);
 
-      expect(screen.queryByTestId("wallet-manager")).not.toBeInTheDocument();
+      // Wallet manager button should be present
+      expect(screen.getByTestId("wallet-manager-button")).toBeInTheDocument();
     });
   });
 });

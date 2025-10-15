@@ -134,6 +134,7 @@ export class AllocationDataBuilder {
         btc: 30,
         eth: 25,
         stablecoin: 20,
+        defi: 15,
         altcoin: 10,
       });
     }
@@ -155,6 +156,7 @@ export class AllocationDataBuilder {
         btc: 30,
         eth: 25,
         stablecoin: 20,
+        defi: 15,
         altcoin: 10,
       };
 

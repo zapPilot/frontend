@@ -10,7 +10,7 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
 - **Coverage**: Basic component rendering, prop handling, hook interactions
 - **Key Areas**:
   - Component rendering with different props
-  - Hook integration (useUser, usePortfolio, useLandingPageData, useWalletModal)
+  - Hook integration (useUser, usePortfolio, useLandingPageData)
   - Error boundary testing
   - Basic user interactions
 

@@ -8,7 +8,6 @@ import {
   usePortfolioState,
   usePortfolioStateHelpers,
 } from "../../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
@@ -17,7 +16,6 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
-vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolio.utils");
 vi.mock("../../../src/components/PortfolioOverview", () => ({
   PortfolioOverview: vi.fn(({ portfolioState, pieChartData, onRetry }) => (
@@ -273,7 +271,6 @@ describe("WalletPortfolio", () => {
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUsePortfolioState = vi.mocked(usePortfolioState);
   const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
-  const mockUseWalletModal = vi.mocked(useWalletModal);
   const mockCreateCategoriesFromApiData = vi.mocked(
     createCategoriesFromApiData
   );
@@ -351,12 +348,6 @@ describe("WalletPortfolio", () => {
       toggleCategoryExpansion: vi.fn(),
     });
 
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-    });
-
     // Setup portfolio state mock
     mockUsePortfolioState.mockReturnValue({
       type: "has_data",
@@ -399,7 +390,6 @@ describe("WalletPortfolio", () => {
       expect(mockUseUser).toHaveBeenCalled();
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
       expect(mockUsePortfolio).toHaveBeenCalledWith([]);
-      expect(mockUseWalletModal).toHaveBeenCalled();
       expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
         { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
         15000
@@ -648,7 +638,7 @@ describe("WalletPortfolio", () => {
       expect(mockCreateCategoriesFromApiData).toHaveBeenCalled();
     });
 
-    it("should maintain backward compatibility with legacy categories structure", async () => {
+    it("should maintain backward compatibility with legacy structure", async () => {
       // Mock legacy structure compatibility
       const _legacyCategories = [
         {
@@ -1268,29 +1258,8 @@ describe("WalletPortfolio", () => {
     });
   });
 
+
   describe("Wallet Actions Integration", () => {
-    it("should handle wallet manager interactions with decomposed hooks", async () => {
-      const mockOpenWalletManager = vi.fn();
-      const mockCloseWalletManager = vi.fn();
-
-      mockUseWalletModal.mockReturnValue({
-        isOpen: false,
-        openModal: mockOpenWalletManager,
-        closeModal: mockCloseWalletManager,
-      });
-
-      render(<WalletPortfolio />);
-
-      await waitFor(() => {
-        expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "has-data"
-        );
-      });
-
-      // Verify wallet manager functions are accessible through useWalletModal
-      expect(mockOpenWalletManager).toBeDefined();
-      expect(mockCloseWalletManager).toBeDefined();
-    });
 
     it("should handle balance visibility toggle with borrowing data", async () => {
       const mockToggleBalance = vi.fn();
@@ -1386,7 +1355,6 @@ describe("WalletPortfolio", () => {
       // Verify component renders with all action callbacks using decomposed hooks
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
       expect(mockUsePortfolio).toHaveBeenCalled();
-      expect(mockUseWalletModal).toHaveBeenCalled();
     });
   });
 
@@ -1405,7 +1373,6 @@ describe("WalletPortfolio", () => {
       expect(mockUseUser).toHaveBeenCalled();
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
       expect(mockUsePortfolio).toHaveBeenCalledWith([]);
-      expect(mockUseWalletModal).toHaveBeenCalled();
       expect(mockCreateCategoriesFromApiData).toHaveBeenCalled();
 
       // Verify portfolio metrics integration

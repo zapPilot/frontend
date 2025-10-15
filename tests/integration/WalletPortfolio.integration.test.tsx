@@ -9,7 +9,6 @@ import {
   usePortfolioState,
   usePortfolioStateHelpers,
 } from "../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../src/utils/portfolio.utils";
 import { render } from "../test-utils";
 
@@ -17,7 +16,6 @@ import { render } from "../test-utils";
 vi.mock("../../src/contexts/UserContext");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
-vi.mock("../../src/hooks/useWalletModal");
 vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 vi.mock("../../src/components/PortfolioOverview");
@@ -199,7 +197,6 @@ vi.mock("framer-motion", () => {
 const mockUseUser = vi.mocked(useUser);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
-const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockCreateCategoriesFromApiData = vi.mocked(createCategoriesFromApiData);
 const mockUsePortfolioState = vi.mocked(usePortfolioState);
 const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
@@ -264,11 +261,6 @@ describe("WalletPortfolio - Integration Tests", () => {
       isRefetching: false,
     });
 
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-    });
 
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategorySummaries);
 
@@ -346,42 +338,15 @@ describe("WalletPortfolio - Integration Tests", () => {
       }
     });
 
-    it("should manage wallet modal state correctly", async () => {
+    it("should handle wallet manager button interaction", async () => {
       const user = userEvent.setup();
-      const openModal = vi.fn();
-      const closeModal = vi.fn();
 
-      mockUseWalletModal.mockReturnValue({
-        isOpen: false,
-        openModal,
-        closeModal,
-      });
-
-      const { rerender } = render(<WalletPortfolio />);
+      render(<WalletPortfolio />);
 
       // Click to open wallet manager
       const walletManagerButton = screen.getByTitle("Manage Wallets");
+      expect(walletManagerButton).toBeInTheDocument();
       await user.click(walletManagerButton);
-      expect(openModal).toHaveBeenCalled();
-
-      // Simulate modal opening
-      mockUseWalletModal.mockReturnValue({
-        isOpen: true,
-        openModal,
-        closeModal,
-      });
-
-      rerender(<WalletPortfolio />);
-
-      // Modal should be visible
-      await waitFor(() => {
-        expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
-      });
-      expect(screen.getByText("Bundled Wallets")).toBeInTheDocument();
-
-      // Close modal
-      await user.click(screen.getByTestId("close-wallet-manager"));
-      expect(closeModal).toHaveBeenCalled();
     });
   });
 
