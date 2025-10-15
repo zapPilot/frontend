@@ -34,13 +34,13 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   vm,
 }: WalletPortfolioPresenterProps) {
-  const { balanceHidden, toggleBalanceVisibility } = usePortfolio(
-    EMPTY_PORTFOLIO_DATA
-  );
+  const { balanceHidden, toggleBalanceVisibility } =
+    usePortfolio(EMPTY_PORTFOLIO_DATA);
+  const { onToggleBalance } = vm;
   const combinedToggle = useCallback(() => {
     toggleBalanceVisibility();
-    vm.onToggleBalance?.();
-  }, [toggleBalanceVisibility, vm.onToggleBalance]);
+    onToggleBalance?.();
+  }, [toggleBalanceVisibility, onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
