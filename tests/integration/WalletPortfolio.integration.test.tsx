@@ -261,7 +261,6 @@ describe("WalletPortfolio - Integration Tests", () => {
       isRefetching: false,
     });
 
-
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategorySummaries);
 
     // Setup portfolio state mock

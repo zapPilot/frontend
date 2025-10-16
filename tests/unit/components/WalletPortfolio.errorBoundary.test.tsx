@@ -387,7 +387,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       );
       expect(onError).toHaveBeenCalled();
     });
-
   });
 
   describe("Hook Data Validation Errors", () => {

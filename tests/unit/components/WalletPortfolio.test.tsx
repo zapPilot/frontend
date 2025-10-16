@@ -1258,9 +1258,7 @@ describe("WalletPortfolio", () => {
     });
   });
 
-
   describe("Wallet Actions Integration", () => {
-
     it("should handle balance visibility toggle with borrowing data", async () => {
       const mockToggleBalance = vi.fn();
 

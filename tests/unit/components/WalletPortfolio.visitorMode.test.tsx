@@ -99,7 +99,6 @@ vi.mock("../../../src/hooks/usePortfolio", () => ({
   }),
 }));
 
-
 vi.mock("../../../src/components/WalletManager", () => ({
   WalletManager: vi.fn(() => null),
 }));

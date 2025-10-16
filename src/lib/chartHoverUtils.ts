@@ -113,7 +113,10 @@ export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
   const severity = severityMappers.volatility(volatility);
-  const mapping: Record<SeverityLevel, "Low" | "Moderate" | "High" | "Very High"> = {
+  const mapping: Record<
+    SeverityLevel,
+    "Low" | "Moderate" | "High" | "Very High"
+  > = {
     excellent: "Low",
     good: "Low",
     fair: "Moderate",

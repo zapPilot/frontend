@@ -38,8 +38,7 @@ describe("buildAllocationHistory", () => {
     expect(point.eth).toBeCloseTo(0, CLOSE_PRECISION);
     expect(point.stablecoin).toBeCloseTo(12.56, CLOSE_PRECISION);
     expect(point.altcoin).toBeCloseTo(87.44, CLOSE_PRECISION);
-    const total =
-      point.btc + point.eth + point.stablecoin + point.altcoin;
+    const total = point.btc + point.eth + point.stablecoin + point.altcoin;
     expect(total).toBeCloseTo(100, CLOSE_PRECISION);
   });
 
@@ -65,10 +64,7 @@ describe("buildAllocationHistory", () => {
     const [point] = result;
     expect(point.btc).toBeCloseTo(40, CLOSE_PRECISION);
     expect(point.eth).toBeCloseTo(60, CLOSE_PRECISION);
-    expect(point.stablecoin + point.altcoin).toBeCloseTo(
-      0,
-      CLOSE_PRECISION
-    );
+    expect(point.stablecoin + point.altcoin).toBeCloseTo(0, CLOSE_PRECISION);
   });
 
   it("returns empty allocation history when no API points are available", () => {

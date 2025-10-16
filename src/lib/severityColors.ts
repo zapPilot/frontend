@@ -27,10 +27,10 @@ export const severityMappers = {
    */
   drawdown: (value: number): SeverityLevel => {
     const abs = Math.abs(value);
-    if (abs < 5) return "excellent";  // Minor
-    if (abs < 10) return "fair";      // Moderate
-    if (abs < 20) return "poor";      // Significant
-    return "critical";                // Severe
+    if (abs < 5) return "excellent"; // Minor
+    if (abs < 10) return "fair"; // Moderate
+    if (abs < 20) return "poor"; // Significant
+    return "critical"; // Severe
   },
 
   /**

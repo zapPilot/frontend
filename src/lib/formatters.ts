@@ -376,9 +376,9 @@ export function formatAddress(
  * @returns Formatted date string
  */
 export function formatChartDate(date: string | Date): string {
-  const parsed = typeof date === 'string' ? new Date(date) : date;
+  const parsed = typeof date === "string" ? new Date(date) : date;
   if (Number.isNaN(parsed.getTime())) {
-    return typeof date === 'string' ? date : '';
+    return typeof date === "string" ? date : "";
   }
 
   return parsed.toLocaleDateString("en-US", {
@@ -406,7 +406,11 @@ export const formatters = {
   currency: (value: number) => formatCurrency(Math.round(value)),
 
   /** Format currency with precise decimals */
-  currencyPrecise: (value: number) => formatCurrency(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+  currencyPrecise: (value: number) =>
+    formatCurrency(value, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
 
   /** Format percentage values */
   percent: (value: number, decimals = 1) => `${value.toFixed(decimals)}%`,
