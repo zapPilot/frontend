@@ -1,7 +1,7 @@
 "use client";
 
 import { GlassCard } from "@/components/ui";
-import { UnifiedLoading } from "@/components/ui/UnifiedLoading";
+import { UnifiedLoading } from "@/components/ui/LoadingSystem";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
@@ -132,8 +132,9 @@ const WalletManagerComponent = ({
               <div className="p-6 text-center">
                 <div className="flex justify-center mb-3">
                   <UnifiedLoading
-                    variant="skeleton-inline"
+                    variant="rectangular"
                     width="8rem"
+                    height={32}
                     aria-label="Loading wallet data"
                   />
                 </div>

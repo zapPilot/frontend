@@ -2,7 +2,7 @@
 
 import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { LoadingState } from "@/components/ui/LoadingSystem";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
 import { Z_INDEX } from "@/constants/design-system";
 import {
@@ -112,7 +112,8 @@ const STRATEGY_PRESETS: Record<
     apr: 0,
     risk: "Medium",
     category: "Portfolio",
-    description: "Optimize allocations across your positions for balanced performance.",
+    description:
+      "Optimize allocations across your positions for balanced performance.",
     tvl: "$0",
     color: "#8B5CF6",
   },
@@ -122,7 +123,8 @@ const STRATEGY_PRESETS: Record<
     apr: 0,
     risk: "Medium",
     category: "Zap",
-    description: "Deploy capital into curated strategies in a single transaction.",
+    description:
+      "Deploy capital into curated strategies in a single transaction.",
     tvl: "$0",
     color: "#10B981",
   },
@@ -132,7 +134,8 @@ const STRATEGY_PRESETS: Record<
     apr: 0,
     risk: "Medium",
     category: "Zap",
-    description: "Exit positions efficiently while minimizing transaction steps.",
+    description:
+      "Exit positions efficiently while minimizing transaction steps.",
     tvl: "$0",
     color: "#F59E0B",
   },

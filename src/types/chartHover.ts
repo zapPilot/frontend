@@ -43,8 +43,6 @@ export interface AllocationHoverData extends BaseHoverData {
   eth: number;
   /** Stablecoin allocation percentage (0-100) */
   stablecoin: number;
-  /** DeFi allocation percentage (0-100) */
-  defi: number;
   /** Altcoin allocation percentage (0-100) */
   altcoin: number;
 }
@@ -98,7 +96,7 @@ export interface UnderwaterHoverData extends BaseHoverData {
   /** Whether this point marks a recovery to peak */
   isRecoveryPoint: boolean;
   /** Current recovery status */
-  recoveryStatus: "Recovered" | "Underwater" | "Near Peak";
+  recoveryStatus: "Recovered" | "Recovering" | "Underwater";
 }
 
 /**

@@ -1,3 +1,9 @@
+import {
+  ALLOCATION_STACK_ORDER,
+  ASSET_LABELS,
+  CHART_COLORS,
+} from "../constants/portfolio";
+import { CHART_DIMENSIONS } from "../constants/chartScales";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { portfolioStateUtils } from "../utils/portfolio.utils";
 
@@ -8,29 +14,17 @@ export interface SVGPathPoint {
 
 type AllocationAssetKey = Exclude<keyof AssetAllocationPoint, "date">;
 
-const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = {
-  btc: "#f59e0b",
-  eth: "#6366f1",
-  stablecoin: "#10b981",
-  defi: "#8b5cf6",
-  altcoin: "#ef4444",
-};
+/**
+ * @deprecated Use CHART_COLORS from constants/portfolio.ts
+ * Kept for backwards compatibility
+ */
+const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = CHART_COLORS;
 
-const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = {
-  btc: "Bitcoin",
-  eth: "Ethereum",
-  stablecoin: "Stablecoins",
-  defi: "DeFi",
-  altcoin: "Altcoins",
-};
-
-const ALLOCATION_STACK_ORDER: AllocationAssetKey[] = [
-  "altcoin",
-  "defi",
-  "stablecoin",
-  "eth",
-  "btc",
-];
+/**
+ * @deprecated Use ASSET_LABELS from constants/portfolio.ts
+ * Kept for backwards compatibility
+ */
+const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = ASSET_LABELS;
 
 const ALLOCATION_BAR_OFFSET = 2;
 const ALLOCATION_BAR_WIDTH = 4;
@@ -150,7 +144,6 @@ export const generateAllocationChartData = (
       btc: Math.max(point.btc ?? 0, 0),
       eth: Math.max(point.eth ?? 0, 0),
       stablecoin: Math.max(point.stablecoin ?? 0, 0),
-      defi: Math.max(point.defi ?? 0, 0),
       altcoin: Math.max(point.altcoin ?? 0, 0),
     };
 
@@ -184,4 +177,36 @@ export const generateAllocationChartData = (
       } satisfies AllocationChartPoint;
     });
   });
+};
+
+/**
+ * Generate scaled SVG path for line charts
+ * Consolidates duplicate path generation logic across chart types
+ * @param data - Array of data points
+ * @param getValue - Function to extract value from point
+ * @param minValue - Minimum value for scaling
+ * @param maxValue - Maximum value for scaling
+ * @param width - Chart width (default: from CHART_DIMENSIONS)
+ * @param height - Chart height (default: from CHART_DIMENSIONS)
+ * @returns SVG path string
+ */
+export const generateScaledPath = <T>(
+  data: T[],
+  getValue: (point: T) => number,
+  minValue: number,
+  maxValue: number,
+  width = CHART_DIMENSIONS.WIDTH,
+  height = CHART_DIMENSIONS.HEIGHT
+): string => {
+  if (data.length === 0) return "";
+
+  const range = maxValue - minValue;
+  return data
+    .map((point, index) => {
+      const x = (index / Math.max(data.length - 1, 1)) * width;
+      const normalized = (getValue(point) - minValue) / range;
+      const y = height - normalized * height;
+      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
+    })
+    .join(" ");
 };

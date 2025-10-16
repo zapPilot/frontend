@@ -6,7 +6,6 @@ import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
 import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import { usePortfolioState } from "../../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
@@ -15,7 +14,6 @@ vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
-vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components for performance testing
@@ -98,7 +96,6 @@ const mockUseUser = vi.mocked(useUser);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUsePortfolioState = vi.mocked(usePortfolioState);
-const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockCreateCategoriesFromApiData = vi.mocked(createCategoriesFromApiData);
 
 describe("WalletPortfolio - Performance and Edge Cases", () => {
@@ -146,12 +143,6 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
       positions: [],
       isLoading: false,
       error: null,
-    });
-
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
     });
 
     mockUsePortfolioState.mockReturnValue({

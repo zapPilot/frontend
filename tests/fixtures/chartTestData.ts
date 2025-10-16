@@ -4,14 +4,14 @@
  */
 
 import type {
-  PortfolioDataPoint,
   AssetAllocationPoint,
+  PortfolioDataPoint,
 } from "@/types/portfolio";
 import {
   DrawdownDataPoint,
   SharpeDataPoint,
-  VolatilityDataPoint,
   UnderwaterDataPoint,
+  VolatilityDataPoint,
 } from "../utils/chartHoverTestFactories";
 
 /**

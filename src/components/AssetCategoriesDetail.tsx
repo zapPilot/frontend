@@ -5,7 +5,7 @@ import { TrendingUp } from "lucide-react";
 import React from "react";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { ErrorStateCard } from "./ui/ErrorStateCard";
-import { AssetCategorySkeleton } from "./ui/LoadingState";
+import { AssetCategorySkeleton } from "./ui/LoadingSystem";
 import { CategoryItem } from "./CategoryItem";
 
 type TabType = "assets" | "borrowing";

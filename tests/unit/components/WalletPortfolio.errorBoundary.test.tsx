@@ -9,14 +9,12 @@ import {
   usePortfolioState,
   usePortfolioStateHelpers,
 } from "../../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../../src/hooks/useWalletModal";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 
 // Mock dependencies for decomposed architecture
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
-vi.mock("../../../src/hooks/useWalletModal");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
 
@@ -211,7 +209,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
   const mockUseUser = vi.mocked(useUser);
   const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
-  const mockUseWalletModal = vi.mocked(useWalletModal);
   const mockUsePortfolioState = vi.mocked(usePortfolioState);
   const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
   const mockCreateCategoriesFromApiData = vi.mocked(
@@ -303,12 +300,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       toggleCategoryExpansion: vi.fn(),
     });
 
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
-    });
-
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategories);
 
     // Setup portfolio state mock
@@ -393,25 +384,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
       expect(screen.getByTestId("error-message")).toHaveTextContent(
         "Portfolio metrics calculation failed"
-      );
-      expect(onError).toHaveBeenCalled();
-    });
-
-    it("should handle useWalletModal hook throwing an error", () => {
-      const onError = vi.fn();
-      mockUseWalletModal.mockImplementation(() => {
-        throw new Error("Modal state initialization failed");
-      });
-
-      render(
-        <TestErrorBoundary onError={onError}>
-          <WalletPortfolio />
-        </TestErrorBoundary>
-      );
-
-      expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
-      expect(screen.getByTestId("error-message")).toHaveTextContent(
-        "Modal state initialization failed"
       );
       expect(onError).toHaveBeenCalled();
     });

@@ -3,5 +3,18 @@ export { BundleNotFound } from "./BundleNotFound";
 export { GlassCard } from "./GlassCard";
 export { GradientButton } from "./GradientButton";
 
-// Loading system - minimal re-exports for backward compatibility
-export { LoadingSpinner } from "./LoadingSystem";
+// Loading system - comprehensive re-exports for backward compatibility
+export {
+  LoadingSpinner,
+  WalletMetricsSkeleton,
+  AssetCategorySkeleton,
+  PieChartLoading,
+  BalanceLoading,
+  UnifiedLoading,
+  BalanceSkeleton,
+  PieChartSkeleton,
+  Skeleton,
+  CardSkeleton,
+  LoadingWrapper,
+  LoadingState,
+} from "./LoadingSystem";

@@ -7,8 +7,7 @@ import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { WalletMetricsSkeleton } from "../ui/LoadingState";
-import { BalanceLoading } from "../ui/UnifiedLoading";
+import { WalletMetricsSkeleton, BalanceLoading } from "../ui/LoadingSystem";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 import { ROITooltip } from "./ROITooltip";
 

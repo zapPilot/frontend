@@ -90,15 +90,10 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
       userAddress: string,
       chainId: number
     ): UnifiedZapRequest => {
-      // TODO: Uncomment this when we have a way to get the strategy allocations
-      // const strategyAllocations = action.includedCategories.map(category => ({
-      //   strategyId: category.id,
-      //   percentage: category.activeAllocationPercentage,
-      // }));
-      // TODO: this is a dev allocation for testing purpose, I'll remove it manually if needed. AI please do remove this line!
-      const strategyAllocations = [
-        { strategyId: "stablecoin", percentage: 100 },
-      ];
+      const strategyAllocations = action.includedCategories.map(category => ({
+        strategyId: category.id,
+        percentage: category.activeAllocationPercentage,
+      }));
       // Ensure we have a valid token address - throw error if missing
       const inputToken = action.swapSettings.fromToken?.address;
       if (!inputToken) {

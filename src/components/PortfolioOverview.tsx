@@ -11,7 +11,7 @@ import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
-import { PieChartLoading } from "./ui/UnifiedLoading";
+import { PieChartLoading } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 

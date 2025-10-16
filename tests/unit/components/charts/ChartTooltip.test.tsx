@@ -46,7 +46,6 @@ describe("ChartTooltip", () => {
           btc: 48,
           eth: 36,
           stablecoin: 0.4,
-          defi: 12,
           altcoin: 0,
         }}
         chartWidth={800}
@@ -56,7 +55,6 @@ describe("ChartTooltip", () => {
 
     expect(screen.getByText("BTC")).toBeInTheDocument();
     expect(screen.getByText("ETH")).toBeInTheDocument();
-    expect(screen.getByText("DeFi")).toBeInTheDocument();
     expect(screen.queryByText("Stablecoin")).not.toBeInTheDocument();
   });
 

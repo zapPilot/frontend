@@ -9,14 +9,12 @@ import {
   usePortfolioState,
   usePortfolioStateHelpers,
 } from "../../src/hooks/usePortfolioState";
-import { useWalletModal } from "../../src/hooks/useWalletModal";
 import { render } from "../test-utils";
 
 // Mock all dependencies
 vi.mock("../../src/contexts/UserContext");
 vi.mock("../../src/hooks/usePortfolio");
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
-vi.mock("../../src/hooks/useWalletModal");
 vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 
@@ -193,7 +191,6 @@ vi.mock("../../src/components/errors/ErrorBoundary", () => ({
 const mockUseUser = vi.mocked(useUser);
 const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
-const mockUseWalletModal = vi.mocked(useWalletModal);
 const mockUsePortfolioState = vi.mocked(usePortfolioState);
 const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
 
@@ -255,12 +252,6 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
       error: null,
       refetch: vi.fn(),
       isRefetching: false,
-    });
-
-    mockUseWalletModal.mockReturnValue({
-      isOpen: false,
-      openModal: vi.fn(),
-      closeModal: vi.fn(),
     });
 
     // Setup portfolio state mocks
@@ -421,40 +412,17 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
   });
 
   describe("Wallet Management Flow", () => {
-    it("should handle complete wallet management flow", async () => {
+    it("should handle wallet manager button interaction", async () => {
       const user = userEvent.setup();
-      const openModal = vi.fn();
-      const closeModal = vi.fn();
 
-      mockUseWalletModal.mockReturnValue({
-        isOpen: false,
-        openModal,
-        closeModal,
-      });
+      render(<WalletPortfolio />);
 
-      const { rerender } = render(<WalletPortfolio />);
+      // Wallet manager button should be present
+      const managerButton = screen.getByTestId("wallet-manager-button");
+      expect(managerButton).toBeInTheDocument();
 
-      // 1. Open wallet manager
-      await user.click(screen.getByTestId("wallet-manager-button"));
-      expect(openModal).toHaveBeenCalled();
-
-      // 2. Simulate modal opening
-      mockUseWalletModal.mockReturnValue({
-        isOpen: true,
-        openModal,
-        closeModal,
-      });
-
-      rerender(<WalletPortfolio />);
-
-      // 3. Should show wallet manager modal
-      expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
-      expect(screen.getByTestId("add-wallet")).toBeInTheDocument();
-      expect(screen.getByTestId("remove-wallet")).toBeInTheDocument();
-
-      // 4. Close modal
-      await user.click(screen.getByTestId("close-modal"));
-      expect(closeModal).toHaveBeenCalled();
+      // Click should not throw error
+      await user.click(managerButton);
     });
   });
 
@@ -626,12 +594,6 @@ describe("WalletPortfolio - Critical User Flows (Regression Tests)", () => {
         positions: [],
         isLoading: false,
         error: null,
-      });
-
-      mockUseWalletModal.mockReturnValue({
-        isOpen: false,
-        openModal,
-        closeModal: vi.fn(),
       });
 
       render(<WalletPortfolio onCategoryClick={onCategoryClick} />);

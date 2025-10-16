@@ -1,9 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
-import { useWalletModal } from "@/hooks/useWalletModal";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
 import type { LandingPageResponse } from "@/services/analyticsService";
 
@@ -103,12 +103,10 @@ export function useWalletPortfolioState(
     hasZeroData,
   });
 
-  // Wallet manager modal controls
-  const {
-    isOpen: isWalletManagerOpen,
-    openModal: openWalletManager,
-    closeModal: closeWalletManager,
-  } = useWalletModal();
+  // Wallet manager modal controls (inlined from useWalletModal)
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+  const openWalletManager = () => setIsWalletManagerOpen(true);
+  const closeWalletManager = () => setIsWalletManagerOpen(false);
 
   // Gate action handlers when in visitor mode
   const gatedOnOptimize = !isVisitorMode ? onOptimizeClick : undefined;

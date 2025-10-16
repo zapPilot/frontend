@@ -5,6 +5,18 @@
  * and chart-specific content rendering.
  */
 
+import { ASSET_CATEGORIES } from "@/constants/portfolio";
+import { formatters } from "@/lib/formatters";
+import {
+  calculateDailyVolatility,
+  getDrawdownSeverity,
+  getDrawdownSeverityColor,
+  getRecoveryStatusColor,
+  getSharpeColor,
+  getSharpeInterpretation,
+  getVolatilityRiskColor,
+  getVolatilityRiskLevel,
+} from "@/lib/chartHoverUtils";
 import { motion } from "framer-motion";
 import type {
   AllocationHoverData,
@@ -15,16 +27,6 @@ import type {
   UnderwaterHoverData,
   VolatilityHoverData,
 } from "../../types/chartHover";
-import {
-  getDrawdownSeverity,
-  getDrawdownSeverityColor,
-  getSharpeInterpretation,
-  getSharpeColor,
-  getVolatilityRiskLevel,
-  getVolatilityRiskColor,
-  calculateDailyVolatility,
-  getRecoveryStatusColor,
-} from "@/lib/chartHoverUtils";
 
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",
@@ -47,11 +49,7 @@ interface ChartTooltipProps {
  * Render Performance chart tooltip content
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
-  const formattedValue = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-  }).format(data.value);
+  const formattedValue = formatters.currencyPrecise(data.value);
 
   return (
     <>
@@ -79,11 +77,26 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
  */
 function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
   const allocations = [
-    { label: "BTC", value: data.btc, color: "text-amber-400" },
-    { label: "ETH", value: data.eth, color: "text-indigo-400" },
-    { label: "Stablecoin", value: data.stablecoin, color: "text-emerald-400" },
-    { label: "DeFi", value: data.defi, color: "text-purple-400" },
-    { label: "Altcoin", value: data.altcoin, color: "text-red-400" },
+    {
+      label: ASSET_CATEGORIES.btc.shortLabel,
+      value: data.btc,
+      color: ASSET_CATEGORIES.btc.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.eth.shortLabel,
+      value: data.eth,
+      color: ASSET_CATEGORIES.eth.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.stablecoin.shortLabel,
+      value: data.stablecoin,
+      color: ASSET_CATEGORIES.stablecoin.tailwindColor,
+    },
+    {
+      label: ASSET_CATEGORIES.altcoin.shortLabel,
+      value: data.altcoin,
+      color: ASSET_CATEGORIES.altcoin.tailwindColor,
+    },
   ];
 
   return (
@@ -99,7 +112,7 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
             >
               <span className={`text-xs ${color}`}>{label}</span>
               <span className="text-sm font-semibold text-white">
-                {value.toFixed(1)}%
+                {formatters.percent(value)}
               </span>
             </div>
           ))}
@@ -122,7 +135,7 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-red-300">Drawdown</span>
           <span className="text-sm font-semibold text-white">
-            {data.drawdown.toFixed(2)}%
+            {formatters.percent(data.drawdown, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -213,13 +226,13 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-amber-300">Annualized Vol</span>
           <span className="text-sm font-semibold text-white">
-            {data.volatility.toFixed(1)}%
+            {formatters.percent(data.volatility)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-400">Daily Vol</span>
           <span className="text-sm font-semibold text-gray-300">
-            {dailyVol.toFixed(2)}%
+            {formatters.percent(dailyVol, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -258,7 +271,7 @@ function UnderwaterTooltipContent({ data }: { data: UnderwaterHoverData }) {
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-red-300">Underwater</span>
           <span className="text-sm font-semibold text-white">
-            {data.underwater.toFixed(2)}%
+            {formatters.percent(data.underwater, 2)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-3">

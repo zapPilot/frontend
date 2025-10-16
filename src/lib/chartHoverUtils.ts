@@ -3,6 +3,14 @@
  * Helper functions for chart hover calculations and styling
  */
 
+import { formatters } from "./formatters";
+import {
+  severityMappers,
+  getColorForSeverity,
+  legacyLabelMapping,
+  type SeverityLevel,
+} from "./severityColors";
+
 // ============================================================================
 // Drawdown Functions
 // ============================================================================
@@ -15,11 +23,18 @@
 export function getDrawdownSeverity(
   drawdown: number
 ): "Minor" | "Moderate" | "Significant" | "Severe" {
-  const absDrawdown = Math.abs(drawdown);
-  if (absDrawdown < 5) return "Minor";
-  if (absDrawdown < 10) return "Moderate";
-  if (absDrawdown < 20) return "Significant";
-  return "Severe";
+  const severity = severityMappers.drawdown(drawdown);
+  const mapping: Record<
+    SeverityLevel,
+    "Minor" | "Moderate" | "Significant" | "Severe"
+  > = {
+    excellent: "Minor",
+    good: "Minor",
+    fair: "Moderate",
+    poor: "Significant",
+    critical: "Severe",
+  };
+  return mapping[severity];
 }
 
 /**
@@ -40,11 +55,7 @@ export function findPeakDate(
     drawdownData[index]?.date ||
     drawdownData[0]?.date ||
     new Date().toISOString();
-  return new Date(peakDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
+  return formatters.chartDate(peakDate);
 }
 
 /**
@@ -75,11 +86,18 @@ export function calculateDaysSincePeak(
 export function getSharpeInterpretation(
   sharpe: number
 ): "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor" {
-  if (sharpe > 2.0) return "Excellent";
-  if (sharpe > 1.0) return "Good";
-  if (sharpe > 0.5) return "Fair";
-  if (sharpe > 0) return "Poor";
-  return "Very Poor";
+  const severity = severityMappers.sharpe(sharpe);
+  const mapping: Record<
+    SeverityLevel,
+    "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor"
+  > = {
+    excellent: "Excellent",
+    good: "Good",
+    fair: "Fair",
+    poor: "Poor",
+    critical: "Very Poor",
+  };
+  return mapping[severity];
 }
 
 // ============================================================================
@@ -94,10 +112,18 @@ export function getSharpeInterpretation(
 export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
-  if (volatility < 15) return "Low";
-  if (volatility < 25) return "Moderate";
-  if (volatility < 35) return "High";
-  return "Very High";
+  const severity = severityMappers.volatility(volatility);
+  const mapping: Record<
+    SeverityLevel,
+    "Low" | "Moderate" | "High" | "Very High"
+  > = {
+    excellent: "Low",
+    good: "Low",
+    fair: "Moderate",
+    poor: "High",
+    critical: "Very High",
+  };
+  return mapping[severity];
 }
 
 /**
@@ -116,15 +142,13 @@ export function calculateDailyVolatility(annualizedVol: number): number {
 /**
  * Determines recovery status
  * @param underwater - Underwater percentage
- * @param isRecoveryPoint - Whether this is a recovery point
  * @returns Recovery status label
  */
 export function getRecoveryStatus(
-  underwater: number,
-  isRecoveryPoint: boolean
-): "Recovered" | "Near Peak" | "Underwater" {
-  if (underwater === 0) return "Recovered";
-  if (isRecoveryPoint) return "Near Peak";
+  underwater: number
+): "Recovered" | "Recovering" | "Underwater" {
+  if (Math.abs(underwater) < 1) return "Recovered";
+  if (Math.abs(underwater) < 10) return "Recovering";
   return "Underwater";
 }
 
@@ -138,11 +162,15 @@ export function getRecoveryStatus(
  * @returns Hex color code
  */
 export function getSharpeColor(sharpe: number): string {
-  if (sharpe > 2.0) return "#10b981"; // Excellent - Green
-  if (sharpe > 1.0) return "#84cc16"; // Good - Lime
-  if (sharpe > 0.5) return "#eab308"; // Fair - Yellow
-  if (sharpe > 0) return "#f97316"; // Poor - Orange
-  return "#ef4444"; // Very Poor - Red
+  const severity = severityMappers.sharpe(sharpe);
+  const colors: Record<SeverityLevel, string> = {
+    excellent: "#10b981",
+    good: "#84cc16",
+    fair: "#fbbf24",
+    poor: "#fb923c",
+    critical: "#ef4444",
+  };
+  return colors[severity];
 }
 
 /**
@@ -153,16 +181,8 @@ export function getSharpeColor(sharpe: number): string {
 export function getDrawdownSeverityColor(
   severity: "Minor" | "Moderate" | "Significant" | "Severe"
 ): { color: string; bgColor: string } {
-  switch (severity) {
-    case "Minor":
-      return { color: "text-green-400", bgColor: "bg-green-500/20" };
-    case "Moderate":
-      return { color: "text-yellow-400", bgColor: "bg-yellow-500/20" };
-    case "Significant":
-      return { color: "text-orange-400", bgColor: "bg-orange-500/20" };
-    case "Severe":
-      return { color: "text-red-400", bgColor: "bg-red-500/20" };
-  }
+  const severityLevel = legacyLabelMapping[severity];
+  return getColorForSeverity(severityLevel);
 }
 
 /**
@@ -173,32 +193,23 @@ export function getDrawdownSeverityColor(
 export function getVolatilityRiskColor(
   riskLevel: "Low" | "Moderate" | "High" | "Very High"
 ): { color: string; bgColor: string } {
-  switch (riskLevel) {
-    case "Low":
-      return { color: "text-green-400", bgColor: "bg-green-500/20" };
-    case "Moderate":
-      return { color: "text-yellow-400", bgColor: "bg-yellow-500/20" };
-    case "High":
-      return { color: "text-orange-400", bgColor: "bg-orange-500/20" };
-    case "Very High":
-      return { color: "text-red-400", bgColor: "bg-red-500/20" };
-  }
+  const severityLevel = legacyLabelMapping[riskLevel];
+  return getColorForSeverity(severityLevel);
 }
 
 /**
  * Gets color for recovery status
  * @param status - Recovery status
- * @returns Object with color and bgColor Tailwind classes
+ * @returns Object with color Tailwind class
  */
 export function getRecoveryStatusColor(
-  status: "Recovered" | "Near Peak" | "Underwater"
-): { color: string; bgColor: string } {
-  switch (status) {
-    case "Recovered":
-      return { color: "text-green-400", bgColor: "bg-green-500/20" };
-    case "Near Peak":
-      return { color: "text-yellow-400", bgColor: "bg-yellow-500/20" };
-    case "Underwater":
-      return { color: "text-red-400", bgColor: "bg-red-500/20" };
-  }
+  status: "Recovered" | "Recovering" | "Underwater"
+): { color: string } {
+  const mapping: Record<typeof status, SeverityLevel> = {
+    Recovered: "excellent",
+    Recovering: "fair",
+    Underwater: "critical",
+  };
+  const colors = getColorForSeverity(mapping[status]);
+  return { color: colors.color };
 }

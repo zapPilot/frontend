@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import {
-  LoadingSkeleton,
+  Skeleton as LoadingSkeleton,
   CardSkeleton,
   MetricsSkeleton,
   ChartSkeleton,
-} from "../../../../src/components/ui/LoadingSkeleton";
+} from "../../../../src/components/ui/LoadingSystem";
 
 describe("LoadingSkeleton", () => {
   describe("Basic Rendering", () => {
@@ -60,18 +60,26 @@ describe("LoadingSkeleton", () => {
       render(<LoadingSkeleton variant="text" lines={3} />);
 
       const skeleton = screen.getByTestId("loading-skeleton");
-      expect(skeleton.children).toHaveLength(3);
+      const lineElements = Array.from(skeleton.children).filter(
+        child => child.tagName !== "SPAN"
+      );
+
+      expect(lineElements).toHaveLength(3);
     });
 
     it("should vary line widths for multiple lines", () => {
       render(<LoadingSkeleton variant="text" lines={4} />);
 
       const skeleton = screen.getByTestId("loading-skeleton");
-      const lines = skeleton.children;
+      const lineElements = Array.from(skeleton.children).filter(
+        child => child.tagName !== "SPAN"
+      );
 
       // Implementation uses inline styles, not CSS classes
-      expect(lines).toHaveLength(4);
-      expect(lines[lines.length - 1]).toHaveStyle({ width: "75%" });
+      expect(lineElements).toHaveLength(4);
+      expect(lineElements[lineElements.length - 1]).toHaveStyle({
+        width: "75%",
+      });
     });
   });
 

@@ -365,6 +365,64 @@ export function formatAddress(
 }
 
 // =============================================================================
+// DATE FORMATTING
+// =============================================================================
+
+/**
+ * Format date for chart labels
+ * Standard format: "Mon DD, YYYY"
+ *
+ * @param date - Date string or Date object
+ * @returns Formatted date string
+ */
+export function formatChartDate(date: string | Date): string {
+  const parsed = typeof date === "string" ? new Date(date) : date;
+  if (Number.isNaN(parsed.getTime())) {
+    return typeof date === "string" ? date : "";
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+// =============================================================================
+// FORMATTERS OBJECT - UNIFIED API
+// =============================================================================
+
+/**
+ * Unified formatters object for easy imports
+ * Provides convenient access to all formatting functions
+ *
+ * @example
+ * import { formatters } from '@/lib/formatters';
+ * const formatted = formatters.currency(1000); // "$1,000.00"
+ * const percent = formatters.percent(25.5); // "25.5%"
+ */
+export const formatters = {
+  /** Format currency values - rounded to dollars */
+  currency: (value: number) => formatCurrency(Math.round(value)),
+
+  /** Format currency with precise decimals */
+  currencyPrecise: (value: number) =>
+    formatCurrency(value, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }),
+
+  /** Format percentage values */
+  percent: (value: number, decimals = 1) => `${value.toFixed(decimals)}%`,
+
+  /** Format chart date labels */
+  chartDate: formatChartDate,
+
+  /** Format numbers with locale */
+  number: formatNumber,
+} as const;
+
+// =============================================================================
 // EXPORTS FOR BACKWARD COMPATIBILITY
 // =============================================================================
 
