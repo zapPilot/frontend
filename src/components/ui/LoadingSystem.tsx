@@ -408,6 +408,44 @@ export function BalanceSkeleton({
   );
 }
 
+export function PieChartSkeleton({
+  size = 200,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <motion.div
+      className={`flex flex-col items-center space-y-4 ${className}`}
+      data-testid="pie-chart-skeleton"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <Skeleton
+        variant="circular"
+        width={size}
+        height={size}
+        className="mb-6"
+      />
+      <div className="w-full space-y-2">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <div key={index} className="flex items-center space-x-3">
+            <Skeleton variant="circular" width={12} height={12} />
+            <Skeleton variant="text" height={16} width="30%" />
+            <Skeleton
+              variant="text"
+              height={16}
+              width="20%"
+              className="ml-auto"
+            />
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // =============================================================================
 // LOADING WRAPPER
 // =============================================================================
@@ -606,3 +644,5 @@ export const LoadingSkeleton = Skeleton;
 export const UnifiedLoading = Skeleton; // UnifiedLoading maps to Skeleton
 export const LoadingButton = ButtonSkeleton;
 export const LoadingCard = CardSkeleton;
+export const BalanceLoading = BalanceSkeleton; // From UnifiedLoading.tsx
+export const PieChartLoading = PieChartSkeleton; // From UnifiedLoading.tsx

@@ -4,45 +4,43 @@ import {
   LoadingState,
   withLoadingState,
   useLoadingComponent,
-} from "../../../../src/components/ui/LoadingState";
+} from "../../../../src/components/ui/LoadingSystem";
 
-// Mock child components
-vi.mock("../../../../src/components/ui/LoadingSystem", () => ({
-  LoadingSpinner: vi.fn(({ size }) => (
-    <div data-testid="loading-spinner" data-size={size}>
-      Spinner
-    </div>
-  )),
-}));
-
-vi.mock("../../../../src/components/ui/LoadingCard", () => ({
-  LoadingCard: vi.fn(({ message, className }) => (
-    <div data-testid="loading-card" className={className}>
-      {message}
-    </div>
-  )),
-}));
-
-vi.mock("../../../../src/components/ui/LoadingSkeleton", () => ({
-  LoadingSkeleton: vi.fn(({ variant, lines }) => (
-    <div
-      data-testid="loading-skeleton"
-      data-variant={variant}
-      data-lines={lines}
-    >
-      Skeleton
-    </div>
-  )),
-  CardSkeleton: vi.fn(() => (
-    <div data-testid="card-skeleton">Card Skeleton</div>
-  )),
-  MetricsSkeleton: vi.fn(() => (
-    <div data-testid="metrics-skeleton">Metrics Skeleton</div>
-  )),
-  ChartSkeleton: vi.fn(() => (
-    <div data-testid="chart-skeleton">Chart Skeleton</div>
-  )),
-}));
+// Mock child components - use importOriginal to preserve other exports
+vi.mock("../../../../src/components/ui/LoadingSystem", async importOriginal => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    Spinner: vi.fn(({ size }) => (
+      <div data-testid="loading-spinner" data-size={size}>
+        Spinner
+      </div>
+    )),
+    Skeleton: vi.fn(({ variant, lines }) => (
+      <div
+        data-testid="loading-skeleton"
+        data-variant={variant}
+        data-lines={lines}
+      >
+        Skeleton
+      </div>
+    )),
+    CardSkeleton: vi.fn(() => (
+      <div data-testid="card-skeleton">Card Skeleton</div>
+    )),
+    MetricsSkeleton: vi.fn(() => (
+      <div data-testid="metrics-skeleton">Metrics Skeleton</div>
+    )),
+    ChartSkeleton: vi.fn(() => (
+      <div data-testid="chart-skeleton">Chart Skeleton</div>
+    )),
+    LoadingCard: vi.fn(({ message, className }) => (
+      <div data-testid="loading-card" className={className}>
+        {message}
+      </div>
+    )),
+  };
+});
 
 describe("LoadingState", () => {
   describe("Variant Rendering", () => {

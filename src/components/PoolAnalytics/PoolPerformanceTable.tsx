@@ -13,7 +13,7 @@ import { formatCurrency } from "../../lib/formatters";
 import type { PoolDetail } from "../../services/analyticsService";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { GlassCard } from "../ui";
-import { UnifiedLoading } from "../ui/UnifiedLoading";
+import { UnifiedLoading } from "../ui/LoadingSystem";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -158,7 +158,9 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
       <GlassCard>
         <div className="flex items-center justify-center p-8">
           <UnifiedLoading
-            variant="skeleton-card"
+            variant="rectangular"
+            width={200}
+            height={40}
             aria-label="Loading pool performance data"
           />
           <span className="ml-3 text-gray-400">Loading pool analytics...</span>
