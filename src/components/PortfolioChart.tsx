@@ -90,6 +90,31 @@ const CHART_LABELS = {
 const CHART_CONTENT_ID = "portfolio-chart-content";
 const ENABLE_TEST_AUTO_HOVER = process.env.NODE_ENV === "test";
 
+/**
+ * Helper to generate consistent event handler props for chart interactions
+ * Consolidates ~72 lines of repeated event handlers across 6 chart types
+ */
+const getChartInteractionProps = (
+  hoverState: ReturnType<typeof useChartHover>
+) => ({
+  onMouseMove: hoverState.handleMouseMove,
+  onMouseOver: hoverState.handleMouseMove,
+  onMouseEnter: hoverState.handleMouseMove,
+  onMouseDown: hoverState.handleMouseMove,
+  onClick: hoverState.handleMouseMove,
+  onPointerMove: hoverState.handlePointerMove,
+  onPointerDown: hoverState.handlePointerDown,
+  onPointerOver: hoverState.handlePointerMove,
+  onMouseLeave: hoverState.handleMouseLeave,
+  onMouseOut: hoverState.handleMouseLeave,
+  onBlur: hoverState.handleMouseLeave,
+  onPointerLeave: hoverState.handleMouseLeave,
+  onTouchStart: hoverState.handleTouchMove,
+  onTouchMove: hoverState.handleTouchMove,
+  onTouchEnd: hoverState.handleTouchEnd,
+  onTouchCancel: hoverState.handleTouchEnd,
+});
+
 export function buildAllocationHistory(
   rawPoints: AllocationTimeseriesInputPoint[]
 ): AssetAllocationPoint[] {
@@ -894,22 +919,7 @@ const PortfolioChartComponent = ({
           preserveAspectRatio="xMidYMid meet"
           data-chart-type="performance"
           aria-label={CHART_LABELS.performance}
-          onMouseMove={performanceHover.handleMouseMove}
-          onMouseOver={performanceHover.handleMouseMove}
-          onMouseEnter={performanceHover.handleMouseMove}
-          onMouseDown={performanceHover.handleMouseMove}
-          onClick={performanceHover.handleMouseMove}
-          onPointerMove={performanceHover.handlePointerMove}
-          onPointerDown={performanceHover.handlePointerDown}
-          onPointerOver={performanceHover.handlePointerMove}
-          onMouseLeave={performanceHover.handleMouseLeave}
-          onMouseOut={performanceHover.handleMouseLeave}
-          onBlur={performanceHover.handleMouseLeave}
-          onPointerLeave={performanceHover.handleMouseLeave}
-          onTouchStart={performanceHover.handleTouchMove}
-          onTouchMove={performanceHover.handleTouchMove}
-          onTouchEnd={performanceHover.handleTouchEnd}
-          onTouchCancel={performanceHover.handleTouchEnd}
+          {...getChartInteractionProps(performanceHover)}
         >
           <text x="16" y="20" opacity="0">
             Portfolio performance data over the selected period {selectedPeriod}
@@ -1006,13 +1016,7 @@ const PortfolioChartComponent = ({
       minValue,
       maxValue,
       selectedPeriod,
-      performanceHover.hoveredPoint,
-      performanceHover.handleMouseMove,
-      performanceHover.handlePointerMove,
-      performanceHover.handlePointerDown,
-      performanceHover.handleMouseLeave,
-      performanceHover.handleTouchMove,
-      performanceHover.handleTouchEnd,
+      performanceHover,
       portfolioPath,
       benchmarkPath,
       portfolioAreaPath,
@@ -1036,22 +1040,7 @@ const PortfolioChartComponent = ({
             className="w-full h-full"
             data-chart-type="allocation"
             aria-label={CHART_LABELS.allocation}
-            onMouseMove={allocationHover.handleMouseMove}
-            onMouseOver={allocationHover.handleMouseMove}
-            onMouseEnter={allocationHover.handleMouseMove}
-            onMouseDown={allocationHover.handleMouseMove}
-            onClick={allocationHover.handleMouseMove}
-            onPointerMove={allocationHover.handlePointerMove}
-            onPointerDown={allocationHover.handlePointerDown}
-            onPointerOver={allocationHover.handlePointerMove}
-            onMouseLeave={allocationHover.handleMouseLeave}
-            onMouseOut={allocationHover.handleMouseLeave}
-            onBlur={allocationHover.handleMouseLeave}
-            onPointerLeave={allocationHover.handleMouseLeave}
-            onTouchStart={allocationHover.handleTouchMove}
-            onTouchMove={allocationHover.handleTouchMove}
-            onTouchEnd={allocationHover.handleTouchEnd}
-            onTouchCancel={allocationHover.handleTouchEnd}
+            {...getChartInteractionProps(allocationHover)}
           >
             <text x="16" y="20" opacity="0">
               Asset allocation percentages across core holdings
@@ -1150,16 +1139,7 @@ const PortfolioChartComponent = ({
         </div>
       </div>
     );
-  }, [
-    allocationHistory,
-    allocationHover.hoveredPoint,
-    allocationHover.handleMouseMove,
-    allocationHover.handlePointerMove,
-    allocationHover.handlePointerDown,
-    allocationHover.handleMouseLeave,
-    allocationHover.handleTouchMove,
-    allocationHover.handleTouchEnd,
-  ]);
+  }, [allocationHistory, allocationHover]);
 
   const renderDrawdownChart = useMemo(
     () => (
@@ -1169,22 +1149,7 @@ const PortfolioChartComponent = ({
           className="w-full h-full"
           data-chart-type="drawdown"
           aria-label={CHART_LABELS.drawdown}
-          onMouseMove={drawdownHover.handleMouseMove}
-          onMouseOver={drawdownHover.handleMouseMove}
-          onMouseEnter={drawdownHover.handleMouseMove}
-          onMouseDown={drawdownHover.handleMouseMove}
-          onClick={drawdownHover.handleMouseMove}
-          onPointerMove={drawdownHover.handlePointerMove}
-          onPointerDown={drawdownHover.handlePointerDown}
-          onPointerOver={drawdownHover.handlePointerMove}
-          onMouseLeave={drawdownHover.handleMouseLeave}
-          onMouseOut={drawdownHover.handleMouseLeave}
-          onBlur={drawdownHover.handleMouseLeave}
-          onPointerLeave={drawdownHover.handleMouseLeave}
-          onTouchStart={drawdownHover.handleTouchMove}
-          onTouchMove={drawdownHover.handleTouchMove}
-          onTouchEnd={drawdownHover.handleTouchEnd}
-          onTouchCancel={drawdownHover.handleTouchEnd}
+          {...getChartInteractionProps(drawdownHover)}
         >
           <text x="16" y="20" opacity="0">
             Drawdown percentages relative to portfolio peak values
@@ -1249,18 +1214,7 @@ const PortfolioChartComponent = ({
         />
       </div>
     ),
-    [
-      drawdownAreaPath,
-      drawdownLinePath,
-      drawdownZeroLineY,
-      drawdownHover.hoveredPoint,
-      drawdownHover.handleMouseMove,
-      drawdownHover.handlePointerMove,
-      drawdownHover.handlePointerDown,
-      drawdownHover.handleMouseLeave,
-      drawdownHover.handleTouchMove,
-      drawdownHover.handleTouchEnd,
-    ]
+    [drawdownAreaPath, drawdownLinePath, drawdownZeroLineY, drawdownHover]
   );
 
   const renderSharpeChart = useMemo(
@@ -1278,22 +1232,7 @@ const PortfolioChartComponent = ({
           className="w-full h-full"
           data-chart-type="sharpe"
           aria-label={CHART_LABELS.sharpe}
-          onMouseMove={sharpeHover.handleMouseMove}
-          onMouseOver={sharpeHover.handleMouseMove}
-          onMouseEnter={sharpeHover.handleMouseMove}
-          onMouseDown={sharpeHover.handleMouseMove}
-          onClick={sharpeHover.handleMouseMove}
-          onPointerMove={sharpeHover.handlePointerMove}
-          onPointerDown={sharpeHover.handlePointerDown}
-          onPointerOver={sharpeHover.handlePointerMove}
-          onMouseLeave={sharpeHover.handleMouseLeave}
-          onMouseOut={sharpeHover.handleMouseLeave}
-          onBlur={sharpeHover.handleMouseLeave}
-          onPointerLeave={sharpeHover.handleMouseLeave}
-          onTouchStart={sharpeHover.handleTouchMove}
-          onTouchMove={sharpeHover.handleTouchMove}
-          onTouchEnd={sharpeHover.handleTouchEnd}
-          onTouchCancel={sharpeHover.handleTouchEnd}
+          {...getChartInteractionProps(sharpeHover)}
         >
           <text x="16" y="20" opacity="0">
             Rolling Sharpe ratio trend for the portfolio
@@ -1390,16 +1329,7 @@ const PortfolioChartComponent = ({
         />
       </div>
     ),
-    [
-      sharpeData,
-      sharpeHover.hoveredPoint,
-      sharpeHover.handleMouseMove,
-      sharpeHover.handlePointerMove,
-      sharpeHover.handlePointerDown,
-      sharpeHover.handleMouseLeave,
-      sharpeHover.handleTouchMove,
-      sharpeHover.handleTouchEnd,
-    ]
+    [sharpeData, sharpeHover]
   );
 
   const renderVolatilityChart = useMemo(
@@ -1417,22 +1347,7 @@ const PortfolioChartComponent = ({
           className="w-full h-full"
           data-chart-type="volatility"
           aria-label={CHART_LABELS.volatility}
-          onMouseMove={volatilityHover.handleMouseMove}
-          onMouseOver={volatilityHover.handleMouseMove}
-          onMouseEnter={volatilityHover.handleMouseMove}
-          onMouseDown={volatilityHover.handleMouseMove}
-          onClick={volatilityHover.handleMouseMove}
-          onPointerMove={volatilityHover.handlePointerMove}
-          onPointerDown={volatilityHover.handlePointerDown}
-          onPointerOver={volatilityHover.handlePointerMove}
-          onMouseLeave={volatilityHover.handleMouseLeave}
-          onMouseOut={volatilityHover.handleMouseLeave}
-          onBlur={volatilityHover.handleMouseLeave}
-          onPointerLeave={volatilityHover.handleMouseLeave}
-          onTouchStart={volatilityHover.handleTouchMove}
-          onTouchMove={volatilityHover.handleTouchMove}
-          onTouchEnd={volatilityHover.handleTouchEnd}
-          onTouchCancel={volatilityHover.handleTouchEnd}
+          {...getChartInteractionProps(volatilityHover)}
         >
           <text x="16" y="20" opacity="0">
             Rolling volatility expressed as annualized percentage
@@ -1506,16 +1421,7 @@ const PortfolioChartComponent = ({
         />
       </div>
     ),
-    [
-      volatilityData,
-      volatilityHover.hoveredPoint,
-      volatilityHover.handleMouseMove,
-      volatilityHover.handlePointerMove,
-      volatilityHover.handlePointerDown,
-      volatilityHover.handleMouseLeave,
-      volatilityHover.handleTouchMove,
-      volatilityHover.handleTouchEnd,
-    ]
+    [volatilityData, volatilityHover]
   );
 
   const renderUnderwaterChart = useMemo(
@@ -1526,22 +1432,7 @@ const PortfolioChartComponent = ({
           className="w-full h-full"
           data-chart-type="underwater"
           aria-label={CHART_LABELS.underwater}
-          onMouseMove={underwaterHover.handleMouseMove}
-          onMouseOver={underwaterHover.handleMouseMove}
-          onMouseEnter={underwaterHover.handleMouseMove}
-          onMouseDown={underwaterHover.handleMouseMove}
-          onClick={underwaterHover.handleMouseMove}
-          onPointerMove={underwaterHover.handlePointerMove}
-          onPointerDown={underwaterHover.handlePointerDown}
-          onPointerOver={underwaterHover.handlePointerMove}
-          onMouseLeave={underwaterHover.handleMouseLeave}
-          onMouseOut={underwaterHover.handleMouseLeave}
-          onBlur={underwaterHover.handleMouseLeave}
-          onPointerLeave={underwaterHover.handleMouseLeave}
-          onTouchStart={underwaterHover.handleTouchMove}
-          onTouchMove={underwaterHover.handleTouchMove}
-          onTouchEnd={underwaterHover.handleTouchEnd}
-          onTouchCancel={underwaterHover.handleTouchEnd}
+          {...getChartInteractionProps(underwaterHover)}
         >
           <text x="16" y="20" opacity="0">
             Underwater recovery status relative to peak values
@@ -1663,16 +1554,7 @@ const PortfolioChartComponent = ({
         />
       </div>
     ),
-    [
-      underwaterData,
-      underwaterHover.hoveredPoint,
-      underwaterHover.handleMouseMove,
-      underwaterHover.handlePointerMove,
-      underwaterHover.handlePointerDown,
-      underwaterHover.handleMouseLeave,
-      underwaterHover.handleTouchMove,
-      underwaterHover.handleTouchEnd,
-    ]
+    [underwaterData, underwaterHover]
   );
 
   if (normalizedError) {
