@@ -220,6 +220,8 @@ export function Skeleton({
         data-testid={testId}
         role="status"
         aria-label={ariaLabel}
+        data-variant={variant}
+        data-lines={lines}
       >
         {Array.from({ length: lines }).map((_, index) => (
           <motion.div
@@ -263,6 +265,8 @@ export function Skeleton({
         repeat: Infinity,
         ease: "easeInOut",
       }}
+      data-variant={variant}
+      data-lines={lines}
     >
       <span className="sr-only">{ariaLabel}</span>
     </motion.div>
@@ -282,6 +286,37 @@ export function CardSkeleton({
 }) {
   return (
     <div className={`p-6 ${className}`} data-testid={testId}>
+      <Skeleton variant="text" height={24} className="mb-4" width="60%" />
+      <Skeleton variant="text" lines={3} spacing="mb-3" />
+      <div className="flex space-x-4 mt-6">
+        <Skeleton variant="rounded" width={80} height={32} />
+        <Skeleton variant="rounded" width={80} height={32} />
+      </div>
+    </div>
+  );
+}
+
+export function LoadingCard({
+  message,
+  className = "",
+  "data-testid": testId = "loading-card",
+  "aria-label": ariaLabel,
+}: {
+  message?: string;
+  className?: string;
+  "data-testid"?: string;
+  "aria-label"?: string;
+}) {
+  const finalAriaLabel = ariaLabel || message || "Loading content";
+
+  return (
+    <div
+      className={`p-6 ${className}`}
+      data-testid={testId}
+      role="status"
+      aria-label={finalAriaLabel}
+    >
+      {message && <p className="text-sm text-gray-400 mb-4">{message}</p>}
       <Skeleton variant="text" height={24} className="mb-4" width="60%" />
       <Skeleton variant="text" lines={3} spacing="mb-3" />
       <div className="flex space-x-4 mt-6">
@@ -383,13 +418,19 @@ export function ButtonSkeleton({
   );
 }
 
+interface BalanceSkeletonProps {
+  size?: "small" | "default" | "large";
+  className?: string;
+  "data-testid"?: string;
+  "aria-label"?: string;
+}
+
 export function BalanceSkeleton({
   size = "default",
   className = "",
-}: {
-  size?: "small" | "default" | "large";
-  className?: string;
-}) {
+  "data-testid": testId = "balance-skeleton",
+  "aria-label": ariaLabel = "Loading balance",
+}: BalanceSkeletonProps) {
   const heights = {
     small: 24,
     default: 32,
@@ -402,23 +443,27 @@ export function BalanceSkeleton({
       width={128}
       height={heights[size]}
       className={className}
-      data-testid="balance-skeleton"
-      aria-label="Loading balance"
+      data-testid={testId}
+      aria-label={ariaLabel}
     />
   );
+}
+
+interface PieChartSkeletonProps {
+  size?: number;
+  className?: string;
+  "data-testid"?: string;
 }
 
 export function PieChartSkeleton({
   size = 200,
   className = "",
-}: {
-  size?: number;
-  className?: string;
-}) {
+  "data-testid": testId = "pie-chart-skeleton",
+}: PieChartSkeletonProps) {
   return (
     <motion.div
       className={`flex flex-col items-center space-y-4 ${className}`}
-      data-testid="pie-chart-skeleton"
+      data-testid={testId}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
@@ -551,7 +596,7 @@ export function LoadingState({
       );
 
     case "card":
-      return <CardSkeleton className={className} />;
+      return <LoadingCard message={message} className={className} />;
 
     case "skeleton":
       return (
@@ -641,8 +686,30 @@ export function useLoadingComponent(
 // Maintain backwards compatibility
 export const LoadingSpinner = Spinner;
 export const LoadingSkeleton = Skeleton;
-export const UnifiedLoading = Skeleton; // UnifiedLoading maps to Skeleton
+
+export function UnifiedLoading({
+  "data-testid": testId,
+  ...rest
+}: SkeletonProps) {
+  return <Skeleton data-testid={testId ?? "unified-loading"} {...rest} />;
+}
+
 export const LoadingButton = ButtonSkeleton;
-export const LoadingCard = CardSkeleton;
-export const BalanceLoading = BalanceSkeleton; // From UnifiedLoading.tsx
-export const PieChartLoading = PieChartSkeleton; // From UnifiedLoading.tsx
+
+export function BalanceLoading({
+  "data-testid": testId,
+  ...rest
+}: BalanceSkeletonProps) {
+  return (
+    <BalanceSkeleton data-testid={testId ?? "balance-loading"} {...rest} />
+  );
+}
+
+export function PieChartLoading({
+  "data-testid": testId,
+  ...rest
+}: PieChartSkeletonProps) {
+  return (
+    <PieChartSkeleton data-testid={testId ?? "pie-chart-loading"} {...rest} />
+  );
+}
