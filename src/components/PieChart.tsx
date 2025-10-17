@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { memo, useMemo } from "react";
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
+import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 import { formatCurrency } from "../lib/formatters";
 import { PieChartData } from "../types/portfolio";
@@ -29,7 +29,7 @@ const PieChartComponent = ({
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const prefersReducedMotion = useReducedMotion();
-  const { balanceHidden } = useBalanceVisibility();
+  const balanceHidden = useResolvedBalanceVisibility();
 
   // Memoize expensive calculations
   const chartData = useMemo(() => {

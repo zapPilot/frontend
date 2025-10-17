@@ -4,7 +4,7 @@ import React from "react";
 import { ArrowRight } from "lucide-react";
 import { formatCurrency } from "../lib/formatters";
 import type { CategorySummary } from "../utils/portfolio.utils";
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
+import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 
 interface CategoryItemProps {
   category: CategorySummary;
@@ -15,7 +15,7 @@ interface CategoryItemProps {
 
 export const CategoryItem = React.memo(
   ({ category, onCategoryClick, isNavigating, variant }: CategoryItemProps) => {
-    const { balanceHidden } = useBalanceVisibility();
+    const balanceHidden = useResolvedBalanceVisibility();
     const isAssets = variant === "assets";
     const cardClasses = isAssets
       ? "border border-gray-800 rounded-2xl p-4 bg-gray-900/20 transition-all duration-200"
