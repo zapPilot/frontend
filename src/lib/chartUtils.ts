@@ -14,18 +14,6 @@ export interface SVGPathPoint {
 
 type AllocationAssetKey = Exclude<keyof AssetAllocationPoint, "date">;
 
-/**
- * @deprecated Use CHART_COLORS from constants/portfolio.ts
- * Kept for backwards compatibility
- */
-const ALLOCATION_COLOR_MAP: Record<AllocationAssetKey, string> = CHART_COLORS;
-
-/**
- * @deprecated Use ASSET_LABELS from constants/portfolio.ts
- * Kept for backwards compatibility
- */
-const ALLOCATION_LABEL_MAP: Record<AllocationAssetKey, string> = ASSET_LABELS;
-
 const ALLOCATION_BAR_OFFSET = 2;
 const ALLOCATION_BAR_WIDTH = 4;
 
@@ -172,8 +160,8 @@ export const generateAllocationChartData = (
         y,
         width: ALLOCATION_BAR_WIDTH,
         height: segmentHeight,
-        color: ALLOCATION_COLOR_MAP[assetKey],
-        label: ALLOCATION_LABEL_MAP[assetKey],
+        color: CHART_COLORS[assetKey],
+        label: ASSET_LABELS[assetKey],
       } satisfies AllocationChartPoint;
     });
   });

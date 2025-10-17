@@ -40,6 +40,7 @@ import {
   getUnderwaterRecovery,
 } from "../services/analyticsService";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
+import { logger } from "../utils/logger";
 import { ChartIndicator, ChartTooltip } from "./charts";
 import { GlassCard } from "./ui";
 import { ButtonSkeleton, Skeleton } from "./ui/LoadingSystem";
@@ -426,23 +427,26 @@ const PortfolioChartComponent = ({
           allocationLoading)));
 
   if (process.env.NODE_ENV === "test") {
-    // eslint-disable-next-line no-console
-    console.log("PortfolioChart state", {
-      hasPreloadedData,
-      isExternalLoading,
-      normalizedError,
-      isLoadingData,
-      overrides: [
-        portfolioDataOverride?.length ?? 0,
-        allocationDataOverride?.length ?? 0,
-        drawdownDataOverride?.length ?? 0,
-        sharpeDataOverride?.length ?? 0,
-        volatilityDataOverride?.length ?? 0,
-        underwaterDataOverride?.length ?? 0,
-      ],
-      activeTab,
-      selectedChart,
-    });
+    logger.debug(
+      "PortfolioChart state",
+      {
+        hasPreloadedData,
+        isExternalLoading,
+        normalizedError,
+        isLoadingData,
+        overrides: [
+          portfolioDataOverride?.length ?? 0,
+          allocationDataOverride?.length ?? 0,
+          drawdownDataOverride?.length ?? 0,
+          sharpeDataOverride?.length ?? 0,
+          volatilityDataOverride?.length ?? 0,
+          underwaterDataOverride?.length ?? 0,
+        ],
+        activeTab,
+        selectedChart,
+      },
+      "PortfolioChart"
+    );
   }
 
   // Portfolio history with fallback logic

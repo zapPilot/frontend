@@ -14,6 +14,7 @@ import {
   type PointerEvent,
   type TouchEvent,
 } from "react";
+import { logger } from "../utils/logger";
 import type { ChartHoverState } from "../types/chartHover";
 
 /**
@@ -187,12 +188,15 @@ export function useChartHover<T>(
 
         setHoveredPoint(hoverData);
         if (process.env.NODE_ENV === "test") {
-          // eslint-disable-next-line no-console
-          console.log("hover update", {
-            chartType: chartType ?? "unknown",
-            x,
-            y,
-          });
+          logger.debug(
+            "hover update",
+            {
+              chartType: chartType ?? "unknown",
+              x,
+              y,
+            },
+            "ChartHover"
+          );
         }
       };
 
@@ -237,8 +241,7 @@ export function useChartHover<T>(
   const handlePointerDown = useCallback(
     (event: PointerEvent<SVGSVGElement>) => {
       if (process.env.NODE_ENV === "test") {
-        // eslint-disable-next-line no-console
-        console.log("pointer down", chartType ?? "unknown");
+        logger.debug("pointer down", chartType ?? "unknown", "ChartHover");
       }
       updateHoverFromClientX(event.clientX, event.currentTarget);
     },
