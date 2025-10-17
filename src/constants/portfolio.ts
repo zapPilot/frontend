@@ -70,18 +70,6 @@ export const ASSET_CATEGORIES: Record<AssetCategoryKey, AssetCategory> = {
 } as const;
 
 /**
- * Legacy Portfolio Colors (DEPRECATED)
- * @deprecated Use ASSET_CATEGORIES instead for new code
- * Kept for backwards compatibility with existing code
- */
-export const PORTFOLIO_COLORS = {
-  BTC: ASSET_CATEGORIES.btc.brandColor,
-  ETH: ASSET_CATEGORIES.eth.brandColor,
-  STABLECOIN: ASSET_CATEGORIES.stablecoin.brandColor,
-  ALTCOIN: ASSET_CATEGORIES.altcoin.brandColor,
-} as const;
-
-/**
  * Chart-specific color map
  * Optimized colors for data visualization
  */
