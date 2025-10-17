@@ -25,16 +25,11 @@ export interface CurrencyFormatOptions {
   currency?: string;
   /** Locale for formatting (defaults to en-US) */
   locale?: string;
-}
-
-export interface SmallCurrencyOptions {
-  /** Values below this show as "< $threshold" */
+  /** Smart precision mode: shows "< $threshold" for very small values */
+  smartPrecision?: boolean;
+  /** Threshold for smart precision mode (default: 0.01) */
   threshold?: number;
-  /** Decimal places for threshold display */
-  thresholdDecimals?: number;
-  /** Decimal places for normal amounts */
-  normalDecimals?: number;
-  /** Show negative values */
+  /** Show negative values in smart precision mode */
   showNegative?: boolean;
 }
 
@@ -47,6 +42,8 @@ export interface NumberFormatOptions {
   minimumFractionDigits?: number;
   /** Locale for formatting */
   locale?: string;
+  /** Smart precision mode: adjusts decimal places based on value magnitude */
+  smartPrecision?: boolean;
 }
 
 export interface EthFormatOptions {
@@ -76,11 +73,16 @@ export interface AddressFormatOptions {
 
 /**
  * Format currency values with comprehensive options
- * Supports hidden placeholders and international formatting
+ * Supports hidden placeholders, international formatting, and smart precision
  *
  * @param amount - The numerical amount to format
  * @param optionsOrIsHidden - Formatting options object or boolean for isHidden (legacy)
  * @returns Formatted currency string
+ *
+ * @example
+ * formatCurrency(1234.56) // "$1,234.56"
+ * formatCurrency(0.005, { smartPrecision: true }) // "< $0.01"
+ * formatCurrency(1234, { minimumFractionDigits: 0 }) // "$1,234"
  */
 export function formatCurrency(
   amount: number,
@@ -98,10 +100,32 @@ export function formatCurrency(
     maximumFractionDigits = 2,
     currency = PORTFOLIO_CONFIG.CURRENCY_CODE,
     locale = PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+    smartPrecision = false,
+    threshold = 0.01,
+    showNegative = true,
   } = options;
 
   if (isHidden) return PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER;
 
+  // Smart precision mode: handle very small amounts
+  if (smartPrecision) {
+    if (amount === 0) return "$0.00";
+
+    const absValue = Math.abs(amount);
+    const isNegative = amount < 0 && showNegative;
+
+    if (absValue < threshold) {
+      const thresholdDecimals = threshold < 0.01 ? 4 : 2;
+      const formatted = `< $${threshold.toFixed(thresholdDecimals)}`;
+      return isNegative ? `-${formatted}` : formatted;
+    }
+
+    // For values above threshold, use standard formatting
+    const formatted = `$${absValue.toFixed(minimumFractionDigits)}`;
+    return isNegative ? `-${formatted}` : formatted;
+  }
+
+  // Standard Intl.NumberFormat formatting
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
@@ -114,33 +138,29 @@ export function formatCurrency(
  * Format currency with smart handling for very small amounts
  * Shows "< $threshold" for values below threshold
  *
+ * @deprecated Use formatCurrency with { smartPrecision: true } instead
  * @param value - The numerical value to format
  * @param options - Formatting options
  * @returns Formatted currency string
  */
 export function formatSmallCurrency(
   value: number,
-  options: SmallCurrencyOptions = {}
+  options: {
+    threshold?: number;
+    thresholdDecimals?: number;
+    normalDecimals?: number;
+    showNegative?: boolean;
+  } = {}
 ): string {
-  const {
-    threshold = 0.01,
-    thresholdDecimals = 4,
-    normalDecimals = 2,
-    showNegative = true,
-  } = options;
+  const { threshold = 0.01, normalDecimals = 2, showNegative = true } = options;
 
-  if (value === 0) return "$0.00";
-
-  const absValue = Math.abs(value);
-  const isNegative = value < 0 && showNegative;
-
-  if (absValue < threshold) {
-    const formatted = `< $${threshold.toFixed(thresholdDecimals)}`;
-    return isNegative ? `-${formatted}` : formatted;
-  }
-
-  const formatted = `$${absValue.toFixed(normalDecimals)}`;
-  return isNegative ? `-${formatted}` : formatted;
+  return formatCurrency(value, {
+    smartPrecision: true,
+    threshold,
+    minimumFractionDigits: normalDecimals,
+    maximumFractionDigits: normalDecimals,
+    showNegative,
+  });
 }
 
 // =============================================================================
@@ -148,11 +168,16 @@ export function formatSmallCurrency(
 // =============================================================================
 
 /**
- * Format numbers with optional hiding and localization
+ * Format numbers with optional hiding, localization, and smart precision
  *
  * @param amount - The numerical amount to format
  * @param optionsOrIsHidden - Formatting options object or boolean for isHidden (legacy)
  * @returns Formatted number string
+ *
+ * @example
+ * formatNumber(1234.56) // "1,234.56"
+ * formatNumber(0.000005, { smartPrecision: true }) // "< 0.000001"
+ * formatNumber(0.005, { smartPrecision: true }) // "0.005000"
  */
 export function formatNumber(
   amount: number,
@@ -169,10 +194,22 @@ export function formatNumber(
     maximumFractionDigits = 4,
     minimumFractionDigits = 0,
     locale = PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+    smartPrecision = false,
   } = options;
 
   if (isHidden) return PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER;
 
+  // Smart precision mode: adjust decimal places based on value magnitude
+  if (smartPrecision) {
+    if (amount === 0) return "0";
+    if (amount < 0.000001) return "< 0.000001";
+    if (amount < 0.01) return amount.toFixed(6);
+    if (amount < 1) return amount.toFixed(4);
+    if (amount < 100) return amount.toFixed(2);
+    return amount.toFixed(0);
+  }
+
+  // Standard toLocaleString formatting
   return amount.toLocaleString(locale, {
     maximumFractionDigits,
     minimumFractionDigits,
@@ -183,16 +220,12 @@ export function formatNumber(
  * Format small numbers with appropriate precision
  * Handles very small values with appropriate decimal places
  *
+ * @deprecated Use formatNumber with { smartPrecision: true } instead
  * @param num - The number to format
  * @returns Formatted number string
  */
 export function formatSmallNumber(num: number): string {
-  if (num === 0) return "0";
-  if (num < 0.000001) return "< 0.000001";
-  if (num < 0.01) return num.toFixed(6);
-  if (num < 1) return num.toFixed(4);
-  if (num < 100) return num.toFixed(2);
-  return num.toFixed(0);
+  return formatNumber(num, { smartPrecision: true });
 }
 
 // =============================================================================
@@ -403,14 +436,14 @@ export function formatChartDate(date: string | Date): string {
  */
 export const formatters = {
   /** Format currency values - rounded to dollars */
-  currency: (value: number) => formatCurrency(Math.round(value)),
-
-  /** Format currency with precise decimals */
-  currencyPrecise: (value: number) =>
-    formatCurrency(value, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+  currency: (value: number) =>
+    formatCurrency(Math.round(value), {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }),
+
+  /** Format currency with precise decimals (alias to formatCurrency) */
+  currencyPrecise: formatCurrency,
 
   /** Format percentage values */
   percent: (value: number, decimals = 1) => `${value.toFixed(decimals)}%`,
