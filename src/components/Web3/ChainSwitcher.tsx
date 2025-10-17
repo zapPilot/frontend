@@ -14,13 +14,14 @@ import {
 import { getThirdWebChains } from "@/config/chains";
 import { chainLogger } from "@/utils/logger";
 import { Z_INDEX } from "@/constants/design-system";
+import type { ButtonVariant } from "@/types/ui.types";
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 
 interface ChainSwitcherProps {
   className?: string;
   disabled?: boolean;
-  variant?: "primary" | "secondary";
+  variant?: Extract<ButtonVariant, "primary" | "secondary">;
 }
 
 export const ChainSwitcher = memo(function ChainSwitcher({
