@@ -12,23 +12,23 @@
  * - getAllocationTimeseries (HTTP)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  getPortfolioTrends,
+  getAllocationTimeseries,
+  getEnhancedDrawdown,
   getLandingPagePortfolioData,
+  getPortfolioTrends,
   getRiskSummary,
   getRollingSharpe,
   getRollingVolatility,
-  getEnhancedDrawdown,
   getUnderwaterRecovery,
-  getAllocationTimeseries,
-  type PortfolioTrendsResponse,
+  type AllocationTimeseriesResponse,
+  type EnhancedDrawdownResponse,
   type LandingPageResponse,
+  type PortfolioTrendsResponse,
   type RollingSharpeResponse,
   type RollingVolatilityResponse,
-  type EnhancedDrawdownResponse,
   type UnderwaterRecoveryResponse,
-  type AllocationTimeseriesResponse,
 } from "../../../src/services/analyticsService";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
 
@@ -65,19 +65,6 @@ describe("analyticsService", () => {
             end_date: "2025-02-07",
             days: 30,
           },
-          trend_data: [
-            {
-              id: "trend-1",
-              user_id: testUserId,
-              wallet_address: "0xWallet1",
-              chain: "ethereum",
-              protocol: "aave",
-              net_value_usd: 1000,
-              pnl_usd: 50,
-              date: "2025-01-08",
-              created_at: "2025-01-08T00:00:00Z",
-            },
-          ],
           daily_totals: [
             {
               date: "2025-01-08",
@@ -105,7 +92,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -118,7 +105,6 @@ describe("analyticsService", () => {
             end_date: "2025-02-07",
             days: 60,
           },
-          trend_data: [],
           daily_totals: [],
           summary: {
             total_change_usd: 0,
@@ -131,7 +117,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 60);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=60&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=60`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -144,7 +130,7 @@ describe("analyticsService", () => {
             end_date: "2025-02-07",
             days: 30,
           },
-          trend_data: [],
+
           daily_totals: [],
           summary: {
             total_change_usd: 0,
@@ -157,7 +143,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 30, 200);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=200`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -170,7 +156,7 @@ describe("analyticsService", () => {
             end_date: "2025-02-07",
             days: 90,
           },
-          trend_data: [],
+
           daily_totals: [],
           summary: {
             total_change_usd: 0,
@@ -183,7 +169,7 @@ describe("analyticsService", () => {
         const result = await getPortfolioTrends(testUserId, 90, 500);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=90&limit=500`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=90`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -194,7 +180,7 @@ describe("analyticsService", () => {
         mockAnalyticsEngineGet.mockResolvedValue({
           user_id: testUserId,
           period: { start_date: "", end_date: "", days: 1 },
-          trend_data: [],
+
           daily_totals: [],
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
@@ -202,7 +188,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 1);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=1&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=1`
         );
       });
 
@@ -210,7 +196,7 @@ describe("analyticsService", () => {
         mockAnalyticsEngineGet.mockResolvedValue({
           user_id: testUserId,
           period: { start_date: "", end_date: "", days: 30 },
-          trend_data: [],
+
           daily_totals: [],
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
@@ -218,7 +204,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 30, 1);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30&limit=1`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
         );
       });
 
@@ -226,7 +212,7 @@ describe("analyticsService", () => {
         mockAnalyticsEngineGet.mockResolvedValue({
           user_id: testUserId,
           period: { start_date: "", end_date: "", days: 0 },
-          trend_data: [],
+
           daily_totals: [],
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
@@ -234,7 +220,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(testUserId, 0);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=0&limit=100`
+          `/api/v1/portfolio/trends/by-user/${testUserId}?days=0`
         );
       });
     });
@@ -245,7 +231,7 @@ describe("analyticsService", () => {
         mockAnalyticsEngineGet.mockResolvedValue({
           user_id: specialUserId,
           period: { start_date: "", end_date: "", days: 30 },
-          trend_data: [],
+
           daily_totals: [],
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
@@ -253,7 +239,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends(specialUserId);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${specialUserId}?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/${specialUserId}?days=30`
         );
       });
 
@@ -261,7 +247,7 @@ describe("analyticsService", () => {
         mockAnalyticsEngineGet.mockResolvedValue({
           user_id: "",
           period: { start_date: "", end_date: "", days: 30 },
-          trend_data: [],
+
           daily_totals: [],
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
@@ -269,7 +255,7 @@ describe("analyticsService", () => {
         await getPortfolioTrends("");
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/?days=30&limit=100`
+          `/api/v1/portfolio/trends/by-user/?days=30`
         );
       });
     });
@@ -283,19 +269,6 @@ describe("analyticsService", () => {
             end_date: "2025-01-30",
             days: 30,
           },
-          trend_data: [
-            {
-              id: "1",
-              user_id: testUserId,
-              wallet_address: "0xABC",
-              chain: "ethereum",
-              protocol: "compound",
-              net_value_usd: 5000,
-              pnl_usd: 200,
-              date: "2025-01-15",
-              created_at: "2025-01-15T12:00:00Z",
-            },
-          ],
           daily_totals: [
             {
               date: "2025-01-15",

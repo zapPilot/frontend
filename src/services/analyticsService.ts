@@ -200,7 +200,6 @@ export interface PortfolioTrendsResponse {
     end_date: string;
     days: number;
   };
-  trend_data: PortfolioTrend[];
   daily_totals: PortfolioDailyTotal[];
   summary: {
     total_change_usd: number;

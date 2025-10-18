@@ -690,7 +690,7 @@ describe("intentService", () => {
       );
 
       expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
-        "/intents/history?wallet=0x1234567890123456789012345678901234567890&limit=50&offset=0"
+        "/intents/history?wallet=0x1234567890123456789012345678901234567890&offset=0"
       );
       expect(result).toEqual(mockHistory);
       expect(result.intents).toHaveLength(2);
@@ -708,7 +708,7 @@ describe("intentService", () => {
       await getUserIntentHistory("0xWalletAddress", 20, 40);
 
       expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
-        "/intents/history?wallet=0xWalletAddress&limit=20&offset=40"
+        "/intents/history?wallet=0xWalletAddress&offset=40"
       );
     });
 
