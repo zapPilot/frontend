@@ -14,18 +14,17 @@ import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 import { PieChartLoading } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
+import { BaseComponentProps } from "../types/ui.types";
 
 type TabType = "assets" | "borrowing";
 
-export interface PortfolioOverviewProps {
+export interface PortfolioOverviewProps extends BaseComponentProps {
   portfolioState: PortfolioState;
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
   renderBalanceDisplay?: () => React.ReactNode;
   title?: string;
-  className?: string;
-  testId?: string;
   onRetry?: () => void;
   onCategoryClick?: (categoryId: string) => void;
 }

@@ -1,13 +1,13 @@
 import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
+import { BaseComponentProps } from "../../types/ui.types";
 
-interface ImageWithFallbackProps {
+interface ImageWithFallbackProps extends BaseComponentProps {
   src: string;
   alt: string;
   fallbackType: "token" | "chain" | "project";
   size?: number;
-  className?: string;
   symbol?: string;
 }
 
