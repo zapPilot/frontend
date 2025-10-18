@@ -3,6 +3,8 @@
  * Centralizes 15+ hardcoded magic numbers with documentation
  */
 
+import { logger } from "../utils/logger";
+
 /**
  * Standard chart dimensions used across all chart components
  */
@@ -94,9 +96,10 @@ export const clampToScale = (
 ) => {
   const clamped = Math.max(scale.MIN, Math.min(scale.MAX, value));
   if (clamped !== value && process.env.NODE_ENV === "development") {
-    // eslint-disable-next-line no-console
-    console.warn(
-      `Chart value ${value} clamped to [${scale.MIN}, ${scale.MAX}]`
+    logger.warn(
+      `Chart value ${value} clamped to [${scale.MIN}, ${scale.MAX}]`,
+      undefined,
+      "ChartScales"
     );
   }
   return clamped;

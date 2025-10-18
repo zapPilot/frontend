@@ -120,7 +120,7 @@ export interface PoolDetail {
  * Categorize pool details by asset type based on symbols
  */
 import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
-import { PORTFOLIO_COLORS } from "@/constants/portfolio";
+import { ASSET_CATEGORIES } from "@/constants/portfolio";
 
 export function categorizePool(
   poolSymbols: string[]
@@ -170,10 +170,13 @@ export function createCategorySummaries(
   const categories: CategorySummary[] = [];
 
   const categoryInfo = {
-    btc: { name: "Bitcoin", color: PORTFOLIO_COLORS.BTC },
-    eth: { name: "Ethereum", color: PORTFOLIO_COLORS.ETH },
-    stablecoins: { name: "Stablecoins", color: PORTFOLIO_COLORS.STABLECOIN },
-    others: { name: "Others", color: PORTFOLIO_COLORS.ALTCOIN },
+    btc: { name: "Bitcoin", color: ASSET_CATEGORIES.btc.brandColor },
+    eth: { name: "Ethereum", color: ASSET_CATEGORIES.eth.brandColor },
+    stablecoins: {
+      name: "Stablecoins",
+      color: ASSET_CATEGORIES.stablecoin.brandColor,
+    },
+    others: { name: "Others", color: ASSET_CATEGORIES.altcoin.brandColor },
   };
 
   Object.entries(categoryGroups).forEach(([categoryId, pools]) => {
@@ -243,10 +246,13 @@ export function createCategoriesFromApiData(
   }
 
   const categoryInfo = {
-    btc: { name: "Bitcoin", color: PORTFOLIO_COLORS.BTC },
-    eth: { name: "Ethereum", color: PORTFOLIO_COLORS.ETH },
-    stablecoins: { name: "Stablecoins", color: PORTFOLIO_COLORS.STABLECOIN },
-    others: { name: "Others", color: PORTFOLIO_COLORS.ALTCOIN },
+    btc: { name: "Bitcoin", color: ASSET_CATEGORIES.btc.brandColor },
+    eth: { name: "Ethereum", color: ASSET_CATEGORIES.eth.brandColor },
+    stablecoins: {
+      name: "Stablecoins",
+      color: ASSET_CATEGORIES.stablecoin.brandColor,
+    },
+    others: { name: "Others", color: ASSET_CATEGORIES.altcoin.brandColor },
   };
 
   return Object.entries(categoryData)

@@ -1,14 +1,14 @@
 import React from "react";
+import { BaseComponentProps } from "../../types/ui.types";
 import { ImageWithFallback } from "./ImageWithFallback";
 
-interface TokenImageProps {
+interface TokenImageProps extends BaseComponentProps {
   token: {
     symbol?: string;
     optimized_symbol?: string;
     logo_url?: string;
   };
   size?: number;
-  className?: string;
 }
 
 const ZAP_ASSET_WORKER_BASE_URL =

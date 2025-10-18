@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { logger } from "../../utils/logger";
 import { BundlePageClient } from "./BundlePageClient";
 
 export function BundlePageEntry() {
@@ -12,8 +13,7 @@ export function BundlePageEntry() {
       userId = searchParams.get("userId") ?? "";
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {
-        // eslint-disable-next-line no-console
-        console.error("[BundlePageEntry] Failed to read search params", error);
+        logger.error("Failed to read search params", error, "BundlePageEntry");
       }
     }
   }

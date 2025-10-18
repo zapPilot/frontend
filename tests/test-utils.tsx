@@ -100,3 +100,20 @@ export * from "@testing-library/react";
 
 // Override the default render and renderHook methods
 export { customRender as render, customRenderHook as renderHook };
+
+// =============================================================================
+// MOCK UTILITIES
+// =============================================================================
+
+/**
+ * Centralized formatter mocks.
+ * Import and use in test files to avoid duplication.
+ *
+ * @example
+ * ```typescript
+ * import { mockFormatters } from 'tests/test-utils';
+ *
+ * vi.mock('@/lib/formatters', () => mockFormatters);
+ * ```
+ */
+export { mockFormatters, resetFormatterMocks } from "./mocks/formatters";

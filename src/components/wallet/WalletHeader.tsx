@@ -1,6 +1,7 @@
 import { Check, Copy, DollarSign, Eye, EyeOff, Wallet } from "lucide-react";
 import React, { useState } from "react";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
+import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { useToast } from "../../hooks/useToast";
 import { GRADIENTS } from "../../constants/design-system";
 
@@ -22,9 +23,8 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
     bundleUserName,
     bundleUrl,
   }) => {
-    const { balanceHidden: ctxHidden, toggleBalanceVisibility } =
-      useBalanceVisibility();
-    const resolvedHidden = balanceHidden ?? ctxHidden;
+    const { toggleBalanceVisibility } = useBalanceVisibility();
+    const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
     const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
 
     // Copy link functionality

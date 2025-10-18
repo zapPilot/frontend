@@ -1,11 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
+import type {
+  ComponentSize,
+  SpinnerVariant,
+  SkeletonVariant,
+} from "@/types/ui.types";
 
 // =============================================================================
 // TYPES & INTERFACES
 // =============================================================================
 
-export type LoadingSize = "xs" | "sm" | "md" | "lg" | "xl";
 export type LoadingColor =
   | "primary"
   | "secondary"
@@ -17,9 +21,6 @@ export type LoadingColor =
   | "green"
   | "red";
 
-export type SpinnerVariant = "default" | "dots" | "pulse";
-export type SkeletonVariant = "text" | "circular" | "rectangular" | "rounded";
-
 export interface BaseLoadingProps {
   className?: string;
   "aria-label"?: string;
@@ -28,7 +29,7 @@ export interface BaseLoadingProps {
 }
 
 export interface SpinnerProps extends BaseLoadingProps {
-  size?: LoadingSize;
+  size?: ComponentSize;
   color?: LoadingColor;
   variant?: SpinnerVariant;
   label?: string;
@@ -53,7 +54,7 @@ export interface LoadingWrapperProps {
 // CONSTANTS & STYLES
 // =============================================================================
 
-const sizeClasses: Record<LoadingSize, string> = {
+const sizeClasses: Record<ComponentSize, string> = {
   xs: "w-3 h-3",
   sm: "w-4 h-4",
   md: "w-6 h-6",
@@ -569,7 +570,7 @@ export function AssetCategorySkeleton({
 
 interface LoadingStateProps {
   variant?: "spinner" | "card" | "skeleton" | "inline";
-  size?: LoadingSize;
+  size?: ComponentSize;
   message?: string;
   className?: string;
   skeletonType?: "card" | "metrics" | "chart" | "text";

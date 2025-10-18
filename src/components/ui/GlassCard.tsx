@@ -2,14 +2,13 @@
 
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
+import { BaseComponentProps } from "../../types/ui.types";
 
 type AriaLive = "off" | "polite" | "assertive";
 
-interface GlassCardProps {
+interface GlassCardProps extends BaseComponentProps {
   children: ReactNode;
-  className?: string;
   animate?: boolean;
-  testId?: string;
   role?: string;
   ariaLive?: AriaLive;
 }

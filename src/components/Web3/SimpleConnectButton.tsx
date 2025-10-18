@@ -8,6 +8,7 @@ import { createWallet, Wallet } from "thirdweb/wallets";
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 import { formatAddress } from "@/lib/formatters";
+import type { StandardSize } from "@/types/ui.types";
 
 const WALLETS = [
   createWallet("com.ambire"),
@@ -55,7 +56,7 @@ const DetailsButton = memo(function DetailsButton({
 
 interface SimpleConnectButtonProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: StandardSize;
 }
 
 export function SimpleConnectButton({
