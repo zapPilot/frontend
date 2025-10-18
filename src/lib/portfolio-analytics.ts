@@ -8,21 +8,21 @@
  */
 
 import {
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Target,
-  Shield,
-  Clock,
   Activity,
+  BarChart3,
+  Clock,
   PieChart,
+  Shield,
+  Target,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 
 import type {
-  PortfolioDataPoint,
-  ChartPeriod,
   AnalyticsMetric,
+  ChartPeriod,
   PerformancePeriod,
+  PortfolioDataPoint,
 } from "../types/portfolio";
 import type { ActualRiskSummaryResponse } from "../types/risk";
 import { getVolatilityLevel } from "../utils/risk";

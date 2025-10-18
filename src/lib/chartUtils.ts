@@ -3,7 +3,6 @@ import {
   ASSET_LABELS,
   CHART_COLORS,
 } from "../constants/portfolio";
-import { CHART_DIMENSIONS } from "../constants/chartScales";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { portfolioStateUtils } from "../utils/portfolio.utils";
 
@@ -165,36 +164,4 @@ export const generateAllocationChartData = (
       } satisfies AllocationChartPoint;
     });
   });
-};
-
-/**
- * Generate scaled SVG path for line charts
- * Consolidates duplicate path generation logic across chart types
- * @param data - Array of data points
- * @param getValue - Function to extract value from point
- * @param minValue - Minimum value for scaling
- * @param maxValue - Maximum value for scaling
- * @param width - Chart width (default: from CHART_DIMENSIONS)
- * @param height - Chart height (default: from CHART_DIMENSIONS)
- * @returns SVG path string
- */
-export const generateScaledPath = <T>(
-  data: T[],
-  getValue: (point: T) => number,
-  minValue: number,
-  maxValue: number,
-  width = CHART_DIMENSIONS.WIDTH,
-  height = CHART_DIMENSIONS.HEIGHT
-): string => {
-  if (data.length === 0) return "";
-
-  const range = maxValue - minValue;
-  return data
-    .map((point, index) => {
-      const x = (index / Math.max(data.length - 1, 1)) * width;
-      const normalized = (getValue(point) - minValue) / range;
-      const y = height - normalized * height;
-      return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-    })
-    .join(" ");
 };
