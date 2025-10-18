@@ -75,8 +75,15 @@ describe("ChartTooltip", () => {
     );
 
     const tooltip = screen.getByRole("tooltip") as HTMLDivElement;
-    expect(parseFloat(tooltip.style.left)).toBeLessThanOrEqual(60);
-    expect(parseFloat(tooltip.style.top)).toBeGreaterThanOrEqual(34);
+    const left = parseFloat(tooltip.style.left);
+    const top = parseFloat(tooltip.style.top);
+
+    expect(left).toBeGreaterThanOrEqual(700);
+    expect(left).toBeLessThanOrEqual(788);
+    expect(tooltip.style.transform).toContain("-100%");
+
+    expect(top).toBeGreaterThanOrEqual(55);
+    expect(top).toBeLessThanOrEqual(80);
     expect(screen.getByText(/High volatility warning/i)).toBeInTheDocument();
   });
 });
