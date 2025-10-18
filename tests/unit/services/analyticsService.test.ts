@@ -140,7 +140,7 @@ describe("analyticsService", () => {
 
         mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
 
-        const result = await getPortfolioTrends(testUserId, 30, 200);
+        const result = await getPortfolioTrends(testUserId, 30);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
           `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
@@ -166,7 +166,7 @@ describe("analyticsService", () => {
 
         mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
 
-        const result = await getPortfolioTrends(testUserId, 90, 500);
+        const result = await getPortfolioTrends(testUserId, 90);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
           `/api/v1/portfolio/trends/by-user/${testUserId}?days=90`
@@ -201,7 +201,7 @@ describe("analyticsService", () => {
           summary: { total_change_usd: 0, total_change_percentage: 0 },
         });
 
-        await getPortfolioTrends(testUserId, 30, 1);
+        await getPortfolioTrends(testUserId, 30);
 
         expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
           `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`

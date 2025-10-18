@@ -229,12 +229,10 @@ export interface PortfolioDailyTotal {
  */
 export const getPortfolioTrends = async (
   userId: string,
-  days: number = 30,
-  limit: number = 100
+  days: number = 30
 ): Promise<PortfolioTrendsResponse> => {
   const params = new URLSearchParams({
     days: days.toString(),
-    limit: limit.toString(),
   });
   return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
     `/api/v1/portfolio/trends/by-user/${userId}?${params}`

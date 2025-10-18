@@ -705,7 +705,7 @@ describe("intentService", () => {
 
       (httpUtils.intentEngine.get as Mock).mockResolvedValue(mockHistory);
 
-      await getUserIntentHistory("0xWalletAddress", 20, 40);
+      await getUserIntentHistory("0xWalletAddress", 40);
 
       expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
         "/intents/history?wallet=0xWalletAddress&offset=40"
@@ -719,11 +719,10 @@ describe("intentService", () => {
         hasMore: false,
       });
 
-      await getUserIntentHistory("0xABC", 10, 5);
+      await getUserIntentHistory("0xABC", 5);
 
       const callUrl = (httpUtils.intentEngine.get as Mock).mock.calls[0][0];
       expect(callUrl).toContain("wallet=0xABC");
-      expect(callUrl).toContain("limit=10");
       expect(callUrl).toContain("offset=5");
     });
 
@@ -1247,23 +1246,23 @@ describe("intentService", () => {
         hasMore: false,
       });
 
-      await getUserIntentHistory("0xWallet", 50, 0);
+      await getUserIntentHistory("0xWallet", 0);
 
       const callUrl = (httpUtils.intentEngine.get as Mock).mock.calls[0][0];
       expect(callUrl).toContain("offset=0");
     });
 
-    it("should handle large limit in pagination", async () => {
+    it("should handle large offset in pagination", async () => {
       (httpUtils.intentEngine.get as Mock).mockResolvedValue({
         intents: [],
         total: 0,
         hasMore: false,
       });
 
-      await getUserIntentHistory("0xWallet", 1000, 0);
+      await getUserIntentHistory("0xWallet", 1000);
 
       const callUrl = (httpUtils.intentEngine.get as Mock).mock.calls[0][0];
-      expect(callUrl).toContain("limit=1000");
+      expect(callUrl).toContain("offset=1000");
     });
   });
 });
