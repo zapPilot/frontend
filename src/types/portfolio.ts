@@ -56,6 +56,14 @@ export interface PortfolioDataPoint {
     chain: string;
     value: number;
     pnl: number;
+    sourceType?: "defi" | "wallet" | string;
+    category?: string;
+  }>;
+  categories?: Array<{
+    category: string;
+    sourceType?: "defi" | "wallet" | string;
+    value: number;
+    pnl: number;
   }>;
   chainsCount?: number;
 }

@@ -214,6 +214,15 @@ export interface PortfolioDailyProtocol {
   chain: string | null;
   value_usd: number;
   pnl_usd: number;
+  source_type: string | null;
+  category: string | null;
+}
+
+export interface PortfolioDailyCategory {
+  category: string | null;
+  source_type: string | null;
+  value_usd: number;
+  pnl_usd: number;
 }
 
 export interface PortfolioDailyTotal {
@@ -221,6 +230,7 @@ export interface PortfolioDailyTotal {
   total_value_usd: number;
   change_percentage: number;
   protocols: PortfolioDailyProtocol[];
+  categories?: PortfolioDailyCategory[];
   chains_count: number;
 }
 

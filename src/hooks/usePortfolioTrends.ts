@@ -44,6 +44,24 @@ function transformPortfolioTrends(
           value:
             typeof protocol?.value_usd === "number" ? protocol.value_usd : 0,
           pnl: typeof protocol?.pnl_usd === "number" ? protocol.pnl_usd : 0,
+          ...(typeof protocol?.source_type === "string"
+            ? { sourceType: protocol.source_type.toLowerCase() }
+            : {}),
+          ...(typeof protocol?.category === "string" && protocol.category
+            ? { category: protocol.category }
+            : {}),
+        }))
+      : [];
+
+    const categories = Array.isArray(dailyTotal.categories)
+      ? dailyTotal.categories.map(category => ({
+          category: category?.category ?? "",
+          value:
+            typeof category?.value_usd === "number" ? category.value_usd : 0,
+          pnl: typeof category?.pnl_usd === "number" ? category.pnl_usd : 0,
+          ...(typeof category?.source_type === "string"
+            ? { sourceType: category.source_type.toLowerCase() }
+            : {}),
         }))
       : [];
 
@@ -53,6 +71,7 @@ function transformPortfolioTrends(
       change: changePercentage,
       benchmark: totalValue * 0.95,
       protocols,
+      categories,
     };
 
     if (typeof dailyTotal.chains_count === "number") {
