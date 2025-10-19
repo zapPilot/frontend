@@ -410,10 +410,10 @@ export interface UnderwaterRecoveryResponse {
 // Phase 2 Analytics - Allocation Timeseries Response
 export interface AllocationTimeseriesPoint {
   date: string;
-  protocol: string;
-  chain: string;
-  net_value_usd: number;
-  percentage_of_portfolio: number;
+  category: string; // Asset category: "btc", "eth", "stable", "altcoin"
+  category_value_usd: number;
+  total_portfolio_value_usd: number;
+  allocation_percentage: number;
 }
 
 export interface AllocationTimeseriesResponse {

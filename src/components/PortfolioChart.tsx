@@ -51,8 +51,11 @@ interface AllocationTimeseriesInputPoint {
   protocol?: string;
   percentage?: number;
   percentage_of_portfolio?: number;
+  allocation_percentage?: number;
   category_value?: number;
+  category_value_usd?: number;
   total_value?: number;
+  total_portfolio_value_usd?: number;
 }
 
 type DrawdownOverridePoint = {
@@ -239,11 +242,18 @@ export function buildAllocationHistory(
         .toLowerCase();
 
       const percentageValue = Number(
-        point.percentage_of_portfolio ?? point.percentage ?? 0
+        point.allocation_percentage ??
+          point.percentage_of_portfolio ??
+          point.percentage ??
+          0
       );
 
-      const categoryValue = Number(point.category_value ?? 0);
-      const totalValue = Number(point.total_value ?? 0);
+      const categoryValue = Number(
+        point.category_value_usd ?? point.category_value ?? 0
+      );
+      const totalValue = Number(
+        point.total_portfolio_value_usd ?? point.total_value ?? 0
+      );
 
       const computedShare =
         !Number.isNaN(percentageValue) && percentageValue !== 0
@@ -622,85 +632,91 @@ const PortfolioChartComponent = ({
   }, [stackedPortfolioData, portfolioHistory]);
 
   // Generate stacked area paths for DeFi and Wallet visualization
-  const { defiAreaPath, walletAreaPath, defiLinePath, totalPath } = useMemo(() => {
-    if (stackedPortfolioData.length === 0) {
-      return { defiAreaPath: "", walletAreaPath: "", defiLinePath: "", totalPath: "" };
-    }
+  const { defiAreaPath, walletAreaPath, defiLinePath, totalPath } =
+    useMemo(() => {
+      if (stackedPortfolioData.length === 0) {
+        return {
+          defiAreaPath: "",
+          walletAreaPath: "",
+          defiLinePath: "",
+          totalPath: "",
+        };
+      }
 
-    const totals = stackedPortfolioData.map(getStackedTotalValue);
-    const minStackedValue = Math.min(...totals);
-    const maxStackedValue = Math.max(...totals);
-    const valueRange = Math.max(maxStackedValue - minStackedValue, 1);
+      const totals = stackedPortfolioData.map(getStackedTotalValue);
+      const minStackedValue = Math.min(...totals);
+      const maxStackedValue = Math.max(...totals);
+      const valueRange = Math.max(maxStackedValue - minStackedValue, 1);
 
-    // DeFi area: from baseline (bottom of chart) to defiValue
-    const defiPath = generateAreaPath(
-      stackedPortfolioData,
-      p => (p as PortfolioStackedDataPoint).defiValue,
-      CHART_WIDTH,
-      CHART_HEIGHT,
-      CHART_PADDING
-    );
+      // DeFi area: from baseline (bottom of chart) to defiValue
+      const defiPath = generateAreaPath(
+        stackedPortfolioData,
+        p => (p as PortfolioStackedDataPoint).defiValue,
+        CHART_WIDTH,
+        CHART_HEIGHT,
+        CHART_PADDING
+      );
 
-    const walletSegments = stackedPortfolioData.map((point, index) => {
-      const x =
-        stackedPortfolioData.length <= 1
-          ? CHART_WIDTH / 2
-          : (index / (stackedPortfolioData.length - 1)) * CHART_WIDTH;
+      const walletSegments = stackedPortfolioData.map((point, index) => {
+        const x =
+          stackedPortfolioData.length <= 1
+            ? CHART_WIDTH / 2
+            : (index / (stackedPortfolioData.length - 1)) * CHART_WIDTH;
 
-      const defiBoundary = Math.max(point.defiValue, 0);
-      const totalValue = getStackedTotalValue(point);
+        const defiBoundary = Math.max(point.defiValue, 0);
+        const totalValue = getStackedTotalValue(point);
 
-      const defiY =
-        CHART_HEIGHT -
-        CHART_PADDING -
-        ((defiBoundary - minStackedValue) / valueRange) *
-          (CHART_HEIGHT - 2 * CHART_PADDING);
+        const defiY =
+          CHART_HEIGHT -
+          CHART_PADDING -
+          ((defiBoundary - minStackedValue) / valueRange) *
+            (CHART_HEIGHT - 2 * CHART_PADDING);
 
-      const totalY =
-        CHART_HEIGHT -
-        CHART_PADDING -
-        ((totalValue - minStackedValue) / valueRange) *
-          (CHART_HEIGHT - 2 * CHART_PADDING);
+        const totalY =
+          CHART_HEIGHT -
+          CHART_PADDING -
+          ((totalValue - minStackedValue) / valueRange) *
+            (CHART_HEIGHT - 2 * CHART_PADDING);
 
-      return { x, defiY, totalY };
-    });
+        return { x, defiY, totalY };
+      });
 
-    const forwardPath = walletSegments
-      .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.totalY}`)
-      .join(" ");
+      const forwardPath = walletSegments
+        .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.totalY}`)
+        .join(" ");
 
-    const reversePath = walletSegments
-      .slice()
-      .reverse()
-      .map(seg => `L ${seg.x} ${seg.defiY}`)
-      .join(" ");
+      const reversePath = walletSegments
+        .slice()
+        .reverse()
+        .map(seg => `L ${seg.x} ${seg.defiY}`)
+        .join(" ");
 
-    const walletPath = walletSegments.length
-      ? `${forwardPath} ${reversePath} Z`
-      : "";
+      const walletPath = walletSegments.length
+        ? `${forwardPath} ${reversePath} Z`
+        : "";
 
-    // Generate boundary line between DeFi and Wallet regions
-    const defiLine = walletSegments.length
-      ? walletSegments
-          .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.defiY}`)
-          .join(" ")
-      : "";
+      // Generate boundary line between DeFi and Wallet regions
+      const defiLine = walletSegments.length
+        ? walletSegments
+            .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.defiY}`)
+            .join(" ")
+        : "";
 
-    const totalOutline = generateSVGPath(
-      stackedPortfolioData,
-      p => getStackedTotalValue(p as PortfolioStackedDataPoint),
-      CHART_WIDTH,
-      CHART_HEIGHT,
-      CHART_PADDING
-    );
+      const totalOutline = generateSVGPath(
+        stackedPortfolioData,
+        p => getStackedTotalValue(p as PortfolioStackedDataPoint),
+        CHART_WIDTH,
+        CHART_HEIGHT,
+        CHART_PADDING
+      );
 
-    return {
-      defiAreaPath: defiPath,
-      walletAreaPath: walletPath,
-      defiLinePath: defiLine,
-      totalPath: totalOutline,
-    };
-  }, [stackedPortfolioData]);
+      return {
+        defiAreaPath: defiPath,
+        walletAreaPath: walletPath,
+        defiLinePath: defiLine,
+        totalPath: totalOutline,
+      };
+    }, [stackedPortfolioData]);
 
   const drawdownData = useMemo(() => {
     if (drawdownDataOverride?.length) {
