@@ -2,7 +2,7 @@
 import { Z_INDEX } from "@/constants/design-system";
 
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
 // APR data point interface

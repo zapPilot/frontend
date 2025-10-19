@@ -13,6 +13,14 @@ interface BaseHoverData {
   x: number;
   /** Y coordinate in SVG space */
   y: number;
+  /** Rendered width of the chart container in pixels */
+  containerWidth?: number;
+  /** Rendered height of the chart container in pixels */
+  containerHeight?: number;
+  /** Hover position on screen (relative to container) */
+  screenX?: number;
+  /** Hover vertical position on screen (relative to container) */
+  screenY?: number;
   /** ISO date string of the data point */
   date: string;
   /** Chart type discriminator */
@@ -29,6 +37,10 @@ export interface PerformanceHoverData extends BaseHoverData {
   value: number;
   /** Benchmark value in USD */
   benchmark: number;
+  /** DeFi portion of the portfolio value in USD */
+  defiValue?: number;
+  /** Wallet portion of the portfolio value in USD */
+  walletValue?: number;
 }
 
 /**

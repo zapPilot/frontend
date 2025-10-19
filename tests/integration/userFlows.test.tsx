@@ -145,7 +145,10 @@ describe("User Flows - Integration Tests", () => {
 
         await waitFor(() => {
           const line = container.querySelector('line[stroke="#8b5cf6"]');
-          expect(line?.getAttribute("x1")).toBe("100");
+          expect(line).not.toBeNull();
+          const x = Number(line?.getAttribute("x1"));
+          expect(Number.isFinite(x)).toBe(true);
+          expect(Math.abs(x - 100)).toBeLessThanOrEqual(20);
         });
 
         // End of period
@@ -156,7 +159,10 @@ describe("User Flows - Integration Tests", () => {
 
         await waitFor(() => {
           const line = container.querySelector('line[stroke="#8b5cf6"]');
-          expect(line?.getAttribute("x1")).toBe("700");
+          expect(line).not.toBeNull();
+          const x = Number(line?.getAttribute("x1"));
+          expect(Number.isFinite(x)).toBe(true);
+          expect(Math.abs(x - 700)).toBeLessThanOrEqual(20);
         });
       }
     });
@@ -413,7 +419,10 @@ describe("User Flows - Integration Tests", () => {
 
         await waitFor(() => {
           const line = container.querySelector('line[stroke="#8b5cf6"]');
-          expect(line?.getAttribute("x1")).toBe("600");
+          expect(line).not.toBeNull();
+          const x = Number(line?.getAttribute("x1"));
+          expect(Number.isFinite(x)).toBe(true);
+          expect(Math.abs(x - 600)).toBeLessThanOrEqual(20);
         });
 
         // Touch end
@@ -713,7 +722,10 @@ describe("User Flows - Integration Tests", () => {
 
       await waitFor(() => {
         const line = container.querySelector('line[stroke="#8b5cf6"]');
-        expect(line?.getAttribute("x1")).toBe("500");
+        expect(line).not.toBeNull();
+        const x = Number(line?.getAttribute("x1"));
+        expect(Number.isFinite(x)).toBe(true);
+        expect(Math.abs(x - 500)).toBeLessThanOrEqual(20);
       });
     });
   });

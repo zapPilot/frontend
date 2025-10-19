@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import React from "react";
+import { BaseComponentProps } from "../../types/ui.types";
 
-interface EmptyStateCardProps {
+interface EmptyStateCardProps extends BaseComponentProps {
   icon?: React.ReactNode;
   title: string;
   description: string;
   action?: React.ReactNode;
-  className?: string;
   children?: React.ReactNode;
 }
 

@@ -2,8 +2,9 @@
 
 import React from "react";
 import type { LucideIcon } from "lucide-react";
+import { InteractiveComponentProps } from "../../types/ui.types";
 
-interface TabButtonProps {
+interface TabButtonProps extends InteractiveComponentProps {
   id: string;
   label: string;
   active: boolean;

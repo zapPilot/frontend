@@ -200,7 +200,6 @@ export interface PortfolioTrendsResponse {
     end_date: string;
     days: number;
   };
-  trend_data: PortfolioTrend[];
   daily_totals: PortfolioDailyTotal[];
   summary: {
     total_change_usd: number;
@@ -215,6 +214,15 @@ export interface PortfolioDailyProtocol {
   chain: string | null;
   value_usd: number;
   pnl_usd: number;
+  source_type: string | null;
+  category: string | null;
+}
+
+export interface PortfolioDailyCategory {
+  category: string | null;
+  source_type: string | null;
+  value_usd: number;
+  pnl_usd: number;
 }
 
 export interface PortfolioDailyTotal {
@@ -222,6 +230,7 @@ export interface PortfolioDailyTotal {
   total_value_usd: number;
   change_percentage: number;
   protocols: PortfolioDailyProtocol[];
+  categories?: PortfolioDailyCategory[];
   chains_count: number;
 }
 
@@ -230,12 +239,10 @@ export interface PortfolioDailyTotal {
  */
 export const getPortfolioTrends = async (
   userId: string,
-  days: number = 30,
-  limit: number = 100
+  days: number = 30
 ): Promise<PortfolioTrendsResponse> => {
   const params = new URLSearchParams({
     days: days.toString(),
-    limit: limit.toString(),
   });
   return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
     `/api/v1/portfolio/trends/by-user/${userId}?${params}`
@@ -403,10 +410,10 @@ export interface UnderwaterRecoveryResponse {
 // Phase 2 Analytics - Allocation Timeseries Response
 export interface AllocationTimeseriesPoint {
   date: string;
-  protocol: string;
-  chain: string;
-  net_value_usd: number;
-  percentage_of_portfolio: number;
+  category: string; // Asset category: "btc", "eth", "stable", "altcoin"
+  category_value_usd: number;
+  total_portfolio_value_usd: number;
+  allocation_percentage: number;
 }
 
 export interface AllocationTimeseriesResponse {

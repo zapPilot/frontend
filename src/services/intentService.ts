@@ -203,7 +203,6 @@ export const getIntentStatus = (intentId: string): Promise<IntentStatus> =>
  */
 export const getUserIntentHistory = (
   walletAddress: string,
-  limit = 50,
   offset = 0
 ): Promise<{
   intents: ExecutionResult[];
@@ -213,7 +212,6 @@ export const getUserIntentHistory = (
   callIntentService(() => {
     const params = new URLSearchParams({
       wallet: walletAddress,
-      limit: limit.toString(),
       offset: offset.toString(),
     });
 

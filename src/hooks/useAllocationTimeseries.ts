@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
 import {
   getAllocationTimeseries,
   AllocationTimeseriesResponse,
 } from "../services/analyticsService";
-import { portfolioLogger } from "../utils/logger";
+import { useAnalyticsData } from "./useAnalyticsData";
 
 interface UseAllocationTimeseriesConfig {
   userId?: string | undefined;
@@ -21,53 +20,12 @@ interface UseAllocationTimeseriesReturn {
 
 /**
  * Hook to fetch allocation timeseries data from analytics-engine
+ * Consolidates with useAnalyticsData to eliminate duplicate data-fetching logic
  */
 export function useAllocationTimeseries({
   userId,
   days = 40,
   enabled = true,
 }: UseAllocationTimeseriesConfig = {}): UseAllocationTimeseriesReturn {
-  const [data, setData] = useState<AllocationTimeseriesResponse | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchAllocationTimeseries = useCallback(async () => {
-    if (!userId || !enabled) {
-      setData(null);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const allocationData = await getAllocationTimeseries(userId, days);
-      setData(allocationData);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error
-          ? err.message
-          : "Failed to fetch allocation timeseries";
-      setError(errorMessage);
-      portfolioLogger.error("Allocation timeseries fetch error", err);
-      setData(null); // Reset data on error
-    } finally {
-      setLoading(false);
-    }
-  }, [userId, days, enabled]);
-
-  // Auto-fetch on mount and dependency changes
-  useEffect(() => {
-    fetchAllocationTimeseries();
-  }, [fetchAllocationTimeseries]);
-
-  return {
-    data,
-    loading,
-    error,
-    refetch: fetchAllocationTimeseries,
-    userId: userId || null,
-  };
+  return useAnalyticsData(getAllocationTimeseries, { userId, days, enabled });
 }

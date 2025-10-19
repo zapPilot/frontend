@@ -3,16 +3,14 @@
 import { motion } from "framer-motion";
 import { memo, ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
+import { InteractiveComponentProps } from "../../types/ui.types";
 
-interface GradientButtonProps {
+interface GradientButtonProps extends InteractiveComponentProps {
   children: ReactNode;
   onClick?: () => void;
   gradient: string;
   shadowColor?: string;
   icon?: LucideIcon;
-  disabled?: boolean;
-  className?: string;
-  testId?: string;
 }
 
 const GradientButtonComponent = ({

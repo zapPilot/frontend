@@ -10,6 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ASSET_CATEGORIES, CHART_COLORS } from "../constants/portfolio";
 import { useUser } from "../contexts/UserContext";
 import { useAllocationTimeseries } from "../hooks/useAllocationTimeseries";
 import { useAnalyticsData } from "../hooks/useAnalyticsData";
@@ -32,7 +33,6 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
-import { ASSET_CATEGORIES, CHART_COLORS } from "../constants/portfolio";
 import {
   getEnhancedDrawdown,
   getRollingSharpe,
@@ -40,6 +40,7 @@ import {
   getUnderwaterRecovery,
 } from "../services/analyticsService";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
+import { logger } from "../utils/logger";
 import { ChartIndicator, ChartTooltip } from "./charts";
 import { GlassCard } from "./ui";
 import { ButtonSkeleton, Skeleton } from "./ui/LoadingSystem";
@@ -50,8 +51,11 @@ interface AllocationTimeseriesInputPoint {
   protocol?: string;
   percentage?: number;
   percentage_of_portfolio?: number;
+  allocation_percentage?: number;
   category_value?: number;
+  category_value_usd?: number;
   total_value?: number;
+  total_portfolio_value_usd?: number;
 }
 
 type DrawdownOverridePoint = {
@@ -78,8 +82,105 @@ type UnderwaterOverridePoint = {
   recovery_point?: boolean;
 };
 
+/**
+ * Extended portfolio data point with DeFi and Wallet breakdown
+ * Used for stacked area chart visualization
+ */
+interface PortfolioStackedDataPoint extends PortfolioDataPoint {
+  defiValue: number;
+  walletValue: number;
+  stackedTotalValue: number;
+}
+
+const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
+
+/**
+ * Builds stacked portfolio data using real protocol source types.
+ * Falls back to a deterministic split when source data is unavailable.
+ */
+const buildStackedPortfolioData = (
+  data: PortfolioDataPoint[],
+  fallbackRatio: number = DEFAULT_STACKED_FALLBACK_RATIO
+): PortfolioStackedDataPoint[] => {
+  return data.map(point => {
+    let defiValue = 0;
+    let walletValue = 0;
+
+    const categories = Array.isArray(point.categories) ? point.categories : [];
+
+    if (categories.length > 0) {
+      for (const categoryEntry of categories) {
+        const normalizedSource =
+          typeof categoryEntry.sourceType === "string"
+            ? categoryEntry.sourceType.toLowerCase()
+            : undefined;
+        const rawValue = Number(categoryEntry.value ?? 0);
+        const value = Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+
+        if (normalizedSource === "defi") {
+          defiValue += value;
+        } else if (normalizedSource === "wallet") {
+          walletValue += value;
+        }
+      }
+    }
+
+    if (defiValue === 0 && walletValue === 0) {
+      if (Array.isArray(point.protocols) && point.protocols.length > 0) {
+        for (const protocol of point.protocols) {
+          const normalizedSource =
+            typeof protocol.sourceType === "string"
+              ? protocol.sourceType.toLowerCase()
+              : undefined;
+          const rawValue = Number(protocol.value ?? 0);
+          const value = Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+
+          if (normalizedSource === "defi") {
+            defiValue += value;
+          } else if (normalizedSource === "wallet") {
+            walletValue += value;
+          }
+        }
+      }
+    }
+
+    let stackedTotalValue = defiValue + walletValue;
+
+    if (stackedTotalValue > 0 && point.value > 0) {
+      const scale = point.value / stackedTotalValue;
+      defiValue *= scale;
+      walletValue *= scale;
+      stackedTotalValue = defiValue + walletValue;
+    }
+
+    if (stackedTotalValue === 0 && point.value > 0) {
+      const fallbackDefi = point.value * fallbackRatio;
+      defiValue = fallbackDefi;
+      walletValue = Math.max(point.value - fallbackDefi, 0);
+      stackedTotalValue = defiValue + walletValue;
+    }
+
+    if (stackedTotalValue === 0) {
+      stackedTotalValue = Math.max(point.value, 0);
+    }
+
+    return {
+      ...point,
+      defiValue,
+      walletValue,
+      stackedTotalValue,
+    } satisfies PortfolioStackedDataPoint;
+  });
+};
+
+const getStackedTotalValue = (point: PortfolioStackedDataPoint): number => {
+  const aggregated =
+    point.stackedTotalValue ?? point.defiValue + point.walletValue;
+  return aggregated > 0 ? aggregated : point.value;
+};
+
 const CHART_LABELS = {
-  performance: "Portfolio performance chart",
+  performance: "Portfolio value chart showing net worth over time",
   allocation: "Portfolio allocation chart",
   drawdown: "Portfolio drawdown chart",
   sharpe: "Rolling Sharpe ratio chart",
@@ -141,11 +242,18 @@ export function buildAllocationHistory(
         .toLowerCase();
 
       const percentageValue = Number(
-        point.percentage_of_portfolio ?? point.percentage ?? 0
+        point.allocation_percentage ??
+          point.percentage_of_portfolio ??
+          point.percentage ??
+          0
       );
 
-      const categoryValue = Number(point.category_value ?? 0);
-      const totalValue = Number(point.total_value ?? 0);
+      const categoryValue = Number(
+        point.category_value_usd ?? point.category_value ?? 0
+      );
+      const totalValue = Number(
+        point.total_portfolio_value_usd ?? point.total_value ?? 0
+      );
 
       const computedShare =
         !Number.isNaN(percentageValue) && percentageValue !== 0
@@ -426,23 +534,26 @@ const PortfolioChartComponent = ({
           allocationLoading)));
 
   if (process.env.NODE_ENV === "test") {
-    // eslint-disable-next-line no-console
-    console.log("PortfolioChart state", {
-      hasPreloadedData,
-      isExternalLoading,
-      normalizedError,
-      isLoadingData,
-      overrides: [
-        portfolioDataOverride?.length ?? 0,
-        allocationDataOverride?.length ?? 0,
-        drawdownDataOverride?.length ?? 0,
-        sharpeDataOverride?.length ?? 0,
-        volatilityDataOverride?.length ?? 0,
-        underwaterDataOverride?.length ?? 0,
-      ],
-      activeTab,
-      selectedChart,
-    });
+    logger.debug(
+      "PortfolioChart state",
+      {
+        hasPreloadedData,
+        isExternalLoading,
+        normalizedError,
+        isLoadingData,
+        overrides: [
+          portfolioDataOverride?.length ?? 0,
+          allocationDataOverride?.length ?? 0,
+          drawdownDataOverride?.length ?? 0,
+          sharpeDataOverride?.length ?? 0,
+          volatilityDataOverride?.length ?? 0,
+          underwaterDataOverride?.length ?? 0,
+        ],
+        activeTab,
+        selectedChart,
+      },
+      "PortfolioChart"
+    );
   }
 
   // Portfolio history with fallback logic
@@ -479,9 +590,6 @@ const PortfolioChartComponent = ({
   const totalReturn = ((currentValue - firstValue) / firstValue) * 100;
   const isPositive = totalReturn >= 0;
 
-  const maxValue = Math.max(...portfolioHistory.map(d => d.value));
-  const minValue = Math.min(...portfolioHistory.map(d => d.value));
-
   // Chart dimensions (match viewBox)
   const CHART_WIDTH = 800;
   const CHART_HEIGHT = 300;
@@ -491,48 +599,124 @@ const PortfolioChartComponent = ({
   const DRAWDOWN_DEFAULT_MIN = -20;
   const DRAWDOWN_DEFAULT_MAX = 0;
 
-  // Precompute static paths to avoid recomputing on hover
-  const portfolioPath = useMemo(
-    () =>
-      portfolioHistory.length
-        ? generateSVGPath(
-            portfolioHistory,
-            p => p.value,
-            CHART_WIDTH,
-            CHART_HEIGHT,
-            CHART_PADDING
-          )
-        : "",
+  // Stacked portfolio data with DeFi and Wallet breakdown
+  const stackedPortfolioData = useMemo(
+    () => buildStackedPortfolioData(portfolioHistory),
     [portfolioHistory]
   );
 
-  const benchmarkPath = useMemo(
-    () =>
-      portfolioHistory.length
-        ? generateSVGPath(
-            portfolioHistory,
-            p => p.benchmark || 0,
-            CHART_WIDTH,
-            CHART_HEIGHT,
-            CHART_PADDING
-          )
-        : "",
-    [portfolioHistory]
-  );
+  const { minValue, maxValue } = useMemo(() => {
+    const stackedTotals = stackedPortfolioData
+      .map(getStackedTotalValue)
+      .filter(value => Number.isFinite(value));
 
-  const portfolioAreaPath = useMemo(
-    () =>
-      portfolioHistory.length
-        ? generateAreaPath(
-            portfolioHistory,
-            p => p.value,
-            CHART_WIDTH,
-            CHART_HEIGHT,
-            CHART_PADDING
-          )
-        : "",
-    [portfolioHistory]
-  );
+    if (stackedTotals.length > 0) {
+      return {
+        minValue: Math.min(...stackedTotals),
+        maxValue: Math.max(...stackedTotals),
+      };
+    }
+
+    const fallbackValues = portfolioHistory
+      .map(point => (Number.isFinite(point.value) ? point.value : 0))
+      .filter(value => Number.isFinite(value));
+
+    if (fallbackValues.length > 0) {
+      return {
+        minValue: Math.min(...fallbackValues),
+        maxValue: Math.max(...fallbackValues),
+      };
+    }
+
+    return { minValue: 0, maxValue: 0 };
+  }, [stackedPortfolioData, portfolioHistory]);
+
+  // Generate stacked area paths for DeFi and Wallet visualization
+  const { defiAreaPath, walletAreaPath, defiLinePath, totalPath } =
+    useMemo(() => {
+      if (stackedPortfolioData.length === 0) {
+        return {
+          defiAreaPath: "",
+          walletAreaPath: "",
+          defiLinePath: "",
+          totalPath: "",
+        };
+      }
+
+      const totals = stackedPortfolioData.map(getStackedTotalValue);
+      const minStackedValue = Math.min(...totals);
+      const maxStackedValue = Math.max(...totals);
+      const valueRange = Math.max(maxStackedValue - minStackedValue, 1);
+
+      // DeFi area: from baseline (bottom of chart) to defiValue
+      const defiPath = generateAreaPath(
+        stackedPortfolioData,
+        p => (p as PortfolioStackedDataPoint).defiValue,
+        CHART_WIDTH,
+        CHART_HEIGHT,
+        CHART_PADDING
+      );
+
+      const walletSegments = stackedPortfolioData.map((point, index) => {
+        const x =
+          stackedPortfolioData.length <= 1
+            ? CHART_WIDTH / 2
+            : (index / (stackedPortfolioData.length - 1)) * CHART_WIDTH;
+
+        const defiBoundary = Math.max(point.defiValue, 0);
+        const totalValue = getStackedTotalValue(point);
+
+        const defiY =
+          CHART_HEIGHT -
+          CHART_PADDING -
+          ((defiBoundary - minStackedValue) / valueRange) *
+            (CHART_HEIGHT - 2 * CHART_PADDING);
+
+        const totalY =
+          CHART_HEIGHT -
+          CHART_PADDING -
+          ((totalValue - minStackedValue) / valueRange) *
+            (CHART_HEIGHT - 2 * CHART_PADDING);
+
+        return { x, defiY, totalY };
+      });
+
+      const forwardPath = walletSegments
+        .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.totalY}`)
+        .join(" ");
+
+      const reversePath = walletSegments
+        .slice()
+        .reverse()
+        .map(seg => `L ${seg.x} ${seg.defiY}`)
+        .join(" ");
+
+      const walletPath = walletSegments.length
+        ? `${forwardPath} ${reversePath} Z`
+        : "";
+
+      // Generate boundary line between DeFi and Wallet regions
+      const defiLine = walletSegments.length
+        ? walletSegments
+            .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.defiY}`)
+            .join(" ")
+        : "";
+
+      const totalOutline = generateSVGPath(
+        stackedPortfolioData,
+        p => getStackedTotalValue(p as PortfolioStackedDataPoint),
+        CHART_WIDTH,
+        CHART_HEIGHT,
+        CHART_PADDING
+      );
+
+      return {
+        defiAreaPath: defiPath,
+        walletAreaPath: walletPath,
+        defiLinePath: defiLine,
+        totalPath: totalOutline,
+      };
+    }, [stackedPortfolioData]);
 
   const drawdownData = useMemo(() => {
     if (drawdownDataOverride?.length) {
@@ -736,14 +920,14 @@ const PortfolioChartComponent = ({
   }, [underwaterDataOverride, underwaterRecoveryData]);
 
   // Performance chart hover
-  const performanceHover = useChartHover(portfolioHistory, {
+  const performanceHover = useChartHover(stackedPortfolioData, {
     chartType: "performance",
     chartWidth: CHART_WIDTH,
     chartHeight: CHART_HEIGHT,
     chartPadding: CHART_PADDING,
     minValue,
     maxValue,
-    getYValue: point => point.value,
+    getYValue: point => getStackedTotalValue(point),
     buildHoverData: (point, x, y) => ({
       chartType: "performance" as const,
       x,
@@ -753,8 +937,10 @@ const PortfolioChartComponent = ({
         day: "numeric",
         year: "numeric",
       }),
-      value: point.value,
+      value: getStackedTotalValue(point),
       benchmark: point.benchmark || 0,
+      defiValue: point.defiValue,
+      walletValue: point.walletValue,
     }),
     testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
   });
@@ -908,7 +1094,7 @@ const PortfolioChartComponent = ({
         {/* Grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-800/50" />
+            <div key={i} className="border-t border-gray-700/60" />
           ))}
         </div>
 
@@ -925,54 +1111,64 @@ const PortfolioChartComponent = ({
             Portfolio performance data over the selected period {selectedPeriod}
           </text>
           <defs>
-            <linearGradient
-              id="portfolioGradient"
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+            {/* DeFi gradient - Purple with enhanced contrast */}
+            <linearGradient id="defiGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.25" />
             </linearGradient>
+
+            {/* Wallet gradient - Cyan with enhanced contrast */}
             <linearGradient
-              id="benchmarkGradient"
+              id="walletGradient"
               x1="0%"
               y1="0%"
               x2="0%"
               y2="100%"
             >
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
             </linearGradient>
           </defs>
 
-          {/* Portfolio line */}
-          {portfolioPath && (
+          {/* Stacked Areas: DeFi (bottom) + Wallet (top) */}
+          {defiAreaPath && <path d={defiAreaPath} fill="url(#defiGradient)" />}
+
+          {walletAreaPath && (
+            <path d={walletAreaPath} fill="url(#walletGradient)" />
+          )}
+
+          {/* Separation line between DeFi and Wallet */}
+          {defiLinePath && (
             <path
-              d={portfolioPath}
+              d={defiLinePath}
               fill="none"
-              stroke="#8b5cf6"
-              strokeWidth="3"
-              className="drop-shadow-lg"
+              stroke="#64748b"
+              strokeWidth="1"
+              opacity="0.4"
             />
           )}
 
-          {/* Benchmark line */}
-          {benchmarkPath && (
-            <path
-              d={benchmarkPath}
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="2"
-              strokeDasharray="5,5"
-              opacity="0.7"
-            />
-          )}
-
-          {/* Fill area under portfolio curve */}
-          {portfolioAreaPath && (
-            <path d={portfolioAreaPath} fill="url(#portfolioGradient)" />
+          {/* Total portfolio outline with glow effect */}
+          {totalPath && (
+            <>
+              {/* White glow layer for contrast */}
+              <path
+                d={totalPath}
+                fill="none"
+                stroke="white"
+                strokeWidth="4"
+                opacity="0.15"
+                className="blur-sm"
+              />
+              {/* Main outline in lighter purple */}
+              <path
+                d={totalPath}
+                fill="none"
+                stroke="#c4b5fd"
+                strokeWidth="2.5"
+                className="drop-shadow-lg"
+              />
+            </>
           )}
 
           {/* Hover indicator */}
@@ -987,20 +1183,26 @@ const PortfolioChartComponent = ({
         </div>
 
         {/* Legend */}
-        <div className="absolute top-4 right-4 flex items-center space-x-4 text-xs pointer-events-none">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-0.5 bg-purple-500"></div>
-            <span className="text-white">Portfolio</span>
-          </div>
-          <div className="flex items-center space-x-2">
+        <div className="absolute top-4 right-4 flex items-center space-x-3 text-xs pointer-events-none">
+          <div className="flex items-center space-x-1.5">
             <div
-              className="w-3 h-0.5 bg-blue-500 opacity-70"
+              className="w-3 h-2 rounded-sm"
               style={{
-                backgroundImage:
-                  "repeating-linear-gradient(to right, #3b82f6, #3b82f6 3px, transparent 3px, transparent 6px)",
+                background:
+                  "linear-gradient(to bottom, rgba(139, 92, 246, 0.6), rgba(139, 92, 246, 0.25))",
               }}
             ></div>
-            <span className="text-gray-400">Benchmark</span>
+            <span className="text-white">DeFi</span>
+          </div>
+          <div className="flex items-center space-x-1.5">
+            <div
+              className="w-3 h-2 rounded-sm"
+              style={{
+                background:
+                  "linear-gradient(to bottom, rgba(6, 182, 212, 0.7), rgba(6, 182, 212, 0.3))",
+              }}
+            ></div>
+            <span className="text-white">Wallet</span>
           </div>
         </div>
 
@@ -1017,9 +1219,10 @@ const PortfolioChartComponent = ({
       maxValue,
       selectedPeriod,
       performanceHover,
-      portfolioPath,
-      benchmarkPath,
-      portfolioAreaPath,
+      defiAreaPath,
+      walletAreaPath,
+      defiLinePath,
+      totalPath,
     ]
   );
 
@@ -1223,7 +1426,7 @@ const PortfolioChartComponent = ({
         {/* Grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-800/50" />
+            <div key={i} className="border-t border-gray-700/60" />
           ))}
         </div>
 
@@ -1338,7 +1541,7 @@ const PortfolioChartComponent = ({
         {/* Grid lines */}
         <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-800/50" />
+            <div key={i} className="border-t border-gray-700/60" />
           ))}
         </div>
 
@@ -1605,7 +1808,7 @@ const PortfolioChartComponent = ({
                 aria-hidden="true"
                 role="presentation"
               />
-              Historical Performance
+              Portfolio Value
             </h3>
             <div className="flex items-center space-x-4 text-sm">
               <div
@@ -1628,7 +1831,11 @@ const PortfolioChartComponent = ({
             aria-label="Select chart type"
           >
             {[
-              { key: "performance", label: "Performance", icon: TrendingUp },
+              {
+                key: "performance",
+                label: "Portfolio Value",
+                icon: TrendingUp,
+              },
               { key: "allocation", label: "Allocation", icon: PieChart },
               { key: "drawdown", label: "Drawdown", icon: Activity },
               { key: "sharpe", label: "Sharpe Ratio", icon: Target },

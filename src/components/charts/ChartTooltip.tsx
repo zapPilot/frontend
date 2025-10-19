@@ -6,7 +6,6 @@
  */
 
 import { ASSET_CATEGORIES } from "@/constants/portfolio";
-import { formatters } from "@/lib/formatters";
 import {
   calculateDailyVolatility,
   getDrawdownSeverity,
@@ -17,7 +16,9 @@ import {
   getVolatilityRiskColor,
   getVolatilityRiskLevel,
 } from "@/lib/chartHoverUtils";
+import { formatters } from "@/lib/formatters";
 import { motion } from "framer-motion";
+import { useRef } from "react";
 import type {
   AllocationHoverData,
   ChartHoverState,
@@ -50,6 +51,26 @@ interface ChartTooltipProps {
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
   const formattedValue = formatters.currencyPrecise(data.value);
+  const breakdownRows = [
+    {
+      label: "DeFi",
+      colorClass: "text-purple-300",
+      value: data.defiValue,
+    },
+    {
+      label: "Wallet",
+      colorClass: "text-cyan-300",
+      value: data.walletValue,
+    },
+  ].filter(
+    (
+      entry
+    ): entry is {
+      label: string;
+      colorClass: string;
+      value: number;
+    } => typeof entry.value === "number" && Number.isFinite(entry.value)
+  );
 
   return (
     <>
@@ -61,12 +82,14 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
             {formattedValue}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-blue-300">Benchmark</span>
-          <span className="text-sm font-semibold text-gray-300">
-            Coming soon
-          </span>
-        </div>
+        {breakdownRows.map(({ label, colorClass, value }) => (
+          <div key={label} className="flex items-center justify-between gap-3">
+            <span className={`text-xs ${colorClass}`}>{label}</span>
+            <span className="text-sm font-semibold text-gray-200">
+              {formatters.currencyPrecise(value)}
+            </span>
+          </div>
+        ))}
       </div>
     </>
   );
@@ -319,38 +342,55 @@ export function ChartTooltip({
   chartWidth = 800,
   chartHeight = 300,
 }: ChartTooltipProps) {
-  if (!hoveredPoint) return null;
+  const tooltipRef = useRef<HTMLDivElement>(null);
 
-  // Smart positioning to avoid overflow
-  const leftPercentage = (hoveredPoint.x / chartWidth) * 100;
-  const topPercentage = (hoveredPoint.y / chartHeight) * 100;
+  if (!hoveredPoint) return null;
 
   const TOOLTIP_MIN_WIDTH = 180;
   const TOOLTIP_MIN_HEIGHT = 120;
+  const EDGE_PADDING = 12;
+  const VERTICAL_OFFSET = 20;
 
-  const halfWidthPercent =
-    chartWidth > 0
-      ? Math.min(45, (TOOLTIP_MIN_WIDTH / 2 / chartWidth) * 100)
-      : 10;
-  const leftClampMin = Math.max(halfWidthPercent, 8);
-  const leftClampMax = Math.min(100 - halfWidthPercent, 92);
+  const containerWidth = hoveredPoint.containerWidth ?? chartWidth;
+  const containerHeight = hoveredPoint.containerHeight ?? chartHeight;
 
-  let adjustedLeft = Math.min(
-    Math.max(leftPercentage, leftClampMin),
-    leftClampMax
-  );
+  const pointerX =
+    hoveredPoint.screenX ??
+    (chartWidth > 0 ? (hoveredPoint.x / chartWidth) * containerWidth : 0);
+  const pointerY =
+    hoveredPoint.screenY ??
+    (chartHeight > 0 ? (hoveredPoint.y / chartHeight) * containerHeight : 0);
 
-  const topOffsetPercent =
-    chartHeight > 0
-      ? Math.min(40, (TOOLTIP_MIN_HEIGHT / chartHeight) * 100)
-      : 12;
-  let adjustedTop = Math.min(Math.max(topPercentage, topOffsetPercent), 92);
+  const measuredWidth = tooltipRef.current?.offsetWidth ?? 0;
+  const measuredHeight = tooltipRef.current?.offsetHeight ?? 0;
+  const tooltipWidth = measuredWidth || TOOLTIP_MIN_WIDTH;
+  const tooltipHeight = measuredHeight || TOOLTIP_MIN_HEIGHT;
+
+  let left = pointerX;
+  let translateX = "-50%";
+  const halfWidth = tooltipWidth / 2;
+
+  if (left - halfWidth < EDGE_PADDING) {
+    left = Math.max(left, EDGE_PADDING);
+    translateX = "0";
+  } else if (left + halfWidth > containerWidth - EDGE_PADDING) {
+    left = Math.min(left, containerWidth - EDGE_PADDING);
+    translateX = "-100%";
+  }
+
+  let top = pointerY - VERTICAL_OFFSET;
+  let translateY = "-100%";
+
+  if (top - tooltipHeight < EDGE_PADDING) {
+    top = Math.min(pointerY + VERTICAL_OFFSET, containerHeight - EDGE_PADDING);
+    translateY = "0";
+  }
 
   if (CHARTS_WITH_TOP_LEGEND.has(hoveredPoint.chartType)) {
-    const isNearbyLegend = adjustedLeft > 60 && topPercentage < 32;
-    if (isNearbyLegend) {
-      adjustedLeft = Math.min(adjustedLeft, 60);
-      adjustedTop = Math.max(adjustedTop, 34);
+    const legendGuardTop = 60;
+    if (translateY === "-100%" && top < legendGuardTop + tooltipHeight) {
+      translateY = "0";
+      top = Math.max(pointerY + VERTICAL_OFFSET, legendGuardTop);
     }
   }
 
@@ -361,16 +401,19 @@ export function ChartTooltip({
       data-chart-type={hoveredPoint.chartType}
       data-testid="chart-tooltip"
       style={{
-        left: `${adjustedLeft}%`,
-        top: `${adjustedTop}%`,
-        transform: "translateX(-50%) translateY(-100%)",
+        left,
+        top,
+        transform: `translate(${translateX}, ${translateY})`,
       }}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      <div className="px-3 py-2 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl min-w-[160px]">
+      <div
+        ref={tooltipRef}
+        className="px-3 py-2 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl min-w-[160px]"
+      >
         {hoveredPoint.chartType === "performance" && (
           <PerformanceTooltipContent
             data={hoveredPoint as PerformanceHoverData}

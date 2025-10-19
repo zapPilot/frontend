@@ -14,6 +14,7 @@ import {
   type PointerEvent,
   type TouchEvent,
 } from "react";
+import { logger } from "../utils/logger";
 import type { ChartHoverState } from "../types/chartHover";
 
 /**
@@ -168,12 +169,12 @@ export function useChartHover<T>(
         const point = data[clampedIndex];
         if (!point) return;
 
-        // Calculate X position in SVG coordinates
-        const boundedMouseX = Math.max(0, Math.min(mouseX, svgWidth));
-        const normalizedX = svgWidth
-          ? boundedMouseX / svgWidth
-          : clampedIndex / Math.max(data.length - 1, 1);
-        const x = normalizedX * chartWidth;
+        // Calculate X position in SVG coordinates from data point index
+        // This ensures the indicator aligns exactly with the selected data point
+        const x =
+          data.length <= 1
+            ? chartWidth / 2
+            : (clampedIndex / (data.length - 1)) * chartWidth;
 
         // Calculate Y position in SVG coordinates based on value
         const yValue = getYValue(point);
@@ -183,16 +184,31 @@ export function useChartHover<T>(
           ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding);
 
         // Build chart-specific hover data
+        const svgHeight = rect.height || chartHeight || 1;
+        const scaleX = chartWidth > 0 ? svgWidth / chartWidth : 1;
+        const scaleY = chartHeight > 0 ? svgHeight / chartHeight : 1;
+        const screenX = x * scaleX;
+        const screenY = y * scaleY;
+
         const hoverData = buildHoverData(point, x, y, clampedIndex);
 
-        setHoveredPoint(hoverData);
+        setHoveredPoint({
+          ...hoverData,
+          containerWidth: svgWidth,
+          containerHeight: svgHeight,
+          screenX,
+          screenY,
+        });
         if (process.env.NODE_ENV === "test") {
-          // eslint-disable-next-line no-console
-          console.log("hover update", {
-            chartType: chartType ?? "unknown",
-            x,
-            y,
-          });
+          logger.debug(
+            "hover update",
+            {
+              chartType: chartType ?? "unknown",
+              x,
+              y,
+            },
+            "ChartHover"
+          );
         }
       };
 
@@ -237,8 +253,7 @@ export function useChartHover<T>(
   const handlePointerDown = useCallback(
     (event: PointerEvent<SVGSVGElement>) => {
       if (process.env.NODE_ENV === "test") {
-        // eslint-disable-next-line no-console
-        console.log("pointer down", chartType ?? "unknown");
+        logger.debug("pointer down", chartType ?? "unknown", "ChartHover");
       }
       updateHoverFromClientX(event.clientX, event.currentTarget);
     },

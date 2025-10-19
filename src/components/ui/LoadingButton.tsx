@@ -1,17 +1,22 @@
 import { motion, MotionStyle } from "framer-motion";
 import React from "react";
 import { LoadingSpinner } from "./LoadingSystem";
+import type {
+  ButtonVariant,
+  StandardSize,
+  ComponentSize,
+} from "@/types/ui.types";
 
 export interface LoadingButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   isLoading?: boolean;
   loadingText?: string;
-  variant?: "primary" | "secondary" | "outline" | "ghost";
-  size?: "sm" | "md" | "lg";
+  variant?: ButtonVariant;
+  size?: StandardSize;
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
-  spinnerSize?: "xs" | "sm" | "md" | "lg" | "xl";
+  spinnerSize?: ComponentSize;
   spinnerColor?: "primary" | "white" | "gray";
 }
 
@@ -147,8 +152,8 @@ export function LoadingIconButton({
 }: {
   icon: React.ReactNode;
   isLoading?: boolean;
-  size?: "sm" | "md" | "lg";
-  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: StandardSize;
+  variant?: ButtonVariant;
   className?: string;
   "aria-label": string;
 } & Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "children">) {

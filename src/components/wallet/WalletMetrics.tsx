@@ -1,6 +1,6 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
-import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
+import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
@@ -29,8 +29,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     portfolioChangePercentage,
     landingPageData,
   }) => {
-    const { balanceHidden: ctxHidden } = useBalanceVisibility();
-    const resolvedHidden = balanceHidden ?? ctxHidden;
+    const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
     // Data must be provided by parent; no internal fetching
     const data = landingPageData;
     const landingPageLoading = !data && portfolioState.isLoading;
