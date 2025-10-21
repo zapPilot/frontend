@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
 import { getStrategies } from "../../services/intentService";
 import { getLandingPagePortfolioData } from "../../services/analyticsService";
 import { AssetCategory } from "../../components/PortfolioAllocation/types";
@@ -9,18 +10,6 @@ import {
   StrategiesApiError,
   StrategiesFetchConfig,
 } from "../../types/strategies";
-
-/**
- * Query key factory for strategies
- */
-export const strategiesKeys = {
-  all: ["strategies"] as const,
-  lists: () => [...strategiesKeys.all, "list"] as const,
-  list: (config?: StrategiesFetchConfig) =>
-    [...strategiesKeys.lists(), config] as const,
-  withPortfolio: (userId?: string, config?: StrategiesFetchConfig) =>
-    [...strategiesKeys.lists(), "portfolio", userId, config] as const,
-};
 
 /**
  * React Query hook for fetching portfolio strategies
@@ -46,7 +35,7 @@ export function useStrategiesQuery(
         },
       },
     }),
-    queryKey: strategiesKeys.list(config),
+    queryKey: queryKeys.strategies.list(config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
         const apiResponse = await getStrategies();
@@ -93,7 +82,7 @@ export function useStrategiesWithPortfolioQuery(
         },
       },
     }),
-    queryKey: strategiesKeys.withPortfolio(userId, config),
+    queryKey: queryKeys.strategies.withPortfolio(userId, config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
         // Always fetch base strategies first

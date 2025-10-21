@@ -5,6 +5,7 @@ import {
   type NormalizedTokenBalance,
 } from "../../services/balanceService";
 import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
 import { normalizeAddresses } from "../../lib/stringUtils";
 
 export interface UseTokenBalancesParams {
@@ -37,13 +38,12 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
 
   const query = useQuery({
     ...createQueryConfig({ dataType: "dynamic" }),
-    queryKey: [
-      "tokenBalances",
-      chainId,
-      normalizedWallet,
+    queryKey: queryKeys.balances.list(
+      chainId!,
+      normalizedWallet!,
       normalizedTokens,
-      skipCache,
-    ],
+      skipCache
+    ),
     queryFn: () =>
       getTokenBalances({
         chainId: chainId!,

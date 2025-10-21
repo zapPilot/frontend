@@ -1,5 +1,6 @@
 import { useCallback, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import {
@@ -122,7 +123,7 @@ export const useWalletOperations = ({
 
           // Invalidate and refetch user data
           queryClient.invalidateQueries({
-            queryKey: ["user-wallets", realUserId],
+            queryKey: queryKeys.user.wallets(realUserId),
           });
           refetch();
 
@@ -279,7 +280,7 @@ export const useWalletOperations = ({
 
         // Invalidate and refetch user data
         queryClient.invalidateQueries({
-          queryKey: ["user-wallets", realUserId],
+          queryKey: queryKeys.user.wallets(realUserId),
         });
         refetch();
 
@@ -339,7 +340,7 @@ export const useWalletOperations = ({
 
         // Invalidate queries and trigger reconnection flow
         queryClient.invalidateQueries({
-          queryKey: ["user-wallets", realUserId],
+          queryKey: queryKeys.user.wallets(realUserId),
         });
         refetch();
 

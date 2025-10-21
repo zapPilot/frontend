@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { ReactNode } from "react";
 import { BaseComponentProps } from "../../types/ui.types";
-import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import { BaseCard } from "./BaseCard";
 
 type AriaLive = "off" | "polite" | "assertive";
 
@@ -14,6 +13,14 @@ interface GlassCardProps extends BaseComponentProps {
   ariaLive?: AriaLive;
 }
 
+/**
+ * GlassCard - Legacy wrapper for BaseCard with glass morphism styling
+ *
+ * Maintained for backward compatibility. New code should use BaseCard directly.
+ * Provides default glass morphism styling with rounded-3xl and p-6.
+ *
+ * @deprecated Use BaseCard with variant="glass" instead
+ */
 export function GlassCard({
   children,
   className = "",
@@ -22,32 +29,19 @@ export function GlassCard({
   role,
   ariaLive,
 }: GlassCardProps) {
-  const baseClasses = "glass-morphism rounded-3xl p-6 border border-gray-800";
-  const fullClassName = `${baseClasses} ${className}`;
-
-  if (animate) {
-    return (
-      <motion.div
-        {...fadeInUp}
-        transition={SMOOTH_TRANSITION}
-        className={fullClassName}
-        data-testid={testId}
-        role={role}
-        aria-live={ariaLive}
-      >
-        {children}
-      </motion.div>
-    );
-  }
-
   return (
-    <div
-      className={fullClassName}
-      data-testid={testId}
-      role={role}
-      aria-live={ariaLive}
+    <BaseCard
+      variant="glass"
+      padding="xl"
+      borderRadius="2xl"
+      border={true}
+      animate={animate}
+      className={className}
+      {...(testId && { testId })}
+      {...(role && { role })}
+      {...(ariaLive && { ariaLive })}
     >
       {children}
-    </div>
+    </BaseCard>
   );
 }

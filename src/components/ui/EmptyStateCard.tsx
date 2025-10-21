@@ -1,9 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import React from "react";
 import { BaseComponentProps } from "../../types/ui.types";
-import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import { BaseCard } from "./BaseCard";
 
 interface EmptyStateCardProps extends BaseComponentProps {
   icon?: React.ReactNode;
@@ -13,13 +12,22 @@ interface EmptyStateCardProps extends BaseComponentProps {
   children?: React.ReactNode;
 }
 
+/**
+ * EmptyStateCard - Centered content card for empty states
+ *
+ * Displays an optional icon, title, description, and action button
+ * in a centered layout with responsive padding.
+ */
 export const EmptyStateCard = React.memo<EmptyStateCardProps>(
   ({ icon, title, description, className = "", children }) => {
     return (
-      <motion.div
-        {...fadeInUp}
-        transition={SMOOTH_TRANSITION}
-        className={`glass-morphism rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-800 text-center ${className}`}
+      <BaseCard
+        variant="empty"
+        padding="lg"
+        borderRadius="xl"
+        border={true}
+        animate={true}
+        className={className}
       >
         {/* Icon */}
         {icon && (
@@ -42,7 +50,7 @@ export const EmptyStateCard = React.memo<EmptyStateCardProps>(
 
         {/* Additional content */}
         {children && <div className="mt-4 sm:mt-6">{children}</div>}
-      </motion.div>
+      </BaseCard>
     );
   }
 );

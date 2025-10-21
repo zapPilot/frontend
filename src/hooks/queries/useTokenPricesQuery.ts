@@ -15,6 +15,7 @@ import {
   type TokenPriceData,
 } from "../../services/priceService";
 import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
 import { normalizeSymbols } from "../../lib/stringUtils";
 
 // Price-specific timing constants
@@ -167,19 +168,13 @@ export const useTokenPricesQuery = (
   // Normalize symbols for consistent query behavior
   const normalizedSymbols = useMemo(() => normalizeSymbols(symbols), [symbols]);
 
-  // Create stable query key
-  const queryKey = useMemo(
-    () => ["tokenPrices", normalizedSymbols.join(",")],
-    [normalizedSymbols]
-  );
-
   // Determine if query should be enabled
   const queryEnabled = Boolean(enabled && normalizedSymbols.length > 0);
 
   // Execute React Query
   const query = useQuery({
     ...createQueryConfig({ dataType: "dynamic" }),
-    queryKey,
+    queryKey: queryKeys.prices.list(normalizedSymbols.join(",")),
     queryFn: () => getTokenPrices(normalizedSymbols),
     enabled: queryEnabled,
     staleTime, // Allow override from params

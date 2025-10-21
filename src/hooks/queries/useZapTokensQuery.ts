@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
 import type { SwapToken } from "../../types/swap";
@@ -18,7 +19,7 @@ import { dedupeStrings } from "../../lib/stringUtils";
 export const useZapTokensQuery = (chainId?: number) => {
   return useQuery({
     ...createQueryConfig({ dataType: "static" }),
-    queryKey: ["zapTokens", chainId],
+    queryKey: queryKeys.zapTokens.byChain(chainId!),
     queryFn: () => tokenService.getZapTokens(chainId!),
     enabled: !!chainId && chainId > 0,
   });
