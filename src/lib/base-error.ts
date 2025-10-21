@@ -8,6 +8,12 @@
  * @module lib/base-error
  */
 
+import {
+  getBackendErrorMessage,
+  getIntentErrorMessage,
+  getAccountErrorMessage,
+} from "./errorMessages";
+
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
@@ -183,28 +189,7 @@ export class BackendServiceError extends BaseServiceError {
   }
 
   override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("email")) {
-          return "Invalid email address format.";
-        }
-        if (this.message?.includes("webhook")) {
-          return "Invalid Discord webhook configuration.";
-        }
-        return "Invalid requEst.Please check your input.";
-
-      case 429:
-        return "Too many notification requests. Please wait before sending more.";
-
-      case 502:
-        return "External notification service is temporarily unavailable.";
-
-      case 503:
-        return "Notification service is temporarily unavailable.";
-
-      default:
-        return this.message;
-    }
+    return getBackendErrorMessage(this.status, this.message);
   }
 }
 
@@ -231,25 +216,7 @@ export class IntentServiceError extends BaseServiceError {
   }
 
   override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("slippage")) {
-          return "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-        }
-        if (this.message?.includes("amount")) {
-          return "Invalid transaction amount. Please check your balance.";
-        }
-        return "Invalid transaction parameters.";
-
-      case 429:
-        return "Too many transactions in progress. Please wait before submitting another.";
-
-      case 503:
-        return "Intent engine is temporarily overloaded. Please try again in a moment.";
-
-      default:
-        return this.message;
-    }
+    return getIntentErrorMessage(this.status, this.message);
   }
 }
 
@@ -276,31 +243,7 @@ export class AccountServiceError extends BaseServiceError {
   }
 
   override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("address")) {
-          return "Invalid wallet address format. Address must be 42 characters long.";
-        }
-        if (this.message?.includes("main wallet")) {
-          return "Cannot remove the main wallet from your bundle.";
-        }
-        return "Invalid request parameters.";
-
-      case 404:
-        return "User or wallet not found.";
-
-      case 409:
-        if (this.message?.includes("wallet")) {
-          return "This wallet is already in your bundle.";
-        }
-        if (this.message?.includes("email")) {
-          return "This email address is already in use.";
-        }
-        return "Resource already exists.";
-
-      default:
-        return this.message;
-    }
+    return getAccountErrorMessage(this.status, this.message);
   }
 }
 
