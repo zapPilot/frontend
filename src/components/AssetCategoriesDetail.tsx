@@ -7,6 +7,7 @@ import { CategorySummary } from "../utils/portfolio.utils";
 import { ErrorStateCard } from "./ui/ErrorStateCard";
 import { AssetCategorySkeleton } from "./ui/LoadingSystem";
 import { CategoryItem } from "./CategoryItem";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 type TabType = "assets" | "borrowing";
 
@@ -38,8 +39,8 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
   }) => {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...fadeInUp}
+        transition={SMOOTH_TRANSITION}
         className={`glass-morphism rounded-3xl p-6 border border-gray-800 ${className}`}
       >
         {/* Loading State */}

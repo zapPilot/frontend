@@ -5,6 +5,7 @@ import {
   type NormalizedTokenBalance,
 } from "../../services/balanceService";
 import { createQueryConfig } from "./queryDefaults";
+import { normalizeAddresses } from "../../lib/stringUtils";
 
 export interface UseTokenBalancesParams {
   chainId?: number;
@@ -13,15 +14,6 @@ export interface UseTokenBalancesParams {
   skipCache?: boolean;
   enabled?: boolean;
 }
-
-const normalizeAddresses = (addresses: string[] = []): string[] =>
-  Array.from(
-    new Set(
-      addresses
-        .filter(address => typeof address === "string" && address.length > 0)
-        .map(address => address.toLowerCase())
-    )
-  );
 
 export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
   const {

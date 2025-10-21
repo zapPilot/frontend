@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { getChangeColorClasses } from "../../../lib/color-utils";
 import type { AnalyticsMetric } from "../../../types/portfolio";
+import { scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 export type KeyMetricCardData = AnalyticsMetric;
 
@@ -22,9 +23,8 @@ export function KeyMetricCard({ metric, index }: KeyMetricCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
+      {...scaleIn}
+      transition={{ ...SMOOTH_TRANSITION, delay: index * 0.05 }}
       className="p-4 glass-morphism rounded-xl border border-gray-800 hover:border-gray-700 transition-all duration-200"
     >
       <div className="flex items-start justify-between mb-2">

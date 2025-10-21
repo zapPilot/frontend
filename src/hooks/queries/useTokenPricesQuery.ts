@@ -15,6 +15,7 @@ import {
   type TokenPriceData,
 } from "../../services/priceService";
 import { createQueryConfig } from "./queryDefaults";
+import { normalizeSymbols } from "../../lib/stringUtils";
 
 // Price-specific timing constants
 const PRICE_STALE_TIME = 2 * 60 * 1000; // 2 minutes - prices change frequently
@@ -104,20 +105,6 @@ export interface UseTokenPricesWithStatesResult extends UseTokenPricesResult {
 // =============================================================================
 // HELPER FUNCTIONS
 // =============================================================================
-
-/**
- * Normalize symbols for consistent query keys and API calls
- */
-const normalizeSymbols = (symbols: string[] = []): string[] =>
-  Array.from(
-    new Set(
-      symbols
-        .filter(
-          symbol => typeof symbol === "string" && symbol.trim().length > 0
-        )
-        .map(symbol => symbol.trim().toUpperCase())
-    )
-  );
 
 /**
  * Check if price data is stale based on timestamp

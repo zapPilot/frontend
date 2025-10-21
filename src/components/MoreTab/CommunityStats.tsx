@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface Stat {
   value: string;
@@ -27,8 +28,8 @@ export function CommunityStats({
 }: CommunityStatsProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      {...fadeInUp}
+      transition={SMOOTH_TRANSITION}
       className={`glass-morphism rounded-2xl p-6 border border-gray-800 ${className}`}
     >
       <div className="flex items-center justify-center mb-4">
@@ -53,9 +54,8 @@ export function CommunityStats({
         {stats.map((stat, index) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
+            {...scaleIn}
+            transition={{ ...SMOOTH_TRANSITION, delay: index * 0.1 }}
             className="text-center"
           >
             <div className="text-2xl font-bold text-white">{stat.value}</div>

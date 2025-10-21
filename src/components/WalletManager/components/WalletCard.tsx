@@ -5,6 +5,7 @@ import { formatAddress } from "@/lib/formatters";
 import { WalletActionMenu } from "./WalletActionMenu";
 import type { WalletData } from "@/services/userService";
 import type { WalletOperations } from "../types/wallet.types";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface WalletCardProps {
   wallet: WalletData;
@@ -36,8 +37,8 @@ export const WalletCard = memo(
       <motion.div
         key={wallet.id}
         layout
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...fadeInUp}
+        transition={SMOOTH_TRANSITION}
         className="p-4 rounded-xl border transition-all duration-200 glass-morphism border-gray-700 hover:border-gray-600"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">

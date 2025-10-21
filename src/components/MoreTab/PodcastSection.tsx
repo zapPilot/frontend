@@ -2,6 +2,11 @@
 
 import { motion } from "framer-motion";
 import { ExternalLink, Headphones, Music } from "lucide-react";
+import {
+  fadeInUp,
+  slideInLeft,
+  SMOOTH_TRANSITION,
+} from "@/lib/animationVariants";
 
 interface PodcastSectionProps {
   title?: string;
@@ -39,8 +44,8 @@ export function PodcastSection({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      {...fadeInUp}
+      transition={SMOOTH_TRANSITION}
       className={`glass-morphism rounded-2xl border border-gray-800 overflow-hidden ${className}`}
     >
       <div className="p-4 border-b border-gray-800">
@@ -55,9 +60,8 @@ export function PodcastSection({
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+            {...slideInLeft}
+            transition={{ ...SMOOTH_TRANSITION, delay: index * 0.1 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${link.color} hover:shadow-lg transition-all duration-200`}

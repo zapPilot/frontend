@@ -9,6 +9,7 @@ import {
   type UseTokenBalancesParams,
 } from "./useTokenBalancesQuery";
 import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
+import { dedupeStrings } from "../../lib/stringUtils";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain
@@ -116,7 +117,7 @@ const normalizeBalanceLookupKeys = (token: {
     keys.push(NATIVE_SENTINEL);
   }
 
-  return Array.from(new Set(keys));
+  return dedupeStrings(keys);
 };
 
 export const useZapTokensWithStates = (
@@ -150,7 +151,7 @@ export const useZapTokensWithStates = (
             (isHexAddress(address) || address === NATIVE_SENTINEL)
         );
 
-      return Array.from(new Set(normalizedOverride));
+      return dedupeStrings(normalizedOverride);
     }
 
     const candidateAddresses = tokens.flatMap(token => {
@@ -172,7 +173,7 @@ export const useZapTokensWithStates = (
         (isHexAddress(address) || address === NATIVE_SENTINEL)
     );
 
-    return Array.from(new Set(filtered));
+    return dedupeStrings(filtered);
   }, [tokenAddressesOverride, tokens]);
 
   const balanceQueryOptions: UseTokenBalancesParams = {
@@ -204,8 +205,8 @@ export const useZapTokensWithStates = (
         (symbol): symbol is string => Boolean(symbol) && symbol.length > 0
       );
 
-    // Deduplicate via Set
-    return Array.from(new Set(symbols));
+    // Deduplicate via utility
+    return dedupeStrings(symbols);
   }, [tokens, priceEnabled]);
 
   // Fetch prices in parallel with balances

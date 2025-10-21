@@ -11,6 +11,7 @@
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { normalizeSymbol, normalizeSymbols } from "../lib/stringUtils";
 
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;
@@ -144,10 +145,10 @@ export const getTokenPrices = (symbols: string[]): Promise<TokenPriceData[]> =>
       return [];
     }
 
-    // Normalize and deduplicate symbols
-    const normalizedSymbols = [
-      ...new Set(symbols.map(s => s.toLowerCase().trim())),
-    ].filter(Boolean);
+    // Normalize and deduplicate symbols (uppercase for API compatibility)
+    const normalizedSymbols = normalizeSymbols(symbols).map(s =>
+      s.toLowerCase()
+    );
 
     if (normalizedSymbols.length === 0) {
       return [];
@@ -218,8 +219,8 @@ export const getTokenPrices = (symbols: string[]): Promise<TokenPriceData[]> =>
  */
 export const getTokenPrice = (symbol: string): Promise<TokenPriceData> =>
   callPriceService(async () => {
-    // Validate input
-    const normalizedSymbol = symbol?.toLowerCase().trim();
+    // Validate and normalize input
+    const normalizedSymbol = normalizeSymbol(symbol).toLowerCase();
 
     if (!normalizedSymbol) {
       return {

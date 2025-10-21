@@ -1,6 +1,7 @@
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
 
 const MAX_TOKEN_ADDRESSES = 50;
 const MORALIS_API_KEY =
@@ -47,7 +48,7 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
     "";
 
   // Handle native tokens - if no address is provided, check if it's a native token
-  let address = addressCandidate.toLowerCase();
+  let address = normalizeAddress(addressCandidate);
   if (!addressCandidate || addressCandidate === "") {
     // Check if this is a native token by looking at symbol or other indicators
     const symbol = (record["symbol"] as string | undefined)?.toLowerCase();
@@ -257,7 +258,7 @@ const normalizeWalletResponse = (
 
   const normalized: WalletTokenBalances = {
     chainId,
-    address: addressCandidate.toLowerCase(),
+    address: normalizeAddress(addressCandidate),
     fromCache: fromCacheFlag,
     tokens,
   };
@@ -283,14 +284,10 @@ export const getTokenBalances = (
       throw new Error("A wallet address is required to fetch balances");
     }
 
-    const normalizedWallet = walletAddress.toLowerCase();
+    const normalizedWallet = normalizeAddress(walletAddress);
 
-    const normalizedTokens = Array.from(
-      new Set(
-        tokenAddresses
-          .filter(address => Boolean(address))
-          .map(address => address.toLowerCase())
-      )
+    const normalizedTokens = normalizeAddresses(
+      tokenAddresses.filter(address => Boolean(address))
     );
 
     if (normalizedTokens.length > MAX_TOKEN_ADDRESSES) {

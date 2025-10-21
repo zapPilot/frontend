@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ReactNode } from "react";
 import { BaseComponentProps } from "../../types/ui.types";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 type AriaLive = "off" | "polite" | "assertive";
 
@@ -27,8 +28,8 @@ export function GlassCard({
   if (animate) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...fadeInUp}
+        transition={SMOOTH_TRANSITION}
         className={fullClassName}
         data-testid={testId}
         role={role}

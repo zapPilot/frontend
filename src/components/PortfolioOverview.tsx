@@ -15,6 +15,7 @@ import { PieChartLoading } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 import { BaseComponentProps } from "../types/ui.types";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 type TabType = "assets" | "borrowing";
 
@@ -75,8 +76,8 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...fadeInUp}
+        transition={SMOOTH_TRANSITION}
         className={`glass-morphism rounded-3xl p-6 border border-gray-800 ${className}`}
         data-testid={testId || "portfolio-overview"}
       >

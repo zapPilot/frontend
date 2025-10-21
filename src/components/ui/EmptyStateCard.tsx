@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import React from "react";
 import { BaseComponentProps } from "../../types/ui.types";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface EmptyStateCardProps extends BaseComponentProps {
   icon?: React.ReactNode;
@@ -16,8 +17,8 @@ export const EmptyStateCard = React.memo<EmptyStateCardProps>(
   ({ icon, title, description, className = "", children }) => {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        {...fadeInUp}
+        transition={SMOOTH_TRANSITION}
         className={`glass-morphism rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-gray-800 text-center ${className}`}
       >
         {/* Icon */}
