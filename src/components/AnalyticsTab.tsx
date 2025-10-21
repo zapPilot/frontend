@@ -48,7 +48,7 @@ export function AnalyticsTab({
   const landingPageQuery = useLandingPageData(resolvedUserId);
   const poolDetails = landingPageQuery.data?.pool_details || [];
   const poolLoading = landingPageQuery.isLoading;
-  const poolError = landingPageQuery.error?.message || null;
+  const poolError = (landingPageQuery.error as Error | null)?.message || null;
   const poolRefetch = landingPageQuery.refetch;
 
   // Use centralized category filter context when available

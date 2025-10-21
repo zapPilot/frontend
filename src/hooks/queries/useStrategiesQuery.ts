@@ -1,4 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { createQueryConfig } from "./queryDefaults";
 import { getStrategies } from "../../services/intentService";
 import { getLandingPagePortfolioData } from "../../services/analyticsService";
 import { AssetCategory } from "../../components/PortfolioAllocation/types";
@@ -27,7 +28,24 @@ export const strategiesKeys = {
 export function useStrategiesQuery(
   config?: StrategiesFetchConfig
 ): UseQueryResult<AssetCategory[], StrategiesApiError> {
-  return useQuery({
+  return useQuery<AssetCategory[], StrategiesApiError>({
+    ...createQueryConfig({
+      dataType: "static",
+      retryConfig: {
+        maxRetries: 3,
+        customRetry: (failureCount, error) => {
+          // Don't retry on client errors (4xx)
+          if (
+            error instanceof StrategiesApiError &&
+            error.statusCode &&
+            error.statusCode < 500
+          ) {
+            return false;
+          }
+          return failureCount < 3;
+        },
+      },
+    }),
     queryKey: strategiesKeys.list(config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
@@ -45,22 +63,8 @@ export function useStrategiesQuery(
         throw new StrategiesApiError(message, "FETCH_ERROR");
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes - strategies don't change frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
     refetchOnWindowFocus: false,
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes when tab is active
-    retry: (failureCount, error) => {
-      // Don't retry on client errors (4xx)
-      if (
-        error instanceof StrategiesApiError &&
-        error.statusCode &&
-        error.statusCode < 500
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 
@@ -71,7 +75,24 @@ export function useStrategiesWithPortfolioQuery(
   userId?: string,
   config?: StrategiesFetchConfig
 ): UseQueryResult<AssetCategory[], StrategiesApiError> {
-  return useQuery({
+  return useQuery<AssetCategory[], StrategiesApiError>({
+    ...createQueryConfig({
+      dataType: "dynamic",
+      retryConfig: {
+        maxRetries: 3,
+        customRetry: (failureCount, error) => {
+          // Don't retry on client errors (4xx)
+          if (
+            error instanceof StrategiesApiError &&
+            error.statusCode &&
+            error.statusCode < 500
+          ) {
+            return false;
+          }
+          return failureCount < 3;
+        },
+      },
+    }),
     queryKey: strategiesKeys.withPortfolio(userId, config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
@@ -108,23 +129,8 @@ export function useStrategiesWithPortfolioQuery(
         throw new StrategiesApiError(message, "FETCH_ERROR");
       }
     },
-    // Removed enabled condition - query now runs for all users
-    staleTime: 2 * 60 * 1000, // 2 minutes - portfolio data changes more frequently
-    gcTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: false,
     refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes for portfolio data
-    retry: (failureCount, error) => {
-      // Don't retry on client errors (4xx)
-      if (
-        error instanceof StrategiesApiError &&
-        error.statusCode &&
-        error.statusCode < 500
-      ) {
-        return false;
-      }
-      return failureCount < 3;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
 

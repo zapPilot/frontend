@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { createQueryConfig } from "./queryDefaults";
 import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
@@ -20,6 +21,12 @@ export interface UsePortfolioQueryReturn {
 // Hook for unified landing page data - replaces dual API calls
 export function useLandingPageData(userId: string | null | undefined) {
   return useQuery({
+    ...createQueryConfig({
+      dataType: "realtime",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND", "404"],
+      },
+    }),
     queryKey: queryKeys.portfolio.landingPage(userId || ""),
     queryFn: async (): Promise<LandingPageResponse> => {
       if (!userId) {
@@ -30,21 +37,7 @@ export function useLandingPageData(userId: string | null | undefined) {
       return await getLandingPagePortfolioData(userId);
     },
     enabled: !!userId, // Only run when userId is available
-    staleTime: 30 * 1000, // Portfolio data is stale after 30 seconds (DeFi changes quickly)
-    gcTime: 2 * 60 * 1000, // Keep in cache for 2 minutes
     refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active
-    retry: (failureCount, error) => {
-      // Don't retry USER_NOT_FOUND errors
-      if (error instanceof Error && error.message.includes("USER_NOT_FOUND")) {
-        return false;
-      }
-      // Don't retry 404 errors (user has no portfolio data)
-      if (error instanceof Error && error.message.includes("404")) {
-        return false;
-      }
-      // Retry other errors up to 2 times
-      return failureCount < 2;
-    },
   });
 }
 

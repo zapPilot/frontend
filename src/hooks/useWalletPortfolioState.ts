@@ -98,7 +98,7 @@ export function useWalletPortfolioState(
     isConnected,
     isLoading: landingPageQuery.isLoading,
     isRetrying: landingPageQuery.isRefetching,
-    error: landingPageQuery.error?.message || null,
+    error: (landingPageQuery.error as Error | null)?.message || null,
     landingPageData: landingPageData ?? null,
     hasZeroData,
   });

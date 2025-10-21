@@ -14,10 +14,10 @@ import {
   getTokenPrices,
   type TokenPriceData,
 } from "../../services/priceService";
+import { createQueryConfig } from "./queryDefaults";
 
 // Price-specific timing constants
 const PRICE_STALE_TIME = 2 * 60 * 1000; // 2 minutes - prices change frequently
-const PRICE_GC_TIME = 5 * 60 * 1000; // Keep cached slightly longer for UX
 const PRICE_REFETCH_INTERVAL = 2 * 60 * 1000; // Auto-refetch every 2 minutes
 const PRICE_STALENESS_THRESHOLD = 5 * 60 * 1000; // Consider stale after 5 minutes
 
@@ -191,29 +191,12 @@ export const useTokenPricesQuery = (
 
   // Execute React Query
   const query = useQuery({
+    ...createQueryConfig({ dataType: "dynamic" }),
     queryKey,
     queryFn: () => getTokenPrices(normalizedSymbols),
     enabled: queryEnabled,
-    staleTime,
-    gcTime: PRICE_GC_TIME,
+    staleTime, // Allow override from params
     refetchInterval: queryEnabled ? refetchInterval : false,
-    retry: (failureCount, error) => {
-      // Don't retry more than twice
-      if (failureCount >= 2) {
-        return false;
-      }
-
-      // Don't retry on client errors (4xx)
-      if (error && typeof error === "object" && "status" in error) {
-        const status = (error as { status?: number }).status;
-        if (typeof status === "number" && status >= 400 && status < 500) {
-          return false;
-        }
-      }
-
-      return true;
-    },
-    retryDelay: attemptIndex => Math.min(1500 * 2 ** attemptIndex, 30_000),
   });
 
   // Normalize to map for O(1) lookups with staleness detection
@@ -275,7 +258,7 @@ export const useTokenPricesQuery = (
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     isError: query.isError,
-    error: query.error,
+    error: query.error as Error | null,
     refetch: query.refetch,
   };
 };
