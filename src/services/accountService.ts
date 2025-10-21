@@ -12,7 +12,7 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
-import { executeServiceCall } from "./serviceHelpers";
+import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Account Service Error Details
@@ -79,6 +79,11 @@ const createAccountServiceError = (error: unknown): AccountServiceError => {
       message = "User account not found. Please connect your wallet first.";
       break;
     case 409:
+      if (message?.includes("wallet already belongs to another user")) {
+        // Keep the backend's enhanced message which already includes guidance
+        // The backend now returns: "Wallet already belongs to another user, please delete one of the accounts instead"
+        break;
+      }
       if (message?.includes("wallet")) {
         message = "This wallet is already associated with an account.";
       } else if (message?.includes("email")) {
@@ -106,8 +111,7 @@ const createAccountServiceError = (error: unknown): AccountServiceError => {
 const accountApiClient = httpUtils.accountApi;
 const backendApiClient = httpUtils.backendApi;
 
-const callAccountApi = <T>(call: () => Promise<T>) =>
-  executeServiceCall(call, { mapError: createAccountServiceError });
+const callAccountApi = createServiceCaller(createAccountServiceError);
 
 // User Management Operations
 
@@ -150,6 +154,15 @@ export const updateUserEmail = (
 export const removeUserEmail = (userId: string): Promise<UpdateEmailResponse> =>
   callAccountApi(() =>
     accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}/email`)
+  );
+
+/**
+ * Delete user account
+ * Cannot delete users with active subscriptions
+ */
+export const deleteUser = (userId: string): Promise<UpdateEmailResponse> =>
+  callAccountApi(() =>
+    accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}`)
   );
 
 // Wallet Management Operations
@@ -248,26 +261,24 @@ export const getUserTokens = (
     amount: number;
   }>
 > =>
-  executeServiceCall(
-    () =>
-      backendApiClient.get<
-        Array<{
-          id: string;
-          chain: string;
-          name: string;
-          symbol: string;
-          display_symbol: string;
-          optimized_symbol: string;
-          decimals: number;
-          logo_url: string;
-          protocol_id: string;
-          price: number;
-          is_verified: boolean;
-          is_core: boolean;
-          is_wallet: boolean;
-          time_at: number;
-          amount: number;
-        }>
-      >(`/user/${accountAddress}/${chainName}/tokens`),
-    { mapError: createAccountServiceError }
+  callAccountApi(() =>
+    backendApiClient.get<
+      Array<{
+        id: string;
+        chain: string;
+        name: string;
+        symbol: string;
+        display_symbol: string;
+        optimized_symbol: string;
+        decimals: number;
+        logo_url: string;
+        protocol_id: string;
+        price: number;
+        is_verified: boolean;
+        is_core: boolean;
+        is_wallet: boolean;
+        time_at: number;
+        amount: number;
+      }>
+    >(`/user/${accountAddress}/${chainName}/tokens`)
   );

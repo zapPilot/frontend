@@ -3,7 +3,15 @@
  * Tests for the extracted HTTP utilities
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import {
   APIError,
   API_ENDPOINTS,
@@ -15,7 +23,10 @@ import {
   httpUtils,
 } from "../../../src/lib/http-utils";
 
-// Mock fetch globally
+// Preserve original fetch so we can restore after the suite runs
+const originalFetch = global.fetch;
+
+// Mock fetch globally for these tests
 global.fetch = vi.fn();
 
 describe("HTTP Utils", () => {
@@ -26,7 +37,11 @@ describe("HTTP Utils", () => {
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   describe("Basic HTTP functions", () => {

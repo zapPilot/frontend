@@ -7,7 +7,7 @@
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
 import { StrategiesApiResponse } from "../types/strategies";
-import { executeServiceCall } from "./serviceHelpers";
+import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Intent Engine interfaces
@@ -52,8 +52,7 @@ export interface IntentStatus {
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;
 
-const callIntentService = <T>(call: () => Promise<T>) =>
-  executeServiceCall(call, { mapError: createIntentServiceError });
+const callIntentService = createServiceCaller(createIntentServiceError);
 
 // Intent Execution Operations
 

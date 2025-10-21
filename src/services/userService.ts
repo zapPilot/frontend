@@ -22,6 +22,7 @@ import {
   updateUserEmail as updateUserEmailService,
   removeUserEmail as removeUserEmailService,
   updateWalletLabel as updateWalletLabelService,
+  deleteUser as deleteUserService,
 } from "./accountService";
 
 // Using the new service-specific AccountApiClient
@@ -180,6 +181,29 @@ export const removeUserEmail = async (
     };
   }
 };
+
+/**
+ * Delete user account
+ * Cannot delete users with active subscriptions
+ */
+export const deleteUser = async (
+  userId: string
+): Promise<ServiceResponse<UpdateEmailResponse>> => {
+  try {
+    const data = await deleteUserService(userId);
+
+    return {
+      data,
+      success: true,
+    };
+  } catch (error) {
+    return {
+      error: handleWalletError(error),
+      success: false,
+    };
+  }
+};
+
 /**
  * Update wallet label
  */

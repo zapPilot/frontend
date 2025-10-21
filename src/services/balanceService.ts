@@ -1,6 +1,6 @@
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
-import { executeServiceCall } from "./serviceHelpers";
+import { createServiceCaller } from "../lib/createServiceCaller";
 
 const MAX_TOKEN_ADDRESSES = 50;
 const MORALIS_API_KEY =
@@ -8,8 +8,7 @@ const MORALIS_API_KEY =
 
 const intentEngineClient = httpUtils.intentEngine;
 
-const callBalanceService = <T>(call: () => Promise<T>) =>
-  executeServiceCall(call, { mapError: createIntentServiceError });
+const callBalanceService = createServiceCaller(createIntentServiceError);
 
 export interface GetTokenBalancesParams {
   chainId: number;
