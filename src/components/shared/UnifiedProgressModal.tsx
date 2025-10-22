@@ -6,7 +6,6 @@ import {
   ArrowRight,
   ArrowRightLeft,
   CheckCircle,
-  Clock,
   DollarSign,
   FileText,
   Loader2,
@@ -14,12 +13,12 @@ import {
   Settings,
   Shield,
   TrendingUp,
-  X,
   Zap,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
-import { GlassCard } from "../ui";
+import { GlassCard, ModalCloseButton } from "../ui";
 import { Z_INDEX } from "@/constants/design-system";
+import { getStatusIcon, type StepStatus } from "@/lib/statusUtils";
 
 // Base step interface
 interface BaseStep {
@@ -27,7 +26,7 @@ interface BaseStep {
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-  status: "pending" | "in_progress" | "completed" | "error";
+  status: StepStatus;
   estimatedTime: number; // in seconds
   details?: string;
   txHash?: string;
@@ -307,20 +306,7 @@ const UnifiedProgressModalComponent = ({
     }
   }, [isComplete, hasError, onClose]);
 
-  const getStatusIcon = (status: BaseStep["status"]) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle className="w-5 h-5 text-green-400" />;
-      case "in_progress":
-        return <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />;
-      case "error":
-        return <AlertCircle className="w-5 h-5 text-red-400" />;
-      default:
-        return <Clock className="w-5 h-5 text-gray-400" />;
-    }
-  };
-
-  const getStepStyle = (status: BaseStep["status"], isActive: boolean) => {
+  const getStepStyle = (status: StepStatus, isActive: boolean) => {
     if (status === "completed") {
       return "border-green-500/50 bg-green-900/20";
     }
@@ -391,12 +377,7 @@ const UnifiedProgressModalComponent = ({
                 </div>
               </div>
               {(isComplete || hasError) && (
-                <button
-                  onClick={handleClose}
-                  className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
-                >
-                  <X className="w-5 h-5 text-gray-300" />
-                </button>
+                <ModalCloseButton onClose={handleClose} />
               )}
             </div>
 

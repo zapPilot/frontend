@@ -11,12 +11,12 @@ import { PoolPerformanceTable } from "./PoolAnalytics";
 import { LoadingSpinner } from "@/components/ui";
 
 // Import component props interface for proper typing
-import type { PortfolioChartProps } from "./PortfolioChart";
+import type { PortfolioChartProps } from "./PortfolioChart/";
 
 // Dynamic import for heavy chart component
 const PortfolioChart: ComponentType<PortfolioChartProps> = dynamic(
   () =>
-    import("./PortfolioChart").then(mod => ({ default: mod.PortfolioChart })),
+    import("./PortfolioChart/").then(mod => ({ default: mod.PortfolioChart })),
   {
     loading: () => (
       <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">

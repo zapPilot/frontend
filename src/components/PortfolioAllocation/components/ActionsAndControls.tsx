@@ -1,8 +1,8 @@
 "use client";
 
 import { TokenImage } from "@/components/shared/TokenImage";
-import { GradientButton } from "@/components/ui";
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { GradientButton, TokenListSkeleton } from "@/components/ui";
+import { FLEX_PATTERNS, GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
 import {
   useZapTokensWithStates,
@@ -83,7 +83,7 @@ export const ActionButton = memo<ActionButtonProps>(
           {...(onAction && { onClick: onAction })}
           gradient={GRADIENTS.PRIMARY}
           disabled={includedCategories.length === 0 || !isEnabled}
-          className="w-full py-4 px-6 hover:from-purple-500 hover:to-blue-500 disabled:opacity-60"
+          className={`w-full py-4 px-6 hover:${GRADIENTS.PRIMARY_HOVER} disabled:opacity-60`}
           testId="zap-action-button"
         >
           {buttonText}
@@ -123,8 +123,8 @@ interface TokenSummaryProps {
 
 const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
   const containerClassName = className
-    ? `flex items-center gap-3 ${className}`
-    : "flex items-center gap-3";
+    ? `${FLEX_PATTERNS.CENTER_GAP_3} ${className}`
+    : FLEX_PATTERNS.CENTER_GAP_3;
 
   const hasBalance = token.balance !== undefined;
   const formattedBalance = hasBalance
@@ -151,7 +151,7 @@ const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
         className="w-8 h-8 flex-shrink-0"
       />
       <div className="flex-1 min-w-0 text-left">
-        <div className="flex items-center gap-2 text-sm leading-tight">
+        <div className={`${FLEX_PATTERNS.CENTER_GAP_2} text-sm leading-tight`}>
           <span className="truncate font-semibold text-white">
             {token.symbol}
           </span>
@@ -161,7 +161,7 @@ const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs leading-tight">
+        <div className={`${FLEX_PATTERNS.CENTER_GAP_2} text-xs leading-tight`}>
           <span className="truncate text-gray-400">{token.name}</span>
           {formattedUsd && (
             <span className="ml-auto text-gray-500">{formattedUsd}</span>
@@ -241,28 +241,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
               className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
               {/* Loading State - Compact Skeleton */}
-              {isInitialLoading && (
-                <div className="space-y-1 p-2">
-                  {Array(5)
-                    .fill(0)
-                    .map((_, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 py-2.5 px-3"
-                      >
-                        <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
-                        <div className="flex-1 min-w-0 space-y-1">
-                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-16" />
-                          <div className="h-3 bg-gray-700 rounded animate-pulse w-24" />
-                        </div>
-                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                          <div className="h-3.5 bg-gray-700 rounded animate-pulse w-20" />
-                          <div className="h-3 bg-gray-700 rounded animate-pulse w-16" />
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
+              {isInitialLoading && <TokenListSkeleton count={5} />}
 
               {/* Error State */}
               {isError && (
@@ -555,7 +534,7 @@ export const AmountInput = memo<AmountInputProps>(
               ${
                 disabled || isAtMin
                   ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+                  : `bg-gradient-to-br ${GRADIENTS.PRIMARY_SUBTLE} text-white hover:${GRADIENTS.PRIMARY_SUBTLE_HOVER}`
               }
             `}
             aria-label="Decrease amount"
@@ -616,7 +595,7 @@ export const AmountInput = memo<AmountInputProps>(
               ${
                 disabled || isAtMax
                   ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                  : "bg-gradient-to-br from-purple-500/20 to-blue-500/20 text-white hover:from-purple-500/30 hover:to-blue-500/30"
+                  : `bg-gradient-to-br ${GRADIENTS.PRIMARY_SUBTLE} text-white hover:${GRADIENTS.PRIMARY_SUBTLE_HOVER}`
               }
             `}
             aria-label="Increase amount"
@@ -651,7 +630,7 @@ export const AmountInput = memo<AmountInputProps>(
             ${
               disabled || isAtMax
                 ? "bg-gray-800 text-gray-600 cursor-not-allowed"
-                : "bg-gradient-to-r from-purple-500/10 to-blue-500/10 text-purple-300 hover:from-purple-500/20 hover:to-blue-500/20"
+                : `bg-gradient-to-r ${GRADIENTS.PRIMARY_FAINT} text-purple-300 hover:${GRADIENTS.PRIMARY_FAINT_HOVER}`
             }
           `}
           aria-label="Set to maximum amount"

@@ -5,6 +5,7 @@ import {
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
+import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { memo } from "react";
 import { CategoryShift, ProcessedAssetCategory } from "../../types";
@@ -89,7 +90,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
     });
 
     const valueSummary = (
-      <div className="flex items-center gap-3 text-xs text-gray-400">
+      <div className={`${FLEX_PATTERNS.CENTER_GAP_3} text-xs text-gray-400`}>
         <div className="mt-0.5">{formattedCategoryValue}</div>
       </div>
     );
@@ -98,7 +99,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
       return (
         <div data-testid={`allocation-${category.id}`} className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className={FLEX_PATTERNS.CENTER_GAP_2}>
               <span className="text-xs text-gray-500 whitespace-nowrap">
                 Current:
               </span>

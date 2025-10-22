@@ -1,6 +1,7 @@
 "use client";
 
 import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
+import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatPercentage } from "@/lib/formatters";
 import { memo } from "react";
 import { ProcessedAssetCategory } from "../../types";
@@ -16,15 +17,15 @@ const TokenSymbolsList = ({
   tokens: string[];
   label: string;
 }) => (
-  <span className="flex items-center gap-1">
+  <span className={FLEX_PATTERNS.CENTER_GAP_1}>
     <span className="text-gray-400">{label}:</span>
-    <div className="flex items-center gap-1">
+    <div className={FLEX_PATTERNS.CENTER_GAP_1}>
       {tokens.map((token, index) => {
         const isLast = index === tokens.length - 1;
 
         return (
           <span key={token} className="flex items-center">
-            <div className="flex items-center gap-1">
+            <div className={FLEX_PATTERNS.CENTER_GAP_1}>
               <ImageWithFallback
                 src={`https://zap-assets-worker.davidtnfsh.workers.dev/tokenPictures/${token.toLowerCase()}.webp`}
                 alt={`${token} token`}

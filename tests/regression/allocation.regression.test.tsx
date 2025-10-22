@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import PortfolioChart from "@/components/PortfolioChart";
+import PortfolioChart from "@/components/PortfolioChart/";
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 import { AllocationDataFactory } from "../utils/chartHoverTestFactories";
 import { SVGEventFactory } from "../utils/eventFactories";

@@ -714,3 +714,47 @@ export function PieChartLoading({
     <PieChartSkeleton data-testid={testId ?? "pie-chart-loading"} {...rest} />
   );
 }
+
+// =============================================================================
+// TOKEN LIST SKELETON
+// =============================================================================
+
+interface TokenListSkeletonProps {
+  count?: number;
+  className?: string;
+  "data-testid"?: string;
+}
+
+/**
+ * Loading skeleton for token list displays
+ * Used in token selectors and similar token list UIs
+ * Shows animated loading placeholders for token icon, name, and balance
+ */
+export function TokenListSkeleton({
+  count = 3,
+  className = "",
+  "data-testid": testId = "token-list-skeleton",
+}: TokenListSkeletonProps) {
+  return (
+    <div className={`space-y-1 p-2 ${className}`} data-testid={testId}>
+      {Array(count)
+        .fill(0)
+        .map((_, i) => (
+          <div key={i} className="flex items-center gap-3 py-2.5 px-3">
+            {/* Token icon skeleton */}
+            <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
+            {/* Token info skeleton */}
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="h-3.5 bg-gray-700 rounded animate-pulse w-16" />
+              <div className="h-3 bg-gray-700 rounded animate-pulse w-24" />
+            </div>
+            {/* Balance skeleton */}
+            <div className="flex flex-col items-end gap-1 flex-shrink-0">
+              <div className="h-3.5 bg-gray-700 rounded animate-pulse w-20" />
+              <div className="h-3 bg-gray-700 rounded animate-pulse w-16" />
+            </div>
+          </div>
+        ))}
+    </div>
+  );
+}

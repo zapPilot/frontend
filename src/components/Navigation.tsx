@@ -1,6 +1,6 @@
 "use client";
 
-import { Z_INDEX } from "@/constants/design-system";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback } from "react";
@@ -60,7 +60,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                           data-testid={`desktop-tab-${item.id}`}
                           className={`group flex w-full gap-x-3 rounded-xl p-3 text-sm font-semibold leading-6 transition-all duration-200 ${
                             isActive
-                              ? "bg-gradient-to-r from-purple-600/20 to-blue-600/20 text-white border border-purple-500/30"
+                              ? `bg-gradient-to-r ${GRADIENTS.PRIMARY_20} text-white border border-purple-500/30`
                               : "text-gray-300 hover:text-white hover:bg-white/5"
                           }`}
                         >
@@ -80,7 +80,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                           {isActive && (
                             <motion.div
                               layoutId="activeTab"
-                              className="ml-auto w-1 h-6 bg-gradient-to-b from-purple-400 to-blue-400 rounded-full"
+                              className={`ml-auto w-1 h-6 bg-gradient-to-b ${GRADIENTS.PRIMARY_400} rounded-full`}
                             />
                           )}
                         </motion.button>
@@ -169,7 +169,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
                 {isActive && (
                   <motion.div
                     layoutId="mobileActiveTab"
-                    className="absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r from-purple-400 to-blue-400 rounded-full"
+                    className={`absolute -top-0.5 left-1/2 transform -translate-x-1/2 w-8 h-0.5 bg-gradient-to-r ${GRADIENTS.PRIMARY_400} rounded-full`}
                   />
                 )}
               </motion.button>

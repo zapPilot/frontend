@@ -49,7 +49,6 @@ export const CHART_PERIODS: ChartPeriod[] = [
 // MOCK DATA GENERATION
 // =============================================================================
 // Mock data generation functions removed in Phase 1 cleanup
-// TODO: Replace with real API data when endpoints are available
 
 /**
  * Generate analytics metrics with real risk data
