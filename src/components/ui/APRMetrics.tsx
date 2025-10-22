@@ -3,6 +3,7 @@
 import { TrendingUp, TrendingDown, Percent, Calendar } from "lucide-react";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { APRMetricsSize } from "../../types/portfolio";
+import { formatPercentage } from "../../lib/formatters";
 
 interface APRMetricsProps {
   annualAPR: number;
@@ -53,8 +54,7 @@ export function APRMetrics({
             <TrendingDown className={styles.icon} />
           )}
           <span className={`${styles.text} font-semibold`}>
-            {annualAPR >= 0 ? "+" : ""}
-            {annualAPR.toFixed(2)}%
+            {formatPercentage(annualAPR, true, 2)}
           </span>
         </div>
       </div>
@@ -73,8 +73,7 @@ export function APRMetrics({
             <TrendingDown className={styles.icon} />
           )}
           <span className={`${styles.text} font-semibold`}>
-            {monthlyReturn >= 0 ? "+" : ""}
-            {monthlyReturn.toFixed(2)}%
+            {formatPercentage(monthlyReturn, true, 2)}
           </span>
         </div>
       </div>

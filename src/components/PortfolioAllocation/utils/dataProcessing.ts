@@ -5,6 +5,7 @@ import {
   ProcessedAssetCategory,
   RebalanceData,
 } from "../types";
+import { clamp, clampMin, ensureNonNegative } from "../../../lib/mathUtils";
 
 // Generate mock target allocation data for rebalancing demo
 export const generateTargetAllocation = (
@@ -18,9 +19,9 @@ export const generateTargetAllocation = (
     switch (category.id) {
       case "btc":
         // Slightly reduce BTC allocation
-        targetPercentage = Math.max(
-          25,
-          category.activeAllocationPercentage - 5
+        targetPercentage = clampMin(
+          category.activeAllocationPercentage - 5,
+          25
         );
         break;
       case "eth":
@@ -40,7 +41,7 @@ export const generateTargetAllocation = (
     }
 
     // Ensure percentage is within valid range
-    targetPercentage = Math.max(0, Math.min(100, targetPercentage));
+    targetPercentage = clamp(targetPercentage, 0, 100);
 
     return {
       ...category,
@@ -142,8 +143,8 @@ export const processAssetCategories = (
 
     const targetPercentage =
       override !== undefined
-        ? Math.max(0, override)
-        : 100 / Math.max(assetCategories.length, 1);
+        ? ensureNonNegative(override)
+        : 100 / clampMin(assetCategories.length, 1);
 
     // If overrides don't sum to 100, treat them as-is. The remainder will be shown as unallocated.
     const categoryValue = (targetPercentage / 100) * totalPortfolioValue;

@@ -5,6 +5,8 @@ import {
 } from "../constants/portfolio";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { portfolioStateUtils } from "../utils/portfolio.utils";
+import { formatPercentage, formatLargeNumber } from "./formatters";
+import { ensureNonNegative } from "./mathUtils";
 
 export interface SVGPathPoint {
   x: number;
@@ -94,14 +96,15 @@ export const formatAxisLabel = (
   type: "currency" | "percentage" = "currency"
 ): string => {
   if (type === "percentage") {
-    return `${value.toFixed(1)}%`;
+    return formatPercentage(value, false, 1);
   }
 
+  // For currency, use formatLargeNumber which already handles K/M/B
   if (value >= 1000) {
-    return `$${(value / 1000).toFixed(0)}k`;
+    return `$${formatLargeNumber(value, 0)}`;
   }
 
-  return `$${value.toFixed(0)}`;
+  return `$${Math.round(value)}`;
 };
 
 export const generateYAxisLabels = (
@@ -128,10 +131,10 @@ export const generateAllocationChartData = (
 
   return data.flatMap((point, index) => {
     const sanitizedValues: Record<AllocationAssetKey, number> = {
-      btc: Math.max(point.btc ?? 0, 0),
-      eth: Math.max(point.eth ?? 0, 0),
-      stablecoin: Math.max(point.stablecoin ?? 0, 0),
-      altcoin: Math.max(point.altcoin ?? 0, 0),
+      btc: ensureNonNegative(point.btc ?? 0),
+      eth: ensureNonNegative(point.eth ?? 0),
+      stablecoin: ensureNonNegative(point.stablecoin ?? 0),
+      altcoin: ensureNonNegative(point.altcoin ?? 0),
     };
 
     const totalValue = ALLOCATION_STACK_ORDER.reduce(

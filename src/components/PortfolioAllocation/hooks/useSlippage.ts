@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { formatNumber } from "../../../lib/formatters";
 
 export interface SlippagePreset {
   label: string;
@@ -190,7 +191,10 @@ export const useSlippage = (
 
   // Formatting functions
   const formatValue = useCallback((value: number): string => {
-    return value.toFixed(value < 1 ? 1 : 0);
+    return formatNumber(value, {
+      maximumFractionDigits: value < 1 ? 1 : 0,
+      minimumFractionDigits: value < 1 ? 1 : 0,
+    });
   }, []);
 
   const getSlippageColor = useCallback((value: number): string => {

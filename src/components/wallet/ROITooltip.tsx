@@ -1,6 +1,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { Z_INDEX } from "@/constants/design-system";
+import { formatPercentage } from "@/lib/formatters";
 
 interface ROIWindowItem {
   key: string;
@@ -59,7 +60,7 @@ export function ROITooltip({
               <span>
                 {entry.label} ({entry.dataPoints} data points)
               </span>
-              <span>{entry.value.toFixed(2)}%</span>
+              <span>{formatPercentage(entry.value, false, 2)}</span>
             </div>
           ))}
         </div>

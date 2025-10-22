@@ -1,6 +1,7 @@
 "use client";
 
 import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
+import { formatPercentage } from "@/lib/formatters";
 import { memo } from "react";
 import { ProcessedAssetCategory } from "../../types";
 
@@ -111,13 +112,24 @@ export const CategoryProtocolList = memo<CategoryProtocolListProps>(
                   )}
                   {protocol.apy && (
                     <span className="text-green-400">
-                      APR: {protocol.apy.toFixed(2)}%
+                      APR: {formatPercentage(protocol.apy, false, 2)}
                       {protocol.aprBreakdown &&
                         protocol.aprBreakdown.base &&
                         protocol.aprBreakdown.reward && (
                           <span className="ml-1 text-gray-500">
-                            ({protocol.aprBreakdown.base.toFixed(1)}% +{" "}
-                            {protocol.aprBreakdown.reward.toFixed(1)}%)
+                            (
+                            {formatPercentage(
+                              protocol.aprBreakdown.base,
+                              false,
+                              1
+                            )}{" "}
+                            +{" "}
+                            {formatPercentage(
+                              protocol.aprBreakdown.reward,
+                              false,
+                              1
+                            )}
+                            )
                           </span>
                         )}
                     </span>
@@ -139,7 +151,7 @@ export const CategoryProtocolList = memo<CategoryProtocolListProps>(
               </div>
               <div className="text-right">
                 <div className="font-bold text-white">
-                  {protocol.allocationPercentage.toFixed(1)}%
+                  {formatPercentage(protocol.allocationPercentage, false, 1)}
                 </div>
                 {protocol.riskScore && (
                   <div className="text-xs text-gray-400">

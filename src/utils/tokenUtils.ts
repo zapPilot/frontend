@@ -7,6 +7,8 @@
  * @module utils/tokenUtils
  */
 
+import { ensureNonNegative } from "../lib/mathUtils";
+
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
@@ -209,10 +211,10 @@ export function sanitizeToken(token: UnvalidatedTokenInput): Token | null {
     optimized_symbol: token.optimized_symbol
       ? String(token.optimized_symbol).trim()
       : undefined,
-    amount: Math.max(0, Number(token.amount) || 0),
-    price: Math.max(0, Number(token.price) || 0),
+    amount: ensureNonNegative(Number(token.amount) || 0),
+    price: ensureNonNegative(Number(token.price) || 0),
     decimals: token.decimals
-      ? Math.max(0, Math.floor(Number(token.decimals)))
+      ? ensureNonNegative(Math.floor(Number(token.decimals)))
       : undefined,
     address: token.address ? String(token.address).trim() : undefined,
     raw_amount_hex_str: token.raw_amount_hex_str

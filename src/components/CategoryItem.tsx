@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ArrowRight } from "lucide-react";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency, formatPercentage } from "../lib/formatters";
 import type { CategorySummary } from "../utils/portfolio.utils";
 import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 
@@ -82,7 +82,7 @@ export const CategoryItem = React.memo(
                   isAssets ? "text-sm text-gray-400" : "text-sm text-orange-400"
                 }
               >
-                {category.percentage.toFixed(1)}%{" "}
+                {formatPercentage(category.percentage, false, 1)}{" "}
                 {isAssets ? "of total" : "of debt"}
               </div>
             </div>

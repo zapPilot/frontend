@@ -3,7 +3,11 @@ import React, { useCallback, useRef, useState } from "react";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
-import { formatCurrency, formatSmallCurrency } from "../../lib/formatters";
+import {
+  formatCurrency,
+  formatSmallCurrency,
+  formatPercentage,
+} from "../../lib/formatters";
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
@@ -168,7 +172,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           >
             <TrendingUp className="w-4 h-4" />
             <span className="text-xl font-semibold">
-              {(estimatedYearlyROI * 100).toFixed(2)}%
+              {formatPercentage(estimatedYearlyROI * 100, false, 2)}
             </span>
             <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
               est.

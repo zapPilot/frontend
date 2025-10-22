@@ -29,10 +29,12 @@ import {
   generateSVGPath,
   generateYAxisLabels,
 } from "../lib/chartUtils";
+import { ensureNonNegative } from "../lib/mathUtils";
 import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../lib/portfolio-analytics";
+import { formatPercentage } from "../lib/formatters";
 import {
   getEnhancedDrawdown,
   getRollingSharpe,
@@ -115,7 +117,9 @@ const buildStackedPortfolioData = (
             ? categoryEntry.sourceType.toLowerCase()
             : undefined;
         const rawValue = Number(categoryEntry.value ?? 0);
-        const value = Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+        const value = Number.isFinite(rawValue)
+          ? ensureNonNegative(rawValue)
+          : 0;
 
         if (normalizedSource === "defi") {
           defiValue += value;
@@ -133,7 +137,9 @@ const buildStackedPortfolioData = (
               ? protocol.sourceType.toLowerCase()
               : undefined;
           const rawValue = Number(protocol.value ?? 0);
-          const value = Number.isFinite(rawValue) ? Math.max(rawValue, 0) : 0;
+          const value = Number.isFinite(rawValue)
+            ? ensureNonNegative(rawValue)
+            : 0;
 
           if (normalizedSource === "defi") {
             defiValue += value;
@@ -156,12 +162,12 @@ const buildStackedPortfolioData = (
     if (stackedTotalValue === 0 && point.value > 0) {
       const fallbackDefi = point.value * fallbackRatio;
       defiValue = fallbackDefi;
-      walletValue = Math.max(point.value - fallbackDefi, 0);
+      walletValue = ensureNonNegative(point.value - fallbackDefi);
       stackedTotalValue = defiValue + walletValue;
     }
 
     if (stackedTotalValue === 0) {
-      stackedTotalValue = Math.max(point.value, 0);
+      stackedTotalValue = ensureNonNegative(point.value);
     }
 
     return {
@@ -663,7 +669,7 @@ const PortfolioChartComponent = ({
             ? CHART_WIDTH / 2
             : (index / (stackedPortfolioData.length - 1)) * CHART_WIDTH;
 
-        const defiBoundary = Math.max(point.defiValue, 0);
+        const defiBoundary = ensureNonNegative(point.defiValue);
         const totalValue = getStackedTotalValue(point);
 
         const defiY =
@@ -1814,8 +1820,7 @@ const PortfolioChartComponent = ({
               <div
                 className={`font-medium ${isPositive ? "text-green-400" : "text-red-400"}`}
               >
-                {isPositive ? "+" : ""}
-                {totalReturn.toFixed(2)}%
+                {formatPercentage(totalReturn, true, 2)}
                 <span className="text-gray-400 ml-1">({selectedPeriod})</span>
               </div>
               <div className="text-gray-400">

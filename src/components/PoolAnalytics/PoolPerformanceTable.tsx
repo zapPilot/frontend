@@ -9,7 +9,7 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
-import { formatCurrency } from "../../lib/formatters";
+import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { PoolDetail } from "../../services/analyticsService";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { GlassCard } from "../ui";
@@ -58,7 +58,7 @@ const isUnderperforming = (pool: PoolDetail): boolean => {
 };
 
 const formatAPR = (apr: number): string => {
-  return `${(apr * 100).toFixed(2)}%`;
+  return formatPercentage(apr * 100, false, 2);
 };
 
 export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
@@ -401,7 +401,11 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
                   </td>
                   <td className="py-4 text-right">
                     <span className="text-gray-300">
-                      {pool.contribution_to_portfolio.toFixed(1)}%
+                      {formatPercentage(
+                        pool.contribution_to_portfolio,
+                        false,
+                        1
+                      )}
                     </span>
                   </td>
                   <td className="py-4 text-center">
@@ -484,7 +488,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
                 <div>
                   <p className="text-gray-400 mb-1">Portfolio %</p>
                   <p className="text-gray-300">
-                    {pool.contribution_to_portfolio.toFixed(1)}%
+                    {formatPercentage(pool.contribution_to_portfolio, false, 1)}
                   </p>
                 </div>
 

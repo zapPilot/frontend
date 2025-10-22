@@ -16,6 +16,7 @@ import {
 } from "react";
 import { logger } from "../utils/logger";
 import type { ChartHoverState } from "../types/chartHover";
+import { clamp, clampMin } from "../lib/mathUtils";
 
 /**
  * Configuration options for chart hover behavior
@@ -137,7 +138,7 @@ export function useChartHover<T>(
   const testAutoHideTimerRef = useRef<number | null>(null);
 
   // Calculate value range for Y positioning
-  const valueRange = Math.max(maxValue - minValue, 1);
+  const valueRange = clampMin(maxValue - minValue, 1);
 
   /**
    * Mouse move handler with RAF optimization
@@ -156,10 +157,7 @@ export function useChartHover<T>(
 
       // Calculate the data index based on pointer position
       const rawIndex = (mouseX / svgWidth) * (data.length - 1);
-      const clampedIndex = Math.max(
-        0,
-        Math.min(Math.round(rawIndex), data.length - 1)
-      );
+      const clampedIndex = clamp(Math.round(rawIndex), 0, data.length - 1);
 
       // Drop updates if index didn't change (reduces state churn)
       if (lastIndexRef.current === clampedIndex) return;
@@ -314,7 +312,7 @@ export function useChartHover<T>(
       if (!point) return;
 
       const normalizedX =
-        data.length <= 1 ? 0.5 : index / Math.max(data.length - 1, 1);
+        data.length <= 1 ? 0.5 : index / clampMin(data.length - 1, 1);
       const x = normalizedX * chartWidth;
       const yValue = getYValue(point);
       const y =

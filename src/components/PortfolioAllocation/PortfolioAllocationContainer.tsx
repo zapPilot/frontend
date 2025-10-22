@@ -7,6 +7,7 @@ import {
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { clamp, clampMin, ensureNonNegative } from "@/lib/mathUtils";
 import { EnhancedOverview, SwapControls } from "./components";
 import type { SwapControlsRef } from "./components/SwapControls";
 import { usePortfolioData, useRebalanceData } from "./hooks";
@@ -56,7 +57,7 @@ export const PortfolioAllocationContainer: React.FC<
       category => allocations[category.id] === undefined
     );
 
-    const remainingBudget = Math.max(0, 100 - curatedTotal);
+    const remainingBudget = ensureNonNegative(100 - curatedTotal);
     const fallbackValue =
       remainingCategories.length > 0
         ? remainingBudget / remainingCategories.length
@@ -71,7 +72,7 @@ export const PortfolioAllocationContainer: React.FC<
       0
     );
     if (total === 0) {
-      const equalShare = 100 / Math.max(assetCategories.length, 1);
+      const equalShare = 100 / clampMin(assetCategories.length, 1);
       assetCategories.forEach(category => {
         allocations[category.id] = equalShare;
       });
@@ -115,9 +116,10 @@ export const PortfolioAllocationContainer: React.FC<
   const handleAllocationChange = (categoryId: string, value: number) => {
     setCategoryAllocations(prev => {
       const next = { ...prev };
-      next[categoryId] = Math.max(
+      next[categoryId] = clamp(
+        value,
         MIN_ALLOCATION_PERCENT,
-        Math.min(MAX_ALLOCATION_PERCENT, value)
+        MAX_ALLOCATION_PERCENT
       );
       return next;
     });

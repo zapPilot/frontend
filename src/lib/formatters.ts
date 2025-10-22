@@ -340,13 +340,13 @@ export function formatLargeNumber(value: number, decimals = 1): string {
   const sign = value < 0 ? "-" : "";
 
   if (absValue >= 1e9) {
-    return `${sign}${(absValue / 1e9).toFixed(decimals)}B`;
+    return `${sign}${(absValue / 1e9).toFixed(decimals)}b`;
   }
   if (absValue >= 1e6) {
-    return `${sign}${(absValue / 1e6).toFixed(decimals)}M`;
+    return `${sign}${(absValue / 1e6).toFixed(decimals)}m`;
   }
   if (absValue >= 1e3) {
-    return `${sign}${(absValue / 1e3).toFixed(decimals)}K`;
+    return `${sign}${(absValue / 1e3).toFixed(decimals)}k`;
   }
 
   return value.toString();
