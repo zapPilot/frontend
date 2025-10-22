@@ -66,18 +66,25 @@ export const mockFormatters = {
    * Handles very small amounts with threshold display.
    */
   formatSmallCurrency: vi.fn((value: number, options: any = {}) => {
-    const threshold = options.threshold || 0.01;
+    const threshold = options.threshold ?? 0.01;
     if (value === 0) return "$0.00";
 
     const absValue = Math.abs(value);
     const isNegative = value < 0;
 
     if (absValue < threshold) {
-      const formatted = `< $${threshold.toFixed(4)}`;
+      const decimals = threshold < 0.01 ? 4 : 2;
+      const formatted = `< $${threshold.toFixed(decimals)}`;
       return isNegative ? `-${formatted}` : formatted;
     }
 
-    const formatted = `$${absValue.toFixed(2)}`;
+    const formatted = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(absValue);
+
     return isNegative ? `-${formatted}` : formatted;
   }),
 

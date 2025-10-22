@@ -8,11 +8,7 @@
  * @module lib/base-error
  */
 
-import {
-  getBackendErrorMessage,
-  getIntentErrorMessage,
-  getAccountErrorMessage,
-} from "./errorMessages";
+import { getBackendErrorMessage, getIntentErrorMessage } from "./errorMessages";
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -220,33 +216,6 @@ export class IntentServiceError extends BaseServiceError {
   }
 }
 
-/**
- * Account Service Error
- * Handles errors from user account and wallet management operations
- */
-export class AccountServiceError extends BaseServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: ErrorDetails
-  ) {
-    const context: ErrorContext = {
-      source: "account-service",
-      status,
-    };
-    if (code !== undefined) context.code = code;
-    if (details !== undefined) context.details = details;
-
-    super(message, context);
-    this.name = "AccountServiceError";
-  }
-
-  override getUserMessage(): string {
-    return getAccountErrorMessage(this.status, this.message);
-  }
-}
-
 // =============================================================================
 // ERROR FACTORY FUNCTIONS
 // =============================================================================
@@ -295,41 +264,6 @@ export function createServiceError(
 }
 
 /**
- * Enhanced error messages for common backend errors
- */
-export const createBackendServiceError = (
-  error: unknown
-): BackendServiceError => {
-  const errorObj = error as UnknownErrorInput;
-  const status = errorObj.status || errorObj.response?.status || 500;
-  let message = errorObj.message || "Backend service error";
-
-  switch (status) {
-    case 400:
-      if (message?.includes("email")) {
-        message = "Invalid email address format.";
-      } else if (message?.includes("webhook")) {
-        message = "Invalid Discord webhook configuration.";
-      }
-      break;
-    case 429:
-      message =
-        "Too many notification requests. Please wait before sending more.";
-      break;
-    case 502:
-      message = "External notification service is temporarily unavailable.";
-      break;
-  }
-
-  return new BackendServiceError(
-    message,
-    status,
-    errorObj.code,
-    errorObj.details
-  );
-};
-
-/**
  * Enhanced error messages for common intent engine errors
  */
 export const createIntentServiceError = (
@@ -364,48 +298,6 @@ export const createIntentServiceError = (
     errorObj.details
   );
 };
-
-// =============================================================================
-// HTTP ERROR UTILITIES
-// =============================================================================
-
-/**
- * Handle HTTP errors with consistent error creation
- */
-export function handleHTTPError(
-  error: unknown,
-  source = "http-client"
-): BaseServiceError {
-  return createServiceError(error, source, "Network request failed");
-}
-
-/**
- * Check if error is a network/connectivity issue
- */
-export function isNetworkError(error: BaseServiceError): boolean {
-  return (
-    error.status === 0 || // Network unreachable
-    error.status === 408 || // Request timeout
-    error.status === 429 || // Rate limited
-    error.status >= 500 || // Server errors
-    error.message.toLowerCase().includes("network") ||
-    error.message.toLowerCase().includes("connection") ||
-    error.message.toLowerCase().includes("timeout")
-  );
-}
-
-/**
- * Get retry delay for error (exponential backoff)
- */
-export function getRetryDelay(
-  attempt: number,
-  baseDelay = 1000,
-  maxDelay = 30000
-): number {
-  const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-  // Add jitter to prevent thundering herd
-  return delay + Math.random() * 1000;
-}
 
 // =============================================================================
 // EXPORTS

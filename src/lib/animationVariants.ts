@@ -14,28 +14,24 @@ import type { Transition, Variants } from "framer-motion";
 // Transition Presets
 // ============================================================================
 
-/**
- * Spring transition preset with bouncy physics
- *
- * Use for:
- * - Interactive elements (buttons, cards)
- * - Elements that need playful motion
- * - Micro-interactions
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={fadeInUp}
- *   transition={SPRING_TRANSITION}
- * />
- * ```
- */
-export const SPRING_TRANSITION: Transition = {
+// Internal-only constants (not exported)
+const SPRING_TRANSITION: Transition = {
   type: "spring",
   stiffness: 260,
   damping: 20,
 };
 
+const QUICK_TRANSITION: Transition = {
+  duration: 0.2,
+  ease: "easeOut",
+};
+
+const STAGGER_TRANSITION: Transition = {
+  staggerChildren: 0.1,
+  delayChildren: 0.05,
+};
+
+// SMOOTH_TRANSITION is still used in components, so it remains exported
 /**
  * Smooth easeInOut transition
  *
@@ -43,61 +39,10 @@ export const SPRING_TRANSITION: Transition = {
  * - Content reveals
  * - Modal animations
  * - Default animation style
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={fadeIn}
- *   transition={SMOOTH_TRANSITION}
- * />
- * ```
  */
 export const SMOOTH_TRANSITION: Transition = {
   duration: 0.4,
-  ease: [0.4, 0, 0.2, 1], // easeInOut cubic-bezier
-};
-
-/**
- * Quick transition for subtle animations
- *
- * Use for:
- * - Hover effects
- * - Small UI changes
- * - Loading states
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={scaleIn}
- *   transition={QUICK_TRANSITION}
- * />
- * ```
- */
-export const QUICK_TRANSITION: Transition = {
-  duration: 0.2,
-  ease: "easeOut",
-};
-
-/**
- * Stagger transition for child elements
- *
- * Use with `staggerChildren` variant for sequential animations
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={staggerChildren}
- *   transition={STAGGER_TRANSITION}
- * >
- *   {items.map(item => (
- *     <motion.div key={item.id} variants={fadeInUp} />
- *   ))}
- * </motion.div>
- * ```
- */
-export const STAGGER_TRANSITION: Transition = {
-  staggerChildren: 0.1,
-  delayChildren: 0.05,
+  ease: [0.4, 0, 0.2, 1],
 };
 
 // ============================================================================
@@ -379,191 +324,6 @@ export const staggerChildren: Variants = {
 };
 
 // ============================================================================
-// Variant Factories
-// ============================================================================
-
-/**
- * Create custom fadeInUp variant with specified offset
- *
- * @param yOffset - Vertical offset in pixels (default: 20)
- * @returns Custom fadeInUp variant
- *
- * @example
- * ```tsx
- * const heroVariant = createFadeInUp(60);
- * <motion.div variants={heroVariant}>Hero content</motion.div>
- * ```
- */
-export function createFadeInUp(yOffset: number = 20): Variants {
-  return {
-    initial: {
-      opacity: 0,
-      y: yOffset,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-    },
-    exit: {
-      opacity: 0,
-      y: yOffset,
-    },
-  };
-}
-
-/**
- * Create custom fadeInDown variant with specified offset
- *
- * @param yOffset - Vertical offset in pixels (default: 20)
- * @returns Custom fadeInDown variant
- *
- * @example
- * ```tsx
- * const dropdownVariant = createFadeInDown(10);
- * <motion.div variants={dropdownVariant}>Dropdown menu</motion.div>
- * ```
- */
-export function createFadeInDown(yOffset: number = 20): Variants {
-  return {
-    initial: {
-      opacity: 0,
-      y: -yOffset,
-    },
-    animate: {
-      opacity: 1,
-      y: 0,
-    },
-    exit: {
-      opacity: 0,
-      y: -yOffset,
-    },
-  };
-}
-
-/**
- * Create custom slideInLeft variant with specified offset
- *
- * @param xOffset - Horizontal offset in pixels (default: 30)
- * @returns Custom slideInLeft variant
- *
- * @example
- * ```tsx
- * const sidebarVariant = createSlideInLeft(100);
- * <motion.aside variants={sidebarVariant}>Sidebar</motion.aside>
- * ```
- */
-export function createSlideInLeft(xOffset: number = 30): Variants {
-  return {
-    initial: {
-      opacity: 0,
-      x: -xOffset,
-    },
-    animate: {
-      opacity: 1,
-      x: 0,
-    },
-    exit: {
-      opacity: 0,
-      x: -xOffset,
-    },
-  };
-}
-
-/**
- * Create custom slideInRight variant with specified offset
- *
- * @param xOffset - Horizontal offset in pixels (default: 30)
- * @returns Custom slideInRight variant
- *
- * @example
- * ```tsx
- * const panelVariant = createSlideInRight(200);
- * <motion.div variants={panelVariant}>Panel</motion.div>
- * ```
- */
-export function createSlideInRight(xOffset: number = 30): Variants {
-  return {
-    initial: {
-      opacity: 0,
-      x: xOffset,
-    },
-    animate: {
-      opacity: 1,
-      x: 0,
-    },
-    exit: {
-      opacity: 0,
-      x: xOffset,
-    },
-  };
-}
-
-/**
- * Create custom scaleIn variant with specified scale
- *
- * @param scale - Initial scale value (default: 0.95)
- * @returns Custom scaleIn variant
- *
- * @example
- * ```tsx
- * const modalVariant = createScaleIn(0.9);
- * <motion.dialog variants={modalVariant}>Modal</motion.dialog>
- * ```
- */
-export function createScaleIn(scale: number = 0.95): Variants {
-  return {
-    initial: {
-      opacity: 0,
-      scale,
-    },
-    animate: {
-      opacity: 1,
-      scale: 1,
-    },
-    exit: {
-      opacity: 0,
-      scale,
-    },
-  };
-}
-
-/**
- * Create custom staggerChildren variant with specified timing
- *
- * @param staggerDelay - Delay between each child (default: 0.1)
- * @param delayChildren - Initial delay before first child (default: 0.05)
- * @returns Custom staggerChildren variant
- *
- * @example
- * ```tsx
- * const listVariant = createStaggerChildren(0.05, 0);
- * <motion.ul variants={listVariant}>
- *   {items.map(item => <motion.li variants={fadeInUp} />)}
- * </motion.ul>
- * ```
- */
-export function createStaggerChildren(
-  staggerDelay: number = 0.1,
-  delayChildren: number = 0.05
-): Variants {
-  return {
-    initial: {
-      opacity: 0,
-    },
-    animate: {
-      opacity: 1,
-      transition: {
-        staggerChildren: staggerDelay,
-        delayChildren,
-      },
-    },
-    exit: {
-      opacity: 0,
-    },
-  };
-}
-
-// ============================================================================
 // Compound Variants
 // ============================================================================
 
@@ -663,32 +423,7 @@ export type AnimationVariant =
   | "rotateIn";
 
 /**
- * Get transition by preset name
- *
- * @param preset - Transition preset name
- * @returns Transition configuration
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={fadeInUp}
- *   transition={getTransition("spring")}
- * />
- * ```
- */
-export function getTransition(preset: TransitionPreset): Transition {
-  const presets: Record<TransitionPreset, Transition> = {
-    spring: SPRING_TRANSITION,
-    smooth: SMOOTH_TRANSITION,
-    quick: QUICK_TRANSITION,
-    stagger: STAGGER_TRANSITION,
-  };
-
-  return presets[preset];
-}
-
-/**
- * Default export containing all variants and utilities
+ * Default export containing all variants and transitions
  */
 export default {
   // Variants
@@ -702,24 +437,11 @@ export default {
   fadeScaleIn,
   rotateIn,
 
-  // Transitions
+  // Transitions (for backward compatibility)
   transitions: {
     spring: SPRING_TRANSITION,
     smooth: SMOOTH_TRANSITION,
     quick: QUICK_TRANSITION,
     stagger: STAGGER_TRANSITION,
   },
-
-  // Factories
-  create: {
-    fadeInUp: createFadeInUp,
-    fadeInDown: createFadeInDown,
-    slideInLeft: createSlideInLeft,
-    slideInRight: createSlideInRight,
-    scaleIn: createScaleIn,
-    staggerChildren: createStaggerChildren,
-  },
-
-  // Utilities
-  getTransition,
 } as const;
