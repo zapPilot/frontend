@@ -4,6 +4,7 @@ import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingSystem";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { AnalyticsTab } from "@/components/AnalyticsTab";
 import { Z_INDEX } from "@/constants/design-system";
 import {
   InvestmentOpportunity,
@@ -12,27 +13,6 @@ import {
 import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
 import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
-
-// Dynamic imports for code splitting
-const AnalyticsTab: ComponentType<{
-  urlUserId?: string | undefined;
-  categoryFilter?: string | null;
-}> = dynamic(
-  () =>
-    import("@/components/AnalyticsTab").then(mod => ({
-      default: mod.AnalyticsTab,
-    })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Analytics..."
-        className="min-h-96"
-      />
-    ),
-  }
-);
 
 const CommunityTab: ComponentType = dynamic(
   () =>

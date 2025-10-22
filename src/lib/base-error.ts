@@ -36,7 +36,7 @@ export interface ErrorJSON {
 
 /** Interface for unknown error objects from external sources */
 export interface UnknownErrorInput {
-  message?: string;
+  message?: unknown;
   status?: number;
   code?: string;
   details?: ErrorDetails;
@@ -159,6 +159,115 @@ export class BaseServiceError extends Error {
 }
 
 // =============================================================================
+// HELPER UTILITIES
+// =============================================================================
+
+const MESSAGE_CANDIDATE_KEYS = [
+  "message",
+  "error",
+  "error_description",
+  "detail",
+  "title",
+  "description",
+  "reason",
+] as const;
+
+interface NormalizedMessageResult {
+  value: string;
+  found: boolean;
+}
+
+function normalizeErrorMessage(
+  value: unknown,
+  fallback: string,
+  seen: WeakSet<object> = new WeakSet()
+): NormalizedMessageResult {
+  if (value === undefined || value === null) {
+    return { value: fallback, found: false };
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "[object Object]") {
+      return { value: fallback, found: false };
+    }
+    return { value: trimmed, found: true };
+  }
+
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint"
+  ) {
+    return { value: String(value), found: true };
+  }
+
+  if (value instanceof Error) {
+    const fromMessage = normalizeErrorMessage(value.message, fallback, seen);
+    if (fromMessage.found) {
+      return fromMessage;
+    }
+
+    if ("cause" in value && value.cause !== undefined) {
+      const fromCause = normalizeErrorMessage(
+        (value as { cause?: unknown }).cause,
+        fallback,
+        seen
+      );
+      if (fromCause.found) {
+        return fromCause;
+      }
+    }
+
+    return { value: fallback, found: false };
+  }
+
+  if (typeof value === "object") {
+    if (seen.has(value)) {
+      return { value: fallback, found: false };
+    }
+    seen.add(value);
+
+    for (const key of MESSAGE_CANDIDATE_KEYS) {
+      if (
+        Object.prototype.hasOwnProperty.call(value, key) &&
+        (value as Record<string, unknown>)[key] !== undefined
+      ) {
+        const result = normalizeErrorMessage(
+          (value as Record<string, unknown>)[key],
+          fallback,
+          seen
+        );
+        if (result.found) {
+          return result;
+        }
+      }
+    }
+
+    try {
+      return {
+        value: JSON.stringify(value),
+        found: true,
+      };
+    } catch {
+      return { value: fallback, found: false };
+    }
+  }
+
+  return { value: String(value), found: true };
+}
+
+function resolveErrorMessage(fallback: string, ...sources: unknown[]): string {
+  for (const source of sources) {
+    const { value, found } = normalizeErrorMessage(source, fallback);
+    if (found) {
+      return value;
+    }
+  }
+  return fallback;
+}
+
+// =============================================================================
 // SERVICE-SPECIFIC ERROR CLASSES
 // =============================================================================
 
@@ -228,12 +337,21 @@ export function createServiceError(
   source: string,
   defaultMessage = "An unexpected error occurred"
 ): BaseServiceError {
+  const getMessage = (...candidates: unknown[]) =>
+    resolveErrorMessage(defaultMessage, ...candidates);
+
   if (error instanceof BaseServiceError) {
     return error;
   }
 
   if (error instanceof Error) {
-    return new BaseServiceError(error.message || defaultMessage, {
+    const message = getMessage(
+      error.message,
+      (error as { cause?: unknown }).cause,
+      error
+    );
+
+    return new BaseServiceError(message, {
       source,
       cause: error,
       details: { originalError: error.constructor.name },
@@ -248,7 +366,14 @@ export function createServiceError(
   // Handle objects with status/message properties
   if (typeof error === "object" && error !== null) {
     const errorObj = error as UnknownErrorInput;
-    return new BaseServiceError(errorObj.message || defaultMessage, {
+    const message = getMessage(
+      errorObj.message,
+      errorObj.response?.data,
+      errorObj.details,
+      errorObj
+    );
+
+    return new BaseServiceError(message, {
       source,
       status: errorObj.status || errorObj.response?.status || 500,
       code: errorObj.code,
@@ -271,13 +396,20 @@ export const createIntentServiceError = (
 ): IntentServiceError => {
   const errorObj = error as UnknownErrorInput;
   const status = errorObj.status || errorObj.response?.status || 500;
-  let message = errorObj.message || "Intent service error";
+  let message = resolveErrorMessage(
+    "Intent service error",
+    errorObj.message,
+    errorObj.response?.data,
+    errorObj.details,
+    errorObj
+  );
+  const lowerMessage = message.toLowerCase();
 
   switch (status) {
     case 400:
-      if (message?.includes("slippage")) {
+      if (lowerMessage.includes("slippage")) {
         message = "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-      } else if (message?.includes("amount")) {
+      } else if (lowerMessage.includes("amount")) {
         message = "Invalid transaction amount. Please check your balance.";
       }
       break;

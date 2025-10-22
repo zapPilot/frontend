@@ -249,6 +249,36 @@ export function formatPercentage(
   return `${sign}${value.toFixed(decimals)}%`;
 }
 
+/**
+ * Format Sharpe Ratio (risk-adjusted return metric)
+ * @param value - Sharpe ratio value
+ * @returns Formatted string with 2 decimal places
+ * @example formatSharpeRatio(1.34) // "1.34"
+ */
+export function formatSharpeRatio(value: number): string {
+  return value.toFixed(2);
+}
+
+/**
+ * Format drawdown percentage (maximum portfolio decline)
+ * @param value - Drawdown percentage value
+ * @returns Formatted string with 1 decimal place and % suffix
+ * @example formatDrawdown(12.4) // "12.4%"
+ */
+export function formatDrawdown(value: number): string {
+  return `${value.toFixed(1)}%`;
+}
+
+/**
+ * Format volatility percentage (portfolio risk measure)
+ * @param value - Volatility percentage value
+ * @returns Formatted string with 1 decimal place and % suffix
+ * @example formatVolatility(22.8) // "22.8%"
+ */
+export function formatVolatility(value: number): string {
+  return `${value.toFixed(1)}%`;
+}
+
 // =============================================================================
 // CRYPTOCURRENCY FORMATTING
 // =============================================================================
@@ -453,6 +483,15 @@ export const formatters = {
 
   /** Format numbers with locale */
   number: formatNumber,
+
+  /** Format Sharpe Ratio values */
+  sharpeRatio: formatSharpeRatio,
+
+  /** Format drawdown percentage values */
+  drawdown: formatDrawdown,
+
+  /** Format volatility percentage values */
+  volatility: formatVolatility,
 } as const;
 
 // =============================================================================

@@ -6,6 +6,11 @@ import {
   RebalanceData,
 } from "../types";
 import { clamp, clampMin, ensureNonNegative } from "../../../lib/mathUtils";
+import {
+  ALLOCATION_THRESHOLDS,
+  MOCK_VALUES,
+  PERCENTAGE_BASE,
+} from "@/constants/portfolio-allocation";
 
 // Generate mock target allocation data for rebalancing demo
 export const generateTargetAllocation = (
@@ -21,32 +26,37 @@ export const generateTargetAllocation = (
         // Slightly reduce BTC allocation
         targetPercentage = clampMin(
           category.activeAllocationPercentage - 5,
-          25
+          ALLOCATION_THRESHOLDS.MIN_BTC_ALLOCATION
         );
         break;
       case "eth":
         // Increase ETH allocation
         targetPercentage = Math.min(
-          50,
-          category.activeAllocationPercentage + 7
+          ALLOCATION_THRESHOLDS.MAX_ETH_ALLOCATION,
+          category.activeAllocationPercentage +
+            ALLOCATION_THRESHOLDS.ETH_INCREASE
         );
         break;
       case "stablecoins":
         // Adjust stablecoins to balance
-        targetPercentage = category.activeAllocationPercentage - 2;
+        targetPercentage =
+          category.activeAllocationPercentage -
+          ALLOCATION_THRESHOLDS.STABLECOIN_DECREASE;
         break;
       default:
         // Small random variation for other categories
-        targetPercentage += (Math.random() - 0.5) * 10;
+        targetPercentage +=
+          (Math.random() - 0.5) * ALLOCATION_THRESHOLDS.RANDOM_VARIATION;
     }
 
     // Ensure percentage is within valid range
-    targetPercentage = clamp(targetPercentage, 0, 100);
+    targetPercentage = clamp(targetPercentage, 0, PERCENTAGE_BASE);
 
     return {
       ...category,
       activeAllocationPercentage: targetPercentage,
-      totalValue: (targetPercentage / 100) * 30000, // Mock total portfolio value
+      totalValue:
+        (targetPercentage / PERCENTAGE_BASE) * MOCK_VALUES.PORTFOLIO_VALUE,
     };
   });
 };
@@ -66,13 +76,14 @@ export const calculateCategoryShifts = (
         currentCat.activeAllocationPercentage;
       const changePercentage =
         currentCat.activeAllocationPercentage > 0
-          ? (changeAmount / currentCat.activeAllocationPercentage) * 100
+          ? (changeAmount / currentCat.activeAllocationPercentage) *
+            PERCENTAGE_BASE
           : 0;
 
       let action: "increase" | "decrease" | "maintain";
       let actionDescription: string;
 
-      if (Math.abs(changeAmount) < 0.5) {
+      if (Math.abs(changeAmount) < ALLOCATION_THRESHOLDS.CHANGE_MAINTAIN) {
         action = "maintain";
         actionDescription = "Maintain";
       } else if (changeAmount > 0) {
@@ -105,7 +116,9 @@ export const generateRebalanceData = (
   const shifts = calculateCategoryShifts(currentCategories, targetCategories);
 
   const totalRebalanceValue = shifts.reduce((sum, shift) => {
-    return sum + Math.abs(shift.changeAmount * 300); // Mock dollar value per percentage point
+    return (
+      sum + Math.abs(shift.changeAmount * MOCK_VALUES.DOLLAR_PER_PERCENTAGE)
+    );
   }, 0);
 
   return {
@@ -144,10 +157,11 @@ export const processAssetCategories = (
     const targetPercentage =
       override !== undefined
         ? ensureNonNegative(override)
-        : 100 / clampMin(assetCategories.length, 1);
+        : PERCENTAGE_BASE / clampMin(assetCategories.length, 1);
 
     // If overrides don't sum to 100, treat them as-is. The remainder will be shown as unallocated.
-    const categoryValue = (targetPercentage / 100) * totalPortfolioValue;
+    const categoryValue =
+      (targetPercentage / PERCENTAGE_BASE) * totalPortfolioValue;
 
     return {
       ...category,
@@ -172,7 +186,7 @@ export const processAssetCategories = (
       activeAllocationPercentage:
         category.isExcluded || totalIncludedValue === 0
           ? 0
-          : (category.totalValue / totalIncludedValue) * 100,
+          : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE,
     }));
 
   const chartData: ChartDataPoint[] = includedCategories.map(category => ({
@@ -180,7 +194,7 @@ export const processAssetCategories = (
     value:
       totalIncludedValue === 0
         ? 0
-        : (category.totalValue / totalIncludedValue) * 100,
+        : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE,
     id: category.id,
     color: category.color,
     isExcluded: false,

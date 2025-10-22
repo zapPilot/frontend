@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  ALLOCATION_UI,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
@@ -105,7 +106,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
                 type="number"
                 min={MIN_ALLOCATION_PERCENT}
                 max={MAX_ALLOCATION_PERCENT}
-                step={0.1}
+                step={ALLOCATION_UI.SLIDER_STEP_FINE}
                 value={parseFloat(
                   formatPercentage(
                     category.activeAllocationPercentage,
@@ -132,7 +133,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
             type="range"
             min={MIN_ALLOCATION_PERCENT}
             max={MAX_ALLOCATION_PERCENT}
-            step={0.5}
+            step={ALLOCATION_UI.SLIDER_STEP_COARSE}
             value={targetAllocation}
             onChange={event =>
               handleAllocationInput(Number(event.target.value))

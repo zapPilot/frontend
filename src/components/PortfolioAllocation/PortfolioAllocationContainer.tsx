@@ -5,7 +5,9 @@ import {
   DEFAULT_PORTFOLIO_TOTAL_VALUE,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
+  PERCENTAGE_BASE,
 } from "@/constants/portfolio-allocation";
+import { SLIPPAGE_CONFIG } from "@/constants/slippage";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { clamp, clampMin, ensureNonNegative } from "@/lib/mathUtils";
 import { EnhancedOverview, SwapControls } from "./components";
@@ -31,7 +33,7 @@ export const PortfolioAllocationContainer: React.FC<
   const swapControlsRef = useRef<SwapControlsRef>(null);
   const [swapSettings, setSwapSettings] = useState<SwapSettings>({
     amount: "",
-    slippageTolerance: 0.5, // Default 0.5%
+    slippageTolerance: SLIPPAGE_CONFIG.DEFAULT,
   });
 
   const getInitialAllocations = useMemo(() => {
@@ -57,7 +59,7 @@ export const PortfolioAllocationContainer: React.FC<
       category => allocations[category.id] === undefined
     );
 
-    const remainingBudget = ensureNonNegative(100 - curatedTotal);
+    const remainingBudget = ensureNonNegative(PERCENTAGE_BASE - curatedTotal);
     const fallbackValue =
       remainingCategories.length > 0
         ? remainingBudget / remainingCategories.length
@@ -72,7 +74,7 @@ export const PortfolioAllocationContainer: React.FC<
       0
     );
     if (total === 0) {
-      const equalShare = 100 / clampMin(assetCategories.length, 1);
+      const equalShare = PERCENTAGE_BASE / clampMin(assetCategories.length, 1);
       assetCategories.forEach(category => {
         allocations[category.id] = equalShare;
       });
@@ -82,7 +84,7 @@ export const PortfolioAllocationContainer: React.FC<
     // Normalize allocations to sum to 100
     return Object.entries(allocations).reduce(
       (acc, [id, value]) => {
-        acc[id] = (value / total) * 100;
+        acc[id] = (value / total) * PERCENTAGE_BASE;
         return acc;
       },
       {} as Record<string, number>
