@@ -1,11 +1,15 @@
 // Main component
-export { PortfolioChart, default } from "./PortfolioChartContainer";
+export { PortfolioChart, default } from "./PortfolioChartOrchestrator";
 
 // Loading skeleton
 export { PortfolioChartSkeleton } from "./PortfolioChartSkeleton";
 
 // Chart components
 export * from "./charts";
+
+// Hooks
+export { useChartData } from "./hooks";
+export type { ChartData } from "./hooks";
 
 // Utilities
 export { buildAllocationHistory } from "./utils";
