@@ -20,7 +20,6 @@ import { renderHook, waitFor, act } from "@testing-library/react";
 import {
   useUnifiedZapStream,
   UNIFIED_ZAP_PHASES,
-  type UnifiedZapStreamEvent,
 } from "@/hooks/useUnifiedZapStream";
 
 // Mock EventSource for SSE testing
@@ -366,9 +365,7 @@ describe("useUnifiedZapStream - ChainBreakdown Normalization", () => {
 
     mockEventSourceInstance?.simulateMessage({
       type: "progress",
-      chainBreakdown: [
-        { name: "Arbitrum", chainId: 42161, protocolCount: 2 },
-      ],
+      chainBreakdown: [{ name: "Arbitrum", chainId: 42161, protocolCount: 2 }],
     });
 
     await waitFor(() => expect(result.current.events.length).toBe(1));
@@ -413,7 +410,9 @@ describe("useUnifiedZapStream - ChainBreakdown Normalization", () => {
 
     await waitFor(() => expect(result.current.events.length).toBe(1));
 
-    expect(result.current.latestEvent?.metadata?.chainBreakdown).toBeUndefined();
+    expect(
+      result.current.latestEvent?.metadata?.chainBreakdown
+    ).toBeUndefined();
   });
 
   it("handles malformed chainBreakdown entries", async () => {
@@ -499,7 +498,7 @@ describe("useUnifiedZapStream - Connection Management", () => {
   });
 
   it("handles reconnection after disconnect", async () => {
-    const { result, rerender } = renderHook(() =>
+    const { result } = renderHook(() =>
       useUnifiedZapStream("test-intent-19", true)
     );
 

@@ -12,6 +12,9 @@ To keep service integrations consistent across the app:
   entrypoint when desired.
 - Utility-only services (such as bundle helpers) should follow the same function-export pattern and
   keep logging centralized through `@/utils/logger`.
+- Chain-specific normalization logic should live next to the calling service. The former DeBank
+  chain helpers were removed because no consumers remained—reintroduce localized adapters if a new
+  integration requires them.
 
 Following these guidelines keeps error handling, typing, and imports uniform and makes it easier to
 add new backend integrations safely.

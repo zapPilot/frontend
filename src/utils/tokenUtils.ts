@@ -7,8 +7,6 @@
  * @module utils/tokenUtils
  */
 
-import { ensureNonNegative } from "../lib/mathUtils";
-
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
@@ -194,49 +192,6 @@ export function validateToken(token: UnvalidatedTokenInput): {
     errors,
   };
 }
-
-/**
- * Sanitize token data for safe processing
- *
- * @param token - Raw token data
- * @returns Sanitized token
- */
-export function sanitizeToken(token: UnvalidatedTokenInput): Token | null {
-  const { isValid } = validateToken(token);
-
-  if (!isValid) return null;
-
-  return {
-    symbol: String(token.symbol).trim().toUpperCase(),
-    optimized_symbol: token.optimized_symbol
-      ? String(token.optimized_symbol).trim()
-      : undefined,
-    amount: ensureNonNegative(Number(token.amount) || 0),
-    price: ensureNonNegative(Number(token.price) || 0),
-    decimals: token.decimals
-      ? ensureNonNegative(Math.floor(Number(token.decimals)))
-      : undefined,
-    address: token.address ? String(token.address).trim() : undefined,
-    raw_amount_hex_str: token.raw_amount_hex_str
-      ? String(token.raw_amount_hex_str)
-      : undefined,
-  } as Token;
-}
-
-/**
- * Batch sanitize array of tokens
- *
- * @param tokens - Array of raw token data
- * @returns Array of sanitized tokens
- */
-export function sanitizeTokens(tokens: UnvalidatedTokenInput[]): Token[] {
-  if (!Array.isArray(tokens)) return [];
-
-  return tokens
-    .map(sanitizeToken)
-    .filter((token): token is Token => token !== null);
-}
-
 // =============================================================================
 // LEGACY EXPORTS (for backward compatibility)
 // =============================================================================
