@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { LandingPageResponse } from "../services/analyticsService";
+import type { AssetCategory } from "../types/portfolio";
 import { PortfolioState, PortfolioStateType } from "../types/portfolioState";
 
 /**
@@ -111,3 +112,56 @@ export function usePortfolioStateHelpers(portfolioState: PortfolioState) {
     [portfolioState]
   );
 }
+
+/**
+ * Portfolio state management utilities
+ *
+ * Consolidates common state reset and validation patterns used throughout
+ * the application for consistent portfolio state handling.
+ */
+export const portfolioStateUtils = {
+  /**
+   * Reset portfolio state to initial/error state
+   *
+   * Common pattern for error handling and initialization.
+   * Returns a clean state object with null values.
+   */
+  resetState: () => ({
+    totalValue: null as number | null,
+    categories: null as AssetCategory[] | null,
+  }),
+
+  /**
+   * Check if portfolio data is in a loading/empty state
+   *
+   * Useful for determining when to show loading indicators or empty states.
+   */
+  isEmpty: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return !categories || categories.length === 0 || !totalValue;
+  },
+
+  /**
+   * Check if portfolio data is valid and ready for display
+   */
+  isValid: (categories: AssetCategory[] | null, totalValue: number | null) => {
+    return (
+      Boolean(categories && categories.length > 0) &&
+      totalValue !== null &&
+      totalValue > 0
+    );
+  },
+
+  /**
+   * Safe array length check - prevents redundant .length === 0 patterns
+   */
+  hasItems: <T>(array: T[] | null | undefined): array is T[] => {
+    return Array.isArray(array) && array.length > 0;
+  },
+
+  /**
+   * Safe empty array check - consolidated null/undefined/empty checking
+   */
+  isEmptyArray: <T>(array: T[] | null | undefined): boolean => {
+    return !Array.isArray(array) || array.length === 0;
+  },
+} as const;

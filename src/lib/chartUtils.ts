@@ -4,7 +4,7 @@ import {
   CHART_COLORS,
 } from "../constants/portfolio";
 import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
-import { portfolioStateUtils } from "../utils/portfolio.utils";
+import { portfolioStateUtils } from "@/hooks/usePortfolioState";
 import { formatPercentage, formatLargeNumber } from "./formatters";
 import { ensureNonNegative } from "./mathUtils";
 

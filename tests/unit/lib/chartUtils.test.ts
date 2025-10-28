@@ -13,7 +13,7 @@ import type {
 } from "../../../src/types/portfolio";
 
 // Mock the portfolioStateUtils dependency
-vi.mock("../../../src/utils/portfolio.utils", () => ({
+vi.mock("@/hooks/usePortfolioState", () => ({
   portfolioStateUtils: {
     isEmptyArray: (arr: unknown[]) => !arr || arr.length === 0,
   },

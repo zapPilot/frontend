@@ -1,33 +1,23 @@
-import { useState, useMemo } from "react";
-import { AssetCategory, PortfolioMetrics } from "../types/portfolio";
-import { calculatePortfolioMetrics } from "../lib/portfolio-data";
+import { useMemo } from "react";
+import { usePortfolioViewToggles } from "./useWalletPortfolioState";
+import { calculatePortfolioMetrics } from "@/lib/portfolio-data";
+import type { AssetCategory, PortfolioMetrics } from "@/types/portfolio";
 
 /**
- * Custom hook for portfolio state management and calculations
+ * Legacy portfolio hook kept for compatibility.
+ * Delegates view toggles to the shared portfolio view toggle hook
+ * so that there is a single source of truth.
  */
 export function usePortfolio(portfolioData: AssetCategory[]) {
-  const [balanceHidden, setBalanceHidden] = useState(false);
-  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const toggles = usePortfolioViewToggles();
 
-  // Calculate portfolio metrics
   const portfolioMetrics: PortfolioMetrics = useMemo(
     () => calculatePortfolioMetrics(portfolioData),
     [portfolioData]
   );
 
-  const toggleBalanceVisibility = () => {
-    setBalanceHidden(!balanceHidden);
-  };
-
-  const toggleCategoryExpansion = (categoryId: string) => {
-    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
-  };
-
   return {
-    balanceHidden,
-    expandedCategory,
+    ...toggles,
     portfolioMetrics,
-    toggleBalanceVisibility,
-    toggleCategoryExpansion,
   };
 }

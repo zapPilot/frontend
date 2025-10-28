@@ -18,10 +18,8 @@
  * - Cache invalidation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode } from "react";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import type {
   LandingPageResponse,
@@ -35,57 +33,46 @@ vi.mock("../../src/services/analyticsService", () => ({
 }));
 
 import * as analyticsService from "../../src/services/analyticsService";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
+import { createMockArray } from "./helpers/mock-factories";
+import { TEST_TIMEOUT } from "./helpers/test-constants";
 
-// Test wrapper with React Query
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-        refetchInterval: false, // Disable auto-refetch in tests
-      },
-    },
-  });
+setupMockCleanup();
 
-  function QueryWrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  }
-
-  QueryWrapper.displayName = "QueryWrapper";
-
-  return QueryWrapper;
-}
+const createWrapper = () => createQueryWrapper().QueryWrapper;
 
 // Mock data generators
 function createMockPoolDetails(count: number = 3): PoolDetail[] {
-  const pools: PoolDetail[] = [];
-
-  for (let i = 0; i < count; i++) {
-    pools.push({
-      snapshot_id: `snapshot-${i}`,
+  const pools = createMockArray(count, index => {
+    const assetValue = 10_000 + index * 5_000;
+    return {
+      snapshot_id: `snapshot-${index}`,
       chain: "ethereum",
-      protocol: `protocol-${i}`,
-      protocol_name: `Protocol ${i}`,
-      asset_usd_value: 10000 + i * 5000,
-      pool_symbols: [`TOKEN${i}`, `TOKEN${i + 1}`],
-      final_apr: 5 + i * 2.5,
+      protocol: `protocol-${index}`,
+      protocol_name: `Protocol ${index}`,
+      asset_usd_value: assetValue,
+      pool_symbols: [`TOKEN${index}`, `TOKEN${index + 1}`],
+      final_apr: 5 + index * 2.5,
       protocol_matched: true,
       apr_data: {
-        apr_protocol: `protocol-${i}`,
-        apr_symbol: `LP-${i}`,
-        apr: 5 + i * 2.5,
-        apr_base: 3 + i * 1.5,
-        apr_reward: 2 + i * 1,
-        apr_updated_at: new Date().toISOString(),
+        apr_protocol: `protocol-${index}`,
+        apr_symbol: `LP-${index}`,
+        apr: 5 + index * 2.5,
+        apr_base: 3 + index * 1.5,
+        apr_reward: 2 + index,
+        apr_updated_at: new Date("2025-01-01").toISOString(),
       },
-      contribution_to_portfolio: (10000 + i * 5000) / 25000,
-    });
-  }
+      contribution_to_portfolio: 0,
+    } satisfies PoolDetail;
+  });
 
-  return pools;
+  const totalValue = pools.reduce((sum, pool) => sum + pool.asset_usd_value, 0);
+
+  return pools.map(pool => ({
+    ...pool,
+    contribution_to_portfolio:
+      totalValue > 0 ? pool.asset_usd_value / totalValue : 0,
+  }));
 }
 
 function createMockAPRSummary(pools: PoolDetail[]): PortfolioAPRSummary {
@@ -126,14 +113,6 @@ function createMockLandingPageResponse(
 }
 
 describe("useLandingPageData - APR Calculations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("calculates weighted average APR correctly", async () => {
     const mockPools: PoolDetail[] = [
       {
@@ -638,7 +617,7 @@ describe("useLandingPageData - Loading and Errors", () => {
       () => {
         expect(result.current.isError).toBe(true);
       },
-      { timeout: 6000 }
+      { timeout: TEST_TIMEOUT }
     );
 
     expect(result.current.error).toBeDefined();
@@ -659,7 +638,7 @@ describe("useLandingPageData - Loading and Errors", () => {
       () => {
         expect(result.current.isError).toBe(true);
       },
-      { timeout: 6000 }
+      { timeout: TEST_TIMEOUT }
     );
   });
 
@@ -677,7 +656,7 @@ describe("useLandingPageData - Loading and Errors", () => {
       () => {
         expect(result.current.isError).toBe(true);
       },
-      { timeout: 6000 }
+      { timeout: TEST_TIMEOUT }
     );
   });
 });

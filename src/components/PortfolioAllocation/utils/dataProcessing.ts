@@ -11,6 +11,7 @@ import {
   MOCK_VALUES,
   PERCENTAGE_BASE,
 } from "@/constants/portfolio-allocation";
+import { createCategoriesFromApiData } from "@/utils/portfolio.utils";
 
 // Generate mock target allocation data for rebalancing demo
 export const generateTargetAllocation = (
@@ -189,16 +190,51 @@ export const processAssetCategories = (
           : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE,
     }));
 
-  const chartData: ChartDataPoint[] = includedCategories.map(category => ({
-    name: category.name,
-    value:
-      totalIncludedValue === 0
+  const STANDARD_CATEGORY_IDS = new Set([
+    "btc",
+    "eth",
+    "stablecoins",
+    "others",
+  ]);
+  const canonicalCategoryTotals = includedCategories.reduce(
+    (acc, category) => {
+      if (STANDARD_CATEGORY_IDS.has(category.id)) {
+        acc[category.id as keyof typeof acc] = category.totalValue;
+      }
+      return acc;
+    },
+    {
+      btc: 0,
+      eth: 0,
+      stablecoins: 0,
+      others: 0,
+    }
+  );
+
+  const canonicalSummaries = createCategoriesFromApiData(
+    canonicalCategoryTotals,
+    totalIncludedValue
+  );
+  const canonicalSummaryMap = new Map(
+    canonicalSummaries.map(summary => [summary.id, summary])
+  );
+
+  const chartData: ChartDataPoint[] = includedCategories.map(category => {
+    const summary = canonicalSummaryMap.get(category.id);
+    const percentage = summary
+      ? summary.percentage
+      : totalIncludedValue === 0
         ? 0
-        : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE,
-    id: category.id,
-    color: category.color,
-    isExcluded: false,
-  }));
+        : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE;
+
+    return {
+      name: summary?.name ?? category.name,
+      value: percentage,
+      id: category.id,
+      color: summary?.color ?? category.color,
+      isExcluded: false,
+    } satisfies ChartDataPoint;
+  });
 
   return { processedCategories, chartData };
 };

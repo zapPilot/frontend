@@ -13,6 +13,10 @@ export { useWalletEvents } from "./useWalletEvents";
 export { useWalletConnection } from "./useWallet";
 
 // Portfolio hooks
+export {
+  useWalletPortfolioState,
+  usePortfolioViewToggles,
+} from "./useWalletPortfolioState";
 export { usePortfolio } from "./usePortfolio";
 
 // UI/Interaction hooks

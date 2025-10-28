@@ -18,10 +18,8 @@
  * - Very large/small balance handling
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode } from "react";
 import { useZapTokensWithStates } from "../../src/hooks/queries/useZapTokensQuery";
 import type { SwapToken } from "../../src/types/swap";
 
@@ -57,29 +55,32 @@ vi.mock("../../src/hooks/queries/useTokenPricesQuery", () => ({
 
 import { useTokenBalancesQuery } from "../../src/hooks/queries/useTokenBalancesQuery";
 import { useTokenPricesQuery } from "../../src/hooks/queries/useTokenPricesQuery";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
+import { createMockArray } from "./helpers/mock-factories";
 
-// Test wrapper with React Query
-const createWrapper = () => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
-  });
+setupMockCleanup();
 
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
-  Wrapper.displayName = "QueryClientWrapper";
-
-  return Wrapper;
-};
+const createWrapper = () => createQueryWrapper().QueryWrapper;
 
 // Mock data generators
 function createMockTokens(count: number = 5): SwapToken[] {
-  const tokens: SwapToken[] = [
+  if (count <= 0) return [];
+
+  const additional = createMockArray(
+    Math.max(count - 1, 0),
+    index =>
+      ({
+        symbol: `TOKEN${index + 1}`,
+        name: `Test Token ${index + 1}`,
+        address: `0x${(index + 1).toString(16).padStart(40, "0")}`,
+        type: "ERC20" as const,
+        decimals: 18,
+        chainId: 1,
+        logoURI: `https://example.com/token${index + 1}.png`,
+      }) satisfies SwapToken
+  );
+
+  return [
     {
       symbol: "ETH",
       name: "Ethereum",
@@ -89,72 +90,51 @@ function createMockTokens(count: number = 5): SwapToken[] {
       chainId: 1,
       logoURI: "https://example.com/eth.png",
     },
+    ...additional,
   ];
-
-  for (let i = 1; i < count; i++) {
-    tokens.push({
-      symbol: `TOKEN${i}`,
-      name: `Test Token ${i}`,
-      address: `0x${i.toString().padStart(40, "0")}`,
-      type: "ERC20",
-      decimals: 18,
-      chainId: 1,
-      logoURI: `https://example.com/token${i}.png`,
-    });
-  }
-
-  return tokens;
 }
 
 function createMockBalances(
   tokens: SwapToken[]
 ): Record<string, { balance: string }> {
-  const balances: Record<string, { balance: string }> = {};
+  return tokens.reduce<Record<string, { balance: string }>>(
+    (acc, token, index) => {
+      const address = token.address?.toLowerCase() || "native";
+      const balanceValue = (100 + index * 25).toFixed(6);
+      acc[address] = { balance: balanceValue };
 
-  tokens.forEach(token => {
-    const address = token.address?.toLowerCase() || "native";
-    balances[address] = {
-      balance: (Math.random() * 1000 + 100).toFixed(6),
-    };
+      if (token.type === "native") {
+        acc["native"] = { balance: balanceValue };
+      }
 
-    // Also add native sentinel
-    if (token.type === "native") {
-      balances["native"] = balances[address];
-    }
-  });
-
-  return balances;
+      return acc;
+    },
+    {}
+  );
 }
 
 function createMockPrices(
   tokens: SwapToken[]
 ): Record<string, { success: boolean; price: number | null }> {
-  const prices: Record<string, { success: boolean; price: number | null }> = {};
-
-  tokens.forEach(token => {
+  return tokens.reduce<
+    Record<string, { success: boolean; price: number | null }>
+  >((acc, token, index) => {
     const symbol = token.symbol?.toUpperCase();
     if (symbol) {
-      prices[symbol] = {
+      acc[symbol] = {
         success: true,
-        price: Math.random() * 5000 + 100,
+        price: 100 + index * 50,
       };
     }
-  });
-
-  return prices;
+    return acc;
+  }, {});
 }
 
 describe("useZapTokensWithStates - Token State Management", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-
     // Set default mock for token service
     // This will be overridden by individual tests
     vi.mocked(tokenService.getZapTokens).mockResolvedValue([]);
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
   });
 
   it("enriches tokens with price data", async () => {

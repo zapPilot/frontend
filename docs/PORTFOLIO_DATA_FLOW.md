@@ -11,7 +11,7 @@ category interaction contract.
 - Portfolio state: `usePortfolioState({ ... })` derives UI states (loading, errors, retrying) and
   exposes helpers.
 - View model: `useWalletPortfolioState(params)` aggregates the above into a single object consumed
-  by the presenter.
+  by the presenter and exposes shared view toggles via `usePortfolioViewToggles`.
 
 ## Container vs. Presenter
 
@@ -46,10 +46,11 @@ category interaction contract.
 ## File Map
 
 - Hooks
-  - `src/hooks/useWalletPortfolioState.ts` — Container VM hook
+  - `src/hooks/useWalletPortfolioState.ts` — Container VM hook plus exported view toggles helper
   - `src/hooks/useBundlePage.ts` — Bundle page state
   - `src/hooks/usePortfolioData.ts` — Transformation adapter
   - `src/hooks/queries/usePortfolioQuery.ts` — Data fetch
+  - `src/hooks/usePortfolio.ts` — Legacy compatibility wrapper delegating to shared view toggles
 - Contexts
   - `src/contexts/CategoryFilterContext.tsx` — Shared category filter state
 - Components

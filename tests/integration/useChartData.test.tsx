@@ -17,10 +17,8 @@
  * - Memoization validation
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactNode } from "react";
 import { useChartData } from "../../src/components/PortfolioChart/hooks/useChartData";
 import type {
   PortfolioDataPoint,
@@ -75,89 +73,64 @@ vi.mock("../../src/lib/portfolio-analytics", async () => {
 import * as usePortfolioTrends from "../../src/hooks/usePortfolioTrends";
 import * as useAnalyticsData from "../../src/hooks/useAnalyticsData";
 import * as useAllocationTimeseries from "../../src/hooks/useAllocationTimeseries";
-// Test wrapper with React Query
-function createWrapper() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: {
-        retry: false,
-        gcTime: 0,
-      },
-    },
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
+import { MOCK_BASE_DATE } from "./helpers/test-constants";
+import { createMockArray, generateDateSeries } from "./helpers/mock-factories";
+
+setupMockCleanup();
+
+const createWrapper = () => createQueryWrapper().QueryWrapper;
+
+const createMockPortfolioData = (days: number = 30): PortfolioDataPoint[] => {
+  const dateSeries = generateDateSeries(MOCK_BASE_DATE, days);
+
+  return createMockArray(days, index => {
+    const baseValue = 10_000 + index * 150;
+    return {
+      date: dateSeries[index],
+      value: baseValue,
+      pnl: index * 10,
+      categories: [
+        { sourceType: "defi", value: baseValue * 0.6 },
+        { sourceType: "wallet", value: baseValue * 0.4 },
+      ],
+    } satisfies PortfolioDataPoint;
   });
+};
 
-  function QueryWrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-    );
-  }
-
-  QueryWrapper.displayName = "QueryWrapper";
-
-  return QueryWrapper;
-}
-
-// Mock data generators
-function createMockPortfolioData(days: number = 30): PortfolioDataPoint[] {
-  const baseDate = new Date("2025-01-01");
-  return Array.from({ length: days }, (_, i) => ({
-    date: new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0],
-    value: 10000 + i * 100 + Math.random() * 500,
-    pnl: i * 10,
-    categories: [
-      { sourceType: "defi", value: (10000 + i * 100) * 0.6 },
-      { sourceType: "wallet", value: (10000 + i * 100) * 0.4 },
-    ],
-  }));
-}
-
-function createMockAllocationData(
+const createMockAllocationData = (
   days: number = 30
-): AllocationTimeseriesInputPoint[] {
-  const baseDate = new Date("2025-01-01");
-  return Array.from({ length: days }, (_, i) => [
-    {
-      date: new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      category: "BTC",
-      allocation_percentage: 30 + Math.random() * 5,
-    },
-    {
-      date: new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      category: "ETH",
-      allocation_percentage: 25 + Math.random() * 5,
-    },
-    {
-      date: new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      category: "Stablecoin",
-      allocation_percentage: 20 + Math.random() * 5,
-    },
-    {
-      date: new Date(baseDate.getTime() + i * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
-      category: "Uniswap",
-      allocation_percentage: 15 + Math.random() * 5,
-    },
-  ]).flat();
-}
+): AllocationTimeseriesInputPoint[] => {
+  const dateSeries = generateDateSeries(MOCK_BASE_DATE, days);
+
+  return dateSeries.flatMap((date, index) => {
+    const offset = (index % 4) * 2;
+    return [
+      {
+        date,
+        category: "BTC",
+        allocation_percentage: 30 + offset,
+      },
+      {
+        date,
+        category: "ETH",
+        allocation_percentage: 25 + offset / 2,
+      },
+      {
+        date,
+        category: "Stablecoin",
+        allocation_percentage: 25 - offset / 2,
+      },
+      {
+        date,
+        category: "Uniswap",
+        allocation_percentage: 20 - offset,
+      },
+    ] satisfies AllocationTimeseriesInputPoint[];
+  });
+};
 
 describe("useChartData - Data Transformations", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("transforms stacked portfolio data correctly", () => {
     const mockData = createMockPortfolioData(30);
 
@@ -331,10 +304,6 @@ describe("useChartData - Data Transformations", () => {
 });
 
 describe("useChartData - Edge Cases", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("handles empty data gracefully", () => {
     vi.mocked(usePortfolioTrends.usePortfolioTrends).mockReturnValue({
       data: [],
@@ -522,10 +491,6 @@ describe("useChartData - Edge Cases", () => {
 });
 
 describe("useChartData - Loading States", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("consolidates loading from multiple hooks", () => {
     vi.mocked(usePortfolioTrends.usePortfolioTrends).mockReturnValue({
       data: undefined,
@@ -580,10 +545,6 @@ describe("useChartData - Loading States", () => {
 });
 
 describe("useChartData - Memoization", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("memoizes data transformations", () => {
     const mockData = createMockPortfolioData(10);
 
@@ -640,10 +601,6 @@ describe("useChartData - Memoization", () => {
 });
 
 describe("useChartData - Portfolio Metrics", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("calculates portfolio metrics correctly", () => {
     const mockData: PortfolioDataPoint[] = [
       { date: "2025-01-01", value: 10000, pnl: 0 },
