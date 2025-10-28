@@ -217,7 +217,7 @@ const _mockMixedPortfolioData = [
 ];
 
 const mockUserInfo = { userId: "test-user-123" };
-const mockPortfolioMetrics = {
+const _mockPortfolioMetrics = {
   totalValue: 10000,
   totalChangePercentage: 5.2,
   totalChangeValue: 500,
@@ -702,7 +702,6 @@ describe("WalletPortfolio", () => {
           "has-data"
         );
       });
-
     });
   });
 

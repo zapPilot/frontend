@@ -74,6 +74,7 @@ export interface WalletPortfolioViewModel {
   onOptimizeClick?: () => void;
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
+  onCategoryClick?: (categoryId: string) => void;
   // Bundle display context (pass-through)
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
