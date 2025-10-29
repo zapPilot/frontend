@@ -12,6 +12,12 @@
 export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
 
 /**
+ * API category keys returned by analytics service
+ * Maps to AssetCategoryKey via API_CATEGORY_KEY_MAP
+ */
+export type ApiCategoryKey = "btc" | "eth" | "stablecoins" | "others";
+
+/**
  * Asset Category Definition
  * Complete metadata for each asset category
  */
@@ -67,6 +73,16 @@ export const ASSET_CATEGORIES: Record<AssetCategoryKey, AssetCategory> = {
     brandColor: "#AB47BC", // Purple - alternative assets color
     tailwindColor: "text-red-400",
   },
+} as const;
+
+/**
+ * Mapping from analytics API category keys to internal asset category keys
+ */
+export const API_CATEGORY_KEY_MAP: Record<ApiCategoryKey, AssetCategoryKey> = {
+  btc: "btc",
+  eth: "eth",
+  stablecoins: "stablecoin",
+  others: "altcoin",
 } as const;
 
 /**

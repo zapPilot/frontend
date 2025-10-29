@@ -75,7 +75,3 @@ export const HEADER = {
   HEIGHT: "h-16",
   TOP_OFFSET: "top-16",
 } as const;
-
-// Type exports for convenience
-export type GradientType = keyof typeof GRADIENTS;
-export type ScrollableContainerVariant = keyof typeof SCROLLABLE_CONTAINER;

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import { usePortfolio } from "../../helpers/deprecatedUsePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -14,7 +14,7 @@ import { render } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../../src/hooks/usePortfolio");
+vi.mock("../../helpers/deprecatedUsePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
@@ -106,10 +106,13 @@ vi.mock("../../../src/components/wallet/WalletHeader", () => {
     WalletHeader: vi.fn(
       ({ onWalletManagerClick, onToggleBalance, balanceHidden }) => {
         const { balanceHidden: hookHidden, toggleBalanceVisibility } =
-          usePortfolio();
+          usePortfolio([]);
         const hidden =
           typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        const handleToggle = () => {
+          onToggleBalance?.();
+          toggleBalanceVisibility?.();
+        };
         return (
           <div data-testid="wallet-header">
             <button
@@ -137,7 +140,7 @@ vi.mock("../../../src/components/wallet/WalletMetrics", () => {
         portfolioChangePercentage,
         userId,
       }) => {
-        const { balanceHidden: hookHidden } = usePortfolio();
+        const { balanceHidden: hookHidden } = usePortfolio([]);
         const hidden =
           typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
         // Mock the getDisplayTotalValue logic
@@ -264,10 +267,42 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
   };
 
   const mockCategorySummaries = [
-    { id: "btc", name: "Bitcoin", value: 10000, percentage: 40 },
-    { id: "eth", name: "Ethereum", value: 8000, percentage: 32 },
-    { id: "stablecoins", name: "Stablecoins", value: 5000, percentage: 20 },
-    { id: "others", name: "Others", value: 2000, percentage: 8 },
+    {
+      id: "btc",
+      name: "Bitcoin",
+      color: "#F7931A",
+      totalValue: 10000,
+      percentage: 40,
+      averageAPR: 4.2,
+      topProtocols: [],
+    },
+    {
+      id: "eth",
+      name: "Ethereum",
+      color: "#627EEA",
+      totalValue: 8000,
+      percentage: 32,
+      averageAPR: 3.8,
+      topProtocols: [],
+    },
+    {
+      id: "stablecoins",
+      name: "Stablecoins",
+      color: "#3C3F51",
+      totalValue: 5000,
+      percentage: 20,
+      averageAPR: 6.1,
+      topProtocols: [],
+    },
+    {
+      id: "others",
+      name: "Others",
+      color: "#9CA3AF",
+      totalValue: 2000,
+      percentage: 8,
+      averageAPR: 2.5,
+      topProtocols: [],
+    },
   ];
 
   beforeEach(() => {
@@ -316,7 +351,17 @@ describe("WalletPortfolio - Comprehensive Tests", () => {
       getDisplayTotalValue: () => 25000,
     });
 
-    mockCreateCategoriesFromApiData.mockReturnValue(mockCategorySummaries);
+    mockCreateCategoriesFromApiData.mockImplementation(categoryData => {
+      if (!categoryData) {
+        return [];
+      }
+
+      const hasPositiveValue = Object.values(categoryData).some(
+        value => value > 0
+      );
+
+      return hasPositiveValue ? mockCategorySummaries : [];
+    });
   });
 
   afterEach(() => {

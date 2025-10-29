@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../src/hooks/usePortfolio";
+import { usePortfolio } from "../helpers/deprecatedUsePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -12,7 +12,7 @@ import { render } from "../test-utils";
 
 // Mock dependencies
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
-vi.mock("../../src/hooks/usePortfolio");
+vi.mock("../helpers/deprecatedUsePortfolio");
 vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");
 vi.mock("../../src/services/analyticsEngine");
@@ -78,10 +78,13 @@ vi.mock("../../src/components/wallet/WalletHeader", () => {
         onWalletManagerClick?: () => void;
       }) => {
         const { balanceHidden: hookHidden, toggleBalanceVisibility } =
-          usePortfolio();
+          usePortfolio([]);
         const hidden =
           typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
-        const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
+        const handleToggle = () => {
+          onToggleBalance?.();
+          toggleBalanceVisibility?.();
+        };
         return (
           <div data-testid="wallet-header">
             <button
@@ -118,7 +121,7 @@ vi.mock("../../src/components/wallet/WalletMetrics", () => {
         };
         balanceHidden?: boolean;
       }) => {
-        const { balanceHidden: hookHidden } = usePortfolio();
+        const { balanceHidden: hookHidden } = usePortfolio([]);
         const hidden =
           typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
         // Mock the getDisplayTotalValue logic
@@ -174,7 +177,7 @@ vi.mock("../../src/components/PortfolioOverview", () => {
         pieChartData: any[];
         totalValue?: number;
       }) => {
-        const { balanceHidden: hookHidden } = usePortfolio();
+        const { balanceHidden: hookHidden } = usePortfolio([]);
         const hidden =
           typeof balanceHidden === "boolean" ? balanceHidden : hookHidden;
         const calculatedTotal =

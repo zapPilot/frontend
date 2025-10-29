@@ -92,7 +92,7 @@ vi.mock("../../../src/contexts/BalanceVisibilityContext", () => ({
   BalanceVisibilityProvider: vi.fn(({ children }) => <div>{children}</div>),
 }));
 
-vi.mock("../../../src/hooks/usePortfolio", () => ({
+vi.mock("../../helpers/deprecatedUsePortfolio", () => ({
   usePortfolio: () => ({
     balanceHidden: false,
     toggleBalanceVisibility: vi.fn(),

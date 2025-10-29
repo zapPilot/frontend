@@ -46,18 +46,6 @@ export interface NumberFormatOptions {
   smartPrecision?: boolean;
 }
 
-export interface EthFormatOptions {
-  /** Show ETH suffix */
-  showSuffix?: boolean;
-  /** Precision for different value ranges */
-  precision?: {
-    tiny: number; // < 0.0001
-    small: number; // < 0.01
-    medium: number; // < 1
-    large: number; // >= 1
-  };
-}
-
 export interface AddressFormatOptions {
   /** Number of characters to keep from the start of the address */
   prefixLength?: number;
@@ -134,35 +122,6 @@ export function formatCurrency(
   }).format(amount);
 }
 
-/**
- * Format currency with smart handling for very small amounts
- * Shows "< $threshold" for values below threshold
- *
- * @deprecated Use formatCurrency with { smartPrecision: true } instead
- * @param value - The numerical value to format
- * @param options - Formatting options
- * @returns Formatted currency string
- */
-export function formatSmallCurrency(
-  value: number,
-  options: {
-    threshold?: number;
-    thresholdDecimals?: number;
-    normalDecimals?: number;
-    showNegative?: boolean;
-  } = {}
-): string {
-  const { threshold = 0.01, normalDecimals = 2, showNegative = true } = options;
-
-  return formatCurrency(value, {
-    smartPrecision: true,
-    threshold,
-    minimumFractionDigits: normalDecimals,
-    maximumFractionDigits: normalDecimals,
-    showNegative,
-  });
-}
-
 // =============================================================================
 // NUMBER FORMATTING
 // =============================================================================
@@ -214,18 +173,6 @@ export function formatNumber(
     maximumFractionDigits,
     minimumFractionDigits,
   });
-}
-
-/**
- * Format small numbers with appropriate precision
- * Handles very small values with appropriate decimal places
- *
- * @deprecated Use formatNumber with { smartPrecision: true } instead
- * @param num - The number to format
- * @returns Formatted number string
- */
-export function formatSmallNumber(num: number): string {
-  return formatNumber(num, { smartPrecision: true });
 }
 
 // =============================================================================
@@ -284,36 +231,6 @@ export function formatVolatility(value: number): string {
 // =============================================================================
 
 /**
- * Format ETH amounts with variable precision based on value
- *
- * @param value - The ETH value to format
- * @param options - Formatting options
- * @returns Formatted ETH amount string
- */
-export function formatEthAmount(
-  value: number,
-  options: EthFormatOptions = {}
-): string {
-  const {
-    showSuffix = true,
-    precision = {
-      tiny: 8, // < 0.0001
-      small: 8, // < 0.01
-      medium: 4, // < 1
-      large: 4, // >= 1
-    },
-  } = options;
-
-  const suffix = showSuffix ? " ETH" : "";
-
-  if (value === 0) return `0${suffix}`;
-  if (value < 0.0001) return `< 0.0001${suffix}`;
-  if (value < 0.01) return `${value.toFixed(precision.tiny)}${suffix}`;
-  if (value < 1) return `${value.toFixed(precision.medium)}${suffix}`;
-  return `${value.toFixed(precision.large)}${suffix}`;
-}
-
-/**
  * Format token amounts with symbol
  *
  * @param amount - Token amount
@@ -334,27 +251,6 @@ export function formatTokenAmount(
 // =============================================================================
 // UTILITY FUNCTIONS
 // =============================================================================
-
-/**
- * Safe number formatting that handles null/undefined values
- *
- * @param value - Value to format (may be null/undefined)
- * @param formatter - Formatting function to apply
- * @param fallback - Fallback string for null/undefined values
- * @returns Formatted string or fallback
- */
-export function safeFormat<T>(
-  value: T | null | undefined,
-  formatter: (val: T) => string,
-  fallback = "—"
-): string {
-  if (value === null || value === undefined) return fallback;
-  try {
-    return formatter(value);
-  } catch {
-    return fallback;
-  }
-}
 
 /**
  * Format large numbers with K/M/B suffixes
@@ -380,19 +276,6 @@ export function formatLargeNumber(value: number, decimals = 1): string {
   }
 
   return value.toString();
-}
-
-/**
- * Format time duration in human readable format
- *
- * @param seconds - Duration in seconds
- * @returns Human readable duration string
- */
-export function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-  return `${Math.floor(seconds / 86400)}d`;
 }
 
 // =============================================================================
@@ -503,7 +386,5 @@ export {
   formatCurrency as formatCurrencyValue,
   formatNumber as formatNumericValue,
   formatPercentage as formatPercentageValue,
-  formatSmallCurrency as formatSmallCurrencyValue,
-  formatSmallNumber as formatSmallNumericValue,
 };
 /* c8 ignore stop */

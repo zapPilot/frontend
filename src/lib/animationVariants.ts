@@ -94,76 +94,6 @@ export const fadeInUp: Variants = {
 };
 
 /**
- * Fade in from top
- *
- * Use for:
- * - Dropdowns
- * - Notifications
- * - Elements appearing from navigation
- *
- * Default offset: 20px downward movement
- *
- * @example
- * ```tsx
- * <motion.div
- *   initial="initial"
- *   animate="animate"
- *   variants={fadeInDown}
- * >
- *   Notification content
- * </motion.div>
- * ```
- */
-export const fadeInDown: Variants = {
-  initial: {
-    opacity: 0,
-    y: -20,
-  },
-  animate: {
-    opacity: 1,
-    y: 0,
-  },
-  exit: {
-    opacity: 0,
-    y: -20,
-  },
-};
-
-/**
- * Simple opacity fade (no movement)
- *
- * Use for:
- * - Subtle transitions
- * - Overlays and modals
- * - When movement would be distracting
- *
- * @example
- * ```tsx
- * <AnimatePresence>
- *   {isVisible && (
- *     <motion.div
- *       variants={fadeIn}
- *       transition={QUICK_TRANSITION}
- *     >
- *       Content
- *     </motion.div>
- *   )}
- * </AnimatePresence>
- * ```
- */
-export const fadeIn: Variants = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-  },
-  exit: {
-    opacity: 0,
-  },
-};
-
-/**
  * Slide in from left
  *
  * Use for:
@@ -198,45 +128,6 @@ export const slideInLeft: Variants = {
   exit: {
     opacity: 0,
     x: -30,
-  },
-};
-
-/**
- * Slide in from right
- *
- * Use for:
- * - Mobile navigation
- * - Cart drawers
- * - Right-aligned panels
- *
- * Default offset: 30px leftward movement
- *
- * @example
- * ```tsx
- * <AnimatePresence>
- *   {isCartOpen && (
- *     <motion.div
- *       variants={slideInRight}
- *       transition={SPRING_TRANSITION}
- *     >
- *       Cart items
- *     </motion.div>
- *   )}
- * </AnimatePresence>
- * ```
- */
-export const slideInRight: Variants = {
-  initial: {
-    opacity: 0,
-    x: 30,
-  },
-  animate: {
-    opacity: 1,
-    x: 0,
-  },
-  exit: {
-    opacity: 0,
-    x: 30,
   },
 };
 
@@ -278,126 +169,9 @@ export const scaleIn: Variants = {
   },
 };
 
-/**
- * Container variant for staggered child animations
- *
- * Use for:
- * - Lists and grids
- * - Sequential content reveals
- * - Dashboard sections
- *
- * Children should use variants like `fadeInUp` or `fadeIn`
- *
- * @example
- * ```tsx
- * <motion.ul
- *   initial="initial"
- *   animate="animate"
- *   variants={staggerChildren}
- *   transition={STAGGER_TRANSITION}
- * >
- *   {items.map(item => (
- *     <motion.li
- *       key={item.id}
- *       variants={fadeInUp}
- *     >
- *       {item.content}
- *     </motion.li>
- *   ))}
- * </motion.ul>
- * ```
- */
-export const staggerChildren: Variants = {
-  initial: {
-    opacity: 0,
-  },
-  animate: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.05,
-    },
-  },
-  exit: {
-    opacity: 0,
-  },
-};
-
 // ============================================================================
 // Compound Variants
 // ============================================================================
-
-/**
- * Combined fade and scale animation (more dramatic)
- *
- * Use for:
- * - Hero sections
- * - Feature highlights
- * - Call-to-action elements
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={fadeScaleIn}
- *   transition={SPRING_TRANSITION}
- * >
- *   Hero content
- * </motion.div>
- * ```
- */
-export const fadeScaleIn: Variants = {
-  initial: {
-    opacity: 0,
-    scale: 0.9,
-    y: 20,
-  },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    y: 0,
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.9,
-    y: 20,
-  },
-};
-
-/**
- * Rotate and fade in animation
- *
- * Use for:
- * - Icons and badges
- * - Playful interactions
- * - Loading indicators
- *
- * @example
- * ```tsx
- * <motion.div
- *   variants={rotateIn}
- *   transition={SPRING_TRANSITION}
- * >
- *   <Icon />
- * </motion.div>
- * ```
- */
-export const rotateIn: Variants = {
-  initial: {
-    opacity: 0,
-    rotate: -10,
-    scale: 0.9,
-  },
-  animate: {
-    opacity: 1,
-    rotate: 0,
-    scale: 1,
-  },
-  exit: {
-    opacity: 0,
-    rotate: 10,
-    scale: 0.9,
-  },
-};
 
 // ============================================================================
 // Type Exports
@@ -411,16 +185,7 @@ export type TransitionPreset = "spring" | "smooth" | "quick" | "stagger";
 /**
  * All available animation variants
  */
-export type AnimationVariant =
-  | "fadeInUp"
-  | "fadeInDown"
-  | "fadeIn"
-  | "slideInLeft"
-  | "slideInRight"
-  | "scaleIn"
-  | "staggerChildren"
-  | "fadeScaleIn"
-  | "rotateIn";
+export type AnimationVariant = "fadeInUp" | "slideInLeft" | "scaleIn";
 
 /**
  * Default export containing all variants and transitions
@@ -428,14 +193,8 @@ export type AnimationVariant =
 export default {
   // Variants
   fadeInUp,
-  fadeInDown,
-  fadeIn,
   slideInLeft,
-  slideInRight,
   scaleIn,
-  staggerChildren,
-  fadeScaleIn,
-  rotateIn,
 
   // Transitions (for backward compatibility)
   transitions: {

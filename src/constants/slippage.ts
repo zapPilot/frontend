@@ -28,7 +28,3 @@ export const SLIPPAGE_CONFIG = {
     HIGH: 1.0,
   },
 } as const;
-
-export type SlippageConfig = typeof SLIPPAGE_CONFIG;
-export type SlippagePreset =
-  (typeof SLIPPAGE_CONFIG.PRESETS)[keyof typeof SLIPPAGE_CONFIG.PRESETS];

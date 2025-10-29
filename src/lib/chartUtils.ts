@@ -1,52 +1,16 @@
-import {
-  ALLOCATION_STACK_ORDER,
-  ASSET_LABELS,
-  CHART_COLORS,
-} from "../constants/portfolio";
-import { AssetAllocationPoint, PortfolioDataPoint } from "../types/portfolio";
 import { portfolioStateUtils } from "@/hooks/usePortfolioState";
-import { formatPercentage, formatLargeNumber } from "./formatters";
-import { ensureNonNegative } from "./mathUtils";
+import {
+  API_CATEGORY_KEY_MAP,
+  ASSET_CATEGORIES,
+  type ApiCategoryKey,
+} from "../constants/portfolio";
+import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
+import { formatLargeNumber, formatPercentage } from "./formatters";
 
 export interface SVGPathPoint {
   x: number;
   y: number;
 }
-
-type AllocationAssetKey = Exclude<keyof AssetAllocationPoint, "date">;
-
-const ALLOCATION_BAR_OFFSET = 2;
-const ALLOCATION_BAR_WIDTH = 4;
-
-export interface AllocationChartPoint {
-  date: string;
-  assetKey: AllocationAssetKey;
-  value: number;
-  percentage: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  color: string;
-  label: string;
-}
-
-export const safeDivision = (
-  numerator: number,
-  denominator: number,
-  fallback = 1
-): number => {
-  if (denominator === 0) {
-    return fallback;
-  }
-
-  const result = numerator / denominator;
-  if (!Number.isFinite(result)) {
-    return fallback;
-  }
-
-  return result;
-};
 
 export const generateSVGPath = (
   data: PortfolioDataPoint[],
@@ -118,53 +82,59 @@ export const generateYAxisLabels = (
   return Array.from({ length: steps }, (_, i) => maxValue - i * stepSize);
 };
 
-export const generateAllocationChartData = (
-  data: AssetAllocationPoint[],
-  width = 800,
-  height = 300
-): AllocationChartPoint[] => {
-  if (portfolioStateUtils.isEmptyArray(data)) {
-    return [];
-  }
+const DEFAULT_PIE_SLICE_COLOR = "#6366F1";
 
-  const spacing = data.length > 1 ? width / (data.length - 1) : 0;
+const isApiCategoryKey = (categoryId: string): categoryId is ApiCategoryKey =>
+  Object.prototype.hasOwnProperty.call(API_CATEGORY_KEY_MAP, categoryId);
 
-  return data.flatMap((point, index) => {
-    const sanitizedValues: Record<AllocationAssetKey, number> = {
-      btc: ensureNonNegative(point.btc ?? 0),
-      eth: ensureNonNegative(point.eth ?? 0),
-      stablecoin: ensureNonNegative(point.stablecoin ?? 0),
-      altcoin: ensureNonNegative(point.altcoin ?? 0),
+export interface PieChartTransformItem {
+  id: string;
+  value: number;
+  percentage?: number;
+  label?: string;
+  color?: string;
+}
+
+export interface TransformPieChartOptions {
+  deriveCategoryMetadata?: boolean;
+  colorVariant?: "brand" | "chart";
+}
+
+export const transformToPieChartData = (
+  items: PieChartTransformItem[],
+  options: TransformPieChartOptions = {}
+): PieChartData[] => {
+  const { deriveCategoryMetadata = false, colorVariant = "brand" } = options;
+
+  const positiveItems = items.filter(item => item.value > 0);
+  const totalValue = positiveItems.reduce((sum, item) => sum + item.value, 0);
+
+  return positiveItems.map(item => {
+    const categoryMeta =
+      deriveCategoryMetadata && isApiCategoryKey(item.id)
+        ? ASSET_CATEGORIES[API_CATEGORY_KEY_MAP[item.id]]
+        : null;
+
+    const percentage =
+      item.percentage !== undefined
+        ? item.percentage
+        : totalValue > 0
+          ? (item.value / totalValue) * 100
+          : 0;
+
+    const color =
+      item.color ??
+      (categoryMeta
+        ? colorVariant === "chart"
+          ? categoryMeta.chartColor
+          : categoryMeta.brandColor
+        : DEFAULT_PIE_SLICE_COLOR);
+
+    return {
+      label: item.label ?? categoryMeta?.label ?? item.id,
+      value: item.value,
+      percentage,
+      color,
     };
-
-    const totalValue = ALLOCATION_STACK_ORDER.reduce(
-      (sum, key) => sum + sanitizedValues[key],
-      0
-    );
-
-    const xPosition = spacing * index - ALLOCATION_BAR_OFFSET;
-    let cumulativeHeight = 0;
-
-    return ALLOCATION_STACK_ORDER.map(assetKey => {
-      const value = sanitizedValues[assetKey];
-      const share = safeDivision(value, totalValue, 0);
-      const segmentHeight = share * height;
-      const y = height - cumulativeHeight - segmentHeight;
-
-      cumulativeHeight += segmentHeight;
-
-      return {
-        date: point.date,
-        assetKey,
-        value,
-        percentage: share * 100,
-        x: xPosition,
-        y,
-        width: ALLOCATION_BAR_WIDTH,
-        height: segmentHeight,
-        color: CHART_COLORS[assetKey],
-        label: ASSET_LABELS[assetKey],
-      } satisfies AllocationChartPoint;
-    });
   });
 };

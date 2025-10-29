@@ -39,7 +39,7 @@ export const ALLOCATION_UI = {
 
 /**
  * Mock values for testing and development
- * TODO: Replace with real API data (GitHub Issue #2)
+ * TODO(ZAP-207): Replace with real API data
  */
 export const MOCK_VALUES = {
   /** Mock total portfolio value in USD */

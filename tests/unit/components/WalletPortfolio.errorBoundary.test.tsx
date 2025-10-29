@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../../src/hooks/usePortfolio";
+import { usePortfolio } from "../../helpers/deprecatedUsePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -13,7 +13,7 @@ import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils"
 
 // Mock dependencies for decomposed architecture
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../../src/hooks/usePortfolio");
+vi.mock("../../helpers/deprecatedUsePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
@@ -371,7 +371,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
 
     it("should handle usePortfolio hook throwing an error", () => {
       const onError = vi.fn();
-      mockUsePortfolio.mockImplementation(() => {
+      mockUsePortfolioState.mockImplementation(() => {
         throw new Error("Portfolio metrics calculation failed");
       });
 
@@ -596,7 +596,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       const onError = vi.fn();
 
       // Make usePortfolio fail when it receives categories from useLandingPageData
-      mockUsePortfolio.mockImplementation(() => {
+      mockUsePortfolioState.mockImplementation(() => {
         throw new Error("Cannot process portfolio categories");
       });
 
@@ -744,7 +744,7 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       const onError = vi.fn();
 
       // Simulate out of memory error
-      mockUsePortfolio.mockImplementation(() => {
+      mockUsePortfolioState.mockImplementation(() => {
         throw new Error("JavaScript heap out of memory");
       });
 

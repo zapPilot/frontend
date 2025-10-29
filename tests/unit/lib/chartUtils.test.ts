@@ -4,13 +4,9 @@ import {
   generateAreaPath,
   formatAxisLabel,
   generateYAxisLabels,
-  generateAllocationChartData,
-  safeDivision,
+  transformToPieChartData,
 } from "../../../src/lib/chartUtils";
-import type {
-  PortfolioDataPoint,
-  AssetAllocationPoint,
-} from "../../../src/types/portfolio";
+import type { PortfolioDataPoint } from "../../../src/types/portfolio";
 
 // Mock the portfolioStateUtils dependency
 vi.mock("@/hooks/usePortfolioState", () => ({
@@ -340,322 +336,65 @@ describe("chartUtils", () => {
     });
   });
 
-  describe("generateAllocationChartData", () => {
-    const createMockAllocation = (
-      data: Array<{
-        date: string;
-        btc: number;
-        eth: number;
-        stablecoin: number;
-        altcoin: number;
-      }>
-    ): AssetAllocationPoint[] => {
-      return data;
-    };
-
-    it("should return empty array for empty data", () => {
-      const result = generateAllocationChartData([]);
-      expect(result).toEqual([]);
-    });
-
-    it("should generate chart points for single allocation point", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 200,
-          stablecoin: 300,
-          altcoin: 50,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data, 800, 300);
-
-      // Should have 4 points (one per asset type)
-      expect(result).toHaveLength(4);
-
-      // Verify all assets are represented
-      const assetKeys = result.map(point => point.assetKey);
-      expect(assetKeys).toContain("btc");
-      expect(assetKeys).toContain("eth");
-      expect(assetKeys).toContain("stablecoin");
-      expect(assetKeys).toContain("altcoin");
-    });
-
-    it("should generate stacked points for multiple allocation points", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-        {
-          date: "2025-01-02",
-          btc: 200,
-          eth: 150,
-          stablecoin: 100,
-          altcoin: 50,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data, 800, 300);
-
-      // Should have 8 points (4 assets × 2 time points)
-      expect(result).toHaveLength(8);
-    });
-
-    it("should assign correct colors to assets", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data);
-
-      const btcPoint = result.find(p => p.assetKey === "btc");
-      const ethPoint = result.find(p => p.assetKey === "eth");
-      const stablecoinPoint = result.find(p => p.assetKey === "stablecoin");
-      const altcoinPoint = result.find(p => p.assetKey === "altcoin");
-
-      expect(btcPoint?.color).toBe("#f59e0b");
-      expect(ethPoint?.color).toBe("#6366f1");
-      expect(stablecoinPoint?.color).toBe("#10b981");
-      expect(altcoinPoint?.color).toBe("#ef4444");
-    });
-
-    it("should scale heights proportionally to asset values", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const height = 300;
-      const result = generateAllocationChartData(data, 800, height);
-
-      // With equal values, each asset should take 1/4 of the height
-      const totalHeight = result.reduce((sum, point) => sum + point.height, 0);
-      expect(totalHeight).toBeCloseTo(height, 0);
-
-      // Each asset should have approximately equal height
-      result.forEach(point => {
-        expect(point.height).toBeCloseTo(height / 4, 0);
-      });
-    });
-
-    it("should position x coordinates based on data index and width", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-        {
-          date: "2025-01-02",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const width = 800;
-      const result = generateAllocationChartData(data, width, 300);
-
-      // First 4 points should be at x = -2 (index 0)
-      const firstPoints = result.slice(0, 4);
-      firstPoints.forEach(point => {
-        expect(point.x).toBe(-2);
-      });
-
-      // Last 4 points should be at x = width - 2 (index 1)
-      const lastPoints = result.slice(4, 8);
-      lastPoints.forEach(point => {
-        expect(point.x).toBe(width - 2);
-      });
-    });
-
-    it("should set correct width for chart points", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data);
-
-      // All points should have width of 4
-      result.forEach(point => {
-        expect(point.width).toBe(4);
-      });
-    });
-
-    it("should store original asset values", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 123,
-          eth: 456,
-          stablecoin: 789,
-          altcoin: 567,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data);
-
-      const btcPoint = result.find(p => p.assetKey === "btc");
-      const ethPoint = result.find(p => p.assetKey === "eth");
-
-      expect(btcPoint?.value).toBe(123);
-      expect(ethPoint?.value).toBe(456);
-    });
-
-    it("should handle custom width and height", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const customWidth = 400;
-      const customHeight = 200;
-      const result = generateAllocationChartData(
-        data,
-        customWidth,
-        customHeight
+  describe("transformToPieChartData", () => {
+    it("should derive category metadata when enabled", () => {
+      const result = transformToPieChartData(
+        [
+          { id: "btc", value: 5000, percentage: 50 },
+          { id: "eth", value: 3000, percentage: 30 },
+          { id: "stablecoins", value: 2000, percentage: 20 },
+        ],
+        { deriveCategoryMetadata: true }
       );
 
-      const totalHeight = result.reduce((sum, point) => sum + point.height, 0);
-      expect(totalHeight).toBeCloseTo(customHeight, 0);
-    });
-
-    it("should handle zero values for some assets", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 0,
-          stablecoin: 200,
-          altcoin: 100,
-        },
-      ]);
-
-      const result = generateAllocationChartData(data, 800, 300);
-
-      // Should still generate 4 points
-      expect(result).toHaveLength(4);
-
-      // Zero-value assets should have zero height
-      const ethPoint = result.find(p => p.assetKey === "eth");
-
-      expect(ethPoint?.height).toBe(0);
-      expect(ethPoint?.value).toBe(0);
-    });
-
-    it("should stack assets from bottom to top", () => {
-      const data = createMockAllocation([
-        {
-          date: "2025-01-01",
-          btc: 100,
-          eth: 100,
-          stablecoin: 100,
-          altcoin: 100,
-        },
-      ]);
-
-      const height = 300;
-      const result = generateAllocationChartData(data, 800, height);
-
-      // Assets should be stacked from bottom (altcoin) to top (btc)
-      // The y position should decrease as we stack up
-      const yPositions = result.map(p => ({ key: p.assetKey, y: p.y }));
-
-      // Verify that y positions are valid (between 0 and height)
-      yPositions.forEach(({ y }) => {
-        expect(y).toBeGreaterThanOrEqual(0);
-        expect(y).toBeLessThanOrEqual(height);
+      expect(result).toHaveLength(3);
+      expect(result[0]).toMatchObject({
+        label: "Bitcoin",
+        color: "#F7931A",
+        percentage: 50,
+        value: 5000,
       });
-    });
-  });
-
-  describe("safeDivision", () => {
-    it("should perform normal division when denominator is non-zero", () => {
-      expect(safeDivision(10, 2)).toBe(5);
-      expect(safeDivision(100, 4)).toBe(25);
-      expect(safeDivision(7, 3)).toBeCloseTo(2.333, 2);
+      expect(result[1].label).toBe("Ethereum");
+      expect(result[2].label).toBe("Stablecoins");
     });
 
-    it("should return fallback value when denominator is zero", () => {
-      expect(safeDivision(10, 0)).toBe(1); // Default fallback
-      expect(safeDivision(100, 0)).toBe(1);
+    it("should compute percentages when missing", () => {
+      const result = transformToPieChartData(
+        [
+          { id: "btc", value: 4000 },
+          { id: "eth", value: 1000 },
+        ],
+        { deriveCategoryMetadata: true }
+      );
+
+      const totalPercentage = result.reduce(
+        (sum, item) => sum + item.percentage,
+        0
+      );
+
+      expect(totalPercentage).toBeCloseTo(100, 5);
+      expect(result[0].percentage).toBeCloseTo(80, 5);
+      expect(result[1].percentage).toBeCloseTo(20, 5);
     });
 
-    it("should use custom fallback value", () => {
-      expect(safeDivision(10, 0, 0)).toBe(0);
-      expect(safeDivision(10, 0, 42)).toBe(42);
-      expect(safeDivision(10, 0, -1)).toBe(-1);
-    });
+    it("should respect custom labels and colors when metadata derivation disabled", () => {
+      const result = transformToPieChartData([
+        {
+          id: "custom",
+          value: 100,
+          label: "Custom Category",
+          color: "#123456",
+        },
+      ]);
 
-    it("should handle negative numbers", () => {
-      expect(safeDivision(-10, 2)).toBe(-5);
-      expect(safeDivision(10, -2)).toBe(-5);
-      expect(safeDivision(-10, -2)).toBe(5);
-    });
-
-    it("should handle zero numerator", () => {
-      expect(safeDivision(0, 5)).toBe(0);
-      // 0 / -5 = -0 in JavaScript (Object.is distinguishes -0 from +0)
-      expect(safeDivision(0, -5)).toBe(-0);
-    });
-
-    it("should handle decimal values", () => {
-      expect(safeDivision(10.5, 2.5)).toBeCloseTo(4.2, 1);
-      expect(safeDivision(0.1, 0.2)).toBeCloseTo(0.5, 1);
-    });
-
-    it("should handle very small denominators (not exactly zero)", () => {
-      const result = safeDivision(1, 0.0001);
-      expect(result).toBe(10000);
-    });
-
-    it("should handle very large numbers", () => {
-      expect(safeDivision(1000000, 1000)).toBe(1000);
-      expect(safeDivision(1e10, 1e5)).toBe(1e5);
-    });
-
-    it("should return fallback when denominator is exactly zero (not negative zero)", () => {
-      expect(safeDivision(10, 0, 99)).toBe(99);
-      expect(safeDivision(10, -0, 99)).toBe(99); // -0 === 0 in JavaScript
-    });
-
-    it("should handle Infinity results from normal division", () => {
-      // When denominator is very small but not zero, result can be Infinity
-      // However, Number.MIN_VALUE / 2 underflows to 0 in JavaScript
-      const verySmall = Number.MIN_VALUE / 2;
-      // This underflows to 0, so safeDivision returns fallback
-      const result = safeDivision(1, verySmall);
-      expect(result).toBe(1); // Fallback because verySmall === 0
+      expect(result).toEqual([
+        {
+          label: "Custom Category",
+          color: "#123456",
+          value: 100,
+          percentage: 100,
+        },
+      ]);
     });
   });
 });

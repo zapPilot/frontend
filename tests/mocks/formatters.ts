@@ -62,59 +62,6 @@ export const mockFormatters = {
   ),
 
   /**
-   * Mock implementation of formatSmallCurrency.
-   * Handles very small amounts with threshold display.
-   */
-  formatSmallCurrency: vi.fn((value: number, options: any = {}) => {
-    const threshold = options.threshold ?? 0.01;
-    if (value === 0) return "$0.00";
-
-    const absValue = Math.abs(value);
-    const isNegative = value < 0;
-
-    if (absValue < threshold) {
-      const decimals = threshold < 0.01 ? 4 : 2;
-      const formatted = `< $${threshold.toFixed(decimals)}`;
-      return isNegative ? `-${formatted}` : formatted;
-    }
-
-    const formatted = new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(absValue);
-
-    return isNegative ? `-${formatted}` : formatted;
-  }),
-
-  /**
-   * Mock implementation of formatSmallNumber.
-   */
-  formatSmallNumber: vi.fn((num: number) => {
-    if (num === 0) return "0";
-    if (num < 0.000001) return "< 0.000001";
-    if (num < 0.01) return num.toFixed(6);
-    if (num < 1) return num.toFixed(4);
-    if (num < 100) return num.toFixed(2);
-    return num.toFixed(0);
-  }),
-
-  /**
-   * Mock implementation of formatEthAmount.
-   */
-  formatEthAmount: vi.fn((value: number, options: any = {}) => {
-    const showSuffix = options.showSuffix ?? true;
-    const suffix = showSuffix ? " ETH" : "";
-
-    if (value === 0) return `0${suffix}`;
-    if (value < 0.0001) return `< 0.0001${suffix}`;
-    if (value < 0.01) return `${value.toFixed(8)}${suffix}`;
-    if (value < 1) return `${value.toFixed(4)}${suffix}`;
-    return `${value.toFixed(4)}${suffix}`;
-  }),
-
-  /**
    * Mock implementation of formatTokenAmount.
    */
   formatTokenAmount: vi.fn((amount: number, symbol: string, decimals = 4) => {
@@ -182,31 +129,6 @@ export const mockFormatters = {
   }),
 
   /**
-   * Mock implementation of formatDuration.
-   */
-  formatDuration: vi.fn((seconds: number) => {
-    if (seconds < 60) return `${seconds}s`;
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-    return `${Math.floor(seconds / 86400)}d`;
-  }),
-
-  /**
-   * Mock implementation of safeFormat.
-   */
-  safeFormat: vi.fn(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-    (value: any, formatter: Function, fallback = "—") => {
-      if (value === null || value === undefined) return fallback;
-      try {
-        return formatter(value);
-      } catch {
-        return fallback;
-      }
-    }
-  ),
-
-  /**
    * Mock implementation of the formatters object.
    */
   formatters: {
@@ -238,12 +160,6 @@ export const mockFormatters = {
   formatPercentageValue: vi.fn(
     (value: number, showPlusSign = true, decimals = 1) =>
       mockFormatters.formatPercentage(value, showPlusSign, decimals)
-  ),
-  formatSmallCurrencyValue: vi.fn((value: number, options: any = {}) =>
-    mockFormatters.formatSmallCurrency(value, options)
-  ),
-  formatSmallNumericValue: vi.fn((num: number) =>
-    mockFormatters.formatSmallNumber(num)
   ),
 };
 

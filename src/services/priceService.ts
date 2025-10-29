@@ -127,7 +127,7 @@ interface SinglePriceResponse {
  * const prices = await getTokenPrices(['BTC', 'ETH', 'USDC']);
  * prices.forEach(({ symbol, price, success }) => {
  *   if (success) {
- *     console.log(`${symbol}: $${price}`);
+ *     apiLogger.debug(`${symbol}: $${price}`);
  *   }
  * });
  * ```
@@ -207,8 +207,8 @@ export const getTokenPrices = (symbols: string[]): Promise<TokenPriceData[]> =>
  * ```typescript
  * const btcPrice = await getTokenPrice('BTC');
  * if (btcPrice.success) {
- *   console.log(`Bitcoin: $${btcPrice.price}`);
- *   console.log(`Market Cap: $${btcPrice.metadata?.marketCap}`);
+ *   apiLogger.debug(`Bitcoin: $${btcPrice.price}`);
+ *   apiLogger.debug(`Market Cap: $${btcPrice.metadata?.marketCap}`);
  * }
  * ```
  *
@@ -315,7 +315,7 @@ export const createPriceLookup = (
  * const amounts = new Map([['btc', 2], ['eth', 10]]);
  * const prices = await getTokenPrices(['BTC', 'ETH']);
  * const totalValue = calculateTotalValue(amounts, prices);
- * console.log(`Portfolio value: $${totalValue}`);
+ * apiLogger.debug(`Portfolio value: $${totalValue}`);
  * ```
  */
 export const calculateTotalValue = (

@@ -14,7 +14,7 @@ export function SettingsTab() {
           label: "App Settings",
           description: "General preferences and configuration",
           onClick: () => {
-            /* TODO: Implement app settings */
+            /* TODO(ZAP-201): Implement app settings */
           },
         },
         {
@@ -22,7 +22,7 @@ export function SettingsTab() {
           label: "Notifications",
           description: "Manage alerts and notifications",
           onClick: () => {
-            /* TODO: Implement notifications */
+            /* TODO(ZAP-202): Implement notifications */
           },
         },
         {
@@ -30,7 +30,7 @@ export function SettingsTab() {
           label: "Security & Privacy",
           description: "Privacy and security settings",
           onClick: () => {
-            /* TODO: Implement security settings */
+            /* TODO(ZAP-203): Implement security settings */
           },
         },
       ],
@@ -43,7 +43,7 @@ export function SettingsTab() {
           label: "Help Center",
           description: "FAQs and documentation",
           onClick: () => {
-            /* TODO: Implement help center */
+            /* TODO(ZAP-204): Implement help center */
           },
         },
         {
@@ -51,7 +51,7 @@ export function SettingsTab() {
           label: "User Guide",
           description: "Learn how to use Zap Pilot",
           onClick: () => {
-            /* TODO: Implement user guide */
+            /* TODO(ZAP-205): Implement user guide */
           },
         },
       ],

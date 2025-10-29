@@ -358,7 +358,17 @@ describe("WalletPortfolio", () => {
       getDisplayTotalValue: () => 15000,
     });
 
-    mockCreateCategoriesFromApiData.mockReturnValue(mockAssetCategories);
+    mockCreateCategoriesFromApiData.mockImplementation(categoryData => {
+      if (!categoryData) {
+        return [];
+      }
+
+      const hasPositiveValue = Object.values(categoryData).some(
+        value => value > 0
+      );
+
+      return hasPositiveValue ? mockAssetCategories : [];
+    });
   });
 
   afterEach(() => {

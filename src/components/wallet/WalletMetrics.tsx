@@ -3,11 +3,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { getChangeColorClasses } from "../../lib/color-utils";
-import {
-  formatCurrency,
-  formatSmallCurrency,
-  formatPercentage,
-} from "../../lib/formatters";
+import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
@@ -220,7 +216,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           className={`flex items-center space-x-2 ${getChangeColorClasses(portfolioChangePercentage)}`}
         >
           <p className="text-xl font-semibold">
-            {formatSmallCurrency(estimatedYearlyPnL)}
+            {formatCurrency(estimatedYearlyPnL, {
+              smartPrecision: true,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </p>
           <span className="text-xs text-purple-400 font-medium bg-purple-900/20 px-1.5 py-0.5 rounded-full">
             est.

@@ -6,7 +6,6 @@ import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
 import type { LandingPageResponse } from "@/services/analyticsService";
-import { usePortfolio } from "./usePortfolio";
 
 export interface UseWalletPortfolioStateParams {
   urlUserId?: string;
@@ -135,26 +134,13 @@ export function useWalletPortfolioState(
     hasZeroData,
   });
 
-  // View toggles consolidated from legacy usePortfolio hook
+  // Local portfolio view toggles
   const {
     balanceHidden,
-    toggleBalanceVisibility: legacyToggleBalanceVisibility = () => {},
+    toggleBalanceVisibility,
     expandedCategory,
-    toggleCategoryExpansion: legacyToggleCategoryExpansion = () => {},
-  } = usePortfolio([]);
-
-  const toggleBalanceVisibility = useCallback(() => {
-    legacyToggleBalanceVisibility();
-    onToggleBalance?.();
-  }, [legacyToggleBalanceVisibility, onToggleBalance]);
-
-  const toggleCategoryExpansion = useCallback(
-    (categoryId: string) => {
-      legacyToggleCategoryExpansion(categoryId);
-      onCategoryClick?.(categoryId);
-    },
-    [legacyToggleCategoryExpansion, onCategoryClick]
-  );
+    toggleCategoryExpansion,
+  } = usePortfolioViewToggles(onToggleBalance, onCategoryClick);
 
   // Wallet manager modal controls (inlined from useWalletModal)
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);

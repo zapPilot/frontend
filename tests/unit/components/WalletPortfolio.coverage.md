@@ -126,7 +126,7 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
 ```typescript
 // Mock external dependencies, not child components (for integration tests)
 vi.mock("../../src/contexts/UserContext");
-vi.mock("../../src/hooks/usePortfolio");
+vi.mock("../helpers/deprecatedUsePortfolio");
 
 // Mock child components for unit tests
 vi.mock("../../src/components/PortfolioOverview", () => ({

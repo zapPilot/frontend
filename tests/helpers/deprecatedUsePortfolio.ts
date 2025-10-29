@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { usePortfolioViewToggles } from "./useWalletPortfolioState";
+import { usePortfolioViewToggles } from "@/hooks/useWalletPortfolioState";
 import { calculatePortfolioMetrics } from "@/lib/portfolio-data";
 import type { AssetCategory, PortfolioMetrics } from "@/types/portfolio";
 
