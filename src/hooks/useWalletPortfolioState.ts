@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
@@ -17,6 +17,33 @@ export interface UseWalletPortfolioStateParams {
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
   bundleUrl?: string;
+}
+
+export function usePortfolioViewToggles(
+  onToggleBalance?: (() => void) | undefined,
+  onCategoryClick?: (categoryId: string) => void
+) {
+  const [balanceHidden, setBalanceHidden] = useState(false);
+  const toggleBalanceVisibility = useCallback(() => {
+    setBalanceHidden(prev => !prev);
+    onToggleBalance?.();
+  }, [onToggleBalance]);
+
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const toggleCategoryExpansion = useCallback(
+    (categoryId: string) => {
+      setExpandedCategory(prev => (prev === categoryId ? null : categoryId));
+      onCategoryClick?.(categoryId);
+    },
+    [onCategoryClick]
+  );
+
+  return {
+    balanceHidden,
+    toggleBalanceVisibility,
+    expandedCategory,
+    toggleCategoryExpansion,
+  } as const;
 }
 
 export interface WalletPortfolioViewModel {
@@ -37,12 +64,16 @@ export interface WalletPortfolioViewModel {
   >["portfolioMetrics"];
   // Aggregated portfolio state
   portfolioState: ReturnType<typeof usePortfolioState>;
+  // Local portfolio view toggles
+  balanceHidden: boolean;
+  toggleBalanceVisibility: () => void;
+  expandedCategory: string | null;
+  toggleCategoryExpansion: (categoryId: string) => void;
   // Actions (effective with visitor gating applied)
   onOptimizeClick?: () => void;
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
   onCategoryClick?: (categoryId: string) => void;
-  onToggleBalance?: () => void;
   // Bundle display context (pass-through)
   isOwnBundle?: boolean | undefined;
   bundleUserName?: string | undefined;
@@ -98,10 +129,18 @@ export function useWalletPortfolioState(
     isConnected,
     isLoading: landingPageQuery.isLoading,
     isRetrying: landingPageQuery.isRefetching,
-    error: landingPageQuery.error?.message || null,
+    error: (landingPageQuery.error as Error | null)?.message || null,
     landingPageData: landingPageData ?? null,
     hasZeroData,
   });
+
+  // Local portfolio view toggles
+  const {
+    balanceHidden,
+    toggleBalanceVisibility,
+    expandedCategory,
+    toggleCategoryExpansion,
+  } = usePortfolioViewToggles(onToggleBalance, onCategoryClick);
 
   // Wallet manager modal controls (inlined from useWalletModal)
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -122,11 +161,14 @@ export function useWalletPortfolioState(
     debtCategorySummaries,
     portfolioMetrics,
     portfolioState,
+    balanceHidden,
+    toggleBalanceVisibility,
+    expandedCategory,
+    toggleCategoryExpansion,
     ...(gatedOnOptimize ? { onOptimizeClick: gatedOnOptimize } : {}),
     ...(gatedOnZapIn ? { onZapInClick: gatedOnZapIn } : {}),
     ...(gatedOnZapOut ? { onZapOutClick: gatedOnZapOut } : {}),
     ...(onCategoryClick ? { onCategoryClick } : {}),
-    ...(onToggleBalance ? { onToggleBalance } : {}),
     ...(typeof isOwnBundle !== "undefined" ? { isOwnBundle } : {}),
     ...(bundleUserName ? { bundleUserName } : {}),
     ...(bundleUrl ? { bundleUrl } : {}),

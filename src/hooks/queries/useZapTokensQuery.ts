@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
 import type { SwapToken } from "../../types/swap";
@@ -8,6 +10,7 @@ import {
   type UseTokenBalancesParams,
 } from "./useTokenBalancesQuery";
 import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
+import { dedupeStrings } from "../../lib/stringUtils";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain
@@ -15,23 +18,10 @@ import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
  */
 export const useZapTokensQuery = (chainId?: number) => {
   return useQuery({
-    queryKey: ["zapTokens", chainId],
+    ...createQueryConfig({ dataType: "static" }),
+    queryKey: queryKeys.zapTokens.byChain(chainId!),
     queryFn: () => tokenService.getZapTokens(chainId!),
     enabled: !!chainId && chainId > 0,
-    staleTime: 5 * 60 * 1000, // 5 minutes - token lists don't change often
-    gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
-    retry: (failureCount, error) => {
-      // Retry up to 2 times, but not on 4xx errors (likely configuration issues)
-      if (failureCount >= 2) return false;
-      if (error && typeof error === "object" && "status" in error) {
-        const status = (error as { status?: number }).status;
-        if (typeof status === "number" && status >= 400 && status < 500) {
-          return false;
-        }
-      }
-      return true;
-    },
-    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 };
 
@@ -128,7 +118,7 @@ const normalizeBalanceLookupKeys = (token: {
     keys.push(NATIVE_SENTINEL);
   }
 
-  return Array.from(new Set(keys));
+  return dedupeStrings(keys);
 };
 
 export const useZapTokensWithStates = (
@@ -162,7 +152,7 @@ export const useZapTokensWithStates = (
             (isHexAddress(address) || address === NATIVE_SENTINEL)
         );
 
-      return Array.from(new Set(normalizedOverride));
+      return dedupeStrings(normalizedOverride);
     }
 
     const candidateAddresses = tokens.flatMap(token => {
@@ -184,7 +174,7 @@ export const useZapTokensWithStates = (
         (isHexAddress(address) || address === NATIVE_SENTINEL)
     );
 
-    return Array.from(new Set(filtered));
+    return dedupeStrings(filtered);
   }, [tokenAddressesOverride, tokens]);
 
   const balanceQueryOptions: UseTokenBalancesParams = {
@@ -216,8 +206,8 @@ export const useZapTokensWithStates = (
         (symbol): symbol is string => Boolean(symbol) && symbol.length > 0
       );
 
-    // Deduplicate via Set
-    return Array.from(new Set(symbols));
+    // Deduplicate via utility
+    return dedupeStrings(symbols);
   }, [tokens, priceEnabled]);
 
   // Fetch prices in parallel with balances
@@ -273,18 +263,18 @@ export const useZapTokensWithStates = (
     // Balance states
     isBalanceLoading: balances.isLoading,
     isBalanceFetching: balances.isFetching,
-    balanceError: balances.isError ? balances.error : null,
+    balanceError: balances.isError ? (balances.error as Error | null) : null,
     refetchBalances: balances.refetch,
     balances: balances.balances,
     // Price states
     isPriceLoading: prices.isLoading,
     isPriceFetching: prices.isFetching,
-    priceError: prices.isError ? prices.error : null,
+    priceError: prices.isError ? (prices.error as Error | null) : null,
     refetchPrices: prices.refetch,
     priceMap: prices.priceMap,
     // React Query base states
     data: query.data,
-    error: query.error,
+    error: query.error as Error | null,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     isSuccess: query.isSuccess,

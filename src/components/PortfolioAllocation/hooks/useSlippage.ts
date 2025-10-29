@@ -1,4 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { formatNumber } from "../../../lib/formatters";
+import { SLIPPAGE_CONFIG } from "@/constants/slippage";
 
 export interface SlippagePreset {
   label: string;
@@ -56,8 +58,8 @@ export interface UseSlippageReturn {
 }
 
 const DEFAULT_PRESETS: SlippagePreset[] = [
-  { label: "0.1%", value: 0.1 },
-  { label: "0.5%", value: 0.5, isDefault: true },
+  { label: "0.1%", value: SLIPPAGE_CONFIG.PRESETS.LOW },
+  { label: "0.5%", value: SLIPPAGE_CONFIG.PRESETS.MEDIUM, isDefault: true },
   { label: "1%", value: 1.0 },
   { label: "3%", value: 3.0 },
 ];
@@ -67,12 +69,12 @@ export const useSlippage = (
   options: UseSlippageOptions = {}
 ): UseSlippageReturn => {
   const {
-    initialValue = 0.5,
+    initialValue = SLIPPAGE_CONFIG.DEFAULT,
     presets = DEFAULT_PRESETS,
     highSlippageThreshold = 5,
     veryHighSlippageThreshold = 10,
     minValue = 0,
-    maxValue = 50,
+    maxValue = SLIPPAGE_CONFIG.MAX,
     allowCustomInput = true,
   } = options;
 
@@ -190,7 +192,10 @@ export const useSlippage = (
 
   // Formatting functions
   const formatValue = useCallback((value: number): string => {
-    return value.toFixed(value < 1 ? 1 : 0);
+    return formatNumber(value, {
+      maximumFractionDigits: value < 1 ? 1 : 0,
+      minimumFractionDigits: value < 1 ? 1 : 0,
+    });
   }, []);
 
   const getSlippageColor = useCallback((value: number): string => {

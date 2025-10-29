@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BarChart3, Shield, TrendingUp, Wallet } from "lucide-react";
 import React from "react";
 import { EmptyStateCard } from "./EmptyStateCard";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface WalletConnectionPromptProps {
   title?: string;
@@ -46,17 +47,18 @@ export const WalletConnectionPrompt = React.memo<WalletConnectionPromptProps>(
         >
           {showFeatures && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              {...fadeInUp}
+              transition={{ ...SMOOTH_TRANSITION, delay: 0.2 }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-6 sm:mt-8"
             >
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 + index * 0.1 }}
+                  {...fadeInUp}
+                  transition={{
+                    ...SMOOTH_TRANSITION,
+                    delay: 0.3 + index * 0.1,
+                  }}
                   className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-gray-900/20 backdrop-blur-sm border border-gray-800 hover:border-gray-700 transition-colors"
                 >
                   <div className="flex items-center justify-center mb-3">

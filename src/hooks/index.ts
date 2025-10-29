@@ -9,11 +9,11 @@ export { useWallet } from "./useWallet";
 export { useChain } from "./useChain";
 export { useWalletEvents } from "./useWalletEvents";
 
-// Legacy compatibility
-export { useWalletConnection } from "./useWallet";
-
 // Portfolio hooks
-export { usePortfolio } from "./usePortfolio";
+export {
+  useWalletPortfolioState,
+  usePortfolioViewToggles,
+} from "./useWalletPortfolioState";
 
 // UI/Interaction hooks
 export { useDropdown } from "./useDropdown";

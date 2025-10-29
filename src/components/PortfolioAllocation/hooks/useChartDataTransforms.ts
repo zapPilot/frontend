@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { transformToPieChartData } from "@/lib/chartUtils";
 import { ChartDataPoint } from "../types";
 import { PieChartData } from "../../../types/portfolio";
 
@@ -11,14 +12,15 @@ export const useChartDataTransforms = (
 ): PieChartData[] => {
   return useMemo(
     () =>
-      chartData.map(
-        item =>
-          ({
-            label: item.name,
-            value: Math.round(item.value * 100),
-            percentage: item.value,
-            color: item.color,
-          }) as PieChartData
+      transformToPieChartData(
+        chartData.map(item => ({
+          id: item.id,
+          label: item.name,
+          value: item.value,
+          percentage: item.value,
+          color: item.color,
+        })),
+        { deriveCategoryMetadata: false }
       ),
     [chartData]
   );

@@ -8,6 +8,8 @@
  * @module lib/base-error
  */
 
+import { getBackendErrorMessage, getIntentErrorMessage } from "./errorMessages";
+
 // =============================================================================
 // TYPES AND INTERFACES
 // =============================================================================
@@ -34,7 +36,7 @@ export interface ErrorJSON {
 
 /** Interface for unknown error objects from external sources */
 export interface UnknownErrorInput {
-  message?: string;
+  message?: unknown;
   status?: number;
   code?: string;
   details?: ErrorDetails;
@@ -157,6 +159,115 @@ export class BaseServiceError extends Error {
 }
 
 // =============================================================================
+// HELPER UTILITIES
+// =============================================================================
+
+const MESSAGE_CANDIDATE_KEYS = [
+  "message",
+  "error",
+  "error_description",
+  "detail",
+  "title",
+  "description",
+  "reason",
+] as const;
+
+interface NormalizedMessageResult {
+  value: string;
+  found: boolean;
+}
+
+function normalizeErrorMessage(
+  value: unknown,
+  fallback: string,
+  seen: WeakSet<object> = new WeakSet()
+): NormalizedMessageResult {
+  if (value === undefined || value === null) {
+    return { value: fallback, found: false };
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === "[object Object]") {
+      return { value: fallback, found: false };
+    }
+    return { value: trimmed, found: true };
+  }
+
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint"
+  ) {
+    return { value: String(value), found: true };
+  }
+
+  if (value instanceof Error) {
+    const fromMessage = normalizeErrorMessage(value.message, fallback, seen);
+    if (fromMessage.found) {
+      return fromMessage;
+    }
+
+    if ("cause" in value && value.cause !== undefined) {
+      const fromCause = normalizeErrorMessage(
+        (value as { cause?: unknown }).cause,
+        fallback,
+        seen
+      );
+      if (fromCause.found) {
+        return fromCause;
+      }
+    }
+
+    return { value: fallback, found: false };
+  }
+
+  if (typeof value === "object") {
+    if (seen.has(value)) {
+      return { value: fallback, found: false };
+    }
+    seen.add(value);
+
+    for (const key of MESSAGE_CANDIDATE_KEYS) {
+      if (
+        Object.prototype.hasOwnProperty.call(value, key) &&
+        (value as Record<string, unknown>)[key] !== undefined
+      ) {
+        const result = normalizeErrorMessage(
+          (value as Record<string, unknown>)[key],
+          fallback,
+          seen
+        );
+        if (result.found) {
+          return result;
+        }
+      }
+    }
+
+    try {
+      return {
+        value: JSON.stringify(value),
+        found: true,
+      };
+    } catch {
+      return { value: fallback, found: false };
+    }
+  }
+
+  return { value: String(value), found: true };
+}
+
+function resolveErrorMessage(fallback: string, ...sources: unknown[]): string {
+  for (const source of sources) {
+    const { value, found } = normalizeErrorMessage(source, fallback);
+    if (found) {
+      return value;
+    }
+  }
+  return fallback;
+}
+
+// =============================================================================
 // SERVICE-SPECIFIC ERROR CLASSES
 // =============================================================================
 
@@ -183,28 +294,7 @@ export class BackendServiceError extends BaseServiceError {
   }
 
   override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("email")) {
-          return "Invalid email address format.";
-        }
-        if (this.message?.includes("webhook")) {
-          return "Invalid Discord webhook configuration.";
-        }
-        return "Invalid requEst.Please check your input.";
-
-      case 429:
-        return "Too many notification requests. Please wait before sending more.";
-
-      case 502:
-        return "External notification service is temporarily unavailable.";
-
-      case 503:
-        return "Notification service is temporarily unavailable.";
-
-      default:
-        return this.message;
-    }
+    return getBackendErrorMessage(this.status, this.message);
   }
 }
 
@@ -231,76 +321,7 @@ export class IntentServiceError extends BaseServiceError {
   }
 
   override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("slippage")) {
-          return "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-        }
-        if (this.message?.includes("amount")) {
-          return "Invalid transaction amount. Please check your balance.";
-        }
-        return "Invalid transaction parameters.";
-
-      case 429:
-        return "Too many transactions in progress. Please wait before submitting another.";
-
-      case 503:
-        return "Intent engine is temporarily overloaded. Please try again in a moment.";
-
-      default:
-        return this.message;
-    }
-  }
-}
-
-/**
- * Account Service Error
- * Handles errors from user account and wallet management operations
- */
-export class AccountServiceError extends BaseServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: ErrorDetails
-  ) {
-    const context: ErrorContext = {
-      source: "account-service",
-      status,
-    };
-    if (code !== undefined) context.code = code;
-    if (details !== undefined) context.details = details;
-
-    super(message, context);
-    this.name = "AccountServiceError";
-  }
-
-  override getUserMessage(): string {
-    switch (this.status) {
-      case 400:
-        if (this.message?.includes("address")) {
-          return "Invalid wallet address format. Address must be 42 characters long.";
-        }
-        if (this.message?.includes("main wallet")) {
-          return "Cannot remove the main wallet from your bundle.";
-        }
-        return "Invalid request parameters.";
-
-      case 404:
-        return "User or wallet not found.";
-
-      case 409:
-        if (this.message?.includes("wallet")) {
-          return "This wallet is already in your bundle.";
-        }
-        if (this.message?.includes("email")) {
-          return "This email address is already in use.";
-        }
-        return "Resource already exists.";
-
-      default:
-        return this.message;
-    }
+    return getIntentErrorMessage(this.status, this.message);
   }
 }
 
@@ -316,12 +337,21 @@ export function createServiceError(
   source: string,
   defaultMessage = "An unexpected error occurred"
 ): BaseServiceError {
+  const getMessage = (...candidates: unknown[]) =>
+    resolveErrorMessage(defaultMessage, ...candidates);
+
   if (error instanceof BaseServiceError) {
     return error;
   }
 
   if (error instanceof Error) {
-    return new BaseServiceError(error.message || defaultMessage, {
+    const message = getMessage(
+      error.message,
+      (error as { cause?: unknown }).cause,
+      error
+    );
+
+    return new BaseServiceError(message, {
       source,
       cause: error,
       details: { originalError: error.constructor.name },
@@ -336,7 +366,14 @@ export function createServiceError(
   // Handle objects with status/message properties
   if (typeof error === "object" && error !== null) {
     const errorObj = error as UnknownErrorInput;
-    return new BaseServiceError(errorObj.message || defaultMessage, {
+    const message = getMessage(
+      errorObj.message,
+      errorObj.response?.data,
+      errorObj.details,
+      errorObj
+    );
+
+    return new BaseServiceError(message, {
       source,
       status: errorObj.status || errorObj.response?.status || 500,
       code: errorObj.code,
@@ -352,41 +389,6 @@ export function createServiceError(
 }
 
 /**
- * Enhanced error messages for common backend errors
- */
-export const createBackendServiceError = (
-  error: unknown
-): BackendServiceError => {
-  const errorObj = error as UnknownErrorInput;
-  const status = errorObj.status || errorObj.response?.status || 500;
-  let message = errorObj.message || "Backend service error";
-
-  switch (status) {
-    case 400:
-      if (message?.includes("email")) {
-        message = "Invalid email address format.";
-      } else if (message?.includes("webhook")) {
-        message = "Invalid Discord webhook configuration.";
-      }
-      break;
-    case 429:
-      message =
-        "Too many notification requests. Please wait before sending more.";
-      break;
-    case 502:
-      message = "External notification service is temporarily unavailable.";
-      break;
-  }
-
-  return new BackendServiceError(
-    message,
-    status,
-    errorObj.code,
-    errorObj.details
-  );
-};
-
-/**
  * Enhanced error messages for common intent engine errors
  */
 export const createIntentServiceError = (
@@ -394,13 +396,20 @@ export const createIntentServiceError = (
 ): IntentServiceError => {
   const errorObj = error as UnknownErrorInput;
   const status = errorObj.status || errorObj.response?.status || 500;
-  let message = errorObj.message || "Intent service error";
+  let message = resolveErrorMessage(
+    "Intent service error",
+    errorObj.message,
+    errorObj.response?.data,
+    errorObj.details,
+    errorObj
+  );
+  const lowerMessage = message.toLowerCase();
 
   switch (status) {
     case 400:
-      if (message?.includes("slippage")) {
+      if (lowerMessage.includes("slippage")) {
         message = "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-      } else if (message?.includes("amount")) {
+      } else if (lowerMessage.includes("amount")) {
         message = "Invalid transaction amount. Please check your balance.";
       }
       break;
@@ -421,48 +430,6 @@ export const createIntentServiceError = (
     errorObj.details
   );
 };
-
-// =============================================================================
-// HTTP ERROR UTILITIES
-// =============================================================================
-
-/**
- * Handle HTTP errors with consistent error creation
- */
-export function handleHTTPError(
-  error: unknown,
-  source = "http-client"
-): BaseServiceError {
-  return createServiceError(error, source, "Network request failed");
-}
-
-/**
- * Check if error is a network/connectivity issue
- */
-export function isNetworkError(error: BaseServiceError): boolean {
-  return (
-    error.status === 0 || // Network unreachable
-    error.status === 408 || // Request timeout
-    error.status === 429 || // Rate limited
-    error.status >= 500 || // Server errors
-    error.message.toLowerCase().includes("network") ||
-    error.message.toLowerCase().includes("connection") ||
-    error.message.toLowerCase().includes("timeout")
-  );
-}
-
-/**
- * Get retry delay for error (exponential backoff)
- */
-export function getRetryDelay(
-  attempt: number,
-  baseDelay = 1000,
-  maxDelay = 30000
-): number {
-  const delay = Math.min(baseDelay * Math.pow(2, attempt), maxDelay);
-  // Add jitter to prevent thundering herd
-  return delay + Math.random() * 1000;
-}
 
 // =============================================================================
 // EXPORTS

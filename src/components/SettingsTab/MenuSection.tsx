@@ -2,6 +2,11 @@
 
 import { motion } from "framer-motion";
 import { ChevronRight, LucideIcon } from "lucide-react";
+import {
+  fadeInUp,
+  slideInLeft,
+  SMOOTH_TRANSITION,
+} from "@/lib/animationVariants";
 
 interface MenuItem {
   icon: LucideIcon;
@@ -25,9 +30,8 @@ export function MenuSection({
 }: MenuSectionProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: sectionIndex * 0.1 }}
+      {...fadeInUp}
+      transition={{ ...SMOOTH_TRANSITION, delay: sectionIndex * 0.1 }}
       className={`glass-morphism rounded-2xl border border-gray-800 overflow-hidden ${className}`}
     >
       <div className="p-4 border-b border-gray-800">
@@ -38,9 +42,11 @@ export function MenuSection({
         {items.map((item, itemIndex) => (
           <motion.button
             key={item.label}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: sectionIndex * 0.1 + itemIndex * 0.05 }}
+            {...slideInLeft}
+            transition={{
+              ...SMOOTH_TRANSITION,
+              delay: sectionIndex * 0.1 + itemIndex * 0.05,
+            }}
             whileHover={{ backgroundColor: "rgba(55, 65, 81, 0.3)" }}
             onClick={item.onClick}
             className="w-full p-4 flex items-center justify-between hover:bg-gray-700/20 transition-all duration-200 cursor-pointer"

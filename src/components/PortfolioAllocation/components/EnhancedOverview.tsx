@@ -13,6 +13,7 @@ import { CategoryListSection } from "./Categories";
 import { PerformanceTrendChart, PortfolioCharts } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];
@@ -63,8 +64,8 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      {...fadeInUp}
+      transition={SMOOTH_TRANSITION}
       className="space-y-6"
       data-testid="enhanced-overview"
     >

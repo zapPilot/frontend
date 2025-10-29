@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ComponentType, useCallback } from "react";
+import { ComponentType } from "react";
 import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { GlassCard } from "@/components/ui";
@@ -12,10 +12,6 @@ import { PortfolioOverview } from "@/components/PortfolioOverview";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
 import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
-import { usePortfolio } from "@/hooks/usePortfolio";
-import type { AssetCategory } from "@/types/portfolio";
-
-const EMPTY_PORTFOLIO_DATA: AssetCategory[] = [];
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>
@@ -34,18 +30,11 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   vm,
 }: WalletPortfolioPresenterProps) {
-  const { balanceHidden, toggleBalanceVisibility } =
-    usePortfolio(EMPTY_PORTFOLIO_DATA);
-  const { onToggleBalance } = vm;
-  const combinedToggle = useCallback(() => {
-    toggleBalanceVisibility();
-    onToggleBalance?.();
-  }, [toggleBalanceVisibility, onToggleBalance]);
   return (
     <BalanceVisibilityProvider
       value={{
-        balanceHidden,
-        toggleBalanceVisibility: combinedToggle,
+        balanceHidden: vm.balanceHidden,
+        toggleBalanceVisibility: vm.toggleBalanceVisibility,
       }}
     >
       <div className="space-y-6">
@@ -58,7 +47,7 @@ export function WalletPortfolioPresenter({
           <GlassCard>
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}
-              onToggleBalance={combinedToggle}
+              onToggleBalance={vm.toggleBalanceVisibility}
               isOwnBundle={vm.isOwnBundle}
               bundleUserName={vm.bundleUserName}
               bundleUrl={vm.bundleUrl}
@@ -91,7 +80,9 @@ export function WalletPortfolioPresenter({
             title="Asset Distribution"
             onRetry={vm.onRetry}
             testId="wallet-portfolio-overview"
-            {...(vm.onCategoryClick && { onCategoryClick: vm.onCategoryClick })}
+            {...(vm.onCategoryClick && {
+              onCategoryClick: vm.toggleCategoryExpansion,
+            })}
           />
         </ErrorBoundary>
 

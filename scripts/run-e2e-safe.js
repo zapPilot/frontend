@@ -33,9 +33,15 @@ async function main() {
   const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
 
   let stderr = "";
-  let stdout = "";
-  child.stdout.on("data", d => (stdout += d.toString()));
-  child.stderr.on("data", d => (stderr += d.toString()));
+  child.stdout.on("data", d => {
+    const chunk = d.toString();
+    process.stdout.write(chunk);
+  });
+  child.stderr.on("data", d => {
+    const chunk = d.toString();
+    stderr += chunk;
+    process.stderr.write(chunk);
+  });
 
   child.on("exit", code => {
     if (code !== 0) {
@@ -70,6 +76,11 @@ async function main() {
       return;
     }
     process.exit(0);
+  });
+
+  child.on("error", err => {
+    console.error("❌ Failed to spawn Playwright:", err);
+    process.exit(1);
   });
 }
 

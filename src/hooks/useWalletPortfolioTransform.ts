@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import type { ApiCategoryKey } from "@/constants/portfolio";
+import { transformToPieChartData } from "@/lib/chartUtils";
 import type { LandingPageResponse } from "../services/analyticsService";
 import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
 import {
@@ -15,6 +17,13 @@ export interface WalletPortfolioTransformResult {
   portfolioMetrics: PortfolioMetrics | null;
   hasZeroData: boolean;
 }
+
+const CATEGORY_ORDER: ApiCategoryKey[] = [
+  "btc",
+  "eth",
+  "stablecoins",
+  "others",
+];
 
 export function useWalletPortfolioTransform(
   landingPageData: LandingPageResponse | undefined
@@ -39,34 +48,7 @@ export function useWalletPortfolioTransform(
       portfolioAllocation.others.total_value === 0 &&
       landingPageData.total_net_usd === 0;
 
-    const transformedPieChartData: PieChartData[] = [
-      {
-        label: "Bitcoin",
-        value: portfolioAllocation.btc.total_value,
-        percentage: portfolioAllocation.btc.percentage_of_portfolio,
-        color: "#F7931A",
-      },
-      {
-        label: "Ethereum",
-        value: portfolioAllocation.eth.total_value,
-        percentage: portfolioAllocation.eth.percentage_of_portfolio,
-        color: "#627EEA",
-      },
-      {
-        label: "Stablecoins",
-        value: portfolioAllocation.stablecoins.total_value,
-        percentage: portfolioAllocation.stablecoins.percentage_of_portfolio,
-        color: "#26A69A",
-      },
-      {
-        label: "Others",
-        value: portfolioAllocation.others.total_value,
-        percentage: portfolioAllocation.others.percentage_of_portfolio,
-        color: "#AB47BC",
-      },
-    ].filter(item => item.value > 0);
-
-    const assetSummaries = createCategoriesFromApiData(
+    const assetSummariesRaw = createCategoriesFromApiData(
       {
         btc: portfolioAllocation.btc.total_value,
         eth: portfolioAllocation.eth.total_value,
@@ -76,7 +58,27 @@ export function useWalletPortfolioTransform(
       landingPageData.total_assets_usd
     );
 
-    const debtSummaries = createCategoriesFromApiData(
+    const assetSummaries = Array.isArray(assetSummariesRaw)
+      ? assetSummariesRaw
+      : [];
+
+    const summaryMap = new Map(
+      assetSummaries.map(summary => [summary.id as ApiCategoryKey, summary])
+    );
+
+    const pieChartData = transformToPieChartData(
+      CATEGORY_ORDER.map(categoryId => {
+        const summary = summaryMap.get(categoryId);
+        return {
+          id: categoryId,
+          value: summary?.totalValue ?? 0,
+          percentage: summary?.percentage ?? 0,
+        };
+      }),
+      { deriveCategoryMetadata: true, colorVariant: "brand" }
+    );
+
+    const debtSummariesRaw = createCategoriesFromApiData(
       landingPageData.category_summary_debt || {
         btc: 0,
         eth: 0,
@@ -86,6 +88,10 @@ export function useWalletPortfolioTransform(
       landingPageData.total_debt_usd || 0
     );
 
+    const debtSummaries = Array.isArray(debtSummariesRaw)
+      ? debtSummariesRaw
+      : [];
+
     const portfolioMetrics: PortfolioMetrics = {
       totalValue: landingPageData.total_net_usd,
       totalChange24h: 0,
@@ -93,8 +99,7 @@ export function useWalletPortfolioTransform(
     };
 
     return {
-      pieChartData:
-        transformedPieChartData.length > 0 ? transformedPieChartData : null,
+      pieChartData: pieChartData.length > 0 ? pieChartData : null,
       categorySummaries: assetSummaries,
       debtCategorySummaries: debtSummaries,
       portfolioMetrics,

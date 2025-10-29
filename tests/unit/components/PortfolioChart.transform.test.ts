@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buildAllocationHistory } from "../../../src/components/PortfolioChart";
+import { buildAllocationHistory } from "../../../src/components/PortfolioChart/";
 
 vi.mock("../../../src/hooks/usePortfolioTrends", () => ({}));
 vi.mock("../../../src/hooks/useRollingSharpe", () => ({}));

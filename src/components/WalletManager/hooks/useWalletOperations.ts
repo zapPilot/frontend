@@ -1,8 +1,13 @@
 import { useCallback, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
-import { handleWalletError, type WalletData } from "@/services/userService";
+import {
+  handleWalletError,
+  type WalletData,
+  deleteUser as deleteUserAccount,
+} from "@/services/userService";
 import {
   addWallet as addWalletToBundle,
   loadWallets as fetchWallets,
@@ -53,6 +58,7 @@ export const useWalletOperations = ({
     label: "",
   });
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Load wallets from API
   const loadWallets = useCallback(
@@ -117,7 +123,7 @@ export const useWalletOperations = ({
 
           // Invalidate and refetch user data
           queryClient.invalidateQueries({
-            queryKey: ["user-wallets", realUserId],
+            queryKey: queryKeys.user.wallets(realUserId),
           });
           refetch();
 
@@ -274,7 +280,7 @@ export const useWalletOperations = ({
 
         // Invalidate and refetch user data
         queryClient.invalidateQueries({
-          queryKey: ["user-wallets", realUserId],
+          queryKey: queryKeys.user.wallets(realUserId),
         });
         refetch();
 
@@ -315,6 +321,53 @@ export const useWalletOperations = ({
     [showToast]
   );
 
+  // Handle delete account
+  const handleDeleteAccount = useCallback(async () => {
+    if (!realUserId) return;
+
+    setIsDeletingAccount(true);
+
+    try {
+      const response = await deleteUserAccount(realUserId);
+
+      if (response.success) {
+        showToast({
+          type: "success",
+          title: "Account Deleted",
+          message:
+            "Account successfully deleted. Reconnect with a different wallet to consolidate.",
+        });
+
+        // Invalidate queries and trigger reconnection flow
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.user.wallets(realUserId),
+        });
+        refetch();
+
+        // Close the wallet manager after a brief delay
+        setTimeout(() => {
+          // Trigger logout/reconnect flow
+          window.location.reload();
+        }, 1500);
+      } else {
+        showToast({
+          type: "error",
+          title: "Deletion Failed",
+          message: response.error || "Failed to delete account",
+        });
+      }
+    } catch (error) {
+      const errorMessage = handleWalletError(error);
+      showToast({
+        type: "error",
+        title: "Deletion Failed",
+        message: errorMessage,
+      });
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  }, [realUserId, queryClient, refetch, showToast]);
+
   return {
     // State
     wallets,
@@ -324,6 +377,7 @@ export const useWalletOperations = ({
     editingWallet,
     newWallet,
     validationError,
+    isDeletingAccount,
 
     // Actions
     setIsAdding,
@@ -335,5 +389,6 @@ export const useWalletOperations = ({
     handleEditLabel,
     handleAddWallet,
     handleCopyAddress,
+    handleDeleteAccount,
   };
 };

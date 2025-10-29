@@ -2,6 +2,7 @@ import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 import { BaseComponentProps } from "../../types/ui.types";
+import { normalizeForComparison } from "../../lib/stringUtils";
 
 interface ImageWithFallbackProps extends BaseComponentProps {
   src: string;
@@ -35,7 +36,7 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   }, [src]);
 
   const getFallbackSrc = (type: string, symbol?: string): string | null => {
-    const lowerSymbol = symbol?.toLowerCase()?.trim() || "";
+    const lowerSymbol = normalizeForComparison(symbol);
 
     // Don't try fallback if no symbol provided
     if (!lowerSymbol) {

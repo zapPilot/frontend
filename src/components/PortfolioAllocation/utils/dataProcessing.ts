@@ -5,6 +5,13 @@ import {
   ProcessedAssetCategory,
   RebalanceData,
 } from "../types";
+import { clamp, clampMin, ensureNonNegative } from "../../../lib/mathUtils";
+import {
+  ALLOCATION_THRESHOLDS,
+  MOCK_VALUES,
+  PERCENTAGE_BASE,
+} from "@/constants/portfolio-allocation";
+import { createCategoriesFromApiData } from "@/utils/portfolio.utils";
 
 // Generate mock target allocation data for rebalancing demo
 export const generateTargetAllocation = (
@@ -18,34 +25,39 @@ export const generateTargetAllocation = (
     switch (category.id) {
       case "btc":
         // Slightly reduce BTC allocation
-        targetPercentage = Math.max(
-          25,
-          category.activeAllocationPercentage - 5
+        targetPercentage = clampMin(
+          category.activeAllocationPercentage - 5,
+          ALLOCATION_THRESHOLDS.MIN_BTC_ALLOCATION
         );
         break;
       case "eth":
         // Increase ETH allocation
         targetPercentage = Math.min(
-          50,
-          category.activeAllocationPercentage + 7
+          ALLOCATION_THRESHOLDS.MAX_ETH_ALLOCATION,
+          category.activeAllocationPercentage +
+            ALLOCATION_THRESHOLDS.ETH_INCREASE
         );
         break;
       case "stablecoins":
         // Adjust stablecoins to balance
-        targetPercentage = category.activeAllocationPercentage - 2;
+        targetPercentage =
+          category.activeAllocationPercentage -
+          ALLOCATION_THRESHOLDS.STABLECOIN_DECREASE;
         break;
       default:
         // Small random variation for other categories
-        targetPercentage += (Math.random() - 0.5) * 10;
+        targetPercentage +=
+          (Math.random() - 0.5) * ALLOCATION_THRESHOLDS.RANDOM_VARIATION;
     }
 
     // Ensure percentage is within valid range
-    targetPercentage = Math.max(0, Math.min(100, targetPercentage));
+    targetPercentage = clamp(targetPercentage, 0, PERCENTAGE_BASE);
 
     return {
       ...category,
       activeAllocationPercentage: targetPercentage,
-      totalValue: (targetPercentage / 100) * 30000, // Mock total portfolio value
+      totalValue:
+        (targetPercentage / PERCENTAGE_BASE) * MOCK_VALUES.PORTFOLIO_VALUE,
     };
   });
 };
@@ -65,13 +77,14 @@ export const calculateCategoryShifts = (
         currentCat.activeAllocationPercentage;
       const changePercentage =
         currentCat.activeAllocationPercentage > 0
-          ? (changeAmount / currentCat.activeAllocationPercentage) * 100
+          ? (changeAmount / currentCat.activeAllocationPercentage) *
+            PERCENTAGE_BASE
           : 0;
 
       let action: "increase" | "decrease" | "maintain";
       let actionDescription: string;
 
-      if (Math.abs(changeAmount) < 0.5) {
+      if (Math.abs(changeAmount) < ALLOCATION_THRESHOLDS.CHANGE_MAINTAIN) {
         action = "maintain";
         actionDescription = "Maintain";
       } else if (changeAmount > 0) {
@@ -104,7 +117,9 @@ export const generateRebalanceData = (
   const shifts = calculateCategoryShifts(currentCategories, targetCategories);
 
   const totalRebalanceValue = shifts.reduce((sum, shift) => {
-    return sum + Math.abs(shift.changeAmount * 300); // Mock dollar value per percentage point
+    return (
+      sum + Math.abs(shift.changeAmount * MOCK_VALUES.DOLLAR_PER_PERCENTAGE)
+    );
   }, 0);
 
   return {
@@ -142,11 +157,12 @@ export const processAssetCategories = (
 
     const targetPercentage =
       override !== undefined
-        ? Math.max(0, override)
-        : 100 / Math.max(assetCategories.length, 1);
+        ? ensureNonNegative(override)
+        : PERCENTAGE_BASE / clampMin(assetCategories.length, 1);
 
     // If overrides don't sum to 100, treat them as-is. The remainder will be shown as unallocated.
-    const categoryValue = (targetPercentage / 100) * totalPortfolioValue;
+    const categoryValue =
+      (targetPercentage / PERCENTAGE_BASE) * totalPortfolioValue;
 
     return {
       ...category,
@@ -171,19 +187,54 @@ export const processAssetCategories = (
       activeAllocationPercentage:
         category.isExcluded || totalIncludedValue === 0
           ? 0
-          : (category.totalValue / totalIncludedValue) * 100,
+          : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE,
     }));
 
-  const chartData: ChartDataPoint[] = includedCategories.map(category => ({
-    name: category.name,
-    value:
-      totalIncludedValue === 0
+  const STANDARD_CATEGORY_IDS = new Set([
+    "btc",
+    "eth",
+    "stablecoins",
+    "others",
+  ]);
+  const canonicalCategoryTotals = includedCategories.reduce(
+    (acc, category) => {
+      if (STANDARD_CATEGORY_IDS.has(category.id)) {
+        acc[category.id as keyof typeof acc] = category.totalValue;
+      }
+      return acc;
+    },
+    {
+      btc: 0,
+      eth: 0,
+      stablecoins: 0,
+      others: 0,
+    }
+  );
+
+  const canonicalSummaries = createCategoriesFromApiData(
+    canonicalCategoryTotals,
+    totalIncludedValue
+  );
+  const canonicalSummaryMap = new Map(
+    canonicalSummaries.map(summary => [summary.id, summary])
+  );
+
+  const chartData: ChartDataPoint[] = includedCategories.map(category => {
+    const summary = canonicalSummaryMap.get(category.id);
+    const percentage = summary
+      ? summary.percentage
+      : totalIncludedValue === 0
         ? 0
-        : (category.totalValue / totalIncludedValue) * 100,
-    id: category.id,
-    color: category.color,
-    isExcluded: false,
-  }));
+        : (category.totalValue / totalIncludedValue) * PERCENTAGE_BASE;
+
+    return {
+      name: summary?.name ?? category.name,
+      value: percentage,
+      id: category.id,
+      color: summary?.color ?? category.color,
+      isExcluded: false,
+    } satisfies ChartDataPoint;
+  });
 
   return { processedCategories, chartData };
 };

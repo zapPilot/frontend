@@ -10,6 +10,7 @@ import {
   Send,
   LucideIcon,
 } from "lucide-react";
+import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface SocialLink {
   icon: LucideIcon;
@@ -50,9 +51,8 @@ export function SocialLinks({
 }: SocialLinksProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+      {...fadeInUp}
+      transition={{ ...SMOOTH_TRANSITION, delay: 0.2 }}
       className={`glass-morphism rounded-2xl p-6 border border-gray-800 ${className}`}
     >
       <h2 className="text-lg font-semibold text-white mb-4">{title}</h2>
@@ -63,9 +63,8 @@ export function SocialLinks({
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 + index * 0.1 }}
+            {...scaleIn}
+            transition={{ ...SMOOTH_TRANSITION, delay: 0.2 + index * 0.1 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="p-4 rounded-xl bg-gray-800/50 hover:bg-gray-700/50 transition-all duration-200 flex flex-col items-center space-y-2 border border-gray-700/50"

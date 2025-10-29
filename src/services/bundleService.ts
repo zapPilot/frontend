@@ -40,7 +40,7 @@ export const getBundleUser = async (
   userId: string
 ): Promise<BundleUser | null> => {
   try {
-    // TODO: Replace with actual API call to get user info
+    // TODO(ZAP-206): Replace with actual API call to get user info
     // For now, return basic user info based on userId
     return {
       userId,

@@ -4,9 +4,9 @@ import {
   getTokenBalances,
   type NormalizedTokenBalance,
 } from "../../services/balanceService";
-
-const BALANCE_STALE_TIME = 3 * 60 * 1000; // 3 minutes – aligns with cache TTL guidance
-const BALANCE_GC_TIME = 6 * 60 * 1000; // Retain shortly after stale for smoother UX
+import { createQueryConfig } from "./queryDefaults";
+import { queryKeys } from "../../lib/queryClient";
+import { normalizeAddresses } from "../../lib/stringUtils";
 
 export interface UseTokenBalancesParams {
   chainId?: number;
@@ -15,15 +15,6 @@ export interface UseTokenBalancesParams {
   skipCache?: boolean;
   enabled?: boolean;
 }
-
-const normalizeAddresses = (addresses: string[] = []): string[] =>
-  Array.from(
-    new Set(
-      addresses
-        .filter(address => typeof address === "string" && address.length > 0)
-        .map(address => address.toLowerCase())
-    )
-  );
 
 export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
   const {
@@ -46,13 +37,13 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
   );
 
   const query = useQuery({
-    queryKey: [
-      "tokenBalances",
-      chainId,
-      normalizedWallet,
+    ...createQueryConfig({ dataType: "dynamic" }),
+    queryKey: queryKeys.balances.list(
+      chainId!,
+      normalizedWallet!,
       normalizedTokens,
-      skipCache,
-    ],
+      skipCache
+    ),
     queryFn: () =>
       getTokenBalances({
         chainId: chainId!,
@@ -61,23 +52,6 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
         skipCache,
       }),
     enabled: queryEnabled,
-    staleTime: BALANCE_STALE_TIME,
-    gcTime: BALANCE_GC_TIME,
-    retry: (failureCount, error) => {
-      if (failureCount >= 2) {
-        return false;
-      }
-
-      if (error && typeof error === "object" && "status" in error) {
-        const status = (error as { status?: number }).status;
-        if (typeof status === "number" && status >= 400 && status < 500) {
-          return false;
-        }
-      }
-
-      return true;
-    },
-    retryDelay: attemptIndex => Math.min(1500 * 2 ** attemptIndex, 30_000),
   });
 
   const balancesByAddress = useMemo(() => {

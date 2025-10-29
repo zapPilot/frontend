@@ -20,9 +20,3 @@ export interface InvestmentOpportunity {
   /** Optional context for navigation behavior in SwapPage */
   navigationContext?: NavigationContext;
 }
-
-export interface InvestmentStat {
-  label: string;
-  value: string;
-  icon: React.ComponentType<{ className?: string }>;
-}

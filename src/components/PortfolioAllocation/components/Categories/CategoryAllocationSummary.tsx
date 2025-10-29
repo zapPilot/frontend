@@ -1,10 +1,12 @@
 "use client";
 
 import {
+  ALLOCATION_UI,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
-import { formatCurrency } from "@/lib/formatters";
+import { FLEX_PATTERNS } from "@/constants/design-system";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { memo } from "react";
 import { CategoryShift, ProcessedAssetCategory } from "../../types";
 
@@ -33,7 +35,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
         <div className="space-y-1" data-testid={`allocation-${category.id}`}>
           <div className="flex items-center space-x-2">
             <div className="text-sm text-gray-400">
-              {category.activeAllocationPercentage.toFixed(1)}%
+              {formatPercentage(category.activeAllocationPercentage, false, 1)}
             </div>
             <span className="text-gray-500">→</span>
             <div
@@ -45,7 +47,11 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
                     : "text-white"
               }`}
             >
-              {rebalanceTarget.activeAllocationPercentage.toFixed(1)}%
+              {formatPercentage(
+                rebalanceTarget.activeAllocationPercentage,
+                false,
+                1
+              )}
             </div>
           </div>
           <div className="flex items-center space-x-2 text-xs">
@@ -58,8 +64,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
                     : "text-gray-400"
               }`}
             >
-              {rebalanceShift.changeAmount > 0 ? "+" : ""}
-              {rebalanceShift.changeAmount.toFixed(1)}%
+              {formatPercentage(rebalanceShift.changeAmount, true, 1)}
             </div>
             <div className="text-gray-500">•</div>
             <div className="text-gray-400">
@@ -85,7 +90,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
     });
 
     const valueSummary = (
-      <div className="flex items-center gap-3 text-xs text-gray-400">
+      <div className={`${FLEX_PATTERNS.CENTER_GAP_3} text-xs text-gray-400`}>
         <div className="mt-0.5">{formattedCategoryValue}</div>
       </div>
     );
@@ -94,7 +99,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
       return (
         <div data-testid={`allocation-${category.id}`} className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className={FLEX_PATTERNS.CENTER_GAP_2}>
               <span className="text-xs text-gray-500 whitespace-nowrap">
                 Current:
               </span>
@@ -102,8 +107,14 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
                 type="number"
                 min={MIN_ALLOCATION_PERCENT}
                 max={MAX_ALLOCATION_PERCENT}
-                step={0.1}
-                value={category.activeAllocationPercentage.toFixed(1)}
+                step={ALLOCATION_UI.SLIDER_STEP_FINE}
+                value={parseFloat(
+                  formatPercentage(
+                    category.activeAllocationPercentage,
+                    false,
+                    1
+                  ).replace("%", "")
+                )}
                 onChange={event => {
                   const value = Number(event.target.value);
                   if (!Number.isNaN(value) && onAllocationChange) {
@@ -123,7 +134,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
             type="range"
             min={MIN_ALLOCATION_PERCENT}
             max={MAX_ALLOCATION_PERCENT}
-            step={0.5}
+            step={ALLOCATION_UI.SLIDER_STEP_COARSE}
             value={targetAllocation}
             onChange={event =>
               handleAllocationInput(Number(event.target.value))
@@ -145,7 +156,7 @@ export const CategoryAllocationSummary = memo<CategoryAllocationSummaryProps>(
           <div className="text-xs text-gray-500">
             {excluded
               ? "0%"
-              : `Current: ${category.activeAllocationPercentage.toFixed(1)}%`}
+              : `Current: ${formatPercentage(category.activeAllocationPercentage, false, 1)}`}
           </div>
           {!excluded && valueSummary}
         </div>

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../../src/hooks/usePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -13,7 +12,6 @@ import { render } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../../src/hooks/usePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
@@ -219,7 +217,7 @@ const _mockMixedPortfolioData = [
 ];
 
 const mockUserInfo = { userId: "test-user-123" };
-const mockPortfolioMetrics = {
+const _mockPortfolioMetrics = {
   totalValue: 10000,
   totalChangePercentage: 5.2,
   totalChangeValue: 500,
@@ -267,7 +265,6 @@ const _mockNewApiResponse = {
 
 describe("WalletPortfolio", () => {
   const mockUseUser = vi.mocked(useUser);
-  const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUsePortfolioState = vi.mocked(usePortfolioState);
   const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
@@ -340,14 +337,6 @@ describe("WalletPortfolio", () => {
       isRefetching: false,
     });
 
-    mockUsePortfolio.mockReturnValue({
-      balanceHidden: false,
-      expandedCategory: null,
-      portfolioMetrics: mockPortfolioMetrics,
-      toggleBalanceVisibility: vi.fn(),
-      toggleCategoryExpansion: vi.fn(),
-    });
-
     // Setup portfolio state mock
     mockUsePortfolioState.mockReturnValue({
       type: "has_data",
@@ -369,7 +358,17 @@ describe("WalletPortfolio", () => {
       getDisplayTotalValue: () => 15000,
     });
 
-    mockCreateCategoriesFromApiData.mockReturnValue(mockAssetCategories);
+    mockCreateCategoriesFromApiData.mockImplementation(categoryData => {
+      if (!categoryData) {
+        return [];
+      }
+
+      const hasPositiveValue = Object.values(categoryData).some(
+        value => value > 0
+      );
+
+      return hasPositiveValue ? mockAssetCategories : [];
+    });
   });
 
   afterEach(() => {
@@ -389,7 +388,7 @@ describe("WalletPortfolio", () => {
       // Verify that the individual hooks are called
       expect(mockUseUser).toHaveBeenCalled();
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
-      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
+      expect(screen.getByTitle("Hide Balance")).toBeInTheDocument();
       expect(mockCreateCategoriesFromApiData).toHaveBeenCalledWith(
         { btc: 7500, eth: 4500, stablecoins: 2000, others: 1000 },
         15000
@@ -713,8 +712,6 @@ describe("WalletPortfolio", () => {
           "has-data"
         );
       });
-
-      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
     });
   });
 
@@ -842,7 +839,9 @@ describe("WalletPortfolio", () => {
       render(<WalletPortfolio />);
 
       await waitFor(() => {
-        expect(mockUsePortfolio).toHaveBeenCalledWith([]);
+        expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
+          "no-data"
+        );
       });
     });
 
@@ -1259,78 +1258,19 @@ describe("WalletPortfolio", () => {
   });
 
   describe("Wallet Actions Integration", () => {
-    it("should handle balance visibility toggle with borrowing data", async () => {
-      const mockToggleBalance = vi.fn();
-
-      mockUsePortfolio.mockReturnValue({
-        balanceHidden: true,
-        expandedCategory: null,
-        portfolioMetrics: mockPortfolioMetrics,
-        toggleBalanceVisibility: mockToggleBalance,
-        toggleCategoryExpansion: vi.fn(),
-      });
-
-      mockUseLandingPageData.mockReturnValue({
-        data: {
-          total_net_usd: 10000,
-          weighted_apr: 0.125,
-          estimated_monthly_income: 1000,
-          portfolio_allocation: {
-            btc: {
-              total_value: 7500,
-              percentage_of_portfolio: 50,
-              wallet_tokens_value: 1000,
-              other_sources_value: 6500,
-            },
-            eth: {
-              total_value: 4500,
-              percentage_of_portfolio: 30,
-              wallet_tokens_value: 800,
-              other_sources_value: 3700,
-            },
-            stablecoins: {
-              total_value: 2000,
-              percentage_of_portfolio: 13.33,
-              wallet_tokens_value: 500,
-              other_sources_value: 1500,
-            },
-            others: {
-              total_value: 1000,
-              percentage_of_portfolio: 6.67,
-              wallet_tokens_value: 200,
-              other_sources_value: 800,
-            },
-          },
-          pool_details: [],
-          total_positions: 0,
-          protocols_count: 0,
-          chains_count: 0,
-          last_updated: null,
-          apr_coverage: {
-            matched_pools: 0,
-            total_pools: 0,
-            coverage_percentage: 0,
-            matched_asset_value_usd: 0,
-          },
-          total_assets_usd: 15000,
-          total_debt_usd: 5000,
-        },
-        isLoading: false,
-        error: null,
-        refetch: vi.fn(),
-        isRefetching: false,
-      });
-
+    it("should toggle balance visibility via header control", async () => {
       render(<WalletPortfolio />);
 
-      await waitFor(() => {
-        expect(screen.getByTestId("pie-chart-data")).toHaveTextContent(
-          "has-data"
-        );
+      const toggleButton = await screen.findByTitle("Hide Balance");
+      expect(toggleButton).toBeInTheDocument();
+
+      await act(async () => {
+        toggleButton.click();
       });
 
-      // Verify balance toggle function is accessible through usePortfolio
-      expect(mockToggleBalance).toBeDefined();
+      await waitFor(() => {
+        expect(screen.getByTitle("Show Balance")).toBeInTheDocument();
+      });
     });
 
     it("should provide wallet action callbacks correctly", async () => {
@@ -1352,7 +1292,7 @@ describe("WalletPortfolio", () => {
 
       // Verify component renders with all action callbacks using decomposed hooks
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
-      expect(mockUsePortfolio).toHaveBeenCalled();
+      expect(screen.getByTitle("Hide Balance")).toBeInTheDocument();
     });
   });
 
@@ -1370,12 +1310,8 @@ describe("WalletPortfolio", () => {
       // Verify all hooks are called and data flows correctly
       expect(mockUseUser).toHaveBeenCalled();
       expect(mockUseLandingPageData).toHaveBeenCalledWith(mockUserInfo.userId);
-      expect(mockUsePortfolio).toHaveBeenCalledWith([]);
       expect(mockCreateCategoriesFromApiData).toHaveBeenCalled();
-
-      // Verify portfolio metrics integration
-      const portfolioResult = mockUsePortfolio.mock.results[0].value;
-      expect(portfolioResult.portfolioMetrics).toEqual(mockPortfolioMetrics);
+      expect(screen.getByTitle("Hide Balance")).toBeInTheDocument();
     });
 
     it("should handle component rerendering with data updates", async () => {

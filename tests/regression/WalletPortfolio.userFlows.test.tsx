@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../src/components/WalletPortfolio";
 import { useUser } from "../../src/contexts/UserContext";
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../src/hooks/usePortfolio";
+import { usePortfolio } from "../helpers/deprecatedUsePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -13,7 +13,7 @@ import { render } from "../test-utils";
 
 // Mock all dependencies
 vi.mock("../../src/contexts/UserContext");
-vi.mock("../../src/hooks/usePortfolio");
+vi.mock("../helpers/deprecatedUsePortfolio");
 vi.mock("../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../src/hooks/usePortfolioState");
 vi.mock("../../src/utils/portfolio.utils");

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
+import { createQueryConfig } from "./queryDefaults";
 // Use user service wrappers to connect and fetch the aggregated profile data
 import { connectWallet, getUserProfile } from "../../services/userService";
 import type {
@@ -33,6 +34,12 @@ export interface UserInfo {
 // Hook to get user by wallet address
 export function useUserByWallet(walletAddress: string | null) {
   return useQuery({
+    ...createQueryConfig({
+      dataType: "dynamic",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND"],
+      },
+    }),
     queryKey: queryKeys.user.byWallet(walletAddress || ""),
     queryFn: async (): Promise<UserInfo> => {
       if (!walletAddress) {
@@ -92,16 +99,6 @@ export function useUserByWallet(walletAddress: string | null) {
       return result;
     },
     enabled: !!walletAddress, // Only run when wallet address is available
-    staleTime: 2 * 60 * 1000, // User data is stale after 2 minutes
-    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    retry: (failureCount, error) => {
-      // Don't retry USER_NOT_FOUND errors
-      if (error instanceof Error && error.message === "USER_NOT_FOUND") {
-        return false;
-      }
-      // Retry other errors up to 2 times
-      return failureCount < 2;
-    },
   });
 }
 
@@ -118,7 +115,7 @@ export function useCurrentUser() {
     connectedWallet,
     userInfo: userQuery.data || null,
     // Transform error messages for UI consistency
-    error: userQuery.error?.message || null,
+    error: (userQuery.error as Error | null)?.message || null,
   };
 }
 

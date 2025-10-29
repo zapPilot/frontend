@@ -1,5 +1,7 @@
 "use client";
 import { Z_INDEX } from "@/constants/design-system";
+import { formatPercentage } from "@/lib/formatters";
+import { ensureNonNegative } from "@/lib/mathUtils";
 
 import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp } from "lucide-react";
@@ -70,7 +72,7 @@ const generateHistoricalAPR = (
     // Add some realistic variation with slight upward trend
     const variation = (Math.random() - 0.5) * 4; // ±2% variation
     const trendAdjustment = (days - i) * 0.02; // Slight upward trend
-    const apr = Math.max(0, baseAPR + variation + trendAdjustment);
+    const apr = ensureNonNegative(baseAPR + variation + trendAdjustment);
 
     data.push({
       date: date.toISOString().split("T")[0] || date.toISOString(),
@@ -143,7 +145,7 @@ export function PerformanceTrendChart({
 
     const change = Math.abs(currentAPR - previousAPR);
     const direction = trend === "up" ? "upward" : "downward";
-    const interpretationText = `Trending ${direction} over ${selectedTimeframe} (${trend === "up" ? "+" : "-"}${change.toFixed(1)}%)`;
+    const interpretationText = `Trending ${direction} over ${selectedTimeframe} (${formatPercentage(trend === "up" ? change : -change, true, 1)})`;
 
     return {
       chartData,
@@ -211,7 +213,7 @@ export function PerformanceTrendChart({
                 <TrendingDown className="w-4 h-4" />
               )}
               <span className="font-semibold">
-                {currentAPR.toFixed(1)}% APR
+                {formatPercentage(currentAPR, false, 1)} APR
               </span>
             </div>
             <span className="text-sm text-slate-400">{interpretationText}</span>
@@ -340,7 +342,7 @@ export function PerformanceTrendChart({
           >
             <p className="text-slate-300 text-sm">{hoveredPoint.date}</p>
             <p className="text-emerald-400 font-semibold">
-              {hoveredPoint.apr.toFixed(1)}% APR
+              {formatPercentage(hoveredPoint.apr, false, 1)} APR
             </p>
             {isFiltered && (
               <p className="text-slate-500 text-xs mt-1">Filtered Portfolio</p>

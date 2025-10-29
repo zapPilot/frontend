@@ -26,6 +26,11 @@ import type {
 } from "../types/portfolio";
 import type { ActualRiskSummaryResponse } from "../types/risk";
 import { getVolatilityLevel } from "../utils/risk";
+import {
+  formatSharpeRatio,
+  formatDrawdown,
+  formatVolatility,
+} from "./formatters";
 
 // =============================================================================
 // CONSTANTS AND CONFIGURATION
@@ -44,7 +49,6 @@ export const CHART_PERIODS: ChartPeriod[] = [
 // MOCK DATA GENERATION
 // =============================================================================
 // Mock data generation functions removed in Phase 1 cleanup
-// TODO: Replace with real API data when endpoints are available
 
 /**
  * Generate analytics metrics with real risk data
@@ -91,7 +95,7 @@ export function getAnalyticsMetrics(
     },
     {
       label: "Sharpe Ratio",
-      value: sharpeRatio ? sharpeRatio.toFixed(2) : "1.34",
+      value: sharpeRatio ? formatSharpeRatio(sharpeRatio) : "1.34",
       change: sharpeRatio ? (sharpeRatio > 1.5 ? 0.15 : -0.05) : 0.15,
       trend: sharpeRatio ? (sharpeRatio > 1.5 ? "up" : "down") : "up",
       icon: Target,
@@ -101,7 +105,7 @@ export function getAnalyticsMetrics(
     },
     {
       label: "Max Drawdown",
-      value: drawdownPct ? `${drawdownPct.toFixed(1)}%` : "-12.4%",
+      value: drawdownPct ? formatDrawdown(drawdownPct) : "-12.4%",
       change: drawdownPct ? Math.abs(drawdownPct) * 0.1 : 2.1,
       trend: "down",
       icon: TrendingDown,
@@ -111,7 +115,7 @@ export function getAnalyticsMetrics(
     },
     {
       label: "Volatility",
-      value: volatilityPct ? `${volatilityPct.toFixed(1)}%` : "22.8%",
+      value: volatilityPct ? formatVolatility(volatilityPct) : "22.8%",
       change: volatilityPct ? (volatilityPct > 100 ? -2.0 : -0.5) : -1.8,
       trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "up",
       icon: Activity,

@@ -6,13 +6,12 @@
 import { SwapToken } from "../types/swap";
 import { createIntentServiceError } from "../lib/base-error";
 import { httpUtils } from "../lib/http-utils";
-import { executeServiceCall } from "./serviceHelpers";
+import { createServiceCaller } from "../lib/createServiceCaller";
 
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;
 
-const callTokenService = <T>(call: () => Promise<T>) =>
-  executeServiceCall(call, { mapError: createIntentServiceError });
+const callTokenService = createServiceCaller(createIntentServiceError);
 
 /**
  * Get supported zap tokens for a specific chain

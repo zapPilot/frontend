@@ -22,26 +22,10 @@ vi.mock("lucide-react", () => ({
 // Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed
 
 // Mock formatters
-vi.mock("../../../../src/lib/formatters", () => ({
-  formatCurrency: vi.fn((amount, options = {}) => {
-    const isHidden = typeof options === "boolean" ? options : options.isHidden;
-    if (isHidden) return "****";
-    if (amount === null || amount === undefined) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  }),
-  formatSmallCurrency: vi.fn(amount => {
-    if (amount === null || amount === undefined) return "$0.00";
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
-  }),
-}));
+vi.mock("../../../../src/lib/formatters", async () => {
+  const { mockFormatters } = await import("../../../mocks/formatters");
+  return mockFormatters;
+});
 
 // Mock color utilities
 vi.mock("../../../../src/lib/color-utils", () => ({

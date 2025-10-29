@@ -8,6 +8,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, useCallback } from "react";
 
+import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
 import { EmailSubscription } from "./components/EmailSubscription";
 import { WalletList } from "./components/WalletList";
@@ -203,6 +204,19 @@ const WalletManagerComponent = ({
                   onStartEditing={emailSubscription.startEditingSubscription}
                   onCancelEditing={emailSubscription.cancelEditingSubscription}
                 />
+              )}
+
+            {/* Delete Account */}
+            {!loading &&
+              !walletOperations.isRefreshing &&
+              !error &&
+              isOwner && (
+                <div className="p-6">
+                  <DeleteAccountButton
+                    onDelete={walletOperations.handleDeleteAccount}
+                    isDeleting={walletOperations.isDeletingAccount}
+                  />
+                </div>
               )}
           </GlassCard>
         </motion.div>

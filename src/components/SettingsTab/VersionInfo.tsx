@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface VersionInfoProps {
   version?: string;
@@ -15,8 +16,8 @@ export function VersionInfo({
 }: VersionInfoProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      {...fadeInUp}
+      transition={SMOOTH_TRANSITION}
       className={`text-center glass-morphism rounded-2xl p-6 border border-gray-800 ${className}`}
     >
       <div className="flex items-center justify-center space-x-4 text-xs text-gray-500">

@@ -4,7 +4,8 @@ import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingSystem";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
-import { Z_INDEX } from "@/constants/design-system";
+import { AnalyticsTab } from "@/components/AnalyticsTab";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import {
   InvestmentOpportunity,
   type NavigationContext,
@@ -13,42 +14,26 @@ import dynamic from "next/dynamic";
 import { ComponentType, ReactNode, useCallback, useState } from "react";
 import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 
-// Dynamic imports for code splitting
-const AnalyticsTab: ComponentType<{
-  urlUserId?: string | undefined;
-  categoryFilter?: string | null;
-}> = dynamic(
-  () =>
-    import("@/components/AnalyticsTab").then(mod => ({
-      default: mod.AnalyticsTab,
-    })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Analytics..."
-        className="min-h-96"
-      />
-    ),
-  }
-);
+// Factory function for dynamic loading components
+const createLoadingComponent = (message: string) => {
+  const LoadingComponent = () => (
+    <LoadingState
+      variant="spinner"
+      size="lg"
+      message={message}
+      className="min-h-96"
+    />
+  );
+  LoadingComponent.displayName = `DynamicLoading(${message})`;
+  return LoadingComponent;
+};
 
 const CommunityTab: ComponentType = dynamic(
   () =>
     import("@/components/CommunityTab").then(mod => ({
       default: mod.CommunityTab,
     })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Community..."
-        className="min-h-96"
-      />
-    ),
-  }
+  { loading: createLoadingComponent("Loading Community...") }
 );
 
 const AirdropTab: ComponentType = dynamic(
@@ -56,16 +41,7 @@ const AirdropTab: ComponentType = dynamic(
     import("@/components/AirdropTab").then(mod => ({
       default: mod.AirdropTab,
     })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Airdrop..."
-        className="min-h-96"
-      />
-    ),
-  }
+  { loading: createLoadingComponent("Loading Airdrop...") }
 );
 
 const SettingsTab: ComponentType = dynamic(
@@ -73,31 +49,13 @@ const SettingsTab: ComponentType = dynamic(
     import("@/components/SettingsTab").then(mod => ({
       default: mod.SettingsTab,
     })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Settings..."
-        className="min-h-96"
-      />
-    ),
-  }
+  { loading: createLoadingComponent("Loading Settings...") }
 );
 
 const SwapPage: ComponentType<SwapPageProps> = dynamic(
   () =>
     import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
-  {
-    loading: () => (
-      <LoadingState
-        variant="spinner"
-        size="lg"
-        message="Loading Swap Interface..."
-        className="min-h-96"
-      />
-    ),
-  }
+  { loading: createLoadingComponent("Loading Swap Interface...") }
 );
 
 type StrategyPreset = Omit<InvestmentOpportunity, "navigationContext">;
@@ -225,19 +183,6 @@ export function DashboardShell({
     }
 
     switch (activeTab) {
-      case "wallet":
-        return (
-          <WalletPortfolio
-            {...(urlUserId && { urlUserId })}
-            onOptimizeClick={handleOptimizeClick}
-            onZapInClick={handleZapInClick}
-            onZapOutClick={handleZapOutClick}
-            onCategoryClick={handleCategoryClick}
-            {...(typeof isOwnBundle !== "undefined" && { isOwnBundle })}
-            {...(bundleUserName && { bundleUserName })}
-            {...(bundleUrl && { bundleUrl })}
-          />
-        );
       case "analytics":
         return (
           <AnalyticsTab
@@ -251,6 +196,7 @@ export function DashboardShell({
         return <AirdropTab />;
       case "settings":
         return <SettingsTab />;
+      case "wallet":
       default:
         return (
           <WalletPortfolio
@@ -271,7 +217,9 @@ export function DashboardShell({
   if (pendingState?.isPending) {
     return (
       <div className="min-h-screen bg-gray-950 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS.BACKGROUND}`}
+        />
         <div
           className={`relative ${Z_INDEX.CONTENT} flex items-center justify-center h-screen`}
         >
@@ -295,7 +243,9 @@ export function DashboardShell({
     >
       <div className="min-h-screen bg-gray-950 relative overflow-hidden">
         {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-gray-950 to-blue-900/20" />
+        <div
+          className={`absolute inset-0 bg-gradient-to-br ${GRADIENTS.BACKGROUND}`}
+        />
 
         {/* Navigation */}
         <Navigation activeTab={activeTab} onTabChange={handleTabChange} />
