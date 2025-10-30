@@ -33,18 +33,6 @@ export interface PortfolioMetrics {
   monthlyReturn?: number;
 }
 
-// DEPRECATED: Use RiskLevel from constants/portfolio.ts instead
-export type RiskLevel = "Low" | "Medium" | "High";
-
-// DEPRECATED: Use ASSET_TYPES from constants/portfolio.ts instead
-export type AssetType =
-  | "Staking"
-  | "Lending"
-  | "Liquidity Pool"
-  | "Holding"
-  | "Safety Module"
-  | "Liquid Staking";
-
 // Chart and Analytics types
 export interface PortfolioDataPoint {
   date: string;

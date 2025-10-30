@@ -11,7 +11,7 @@
 // TYPES AND INTERFACES
 // =============================================================================
 
-export interface PerformanceColorOptions {
+interface PerformanceColorOptions {
   /** Show neutral color for zero values */
   neutralZero?: boolean;
   /** Custom neutral color */

@@ -1,4 +1,4 @@
-import { RiskLevel } from "./portfolio";
+import { RiskLevel } from "./risk";
 
 /**
  * Navigation context determines how the SwapPage behaves based on entry point

@@ -2,7 +2,7 @@
  * Types for the optimization tab and dust zap functionality
  */
 
-import { DeBankToken } from "./api";
+import { DeBankToken } from "./api.internal";
 
 export interface DustToken extends DeBankToken {
   isSelected: boolean;

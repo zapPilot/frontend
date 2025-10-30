@@ -79,7 +79,7 @@ export const isClientError = (error: unknown): boolean => {
 /**
  * Retry configuration options
  */
-export interface RetryConfig {
+interface RetryConfig {
   /** Maximum number of retry attempts (default: 2) */
   maxRetries?: number;
   /** Skip retrying client errors (4xx status codes) (default: true) */
@@ -93,7 +93,7 @@ export interface RetryConfig {
 /**
  * Query configuration options
  */
-export interface QueryConfigOptions {
+interface QueryConfigOptions {
   /** Data type determines stale/cache times */
   dataType?: keyof typeof QUERY_TIMINGS;
   /** Retry behavior configuration */

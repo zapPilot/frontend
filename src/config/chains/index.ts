@@ -20,17 +20,6 @@
  * ```
  */
 
-// Core types and definitions
-export type {
-  BaseChainConfig,
-  ChainAdapter,
-  ChainEnvironmentConfig,
-  ChainListAdapter,
-  ChainRegistry,
-  SupportedChainId,
-  ThirdWebChainConfig,
-} from "./types";
-
 // Canonical chain definitions
 export {
   CHAIN_CONFIG,

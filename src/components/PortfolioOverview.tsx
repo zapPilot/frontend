@@ -19,7 +19,7 @@ import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 type TabType = "assets" | "borrowing";
 
-export interface PortfolioOverviewProps extends BaseComponentProps {
+interface PortfolioOverviewProps extends BaseComponentProps {
   portfolioState: PortfolioState;
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];

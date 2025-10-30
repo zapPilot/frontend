@@ -10,7 +10,7 @@
 /**
  * Options for the normalizeStrings function
  */
-export interface NormalizeOptions {
+interface NormalizeOptions {
   /**
    * Case transformation to apply
    * - 'lower': Convert to lowercase (default for addresses)
@@ -262,24 +262,6 @@ export function isValidString(str: unknown): str is string {
 }
 
 /**
- * Filter an array to only valid (non-empty) strings with type narrowing
- *
- * Combines filtering and type narrowing in a single operation.
- * Alternative to Array.filter(isValidString) with better semantics.
- *
- * @example
- * const mixed = ['hello', '', null, undefined, '  ', 'world']
- * filterValidStrings(mixed)
- * // => ['hello', 'world']
- *
- * @param values - Array of unknown values
- * @returns Array of valid strings only
- */
-export function filterValidStrings(values: unknown[]): string[] {
-  return values.filter(isValidString);
-}
-
-/**
  * Normalize a string for case-insensitive comparison
  *
  * Common pattern for search, filtering, and matching operations.
@@ -299,28 +281,6 @@ export function normalizeForComparison(str: unknown): string {
     return "";
   }
   return str.toLowerCase().trim();
-}
-
-/**
- * Check if two strings are equal after normalization
- *
- * Case-insensitive, whitespace-insensitive string comparison.
- * Useful for user input validation and search matching.
- *
- * @example
- * stringEquals('  Hello  ', 'hello')
- * // => true
- *
- * @example
- * stringEquals('ETH', 'eth')
- * // => true
- *
- * @param str1 - First string
- * @param str2 - Second string
- * @returns True if strings are equal after normalization
- */
-export function stringEquals(str1: unknown, str2: unknown): boolean {
-  return normalizeForComparison(str1) === normalizeForComparison(str2);
 }
 
 /**

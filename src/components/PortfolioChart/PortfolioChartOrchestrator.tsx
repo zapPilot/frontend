@@ -416,5 +416,3 @@ const PortfolioChartComponent = ({
 export const PortfolioChart = memo(PortfolioChartComponent);
 
 PortfolioChart.displayName = "PortfolioChart";
-
-export default PortfolioChart;

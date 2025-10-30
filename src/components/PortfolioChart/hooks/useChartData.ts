@@ -44,7 +44,7 @@ interface ChartDataOverrides {
 /**
  * Return type for useChartData hook
  */
-export interface ChartData {
+interface ChartData {
   // Processed data for each chart type
   stackedPortfolioData: PortfolioStackedDataPoint[];
   allocationHistory: AssetAllocationPoint[];

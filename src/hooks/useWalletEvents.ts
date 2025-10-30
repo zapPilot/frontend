@@ -12,46 +12,47 @@ import { useWallet } from "./useWallet";
 import { walletLogger } from "@/utils/logger";
 
 // Wallet-specific event data types
-export interface AccountEventData {
+interface AccountEventData {
   address?: string;
   connector?: string;
   [key: string]: unknown;
 }
 
-export interface ChainEventData {
+interface ChainEventData {
   id?: number;
   name?: string;
   rpcUrls?: string[];
   [key: string]: unknown;
 }
 
-export interface ConnectionEventData {
-  connected: boolean;
-  wallet?: string;
-  [key: string]: unknown;
-}
+// ConnectionEventData unused - connection state passed as boolean
+// interface ConnectionEventData {
+//   connected: boolean;
+//   wallet?: string;
+//   [key: string]: unknown;
+// }
 
-// Union type for all possible event data
-export type WalletEventData =
-  | AccountEventData
-  | ChainEventData
-  | ConnectionEventData
-  | Record<string, unknown>;
+// Union type for all possible event data (unused but needed for type inference)
+// type WalletEventData =
+//   | AccountEventData
+//   | ChainEventData
+//   | ConnectionEventData
+//   | Record<string, unknown>;
 
-// Simplified event types
-export interface WalletEvent {
-  type: string;
-  timestamp: number;
-  data?: WalletEventData;
-}
+// Simplified event types (unused but kept for reference)
+// interface WalletEvent {
+//   type: string;
+//   timestamp: number;
+//   data?: WalletEventData;
+// }
 
 // Basic event stats
-export interface EventStats {
+interface EventStats {
   totalEvents: number;
 }
 
 // Simplified hook interface
-export interface UseWalletEventsReturn {
+interface UseWalletEventsReturn {
   // Basic stats
   stats: EventStats;
 

@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { SwapPage } from "../../../../src/components/SwapPage/SwapPage";
 import type { InvestmentOpportunity } from "../../../../src/types/investment";
 
+// Mock useChain hook
+vi.mock("../../../../src/hooks/useChain", () => ({
+  useChain: vi.fn(() => ({
+    chain: { id: 1, name: "Ethereum" },
+    isSupported: true,
+  })),
+}));
+
 // Mock child components
 vi.mock("../../../../src/components/SwapPage/SwapPageHeader", () => ({
   SwapPageHeader: vi.fn(({ strategy, onBack }: any) => (

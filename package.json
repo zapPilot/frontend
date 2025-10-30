@@ -44,8 +44,7 @@
     "next-pwa": "^5.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "thirdweb": "^5.105.10",
-    "zod": "^3.25.75"
+    "thirdweb": "^5.105.10"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -61,15 +60,10 @@
     "@typescript-eslint/parser": "^8.35.0",
     "@vitejs/plugin-react": "^4.7.0",
     "@vitest/coverage-v8": "^3.2.4",
-    "babel-plugin-transform-remove-console": "^6.9.4",
     "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
-    "eslint-config-prettier": "^10.1.5",
-    "eslint-import-resolver-typescript": "^4.4.4",
-    "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-prettier": "^5.5.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "husky": "^9.1.7",

@@ -10,7 +10,7 @@ import type {
 } from "../../../types";
 import { getActionButtonText } from "./utils";
 
-export interface ActionButtonProps {
+interface ActionButtonProps {
   operationMode: OperationMode;
   includedCategories: ProcessedAssetCategory[];
   rebalanceMode?: RebalanceMode | undefined;

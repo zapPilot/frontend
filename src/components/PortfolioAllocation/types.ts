@@ -55,7 +55,7 @@ export interface ChartDataPoint {
 }
 
 // UI Variation types
-export type PortfolioVariationType = "enhancedOverview";
+type PortfolioVariationType = "enhancedOverview";
 
 // Rebalance mode interfaces
 export interface CategoryShift {
@@ -97,14 +97,6 @@ export interface SwapSettings {
     rebalance: boolean;
   };
 }
-
-export interface OperationConfig {
-  mode: OperationMode;
-  swapSettings: SwapSettings;
-  isEnabled: boolean;
-}
-
-// SlippagePreset interface is now exported from useSlippage hook
 
 export interface SwapValidation {
   isValid: boolean;

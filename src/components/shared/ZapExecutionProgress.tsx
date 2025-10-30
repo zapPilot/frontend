@@ -31,7 +31,7 @@ import {
 } from "../../types/modal.types";
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
-export interface ZapExecutionProgressProps
+interface ZapExecutionProgressProps
   extends Omit<
     BaseModalProps<ZapExecutionResult>,
     "children" | "a11y" | "size"

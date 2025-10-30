@@ -7,25 +7,7 @@ import { httpUtils } from "../lib/http-utils";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
 // API Response Types
-export interface AdditionalWallet {
-  wallet_address: string;
-  label?: string;
-  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
-  created_at?: string;
-}
-
-export interface PortfolioSnapshot {
-  id: string;
-  user_id: string;
-  wallet_address: string;
-  chain: string;
-  protocol: string;
-  net_value_usd: number;
-  snapshot_date: string;
-  created_at: string;
-}
-
-export interface PortfolioTrend {
+interface PortfolioTrend {
   id: string;
   user_id: string;
   wallet_address: string;
@@ -35,30 +17,6 @@ export interface PortfolioTrend {
   pnl_usd: number;
   date: string;
   created_at: string;
-}
-
-export interface AssetCategory {
-  category: string;
-  total_value_usd: number;
-  percentage: number;
-  assets: Array<{
-    name: string;
-    symbol: string;
-    protocol: string;
-    amount: number;
-    value_usd: number;
-    apr?: number;
-    type?: string;
-  }>;
-}
-
-export interface PortfolioSummaryResponse {
-  user_id: string;
-  total_value_usd: number;
-  total_change_24h: number;
-  total_change_percentage: number;
-  last_updated: string;
-  categories?: AssetCategory[];
 }
 
 export interface PoolDetail {
@@ -80,21 +38,6 @@ export interface PoolDetail {
     apr_updated_at: string | null;
   };
   contribution_to_portfolio: number;
-}
-
-export interface PortfolioAPRSummary {
-  total_asset_value_usd: number;
-  weighted_apr: number;
-  matched_pools: number;
-  total_pools: number;
-  matched_asset_value_usd: number;
-  coverage_percentage: number;
-}
-
-export interface PortfolioAPRResponse {
-  user_id: string;
-  portfolio_summary: PortfolioAPRSummary;
-  pool_details: PoolDetail[];
 }
 
 // Unified Landing Page Response Type
@@ -185,16 +128,7 @@ export interface LandingPageResponse {
 }
 
 // Transformed data types for UI
-export interface WalletAddress {
-  id: string;
-  address: string;
-  label: string;
-  isActive: boolean;
-  isMain: boolean;
-  createdAt: string | null;
-}
-
-export interface PortfolioTrendsResponse {
+interface PortfolioTrendsResponse {
   user_id: string;
   period: {
     start_date: string;
@@ -210,7 +144,7 @@ export interface PortfolioTrendsResponse {
   };
 }
 
-export interface PortfolioDailyProtocol {
+interface PortfolioDailyProtocol {
   protocol: string | null;
   chain: string | null;
   value_usd: number;
@@ -219,14 +153,14 @@ export interface PortfolioDailyProtocol {
   category: string | null;
 }
 
-export interface PortfolioDailyCategory {
+interface PortfolioDailyCategory {
   category: string | null;
   source_type: string | null;
   value_usd: number;
   pnl_usd: number;
 }
 
-export interface PortfolioDailyTotal {
+interface PortfolioDailyTotal {
   date: string;
   total_value_usd: number;
   change_percentage: number;
@@ -279,7 +213,7 @@ export const getRiskSummary = async (
 };
 
 // Phase 2 Analytics - Rolling Sharpe Ratio Response
-export interface RollingSharpeTimeseriesPoint {
+interface RollingSharpeTimeseriesPoint {
   date: string;
   portfolio_value: number;
   daily_return_pct: number;
@@ -315,7 +249,7 @@ export interface RollingSharpeResponse {
 }
 
 // Phase 2 Analytics - Rolling Volatility Response
-export interface RollingVolatilityTimeseriesPoint {
+interface RollingVolatilityTimeseriesPoint {
   date: string;
   portfolio_value: number;
   daily_return_pct: number;
@@ -353,7 +287,7 @@ export interface RollingVolatilityResponse {
 }
 
 // Phase 2 Analytics - Enhanced Drawdown Response
-export interface EnhancedDrawdownTimeseriesPoint {
+interface EnhancedDrawdownTimeseriesPoint {
   date: string;
   portfolio_value: number;
   peak_value: number;
@@ -380,7 +314,7 @@ export interface EnhancedDrawdownResponse {
 }
 
 // Phase 2 Analytics - Underwater Recovery Response
-export interface UnderwaterRecoveryTimeseriesPoint {
+interface UnderwaterRecoveryTimeseriesPoint {
   date: string;
   underwater_pct: number;
   is_underwater: boolean;
@@ -409,7 +343,7 @@ export interface UnderwaterRecoveryResponse {
 }
 
 // Phase 2 Analytics - Allocation Timeseries Response
-export interface AllocationTimeseriesPoint {
+interface AllocationTimeseriesPoint {
   date: string;
   category: string; // Asset category: "btc", "eth", "stable", "altcoin"
   category_value_usd: number;

@@ -14,7 +14,7 @@ import {
 } from "@/config/chains";
 
 // Compatible interface matching the original useWalletConnection
-export interface WalletHooks {
+interface WalletHooks {
   // Account management
   account: {
     address: string;
@@ -91,13 +91,7 @@ export function useWallet(): WalletHooks {
 }
 
 // Legacy exports for backward compatibility
-export const useWalletConnection = useWallet;
+export { useWallet as useWalletConnection };
 
 // Chain constants for backward compatibility - now using canonical CHAIN_IDS
 export { CHAIN_IDS as SUPPORTED_CHAINS } from "@/config/chains";
-
-export type SupportedChainId =
-  (typeof SUPPORTED_CHAINS)[keyof typeof SUPPORTED_CHAINS];
-
-// Default export
-export default useWallet;

@@ -14,13 +14,13 @@ import { getBackendErrorMessage, getIntentErrorMessage } from "./errorMessages";
 // TYPES AND INTERFACES
 // =============================================================================
 
-export interface ErrorDetails {
+interface ErrorDetails {
   /** Additional error context data */
   [key: string]: unknown;
 }
 
 /** Interface for JSON representation of errors */
-export interface ErrorJSON {
+interface ErrorJSON {
   name: string;
   message: string;
   timestamp: number;
@@ -35,7 +35,7 @@ export interface ErrorJSON {
 }
 
 /** Interface for unknown error objects from external sources */
-export interface UnknownErrorInput {
+interface UnknownErrorInput {
   message?: unknown;
   status?: number;
   code?: string;
@@ -49,7 +49,7 @@ export interface UnknownErrorInput {
   [key: string]: unknown;
 }
 
-export interface ErrorContext {
+interface ErrorContext {
   /** Service or module where error occurred */
   source?: string | undefined;
   /** HTTP status code (if applicable) */
@@ -64,7 +64,7 @@ export interface ErrorContext {
   timestamp?: string;
 }
 
-export type ErrorSeverity = "low" | "medium" | "high" | "critical";
+type ErrorSeverity = "low" | "medium" | "high" | "critical";
 
 // =============================================================================
 // BASE ERROR CLASS
@@ -328,65 +328,6 @@ export class IntentServiceError extends BaseServiceError {
 // =============================================================================
 // ERROR FACTORY FUNCTIONS
 // =============================================================================
-
-/**
- * Create standardized error from unknown error type
- */
-export function createServiceError(
-  error: unknown,
-  source: string,
-  defaultMessage = "An unexpected error occurred"
-): BaseServiceError {
-  const getMessage = (...candidates: unknown[]) =>
-    resolveErrorMessage(defaultMessage, ...candidates);
-
-  if (error instanceof BaseServiceError) {
-    return error;
-  }
-
-  if (error instanceof Error) {
-    const message = getMessage(
-      error.message,
-      (error as { cause?: unknown }).cause,
-      error
-    );
-
-    return new BaseServiceError(message, {
-      source,
-      cause: error,
-      details: { originalError: error.constructor.name },
-    });
-  }
-
-  // Handle string errors
-  if (typeof error === "string") {
-    return new BaseServiceError(error, { source });
-  }
-
-  // Handle objects with status/message properties
-  if (typeof error === "object" && error !== null) {
-    const errorObj = error as UnknownErrorInput;
-    const message = getMessage(
-      errorObj.message,
-      errorObj.response?.data,
-      errorObj.details,
-      errorObj
-    );
-
-    return new BaseServiceError(message, {
-      source,
-      status: errorObj.status || errorObj.response?.status || 500,
-      code: errorObj.code,
-      details: errorObj.details,
-    });
-  }
-
-  // Fallback for completely unknown error types
-  return new BaseServiceError(defaultMessage, {
-    source,
-    details: { originalError: String(error) },
-  });
-}
 
 /**
  * Enhanced error messages for common intent engine errors

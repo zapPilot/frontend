@@ -21,7 +21,7 @@ import { clamp, clampMin } from "../lib/mathUtils";
 /**
  * Configuration options for chart hover behavior
  */
-export interface UseChartHoverOptions<T> {
+interface UseChartHoverOptions<T> {
   /** Chart type discriminator for hover state */
   chartType: string;
   /** SVG viewBox width */
@@ -52,7 +52,7 @@ export interface UseChartHoverOptions<T> {
 /**
  * Return type for useChartHover hook
  */
-export interface UseChartHoverReturn {
+interface UseChartHoverReturn {
   /** Current hover state or null if not hovering */
   hoveredPoint: ChartHoverState | null;
   /** Mouse move handler to attach to SVG element */

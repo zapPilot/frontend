@@ -32,7 +32,7 @@ interface EnhancedOverviewProps {
   actionDisabledReason?: string;
 }
 
-export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
+export function EnhancedOverview({
   processedCategories,
   chartData,
   rebalanceMode,
@@ -45,7 +45,7 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
   onAllocationChange,
   actionEnabled = true,
   actionDisabledReason,
-}) => {
+}: EnhancedOverviewProps) {
   const {
     includedCategories,
     excludedCategories,
@@ -141,4 +141,4 @@ export const EnhancedOverview: React.FC<EnhancedOverviewProps> = ({
       />
     </motion.div>
   );
-};
+}

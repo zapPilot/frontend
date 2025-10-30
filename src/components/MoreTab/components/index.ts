@@ -3,4 +3,4 @@
  */
 
 export { KeyMetricsGrid } from "./KeyMetricsGrid";
-export { KeyMetricCard, type KeyMetricCardData } from "./KeyMetricCard";
+export { KeyMetricCard } from "./KeyMetricCard";

@@ -1,4 +1,4 @@
-export type ServiceCall<T> = () => Promise<T>;
+type ServiceCall<T> = () => Promise<T>;
 
 interface ExecuteServiceCallOptions {
   mapError?: (error: unknown) => Error;

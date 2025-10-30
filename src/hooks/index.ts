@@ -1,28 +1,9 @@
 /**
  * Hooks Index
  *
- * Centralized exports for all custom hooks
+ * Minimal barrel exports - prefer direct imports for tree-shaking
+ * NOTE: Most hooks removed from barrel - import directly from their files
  */
 
-// Main wallet hook
-export { useWallet } from "./useWallet";
-export { useChain } from "./useChain";
-export { useWalletEvents } from "./useWalletEvents";
-
-// Portfolio hooks
-export {
-  useWalletPortfolioState,
-  usePortfolioViewToggles,
-} from "./useWalletPortfolioState";
-
-// UI/Interaction hooks
+// UI/Interaction hooks (only exported hook actually used via barrel)
 export { useDropdown } from "./useDropdown";
-
-// Re-export types for convenience
-export type {
-  WalletAccount,
-  Chain,
-  WalletError,
-  SupportedChainId,
-  WalletProviderInterface,
-} from "@/types/wallet";

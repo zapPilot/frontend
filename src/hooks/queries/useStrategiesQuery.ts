@@ -153,8 +153,3 @@ export function useStrategiesWithPortfolioData(
       0,
   };
 }
-
-/**
- * Type exports for external use
- */
-export type StrategiesQueryResult = ReturnType<typeof useStrategiesQuery>;

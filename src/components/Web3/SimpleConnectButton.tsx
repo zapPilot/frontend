@@ -115,5 +115,3 @@ export function SimpleConnectButton({
     </div>
   );
 }
-
-export default SimpleConnectButton;

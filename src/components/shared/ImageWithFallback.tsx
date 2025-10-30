@@ -12,14 +12,14 @@ interface ImageWithFallbackProps extends BaseComponentProps {
   symbol?: string;
 }
 
-export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
+export function ImageWithFallback({
   src,
   alt,
   fallbackType,
   size = 24,
   className = "",
   symbol,
-}) => {
+}: ImageWithFallbackProps) {
   const [imageState, setImageState] = useState({
     status: "loading" as "loading" | "fallback" | "error",
     currentSrc: src,
@@ -104,4 +104,4 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       />
     </div>
   );
-};
+}

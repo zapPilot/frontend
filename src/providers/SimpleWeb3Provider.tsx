@@ -16,5 +16,3 @@ interface SimpleWeb3ProviderProps {
 export function SimpleWeb3Provider({ children }: SimpleWeb3ProviderProps) {
   return <ThirdwebProvider>{children}</ThirdwebProvider>;
 }
-
-export default SimpleWeb3Provider;

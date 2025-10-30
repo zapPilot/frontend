@@ -51,6 +51,3 @@ const GradientButtonComponent = ({
 };
 
 export const GradientButton = memo(GradientButtonComponent);
-
-// Also export as default for better compatibility
-export default GradientButton;

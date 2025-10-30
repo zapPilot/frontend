@@ -7,10 +7,11 @@ import {
 import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
 import { formatLargeNumber, formatPercentage } from "./formatters";
 
-export interface SVGPathPoint {
-  x: number;
-  y: number;
-}
+// Unused type - points are inline in generateSVGPath
+// interface SVGPathPoint {
+//   x: number;
+//   y: number;
+// }
 
 export const generateSVGPath = (
   data: PortfolioDataPoint[],
@@ -87,7 +88,7 @@ const DEFAULT_PIE_SLICE_COLOR = "#6366F1";
 const isApiCategoryKey = (categoryId: string): categoryId is ApiCategoryKey =>
   Object.prototype.hasOwnProperty.call(API_CATEGORY_KEY_MAP, categoryId);
 
-export interface PieChartTransformItem {
+interface PieChartTransformItem {
   id: string;
   value: number;
   percentage?: number;
@@ -95,7 +96,7 @@ export interface PieChartTransformItem {
   color?: string;
 }
 
-export interface TransformPieChartOptions {
+interface TransformPieChartOptions {
   deriveCategoryMetadata?: boolean;
   colorVariant?: "brand" | "chart";
 }

@@ -11,7 +11,7 @@ export interface BundleUser {
   avatar?: string;
 }
 
-export interface BundleMetadata {
+interface BundleMetadata {
   user: BundleUser;
   isPublic: boolean;
   createdAt: Date;

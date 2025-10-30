@@ -63,34 +63,6 @@ export interface ChainEnvironmentConfig {
 }
 
 /**
- * ThirdWeb-compatible chain format
- */
-export interface ThirdWebChainConfig {
-  id: number;
-  name: string;
-  rpc: string[];
-  nativeCurrency: {
-    name: string;
-    symbol: string;
-    decimals: number;
-  };
-  blockExplorers?: Array<{
-    name: string;
-    url: string;
-  }>;
-}
-
-/**
- * Chain registry type for ID-based lookups
- */
-export type ChainRegistry = Record<number, BaseChainConfig>;
-
-/**
- * Supported chain IDs as const assertion
- */
-export type SupportedChainId = 1 | 42161 | 8453 | 10;
-
-/**
  * Chain adapter function types
  */
 export type ChainAdapter<T> = (config: BaseChainConfig) => T;

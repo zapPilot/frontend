@@ -12,7 +12,12 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
+  /**
+   * @deprecated Retained for backward compatibility with legacy API responses.
+   * Not used in application logic unless NEXT_PUBLIC_USE_LEGACY_WALLET=true.
+   * Safe to remove after confirming backend migration is complete.
+   */
+  is_main?: boolean;
   label?: string;
   created_at: string;
 }

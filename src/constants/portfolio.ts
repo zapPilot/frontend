@@ -9,7 +9,7 @@
  * Asset Category Keys
  * Type-safe keys for all supported asset categories
  */
-export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
+type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
 
 /**
  * API category keys returned by analytics service
@@ -21,7 +21,7 @@ export type ApiCategoryKey = "btc" | "eth" | "stablecoins" | "others";
  * Asset Category Definition
  * Complete metadata for each asset category
  */
-export interface AssetCategory {
+interface AssetCategory {
   /** Unique identifier key */
   key: AssetCategoryKey;
   /** Full display name */

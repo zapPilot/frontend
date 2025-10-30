@@ -12,7 +12,7 @@
 // TYPES AND INTERFACES
 // =============================================================================
 
-export interface PortfolioMetrics {
+interface PortfolioMetrics {
   totalValue: number;
   totalChange24h: number;
   totalChangePercentage: number;

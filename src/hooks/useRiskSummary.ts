@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getRiskSummary } from "../services/analyticsService";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
-export interface UseRiskSummaryResult {
+interface UseRiskSummaryResult {
   data: ActualRiskSummaryResponse | null;
   isLoading: boolean;
   error: Error | null;

@@ -173,20 +173,6 @@ export const scaleIn: Variants = {
 // Compound Variants
 // ============================================================================
 
-// ============================================================================
-// Type Exports
-// ============================================================================
-
-/**
- * All available transition presets
- */
-export type TransitionPreset = "spring" | "smooth" | "quick" | "stagger";
-
-/**
- * All available animation variants
- */
-export type AnimationVariant = "fadeInUp" | "slideInLeft" | "scaleIn";
-
 /**
  * Default export containing all variants and transitions
  */

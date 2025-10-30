@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useCallback, useState } from "react";
 import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
-import { useChain } from "../../hooks";
+import { useChain } from "@/hooks/useChain";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
 import { formatCurrency } from "../../lib/formatters";
 import {

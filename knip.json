@@ -11,6 +11,8 @@
     "vitest.config.ts"
   ],
   "ignoreDependencies": ["@types/*", "husky", "lint-staged", "cross-env", "pino-pretty"],
+  "ignoreExportsUsedInFile": true,
+  "includeEntryExports": true,
   "next": {
     "entry": ["src/app/**", "src/middleware.ts"]
   }

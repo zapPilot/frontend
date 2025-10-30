@@ -7,7 +7,7 @@ import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
 import type { LandingPageResponse } from "@/services/analyticsService";
 
-export interface UseWalletPortfolioStateParams {
+interface UseWalletPortfolioStateParams {
   urlUserId?: string;
   onOptimizeClick?: (() => void) | undefined;
   onZapInClick?: (() => void) | undefined;

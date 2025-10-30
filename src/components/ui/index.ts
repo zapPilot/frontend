@@ -7,7 +7,9 @@ export { ModalCloseButton } from "./ModalCloseButton";
 
 // Loading system - comprehensive re-exports for backward compatibility
 export {
-  LoadingSpinner,
+  Spinner,
+  Skeleton,
+  ButtonSkeleton,
   WalletMetricsSkeleton,
   AssetCategorySkeleton,
   PieChartLoading,
@@ -15,9 +17,14 @@ export {
   UnifiedLoading,
   BalanceSkeleton,
   PieChartSkeleton,
-  Skeleton,
   CardSkeleton,
   LoadingWrapper,
   LoadingState,
   TokenListSkeleton,
+} from "./LoadingSystem";
+
+export {
+  Spinner as LoadingSpinner,
+  Skeleton as LoadingSkeleton,
+  ButtonSkeleton as LoadingButton,
 } from "./LoadingSystem";

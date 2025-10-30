@@ -19,9 +19,7 @@ import {
   SwapSettings,
 } from "./types";
 
-export const PortfolioAllocationContainer: React.FC<
-  PortfolioAllocationContainerProps
-> = ({
+export function PortfolioAllocationContainer({
   assetCategories,
   operationMode = "zapIn",
   isRebalanceMode = false,
@@ -29,7 +27,7 @@ export const PortfolioAllocationContainer: React.FC<
   excludedCategoryIds,
   onToggleCategoryExclusion,
   chainId,
-}) => {
+}: PortfolioAllocationContainerProps) {
   const swapControlsRef = useRef<SwapControlsRef>(null);
   const [swapSettings, setSwapSettings] = useState<SwapSettings>({
     amount: "",
@@ -222,4 +220,4 @@ export const PortfolioAllocationContainer: React.FC<
       />
     </div>
   );
-};
+}

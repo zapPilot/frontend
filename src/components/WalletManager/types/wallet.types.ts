@@ -33,21 +33,6 @@ export interface MenuPosition {
   left: number;
 }
 
-export interface WalletState {
-  wallets: import("@/services/userService").WalletData[];
-  operations: WalletOperations;
-  isRefreshing: boolean;
-  isAdding: boolean;
-  editingWallet: EditingWallet | null;
-  newWallet: NewWallet;
-  validationError: string | null;
-  email: string;
-  subscribedEmail: string | null;
-  isEditingSubscription: boolean;
-  openDropdown: string | null;
-  menuPosition: MenuPosition | null;
-}
-
 export interface ValidationResult {
   isValid: boolean;
   error?: string;

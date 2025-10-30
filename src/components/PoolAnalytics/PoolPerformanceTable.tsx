@@ -61,7 +61,7 @@ const formatAPR = (apr: number): string => {
   return formatPercentage(apr * 100, false, 2);
 };
 
-export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
+export function PoolPerformanceTable({
   pools,
   isLoading,
   error,
@@ -70,7 +70,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
   onClearCategoryFilter,
   defaultTopN = 5,
   topNOptions = [5, 10, 20, 50],
-}) => {
+}: PoolPerformanceTableProps) {
   const [sortState, setSortState] = useState<SortState>({
     field: "value",
     direction: "desc",
@@ -573,4 +573,4 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
       </div>
     </GlassCard>
   );
-};
+}

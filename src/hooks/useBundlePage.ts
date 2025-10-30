@@ -11,7 +11,7 @@ import {
 } from "@/services/bundleService";
 import { logger } from "@/utils/logger";
 
-export interface UseBundlePageResult {
+interface UseBundlePageResult {
   isOwnBundle: boolean;
   bundleUrl: string;
   bundleUser: BundleUser | null;

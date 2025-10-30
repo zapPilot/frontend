@@ -43,7 +43,7 @@ export interface UseZapTokensWithStatesOptions {
  * Return type for useZapTokensWithStates hook
  * Includes token data enriched with balances and prices, plus loading/error states
  */
-export interface UseZapTokensWithStatesResult {
+interface UseZapTokensWithStatesResult {
   tokens: SwapToken[];
   hasTokens: boolean;
   isEmpty: boolean;

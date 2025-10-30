@@ -14,11 +14,11 @@ interface TokenImageProps extends BaseComponentProps {
 const ZAP_ASSET_WORKER_BASE_URL =
   "https://zap-assets-worker.davidtnfsh.workers.dev";
 
-export const TokenImage: React.FC<TokenImageProps> = ({
+export function TokenImage({
   token,
   size = 32,
   className = "",
-}) => {
+}: TokenImageProps) {
   const getTokenSymbol = () => {
     return token.optimized_symbol || token.symbol || "UNKNOWN";
   };
@@ -43,4 +43,4 @@ export const TokenImage: React.FC<TokenImageProps> = ({
       className={className}
     />
   );
-};
+}
