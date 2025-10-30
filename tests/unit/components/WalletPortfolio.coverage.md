@@ -14,22 +14,7 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
   - Error boundary testing
   - Basic user interactions
 
-### 2. `WalletPortfolio.comprehensive.test.tsx` (New)
-
-- **Purpose**: Comprehensive unit tests with enhanced coverage
-- **Coverage**: 95%+ component functionality
-- **Key Areas**:
-  - **Data Transformations**: useMemo calculations, pie chart data filtering, portfolio metrics
-  - **User Interactions**: All callback props, balance toggling, modal management
-  - **Loading States**: Loading indicators, skeleton states, retry functionality
-  - **Error Handling**: API errors, malformed data, network failures
-  - **Balance Privacy**: Hide/show functionality across all components
-  - **Connection States**: Connected/disconnected scenarios, partial user info
-  - **Performance**: Memoization verification, rapid state changes
-  - **Edge Cases**: Large numbers, negative values, rapid interactions
-  - **Component Lifecycle**: Mounting, unmounting, prop changes
-
-### 3. `WalletPortfolio.userFlows.test.tsx` (New - Regression Tests)
+### 2. `WalletPortfolio.userFlows.test.tsx` (New - Regression Tests)
 
 - **Purpose**: Critical user flow regression testing
 - **Coverage**: End-to-end user scenarios
@@ -43,7 +28,7 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
   - **Performance Critical Paths**: Rapid interactions, large data handling
   - **Accessibility & UX**: Keyboard navigation, ARIA compliance
 
-### 4. `WalletPortfolio.integration.test.tsx` (New)
+### 3. `WalletPortfolio.integration.test.tsx` (New)
 
 - **Purpose**: Integration testing with real child components
 - **Coverage**: Component integration and data flow
@@ -59,7 +44,7 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
   - **Error Boundary Integration**: Error catching and recovery
   - **Real-world Scenarios**: Wallet switching, network switching
 
-### 5. `WalletPortfolio.performance.test.tsx` (New)
+### 4. `WalletPortfolio.performance.test.tsx` (New)
 
 - **Purpose**: Performance testing and edge case handling
 - **Coverage**: Performance optimization and stress testing
@@ -69,12 +54,12 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
   - **Edge Cases**: Null data, malformed API responses, extreme values, special characters
   - **Stress Tests**: Multiple simultaneous interactions, frequent prop updates
 
-### 6. `WalletPortfolio.errorBoundary.test.tsx` (Existing)
+### 5. `WalletPortfolio.errorBoundary.test.tsx` (Existing)
 
 - **Purpose**: Error boundary specific testing
 - **Coverage**: Error handling and recovery scenarios
 
-### 7. `WalletPortfolio.balanceHiding.test.tsx` (Existing Integration)
+### 6. `WalletPortfolio.balanceHiding.test.tsx` (Existing Integration)
 
 - **Purpose**: Balance hiding integration testing
 - **Coverage**: Privacy functionality integration
@@ -177,9 +162,6 @@ expect(renderTime).toBeLessThan(100);
 ### Individual Test Files
 
 ```bash
-# Run comprehensive tests
-npm run test:unit WalletPortfolio.comprehensive.test.tsx
-
 # Run regression tests
 npm run test:unit WalletPortfolio.userFlows.test.tsx
 
