@@ -63,6 +63,7 @@ export interface PortfolioSummaryResponse {
 
 export interface PoolDetail {
   snapshot_id: string;
+  snapshot_ids?: string[] | null;
   chain: string;
   protocol: string;
   protocol_name: string;
