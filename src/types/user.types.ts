@@ -39,20 +39,6 @@ export interface UserSubscription {
   plan?: Plan;
 }
 
-// API Request DTOs
-export interface ConnectWalletDto {
-  wallet: string;
-}
-
-export interface AddWalletDto {
-  wallet: string;
-  label?: string;
-}
-
-export interface UpdateEmailDto {
-  email: string;
-}
-
 // API Response Interfaces
 export interface ConnectWalletResponse {
   user_id: string;
@@ -73,13 +59,6 @@ export interface UserProfileResponse {
   user: User;
   wallets: UserCryptoWallet[];
   subscription?: UserSubscription;
-}
-
-// API Error Response
-export interface ApiError {
-  error: string;
-  message?: string;
-  statusCode: number;
 }
 
 // Service Response Wrapper

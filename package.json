@@ -31,7 +31,7 @@
     "deadcode": "knip --exports --dependencies",
     "deadcode:ci": "knip --exports --dependencies --reporter=json",
     "deadcode:fix": "knip --exports --dependencies --fix",
-    "deadcode:check": "knip --exports --dependencies --reporter=compact",
+    "deadcode:check": "knip --exports --dependencies --no-config-hints",
     "prepare": "husky"
   },
   "dependencies": {
@@ -71,6 +71,7 @@
     "knip": "^5.66.4",
     "lint-staged": "^16.1.2",
     "pino-pretty": "^13.1.1",
+    "postcss": "^8.4.47",
     "prettier": "^3.6.1",
     "tailwindcss": "^4",
     "typescript": "^5",

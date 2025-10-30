@@ -86,28 +86,3 @@ export interface PerformancePeriod {
   sharpe: number;
   maxDrawdown: number;
 }
-
-export interface AssetAttribution {
-  asset: string;
-  contribution: number;
-  allocation: number;
-  performance: number;
-  color: string;
-}
-
-export type APRMetricsSize = "small" | "medium" | "large";
-
-// Input validation types for portfolio data
-export interface UnvalidatedAssetCategory {
-  id?: string;
-  name?: unknown;
-  color?: unknown;
-  totalValue?: unknown;
-  percentage?: unknown;
-  change24h?: unknown;
-  assets?: unknown;
-}
-
-export interface UnvalidatedPortfolioData {
-  [key: string]: unknown;
-}

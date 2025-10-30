@@ -10,7 +10,19 @@
     "playwright.config.ts",
     "vitest.config.ts"
   ],
-  "ignoreDependencies": ["@types/*", "husky", "lint-staged", "cross-env", "pino-pretty"],
+  "ignoreDependencies": [
+    "@types/*",
+    "husky",
+    "lint-staged",
+    "cross-env",
+    "pino-pretty",
+    "eslint-config-next",
+    "eslint-plugin-jsx-a11y",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "tailwindcss",
+    "postcss"
+  ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": true,
   "next": {

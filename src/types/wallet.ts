@@ -147,27 +147,6 @@ export const chainUtils = {
   },
 };
 
-// Future provider types (for when switching is needed)
-export type ProviderType =
-  | "thirdweb"
-  | "wagmi"
-  | "rainbowkit"
-  | "walletconnect"
-  | "custom";
-
-// Provider configuration (minimal)
-export interface ProviderConfig {
-  type: ProviderType;
-  clientId?: string;
-  projectId?: string;
-  metadata?: {
-    name: string;
-    description: string;
-    url: string;
-    icons: string[];
-  };
-}
-
 // Export all types
 export type {
   WalletAccount as Account,
@@ -176,6 +155,3 @@ export type {
   ConnectionStatus as Status,
   WalletProviderInterface as Provider,
 };
-
-// Legacy type aliases for backward compatibility (can be removed later)
-export type WalletConnectionHooks = WalletProviderInterface;

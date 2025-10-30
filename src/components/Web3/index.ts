@@ -12,4 +12,4 @@ export { SimpleConnectButton } from "./SimpleConnectButton";
 // Legacy components for backward compatibility
 
 // Re-export types for convenience
-export type { Chain, ProviderType, WalletAccount } from "@/types/wallet";
+export type { Chain, WalletAccount } from "@/types/wallet";
