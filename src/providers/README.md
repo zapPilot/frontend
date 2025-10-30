@@ -1,410 +1,104 @@
-# Phase 2 - Provider Abstraction Layer
+# Providers Overview
 
-This directory contains the implementation of Phase 2 of the wallet abstraction architecture. The
-Provider Abstraction Layer enables dynamic provider switching and provides a standardized interface
-for wallet operations across different Web3 providers.
+This directory contains the lightweight provider stack that powers Zap Pilot's app shell. The
+original “phase 2” abstraction layer (dynamic provider factory, adapter registry, event bus) has
+been retired in favour of a lean, direct integration with Thirdweb. What remains is intentionally
+simple and focused on the primitives the UI actually uses today.
 
-## Architecture Overview
+## Current Stack
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                    Web3Provider (Entry Point)                   │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │                ThirdwebProvider                             │ │
-│  │  ┌─────────────────────────────────────────────────────────┐ │ │
-│  │  │              WalletProvider                             │ │ │
-│  │  │  ┌─────────────────────────────────────────────────────┐ │ │ │
-│  │  │  │           WalletProviderFactory                     │ │ │ │
-│  │  │  │  ┌─────────────────────────────────────────────────┐ │ │ │ │
-│  │  │  │  │         Provider Adapters                       │ │ │ │ │
-│  │  │  │  │  ┌─────────────────────────────────────────────┐ │ │ │ │ │
-│  │  │  │  │  │  ThirdWebAdapter  │  RainbowKit  │  ZeroDev │ │ │ │ │ │
-│  │  │  │  │  └─────────────────────────────────────────────┘ │ │ │ │ │
-│  │  │  │  └─────────────────────────────────────────────────┘ │ │ │ │
-│  │  │  └─────────────────────────────────────────────────────┘ │ │ │
-│  │  └─────────────────────────────────────────────────────────┘ │ │
-│  └─────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+QueryProvider  →  SimpleWeb3Provider  →  WalletProvider  →  App
 ```
 
-## Components
+### QueryProvider (`QueryProvider.tsx`)
 
-### 1. Web3Provider (`Web3Provider.tsx`)
+- Wraps the app with a shared `QueryClient` from TanStack Query.
+- Enables React Query Devtools only when `NODE_ENV=development` **and**
+  `NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS=1` (keeps production bundle clean).
 
-The main entry point that provides both ThirdWeb SDK initialization and the wallet abstraction
-layer.
+### SimpleWeb3Provider (`SimpleWeb3Provider.tsx`)
 
-**Features:**
+- A thin wrapper around `ThirdwebProvider`.
+- No custom configuration is required; environment variables are read directly by Thirdweb’s SDK.
+- Exists purely to keep the Thirdweb context colocated with the rest of the provider stack.
 
-- Multi-layered provider setup
-- Backward compatibility with existing code
-- Configurable provider selection
-- Error handling integration
+### WalletProvider (`WalletProvider.tsx`)
 
-**Usage:**
+- Bridges a subset of Thirdweb React hooks into a single context that the app can consume.
+- Exposes a simplified shape:
+  ```ts
+  {
+    account: { address, isConnected, balance? } | null;
+    chain: { id, name, symbol } | null;
+    connect(): Promise<void>;
+    disconnect(): Promise<void>;
+    switchChain(chainId: number): Promise<void>;
+    signMessage(message: string): Promise<string>;
+    isConnected: boolean;
+    isConnecting: boolean;
+    isDisconnecting: boolean;
+    error: { message; code? } | null;
+    clearError(): void;
+  }
+  ```
+- Use the `useWalletProvider` hook to access the context.
+- Any errors surfaced today are logged through `walletLogger`; callers are expected to handle
+  promise rejections.
+
+## Usage
+
+The Next.js root layout demonstrates the intended composition:
 
 ```tsx
-import { Web3Provider } from "@/providers";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
+import { WalletProvider } from "@/providers/WalletProvider";
 
-function App() {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Web3Provider
-      defaultProvider="thirdweb"
-      enableDebug={true}
-      onError={error => console.error("Wallet error:", error)}
-    >
-      <YourAppComponents />
-    </Web3Provider>
+    <QueryProvider>
+      <SimpleWeb3Provider>
+        <WalletProvider>{children}</WalletProvider>
+      </SimpleWeb3Provider>
+    </QueryProvider>
   );
 }
 ```
 
-### 2. WalletContext (`WalletContext.tsx`)
-
-Provides centralized wallet state management with event system and error handling.
-
-**Features:**
-
-- Provider-agnostic state management
-- Event system for cross-component communication
-- Comprehensive error handling
-- Dynamic provider switching
-- Lifecycle management
-
-**Usage:**
+Inside feature code:
 
 ```tsx
-import { useWalletContext, useWalletConnection } from "@/providers";
+import { useWalletProvider } from "@/providers/WalletProvider";
 
-function WalletComponent() {
-  const { account, connect, disconnect, switchProvider } = useWalletContext();
-  // or use the simplified hook
-  const { account, connect, disconnect } = useWalletConnection();
+const ConnectButton = () => {
+  const { account, connect, disconnect, isConnected } = useWalletProvider();
 
-  return (
-    <div>
-      {account ? (
-        <button onClick={disconnect}>Disconnect {account.address}</button>
-      ) : (
-        <button onClick={connect}>Connect Wallet</button>
-      )}
-    </div>
+  return isConnected ? (
+    <button onClick={disconnect}>Disconnect {account?.address}</button>
+  ) : (
+    <button onClick={connect}>Connect Wallet</button>
   );
-}
-```
-
-### 3. WalletProviderFactory (`WalletProviderFactory.ts`)
-
-Factory class for creating and managing different wallet provider implementations.
-
-**Features:**
-
-- Type-safe provider creation
-- Provider lifecycle management
-- Runtime provider switching
-- Provider registry system
-- Singleton pattern with proper cleanup
-
-**Usage:**
-
-```tsx
-import { getProviderFactory } from "@/providers";
-
-// Get factory instance
-const factory = getProviderFactory();
-
-// Switch provider
-await factory.switchProvider("rainbowkit");
-
-// Get available providers
-const providers = factory.getAvailableProviders();
-```
-
-### 4. ThirdWebAdapter (`adapters/ThirdWebAdapter.ts`)
-
-ThirdWeb-specific implementation of the WalletProvider interface.
-
-**Features:**
-
-- Standardized ThirdWeb integration
-- React hooks integration
-- Event handling
-- Error mapping
-- Message signing support
-
-**Usage:**
-
-```tsx
-import { useThirdWebAdapter } from "@/providers";
-
-function ThirdWebComponent() {
-  const adapter = useThirdWebAdapter();
-
-  useEffect(() => {
-    adapter.onAccountChanged(account => {
-      console.log("Account changed:", account);
-    });
-  }, [adapter]);
-
-  return <div>ThirdWeb integration</div>;
-}
-```
-
-## Key Features
-
-### 1. Provider Switching
-
-Switch between different wallet providers at runtime without changing application code:
-
-```tsx
-const { switchProvider } = useWalletContext();
-
-// Switch to RainbowKit
-await switchProvider("rainbowkit");
-
-// Switch to ThirdWeb
-await switchProvider("thirdweb");
-```
-
-### 2. Event System
-
-Subscribe to wallet events across components:
-
-```tsx
-const { addEventListener } = useWalletContext();
-
-useEffect(() => {
-  const unsubscribe = addEventListener("accountChanged", event => {
-    console.log("Account changed:", event.payload);
-  });
-
-  return unsubscribe;
-}, [addEventListener]);
-```
-
-### 3. Error Handling
-
-Comprehensive error handling with standardized error types:
-
-```tsx
-const { error, clearError } = useWalletConnection();
-
-if (error) {
-  switch (error.type) {
-    case WalletErrorType.USER_REJECTED:
-      console.log("User rejected the request");
-      break;
-    case WalletErrorType.CHAIN_NOT_SUPPORTED:
-      console.log("Chain not supported");
-      break;
-    // ... handle other error types
-  }
-}
-```
-
-### 4. Chain Management
-
-Standardized chain switching and validation:
-
-```tsx
-const { chain, switchChain, isChainSupported } = useWalletConnection();
-
-// Check if chain is supported
-if (isChainSupported(42161)) {
-  await switchChain(42161); // Switch to Arbitrum
-}
-```
-
-## Configuration
-
-Configure providers in `@/config/wallet.ts`:
-
-```typescript
-export const WALLET_CONFIG: WalletConfig = {
-  defaultProvider: "thirdweb",
-  providers: {
-    thirdweb: {
-      clientId: "your-client-id",
-      supportedWallets: ["metamask", "coinbase", "walletConnect"],
-      activeChain: CHAIN_IDS.ARBITRUM,
-    },
-    rainbowkit: {
-      projectId: "your-project-id",
-      appName: "Your App Name",
-    },
-  },
 };
 ```
 
-## Extending with New Providers
+## Extending or Reintroducing Advanced Features
 
-To add a new provider (e.g., ZeroDev):
+- **Additional providers**: If multi-provider switching is needed again, start by abstracting
+  `SimpleWeb3Provider` behind a new facade and reintroduce the factory pattern there rather than
+  bloating `WalletProvider`.
+- **Chain configuration**: `handleSwitchChain` currently constructs a basic chain object. Update it
+  to pull concrete RPC metadata from a shared config module before shipping to production networks.
+- **Error handling**: the provider presently logs and re-throws errors. If the UI needs richer
+  feedback, add local state for error codes and expose helpers on the context.
+- **Event tracking**: the old `useWalletEvents` hook was removed. Prefer React Query subscriptions
+  or component-level effects tied to `account`/`chain` changes instead of recreating a global event
+  bus unless requirements demand it.
 
-1. **Create Adapter** (`adapters/ZeroDevAdapter.ts`):
+## Migration Notes
 
-```typescript
-export class ZeroDevAdapter implements WalletProvider {
-  public readonly type: ProviderType = "zerodev";
-  public readonly name: string = "ZeroDev";
-
-  // Implement WalletProvider interface
-  async connect(): Promise<void> {
-    // ZeroDev connection logic
-  }
-
-  // ... other methods
-}
-```
-
-2. **Register Provider** in `WalletProviderFactory.ts`:
-
-```typescript
-this.providerRegistry.set("zerodev", () => new ZeroDevAdapter());
-```
-
-3. **Update Configuration** in `@/config/wallet.ts`:
-
-```typescript
-export const WALLET_CONFIG: WalletConfig = {
-  providers: {
-    // ... existing providers
-    zerodev: {
-      projectId: "your-zerodev-project-id",
-      // ... other config
-    },
-  },
-};
-```
-
-4. **Update Types** in `@/types/wallet.ts`:
-
-```typescript
-export type ProviderType =
-  | "thirdweb"
-  | "rainbowkit"
-  | "wagmi"
-  | "walletconnect"
-  | "zerodev"
-  | "custom";
-```
-
-## Testing
-
-Test the implementation with different providers:
-
-```tsx
-describe("Provider Abstraction Layer", () => {
-  it("should switch providers", async () => {
-    const { switchProvider } = useWalletContext();
-
-    await switchProvider("rainbowkit");
-    expect(providerType).toBe("rainbowkit");
-  });
-
-  it("should handle errors", async () => {
-    const { connect, error } = useWalletConnection();
-
-    // Mock error scenario
-    await expect(connect()).rejects.toThrow();
-    expect(error).toBeDefined();
-  });
-});
-```
-
-## Backward Compatibility
-
-The implementation maintains backward compatibility:
-
-- Existing `useWalletConnection()` calls continue to work
-- Same interface for wallet operations
-- Gradual migration path
-- Legacy exports available
-
-## Performance Considerations
-
-- Lazy provider initialization
-- Efficient event handling
-- Minimal re-renders
-- Proper cleanup on unmount
-- Singleton factory pattern
-
-## Security Considerations
-
-- Secure provider switching
-- Error boundary integration
-- Input validation
-- Safe defaults
-- Proper cleanup of sensitive data
-
-## Future Enhancements
-
-- Account abstraction integration
-- Multi-wallet support
-- Advanced error recovery
-- Provider health monitoring
-- Analytics integration
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Provider not initialized**: Ensure Web3Provider wraps your app
-2. **Hook errors**: Make sure to use hooks inside WalletProvider
-3. **Type errors**: Check that provider types are properly imported
-4. **Connection failures**: Verify provider configuration
-
-### Debug Mode
-
-Enable debug logging:
-
-```tsx
-<Web3Provider enableDebug={true}>
-  <App />
-</Web3Provider>
-```
-
-Check browser console for detailed logs.
-
-## Migration Guide
-
-### From Legacy Implementation
-
-1. **Update imports**:
-
-```typescript
-// Old
-import { useWalletConnection } from "@/hooks/useWalletConnection";
-
-// New (works the same way)
-import { useWalletConnection } from "@/providers";
-```
-
-2. **Add provider wrapping** (if not already done):
-
-```tsx
-// Wrap your app with Web3Provider
-<Web3Provider>
-  <App />
-</Web3Provider>
-```
-
-3. **Optional: Use new features**:
-
-```tsx
-// Access advanced features
-const { switchProvider, addEventListener } = useWalletContext();
-```
-
-## API Reference
-
-See TypeScript definitions in `@/types/wallet.ts` for complete API documentation.
-
-## Contributing
-
-When adding new providers or features:
-
-1. Follow the existing patterns
-2. Add comprehensive tests
-3. Update documentation
-4. Maintain backward compatibility
-5. Consider performance implications
+- `Web3Provider.tsx`, `WalletProviderFactory.ts`, `api.internal.ts`, `optimize.ts`, and other legacy
+  artifacts have been deleted. Update any external documentation or downstream consumers
+  accordingly.
+- `WALLET_CONFIG` is no longer exported; Thirdweb configuration should live in environment variables
+  (see `.env.example`) or within the dedicated utility modules under `src/utils`.
