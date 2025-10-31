@@ -11,15 +11,9 @@ import type {
 
 // Removed ApiBundleResponse in favor of account API wallets
 
-// Feature flag for Phase 5 rollback protection
-// Set NEXT_PUBLIC_USE_LEGACY_WALLET=true to re-enable legacy primaryWallet field computation
-const USE_LEGACY_WALLET_FIELDS =
-  process.env["NEXT_PUBLIC_USE_LEGACY_WALLET"] === "true";
-
 export interface UserInfo {
   userId: string;
   email: string;
-  primaryWallet?: string; // DEPRECATED: Optional for backward compatibility during migration
   bundleWallets: string[];
   additionalWallets: Array<{
     wallet_address: string;
@@ -76,7 +70,7 @@ export function useUserByWallet(walletAddress: string | null) {
         created_at: w.created_at,
       }));
 
-      const result: UserInfo = {
+      return {
         userId,
         email: userEmail, // Now populated from getUserProfile
         bundleWallets,
@@ -85,18 +79,6 @@ export function useUserByWallet(walletAddress: string | null) {
         totalWallets: bundleWallets.length,
         totalVisibleWallets: bundleWallets.length,
       };
-
-      // Add primaryWallet only if legacy mode enabled (Phase 5 rollback protection)
-      if (USE_LEGACY_WALLET_FIELDS) {
-        const primaryWallet =
-          wallets.find(w => w.is_main)?.wallet ||
-          walletAddress ||
-          wallets[0]?.wallet ||
-          "";
-        result.primaryWallet = primaryWallet;
-      }
-
-      return result;
     },
     enabled: !!walletAddress, // Only run when wallet address is available
   });

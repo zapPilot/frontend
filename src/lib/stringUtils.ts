@@ -348,3 +348,55 @@ export function truncateAddress(
   }
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
 }
+
+/**
+ * Normalize a protocol name for asset URL construction
+ *
+ * Removes version suffixes (v1, v2, v3, etc.) that are commonly appended
+ * to protocol names in the data but not present in asset file names.
+ *
+ * Preserves legitimate use of "v" in protocol names like "Venus Protocol"
+ * by only removing version patterns at the end of the string.
+ *
+ * Used in:
+ * - ProtocolImage component
+ * - CategoryProtocolList component
+ * - Any protocol image URL construction
+ *
+ * @example
+ * normalizeProtocolName('aerodrome v3')
+ * // => 'aerodrome'
+ *
+ * @example
+ * normalizeProtocolName('Uniswap V2')
+ * // => 'uniswap'
+ *
+ * @example
+ * normalizeProtocolName('aerodromeV3')
+ * // => 'aerodrome'
+ *
+ * @example
+ * normalizeProtocolName('compound-v1')
+ * // => 'compound'
+ *
+ * @example
+ * normalizeProtocolName('Venus Protocol')
+ * // => 'venus protocol' (preserves legitimate "v")
+ *
+ * @param name - Protocol name to normalize
+ * @returns Normalized protocol name (lowercase, version stripped, trimmed)
+ */
+export function normalizeProtocolName(name: string | undefined): string {
+  if (!isValidString(name)) {
+    return "";
+  }
+
+  return name
+    .trim()
+    // Remove version patterns with separators: " v2", "-v3", "_V1", "/v2"
+    .replace(/[\s\-_/]+v\d+$/i, "")
+    // Remove embedded versions: "aerodromeV2" → "aerodrome"
+    .replace(/v\d+$/i, "")
+    .trim()
+    .toLowerCase();
+}

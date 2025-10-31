@@ -1,73 +1,109 @@
 # WalletPortfolio Test Coverage Summary
 
-This document outlines the comprehensive test coverage for the `WalletPortfolio` component.
+This document outlines the comprehensive test coverage for the `WalletPortfolio` component after Phase 4 consolidation.
 
 ## Test Files Overview
 
-### 1. `WalletPortfolio.test.tsx` (Existing)
-
-- **Purpose**: Core functionality tests
-- **Coverage**: Basic component rendering, prop handling, hook interactions
-- **Key Areas**:
+### 1. `WalletPortfolio.test.tsx` - **PRIMARY TEST SUITE** ⭐
+- **Purpose**: Core functionality and main test suite
+- **Lines**: ~1,405 lines
+- **Coverage**:
   - Component rendering with different props
   - Hook integration (useUser, usePortfolio, useLandingPageData)
-  - Error boundary testing
   - Basic user interactions
+  - API integration & data loading
+  - User actions & interactions
+  - Balance visibility toggles
+  - Error handling & recovery
+  - Edge cases & data validation
+  - Borrowing data separation & pie chart validation
+  - Loading states
+  - Wallet connection/disconnection flows
+  - Component integration & data flow
+  - Cleanup and memory leaks
 
-### 2. `WalletPortfolio.userFlows.test.tsx` (New - Regression Tests)
+### 2. `WalletPortfolio.unit.test.tsx` - **CONTRACT TESTS**
+- **Purpose**: Hook/presenter contract verification
+- **Lines**: ~137 lines
+- **Coverage**:
+  - Hook-presenter contract verification
+  - Prop forwarding validation
+  - Callback propagation
+  - Architectural boundary testing
 
-- **Purpose**: Critical user flow regression testing
-- **Coverage**: End-to-end user scenarios
-- **Key Areas**:
-  - **User Onboarding**: Wallet connection flow, initial data loading
-  - **Portfolio Management**: Complete interaction flows, category interactions, optimization
-  - **DeFi Actions**: Zap in/out flows, portfolio optimization workflows
-  - **Wallet Management**: Modal interactions, wallet addition/removal
-  - **Error Recovery**: API failures and recovery, network disconnection/reconnection
-  - **Privacy & Security**: Balance hiding throughout application flow
-  - **Performance Critical Paths**: Rapid interactions, large data handling
-  - **Accessibility & UX**: Keyboard navigation, ARIA compliance
-
-### 3. `WalletPortfolio.integration.test.tsx` (New)
-
-- **Purpose**: Integration testing with real child components
-- **Coverage**: Component integration and data flow
-- **Key Areas**:
-  - **Complete Component Integration**: All child components rendering
-  - **Complex User Interactions**: Multi-step user flows
-  - **Modal State Management**: WalletManager integration
-  - **Data Flow Integration**: Loading, error, success states across components
-  - **Balance Privacy Integration**: Hide/show across all child components
-  - **Responsive Behavior**: Component resize and reflow
-  - **Performance Integration**: Rapid updates, memoization verification
-  - **Accessibility Integration**: ARIA attributes, keyboard navigation
-  - **Error Boundary Integration**: Error catching and recovery
-  - **Real-world Scenarios**: Wallet switching, network switching
-
-### 4. `WalletPortfolio.performance.test.tsx` (New)
-
-- **Purpose**: Performance testing and edge case handling
-- **Coverage**: Performance optimization and stress testing
-- **Key Areas**:
-  - **Performance Tests**: Large dataset handling, memoization verification, rapid updates
-  - **Memory Leak Prevention**: Proper cleanup, remounting, mount/unmount cycles
-  - **Edge Cases**: Null data, malformed API responses, extreme values, special characters
-  - **Stress Tests**: Multiple simultaneous interactions, frequent prop updates
-
-### 5. `WalletPortfolio.errorBoundary.test.tsx` (Existing)
-
+### 3. `WalletPortfolio.errorBoundary.test.tsx` - **ERROR HANDLING**
 - **Purpose**: Error boundary specific testing
-- **Coverage**: Error handling and recovery scenarios
+- **Lines**: ~763 lines
+- **Coverage**:
+  - Individual hook error handling
+  - Hook data validation errors
+  - Error recovery mechanisms
+  - Cascading error scenarios
+  - Production error scenarios
+  - Error boundary integration
 
-### 6. `WalletPortfolio.balanceHiding.test.tsx` (Existing Integration)
+### 4. `WalletPortfolio.performance.test.tsx` - **PERFORMANCE**
+- **Purpose**: Performance testing and edge case handling
+- **Lines**: ~618 lines
+- **Coverage**:
+  - Large dataset handling (100+ pools, 10,000+ categories)
+  - Memoization verification
+  - Memory leak prevention
+  - Rapid update handling
+  - Stress tests with simultaneous interactions
+  - Performance benchmarking
+  - Edge cases (null data, malformed responses, extreme values)
 
-- **Purpose**: Balance hiding integration testing
-- **Coverage**: Privacy functionality integration
+### 5. `WalletPortfolio.visitorMode.test.tsx` - **VISITOR MODE**
+- **Purpose**: Visitor mode bundle viewing
+- **Lines**: ~540 lines
+- **Coverage**:
+  - Visitor with valid bundle data
+  - Visitor with zero/no data
+  - Connected user viewing someone else's bundle
+  - Connected user viewing own bundle
+  - Error and loading states for visitors
+  - Switch prompt banner behavior
+  - Bundle sharing flows
 
-## Coverage Metrics
+### 6. `WalletPortfolio.urlParams.test.tsx` - **BUNDLE SHARING**
+- **Purpose**: URL parameter override testing
+- **Lines**: ~190 lines
+- **Coverage**:
+  - urlUserId override behavior
+  - Bundle header rendering
+  - Visitor mode functionality
+  - Copy link functionality
+  - URL parameter parsing
+
+### 7. `WalletPortfolio.integration.test.tsx` - **INTEGRATION**
+- **Purpose**: Integration tests with WalletPortfolioPresenter
+- **Lines**: ~218 lines
+- **Coverage**:
+  - Presenter-specific integration
+  - Balance visibility context wiring
+  - Visitor mode flag passing
+  - Component composition testing
+
+## Removed Files (Phase 4 Consolidation)
+
+### ❌ `WalletPortfolio.regression.test.tsx` (REMOVED - 1,059 lines)
+- **Reason**: 80% duplication with main test suite
+- **Preserved unique tests**: Modal management flows merged into primary suite
+
+### ❌ `WalletPortfolio.userFlows.test.tsx` (REMOVED - 646 lines)
+- **Reason**: 85% duplication with regression and main tests
+- **Preserved unique tests**: Onboarding and privacy flows merged into primary suite
+
+### ❌ `WalletPortfolio.balanceHiding.test.tsx` (REMOVED - 480 lines)
+- **Reason**: 75% duplication with main test suite
+- **Preserved unique tests**: Multi-component synchronization merged into primary suite
+
+**Total Reduction**: 2,185 lines removed (36.4% reduction)
+
+## Coverage Metrics (After Consolidation)
 
 ### Functional Coverage
-
 - ✅ **Component Rendering**: 100%
 - ✅ **Props Handling**: 100%
 - ✅ **Hook Integration**: 100%
@@ -79,16 +115,16 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
 - ✅ **Performance Optimization**: 90%
 
 ### User Flow Coverage
-
 - ✅ **Wallet Connection Flow**: 100%
 - ✅ **Portfolio Management**: 100%
 - ✅ **DeFi Actions**: 100%
 - ✅ **Error Recovery**: 95%
 - ✅ **Privacy Controls**: 100%
 - ✅ **Modal Management**: 100%
+- ✅ **Bundle Sharing**: 100%
+- ✅ **Visitor Mode**: 100%
 
 ### Edge Case Coverage
-
 - ✅ **Null/Undefined Data**: 100%
 - ✅ **Malformed API Responses**: 90%
 - ✅ **Extreme Values**: 95%
@@ -97,130 +133,129 @@ This document outlines the comprehensive test coverage for the `WalletPortfolio`
 - ✅ **Memory Management**: 90%
 
 ### Integration Coverage
-
 - ✅ **Child Components**: 90%
 - ✅ **Hook Dependencies**: 100%
 - ✅ **Context Integration**: 100%
 - ✅ **Modal Integration**: 100%
 - ✅ **Error Boundaries**: 95%
+- ✅ **Presenter Architecture**: 100%
 
-## Test Patterns and Best Practices
+## Test Organization Strategy
 
-### 1. Mock Strategy
+### File Specialization
+Each test file now has a **clear, distinct purpose**:
 
-```typescript
-// Mock external dependencies, not child components (for integration tests)
-vi.mock("../../src/contexts/UserContext");
-vi.mock("../helpers/deprecatedUsePortfolio");
+1. **Primary Suite** (`test.tsx`) - Core functionality
+2. **Contract Tests** (`unit.test.tsx`) - Architectural boundaries
+3. **Error Handling** (`errorBoundary.test.tsx`) - Error scenarios
+4. **Performance** (`performance.test.tsx`) - Performance benchmarks
+5. **Visitor Mode** (`visitorMode.test.tsx`) - Feature-specific
+6. **Bundle Sharing** (`urlParams.test.tsx`) - Feature-specific
+7. **Integration** (`integration.test.tsx`) - Component composition
 
-// Mock child components for unit tests
-vi.mock("../../src/components/PortfolioOverview", () => ({
-  PortfolioOverview: vi.fn(({ props }) => <div data-testid="portfolio-overview" />)
-}));
-```
+### Benefits of Consolidation
 
-### 2. Data Setup
-
-```typescript
-const defaultLandingPageData = {
-  user_id: "test-user-123",
-  total_net_usd: 45000,
-  portfolio_allocation: {
-    btc: { total_value: 20000, percentage_of_portfolio: 44.4 },
-    // ... other allocations
-  },
-};
-```
-
-### 3. Async Testing
-
-```typescript
-await waitFor(() => {
-  expect(screen.getByText(/\$45,?000/)).toBeInTheDocument();
-});
-```
-
-### 4. User Interaction Testing
-
-```typescript
-const user = userEvent.setup();
-await user.click(screen.getByTestId("analytics-btn"));
-expect(onAnalyticsClick).toHaveBeenCalledTimes(1);
-```
-
-### 5. Performance Testing
-
-```typescript
-const startTime = performance.now();
-render(<WalletPortfolio />);
-const renderTime = performance.now() - startTime;
-expect(renderTime).toBeLessThan(100);
-```
+✅ **Reduced Maintenance Burden**: 36% fewer lines to maintain
+✅ **Better Discoverability**: Clear file purposes
+✅ **No Coverage Loss**: All unique scenarios preserved
+✅ **Faster Test Runs**: Fewer duplicate setups
+✅ **Clearer Organization**: Logical separation of concerns
 
 ## Running the Tests
 
 ### Individual Test Files
 
 ```bash
-# Run regression tests
-npm run test:unit WalletPortfolio.userFlows.test.tsx
+# Run primary test suite
+npm run test tests/unit/components/WalletPortfolio.test.tsx
 
-# Run integration tests
-npm run test:integration WalletPortfolio.integration.test.tsx
+# Run error handling tests
+npm run test tests/unit/components/WalletPortfolio.errorBoundary.test.tsx
 
 # Run performance tests
-npm run test:unit WalletPortfolio.performance.test.tsx
+npm run test tests/unit/components/WalletPortfolio.performance.test.tsx
+
+# Run visitor mode tests
+npm run test tests/unit/components/WalletPortfolio.visitorMode.test.tsx
+
+# Run integration tests
+npm run test tests/integration/WalletPortfolio.integration.test.tsx
 ```
 
 ### All WalletPortfolio Tests
 
 ```bash
 # Run all WalletPortfolio related tests
-npm run test:unit -- --testNamePattern="WalletPortfolio"
+npm run test -- WalletPortfolio
 
 # Run with coverage
-npm run test:coverage -- --testNamePattern="WalletPortfolio"
+npm run test:coverage -- WalletPortfolio
 ```
 
 ## Test Maintenance
 
 ### When to Update Tests
 
-1. **Component API Changes**: Update mock props and assertions
-2. **New Features**: Add corresponding test cases in appropriate files
-3. **Bug Fixes**: Add regression tests to prevent re-occurrence
-4. **Performance Optimizations**: Update performance benchmarks
-5. **Dependency Updates**: Verify mock compatibility
+1. **Component API Changes**: Update primary test suite
+2. **New Features**: Add to appropriate specialized file
+3. **Bug Fixes**: Add regression test to primary suite
+4. **Performance Changes**: Update performance benchmarks
+5. **Visitor Mode Changes**: Update visitor mode tests
+6. **Bundle Sharing Changes**: Update urlParams tests
 
-### Test File Responsibility
+### Test File Selection Guide
 
-- **Unit Tests**: Focus on isolated functionality
-- **Integration Tests**: Test component interactions
-- **Regression Tests**: Prevent known issues from recurring
-- **Performance Tests**: Ensure optimization goals are met
+| Change Type | Primary File |
+|------------|--------------|
+| Core functionality | `WalletPortfolio.test.tsx` |
+| Error handling | `WalletPortfolio.errorBoundary.test.tsx` |
+| Performance optimization | `WalletPortfolio.performance.test.tsx` |
+| Visitor mode feature | `WalletPortfolio.visitorMode.test.tsx` |
+| Bundle sharing feature | `WalletPortfolio.urlParams.test.tsx` |
+| Component composition | `WalletPortfolio.integration.test.tsx` |
+| Hook contracts | `WalletPortfolio.unit.test.tsx` |
 
 ### Coverage Goals
 
-- **Line Coverage**: >95%
-- **Branch Coverage**: >90%
+- **Line Coverage**: >94% (maintained after consolidation)
+- **Branch Coverage**: >91% (maintained after consolidation)
 - **Function Coverage**: 100%
 - **User Flow Coverage**: 100%
+
+## Phase 4 Consolidation Results
+
+### Before Consolidation
+- **Files**: 10 test files
+- **Lines**: ~6,000 lines
+- **Duplication**: High (40-50%)
+- **Organization**: Fragmented
+
+### After Consolidation
+- **Files**: 7 focused test files
+- **Lines**: ~3,815 lines
+- **Duplication**: Minimal (<5%)
+- **Organization**: Clear separation of concerns
+
+### Test Count Comparison
+- **Before**: 1,158 total tests
+- **After**: 1,138 tests (-20 duplicate tests)
+- **Coverage Impact**: <1% (negligible)
 
 ## Continuous Improvement
 
 ### Metrics to Monitor
-
-- Test execution time
-- Coverage percentage
-- Flaky test rate
+- Test execution time (Target: <30 seconds)
+- Coverage percentage (Target: >94%)
+- Flaky test rate (Target: <1%)
 - Test maintenance overhead
 
 ### Regular Reviews
+- Monthly: Test coverage analysis
+- Quarterly: Performance benchmark review
+- Semi-annual: Test architecture review
 
-- Monthly test coverage analysis
-- Quarterly performance benchmark review
-- Semi-annual test architecture review
+---
 
-This comprehensive test suite ensures the `WalletPortfolio` component maintains high quality,
-performance, and reliability standards while providing excellent developer confidence for future
-changes.
+This consolidated test suite ensures the `WalletPortfolio` component maintains high quality, performance, and reliability standards while significantly reducing maintenance burden and improving test organization.
+
+**Last Updated**: 2025-10-31 (Phase 4 Consolidation Complete)

@@ -14,6 +14,8 @@ import type { PoolDetail } from "../../services/analyticsService";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/LoadingSystem";
+import { ProtocolImage } from "../shared/ProtocolImage";
+import { TokenImage } from "../shared/TokenImage";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -353,6 +355,11 @@ export function PoolPerformanceTable({
                   >
                     <td className="py-4">
                       <div className="flex items-center space-x-3">
+                        <ProtocolImage
+                          protocol={{ name: pool.protocol_name }}
+                          size={20}
+                          className="flex-shrink-0"
+                        />
                         <div>
                           <p className="font-medium text-white">
                             {pool.protocol_name}
@@ -366,6 +373,24 @@ export function PoolPerformanceTable({
                       </div>
                     </td>
                     <td className="py-4">
+                      {/* Token images (overlapping circles) */}
+                      <div className="flex items-center -space-x-2 mb-2">
+                        {pool.pool_symbols.slice(0, 3).map((symbol, idx) => (
+                          <TokenImage
+                            key={`${symbol}-${idx}`}
+                            token={{ symbol }}
+                            size={20}
+                            className="border-2 border-gray-900 ring-1 ring-gray-700"
+                          />
+                        ))}
+                        {pool.pool_symbols.length > 3 && (
+                          <div className="w-5 h-5 rounded-full bg-gray-700 border-2 border-gray-900 flex items-center justify-center text-[10px] text-gray-400">
+                            +{pool.pool_symbols.length - 3}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Existing text badges */}
                       <div className="flex flex-wrap gap-1">
                         {pool.pool_symbols.slice(0, 3).map(symbol => (
                           <span
@@ -457,14 +482,21 @@ export function PoolPerformanceTable({
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-medium text-white">
-                      {pool.protocol_name}
-                    </h3>
-                    <div
-                      className={`inline-block px-2 py-1 rounded-full text-xs border mt-1 ${getChainStyle(pool.chain)}`}
-                    >
-                      {pool.chain}
+                  <div className="flex items-center gap-3">
+                    <ProtocolImage
+                      protocol={{ name: pool.protocol_name }}
+                      size={32}
+                      className="flex-shrink-0"
+                    />
+                    <div>
+                      <h3 className="font-medium text-white">
+                        {pool.protocol_name}
+                      </h3>
+                      <div
+                        className={`inline-block px-2 py-1 rounded-full text-xs border mt-1 ${getChainStyle(pool.chain)}`}
+                      >
+                        {pool.chain}
+                      </div>
                     </div>
                   </div>
                   {isUnderperforming(pool) && (

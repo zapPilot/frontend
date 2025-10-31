@@ -3,6 +3,7 @@
 import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
 import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatPercentage } from "@/lib/formatters";
+import { normalizeProtocolName } from "@/lib/stringUtils";
 import { memo } from "react";
 import { ProcessedAssetCategory } from "../../types";
 
@@ -66,10 +67,10 @@ export const CategoryProtocolList = memo<CategoryProtocolListProps>(
               <div className="flex-1">
                 <div className="flex items-center space-x-2">
                   <ImageWithFallback
-                    src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${protocol.protocol || protocol.name.toLowerCase().replace(/[^a-z0-9]+/g, "")}.webp`}
+                    src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${normalizeProtocolName(protocol.protocol || protocol.name)}.webp`}
                     alt={`${protocol.name} logo`}
                     fallbackType="project"
-                    symbol={protocol.protocol || protocol.name}
+                    symbol={normalizeProtocolName(protocol.protocol || protocol.name)}
                     size={16}
                     className="flex-shrink-0 max-sm:!w-[14px] max-sm:!h-[14px]"
                   />
