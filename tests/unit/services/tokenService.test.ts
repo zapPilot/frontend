@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { httpUtils } from "@/lib/http-utils";
 import * as tokenService from "@/services/tokenService";
-import type { SwapToken } from "@/types/swap";
 
 // Mock HTTP utilities
 vi.mock("@/lib/http-utils", () => ({
