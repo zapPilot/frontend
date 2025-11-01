@@ -1,27 +1,28 @@
-import { useCallback, useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryClient";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
+import { useWallet } from "@/hooks/useWallet";
+import { formatAddress } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryClient";
 import {
+  deleteUser as deleteUserAccount,
   handleWalletError,
   type WalletData,
-  deleteUser as deleteUserAccount,
 } from "@/services/userService";
+import { copyTextToClipboard } from "@/utils/clipboard";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
 import {
   addWallet as addWalletToBundle,
   loadWallets as fetchWallets,
   removeWallet as removeWalletFromBundle,
   updateWalletLabel as updateWalletLabelRequest,
 } from "../services/WalletService";
-import { validateNewWallet } from "../utils/validation";
-import { formatAddress } from "@/lib/formatters";
-import { copyTextToClipboard } from "@/utils/clipboard";
 import type {
-  WalletOperations,
-  NewWallet,
   EditingWallet,
+  NewWallet,
+  WalletOperations,
 } from "../types/wallet.types";
+import { validateNewWallet } from "../utils/validation";
 
 interface UseWalletOperationsParams {
   viewingUserId: string;
@@ -39,6 +40,7 @@ export const useWalletOperations = ({
   const queryClient = useQueryClient();
   const { refetch } = useUser();
   const { showToast } = useToast();
+  const { disconnect, isConnected } = useWallet();
 
   // State
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -331,11 +333,31 @@ export const useWalletOperations = ({
       const response = await deleteUserAccount(realUserId);
 
       if (response.success) {
+        let shouldReload = true;
+
+        if (isConnected) {
+          try {
+            await disconnect();
+          } catch (disconnectError) {
+            const disconnectMessage =
+              handleWalletError(disconnectError) ||
+              "Account deleted, but we couldn't disconnect your wallet automatically.";
+
+            showToast({
+              type: "warning",
+              title: "Disconnect Wallet",
+              message: `${disconnectMessage} Please disconnect manually to prevent automatic reconnection.`,
+            });
+
+            shouldReload = false;
+          }
+        }
+
         showToast({
           type: "success",
           title: "Account Deleted",
           message:
-            "Account successfully deleted. Reconnect with a different wallet to consolidate.",
+            "Account successfully deleted. Wallet connection has been cleared to prevent automatic reconnection.",
         });
 
         // Invalidate queries and trigger reconnection flow
@@ -344,11 +366,13 @@ export const useWalletOperations = ({
         });
         refetch();
 
-        // Close the wallet manager after a brief delay
-        setTimeout(() => {
-          // Trigger logout/reconnect flow
-          window.location.reload();
-        }, 1500);
+        if (shouldReload) {
+          // Close the wallet manager after a brief delay
+          setTimeout(() => {
+            // Trigger logout/reconnect flow
+            window.location.reload();
+          }, 1500);
+        }
       } else {
         showToast({
           type: "error",
@@ -366,7 +390,7 @@ export const useWalletOperations = ({
     } finally {
       setIsDeletingAccount(false);
     }
-  }, [realUserId, queryClient, refetch, showToast]);
+  }, [realUserId, queryClient, refetch, showToast, disconnect, isConnected]);
 
   return {
     // State

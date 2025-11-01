@@ -2,6 +2,7 @@
 
 import {
   AlertCircle,
+  AlertTriangle,
   CheckCircle,
   ExternalLink,
   X,
@@ -11,7 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 
 export interface Toast {
   id: string;
-  type: "success" | "error" | "info";
+  type: "success" | "error" | "info" | "warning";
   title: string;
   message?: string;
   link?:
@@ -60,6 +61,8 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
         return <XCircle size={20} className="text-red-400" />;
       case "info":
         return <AlertCircle size={20} className="text-blue-400" />;
+      case "warning":
+        return <AlertTriangle size={20} className="text-amber-400" />;
       default:
         return <CheckCircle size={20} className="text-green-400" />;
     }
@@ -73,6 +76,8 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
         return "border-red-600/30";
       case "info":
         return "border-blue-600/30";
+      case "warning":
+        return "border-amber-500/30";
       default:
         return "border-green-600/30";
     }
@@ -86,6 +91,8 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
         return "bg-red-900/20";
       case "info":
         return "bg-blue-900/20";
+      case "warning":
+        return "bg-amber-900/20";
       default:
         return "bg-green-900/20";
     }
