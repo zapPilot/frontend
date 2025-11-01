@@ -171,6 +171,8 @@ interface PortfolioDailyTotal {
 
 /**
  * Get portfolio trends for a user
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getPortfolioTrends = async (
   userId: string,
@@ -370,6 +372,8 @@ export interface AllocationTimeseriesResponse {
 
 /**
  * Get rolling Sharpe ratio analysis
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getRollingSharpe = async (
   userId: string,
@@ -385,6 +389,8 @@ export const getRollingSharpe = async (
 
 /**
  * Get rolling volatility analysis
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getRollingVolatility = async (
   userId: string,
@@ -400,6 +406,8 @@ export const getRollingVolatility = async (
 
 /**
  * Get enhanced drawdown analysis
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getEnhancedDrawdown = async (
   userId: string,
@@ -415,6 +423,8 @@ export const getEnhancedDrawdown = async (
 
 /**
  * Get underwater recovery analysis
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getUnderwaterRecovery = async (
   userId: string,
@@ -430,6 +440,8 @@ export const getUnderwaterRecovery = async (
 
 /**
  * Get allocation timeseries data
+ *
+ * @deprecated Use `getPortfolioDashboard` for unified analytics.
  */
 export const getAllocationTimeseries = async (
   userId: string,

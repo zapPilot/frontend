@@ -10,6 +10,7 @@
  * - getEnhancedDrawdown (HTTP)
  * - getUnderwaterRecovery (HTTP)
  * - getAllocationTimeseries (HTTP)
+ * - getPortfolioDashboard (HTTP)
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,6 +23,7 @@ import {
   getRollingSharpe,
   getRollingVolatility,
   getUnderwaterRecovery,
+  getPortfolioDashboard,
   type AllocationTimeseriesResponse,
   type EnhancedDrawdownResponse,
   type LandingPageResponse,
@@ -29,6 +31,7 @@ import {
   type RollingSharpeResponse,
   type RollingVolatilityResponse,
   type UnderwaterRecoveryResponse,
+  type UnifiedDashboardResponse,
 } from "../../../src/services/analyticsService";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
 
@@ -48,6 +51,150 @@ const mockAnalyticsEngineGet = httpUtils.analyticsEngine.get as ReturnType<
   typeof vi.fn
 >;
 
+const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
+  user_id: "0xDashboardUser",
+  parameters: {
+    trend_days: 30,
+    risk_days: 30,
+    drawdown_days: 90,
+    allocation_days: 40,
+    rolling_days: 40,
+  },
+  trends: {
+    period: {
+      start_date: "2025-01-01",
+      end_date: "2025-01-30",
+      days: 30,
+    },
+    daily_values: [],
+    summary: {
+      current_value_usd: 0,
+      start_value_usd: 0,
+      change_usd: 0,
+      change_pct: 0,
+    },
+  },
+  risk_metrics: {
+    volatility: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      volatility_pct: 0,
+      annualized_volatility_pct: 0,
+      interpretation: "",
+      summary: {
+        avg_volatility: 0,
+        max_volatility: 0,
+        min_volatility: 0,
+      },
+    },
+    sharpe_ratio: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      sharpe_ratio: 0,
+      interpretation: "",
+      summary: {
+        avg_sharpe: 0,
+        statistical_reliability: "",
+      },
+    },
+    max_drawdown: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      max_drawdown_pct: 0,
+      peak_date: "2025-01-01",
+      trough_date: "2025-01-01",
+      recovery_date: null,
+      summary: {
+        current_drawdown_pct: 0,
+        is_recovered: true,
+      },
+    },
+  },
+  drawdown_analysis: {
+    enhanced: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      daily_drawdowns: [],
+      summary: {
+        max_drawdown_pct: 0,
+        current_drawdown_pct: 0,
+        peak_value: 0,
+        current_value: 0,
+      },
+    },
+    underwater_recovery: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      underwater_periods: [],
+      summary: {
+        total_underwater_days: 0,
+        underwater_percentage: 0,
+        recovery_points: 0,
+        current_underwater_pct: 0,
+        is_currently_underwater: false,
+      },
+    },
+  },
+  allocation: {
+    daily_allocations: [],
+    summary: {
+      unique_dates: 0,
+      unique_protocols: 0,
+      unique_chains: 0,
+    },
+  },
+  rolling_analytics: {
+    sharpe: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      rolling_sharpe_timeseries: [],
+      summary: {
+        latest_sharpe_ratio: 0,
+        avg_sharpe_ratio: 0,
+        reliable_data_points: 0,
+        statistical_reliability: "",
+      },
+    },
+    volatility: {
+      period: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        days: 30,
+      },
+      rolling_volatility_timeseries: [],
+      summary: {
+        latest_daily_volatility: 0,
+        latest_annualized_volatility: 0,
+        avg_daily_volatility: 0,
+        avg_annualized_volatility: 0,
+      },
+    },
+  },
+  _metadata: {
+    success_count: 1,
+    error_count: 0,
+    success_rate: 1,
+    errors: {},
+  },
+});
 describe("analyticsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -768,6 +915,7 @@ describe("analyticsService", () => {
     });
   });
 
+  // NOTE: Deprecated analytics endpoints kept for backward compatibility.
   describe("getRollingSharpe", () => {
     const testUserId = "0xTestUser123";
 
@@ -1340,6 +1488,51 @@ describe("analyticsService", () => {
 
         expect(result.message).toBe("No allocation data available");
       });
+    });
+  });
+
+  describe("getPortfolioDashboard", () => {
+    const testUserId = "0xDashboardUser";
+
+    it("should fetch unified dashboard with default parameters", async () => {
+      const mockResponse = createMockDashboardResponse();
+      mockResponse.user_id = testUserId;
+
+      mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+
+      const result = await getPortfolioDashboard(testUserId);
+
+      expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+        `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=30&risk_days=30&drawdown_days=90&allocation_days=40&rolling_days=40`
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should fetch unified dashboard with custom parameters", async () => {
+      const mockResponse = createMockDashboardResponse();
+      mockResponse.user_id = testUserId;
+      mockResponse.parameters = {
+        trend_days: 45,
+        risk_days: 45,
+        drawdown_days: 120,
+        allocation_days: 60,
+        rolling_days: 60,
+      };
+
+      mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+
+      const result = await getPortfolioDashboard(testUserId, {
+        trend_days: 45,
+        risk_days: 45,
+        drawdown_days: 120,
+        allocation_days: 60,
+        rolling_days: 60,
+      });
+
+      expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+        `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=45&risk_days=45&drawdown_days=120&allocation_days=60&rolling_days=60`
+      );
+      expect(result).toEqual(mockResponse);
     });
   });
 });
