@@ -4,14 +4,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../helpers/deprecatedUsePortfolio";
 import { usePortfolioState } from "../../../src/hooks/usePortfolioState";
 import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils";
 import { render } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../helpers/deprecatedUsePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
@@ -93,7 +91,6 @@ vi.mock("framer-motion", () => ({
 }));
 
 const mockUseUser = vi.mocked(useUser);
-const mockUsePortfolio = vi.mocked(usePortfolio);
 const mockUseLandingPageData = vi.mocked(useLandingPageData);
 const mockUsePortfolioState = vi.mocked(usePortfolioState);
 const mockCreateCategoriesFromApiData = vi.mocked(createCategoriesFromApiData);
@@ -135,14 +132,6 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
     mockUseUser.mockReturnValue({
       userInfo: { userId: "test-user", address: "0x123", email: null },
       isConnected: true,
-    });
-
-    mockUsePortfolio.mockReturnValue({
-      balanceHidden: false,
-      toggleBalanceVisibility: vi.fn(),
-      positions: [],
-      isLoading: false,
-      error: null,
     });
 
     mockUsePortfolioState.mockReturnValue({
@@ -248,15 +237,6 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
 
     it("should handle rapid consecutive updates", async () => {
       const user = userEvent.setup();
-      const toggleFn = vi.fn();
-
-      mockUsePortfolio.mockReturnValue({
-        balanceHidden: false,
-        toggleBalanceVisibility: toggleFn,
-        positions: [],
-        isLoading: false,
-        error: null,
-      });
 
       mockUseLandingPageData.mockReturnValue({
         data: createLargeDataset(10),

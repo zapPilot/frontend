@@ -101,7 +101,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
       end_date: "2025-01-30",
       days: 30,
     },
-    daily_values: [],
+    daily_totals: [],
     summary: {
       current_value_usd: 0,
       start_value_usd: 0,
@@ -161,7 +161,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      daily_drawdowns: [],
+      drawdown_data: [],
       summary: {
         max_drawdown_pct: 0,
         current_drawdown_pct: 0,
@@ -175,7 +175,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      underwater_periods: [],
+      underwater_data: [],
       summary: {
         total_underwater_days: 0,
         underwater_percentage: 0,
@@ -186,7 +186,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
-    daily_allocations: [],
+    allocation_data: [],
     summary: {
       unique_dates: 0,
       unique_protocols: 0,
@@ -200,7 +200,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      rolling_sharpe_timeseries: [],
+      rolling_sharpe_data: [],
       summary: {
         latest_sharpe_ratio: 0,
         avg_sharpe_ratio: 0,
@@ -214,7 +214,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      rolling_volatility_timeseries: [],
+      rolling_volatility_data: [],
       summary: {
         latest_daily_volatility: 0,
         latest_annualized_volatility: 0,
@@ -267,15 +267,25 @@ describe("useChartData - Data Transformations", () => {
   it("transforms stacked portfolio data correctly", () => {
     const mockData = createMockPortfolioData(30);
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = mockData.map(point => ({
+    dashboard.trends.daily_totals = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {
-        aave: (point.value ?? 0) * 0.6,
-        wallet: (point.value ?? 0) * 0.4,
-      },
-      chains: {},
+      change_percentage: 0,
+      categories: [
+        {
+          category: "btc",
+          source_type: "defi",
+          value_usd: (point.value ?? 0) * 0.6,
+          pnl_usd: 0,
+        },
+        {
+          category: "stablecoins",
+          source_type: "wallet",
+          value_usd: (point.value ?? 0) * 0.4,
+          pnl_usd: 0,
+        },
+      ],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);
@@ -304,15 +314,38 @@ describe("useChartData - Data Transformations", () => {
   it("transforms allocation history correctly", () => {
     const dashboard = createMockDashboard();
     const dateSeries = generateDateSeries(MOCK_BASE_DATE, 10);
-    dashboard.allocation.daily_allocations = dateSeries.map((date, index) => {
+    dashboard.allocation.allocation_data = dateSeries.flatMap((date, index) => {
       const offset = (index % 3) * 5;
-      return {
-        date,
-        btc_pct: 30 + offset,
-        eth_pct: 25 + offset / 2,
-        stablecoins_pct: 25 - offset / 2,
-        others_pct: 20 - offset,
-      };
+      return [
+        {
+          date,
+          category: "btc",
+          category_value_usd: 0,
+          total_portfolio_value_usd: 0,
+          allocation_percentage: 30 + offset,
+        },
+        {
+          date,
+          category: "eth",
+          category_value_usd: 0,
+          total_portfolio_value_usd: 0,
+          allocation_percentage: 25 + offset / 2,
+        },
+        {
+          date,
+          category: "stablecoins",
+          category_value_usd: 0,
+          total_portfolio_value_usd: 0,
+          allocation_percentage: 25 - offset / 2,
+        },
+        {
+          date,
+          category: "others",
+          category_value_usd: 0,
+          total_portfolio_value_usd: 0,
+          allocation_percentage: 20 - offset,
+        },
+      ];
     });
 
     setDashboardResponse(dashboard);
@@ -340,7 +373,7 @@ describe("useChartData - Data Transformations", () => {
 
   it("calculates drawdown data correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.drawdown_analysis.enhanced.daily_drawdowns = [
+    dashboard.drawdown_analysis.enhanced.drawdown_data = [
       {
         date: "2025-01-01",
         portfolio_value_usd: 10000,
@@ -379,7 +412,7 @@ describe("useChartData - Data Transformations", () => {
 
   it("calculates Sharpe ratio data correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.rolling_analytics.sharpe.rolling_sharpe_timeseries = [
+    dashboard.rolling_analytics.sharpe.rolling_sharpe_data = [
       {
         date: "2025-01-01",
         rolling_sharpe_ratio: 1.2,
@@ -412,7 +445,7 @@ describe("useChartData - Data Transformations", () => {
 
   it("calculates volatility data correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.rolling_analytics.volatility.rolling_volatility_timeseries = [
+    dashboard.rolling_analytics.volatility.rolling_volatility_data = [
       {
         date: "2025-01-01",
         rolling_volatility_pct: 15.5,
@@ -443,20 +476,24 @@ describe("useChartData - Data Transformations", () => {
 
   it("calculates underwater data correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.drawdown_analysis.underwater_recovery.underwater_periods = [
+    dashboard.drawdown_analysis.underwater_recovery.underwater_data = [
       {
-        start_date: "2025-01-01",
-        end_date: "2025-01-10",
-        days_underwater: 9,
-        max_drawdown_pct: -5.5,
-        is_recovered: true,
+        date: "2025-01-01",
+        underwater_pct: -5.5,
+        recovery_point: false,
+        is_underwater: true,
       },
       {
-        start_date: "2025-02-01",
-        end_date: null,
-        days_underwater: 4,
-        max_drawdown_pct: -3.2,
-        is_recovered: false,
+        date: "2025-01-10",
+        underwater_pct: 0,
+        recovery_point: true,
+        is_underwater: false,
+      },
+      {
+        date: "2025-02-01",
+        underwater_pct: -3.2,
+        recovery_point: false,
+        is_underwater: true,
       },
     ];
 
@@ -518,22 +555,22 @@ describe("useChartData - Edge Cases", () => {
 
   it("handles malformed API responses", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = [
+    dashboard.trends.daily_totals = [
       // Missing protocols/chains should be handled gracefully
       {
         date: "2025-01-01",
         total_value_usd: 10_000,
-        change_pct: 0,
-        protocols: {},
-        chains: {},
+        change_percentage: 0,
+        categories: [],
+        protocols: [],
       },
       // Partially malformed entry
       {
         date: "2025-01-02",
         total_value_usd: NaN,
-        change_pct: 0,
-        protocols: {},
-        chains: {},
+        change_percentage: 0,
+        categories: [],
+        protocols: [],
       },
     ];
 
@@ -670,12 +707,12 @@ describe("useChartData - Loading States", () => {
 
   it("only shows loaded when dashboard completes", async () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {},
-      chains: {},
+      change_percentage: 0,
+      categories: [],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);
@@ -712,12 +749,12 @@ describe("useChartData - Loading States", () => {
 describe("useChartData - Memoization", () => {
   it("memoizes data transformations", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {},
-      chains: {},
+      change_percentage: 0,
+      categories: [],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);
@@ -735,12 +772,12 @@ describe("useChartData - Memoization", () => {
 
   it("recalculates when dependencies change", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {},
-      chains: {},
+      change_percentage: 0,
+      categories: [],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);
@@ -792,12 +829,12 @@ describe("useChartData - Portfolio Metrics", () => {
     ];
 
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = mockData.map(point => ({
+    dashboard.trends.daily_totals = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {},
-      chains: {},
+      change_percentage: 0,
+      categories: [],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);
@@ -819,12 +856,12 @@ describe("useChartData - Portfolio Metrics", () => {
     ];
 
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = mockData.map(point => ({
+    dashboard.trends.daily_totals = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
-      change_pct: 0,
-      protocols: {},
-      chains: {},
+      change_percentage: 0,
+      categories: [],
+      protocols: [],
     }));
 
     setDashboardResponse(dashboard);

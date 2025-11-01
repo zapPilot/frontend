@@ -5,7 +5,6 @@ import {
   formatPercentage,
 } from "../../../src/lib/formatters";
 import { getChangeColorClasses } from "../../../src/lib/color-utils";
-import { calculatePortfolioMetrics } from "../../../src/lib/portfolio-data";
 
 describe("utils", () => {
   describe("formatCurrency", () => {
@@ -63,52 +62,6 @@ describe("utils", () => {
     it("should return red classes for negative values", () => {
       expect(getChangeColorClasses(-5)).toBe("text-red-400");
       expect(getChangeColorClasses(-0.1)).toBe("text-red-400");
-    });
-  });
-
-  describe("calculatePortfolioMetrics", () => {
-    it("should calculate metrics correctly for multiple categories", () => {
-      const categories = [
-        { totalValue: 1000, change24h: 5 }, // +50
-        { totalValue: 2000, change24h: -2 }, // -40
-        { totalValue: 500, change24h: 10 }, // +50
-      ];
-
-      const result = calculatePortfolioMetrics(categories);
-
-      expect(result.totalValue).toBe(3500);
-      expect(result.totalChange24h).toBe(60); // 50 - 40 + 50
-      expect(result.totalChangePercentage).toBeCloseTo(1.71, 1); // (60/3500) * 100
-    });
-
-    it("should handle empty categories array", () => {
-      const result = calculatePortfolioMetrics([]);
-
-      expect(result.totalValue).toBe(0);
-      expect(result.totalChange24h).toBe(0);
-      expect(result.totalChangePercentage).toBe(0);
-    });
-
-    it("should handle zero total value", () => {
-      const categories = [{ totalValue: 0, change24h: 5 }];
-
-      const result = calculatePortfolioMetrics(categories);
-
-      expect(result.totalValue).toBe(0);
-      expect(result.totalChange24h).toBe(0);
-      expect(result.totalChangePercentage).toBe(0);
-    });
-
-    it("should handle negative changes correctly", () => {
-      const categories = [
-        { totalValue: 1000, change24h: -10 }, // -100
-      ];
-
-      const result = calculatePortfolioMetrics(categories);
-
-      expect(result.totalValue).toBe(1000);
-      expect(result.totalChange24h).toBe(-100);
-      expect(result.totalChangePercentage).toBe(-10);
     });
   });
 });

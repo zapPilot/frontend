@@ -172,7 +172,7 @@ interface PortfolioDailyTotal {
 /**
  * Get portfolio trends for a user
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getPortfolioTrends = async (
   userId: string,
@@ -370,10 +370,35 @@ export interface AllocationTimeseriesResponse {
   message?: string;
 }
 
+// =============================================================================
+// DEPRECATED FUNCTIONS - Scheduled for removal in v0.3.0
+// =============================================================================
+/**
+ * The following functions are deprecated as of v0.2.0 and will be removed in v0.3.0.
+ * All functionality has been consolidated into the unified `getPortfolioDashboard` endpoint.
+ *
+ * Migration timeline:
+ * - v0.2.0 (current): Functions marked as deprecated but still functional
+ * - v0.3.0 (target: Q2 2025): Functions will be removed
+ *
+ * Migration guide:
+ * Replace individual analytics calls with a single call to `getPortfolioDashboard`:
+ *
+ * @example
+ * // Before (deprecated):
+ * const sharpe = await getRollingSharpe(userId);
+ * const volatility = await getRollingVolatility(userId);
+ * const drawdown = await getEnhancedDrawdown(userId);
+ *
+ * // After (recommended):
+ * const dashboard = await getPortfolioDashboard(userId);
+ * // Access: dashboard.sharpe_ratio, dashboard.volatility, dashboard.drawdown, etc.
+ */
+
 /**
  * Get rolling Sharpe ratio analysis
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getRollingSharpe = async (
   userId: string,
@@ -390,7 +415,7 @@ export const getRollingSharpe = async (
 /**
  * Get rolling volatility analysis
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getRollingVolatility = async (
   userId: string,
@@ -407,7 +432,7 @@ export const getRollingVolatility = async (
 /**
  * Get enhanced drawdown analysis
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getEnhancedDrawdown = async (
   userId: string,
@@ -424,7 +449,7 @@ export const getEnhancedDrawdown = async (
 /**
  * Get underwater recovery analysis
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getUnderwaterRecovery = async (
   userId: string,
@@ -441,7 +466,7 @@ export const getUnderwaterRecovery = async (
 /**
  * Get allocation timeseries data
  *
- * @deprecated Use `getPortfolioDashboard` for unified analytics.
+ * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
  */
 export const getAllocationTimeseries = async (
   userId: string,
@@ -480,17 +505,31 @@ export interface UnifiedDashboardResponse {
 
   // Historical trends (replaces getPortfolioTrends)
   trends: {
+    user_id?: string;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    daily_values: Array<{
+    daily_totals: Array<{
       date: string;
       total_value_usd: number;
-      change_pct: number;
-      protocols: Record<string, number>;
-      chains: Record<string, number>;
+      change_percentage: number;
+      categories?: Array<{
+        category: string;
+        source_type?: string;
+        value_usd: number;
+        pnl_usd: number;
+      }>;
+      protocols?: Array<{
+        protocol: string;
+        chain: string;
+        value_usd: number;
+        pnl_usd: number;
+        source_type?: string;
+        category?: string;
+      }>;
+      chains_count?: number;
     }>;
     summary: {
       current_value_usd: number;
@@ -550,16 +589,24 @@ export interface UnifiedDashboardResponse {
   // Drawdown analysis (replaces getEnhancedDrawdown + getUnderwaterRecovery)
   drawdown_analysis: {
     enhanced: {
+      user_id?: string;
       period: {
         start_date: string;
         end_date: string;
         days: number;
       };
-      daily_drawdowns: Array<{
+      period_info?: Record<string, unknown>;
+      drawdown_data: Array<{
         date: string;
-        portfolio_value_usd: number;
-        running_peak_usd: number;
-        drawdown_pct: number;
+        portfolio_value?: number;
+        portfolio_value_usd?: number;
+        peak_value?: number;
+        running_peak_usd?: number;
+        drawdown_pct?: number;
+        underwater_pct?: number;
+        is_underwater?: boolean;
+        recovery_point?: boolean;
+        [key: string]: unknown;
       }>;
       summary: {
         max_drawdown_pct: number;
@@ -567,19 +614,25 @@ export interface UnifiedDashboardResponse {
         peak_value: number;
         current_value: number;
       };
+      data_points?: number;
     };
     underwater_recovery: {
+      user_id?: string;
       period: {
         start_date: string;
         end_date: string;
         days: number;
       };
-      underwater_periods: Array<{
-        start_date: string;
-        end_date: string | null;
-        days_underwater: number;
-        max_drawdown_pct: number;
-        is_recovered: boolean;
+      period_info?: Record<string, unknown>;
+      underwater_data: Array<{
+        date: string;
+        underwater_pct: number;
+        drawdown_pct?: number;
+        portfolio_value?: number;
+        peak_value?: number;
+        is_underwater?: boolean;
+        recovery_point?: boolean;
+        [key: string]: unknown;
       }>;
       summary: {
         total_underwater_days: number;
@@ -588,22 +641,25 @@ export interface UnifiedDashboardResponse {
         current_underwater_pct: number;
         is_currently_underwater: boolean;
       };
+      data_points?: number;
     };
   };
 
   // Portfolio allocation over time (replaces getAllocationTimeseries)
   allocation: {
+    user_id?: string;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    daily_allocations: Array<{
+    allocation_data: Array<{
       date: string;
-      btc_pct: number;
-      eth_pct: number;
-      stablecoins_pct: number;
-      others_pct: number;
+      category: string;
+      category_value_usd: number;
+      total_portfolio_value_usd: number;
+      allocation_percentage: number;
+      [key: string]: unknown;
     }>;
     summary: {
       unique_dates: number;
@@ -615,15 +671,17 @@ export interface UnifiedDashboardResponse {
   // Rolling window analytics (replaces getRollingSharpe + getRollingVolatility)
   rolling_analytics: {
     sharpe: {
+      user_id?: string;
       period: {
         start_date: string;
         end_date: string;
         days: number;
       };
-      rolling_sharpe_timeseries: Array<{
+      rolling_sharpe_data: Array<{
         date: string;
         rolling_sharpe_ratio: number;
         is_statistically_reliable: boolean;
+        [key: string]: unknown;
       }>;
       summary: {
         latest_sharpe_ratio: number;
@@ -631,17 +689,22 @@ export interface UnifiedDashboardResponse {
         reliable_data_points: number;
         statistical_reliability: string;
       };
+      data_points?: number;
+      educational_context?: Record<string, unknown>;
     };
     volatility: {
+      user_id?: string;
       period: {
         start_date: string;
         end_date: string;
         days: number;
       };
-      rolling_volatility_timeseries: Array<{
+      rolling_volatility_data: Array<{
         date: string;
         rolling_volatility_pct: number;
         annualized_volatility_pct: number;
+        rolling_volatility_daily_pct?: number;
+        [key: string]: unknown;
       }>;
       summary: {
         latest_daily_volatility: number;
@@ -649,6 +712,8 @@ export interface UnifiedDashboardResponse {
         avg_daily_volatility: number;
         avg_annualized_volatility: number;
       };
+      data_points?: number;
+      educational_context?: Record<string, unknown>;
     };
   };
 

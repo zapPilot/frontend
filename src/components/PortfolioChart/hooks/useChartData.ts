@@ -27,6 +27,13 @@ import type {
 } from "../types";
 import { buildAllocationHistory, buildStackedPortfolioData } from "../utils";
 
+type PortfolioProtocolPoint = NonNullable<
+  PortfolioDataPoint["protocols"]
+>[number];
+type PortfolioCategoryPoint = NonNullable<
+  PortfolioDataPoint["categories"]
+>[number];
+
 /**
  * Interface for override data that can be passed to useChartData
  */
@@ -137,124 +144,142 @@ export function useChartData(
 
   // Transform trends data to PortfolioDataPoint[] format
   const apiPortfolioHistory: PortfolioDataPoint[] = useMemo(() => {
-    if (!dashboard?.trends?.daily_values) {
+    const dailyTotals = dashboard?.trends?.daily_totals ?? [];
+    if (dailyTotals.length === 0) {
       return [];
     }
 
-    // Transform unified format to match usePortfolioTrends output
-    return dashboard.trends.daily_values.map(dailyValue => ({
-      date: dailyValue.date,
-      value: dailyValue.total_value_usd,
-      change: dailyValue.change_pct,
-      benchmark: dailyValue.total_value_usd * 0.95, // Placeholder benchmark
-      protocols: Object.entries(dailyValue.protocols || {}).map(
-        ([protocol, value]) => ({
-          protocol,
-          chain: "", // Not provided in unified response
-          value: Number(value),
-          pnl: 0, // Not provided in unified response
-        })
-      ),
-      categories: [], // Would need to be derived from chains data if needed
-    }));
+    const sortedTotals = [...dailyTotals].sort((a, b) =>
+      a.date.localeCompare(b.date)
+    );
+
+    return sortedTotals.map(total => {
+      const protocols = (total.protocols ?? []).map(protocol => {
+        const base: PortfolioProtocolPoint = {
+          protocol: protocol.protocol ?? "",
+          chain: protocol.chain ?? "",
+          value: Number(protocol.value_usd ?? 0),
+          pnl: Number(protocol.pnl_usd ?? 0),
+        };
+
+        if (protocol.source_type != null) {
+          base.sourceType = protocol.source_type;
+        }
+
+        if (protocol.category != null) {
+          base.category = protocol.category;
+        }
+
+        return base;
+      });
+
+      const categories = (total.categories ?? []).map(categoryEntry => {
+        const base: PortfolioCategoryPoint = {
+          category: categoryEntry.category ?? "unknown",
+          value: Number(categoryEntry.value_usd ?? 0),
+          pnl: Number(categoryEntry.pnl_usd ?? 0),
+        };
+
+        if (categoryEntry.source_type != null) {
+          base.sourceType = categoryEntry.source_type;
+        }
+
+        return base;
+      });
+
+      const chainsCount =
+        typeof total.chains_count === "number" ? total.chains_count : undefined;
+
+      const result: PortfolioDataPoint = {
+        date: total.date,
+        value: Number(total.total_value_usd ?? 0),
+        change: Number(total.change_percentage ?? 0),
+        benchmark: Number(total.total_value_usd ?? 0) * 0.95,
+        protocols,
+        categories,
+      };
+
+      if (chainsCount !== undefined) {
+        result.chainsCount = chainsCount;
+      }
+
+      return result;
+    });
   }, [dashboard?.trends]);
 
   // Extract rolling analytics data
   const rollingSharpeData = useMemo(() => {
-    const sharpeTimeseries =
-      dashboard?.rolling_analytics?.sharpe?.rolling_sharpe_timeseries ?? [];
+    const sharpeSection = dashboard?.rolling_analytics?.sharpe;
+    if (!sharpeSection) {
+      return null;
+    }
 
-    if (
-      !dashboard?.rolling_analytics?.sharpe ||
-      sharpeTimeseries.length === 0
-    ) {
+    const sharpeSeries = sharpeSection.rolling_sharpe_data ?? [];
+    if (sharpeSeries.length === 0) {
       return null;
     }
 
     return {
-      rolling_sharpe_data: sharpeTimeseries,
+      rolling_sharpe_data: sharpeSeries,
     };
   }, [dashboard?.rolling_analytics?.sharpe]);
 
   const rollingVolatilityData = useMemo(() => {
-    const volatilityTimeseries =
-      dashboard?.rolling_analytics?.volatility?.rolling_volatility_timeseries ??
-      [];
+    const volatilitySection = dashboard?.rolling_analytics?.volatility;
+    if (!volatilitySection) {
+      return null;
+    }
 
-    if (
-      !dashboard?.rolling_analytics?.volatility ||
-      volatilityTimeseries.length === 0
-    ) {
+    const volatilitySeries = volatilitySection.rolling_volatility_data ?? [];
+    if (volatilitySeries.length === 0) {
       return null;
     }
 
     return {
-      rolling_volatility_data: volatilityTimeseries,
+      rolling_volatility_data: volatilitySeries,
     };
   }, [dashboard?.rolling_analytics?.volatility]);
 
   // Extract drawdown data
   const enhancedDrawdownData = useMemo(() => {
-    const drawdownPoints =
-      dashboard?.drawdown_analysis?.enhanced?.daily_drawdowns ?? [];
+    const enhancedSection = dashboard?.drawdown_analysis?.enhanced;
+    if (!enhancedSection) {
+      return null;
+    }
 
-    if (
-      !dashboard?.drawdown_analysis?.enhanced ||
-      drawdownPoints.length === 0
-    ) {
+    const drawdownPoints = enhancedSection.drawdown_data ?? [];
+    if (drawdownPoints.length === 0) {
       return null;
     }
 
     return {
       drawdown_data: drawdownPoints.map(d => ({
         date: d.date,
-        portfolio_value: d.portfolio_value_usd,
-        peak_value: d.running_peak_usd,
-        drawdown_pct: d.drawdown_pct,
-        is_underwater: d.drawdown_pct < 0,
+        portfolio_value: Number(
+          d.portfolio_value ?? d.portfolio_value_usd ?? 0
+        ),
+        peak_value: Number(d.peak_value ?? d.running_peak_usd ?? 0),
+        drawdown_pct: Number(d.drawdown_pct ?? 0),
+        is_underwater:
+          typeof d.is_underwater === "boolean"
+            ? d.is_underwater
+            : Number(d.drawdown_pct ?? 0) < 0,
       })),
     };
   }, [dashboard?.drawdown_analysis?.enhanced]);
 
   const underwaterRecoveryData = useMemo(() => {
-    if (!dashboard?.drawdown_analysis?.underwater_recovery) {
+    const underwaterSection = dashboard?.drawdown_analysis?.underwater_recovery;
+    if (!underwaterSection) {
       return null;
     }
 
-    const underwaterPeriods =
-      dashboard.drawdown_analysis.underwater_recovery.underwater_periods ?? [];
-
-    if (underwaterPeriods.length === 0) {
+    const underwaterSeries = underwaterSection.underwater_data ?? [];
+    if (underwaterSeries.length === 0) {
       return { underwater_data: [] };
     }
 
-    // Transform underwater_periods to underwater_data format
-    const underwaterData = underwaterPeriods.flatMap(period => {
-      const points = [];
-      points.push({
-        date: period.start_date,
-        underwater_pct: period.max_drawdown_pct,
-        is_underwater: true,
-        recovery_point: false,
-        portfolio_value: 0, // Not available in unified response
-        peak_value: 0, // Not available in unified response
-      });
-
-      if (period.end_date && period.is_recovered) {
-        points.push({
-          date: period.end_date,
-          underwater_pct: 0,
-          is_underwater: false,
-          recovery_point: true,
-          portfolio_value: 0,
-          peak_value: 0,
-        });
-      }
-
-      return points;
-    });
-
-    return { underwater_data: underwaterData };
+    return { underwater_data: underwaterSeries };
   }, [dashboard?.drawdown_analysis?.underwater_recovery]);
 
   // Transform allocation data to AllocationTimeseriesPoint format
@@ -263,45 +288,20 @@ export function useChartData(
       return { allocation_data: [] };
     }
 
-    const dailyAllocations = dashboard.allocation.daily_allocations ?? [];
-    if (dailyAllocations.length === 0) {
+    const allocationSeries = dashboard.allocation.allocation_data ?? [];
+    if (allocationSeries.length === 0) {
       return { allocation_data: [] };
     }
 
-    // Convert from daily_allocations format to allocation_data format
-    const allocation_data: AllocationTimeseriesInputPoint[] =
-      dailyAllocations.flatMap(daily => [
-        {
-          date: daily.date,
-          category: "btc",
-          category_value_usd: 0, // Not available in unified response
-          total_portfolio_value_usd: 0, // Not available in unified response
-          allocation_percentage: daily.btc_pct,
-        },
-        {
-          date: daily.date,
-          category: "eth",
-          category_value_usd: 0,
-          total_portfolio_value_usd: 0,
-          allocation_percentage: daily.eth_pct,
-        },
-        {
-          date: daily.date,
-          category: "stable",
-          category_value_usd: 0,
-          total_portfolio_value_usd: 0,
-          allocation_percentage: daily.stablecoins_pct,
-        },
-        {
-          date: daily.date,
-          category: "altcoin",
-          category_value_usd: 0,
-          total_portfolio_value_usd: 0,
-          allocation_percentage: daily.others_pct,
-        },
-      ]);
-
-    return { allocation_data };
+    return {
+      allocation_data: allocationSeries.map(entry => ({
+        date: entry.date,
+        category: entry.category,
+        category_value_usd: Number(entry.category_value_usd ?? 0),
+        total_portfolio_value_usd: Number(entry.total_portfolio_value_usd ?? 0),
+        allocation_percentage: Number(entry.allocation_percentage ?? 0),
+      })),
+    };
   }, [dashboard?.allocation]);
 
   // Portfolio history with fallback logic
