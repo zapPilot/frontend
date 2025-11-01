@@ -124,7 +124,9 @@ describe("tokenService", () => {
       expect(result[0].chainId).toBe(137);
       expect(result[0].symbol).toBe("WMATIC");
       expect(result[1].symbol).toBe("USDC");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith("/tokens/zap/137");
+      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
+        "/tokens/zap/137"
+      );
     });
 
     it("should fetch tokens for Base (chainId: 8453)", async () => {
@@ -151,7 +153,9 @@ describe("tokenService", () => {
       expect(result).toHaveLength(1);
       expect(result[0].chainId).toBe(8453);
       expect(result[0].symbol).toBe("WETH");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith("/tokens/zap/8453");
+      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
+        "/tokens/zap/8453"
+      );
     });
 
     it("should handle empty token list", async () => {

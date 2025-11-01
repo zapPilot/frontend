@@ -85,7 +85,9 @@ describe("accountService", () => {
       );
 
       await expect(
-        accountService.connectWallet("0x1234567890123456789012345678901234567890")
+        accountService.connectWallet(
+          "0x1234567890123456789012345678901234567890"
+        )
       ).rejects.toThrow();
     });
   });
@@ -127,7 +129,9 @@ describe("accountService", () => {
 
       vi.mocked(httpUtils.accountApi.get).mockRejectedValue(mockError);
 
-      await expect(accountService.getUserProfile("nonexistent")).rejects.toThrow();
+      await expect(
+        accountService.getUserProfile("nonexistent")
+      ).rejects.toThrow();
     });
 
     it("should fetch profile with subscription data", async () => {
@@ -252,7 +256,9 @@ describe("accountService", () => {
       const result = await accountService.deleteUser("user123");
 
       expect(result).toEqual(mockResponse);
-      expect(httpUtils.accountApi.delete).toHaveBeenCalledWith("/users/user123");
+      expect(httpUtils.accountApi.delete).toHaveBeenCalledWith(
+        "/users/user123"
+      );
     });
 
     it("should handle user not found (404)", async () => {
@@ -373,7 +379,8 @@ describe("accountService", () => {
     it("should handle wallet belongs to another user (409)", async () => {
       const mockError = {
         status: 409,
-        message: "Wallet already belongs to another user, please delete one of the accounts instead",
+        message:
+          "Wallet already belongs to another user, please delete one of the accounts instead",
       };
 
       vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);

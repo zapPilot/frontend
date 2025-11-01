@@ -391,12 +391,14 @@ export function normalizeProtocolName(name: string | undefined): string {
     return "";
   }
 
-  return name
-    .trim()
-    // Remove version patterns with separators: " v2", "-v3", "_V1", "/v2"
-    .replace(/[\s\-_/]+v\d+$/i, "")
-    // Remove embedded versions: "aerodromeV2" → "aerodrome"
-    .replace(/v\d+$/i, "")
-    .trim()
-    .toLowerCase();
+  return (
+    name
+      .trim()
+      // Remove version patterns with separators: " v2", "-v3", "_V1", "/v2"
+      .replace(/[\s\-_/]+v\d+$/i, "")
+      // Remove embedded versions: "aerodromeV2" → "aerodrome"
+      .replace(/v\d+$/i, "")
+      .trim()
+      .toLowerCase()
+  );
 }

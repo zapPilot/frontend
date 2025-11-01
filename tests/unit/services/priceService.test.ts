@@ -16,7 +16,9 @@ vi.mock("@/lib/http-utils", () => ({
 vi.mock("@/lib/stringUtils", () => ({
   normalizeSymbol: (s: string) => s.trim().toUpperCase(),
   normalizeSymbols: (arr: string[]) =>
-    arr.map(s => s.trim().toUpperCase()).filter((s, i, a) => a.indexOf(s) === i),
+    arr
+      .map(s => s.trim().toUpperCase())
+      .filter((s, i, a) => a.indexOf(s) === i),
 }));
 
 describe("priceService", () => {
