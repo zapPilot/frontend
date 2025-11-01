@@ -123,7 +123,7 @@ export interface DustTokenParams {
 /**
  * UnifiedZap interfaces for multi-strategy allocation
  */
-export interface UnifiedZapParams {
+interface UnifiedZapParams {
   strategyAllocations: Array<{
     strategyId: string;
     percentage: number;

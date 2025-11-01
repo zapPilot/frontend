@@ -10,7 +10,7 @@
 /**
  * Options for the normalizeStrings function
  */
-export interface NormalizeOptions {
+interface NormalizeOptions {
   /**
    * Case transformation to apply
    * - 'lower': Convert to lowercase (default for addresses)
@@ -262,24 +262,6 @@ export function isValidString(str: unknown): str is string {
 }
 
 /**
- * Filter an array to only valid (non-empty) strings with type narrowing
- *
- * Combines filtering and type narrowing in a single operation.
- * Alternative to Array.filter(isValidString) with better semantics.
- *
- * @example
- * const mixed = ['hello', '', null, undefined, '  ', 'world']
- * filterValidStrings(mixed)
- * // => ['hello', 'world']
- *
- * @param values - Array of unknown values
- * @returns Array of valid strings only
- */
-export function filterValidStrings(values: unknown[]): string[] {
-  return values.filter(isValidString);
-}
-
-/**
  * Normalize a string for case-insensitive comparison
  *
  * Common pattern for search, filtering, and matching operations.
@@ -299,28 +281,6 @@ export function normalizeForComparison(str: unknown): string {
     return "";
   }
   return str.toLowerCase().trim();
-}
-
-/**
- * Check if two strings are equal after normalization
- *
- * Case-insensitive, whitespace-insensitive string comparison.
- * Useful for user input validation and search matching.
- *
- * @example
- * stringEquals('  Hello  ', 'hello')
- * // => true
- *
- * @example
- * stringEquals('ETH', 'eth')
- * // => true
- *
- * @param str1 - First string
- * @param str2 - Second string
- * @returns True if strings are equal after normalization
- */
-export function stringEquals(str1: unknown, str2: unknown): boolean {
-  return normalizeForComparison(str1) === normalizeForComparison(str2);
 }
 
 /**
@@ -387,4 +347,58 @@ export function truncateAddress(
     return address;
   }
   return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
+}
+
+/**
+ * Normalize a protocol name for asset URL construction
+ *
+ * Removes version suffixes (v1, v2, v3, etc.) that are commonly appended
+ * to protocol names in the data but not present in asset file names.
+ *
+ * Preserves legitimate use of "v" in protocol names like "Venus Protocol"
+ * by only removing version patterns at the end of the string.
+ *
+ * Used in:
+ * - ProtocolImage component
+ * - CategoryProtocolList component
+ * - Any protocol image URL construction
+ *
+ * @example
+ * normalizeProtocolName('aerodrome v3')
+ * // => 'aerodrome'
+ *
+ * @example
+ * normalizeProtocolName('Uniswap V2')
+ * // => 'uniswap'
+ *
+ * @example
+ * normalizeProtocolName('aerodromeV3')
+ * // => 'aerodrome'
+ *
+ * @example
+ * normalizeProtocolName('compound-v1')
+ * // => 'compound'
+ *
+ * @example
+ * normalizeProtocolName('Venus Protocol')
+ * // => 'venus protocol' (preserves legitimate "v")
+ *
+ * @param name - Protocol name to normalize
+ * @returns Normalized protocol name (lowercase, version stripped, trimmed)
+ */
+export function normalizeProtocolName(name: string | undefined): string {
+  if (!isValidString(name)) {
+    return "";
+  }
+
+  return (
+    name
+      .trim()
+      // Remove version patterns with separators: " v2", "-v3", "_V1", "/v2"
+      .replace(/[\s\-_/]+v\d+$/i, "")
+      // Remove embedded versions: "aerodromeV2" → "aerodrome"
+      .replace(/v\d+$/i, "")
+      .trim()
+      .toLowerCase()
+  );
 }

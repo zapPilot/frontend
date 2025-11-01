@@ -86,9 +86,9 @@ export const UNIFIED_ZAP_PHASES = [
   "error",
 ] as const;
 
-export type UnifiedZapPhase = (typeof UNIFIED_ZAP_PHASES)[number];
+type UnifiedZapPhase = (typeof UNIFIED_ZAP_PHASES)[number];
 
-export interface UnifiedZapStreamEventMetadata {
+interface UnifiedZapStreamEventMetadata {
   totalStrategies?: number;
   totalProtocols?: number;
   estimatedDuration?: string;
@@ -115,7 +115,7 @@ export interface UnifiedZapStreamTransaction {
   chainId?: number;
 }
 
-export interface UnifiedZapStreamEvent {
+interface UnifiedZapStreamEvent {
   type: string;
   intentId?: string;
   progress: number; // normalized 0-1 value
@@ -139,7 +139,7 @@ export interface UnifiedZapStreamEvent {
   chainId?: number;
 }
 
-export interface UseUnifiedZapStreamReturn {
+interface UseUnifiedZapStreamReturn {
   events: UnifiedZapStreamEvent[];
   latestEvent: UnifiedZapStreamEvent | null;
   isConnected: boolean;

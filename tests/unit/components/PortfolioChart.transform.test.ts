@@ -2,12 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { buildAllocationHistory } from "../../../src/components/PortfolioChart/";
 
-vi.mock("../../../src/hooks/usePortfolioTrends", () => ({}));
-vi.mock("../../../src/hooks/useRollingSharpe", () => ({}));
-vi.mock("../../../src/hooks/useRollingVolatility", () => ({}));
-vi.mock("../../../src/hooks/useEnhancedDrawdown", () => ({}));
-vi.mock("../../../src/hooks/useUnderwaterRecovery", () => ({}));
-vi.mock("../../../src/hooks/useAllocationTimeseries", () => ({}));
 vi.mock("../../../src/contexts/UserContext", () => ({
   useUser: () => ({ userInfo: null }),
 }));

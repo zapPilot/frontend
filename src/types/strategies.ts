@@ -230,17 +230,6 @@ export class StrategiesApiError extends Error {
 }
 
 /**
- * Loading state interface for strategies data
- */
-export interface StrategiesLoadingState {
-  isLoading: boolean;
-  isError: boolean;
-  error?: StrategiesApiError | Error;
-  data?: AssetCategory[];
-  isRefetching?: boolean;
-}
-
-/**
  * Configuration options for strategies fetching
  */
 export interface StrategiesFetchConfig {

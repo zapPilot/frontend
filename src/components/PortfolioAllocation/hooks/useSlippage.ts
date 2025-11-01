@@ -9,14 +9,14 @@ export interface SlippagePreset {
   description?: string;
 }
 
-export interface SlippageWarning {
+interface SlippageWarning {
   type: "high" | "veryHigh" | "none";
   title: string;
   message: string;
   color: "yellow" | "red" | "none";
 }
 
-export interface UseSlippageOptions {
+interface UseSlippageOptions {
   initialValue?: number;
   presets?: SlippagePreset[];
   highSlippageThreshold?: number;
@@ -26,7 +26,7 @@ export interface UseSlippageOptions {
   allowCustomInput?: boolean;
 }
 
-export interface UseSlippageReturn {
+interface UseSlippageReturn {
   // Current state
   value: number;
   customValue: string;

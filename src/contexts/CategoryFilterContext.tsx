@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext } from "react";
 
-export interface CategoryFilterContextValue {
+interface CategoryFilterContextValue {
   selectedCategoryId: string | null;
   setSelectedCategoryId: (id: string | null) => void;
   clearCategoryFilter: () => void;

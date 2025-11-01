@@ -9,7 +9,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { OperationMode } from "../../../types";
 import { constrainValue, formatCryptoAmount, parseInputValue } from "./utils";
 
-export interface AmountInputProps {
+interface AmountInputProps {
   operationMode: OperationMode;
   amount: string;
   onAmountChange: (amount: string) => void;

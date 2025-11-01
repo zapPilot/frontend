@@ -62,14 +62,14 @@ const CONTEXT_CONFIGS = {
   },
 };
 
-export const SlippageComponent: React.FC<SlippageComponentProps> = ({
+export function SlippageComponent({
   value,
   onChange,
   className = "",
   variant = "compact",
   context = "portfolio",
   dropdownPosition = "auto",
-}) => {
+}: SlippageComponentProps) {
   const dropdown = useDropdown(false);
   const config = CONTEXT_CONFIGS[context];
 
@@ -387,4 +387,4 @@ export const SlippageComponent: React.FC<SlippageComponentProps> = ({
       )}
     </div>
   );
-};
+}

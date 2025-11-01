@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 /**
  * Return type for the useDropdown hook
  */
-export interface UseDropdownReturn {
+interface UseDropdownReturn {
   /** Whether the dropdown is currently open */
   isOpen: boolean;
   /** Function to open the dropdown */

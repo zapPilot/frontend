@@ -51,7 +51,7 @@ export class TimeoutError extends Error {
 }
 
 // HTTP request configuration interface
-export interface HttpRequestConfig {
+interface HttpRequestConfig {
   method?: HTTPMethod;
   headers?: Record<string, string>;
   body?: unknown;

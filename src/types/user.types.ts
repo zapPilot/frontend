@@ -12,7 +12,6 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  is_main?: boolean; // DEPRECATED: Optional for backward compatibility during migration
   label?: string;
   created_at: string;
 }
@@ -32,20 +31,6 @@ export interface UserSubscription {
   is_canceled: boolean;
   created_at: string;
   plan?: Plan;
-}
-
-// API Request DTOs
-export interface ConnectWalletDto {
-  wallet: string;
-}
-
-export interface AddWalletDto {
-  wallet: string;
-  label?: string;
-}
-
-export interface UpdateEmailDto {
-  email: string;
 }
 
 // API Response Interfaces
@@ -68,13 +53,6 @@ export interface UserProfileResponse {
   user: User;
   wallets: UserCryptoWallet[];
   subscription?: UserSubscription;
-}
-
-// API Error Response
-export interface ApiError {
-  error: string;
-  message?: string;
-  statusCode: number;
 }
 
 // Service Response Wrapper

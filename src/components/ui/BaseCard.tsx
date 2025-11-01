@@ -31,7 +31,7 @@ const BORDER_RADIUS_STYLES = {
   "2xl": "rounded-3xl",
 } as const;
 
-export interface BaseCardProps extends BaseComponentProps {
+interface BaseCardProps extends BaseComponentProps {
   children: ReactNode;
   variant?: keyof typeof VARIANT_STYLES;
   padding?: keyof typeof PADDING_STYLES;

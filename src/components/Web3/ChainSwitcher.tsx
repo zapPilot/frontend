@@ -162,5 +162,3 @@ export const ChainSwitcher = memo(function ChainSwitcher({
     </div>
   );
 });
-
-export default ChainSwitcher;

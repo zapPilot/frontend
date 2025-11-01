@@ -2,16 +2,7 @@
 export { WalletManager } from "./WalletManager";
 
 // Types
-export type {
-  WalletManagerProps,
-  WalletOperations,
-  OperationState,
-  EditingWallet,
-  NewWallet,
-  MenuPosition,
-  WalletState,
-  ValidationResult,
-} from "./types/wallet.types";
+export type { WalletManagerProps } from "./types/wallet.types";
 
 // Components
 export { WalletCard } from "./components/WalletCard";

@@ -4,7 +4,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
-import { usePortfolio } from "../../helpers/deprecatedUsePortfolio";
 import {
   usePortfolioState,
   usePortfolioStateHelpers,
@@ -13,7 +12,6 @@ import { createCategoriesFromApiData } from "../../../src/utils/portfolio.utils"
 
 // Mock dependencies for decomposed architecture
 vi.mock("../../../src/contexts/UserContext");
-vi.mock("../../helpers/deprecatedUsePortfolio");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");
 vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
@@ -199,15 +197,8 @@ const mockCategories = [
   },
 ];
 
-const mockPortfolioMetrics = {
-  totalValue: 10000,
-  totalChangePercentage: 5.2,
-  totalChangeValue: 500,
-};
-
 describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () => {
   const mockUseUser = vi.mocked(useUser);
-  const mockUsePortfolio = vi.mocked(usePortfolio);
   const mockUseLandingPageData = vi.mocked(useLandingPageData);
   const mockUsePortfolioState = vi.mocked(usePortfolioState);
   const mockUsePortfolioStateHelpers = vi.mocked(usePortfolioStateHelpers);
@@ -290,14 +281,6 @@ describe("WalletPortfolio - Error Boundary and Recovery Tests (Decomposed)", () 
       error: null,
       refetch: vi.fn(),
       isRefetching: false,
-    });
-
-    mockUsePortfolio.mockReturnValue({
-      balanceHidden: false,
-      expandedCategory: null,
-      portfolioMetrics: mockPortfolioMetrics,
-      toggleBalanceVisibility: vi.fn(),
-      toggleCategoryExpansion: vi.fn(),
     });
 
     mockCreateCategoriesFromApiData.mockReturnValue(mockCategories);

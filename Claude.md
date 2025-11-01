@@ -37,6 +37,83 @@ This is a static-export Next.js application with a service-first, component-base
 - **Error Boundary**: Comprehensive error handling with user-friendly fallbacks
 - **Performance**: React.memo, useMemo, and lazy loading for optimization
 
+### Provider Stack
+
+The application uses a lightweight provider composition that wraps the app with essential context:
+
+```
+QueryProvider  →  SimpleWeb3Provider  →  WalletProvider  →  App
+```
+
+#### QueryProvider
+
+- Wraps the app with a shared `QueryClient` from TanStack Query
+- Enables React Query Devtools only when `NODE_ENV=development` **and**
+  `NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS=1`
+- Provides caching and state management for all API operations
+
+#### SimpleWeb3Provider
+
+- Thin wrapper around `ThirdwebProvider`
+- Environment variables are read directly by Thirdweb's SDK
+- No custom configuration required for basic wallet operations
+
+#### WalletProvider
+
+- Bridges Thirdweb React hooks into a simplified context
+- Exposes a unified wallet interface:
+  ```typescript
+  {
+    account: { address, isConnected, balance? } | null;
+    chain: { id, name, symbol } | null;
+    connect(): Promise<void>;
+    disconnect(): Promise<void>;
+    switchChain(chainId: number): Promise<void>;
+    signMessage(message: string): Promise<string>;
+    isConnected: boolean;
+    isConnecting: boolean;
+    isDisconnecting: boolean;
+    error: { message; code? } | null;
+    clearError(): void;
+  }
+  ```
+- Access via `useWalletProvider()` hook
+- Error handling through `walletLogger` with promise rejection handling
+
+#### Provider Composition
+
+```tsx
+import { QueryProvider } from "@/providers/QueryProvider";
+import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
+import { WalletProvider } from "@/providers/WalletProvider";
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <QueryProvider>
+      <SimpleWeb3Provider>
+        <WalletProvider>{children}</WalletProvider>
+      </SimpleWeb3Provider>
+    </QueryProvider>
+  );
+}
+```
+
+#### Usage Example
+
+```tsx
+import { useWalletProvider } from "@/providers/WalletProvider";
+
+const ConnectButton = () => {
+  const { account, connect, disconnect, isConnected } = useWalletProvider();
+
+  return isConnected ? (
+    <button onClick={disconnect}>Disconnect {account?.address}</button>
+  ) : (
+    <button onClick={connect}>Connect Wallet</button>
+  );
+};
+```
+
 ## Project Structure & Module Organization
 
 - `src/app`: Next.js App Router entry points (`layout.tsx`, `page.tsx`)

@@ -14,7 +14,7 @@ import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 // TYPES AND INTERFACES
 // =============================================================================
 
-export interface CurrencyFormatOptions {
+interface CurrencyFormatOptions {
   /** Show hidden placeholder when true */
   isHidden?: boolean;
   /** Minimum fraction digits */
@@ -33,7 +33,7 @@ export interface CurrencyFormatOptions {
   showNegative?: boolean;
 }
 
-export interface NumberFormatOptions {
+interface NumberFormatOptions {
   /** Show hidden placeholder when true */
   isHidden?: boolean;
   /** Maximum fraction digits */
@@ -46,7 +46,7 @@ export interface NumberFormatOptions {
   smartPrecision?: boolean;
 }
 
-export interface AddressFormatOptions {
+interface AddressFormatOptions {
   /** Number of characters to keep from the start of the address */
   prefixLength?: number;
   /** Number of characters to keep from the end of the address */
@@ -377,14 +377,4 @@ export const formatters = {
   volatility: formatVolatility,
 } as const;
 
-// =============================================================================
-// EXPORTS FOR BACKWARD COMPATIBILITY
-// =============================================================================
-
-// Re-export main functions for easier migration
-export {
-  formatCurrency as formatCurrencyValue,
-  formatNumber as formatNumericValue,
-  formatPercentage as formatPercentageValue,
-};
 /* c8 ignore stop */

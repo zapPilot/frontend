@@ -16,7 +16,7 @@ interface TabButtonProps extends InteractiveComponentProps {
   controls?: string;
 }
 
-export const TabButton: React.FC<TabButtonProps> = ({
+export function TabButton({
   id,
   label,
   active,
@@ -26,7 +26,7 @@ export const TabButton: React.FC<TabButtonProps> = ({
   variant = "assets",
   compact = false,
   controls,
-}) => {
+}: TabButtonProps) {
   const spacing = compact
     ? "space-x-1.5 px-2.5 py-1.5"
     : "space-x-2 px-3 py-1.5";
@@ -72,6 +72,4 @@ export const TabButton: React.FC<TabButtonProps> = ({
       )}
     </button>
   );
-};
-
-export default TabButton;
+}

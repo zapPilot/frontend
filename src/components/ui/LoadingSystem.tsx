@@ -10,7 +10,7 @@ import type {
 // TYPES & INTERFACES
 // =============================================================================
 
-export type LoadingColor =
+type LoadingColor =
   | "primary"
   | "secondary"
   | "white"
@@ -21,21 +21,21 @@ export type LoadingColor =
   | "green"
   | "red";
 
-export interface BaseLoadingProps {
+interface BaseLoadingProps {
   className?: string;
   "aria-label"?: string;
   "aria-hidden"?: boolean | "true" | "false";
   "data-testid"?: string;
 }
 
-export interface SpinnerProps extends BaseLoadingProps {
+interface SpinnerProps extends BaseLoadingProps {
   size?: ComponentSize;
   color?: LoadingColor;
   variant?: SpinnerVariant;
   label?: string;
 }
 
-export interface SkeletonProps extends BaseLoadingProps {
+interface SkeletonProps extends BaseLoadingProps {
   variant?: SkeletonVariant;
   width?: string | number;
   height?: string | number;
@@ -43,7 +43,7 @@ export interface SkeletonProps extends BaseLoadingProps {
   spacing?: string;
 }
 
-export interface LoadingWrapperProps {
+interface LoadingWrapperProps {
   isLoading: boolean;
   loadingComponent?: React.ReactNode;
   children: React.ReactNode;
@@ -684,18 +684,12 @@ export function useLoadingComponent(
 // LEGACY COMPATIBILITY EXPORTS
 // =============================================================================
 
-// Maintain backwards compatibility
-export const LoadingSpinner = Spinner;
-export const LoadingSkeleton = Skeleton;
-
 export function UnifiedLoading({
   "data-testid": testId,
   ...rest
 }: SkeletonProps) {
   return <Skeleton data-testid={testId ?? "unified-loading"} {...rest} />;
 }
-
-export const LoadingButton = ButtonSkeleton;
 
 export function BalanceLoading({
   "data-testid": testId,

@@ -10,7 +10,7 @@ import {
   type CategorySummary,
 } from "../utils/portfolio.utils";
 
-export interface WalletPortfolioTransformResult {
+interface WalletPortfolioTransformResult {
   pieChartData: PieChartData[] | null;
   categorySummaries: CategorySummary[];
   debtCategorySummaries: CategorySummary[];

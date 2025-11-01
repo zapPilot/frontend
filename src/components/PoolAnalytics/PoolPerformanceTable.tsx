@@ -14,6 +14,8 @@ import type { PoolDetail } from "../../services/analyticsService";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { GlassCard } from "../ui";
 import { UnifiedLoading } from "../ui/LoadingSystem";
+import { ProtocolImage } from "../shared/ProtocolImage";
+import { TokenImage } from "../shared/TokenImage";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -61,7 +63,7 @@ const formatAPR = (apr: number): string => {
   return formatPercentage(apr * 100, false, 2);
 };
 
-export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
+export function PoolPerformanceTable({
   pools,
   isLoading,
   error,
@@ -70,7 +72,7 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
   onClearCategoryFilter,
   defaultTopN = 5,
   topNOptions = [5, 10, 20, 50],
-}) => {
+}: PoolPerformanceTableProps) {
   const [sortState, setSortState] = useState<SortState>({
     field: "value",
     direction: "desc",
@@ -294,6 +296,11 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
                     Assets
                   </span>
                 </th>
+                <th className="text-center pb-3">
+                  <span className="text-sm font-medium text-gray-300">
+                    Positions
+                  </span>
+                </th>
                 <th
                   className="text-left pb-3 cursor-pointer hover:text-purple-400 transition-colors"
                   onClick={() => handleSort("apr")}
@@ -335,46 +342,171 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
               </tr>
             </thead>
             <tbody>
-              {displayedPools.map((pool, index) => (
-                <motion.tr
-                  key={pool.snapshot_id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="border-b border-gray-800/30 hover:bg-white/5 transition-colors"
-                >
-                  <td className="py-4">
-                    <div className="flex items-center space-x-3">
-                      <div>
-                        <p className="font-medium text-white">
-                          {pool.protocol_name}
-                        </p>
-                        <div
-                          className={`inline-block px-2 py-1 rounded-full text-xs border ${getChainStyle(pool.chain)}`}
-                        >
-                          {pool.chain}
+              {displayedPools.map((pool, index) => {
+                const snapshotCount = pool.snapshot_ids?.length ?? 0;
+
+                return (
+                  <motion.tr
+                    key={pool.snapshot_id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border-b border-gray-800/30 hover:bg-white/5 transition-colors"
+                  >
+                    <td className="py-4">
+                      <div className="flex items-center space-x-3">
+                        <ProtocolImage
+                          protocol={{ name: pool.protocol_name }}
+                          size={20}
+                          className="flex-shrink-0"
+                        />
+                        <div>
+                          <p className="font-medium text-white">
+                            {pool.protocol_name}
+                          </p>
+                          <div
+                            className={`inline-block px-2 py-1 rounded-full text-xs border ${getChainStyle(pool.chain)}`}
+                          >
+                            {pool.chain}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {pool.pool_symbols.slice(0, 3).map(symbol => (
+                    </td>
+                    <td className="py-4">
+                      {/* Token images (overlapping circles) */}
+                      <div className="flex items-center -space-x-2 mb-2">
+                        {pool.pool_symbols.slice(0, 3).map((symbol, idx) => (
+                          <TokenImage
+                            key={`${symbol}-${idx}`}
+                            token={{ symbol }}
+                            size={20}
+                            className="border-2 border-gray-900 ring-1 ring-gray-700"
+                          />
+                        ))}
+                        {pool.pool_symbols.length > 3 && (
+                          <div className="w-5 h-5 rounded-full bg-gray-700 border-2 border-gray-900 flex items-center justify-center text-[10px] text-gray-400">
+                            +{pool.pool_symbols.length - 3}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Existing text badges */}
+                      <div className="flex flex-wrap gap-1">
+                        {pool.pool_symbols.slice(0, 3).map(symbol => (
+                          <span
+                            key={symbol}
+                            className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded"
+                          >
+                            {symbol.toUpperCase()}
+                          </span>
+                        ))}
+                        {pool.pool_symbols.length > 3 && (
+                          <span className="px-2 py-1 bg-gray-700/50 text-gray-400 text-xs rounded">
+                            +{pool.pool_symbols.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-4 text-center">
+                      <span className="text-gray-300 font-medium">
+                        {snapshotCount}
+                      </span>
+                    </td>
+                    <td className="py-4">
+                      <div className="flex items-center space-x-2">
+                        {pool.final_apr > 0.05 ? (
+                          <TrendingUp className="w-4 h-4 text-green-400" />
+                        ) : pool.final_apr <= 0.01 ? (
+                          <TrendingDown className="w-4 h-4 text-red-400" />
+                        ) : null}
                         <span
-                          key={symbol}
-                          className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded"
+                          className={`font-medium ${
+                            isUnderperforming(pool)
+                              ? "text-yellow-400"
+                              : pool.final_apr > 0.05
+                                ? "text-green-400"
+                                : "text-white"
+                          }`}
                         >
-                          {symbol.toUpperCase()}
+                          {formatAPR(pool.final_apr)}
                         </span>
-                      ))}
-                      {pool.pool_symbols.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-700/50 text-gray-400 text-xs rounded">
-                          +{pool.pool_symbols.length - 3}
-                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 text-right">
+                      <span className="text-white font-medium">
+                        {formatCurrency(pool.asset_usd_value)}
+                      </span>
+                    </td>
+                    <td className="py-4 text-right">
+                      <span className="text-gray-300">
+                        {formatPercentage(
+                          pool.contribution_to_portfolio,
+                          false,
+                          1
+                        )}
+                      </span>
+                    </td>
+                    <td className="py-4 text-center">
+                      {isUnderperforming(pool) ? (
+                        <div className="flex items-center justify-center">
+                          <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <div className="w-2 h-2 bg-green-400 rounded-full" />
+                        </div>
                       )}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="md:hidden space-y-4">
+          {displayedPools.map((pool, index) => {
+            const snapshotCount = pool.snapshot_ids?.length ?? 0;
+
+            return (
+              <motion.div
+                key={pool.snapshot_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className={`p-4 rounded-lg border ${
+                  isUnderperforming(pool)
+                    ? "bg-yellow-900/20 border-yellow-600/30"
+                    : "bg-white/5 border-gray-700/50"
+                }`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <ProtocolImage
+                      protocol={{ name: pool.protocol_name }}
+                      size={32}
+                      className="flex-shrink-0"
+                    />
+                    <div>
+                      <h3 className="font-medium text-white">
+                        {pool.protocol_name}
+                      </h3>
+                      <div
+                        className={`inline-block px-2 py-1 rounded-full text-xs border mt-1 ${getChainStyle(pool.chain)}`}
+                      >
+                        {pool.chain}
+                      </div>
                     </div>
-                  </td>
-                  <td className="py-4">
+                  </div>
+                  {isUnderperforming(pool) && (
+                    <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-400 mb-1">APR</p>
                     <div className="flex items-center space-x-2">
                       {pool.final_apr > 0.05 ? (
                         <TrendingUp className="w-4 h-4 text-green-400" />
@@ -393,126 +525,53 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
                         {formatAPR(pool.final_apr)}
                       </span>
                     </div>
-                  </td>
-                  <td className="py-4 text-right">
-                    <span className="text-white font-medium">
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400 mb-1">Value</p>
+                    <p className="text-white font-medium">
                       {formatCurrency(pool.asset_usd_value)}
-                    </span>
-                  </td>
-                  <td className="py-4 text-right">
-                    <span className="text-gray-300">
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400 mb-1">Portfolio %</p>
+                    <p className="text-gray-300">
                       {formatPercentage(
                         pool.contribution_to_portfolio,
                         false,
                         1
                       )}
-                    </span>
-                  </td>
-                  <td className="py-4 text-center">
-                    {isUnderperforming(pool) ? (
-                      <div className="flex items-center justify-center">
-                        <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <div className="w-2 h-2 bg-green-400 rounded-full" />
-                      </div>
-                    )}
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    </p>
+                  </div>
 
-        {/* Mobile Cards */}
-        <div className="md:hidden space-y-4">
-          {displayedPools.map((pool, index) => (
-            <motion.div
-              key={pool.snapshot_id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`p-4 rounded-lg border ${
-                isUnderperforming(pool)
-                  ? "bg-yellow-900/20 border-yellow-600/30"
-                  : "bg-white/5 border-gray-700/50"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-medium text-white">
-                    {pool.protocol_name}
-                  </h3>
-                  <div
-                    className={`inline-block px-2 py-1 rounded-full text-xs border mt-1 ${getChainStyle(pool.chain)}`}
-                  >
-                    {pool.chain}
+                  <div>
+                    <p className="text-gray-400 mb-1">Snapshots</p>
+                    <p className="text-gray-300 font-medium">{snapshotCount}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-gray-400 mb-1">Assets</p>
+                    <div className="flex flex-wrap gap-1">
+                      {pool.pool_symbols.slice(0, 2).map(symbol => (
+                        <span
+                          key={symbol}
+                          className="px-1.5 py-0.5 bg-gray-700/50 text-gray-300 text-xs rounded"
+                        >
+                          {symbol.toUpperCase()}
+                        </span>
+                      ))}
+                      {pool.pool_symbols.length > 2 && (
+                        <span className="text-gray-400 text-xs">
+                          +{pool.pool_symbols.length - 2}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                {isUnderperforming(pool) && (
-                  <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-400 mb-1">APR</p>
-                  <div className="flex items-center space-x-2">
-                    {pool.final_apr > 0.05 ? (
-                      <TrendingUp className="w-4 h-4 text-green-400" />
-                    ) : pool.final_apr <= 0.01 ? (
-                      <TrendingDown className="w-4 h-4 text-red-400" />
-                    ) : null}
-                    <span
-                      className={`font-medium ${
-                        isUnderperforming(pool)
-                          ? "text-yellow-400"
-                          : pool.final_apr > 0.05
-                            ? "text-green-400"
-                            : "text-white"
-                      }`}
-                    >
-                      {formatAPR(pool.final_apr)}
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-gray-400 mb-1">Value</p>
-                  <p className="text-white font-medium">
-                    {formatCurrency(pool.asset_usd_value)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-gray-400 mb-1">Portfolio %</p>
-                  <p className="text-gray-300">
-                    {formatPercentage(pool.contribution_to_portfolio, false, 1)}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-gray-400 mb-1">Assets</p>
-                  <div className="flex flex-wrap gap-1">
-                    {pool.pool_symbols.slice(0, 2).map(symbol => (
-                      <span
-                        key={symbol}
-                        className="px-1.5 py-0.5 bg-gray-700/50 text-gray-300 text-xs rounded"
-                      >
-                        {symbol.toUpperCase()}
-                      </span>
-                    ))}
-                    {pool.pool_symbols.length > 2 && (
-                      <span className="text-gray-400 text-xs">
-                        +{pool.pool_symbols.length - 2}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Performance Summary */}
@@ -546,4 +605,4 @@ export const PoolPerformanceTable: React.FC<PoolPerformanceTableProps> = ({
       </div>
     </GlassCard>
   );
-};
+}

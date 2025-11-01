@@ -38,20 +38,6 @@ export const clampMin = (value: number, min: number): number =>
   Math.max(min, value);
 
 /**
- * Clamp a value to a maximum bound
- *
- * @param value - The value to clamp
- * @param max - Maximum allowed value
- * @returns Clamped value
- *
- * @example
- * clampMax(5, 10)  // 5
- * clampMax(15, 10) // 10
- */
-export const clampMax = (value: number, max: number): number =>
-  Math.min(max, value);
-
-/**
  * Ensure value is non-negative (>= 0)
  * Alias for clampMin(value, 0)
  *

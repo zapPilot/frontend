@@ -33,18 +33,6 @@ export interface PortfolioMetrics {
   monthlyReturn?: number;
 }
 
-// DEPRECATED: Use RiskLevel from constants/portfolio.ts instead
-export type RiskLevel = "Low" | "Medium" | "High";
-
-// DEPRECATED: Use ASSET_TYPES from constants/portfolio.ts instead
-export type AssetType =
-  | "Staking"
-  | "Lending"
-  | "Liquidity Pool"
-  | "Holding"
-  | "Safety Module"
-  | "Liquid Staking";
-
 // Chart and Analytics types
 export interface PortfolioDataPoint {
   date: string;
@@ -97,29 +85,4 @@ export interface PerformancePeriod {
   volatility: number;
   sharpe: number;
   maxDrawdown: number;
-}
-
-export interface AssetAttribution {
-  asset: string;
-  contribution: number;
-  allocation: number;
-  performance: number;
-  color: string;
-}
-
-export type APRMetricsSize = "small" | "medium" | "large";
-
-// Input validation types for portfolio data
-export interface UnvalidatedAssetCategory {
-  id?: string;
-  name?: unknown;
-  color?: unknown;
-  totalValue?: unknown;
-  percentage?: unknown;
-  change24h?: unknown;
-  assets?: unknown;
-}
-
-export interface UnvalidatedPortfolioData {
-  [key: string]: unknown;
 }

@@ -30,7 +30,7 @@ const PRICE_STALENESS_THRESHOLD = 5 * 60 * 1000; // Consider stale after 5 minut
 /**
  * Normalized price data with timestamp for UI consumption
  */
-export interface NormalizedTokenPrice {
+interface NormalizedTokenPrice {
   symbol: string;
   price: number | null;
   timestamp: string;
@@ -48,7 +48,7 @@ export type TokenPriceMap = Record<string, NormalizedTokenPrice>;
 /**
  * Hook parameters
  */
-export interface UseTokenPricesParams {
+interface UseTokenPricesParams {
   /** Array of token symbols to fetch prices for */
   symbols?: string[];
   /** Enable/disable the query */
@@ -62,7 +62,7 @@ export interface UseTokenPricesParams {
 /**
  * Hook return value
  */
-export interface UseTokenPricesResult {
+interface UseTokenPricesResult {
   /** Array of price data in same order as requested symbols */
   prices: TokenPriceData[] | undefined;
   /** Normalized map for O(1) symbol lookups */
@@ -90,7 +90,7 @@ export interface UseTokenPricesResult {
 /**
  * Extended hook result with computed helper values
  */
-export interface UseTokenPricesWithStatesResult extends UseTokenPricesResult {
+interface UseTokenPricesWithStatesResult extends UseTokenPricesResult {
   /** Whether all requested prices succeeded */
   allSuccessful: boolean;
   /** Whether all requested prices failed */

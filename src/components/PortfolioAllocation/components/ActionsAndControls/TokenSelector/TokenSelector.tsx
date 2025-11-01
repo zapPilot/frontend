@@ -13,7 +13,7 @@ import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
 import { memo, useMemo } from "react";
 import { TokenSummary } from "./TokenSummary";
 
-export interface TokenSelectorProps {
+interface TokenSelectorProps {
   selectedToken?: SwapToken;
   onTokenSelect: (token: SwapToken) => void;
   label: string;

@@ -11,7 +11,7 @@
 // TYPES
 // =============================================================================
 
-export type ErrorSource =
+type ErrorSource =
   | "backend-service"
   | "intent-service"
   | "account-service"
@@ -21,7 +21,7 @@ export type ErrorSource =
   | "balance-service"
   | "unknown";
 
-export interface ErrorMessageContext {
+interface ErrorMessageContext {
   /** HTTP status code */
   status: number;
   /** Original error message from API */
@@ -256,21 +256,6 @@ export function getIntentErrorMessage(
     status,
     ...(message !== undefined && { message }),
     source: "intent-service",
-  });
-}
-
-/**
- * Get error message for account service
- * Convenience wrapper for getErrorMessage with source set
- */
-export function getAccountErrorMessage(
-  status: number,
-  message?: string
-): string {
-  return getErrorMessage({
-    status,
-    ...(message !== undefined && { message }),
-    source: "account-service",
   });
 }
 

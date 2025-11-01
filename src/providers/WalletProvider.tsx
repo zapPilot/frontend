@@ -29,19 +29,19 @@ import THIRDWEB_CLIENT from "@/utils/thirdweb";
 import { walletLogger } from "@/utils/logger";
 
 // Essential types for simplified wallet
-export interface SimplifiedWalletAccount {
+interface SimplifiedWalletAccount {
   address: string;
   isConnected: boolean;
   balance?: string;
 }
 
-export interface SimplifiedChain {
+interface SimplifiedChain {
   id: number;
   name: string;
   symbol: string;
 }
 
-export interface WalletError {
+interface WalletError {
   message: string;
   code?: string;
 }

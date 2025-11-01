@@ -123,5 +123,3 @@ export const CategoryItem = React.memo(
 );
 
 CategoryItem.displayName = "CategoryItem";
-
-export default CategoryItem;

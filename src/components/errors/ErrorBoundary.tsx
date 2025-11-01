@@ -23,8 +23,27 @@ interface State {
 }
 
 /**
- * Error Boundary component that catches JavaScript errors anywhere in the child
- * component tree and displays a fallback UI instead of crashing the whole app
+ * Error Boundary Component
+ *
+ * Catches JavaScript errors anywhere in the child component tree and displays
+ * a fallback UI instead of crashing the whole app.
+ *
+ * **Note on Class Component Implementation:**
+ * This is intentionally implemented as a React class component, which is an
+ * exception to our modern React patterns. As of React 19, error boundaries
+ * can only be implemented using class components with lifecycle methods.
+ * React does not yet provide a functional component alternative for error boundaries.
+ *
+ * This component uses the following lifecycle methods:
+ * - `static getDerivedStateFromError()` - Updates state when an error is caught
+ * - `componentDidCatch()` - Logs error details and triggers callbacks
+ * - `componentDidUpdate()` - Handles automatic error recovery on prop changes
+ * - `componentWillUnmount()` - Cleanup for timers and resources
+ *
+ * @see https://react.dev/reference/react/Component#catching-rendering-errors-with-an-error-boundary
+ *
+ * **Future:** Monitor React for functional error boundary support. When available,
+ * this component should be migrated to use the new functional API.
  */
 export class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;

@@ -25,7 +25,7 @@ const callPriceService = createServiceCaller(createIntentServiceError);
 /**
  * Additional price metadata from provider
  */
-export interface PriceMetadata {
+interface PriceMetadata {
   /** Market capitalization in USD */
   marketCap?: number;
   /** 24-hour trading volume in USD */
@@ -43,7 +43,7 @@ export interface PriceMetadata {
 /**
  * Individual token price data
  */
-export interface TokenPrice {
+interface TokenPrice {
   /** Token symbol (normalized to lowercase) */
   symbol: string;
   /** Current price in USD */
@@ -82,7 +82,7 @@ export interface TokenPriceData {
 /**
  * Response from bulk price endpoint
  */
-export interface BulkPriceResponse {
+interface BulkPriceResponse {
   /** Map of symbol to price data */
   results: Record<string, TokenPrice>;
   /** Array of symbols that failed to fetch */
