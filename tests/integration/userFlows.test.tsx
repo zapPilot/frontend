@@ -10,11 +10,13 @@
  * @see src/components/PortfolioChart.tsx
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 
 // Mock Framer Motion
@@ -222,7 +224,7 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("drawdown");
 
       // Step 1: Check maximum drawdown
-      const drawdownSvg = container.querySelector(
+      let drawdownSvg = container.querySelector(
         'svg[data-chart-type="drawdown-recovery"]'
       );
       if (drawdownSvg) {
@@ -318,7 +320,7 @@ describe("User Flows - Integration Tests", () => {
         ).not.toBeNull();
       });
 
-      const drawdownSvg = container.querySelector(
+      drawdownSvg = container.querySelector(
         'svg[data-chart-type="drawdown-recovery"]'
       );
       expect(drawdownSvg).not.toBeNull();
@@ -486,8 +488,7 @@ describe("User Flows - Integration Tests", () => {
         );
 
         await waitFor(() => {
-          const chartType =
-            tab === "drawdown" ? "drawdown-recovery" : tab;
+          const chartType = tab === "drawdown" ? "drawdown-recovery" : tab;
           const svg = container.querySelector(
             `svg[data-chart-type="${chartType}"]`
           );

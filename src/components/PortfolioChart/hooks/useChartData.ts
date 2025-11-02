@@ -345,6 +345,7 @@ export function buildDrawdownRecoveryInsights(
   }
 
   let accumulator = initializeRecoveryAccumulator(firstPoint);
+  accumulator = processDrawdownPoint(firstPoint, accumulator);
 
   for (let index = 1; index < points.length; index += 1) {
     const point = points[index];
