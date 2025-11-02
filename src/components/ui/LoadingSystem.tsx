@@ -288,12 +288,7 @@ export function CardSkeleton({
 }) {
   return (
     <div className={`p-6 ${className}`} data-testid={testId}>
-      <Skeleton variant="text" height={24} className="mb-4" width="60%" />
-      <Skeleton variant="text" lines={3} spacing="mb-3" />
-      <div className="flex space-x-4 mt-6">
-        <Skeleton variant="rounded" width={80} height={32} />
-        <Skeleton variant="rounded" width={80} height={32} />
-      </div>
+      <CardSkeletonContent />
     </div>
   );
 }
@@ -319,12 +314,7 @@ export function LoadingCard({
       aria-label={finalAriaLabel}
     >
       {message && <p className="text-sm text-gray-400 mb-4">{message}</p>}
-      <Skeleton variant="text" height={24} className="mb-4" width="60%" />
-      <Skeleton variant="text" lines={3} spacing="mb-3" />
-      <div className="flex space-x-4 mt-6">
-        <Skeleton variant="rounded" width={80} height={32} />
-        <Skeleton variant="rounded" width={80} height={32} />
-      </div>
+      <CardSkeletonContent />
     </div>
   );
 }
@@ -357,6 +347,62 @@ export function MetricsSkeleton({
   );
 }
 
+function SkeletonLegend({ rows = 4 }: { rows?: number }) {
+  return (
+    <div className="w-full space-y-2">
+      {Array.from({ length: rows }).map((_, index) => (
+        <div key={index} className="flex items-center space-x-3">
+          <Skeleton variant="circular" width={12} height={12} />
+          <Skeleton variant="text" height={16} width="30%" />
+          <Skeleton
+            variant="text"
+            height={16}
+            width="20%"
+            className="ml-auto"
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CardSkeletonContent() {
+  return (
+    <>
+      <Skeleton variant="text" height={24} className="mb-4" width="60%" />
+      <Skeleton variant="text" lines={3} spacing="mb-3" />
+      <div className="flex space-x-4 mt-6">
+        <Skeleton variant="rounded" width={80} height={32} />
+        <Skeleton variant="rounded" width={80} height={32} />
+      </div>
+    </>
+  );
+}
+
+interface CircularSkeletonSectionProps {
+  size: number;
+  className?: string;
+  "data-testid"?: string;
+}
+
+function CircularSkeletonSection({
+  size,
+  className = "",
+  "data-testid": testId,
+}: CircularSkeletonSectionProps) {
+  return (
+    <motion.div
+      className={`flex flex-col items-center space-y-4 ${className}`}
+      data-testid={testId}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    >
+      <Skeleton variant="circular" width={size} height={size} className="mb-6" />
+      <SkeletonLegend />
+    </motion.div>
+  );
+}
+
 export function ChartSkeleton({
   size = 200,
   className = "",
@@ -366,35 +412,7 @@ export function ChartSkeleton({
   className?: string;
   "data-testid"?: string;
 }) {
-  return (
-    <motion.div
-      className={`flex flex-col items-center space-y-4 ${className}`}
-      data-testid={testId}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Skeleton
-        variant="circular"
-        width={size}
-        height={size}
-        className="mb-6"
-      />
-      <div className="w-full space-y-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="flex items-center space-x-3">
-            <Skeleton variant="circular" width={12} height={12} />
-            <Skeleton variant="text" height={16} width="30%" />
-            <Skeleton
-              variant="text"
-              height={16}
-              width="20%"
-              className="ml-auto"
-            />
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
+  return <CircularSkeletonSection size={size} className={className} data-testid={testId} />;
 }
 
 export function ButtonSkeleton({
@@ -462,35 +480,7 @@ export function PieChartSkeleton({
   className = "",
   "data-testid": testId = "pie-chart-skeleton",
 }: PieChartSkeletonProps) {
-  return (
-    <motion.div
-      className={`flex flex-col items-center space-y-4 ${className}`}
-      data-testid={testId}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Skeleton
-        variant="circular"
-        width={size}
-        height={size}
-        className="mb-6"
-      />
-      <div className="w-full space-y-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div key={index} className="flex items-center space-x-3">
-            <Skeleton variant="circular" width={12} height={12} />
-            <Skeleton variant="text" height={16} width="30%" />
-            <Skeleton
-              variant="text"
-              height={16}
-              width="20%"
-              className="ml-auto"
-            />
-          </div>
-        ))}
-      </div>
-    </motion.div>
-  );
+  return <CircularSkeletonSection size={size} className={className} data-testid={testId} />;
 }
 
 // =============================================================================

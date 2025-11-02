@@ -32,6 +32,7 @@
     "deadcode:ci": "knip --exports --dependencies --reporter=json",
     "deadcode:fix": "knip --exports --dependencies --fix",
     "deadcode:check": "knip --exports --dependencies --no-config-hints",
+    "dup:check": "jscpd src --gitignore --min-lines 5 --threshold 1.6",
     "prepare": "husky"
   },
   "dependencies": {
@@ -72,6 +73,7 @@
     "eslint-plugin-sonarjs": "^3.0.5",
     "eslint-plugin-unicorn": "^62.0.0",
     "husky": "^9.1.7",
+    "jscpd": "^4.0.5",
     "jsdom": "^25.0.1",
     "knip": "^5.66.4",
     "lint-staged": "^16.1.2",

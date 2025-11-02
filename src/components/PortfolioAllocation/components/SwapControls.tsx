@@ -41,6 +41,63 @@ export interface SwapControlsRef {
   resetValidation: () => void;
 }
 
+interface OptimizationToggleProps {
+  label: string;
+  description: string;
+  checked: boolean;
+  onToggle: (checked: boolean) => void;
+  disabled?: boolean;
+  "data-testid"?: string;
+}
+
+const CHECK_ICON_PATH =
+  "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z";
+
+const OptimizationToggle = ({
+  label,
+  description,
+  checked,
+  onToggle,
+  disabled = false,
+  "data-testid": testId,
+}: OptimizationToggleProps) => (
+  <label
+    className="flex items-center space-x-3 cursor-pointer group"
+    data-testid={testId}
+  >
+    <div className="relative">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={event => onToggle(event.target.checked)}
+        className="sr-only"
+        disabled={disabled}
+      />
+      <div
+        className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
+          checked
+            ? "bg-blue-500 border-blue-500"
+            : "border-gray-400 group-hover:border-blue-400"
+        } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
+      >
+        {checked && (
+          <svg
+            className="w-3 h-3 text-white absolute top-0.5 left-0.5"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path fillRule="evenodd" d={CHECK_ICON_PATH} clipRule="evenodd" />
+          </svg>
+        )}
+      </div>
+    </div>
+    <div className="flex-1">
+      <div className="text-sm font-medium text-white">{label}</div>
+      <div className="text-xs text-gray-400">{description}</div>
+    </div>
+  </label>
+);
+
 export const SwapControls = forwardRef<SwapControlsRef, SwapControlsProps>(
   (
     {
@@ -288,91 +345,25 @@ export const SwapControls = forwardRef<SwapControlsRef, SwapControlsProps>(
               Optimization Options
             </h4>
             <div className="grid grid-cols-1 gap-3">
-              {/* Dust Zap Checkbox */}
-              <label className="flex items-center space-x-3 cursor-pointer group">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={swapSettings.optimizationOptions?.dustZap || false}
-                    onChange={e =>
-                      handleOptimizationChange("dustZap", e.target.checked)
-                    }
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                      swapSettings.optimizationOptions?.dustZap
-                        ? "bg-blue-500 border-blue-500"
-                        : "border-gray-400 group-hover:border-blue-400"
-                    }`}
-                  >
-                    {swapSettings.optimizationOptions?.dustZap && (
-                      <svg
-                        className="w-3 h-3 text-white absolute top-0.5 left-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-white">Dust Zap</div>
-                  <div className="text-xs text-gray-400">
-                    Convert small token balances to ETH
-                  </div>
-                </div>
-              </label>
+              <OptimizationToggle
+                label="Dust Zap"
+                description="Convert small token balances to ETH"
+                checked={swapSettings.optimizationOptions?.dustZap || false}
+                onToggle={checked =>
+                  handleOptimizationChange("dustZap", checked)
+                }
+                data-testid="dust-zap-toggle"
+              />
 
-              {/* Rebalance Checkbox */}
-              <label className="flex items-center space-x-3 cursor-pointer group">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={
-                      swapSettings.optimizationOptions?.rebalance || false
-                    }
-                    onChange={e =>
-                      handleOptimizationChange("rebalance", e.target.checked)
-                    }
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                      swapSettings.optimizationOptions?.rebalance
-                        ? "bg-blue-500 border-blue-500"
-                        : "border-gray-400 group-hover:border-blue-400"
-                    }`}
-                  >
-                    {swapSettings.optimizationOptions?.rebalance && (
-                      <svg
-                        className="w-3 h-3 text-white absolute top-0.5 left-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium text-white">
-                    Rebalance
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    Optimize portfolio allocation
-                  </div>
-                </div>
-              </label>
+              <OptimizationToggle
+                label="Rebalance"
+                description="Optimize portfolio allocation"
+                checked={swapSettings.optimizationOptions?.rebalance || false}
+                onToggle={checked =>
+                  handleOptimizationChange("rebalance", checked)
+                }
+                data-testid="rebalance-toggle"
+              />
             </div>
           </div>
         )}

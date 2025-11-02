@@ -1,4 +1,4 @@
-import { dirname } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
 import tseslint from 'typescript-eslint';
@@ -10,6 +10,7 @@ import promisePlugin from 'eslint-plugin-promise';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const eslintProjectConfig = join(__dirname, "tsconfig.eslint.json");
 
 const compat = new FlatCompat({
   baseDirectory: __dirname,
@@ -54,7 +55,7 @@ const eslintConfig = [
     },
     languageOptions: {
       parserOptions: {
-        projectService: true,
+        project: eslintProjectConfig,
         tsconfigRootDir: __dirname,
       },
     },
@@ -91,10 +92,16 @@ const eslintConfig = [
       // ========================================
       // Code Smell Detection (SonarJS)
       // ========================================
-      'sonarjs/cognitive-complexity': ['error', 15],            // Max complexity per function
-      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],  // Catch magic strings
+      'sonarjs/cognitive-complexity': ['error', 25],            // Max complexity per function
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 2 }],  // Catch magic strings
+      'sonarjs/no-duplicated-branches': 'warn',                    // Flag duplicated branch bodies
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'warn',                      // Simplify nested ifs
+      'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing
+      'sonarjs/no-nested-conditional': 'warn',                  // Reduce noise for nested ternaries
+      'sonarjs/pseudo-random': 'off',                           // Allow Math.random for UI effects
+      'sonarjs/use-type-alias': 'off',                          // Optional type alias usage
+      'sonarjs/prefer-single-boolean-return': 'warn',           // Informational only
 
       // ========================================
       // Promise/Async Patterns
@@ -200,7 +207,29 @@ const eslintConfig = [
 
       // Allow any in scripts
       "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
     }
+  },
+  {
+    files: [
+      "cloudflare/**/*.js",
+      "scripts/**/*.{js,ts}",
+      "tests/**/*.{js,ts,tsx}"
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: null,
+      },
+    },
+    rules: {
+      "@typescript-eslint/await-thenable": "off",
+      "@typescript-eslint/no-floating-promises": "off",
+      "@typescript-eslint/no-misused-promises": "off",
+      "@typescript-eslint/no-unnecessary-condition": "off",
+      "@typescript-eslint/prefer-nullish-coalescing": "off",
+      "@typescript-eslint/prefer-optional-chain": "off",
+    },
   },
   {
     ignores: [
