@@ -14,10 +14,9 @@ export const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
 export const CHART_LABELS = {
   performance: "Portfolio value chart showing net worth over time",
   allocation: "Portfolio allocation chart",
-  drawdown: "Portfolio drawdown chart",
+  drawdown: "Drawdown and recovery analysis chart",
   sharpe: "Rolling Sharpe ratio chart",
   volatility: "Portfolio volatility chart",
-  underwater: "Portfolio underwater recovery chart",
 } as const;
 
 export const CHART_CONTENT_ID = "portfolio-chart-content";

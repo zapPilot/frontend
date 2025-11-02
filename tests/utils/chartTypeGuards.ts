@@ -265,6 +265,6 @@ export function isPerformanceHoverData(
  */
 export function isDrawdownHoverData(
   state: ChartHoverState | null
-): state is Extract<ChartHoverState, { chartType: "drawdown" }> {
-  return state?.chartType === "drawdown";
+): state is Extract<ChartHoverState, { chartType: "drawdown-recovery" }> {
+  return state?.chartType === "drawdown-recovery";
 }

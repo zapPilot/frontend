@@ -13,7 +13,6 @@ import {
   calculateDailyVolatility,
   getDrawdownSeverity,
   getDrawdownSeverityColor,
-  getRecoveryStatusColor,
   getSharpeColor,
   getSharpeInterpretation,
   getVolatilityRiskColor,
@@ -27,7 +26,6 @@ import type {
   DrawdownHoverData,
   PerformanceHoverData,
   SharpeHoverData,
-  UnderwaterHoverData,
   VolatilityHoverData,
 } from "../../types/chartHover";
 
@@ -36,7 +34,6 @@ const CHARTS_WITH_TOP_LEGEND = new Set([
   "allocation",
   "sharpe",
   "volatility",
-  "underwater",
 ]);
 
 interface ChartTooltipProps {
@@ -171,16 +168,56 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
             {severityLabel}
           </span>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Peak Date</span>
-          <span className="text-xs text-gray-300">{data.peakDate}</span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Days from Peak</span>
-          <span className="text-sm font-semibold text-blue-400">
-            {data.distanceFromPeak}
-          </span>
-        </div>
+        {data.peakDate && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-gray-400">Peak Date</span>
+            <span className="text-xs text-gray-300">{data.peakDate}</span>
+          </div>
+        )}
+        {data.distanceFromPeak != null && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-gray-400">Days from Peak</span>
+            <span className="text-sm font-semibold text-blue-400">
+              {data.distanceFromPeak}
+            </span>
+          </div>
+        )}
+        {data.recoveryDurationDays != null && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-gray-400">Recovery Time</span>
+            <span className="text-sm font-semibold text-emerald-400">
+              {data.recoveryDurationDays} days
+            </span>
+          </div>
+        )}
+        {data.recoveryDepth != null && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-gray-400">Cycle Depth</span>
+            <span className="text-sm font-semibold text-gray-200">
+              {formatters.percent(data.recoveryDepth, 1)}
+            </span>
+          </div>
+        )}
+        {data.isRecoveryPoint && (
+          <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-gray-700">
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              className="text-emerald-400"
+            >
+              <path
+                d="M2 10 L2 2 L10 6 Z"
+                fill="currentColor"
+                stroke="white"
+                strokeWidth="0.5"
+              />
+            </svg>
+            <span className="text-xs text-emerald-400 font-semibold">
+              New Peak
+            </span>
+          </div>
+        )}
       </div>
     </>
   );
@@ -281,62 +318,6 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
 }
 
 /**
- * Render Underwater chart tooltip content with recovery flag
- */
-function UnderwaterTooltipContent({ data }: { data: UnderwaterHoverData }) {
-  const statusColors = getRecoveryStatusColor(data.recoveryStatus);
-
-  // Calculate approximate days underwater (assuming daily data)
-  const daysUnderwater = Math.abs(data.underwater) > 0.5 ? "Ongoing" : "0";
-
-  return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-red-300">Underwater</span>
-          <span className="text-sm font-semibold text-white">
-            {formatters.percent(data.underwater, 2)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Days Underwater</span>
-          <span className="text-sm font-semibold text-blue-400">
-            {daysUnderwater}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Status</span>
-          <span className={`text-sm font-semibold ${statusColors.color}`}>
-            {data.recoveryStatus}
-          </span>
-        </div>
-        {data.isRecoveryPoint && (
-          <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-gray-700">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              className="text-green-400"
-            >
-              <path
-                d="M2 10 L2 2 L10 6 Z"
-                fill="currentColor"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-            </svg>
-            <span className="text-xs text-green-400 font-semibold">
-              Recovery Point
-            </span>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-
-/**
  * ChartTooltip component with smart positioning
  */
 export function ChartTooltip({
@@ -426,7 +407,7 @@ export function ChartTooltip({
             data={hoveredPoint as AllocationHoverData}
           />
         )}
-        {hoveredPoint.chartType === "drawdown" && (
+        {hoveredPoint.chartType === "drawdown-recovery" && (
           <DrawdownTooltipContent data={hoveredPoint as DrawdownHoverData} />
         )}
         {hoveredPoint.chartType === "sharpe" && (
@@ -435,11 +416,6 @@ export function ChartTooltip({
         {hoveredPoint.chartType === "volatility" && (
           <VolatilityTooltipContent
             data={hoveredPoint as VolatilityHoverData}
-          />
-        )}
-        {hoveredPoint.chartType === "underwater" && (
-          <UnderwaterTooltipContent
-            data={hoveredPoint as UnderwaterHoverData}
           />
         )}
       </div>

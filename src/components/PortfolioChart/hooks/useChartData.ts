@@ -14,6 +14,7 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../../../lib/portfolio-analytics";
+import { DRAWDOWN_CONSTANTS } from "../chartConstants";
 import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
@@ -21,9 +22,10 @@ import type {
 import type {
   AllocationTimeseriesInputPoint,
   DrawdownOverridePoint,
+  DrawdownRecoveryData,
+  DrawdownRecoverySummary,
   PortfolioStackedDataPoint,
   SharpeOverridePoint,
-  UnderwaterOverridePoint,
   VolatilityOverridePoint,
 } from "../types";
 import { buildAllocationHistory, buildStackedPortfolioData } from "../utils";
@@ -34,6 +36,158 @@ type PortfolioProtocolPoint = NonNullable<
 type PortfolioCategoryPoint = NonNullable<
   PortfolioDataPoint["categories"]
 >[number];
+
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+interface DrawdownCycleMeta {
+  data: DrawdownRecoveryData[];
+  summary: DrawdownRecoverySummary;
+}
+
+export function buildDrawdownRecoveryInsights(
+  points: { date: string; drawdown: number }[],
+  recoveryThreshold: number = DRAWDOWN_CONSTANTS.RECOVERY_THRESHOLD
+): DrawdownCycleMeta {
+  if (!points || points.length === 0) {
+    return {
+      data: [],
+      summary: {
+        maxDrawdown: 0,
+        totalRecoveries: 0,
+        averageRecoveryDays: null,
+        currentDrawdown: 0,
+        currentStatus: "At Peak",
+      },
+    };
+  }
+
+  const annotated: DrawdownRecoveryData[] = [];
+  const recoveryDurations: number[] = [];
+
+  const epsilon = 0.0005;
+
+  let lastPeakTimestamp: number | null = null;
+  let lastPeakDate: string | undefined = undefined;
+  let underwaterStartTimestamp: number | null = null;
+  let underwaterStartDate: string | undefined = undefined;
+  let currentCycleMin = 0;
+  let isUnderwater = false;
+  let previousDrawdown = points[0]?.drawdown ?? 0;
+
+  points.forEach(point => {
+    const normalizedDrawdown = Number(point.drawdown ?? 0);
+    const dateObj = new Date(point.date);
+    const timestamp = Number.isNaN(dateObj.getTime())
+      ? null
+      : dateObj.getTime();
+
+    if (lastPeakTimestamp == null && timestamp != null) {
+      lastPeakTimestamp = timestamp;
+      lastPeakDate = point.date;
+    }
+
+    let peakDateForPoint = lastPeakDate ?? point.date;
+    let daysFromPeak: number | undefined;
+    if (lastPeakTimestamp != null && timestamp != null) {
+      const diff = Math.round((timestamp - lastPeakTimestamp) / MS_PER_DAY);
+      daysFromPeak = diff >= 0 ? diff : 0;
+    }
+
+    let isRecoveryPoint = false;
+    let recoveryDurationDays: number | undefined;
+    let recoveryDepth: number | undefined;
+
+    if (normalizedDrawdown >= -epsilon) {
+      if (isUnderwater && timestamp != null) {
+        const startTs = underwaterStartTimestamp ?? lastPeakTimestamp ?? timestamp;
+        const diff = Math.round((timestamp - startTs) / MS_PER_DAY);
+        const duration = diff >= 0 ? diff : 0;
+        recoveryDurationDays = duration;
+        recoveryDurations.push(duration);
+        recoveryDepth = currentCycleMin;
+        isRecoveryPoint = true;
+      } else if (previousDrawdown < -epsilon) {
+        isRecoveryPoint = true;
+      }
+
+      isUnderwater = false;
+      currentCycleMin = 0;
+      underwaterStartTimestamp = timestamp ?? lastPeakTimestamp;
+      underwaterStartDate = point.date;
+      daysFromPeak = 0;
+      peakDateForPoint = point.date;
+
+      if (timestamp != null) {
+        lastPeakTimestamp = timestamp;
+        lastPeakDate = point.date;
+      }
+    } else {
+      if (!isUnderwater) {
+        isUnderwater = true;
+        underwaterStartTimestamp = lastPeakTimestamp ?? timestamp;
+        underwaterStartDate = lastPeakDate ?? point.date;
+        currentCycleMin = normalizedDrawdown;
+      } else if (normalizedDrawdown < currentCycleMin) {
+        currentCycleMin = normalizedDrawdown;
+      }
+
+      peakDateForPoint = underwaterStartDate ?? peakDateForPoint;
+      if (timestamp != null && underwaterStartTimestamp != null) {
+        const diff = Math.round((timestamp - underwaterStartTimestamp) / MS_PER_DAY);
+        daysFromPeak = diff >= 0 ? diff : 0;
+      }
+    }
+
+    annotated.push({
+      date: point.date,
+      drawdown: normalizedDrawdown,
+      isRecoveryPoint,
+      daysFromPeak,
+      peakDate: peakDateForPoint,
+      recoveryDurationDays,
+      recoveryDepth,
+    });
+
+    previousDrawdown = normalizedDrawdown;
+  });
+
+  const maxDrawdown = annotated.reduce((min, point) => {
+    if (!Number.isFinite(point.drawdown)) return min;
+    return Math.min(min, point.drawdown);
+  }, 0);
+
+  const currentPoint = annotated[annotated.length - 1];
+  const currentDrawdown = currentPoint?.drawdown ?? 0;
+  const currentStatus =
+    currentDrawdown <= recoveryThreshold ? "Underwater" : "At Peak";
+
+  const totalRecoveries = annotated.filter(point => point.isRecoveryPoint)
+    .length;
+
+  const averageRecoveryDays =
+    recoveryDurations.length > 0
+      ? Math.round(
+          recoveryDurations.reduce((sum, value) => sum + value, 0) /
+            recoveryDurations.length
+        )
+      : null;
+
+  return {
+    data: annotated,
+    summary: {
+      maxDrawdown,
+      totalRecoveries,
+      averageRecoveryDays,
+      currentDrawdown,
+      currentStatus,
+      latestPeakDate: lastPeakDate,
+      latestRecoveryDurationDays:
+        recoveryDurations.length > 0
+          ? recoveryDurations[recoveryDurations.length - 1]
+          : undefined,
+    },
+  };
+}
 
 /**
  * Interface for override data that can be passed to useChartData
@@ -47,7 +201,6 @@ interface ChartDataOverrides {
   drawdownData?: DrawdownOverridePoint[] | undefined;
   sharpeData?: SharpeOverridePoint[] | undefined;
   volatilityData?: VolatilityOverridePoint[] | undefined;
-  underwaterData?: UnderwaterOverridePoint[] | undefined;
 }
 
 /**
@@ -57,14 +210,10 @@ interface ChartData {
   // Processed data for each chart type
   stackedPortfolioData: PortfolioStackedDataPoint[];
   allocationHistory: AssetAllocationPoint[];
-  drawdownData: { date: string; drawdown: number }[];
+  drawdownRecoveryData: DrawdownRecoveryData[];
+  drawdownRecoverySummary: DrawdownRecoverySummary;
   sharpeData: { date: string; sharpe: number }[];
   volatilityData: { date: string; volatility: number }[];
-  underwaterData: {
-    date: string;
-    underwater: number;
-    recovery?: boolean;
-  }[];
 
   // Raw portfolio history for reference
   portfolioHistory: PortfolioDataPoint[];
@@ -111,8 +260,7 @@ export function useChartData(
     (overrides?.allocationData?.length ?? 0) > 0 ||
     (overrides?.drawdownData?.length ?? 0) > 0 ||
     (overrides?.sharpeData?.length ?? 0) > 0 ||
-    (overrides?.volatilityData?.length ?? 0) > 0 ||
-    (overrides?.underwaterData?.length ?? 0) > 0;
+    (overrides?.volatilityData?.length ?? 0) > 0;
 
   // UNIFIED DASHBOARD FETCH - Replaces 6 separate API calls
   const dashboardQuery = usePortfolioDashboard(userId, {
@@ -269,20 +417,6 @@ export function useChartData(
     };
   }, [dashboard?.drawdown_analysis?.enhanced]);
 
-  const underwaterRecoveryData = useMemo(() => {
-    const underwaterSection = dashboard?.drawdown_analysis?.underwater_recovery;
-    if (!underwaterSection) {
-      return null;
-    }
-
-    const underwaterSeries = underwaterSection.underwater_data ?? [];
-    if (underwaterSeries.length === 0) {
-      return { underwater_data: [] };
-    }
-
-    return { underwater_data: underwaterSeries };
-  }, [dashboard?.drawdown_analysis?.underwater_recovery]);
-
   // Transform allocation data to AllocationTimeseriesPoint format
   const allocationTimeseriesData = useMemo(() => {
     if (!dashboard?.allocation) {
@@ -384,26 +518,64 @@ export function useChartData(
     [portfolioHistory]
   );
 
-  // Drawdown data for DrawdownChart component
-  const drawdownData = useMemo(() => {
+  // Drawdown data for DrawdownRecoveryChart component
+  const drawdownRecovery = useMemo(() => {
+    let basePoints: { date: string; drawdown: number }[] = [];
+
     if (overrides?.drawdownData?.length) {
-      return overrides.drawdownData.map(point => ({
+      basePoints = overrides.drawdownData.map(point => ({
         date: point.date,
         drawdown: Number(point.drawdown ?? point.drawdown_pct ?? 0),
       }));
+
+      const overrideMeta = buildDrawdownRecoveryInsights(basePoints);
+
+      if (overrideMeta.data.length === overrides.drawdownData.length) {
+        const mergedData = overrideMeta.data.map((item, index) => {
+          const overridePoint = overrides.drawdownData?.[index];
+          return {
+            ...item,
+            ...(overridePoint?.isRecoveryPoint !== undefined && {
+              isRecoveryPoint: overridePoint.isRecoveryPoint,
+            }),
+            ...(overridePoint?.daysFromPeak !== undefined && {
+              daysFromPeak: overridePoint.daysFromPeak,
+            }),
+            ...(overridePoint?.peakDate && { peakDate: overridePoint.peakDate }),
+            ...(overridePoint?.recoveryDurationDays !== undefined && {
+              recoveryDurationDays: overridePoint.recoveryDurationDays,
+            }),
+            ...(overridePoint?.recoveryDepth !== undefined && {
+              recoveryDepth: overridePoint.recoveryDepth,
+            }),
+            ...(overridePoint?.isHistoricalPeriod !== undefined && {
+              isHistoricalPeriod: overridePoint.isHistoricalPeriod,
+            }),
+          } satisfies DrawdownRecoveryData;
+        });
+
+        return {
+          data: mergedData,
+          summary: overrideMeta.summary,
+        } satisfies DrawdownCycleMeta;
+      }
+
+      return overrideMeta;
     }
 
     if (
-      !enhancedDrawdownData?.drawdown_data ||
-      enhancedDrawdownData.drawdown_data.length === 0
+      enhancedDrawdownData?.drawdown_data &&
+      enhancedDrawdownData.drawdown_data.length > 0
     ) {
-      return calculateDrawdownData(portfolioHistory);
+      basePoints = enhancedDrawdownData.drawdown_data.map(point => ({
+        date: point.date,
+        drawdown: Number(point.drawdown_pct ?? 0),
+      }));
+      return buildDrawdownRecoveryInsights(basePoints);
     }
 
-    return enhancedDrawdownData.drawdown_data.map(point => ({
-      date: point.date,
-      drawdown: Number(point.drawdown_pct ?? 0),
-    }));
+    basePoints = calculateDrawdownData(portfolioHistory);
+    return buildDrawdownRecoveryInsights(basePoints);
   }, [overrides?.drawdownData, enhancedDrawdownData, portfolioHistory]);
 
   // Real data for Rolling Sharpe Ratio
@@ -472,42 +644,17 @@ export function useChartData(
       }));
   }, [rollingVolatilityData, overrides?.volatilityData]);
 
-  // Real data for Underwater Chart (enhanced drawdown)
-  const underwaterData = useMemo(() => {
-    if (overrides?.underwaterData?.length) {
-      return overrides.underwaterData.map(point => ({
-        date: point.date,
-        underwater: Number(point.underwater_pct ?? 0),
-        ...(point.recovery_point !== undefined && {
-          recovery: point.recovery_point,
-        }),
-      }));
-    }
-
-    if (
-      !underwaterRecoveryData?.underwater_data ||
-      underwaterRecoveryData.underwater_data.length === 0
-    ) {
-      return [];
-    }
-
-    return underwaterRecoveryData.underwater_data.map(point => ({
-      date: point.date,
-      underwater: Number(point.underwater_pct ?? 0),
-      ...(point.recovery_point !== undefined && {
-        recovery: point.recovery_point,
-      }),
-    }));
-  }, [overrides?.underwaterData, underwaterRecoveryData]);
+  const drawdownRecoveryData = drawdownRecovery.data;
+  const drawdownRecoverySummary = drawdownRecovery.summary;
 
   // Check for partial failures in unified dashboard
   return {
     stackedPortfolioData,
     allocationHistory,
-    drawdownData,
+    drawdownRecoveryData,
+    drawdownRecoverySummary,
     sharpeData,
     volatilityData,
-    underwaterData,
     portfolioHistory,
     drawdownReferenceData,
     isLoading,

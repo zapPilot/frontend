@@ -6,8 +6,7 @@
  */
 
 export { AllocationChart } from "./AllocationChart";
-export { DrawdownChart } from "./DrawdownChart";
+export { DrawdownRecoveryChart } from "./DrawdownRecoveryChart";
 export { PerformanceChart } from "./PerformanceChart";
 export { SharpeChart } from "./SharpeChart";
-export { UnderwaterChart } from "./UnderwaterChart";
 export { VolatilityChart } from "./VolatilityChart";

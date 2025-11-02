@@ -10,7 +10,6 @@ import type {
 import {
   DrawdownDataPoint,
   SharpeDataPoint,
-  UnderwaterDataPoint,
   VolatilityDataPoint,
 } from "../utils/chartHoverTestFactories";
 
@@ -273,11 +272,21 @@ export const ChartTestFixtures = {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
 
+      const drawdown = Math.min(0, i <= 15 ? -i * 0.6 : -(30 - i) * 0.6);
+      const isRecoveryPoint = i === 0 || drawdown >= -0.1;
+
       return {
         date: date.toISOString().split("T")[0]!,
-        drawdown_pct: Math.min(0, -i * 0.5),
-        portfolio_value: 10000 - i * 50,
-      };
+        drawdown_pct: drawdown,
+        portfolio_value: 10000 + drawdown * 80,
+        is_recovery_point: isRecoveryPoint,
+        days_from_peak: isRecoveryPoint ? 0 : Math.max(0, i - 8),
+        peak_date:
+          i === 0
+            ? date.toISOString().split("T")[0]!
+            : new Date("2025-01-01").toISOString().split("T")[0]!,
+        recovery_depth_pct: drawdown,
+      } satisfies DrawdownDataPoint;
     });
   },
 
@@ -289,13 +298,23 @@ export const ChartTestFixtures = {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
 
-      const drawdown = i < 15 ? -i * 0.7 : -(15 - (i - 15)) * 0.7;
+      const decline = i < 12 ? -i * 0.8 : -(12 - Math.max(0, i - 12)) * 0.8;
+      const drawdown = Math.min(0, decline);
+      const isRecoveryPoint = drawdown >= -0.05;
 
       return {
         date: date.toISOString().split("T")[0]!,
-        drawdown_pct: Math.min(0, drawdown),
-        portfolio_value: 10000 + drawdown * 100,
-      };
+        drawdown_pct: drawdown,
+        portfolio_value: 10000 + drawdown * 90,
+        is_recovery_point: isRecoveryPoint,
+        days_from_peak: isRecoveryPoint ? 0 : Math.max(0, i - 7),
+        peak_date:
+          i <= 12
+            ? new Date("2025-01-01").toISOString().split("T")[0]!
+            : new Date("2025-01-13").toISOString().split("T")[0]!,
+        recovery_duration_days: isRecoveryPoint ? Math.max(0, i - 12) : undefined,
+        recovery_depth_pct: drawdown,
+      } satisfies DrawdownDataPoint;
     });
   },
 
@@ -332,24 +351,6 @@ export const ChartTestFixtures = {
   },
 
   /**
-   * Underwater data with recovery points
-   */
-  underwaterData(): UnderwaterDataPoint[] {
-    return Array.from({ length: 30 }, (_, i) => {
-      const date = new Date("2025-01-01");
-      date.setDate(date.getDate() + i);
-
-      const isRecoveryPoint = i % 10 === 0 && i > 0;
-
-      return {
-        date: date.toISOString().split("T")[0]!,
-        underwater_pct: isRecoveryPoint ? 0 : -(i % 10) * 1.5,
-        recovery_point: isRecoveryPoint,
-      };
-    });
-  },
-
-  /**
    * Complete dataset for all chart types (for integration tests)
    */
   completeDataset() {
@@ -359,7 +360,6 @@ export const ChartTestFixtures = {
       drawdown: this.drawdownData(),
       sharpe: this.sharpeData(),
       volatility: this.volatilityData(),
-      underwater: this.underwaterData(),
     };
   },
 };

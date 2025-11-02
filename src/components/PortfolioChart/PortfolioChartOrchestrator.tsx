@@ -18,10 +18,9 @@ import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
   AllocationChart,
-  DrawdownChart,
+  DrawdownRecoveryChart,
   PerformanceChart,
   SharpeChart,
-  UnderwaterChart,
   VolatilityChart,
 } from "./charts";
 import { useChartData } from "./hooks";
@@ -39,10 +38,13 @@ const CHART_TYPES = [
     icon: TrendingUp,
   },
   { key: "allocation" as const, label: "Allocation", icon: PieChart },
-  { key: "drawdown" as const, label: "Drawdown", icon: Activity },
+  {
+    key: "drawdown" as const,
+    label: "Drawdown & Recovery",
+    icon: Activity,
+  },
   { key: "sharpe" as const, label: "Sharpe Ratio", icon: Target },
   { key: "volatility" as const, label: "Volatility", icon: BarChart3 },
-  { key: "underwater" as const, label: "Underwater", icon: Activity },
 ] as const;
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
@@ -60,7 +62,6 @@ type ChartType = (typeof CHART_TYPES)[number]["key"];
  * @param drawdownData - Optional override for drawdown data (testing)
  * @param sharpeData - Optional override for Sharpe ratio data (testing)
  * @param volatilityData - Optional override for volatility data (testing)
- * @param underwaterData - Optional override for underwater data (testing)
  * @param activeTab - Optional externally controlled active chart type
  * @param isLoading - Optional external loading state
  * @param error - Optional external error state
@@ -72,7 +73,6 @@ const PortfolioChartComponent = ({
   drawdownData: drawdownDataOverride,
   sharpeData: sharpeDataOverride,
   volatilityData: volatilityDataOverride,
-  underwaterData: underwaterDataOverride,
   activeTab,
   isLoading: externalLoading,
   error: externalError,
@@ -109,7 +109,6 @@ const PortfolioChartComponent = ({
       drawdownData: drawdownDataOverride,
       sharpeData: sharpeDataOverride,
       volatilityData: volatilityDataOverride,
-      underwaterData: underwaterDataOverride,
     },
     externalLoading,
     externalError
@@ -259,9 +258,9 @@ const PortfolioChartComponent = ({
             <AllocationChart data={chartData.allocationHistory} />
           )}
           {selectedChart === "drawdown" && (
-            <DrawdownChart
-              data={chartData.drawdownData}
-              referenceData={chartData.drawdownReferenceData}
+            <DrawdownRecoveryChart
+              data={chartData.drawdownRecoveryData}
+              summary={chartData.drawdownRecoverySummary}
             />
           )}
           {selectedChart === "sharpe" && (
@@ -270,13 +269,65 @@ const PortfolioChartComponent = ({
           {selectedChart === "volatility" && (
             <VolatilityChart data={chartData.volatilityData} />
           )}
-          {selectedChart === "underwater" && (
-            <UnderwaterChart data={chartData.underwaterData} />
-          )}
         </div>
 
         {/* Chart Summary Statistics */}
         <div className="mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {selectedChart === "drawdown" &&
+            chartData.drawdownRecoveryData.length > 0 && (
+              <>
+                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Max Drawdown
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-red-400">
+                    {formatPercentage(
+                      chartData.drawdownRecoverySummary.maxDrawdown,
+                      true,
+                      1
+                    )}
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Recoveries
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-gray-200">
+                    {chartData.drawdownRecoverySummary.totalRecoveries}
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Avg Recovery
+                  </div>
+                  <div className="mt-2 text-xl font-bold text-gray-300">
+                    {chartData.drawdownRecoverySummary.averageRecoveryDays != null
+                      ? `${chartData.drawdownRecoverySummary.averageRecoveryDays} days`
+                      : "—"}
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                    Current
+                  </div>
+                  <div className="mt-3 flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${chartData.drawdownRecoverySummary.currentStatus === "Underwater" ? "bg-red-500/10 border-red-500/30 text-red-400" : "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"}`}
+                    >
+                      {chartData.drawdownRecoverySummary.currentStatus}
+                    </span>
+                    <span className="text-lg font-semibold text-gray-100">
+                      {formatPercentage(
+                        chartData.drawdownRecoverySummary.currentDrawdown,
+                        true,
+                        1
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
           {selectedChart === "sharpe" && chartData.sharpeData.length > 0 && (
             <>
               <div className="text-center">
@@ -363,48 +414,6 @@ const PortfolioChartComponent = ({
               </>
             )}
 
-          {selectedChart === "underwater" &&
-            chartData.underwaterData.length > 0 && (
-              <>
-                <div className="text-center">
-                  <div className="text-sm text-gray-400">Max Drawdown</div>
-                  <div className="text-lg font-bold text-red-400">
-                    {Math.min(
-                      ...chartData.underwaterData.map(d => d.underwater)
-                    ).toFixed(1)}
-                    %
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-400">Recovery Times</div>
-                  <div className="text-lg font-bold text-green-400">
-                    {chartData.underwaterData.filter(d => d.recovery).length}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-400">Time Underwater</div>
-                  <div className="text-lg font-bold text-blue-400">
-                    {Math.round(
-                      (chartData.underwaterData.filter(d => d.underwater < -0.5)
-                        .length /
-                        chartData.underwaterData.length) *
-                        100
-                    )}
-                    %
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-400">Current Status</div>
-                  <div className="text-lg font-bold text-gray-300">
-                    {(chartData.underwaterData[
-                      chartData.underwaterData.length - 1
-                    ]?.underwater ?? 0) < -0.5
-                      ? "Underwater"
-                      : "Above Water"}
-                  </div>
-                </div>
-              </>
-            )}
         </div>
       </BaseCard>
     </motion.div>

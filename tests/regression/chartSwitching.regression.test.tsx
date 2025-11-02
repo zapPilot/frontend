@@ -65,7 +65,6 @@ describe("Chart Switching - Regression Tests", () => {
           drawdownData={ChartTestFixtures.drawdownData()}
           sharpeData={ChartTestFixtures.sharpeData()}
           volatilityData={ChartTestFixtures.volatilityData()}
-          underwaterData={ChartTestFixtures.underwaterData()}
           activeTab={activeTab}
         />
       </QueryClientProvider>
@@ -74,7 +73,7 @@ describe("Chart Switching - Regression Tests", () => {
 
   describe("Hover State Isolation", () => {
     it("should not carry over hover state when switching charts", async () => {
-      const { rerender } = renderChart("performance");
+      const { rerender, container } = renderChart("performance");
 
       // Hover on performance chart
       const performanceSvg = container.querySelector(
@@ -378,13 +377,7 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Switch through all chart types
-      const chartTypes = [
-        "allocation",
-        "drawdown",
-        "sharpe",
-        "volatility",
-        "underwater",
-      ];
+      const chartTypes = ["allocation", "drawdown", "sharpe", "volatility"];
 
       for (const chartType of chartTypes) {
         rerender(
@@ -395,18 +388,18 @@ describe("Chart Switching - Regression Tests", () => {
               drawdownData={ChartTestFixtures.drawdownData()}
               sharpeData={ChartTestFixtures.sharpeData()}
               volatilityData={ChartTestFixtures.volatilityData()}
-              underwaterData={ChartTestFixtures.underwaterData()}
               activeTab={chartType}
             />
           </QueryClientProvider>
         );
 
         await waitFor(() => {
-          // Each chart should have date labels
-          const dateLabels = container.querySelectorAll(
-            '[data-testid*="date"]'
+          const dataChartType =
+            chartType === "drawdown" ? "drawdown-recovery" : chartType;
+          const svg = container.querySelector(
+            `svg[data-chart-type="${dataChartType}"]`
           );
-          expect(dateLabels.length).toBeGreaterThanOrEqual(0);
+          expect(svg).not.toBeNull();
         });
       }
     });

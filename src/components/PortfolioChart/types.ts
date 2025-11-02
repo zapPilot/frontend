@@ -21,6 +21,33 @@ export interface DrawdownOverridePoint {
   drawdown_pct?: number;
   drawdown?: number;
   portfolio_value?: number;
+  isRecoveryPoint?: boolean;
+  daysFromPeak?: number;
+  peakDate?: string;
+  recoveryDurationDays?: number;
+  recoveryDepth?: number;
+  isHistoricalPeriod?: boolean;
+}
+
+export interface DrawdownRecoveryData {
+  date: string;
+  drawdown: number;
+  isRecoveryPoint?: boolean;
+  daysFromPeak?: number;
+  peakDate?: string;
+  recoveryDurationDays?: number;
+  recoveryDepth?: number;
+  isHistoricalPeriod?: boolean;
+}
+
+export interface DrawdownRecoverySummary {
+  maxDrawdown: number;
+  totalRecoveries: number;
+  averageRecoveryDays: number | null;
+  currentDrawdown: number;
+  currentStatus: "Underwater" | "At Peak";
+  latestPeakDate?: string;
+  latestRecoveryDurationDays?: number;
 }
 
 export interface SharpeOverridePoint {
@@ -32,12 +59,6 @@ export interface VolatilityOverridePoint {
   date: string;
   annualized_volatility_pct?: number;
   rolling_volatility_daily_pct?: number;
-}
-
-export interface UnderwaterOverridePoint {
-  date: string;
-  underwater_pct?: number;
-  recovery_point?: boolean;
 }
 
 /**
@@ -57,14 +78,12 @@ export interface PortfolioChartProps {
   drawdownData?: DrawdownOverridePoint[];
   sharpeData?: SharpeOverridePoint[];
   volatilityData?: VolatilityOverridePoint[];
-  underwaterData?: UnderwaterOverridePoint[];
   activeTab?:
     | "performance"
     | "allocation"
     | "drawdown"
     | "sharpe"
-    | "volatility"
-    | "underwater";
+    | "volatility";
   isLoading?: boolean;
   error?: Error | string | null;
 }

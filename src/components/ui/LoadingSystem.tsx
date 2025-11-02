@@ -22,11 +22,26 @@ type LoadingColor =
   | "green"
   | "red";
 
+const ARIA_LABEL_PROP = "aria-label" as const;
+const ARIA_HIDDEN_PROP = "aria-hidden" as const;
+const DATA_TEST_ID_PROP = "data-testid" as const;
+const TEXT_BLUE = "text-blue-600";
+const TEXT_GRAY = "text-gray-400";
+const TEXT_GRAY_DARK = "text-gray-600";
+const TEXT_GREEN = "text-green-600";
+const TEXT_RED = "text-red-600";
+const TEXT_YELLOW = "text-yellow-600";
+const TEXT_WHITE = "text-white";
+const BASE_SKELETON_CLASS = "bg-gray-200 animate-pulse";
+const SR_ONLY_CLASS = "sr-only";
+const DEFAULT_SPINNER_LABEL = "Loading";
+const DEFAULT_SKELETON_LABEL = "Loading content";
+
 interface BaseLoadingProps {
   className?: string;
-  "aria-label"?: string;
-  "aria-hidden"?: boolean | "true" | "false";
-  "data-testid"?: string;
+  [ARIA_LABEL_PROP]?: string;
+  [ARIA_HIDDEN_PROP]?: boolean | "true" | "false";
+  [DATA_TEST_ID_PROP]?: string;
 }
 
 interface SpinnerProps extends BaseLoadingProps {
@@ -64,15 +79,15 @@ const sizeClasses: Record<ComponentSize, string> = {
 };
 
 const colorClasses: Record<LoadingColor, string> = {
-  primary: "text-blue-600",
-  secondary: "text-gray-600",
-  blue: "text-blue-600",
-  white: "text-white",
-  gray: "text-gray-400",
-  green: "text-green-600",
-  success: "text-green-600",
-  red: "text-red-600",
-  warning: "text-yellow-600",
+  primary: TEXT_BLUE,
+  secondary: TEXT_GRAY_DARK,
+  blue: TEXT_BLUE,
+  white: TEXT_WHITE,
+  gray: TEXT_GRAY,
+  green: TEXT_GREEN,
+  success: TEXT_GREEN,
+  red: TEXT_RED,
+  warning: TEXT_YELLOW,
 };
 
 // =============================================================================
@@ -84,20 +99,20 @@ export function Spinner({
   color = "primary",
   variant = "default",
   className = "",
-  label = "Loading",
-  "aria-label": ariaLabel,
-  "aria-hidden": ariaHidden,
-  "data-testid": testId = "loading-spinner",
+  label = DEFAULT_SPINNER_LABEL,
+  [ARIA_LABEL_PROP]: ariaLabel,
+  [ARIA_HIDDEN_PROP]: ariaHidden,
+  [DATA_TEST_ID_PROP]: testId = "loading-spinner",
 }: SpinnerProps) {
-  const finalAriaLabel = ariaLabel || label;
+  const finalAriaLabel = ariaLabel ?? label;
   const isHidden = ariaHidden === true || ariaHidden === "true";
 
   const containerProps = {
     className: `inline-flex items-center ${sizeClasses[size]} ${className}`,
-    "data-testid": testId,
+    [DATA_TEST_ID_PROP]: testId,
     "data-size": size,
-    ...(!isHidden && { role: "status", "aria-label": finalAriaLabel }),
-    ...(isHidden && { "aria-hidden": ariaHidden }),
+    ...(!isHidden && { role: "status", [ARIA_LABEL_PROP]: finalAriaLabel }),
+    ...(isHidden && { [ARIA_HIDDEN_PROP]: ariaHidden }),
   } as const;
 
   if (variant === "dots") {
@@ -117,7 +132,7 @@ export function Spinner({
             />
           ))}
         </div>
-        <span className="sr-only">{label}</span>
+        <span className={SR_ONLY_CLASS}>{label}</span>
       </div>
     );
   }
@@ -134,7 +149,7 @@ export function Spinner({
             ease: "easeInOut",
           }}
         />
-        <span className="sr-only">{label}</span>
+        <span className={SR_ONLY_CLASS}>{label}</span>
       </div>
     );
   }
@@ -174,7 +189,7 @@ export function Spinner({
           strokeLinecap="round"
         />
       </motion.svg>
-      <span className="sr-only">{label}</span>
+      <span className={SR_ONLY_CLASS}>{label}</span>
     </div>
   );
 }
@@ -190,10 +205,10 @@ export function Skeleton({
   lines = 1,
   spacing = "mb-2",
   className = "",
-  "aria-label": ariaLabel = "Loading content",
-  "data-testid": testId = "loading-skeleton",
+  [ARIA_LABEL_PROP]: ariaLabel = DEFAULT_SKELETON_LABEL,
+  [DATA_TEST_ID_PROP]: testId = "loading-skeleton",
 }: SkeletonProps) {
-  const baseClasses = "bg-gray-200 animate-pulse";
+  const baseClasses = BASE_SKELETON_CLASS;
 
   const variantClasses: Record<SkeletonVariant, string> = {
     text: "h-4 rounded",
@@ -236,7 +251,7 @@ export function Skeleton({
               width:
                 index === lines - 1 && variant === "text"
                   ? "75%"
-                  : style["width"] || "100%",
+                  : (style["width"] ?? "100%"),
             }}
             initial={{ opacity: 0.6 }}
             animate={{ opacity: [0.6, 1, 0.6] }}
@@ -248,7 +263,7 @@ export function Skeleton({
             }}
           />
         ))}
-        <span className="sr-only">{ariaLabel}</span>
+        <span className={SR_ONLY_CLASS}>{ariaLabel}</span>
       </div>
     );
   }
@@ -270,7 +285,7 @@ export function Skeleton({
       data-variant={variant}
       data-lines={lines}
     >
-      <span className="sr-only">{ariaLabel}</span>
+      <span className={SR_ONLY_CLASS}>{ariaLabel}</span>
     </motion.div>
   );
 }
@@ -281,10 +296,10 @@ export function Skeleton({
 
 export function CardSkeleton({
   className = "",
-  "data-testid": testId = "card-skeleton",
+  [DATA_TEST_ID_PROP]: testId = "card-skeleton",
 }: {
   className?: string;
-  "data-testid"?: string;
+  [DATA_TEST_ID_PROP]?: string;
 }) {
   return (
     <div className={`p-6 ${className}`} data-testid={testId}>
@@ -296,15 +311,15 @@ export function CardSkeleton({
 export function LoadingCard({
   message,
   className = "",
-  "data-testid": testId = "loading-card",
-  "aria-label": ariaLabel,
+  [DATA_TEST_ID_PROP]: testId = "loading-card",
+  [ARIA_LABEL_PROP]: ariaLabel,
 }: {
   message?: string;
   className?: string;
-  "data-testid"?: string;
-  "aria-label"?: string;
+  [DATA_TEST_ID_PROP]?: string;
+  [ARIA_LABEL_PROP]?: string;
 }) {
-  const finalAriaLabel = ariaLabel || message || "Loading content";
+  const finalAriaLabel = ariaLabel ?? message ?? DEFAULT_SKELETON_LABEL;
 
   return (
     <div
@@ -321,10 +336,10 @@ export function LoadingCard({
 
 export function MetricsSkeleton({
   className = "",
-  "data-testid": testId = "metrics-skeleton",
+  [DATA_TEST_ID_PROP]: testId = "metrics-skeleton",
 }: {
   className?: string;
-  "data-testid"?: string;
+  [DATA_TEST_ID_PROP]?: string;
 }) {
   return (
     <div
@@ -379,16 +394,14 @@ function CardSkeletonContent() {
   );
 }
 
-interface CircularSkeletonSectionProps {
+interface CircularSkeletonSectionProps extends BaseLoadingProps {
   size: number;
-  className?: string;
-  "data-testid"?: string;
 }
 
 function CircularSkeletonSection({
   size,
   className = "",
-  "data-testid": testId,
+  [DATA_TEST_ID_PROP]: testId,
 }: CircularSkeletonSectionProps) {
   return (
     <motion.div
@@ -397,23 +410,47 @@ function CircularSkeletonSection({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-      <Skeleton variant="circular" width={size} height={size} className="mb-6" />
+      <Skeleton
+        variant="circular"
+        width={size}
+        height={size}
+        className="mb-6"
+      />
       <SkeletonLegend />
     </motion.div>
   );
 }
 
-export function ChartSkeleton({
-  size = 200,
-  className = "",
-  "data-testid": testId = "chart-skeleton",
-}: {
+interface CircularSkeletonComponentProps
+  extends Pick<BaseLoadingProps, "className"> {
   size?: number;
-  className?: string;
-  "data-testid"?: string;
-}) {
-  return <CircularSkeletonSection size={size} className={className} data-testid={testId} />;
+  [DATA_TEST_ID_PROP]?: string;
 }
+
+const createCircularSkeletonComponent = (
+  defaultTestId: string
+): React.FC<CircularSkeletonComponentProps> => {
+  const Component: React.FC<CircularSkeletonComponentProps> = ({
+    size = 200,
+    className = "",
+    [DATA_TEST_ID_PROP]: testId = defaultTestId,
+  }) => (
+    <CircularSkeletonSection
+      size={size}
+      className={className}
+      data-testid={testId}
+    />
+  );
+
+  return Component;
+};
+
+export const ChartSkeleton = createCircularSkeletonComponent("chart-skeleton");
+ChartSkeleton.displayName = "ChartSkeleton";
+
+export const PieChartSkeleton =
+  createCircularSkeletonComponent("pie-chart-skeleton");
+PieChartSkeleton.displayName = "PieChartSkeleton";
 
 export function ButtonSkeleton({
   width = "120px",
@@ -438,18 +475,15 @@ export function ButtonSkeleton({
   );
 }
 
-interface BalanceSkeletonProps {
+interface BalanceSkeletonProps extends BaseLoadingProps {
   size?: "small" | "default" | "large";
-  className?: string;
-  "data-testid"?: string;
-  "aria-label"?: string;
 }
 
 export function BalanceSkeleton({
   size = "default",
   className = "",
-  "data-testid": testId = "balance-skeleton",
-  "aria-label": ariaLabel = "Loading balance",
+  [DATA_TEST_ID_PROP]: testId = "balance-skeleton",
+  [ARIA_LABEL_PROP]: ariaLabel = "Loading balance",
 }: BalanceSkeletonProps) {
   const heights = {
     small: 24,
@@ -469,20 +503,6 @@ export function BalanceSkeleton({
   );
 }
 
-interface PieChartSkeletonProps {
-  size?: number;
-  className?: string;
-  "data-testid"?: string;
-}
-
-export function PieChartSkeleton({
-  size = 200,
-  className = "",
-  "data-testid": testId = "pie-chart-skeleton",
-}: PieChartSkeletonProps) {
-  return <CircularSkeletonSection size={size} className={className} data-testid={testId} />;
-}
-
 // =============================================================================
 // LOADING WRAPPER
 // =============================================================================
@@ -496,7 +516,7 @@ export function LoadingWrapper({
   if (isLoading) {
     return (
       <div className={className}>
-        {loadingComponent || <Skeleton variant="text" />}
+        {loadingComponent ?? <Skeleton variant="text" />}
       </div>
     );
   }
@@ -627,7 +647,7 @@ export function withLoadingState<P extends object>(
     const { isLoading, className, ...componentProps } = props;
 
     if (isLoading) {
-      return <LoadingState {...loadingProps} className={className || ""} />;
+      return <LoadingState {...loadingProps} className={className ?? ""} />;
     }
 
     return <Component {...(componentProps as P)} />;
@@ -676,14 +696,14 @@ export function useLoadingComponent(
 // =============================================================================
 
 export function UnifiedLoading({
-  "data-testid": testId,
+  [DATA_TEST_ID_PROP]: testId,
   ...rest
 }: SkeletonProps) {
   return <Skeleton data-testid={testId ?? "unified-loading"} {...rest} />;
 }
 
 export function BalanceLoading({
-  "data-testid": testId,
+  [DATA_TEST_ID_PROP]: testId,
   ...rest
 }: BalanceSkeletonProps) {
   return (
@@ -692,9 +712,9 @@ export function BalanceLoading({
 }
 
 export function PieChartLoading({
-  "data-testid": testId,
+  [DATA_TEST_ID_PROP]: testId,
   ...rest
-}: PieChartSkeletonProps) {
+}: CircularSkeletonComponentProps) {
   return (
     <PieChartSkeleton data-testid={testId ?? "pie-chart-loading"} {...rest} />
   );
@@ -704,10 +724,9 @@ export function PieChartLoading({
 // TOKEN LIST SKELETON
 // =============================================================================
 
-interface TokenListSkeletonProps {
+interface TokenListSkeletonProps extends Pick<BaseLoadingProps, "className"> {
   count?: number;
-  className?: string;
-  "data-testid"?: string;
+  [DATA_TEST_ID_PROP]?: string;
 }
 
 /**
@@ -718,7 +737,7 @@ interface TokenListSkeletonProps {
 export function TokenListSkeleton({
   count = 3,
   className = "",
-  "data-testid": testId = "token-list-skeleton",
+  [DATA_TEST_ID_PROP]: testId = "token-list-skeleton",
 }: TokenListSkeletonProps) {
   return (
     <div className={`space-y-1 p-2 ${className}`} data-testid={testId}>

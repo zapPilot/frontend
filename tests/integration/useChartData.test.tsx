@@ -1,14 +1,13 @@
 /**
  * Integration tests for useChartData hook
  *
- * Tests comprehensive data transformations for 6 chart types powered by the
+ * Tests comprehensive data transformations for 5 chart types powered by the
  * unified dashboard endpoint:
  * 1. Stacked Portfolio (DeFi + Wallet breakdown)
  * 2. Allocation History (BTC, ETH, Stablecoins, Altcoins)
- * 3. Drawdown Analysis
+ * 3. Drawdown & Recovery Analysis
  * 4. Sharpe Ratio (Risk-adjusted returns)
  * 5. Volatility Tracking
- * 6. Underwater Recovery
  *
  * Coverage includes:
  * - Happy path transformations
@@ -440,8 +439,8 @@ describe("useChartData - Data Transformations", () => {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.drawdownData).toHaveLength(4);
-    expect(result.current.drawdownData[2].drawdown).toBeCloseTo(10, 1);
+    expect(result.current.drawdownRecoveryData).toHaveLength(4);
+    expect(result.current.drawdownRecoveryData[2].drawdown).toBeCloseTo(10, 1);
   });
 
   it("calculates Sharpe ratio data correctly", () => {
@@ -508,26 +507,26 @@ describe("useChartData - Data Transformations", () => {
     expect(result.current.volatilityData[2].volatility).toBe(12.1);
   });
 
-  it("calculates underwater data correctly", () => {
+  it("calculates drawdown recovery insights correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.drawdown_analysis.underwater_recovery.underwater_data = [
+    dashboard.drawdown_analysis.enhanced.drawdown_data = [
       {
         date: "2025-01-01",
-        underwater_pct: -5.5,
-        recovery_point: false,
-        is_underwater: true,
+        drawdown_pct: 0,
+        portfolio_value: 10000,
+        peak_value: 10000,
       },
       {
         date: "2025-01-10",
-        underwater_pct: 0,
-        recovery_point: true,
-        is_underwater: false,
+        drawdown_pct: -6.2,
+        portfolio_value: 9380,
+        peak_value: 10000,
       },
       {
-        date: "2025-02-01",
-        underwater_pct: -3.2,
-        recovery_point: false,
-        is_underwater: true,
+        date: "2025-01-20",
+        drawdown_pct: 0,
+        portfolio_value: 10200,
+        peak_value: 10200,
       },
     ];
 
@@ -537,15 +536,18 @@ describe("useChartData - Data Transformations", () => {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.underwaterData).toHaveLength(3);
-    expect(result.current.underwaterData[0]).toMatchObject({
-      date: "2025-01-01",
-      underwater: -5.5,
+    expect(result.current.drawdownRecoveryData).toHaveLength(3);
+    expect(result.current.drawdownRecoveryData[1]).toMatchObject({
+      drawdown: -6.2,
+      isRecoveryPoint: false,
     });
-    expect(result.current.underwaterData[1]).toMatchObject({
-      date: "2025-01-10",
-      underwater: 0,
-      recovery: true,
+    expect(
+      result.current.drawdownRecoveryData.find(point => point.isRecoveryPoint)
+    ).toBeTruthy();
+
+    expect(result.current.drawdownRecoverySummary).toMatchObject({
+      totalRecoveries: 1,
+      currentStatus: "At Peak",
     });
   });
 });
@@ -667,10 +669,10 @@ describe("useChartData - Edge Cases", () => {
       { wrapper: createWrapper() }
     );
 
-    expect(result.current.drawdownData).toHaveLength(3);
-    expect(result.current.drawdownData[0].drawdown).toBe(0);
-    expect(result.current.drawdownData[1].drawdown).toBe(0);
-    expect(result.current.drawdownData[2].drawdown).toBe(5.5);
+    expect(result.current.drawdownRecoveryData).toHaveLength(3);
+    expect(result.current.drawdownRecoveryData[0].drawdown).toBe(0);
+    expect(result.current.drawdownRecoveryData[1].drawdown).toBe(0);
+    expect(result.current.drawdownRecoveryData[2].drawdown).toBe(5.5);
   });
 
   it("filters out null sharpe ratios", () => {

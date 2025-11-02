@@ -10,7 +10,6 @@ import type {
   DrawdownHoverData,
   SharpeHoverData,
   VolatilityHoverData,
-  UnderwaterHoverData,
 } from "@/types/chartHover";
 import type {
   PortfolioDataPoint,
@@ -97,6 +96,11 @@ export interface DrawdownDataPoint {
   date: string;
   drawdown_pct: number;
   portfolio_value: number;
+  peak_date?: string;
+  days_from_peak?: number;
+  recovery_duration_days?: number;
+  recovery_depth_pct?: number;
+  is_recovery_point?: boolean;
 }
 
 export const DrawdownDataFactory: BaseChartDataFactory<DrawdownDataPoint> = {
@@ -188,41 +192,6 @@ export const VolatilityDataFactory: BaseChartDataFactory<VolatilityDataPoint> =
   };
 
 /**
- * Underwater data point
- */
-export interface UnderwaterDataPoint {
-  date: string;
-  underwater_pct: number;
-  recovery_point?: boolean;
-}
-
-export const UnderwaterDataFactory: BaseChartDataFactory<UnderwaterDataPoint> =
-  {
-    createPoint(overrides = {}) {
-      return {
-        date: "2025-01-01",
-        underwater_pct: -10,
-        recovery_point: false,
-        ...overrides,
-      };
-    },
-
-    createPoints(count, generator) {
-      return Array.from({ length: count }, (_, i) => {
-        const baseDate = new Date("2025-01-01");
-        baseDate.setDate(baseDate.getDate() + i);
-
-        return this.createPoint({
-          date: baseDate.toISOString().split("T")[0],
-          underwater_pct: -10 - i * 0.3,
-          recovery_point: i % 10 === 0 && i > 0,
-          ...(generator ? generator(i) : {}),
-        });
-      });
-    },
-  };
-
-/**
  * Type-safe hover data builders for each chart type
  */
 export const HoverDataBuilders = {
@@ -291,7 +260,7 @@ export const HoverDataBuilders = {
     const peakDate = priorData[peakIndex]?.date || point.date;
 
     return {
-      chartType: "drawdown" as const,
+      chartType: "drawdown-recovery" as const,
       x,
       y,
       date: new Date(point.date).toLocaleDateString("en-US", {
@@ -300,12 +269,19 @@ export const HoverDataBuilders = {
         year: "numeric",
       }),
       drawdown: point.drawdown_pct,
-      peakDate: new Date(peakDate).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      distanceFromPeak: index - peakIndex,
+      peakDate: new Date(point.peak_date ?? peakDate).toLocaleDateString(
+        "en-US",
+        {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        }
+      ),
+      distanceFromPeak: point.days_from_peak ?? index - peakIndex,
+      isRecoveryPoint:
+        point.is_recovery_point ?? Math.abs(point.drawdown_pct) < 0.05,
+      recoveryDurationDays: point.recovery_duration_days,
+      recoveryDepth: point.recovery_depth_pct,
     };
   },
 
@@ -374,43 +350,6 @@ export const HoverDataBuilders = {
       }),
       volatility: vol,
       riskLevel,
-    };
-  },
-
-  /**
-   * Build underwater hover data
-   */
-  underwater(
-    point: UnderwaterDataPoint,
-    x: number,
-    y: number
-  ): UnderwaterHoverData {
-    const isRecovery = point.recovery_point || false;
-    const underwater = point.underwater_pct;
-    let recoveryStatus: string;
-
-    if (underwater >= -0.5) {
-      recoveryStatus = isRecovery ? "Recovered" : "Near Peak";
-    } else if (underwater >= -5) {
-      recoveryStatus = "Shallow Drawdown";
-    } else if (underwater >= -10) {
-      recoveryStatus = "Moderate Drawdown";
-    } else {
-      recoveryStatus = "Deep Drawdown";
-    }
-
-    return {
-      chartType: "underwater" as const,
-      x,
-      y,
-      date: new Date(point.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
-      underwater,
-      isRecoveryPoint: isRecovery,
-      recoveryStatus,
     };
   },
 };
@@ -507,7 +446,9 @@ export const ChartHoverOptionsFactory = {
   },
 
   drawdown(data: DrawdownDataPoint[]) {
-    return new ChartHoverOptionsBuilder<DrawdownDataPoint>("drawdown")
+    return new ChartHoverOptionsBuilder<DrawdownDataPoint>(
+      "drawdown-recovery"
+    )
       .withValueRange(-20, 0)
       .withYValueExtractor(point => point.drawdown_pct)
       .withHoverDataBuilder((point, x, y, index) =>
@@ -532,16 +473,6 @@ export const ChartHoverOptionsFactory = {
       .withYValueExtractor(point => point.annualized_volatility_pct)
       .withHoverDataBuilder((point, x, y) =>
         HoverDataBuilders.volatility(point, x, y)
-      )
-      .build();
-  },
-
-  underwater() {
-    return new ChartHoverOptionsBuilder<UnderwaterDataPoint>("underwater")
-      .withValueRange(-20, 0)
-      .withYValueExtractor(point => point.underwater_pct)
-      .withHoverDataBuilder((point, x, y) =>
-        HoverDataBuilders.underwater(point, x, y)
       )
       .build();
   },

@@ -43,7 +43,6 @@ describe("PortfolioChart debug", () => {
           drawdownData={ChartTestFixtures.drawdownData()}
           sharpeData={ChartTestFixtures.sharpeData()}
           volatilityData={ChartTestFixtures.volatilityData()}
-          underwaterData={ChartTestFixtures.underwaterData()}
           activeTab="performance"
         />
       </QueryClientProvider>
