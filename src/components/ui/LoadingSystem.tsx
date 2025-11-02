@@ -1,9 +1,10 @@
-import React from "react";
 import { motion } from "framer-motion";
+import React from "react";
+
 import type {
   ComponentSize,
-  SpinnerVariant,
   SkeletonVariant,
+  SpinnerVariant,
 } from "@/types/ui.types";
 
 // =============================================================================

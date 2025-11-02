@@ -1,9 +1,10 @@
 import { Check, Copy, DollarSign, Eye, EyeOff, Wallet } from "lucide-react";
 import React, { useState } from "react";
+
+import { GRADIENTS } from "../../constants/design-system";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { useToast } from "../../hooks/useToast";
-import { GRADIENTS } from "../../constants/design-system";
 
 interface WalletHeaderProps {
   onWalletManagerClick: () => void;

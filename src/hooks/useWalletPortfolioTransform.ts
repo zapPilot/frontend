@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
+
 import type { ApiCategoryKey } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
+
 import type { LandingPageResponse } from "../services/analyticsService";
 import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
 import {
-  createCategoriesFromApiData,
   type CategorySummary,
+  createCategoriesFromApiData,
 } from "../utils/portfolio.utils";
 
 interface WalletPortfolioTransformResult {

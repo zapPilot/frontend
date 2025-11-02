@@ -1,12 +1,13 @@
 "use client";
 
-import { GlassCard } from "@/components/ui";
-import { UnifiedLoading } from "@/components/ui/LoadingSystem";
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
-import { useUser } from "@/contexts/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, useCallback } from "react";
+
+import { BaseCard } from "@/components/ui";
+import { UnifiedLoading } from "@/components/ui/LoadingSystem";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { useUser } from "@/contexts/UserContext";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
@@ -91,7 +92,7 @@ const WalletManagerComponent = ({
           className="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
-          <GlassCard className="p-0 overflow-hidden">
+          <BaseCard variant="glass" className="p-0 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
               <div className="flex items-center space-x-3">
@@ -218,7 +219,7 @@ const WalletManagerComponent = ({
                   />
                 </div>
               )}
-          </GlassCard>
+          </BaseCard>
         </motion.div>
 
         {/* Edit Wallet Modal */}

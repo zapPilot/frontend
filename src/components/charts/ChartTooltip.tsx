@@ -5,6 +5,9 @@
  * and chart-specific content rendering.
  */
 
+import { motion } from "framer-motion";
+import { useRef } from "react";
+
 import { ASSET_CATEGORIES } from "@/constants/portfolio";
 import {
   calculateDailyVolatility,
@@ -17,8 +20,7 @@ import {
   getVolatilityRiskLevel,
 } from "@/lib/chartHoverUtils";
 import { formatters } from "@/lib/formatters";
-import { motion } from "framer-motion";
-import { useRef } from "react";
+
 import type {
   AllocationHoverData,
   ChartHoverState,

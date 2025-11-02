@@ -5,10 +5,10 @@
 
 import { formatters } from "./formatters";
 import {
-  severityMappers,
   getColorForSeverity,
   legacyLabelMapping,
   type SeverityLevel,
+  severityMappers,
 } from "./severityColors";
 
 // ============================================================================
@@ -44,7 +44,7 @@ export function getDrawdownSeverity(
  * @returns Formatted peak date string
  */
 export function findPeakDate(
-  drawdownData: Array<{ date: string; portfolio_value: number }>,
+  drawdownData: { date: string; portfolio_value: number }[],
   index: number
 ): string {
   const priorData = drawdownData.slice(0, index + 1);
@@ -65,7 +65,7 @@ export function findPeakDate(
  * @returns Number of days since peak
  */
 export function calculateDaysSincePeak(
-  drawdownData: Array<{ date: string; portfolio_value: number }>,
+  drawdownData: { date: string; portfolio_value: number }[],
   index: number
 ): number {
   const priorData = drawdownData.slice(0, index + 1);

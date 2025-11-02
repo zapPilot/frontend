@@ -1,6 +1,6 @@
 import { createIntentServiceError } from "../lib/base-error";
-import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
 
 const MAX_TOKEN_ADDRESSES = 50;

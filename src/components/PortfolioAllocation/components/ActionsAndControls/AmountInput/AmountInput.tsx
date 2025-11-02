@@ -1,11 +1,13 @@
 "use client";
 
-import { GRADIENTS } from "@/constants/design-system";
-import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
-import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+
+import { GRADIENTS } from "@/constants/design-system";
+import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
+import type { SwapToken } from "@/types/swap";
+
 import type { OperationMode } from "../../../types";
 import { constrainValue, formatCryptoAmount, parseInputValue } from "./utils";
 
@@ -43,8 +45,7 @@ export const AmountInput = memo<AmountInputProps>(
       }
       if (
         operationMode === "zapIn" &&
-        fromToken &&
-        fromToken.balance !== undefined
+        fromToken?.balance !== undefined
       ) {
         return fromToken.balance;
       }
@@ -158,7 +159,7 @@ export const AmountInput = memo<AmountInputProps>(
     const displayBalance =
       operationMode === "zapOut"
         ? formatCurrency(totalPortfolioValue)
-        : fromToken && fromToken.balance !== undefined
+        : fromToken?.balance !== undefined
           ? `${formatTokenAmount(fromToken.balance, fromToken.symbol)}`
           : formatCurrency(0);
 

@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback,useEffect, useState } from "react";
+
 import type { MenuPosition } from "../types/wallet.types";
 
 export const useDropdownMenu = () => {

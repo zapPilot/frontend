@@ -1,9 +1,10 @@
 "use client";
 
-import { GlassCard } from "@/components/ui/GlassCard";
-import { Z_INDEX } from "@/constants/design-system";
-import { logger, LogLevel, type LogEntry } from "@/utils/logger";
 import { useEffect, useState } from "react";
+
+import { BaseCard } from "@/components/ui/BaseCard";
+import { Z_INDEX } from "@/constants/design-system";
+import { type LogEntry,logger, LogLevel } from "@/utils/logger";
 
 /**
  * Development Log Viewer Component
@@ -73,7 +74,7 @@ export function LogViewer() {
       </button>
 
       {isVisible && (
-        <GlassCard className="mt-2 w-96 max-h-96 overflow-hidden">
+        <BaseCard variant="glass" className="mt-2 w-96 max-h-96 overflow-hidden">
           <div className="p-3">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-sm font-semibold">Development Logs</h3>
@@ -143,7 +144,7 @@ export function LogViewer() {
               })}
             </div>
           </div>
-        </GlassCard>
+        </BaseCard>
       )}
     </div>
   );

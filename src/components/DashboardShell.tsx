@@ -1,18 +1,19 @@
 "use client";
 
+import dynamic from "next/dynamic";
+import { ComponentType, ReactNode, useCallback, useState } from "react";
+
+import { AnalyticsTab } from "@/components/AnalyticsTab";
 import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingSystem";
 import { WalletPortfolio } from "@/components/WalletPortfolio";
-import { AnalyticsTab } from "@/components/AnalyticsTab";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 import {
   InvestmentOpportunity,
   type NavigationContext,
 } from "@/types/investment";
-import dynamic from "next/dynamic";
-import { ComponentType, ReactNode, useCallback, useState } from "react";
-import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 
 // Factory function for dynamic loading components
 const createLoadingComponent = (message: string) => {

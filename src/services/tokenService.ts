@@ -3,10 +3,10 @@
  * Service functions for fetching supported zap tokens from backend API
  */
 
-import { SwapToken } from "../types/swap";
 import { createIntentServiceError } from "../lib/base-error";
-import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { httpUtils } from "../lib/http-utils";
+import { SwapToken } from "../types/swap";
 
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;
@@ -22,14 +22,12 @@ interface ZapTokensResponse {
   chainId: number;
   chainName: string;
   nativeToken: string;
-  tokens: Array<
-    Omit<SwapToken, "chainId"> & {
+  tokens: (Omit<SwapToken, "chainId"> & {
       type?: "native" | "wrapped" | "erc20";
       wrappedVersion?: string;
       nativeVersion?: string;
       hasDeposit?: boolean;
-    }
-  >;
+    })[];
 }
 
 export const getZapTokens = (chainId: number): Promise<SwapToken[]> =>

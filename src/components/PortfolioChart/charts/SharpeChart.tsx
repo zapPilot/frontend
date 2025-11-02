@@ -1,18 +1,19 @@
 "use client";
 
 import { memo } from "react";
+
 import { useChartHover } from "../../../hooks/useChartHover";
+import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
-import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
 import {
-  getChartInteractionProps,
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
+  getChartInteractionProps,
 } from "../utils";
 
 interface SharpeChartProps {
-  data: Array<{ date: string; sharpe: number }>;
+  data: { date: string; sharpe: number }[];
   width?: number;
   height?: number;
   padding?: number;

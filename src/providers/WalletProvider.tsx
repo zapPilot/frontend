@@ -9,24 +9,25 @@
 
 import {
   createContext,
-  useContext,
-  useCallback,
-  useMemo,
   ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
 } from "react";
 import {
   useActiveAccount,
-  useConnect,
-  useDisconnect,
   useActiveWallet,
   useActiveWalletChain,
+  useConnect,
+  useConnectedWallets,
+  useDisconnect,
   useSwitchActiveWalletChain,
   useWalletBalance,
-  useConnectedWallets,
 } from "thirdweb/react";
+
+import { walletLogger } from "@/utils/logger";
 // Chain types are handled internally
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
-import { walletLogger } from "@/utils/logger";
 
 // Essential types for simplified wallet
 interface SimplifiedWalletAccount {

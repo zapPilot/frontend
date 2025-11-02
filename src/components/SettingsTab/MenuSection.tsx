@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ChevronRight, LucideIcon } from "lucide-react";
+
 import {
   fadeInUp,
   slideInLeft,

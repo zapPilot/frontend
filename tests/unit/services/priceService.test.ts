@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { httpUtils } from "@/lib/http-utils";
-import * as priceService from "@/services/priceService";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import type { TokenPriceData } from "@/services/priceService";
 
 // Mock HTTP utilities
-vi.mock("@/lib/http-utils", () => ({
+const httpUtilsMock = vi.hoisted(() => ({
   httpUtils: {
     intentEngine: {
       get: vi.fn(),
     },
   },
 }));
+
+vi.mock("@/lib/http-utils", () => httpUtilsMock);
 
 // Mock string utils
 vi.mock("@/lib/stringUtils", () => ({
@@ -21,9 +21,31 @@ vi.mock("@/lib/stringUtils", () => ({
       .filter((s, i, a) => a.indexOf(s) === i),
 }));
 
+// Ensure these tests run against the real service implementation
+vi.unmock("@/services/priceService");
+
+type PriceServiceModule = typeof import("@/services/priceService");
+type HttpUtilsModule = typeof import("@/lib/http-utils");
+
+let priceService: PriceServiceModule;
+let httpUtils: HttpUtilsModule["httpUtils"];
+
+const loadModules = async () => {
+  // Reset module registry so previous mocks don't bleed between suites
+  vi.resetModules();
+
+  ({ httpUtils } = await import("@/lib/http-utils"));
+  priceService = await import("@/services/priceService");
+};
+
+beforeAll(async () => {
+  await loadModules();
+});
+
 describe("priceService", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await loadModules();
   });
 
   describe("getTokenPrices", () => {

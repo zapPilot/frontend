@@ -4,12 +4,13 @@ import { motion } from "framer-motion";
 import {
   ExternalLink,
   Github,
+  LucideIcon,
   MessageCircle,
-  Twitter,
   MessageSquare,
   Send,
-  LucideIcon,
+  Twitter,
 } from "lucide-react";
+
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface SocialLink {

@@ -5,20 +5,21 @@
  * Supports single circles, multi-colored circles, and flagged circles for recovery points.
  */
 
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
+
 import { CHART_COLORS } from "@/constants/portfolio";
-import { formatters } from "@/lib/formatters";
 import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
+import { formatters } from "@/lib/formatters";
 import {
+  type ChartHoverState,
   isAllocationHover,
   isDrawdownHover,
   isPerformanceHover,
   isSharpeHover,
   isUnderwaterHover,
   isVolatilityHover,
-  type ChartHoverState,
 } from "@/types/chartHover";
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
 
 interface ChartIndicatorProps {
   /** Current hover state or null */

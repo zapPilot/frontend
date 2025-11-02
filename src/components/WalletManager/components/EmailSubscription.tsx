@@ -1,4 +1,5 @@
 import { GradientButton, LoadingSpinner } from "@/components/ui";
+
 import type { OperationState } from "../types/wallet.types";
 
 interface EmailSubscriptionProps {

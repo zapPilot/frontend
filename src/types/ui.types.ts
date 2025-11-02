@@ -358,11 +358,11 @@ export const SIZE_ORDER: readonly ComponentSize[] = [
  * ```
  */
 export type {
-  ComponentSize as Size,
-  StandardSize as StandardComponentSize,
   ButtonVariant as ButtonStyle,
-  LoadingVariant as LoadingStyle,
-  SpinnerVariant as SpinnerStyle,
-  SkeletonVariant as SkeletonStyle,
   LoadingColor as Color,
+  LoadingVariant as LoadingStyle,
+  ComponentSize as Size,
+  SkeletonVariant as SkeletonStyle,
+  SpinnerVariant as SpinnerStyle,
+  StandardSize as StandardComponentSize,
 };

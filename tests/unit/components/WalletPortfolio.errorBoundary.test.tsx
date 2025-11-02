@@ -17,9 +17,9 @@ vi.mock("../../../src/hooks/usePortfolioState");
 vi.mock("../../../src/utils/portfolio.utils");
 
 // Mock child components to test error boundaries at different levels
-vi.mock("../../../src/components/ui/GlassCard", () => ({
-  GlassCard: vi.fn(({ children }) => (
-    <div data-testid="glass-card">{children}</div>
+vi.mock("../../../src/components/ui/BaseCard", () => ({
+  BaseCard: vi.fn(({ children }) => (
+    <div data-testid="base-card">{children}</div>
   )),
 }));
 

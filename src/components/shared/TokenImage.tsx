@@ -1,4 +1,5 @@
 import React from "react";
+
 import { BaseComponentProps } from "../../types/ui.types";
 import { ImageWithFallback } from "./ImageWithFallback";
 

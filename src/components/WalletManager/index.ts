@@ -5,32 +5,32 @@ export { WalletManager } from "./WalletManager";
 export type { WalletManagerProps } from "./types/wallet.types";
 
 // Components
-export { WalletCard } from "./components/WalletCard";
-export { WalletActionMenu } from "./components/WalletActionMenu";
-export { EditWalletModal } from "./components/EditWalletModal";
 export { AddWalletForm } from "./components/AddWalletForm";
+export { EditWalletModal } from "./components/EditWalletModal";
 export { EmailSubscription } from "./components/EmailSubscription";
+export { WalletActionMenu } from "./components/WalletActionMenu";
+export { WalletCard } from "./components/WalletCard";
 export { WalletList } from "./components/WalletList";
 
 // Hooks
-export { useWalletOperations } from "./hooks/useWalletOperations";
-export { useEmailSubscription } from "./hooks/useEmailSubscription";
 export { useDropdownMenu } from "./hooks/useDropdownMenu";
+export { useEmailSubscription } from "./hooks/useEmailSubscription";
+export { useWalletOperations } from "./hooks/useWalletOperations";
 
 // Services
 export {
-  loadWallets,
   addWallet,
+  loadWallets,
   removeWallet,
-  updateWalletLabel,
-  updateUserEmailSubscription,
   unsubscribeUserEmail,
+  updateUserEmailSubscription,
+  updateWalletLabel,
 } from "./services/WalletService";
 
 // Utils
 export {
   validateAddress,
-  validateLabel,
   validateEmail,
+  validateLabel,
   validateNewWallet,
 } from "./utils/validation";

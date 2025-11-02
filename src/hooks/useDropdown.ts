@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback,useState } from "react";
 
 /**
  * Return type for the useDropdown hook
@@ -49,7 +49,7 @@ interface UseDropdownReturn {
  * ```
  */
 export const useDropdown = (
-  initialState: boolean = false
+  initialState = false
 ): UseDropdownReturn => {
   const [isOpen, setIsOpen] = useState(initialState);
 

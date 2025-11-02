@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
+
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getAnalyticsMetrics } from "../../lib/portfolio-analytics";
 import { KeyMetricsGrid } from "./components";

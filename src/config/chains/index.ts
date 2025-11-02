@@ -40,9 +40,8 @@ export {
 } from "./adapters";
 
 // Re-export for convenience
-import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
-
 import { getMainnetChains, toThirdWebChains } from "./adapters";
+import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
 /**
  * Convenience functions for common use cases

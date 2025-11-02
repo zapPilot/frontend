@@ -1,5 +1,9 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
+import { memo, useMemo } from "react";
+
 import { TokenListSkeleton } from "@/components/ui";
 import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
@@ -8,9 +12,7 @@ import {
   type UseZapTokensWithStatesOptions,
 } from "@/hooks/queries/useZapTokensQuery";
 import type { SwapToken } from "@/types/swap";
-import { motion } from "framer-motion";
-import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
-import { memo, useMemo } from "react";
+
 import { TokenSummary } from "./TokenSummary";
 
 interface TokenSelectorProps {

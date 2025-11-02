@@ -4,13 +4,14 @@ import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
 import {
   forwardRef,
+  type Ref,
   useCallback,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
-  type Ref,
 } from "react";
+
 import { useUser } from "../../../contexts/UserContext";
 import type { SwapToken } from "../../../types/swap";
 import { SlippageComponent } from "../../shared/SlippageComponent";

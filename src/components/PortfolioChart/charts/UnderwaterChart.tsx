@@ -1,18 +1,19 @@
 "use client";
 
 import { memo } from "react";
+
 import { useChartHover } from "../../../hooks/useChartHover";
+import { getRecoveryStatus } from "../../../lib/chartHoverUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, UNDERWATER_CONSTANTS } from "../chartConstants";
-import { getRecoveryStatus } from "../../../lib/chartHoverUtils";
 import {
-  getChartInteractionProps,
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
+  getChartInteractionProps,
 } from "../utils";
 
 interface UnderwaterChartProps {
-  data: Array<{ date: string; underwater: number; recovery?: boolean }>;
+  data: { date: string; underwater: number; recovery?: boolean }[];
   width?: number;
   height?: number;
   padding?: number;

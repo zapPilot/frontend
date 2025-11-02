@@ -39,20 +39,20 @@ export interface PortfolioDataPoint {
   value: number;
   change: number;
   benchmark?: number;
-  protocols?: Array<{
+  protocols?: {
     protocol: string;
     chain: string;
     value: number;
     pnl: number;
     sourceType?: "defi" | "wallet" | string;
     category?: string;
-  }>;
-  categories?: Array<{
+  }[];
+  categories?: {
     category: string;
     sourceType?: "defi" | "wallet" | string;
     value: number;
     pnl: number;
-  }>;
+  }[];
   chainsCount?: number;
 }
 

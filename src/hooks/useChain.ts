@@ -8,8 +8,10 @@
 "use client";
 
 import { useCallback } from "react";
-import { useWallet } from "./useWallet";
+
 import { chainUtils } from "@/types/wallet";
+
+import { useWallet } from "./useWallet";
 
 /**
  * Simplified chain hook

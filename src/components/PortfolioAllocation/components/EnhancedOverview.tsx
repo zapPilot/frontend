@@ -1,6 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
+
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+
 import { usePortfolioAllocationViewModel } from "../hooks";
 import {
   ChartDataPoint,
@@ -13,7 +16,6 @@ import { CategoryListSection } from "./Categories";
 import { PerformanceTrendChart, PortfolioCharts } from "./Charts";
 import { OverviewHeader } from "./Headers";
 import { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
-import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface EnhancedOverviewProps {
   processedCategories: ProcessedAssetCategory[];

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, ReactNode, useContext } from "react";
+
 import { useCurrentUser, type UserInfo } from "../hooks/queries/useUserQuery";
 
 // Types are now imported from useUserQuery hook

@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { createQueryConfig } from "./queryDefaults";
+
 import { queryKeys } from "../../lib/queryClient";
+import { dedupeStrings } from "../../lib/stringUtils";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
 import type { SwapToken } from "../../types/swap";
+import { createQueryConfig } from "./queryDefaults";
 import {
-  useTokenBalancesQuery,
   type UseTokenBalancesParams,
+  useTokenBalancesQuery,
 } from "./useTokenBalancesQuery";
-import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
-import { dedupeStrings } from "../../lib/stringUtils";
+import { type TokenPriceMap,useTokenPricesQuery } from "./useTokenPricesQuery";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain

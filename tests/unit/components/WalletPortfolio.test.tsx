@@ -44,8 +44,8 @@ vi.mock("../../../src/components/WalletManager", () => ({
 }));
 
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: vi.fn(({ children }: { children: React.ReactNode }) => (
-    <div data-testid="glass-card">{children}</div>
+  BaseCard: vi.fn(({ children }: { children: React.ReactNode }) => (
+    <div data-testid="base-card">{children}</div>
   )),
   GradientButton: vi.fn(
     ({

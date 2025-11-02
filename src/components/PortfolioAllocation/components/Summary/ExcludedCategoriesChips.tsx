@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import { memo } from "react";
+
 import { ProcessedAssetCategory } from "../../types";
 
 interface ExcludedCategoriesChipsProps {

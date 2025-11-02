@@ -9,8 +9,8 @@
  */
 
 import { createIntentServiceError } from "../lib/base-error";
-import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { httpUtils } from "../lib/http-utils";
 import { normalizeSymbol, normalizeSymbols } from "../lib/stringUtils";
 
 // Get configured client
@@ -159,7 +159,7 @@ export const getTokenPrices = (symbols: string[]): Promise<TokenPriceData[]> =>
       `/tokens/prices?tokens=${normalizedSymbols.join(",")}`
     );
 
-    if (!response || !response.results) {
+    if (!response?.results) {
       return normalizedSymbols.map(symbol => ({
         symbol,
         price: null,
@@ -238,7 +238,7 @@ export const getTokenPrice = (symbol: string): Promise<TokenPriceData> =>
         `/tokens/price/${normalizedSymbol}`
       );
 
-      if (!response || !response.success) {
+      if (!response?.success) {
         return {
           symbol: normalizedSymbol,
           price: null,

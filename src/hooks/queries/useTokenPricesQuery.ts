@@ -10,13 +10,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+
+import { queryKeys } from "../../lib/queryClient";
+import { normalizeSymbols } from "../../lib/stringUtils";
 import {
   getTokenPrices,
   type TokenPriceData,
 } from "../../services/priceService";
 import { createQueryConfig } from "./queryDefaults";
-import { queryKeys } from "../../lib/queryClient";
-import { normalizeSymbols } from "../../lib/stringUtils";
 
 // Price-specific timing constants
 const PRICE_STALE_TIME = 2 * 60 * 1000; // 2 minutes - prices change frequently
@@ -291,11 +292,11 @@ export const useTokenPricesWithStates = (
     let oldestAge = 0;
 
     if (prices) {
-      prices.forEach(price => {
+      for (const price of prices) {
         const age = getPriceAge(price.timestamp);
         totalAge += age;
         oldestAge = Math.max(oldestAge, age);
-      });
+      }
     }
 
     const averageAge = symbolCount > 0 ? totalAge / symbolCount : 0;

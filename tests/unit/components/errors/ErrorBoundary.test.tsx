@@ -31,10 +31,10 @@ vi.mock("../../../../src/components/ui/GradientButton", () => ({
   )),
 }));
 
-// Mock GlassCard
-vi.mock("../../../../src/components/ui/GlassCard", () => ({
-  GlassCard: vi.fn(({ children, className }) => (
-    <div className={className} data-testid="glass-card">
+// Mock BaseCard
+vi.mock("../../../../src/components/ui/BaseCard", () => ({
+  BaseCard: vi.fn(({ children, className }) => (
+    <div className={className} data-testid="base-card">
       {children}
     </div>
   )),

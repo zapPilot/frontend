@@ -6,17 +6,18 @@
  */
 
 import {
+  type MouseEvent,
+  type PointerEvent,
+  type TouchEvent,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type MouseEvent,
-  type PointerEvent,
-  type TouchEvent,
 } from "react";
-import { logger } from "../utils/logger";
-import type { ChartHoverState } from "../types/chartHover";
+
 import { clamp, clampMin } from "../lib/mathUtils";
+import type { ChartHoverState } from "../types/chartHover";
+import { logger } from "../utils/logger";
 
 /**
  * Configuration options for chart hover behavior

@@ -8,10 +8,11 @@
  */
 
 import { useMemo } from "react";
+
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
 import {
-  CHART_PERIODS,
   calculateDrawdownData,
+  CHART_PERIODS,
 } from "../../../lib/portfolio-analytics";
 import type {
   AssetAllocationPoint,
@@ -20,10 +21,10 @@ import type {
 import type {
   AllocationTimeseriesInputPoint,
   DrawdownOverridePoint,
-  SharpeOverridePoint,
-  VolatilityOverridePoint,
-  UnderwaterOverridePoint,
   PortfolioStackedDataPoint,
+  SharpeOverridePoint,
+  UnderwaterOverridePoint,
+  VolatilityOverridePoint,
 } from "../types";
 import { buildAllocationHistory, buildStackedPortfolioData } from "../utils";
 
@@ -56,20 +57,20 @@ interface ChartData {
   // Processed data for each chart type
   stackedPortfolioData: PortfolioStackedDataPoint[];
   allocationHistory: AssetAllocationPoint[];
-  drawdownData: Array<{ date: string; drawdown: number }>;
-  sharpeData: Array<{ date: string; sharpe: number }>;
-  volatilityData: Array<{ date: string; volatility: number }>;
-  underwaterData: Array<{
+  drawdownData: { date: string; drawdown: number }[];
+  sharpeData: { date: string; sharpe: number }[];
+  volatilityData: { date: string; volatility: number }[];
+  underwaterData: {
     date: string;
     underwater: number;
     recovery?: boolean;
-  }>;
+  }[];
 
   // Raw portfolio history for reference
   portfolioHistory: PortfolioDataPoint[];
 
   // Drawdown reference data
-  drawdownReferenceData: Array<{ date: string; portfolio_value: number }>;
+  drawdownReferenceData: { date: string; portfolio_value: number }[];
 
   // Loading and error states
   isLoading: boolean;

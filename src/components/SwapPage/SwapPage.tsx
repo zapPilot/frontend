@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useCallback, useState } from "react";
+
+import { useChain } from "@/hooks/useChain";
+
 import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
-import { useChain } from "@/hooks/useChain";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
 import { formatCurrency } from "../../lib/formatters";
 import {
@@ -299,7 +301,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         )}
 
         {/* Execution Error Display (when no intent ID) */}
-        {zapExecution && zapExecution.error && !zapExecution.intentId && (
+        {zapExecution?.error && !zapExecution.intentId && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <span className="text-red-500">❌</span>

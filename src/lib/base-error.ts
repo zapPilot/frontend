@@ -14,10 +14,7 @@ import { getBackendErrorMessage, getIntentErrorMessage } from "./errorMessages";
 // TYPES AND INTERFACES
 // =============================================================================
 
-interface ErrorDetails {
-  /** Additional error context data */
-  [key: string]: unknown;
-}
+type ErrorDetails = Record<string, unknown>;
 
 /** Interface for JSON representation of errors */
 interface ErrorJSON {
@@ -180,7 +177,7 @@ interface NormalizedMessageResult {
 function normalizeErrorMessage(
   value: unknown,
   fallback: string,
-  seen: WeakSet<object> = new WeakSet()
+  seen = new WeakSet<object>()
 ): NormalizedMessageResult {
   if (value === undefined || value === null) {
     return { value: fallback, found: false };

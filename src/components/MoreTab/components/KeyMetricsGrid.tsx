@@ -7,7 +7,8 @@
 
 import { motion } from "framer-motion";
 import { BarChart3 } from "lucide-react";
-import { GlassCard } from "../../ui";
+
+import { BaseCard } from "../../ui";
 import { KeyMetricCard, KeyMetricCardData } from "./KeyMetricCard";
 
 interface KeyMetricsGridProps {
@@ -26,7 +27,7 @@ export function KeyMetricsGrid({
       transition={{ delay: 0.1 }}
       className={className}
     >
-      <GlassCard className="p-6">
+      <BaseCard variant="glass" className="p-6">
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
           <BarChart3 className="w-5 h-5 mr-2 text-purple-400" />
           Key Metrics
@@ -36,7 +37,7 @@ export function KeyMetricsGrid({
             <KeyMetricCard key={metric.label} metric={metric} index={index} />
           ))}
         </div>
-      </GlassCard>
+      </BaseCard>
     </motion.div>
   );
 }

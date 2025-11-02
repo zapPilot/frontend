@@ -11,8 +11,8 @@ export * from "./charts";
 export { useChartData } from "./hooks";
 
 // Utilities
-export { buildAllocationHistory } from "./utils";
 export * from "./chartHelpers";
+export { buildAllocationHistory } from "./utils";
 
 // Constants
 export * from "./chartConstants";

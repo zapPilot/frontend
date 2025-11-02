@@ -1,10 +1,12 @@
 "use client";
 
+import { memo } from "react";
+
 import { ImageWithFallback } from "@/components/shared/ImageWithFallback";
 import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatPercentage } from "@/lib/formatters";
 import { normalizeProtocolName } from "@/lib/stringUtils";
-import { memo } from "react";
+
 import { ProcessedAssetCategory } from "../../types";
 
 interface CategoryProtocolListProps {
@@ -117,8 +119,7 @@ export const CategoryProtocolList = memo<CategoryProtocolListProps>(
                   {protocol.apy && (
                     <span className="text-green-400">
                       APR: {formatPercentage(protocol.apy, false, 2)}
-                      {protocol.aprBreakdown &&
-                        protocol.aprBreakdown.base &&
+                      {protocol.aprBreakdown?.base &&
                         protocol.aprBreakdown.reward && (
                           <span className="ml-1 text-gray-500">
                             (

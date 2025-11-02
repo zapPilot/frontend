@@ -1,8 +1,10 @@
+import { Copy, Edit3, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
 import { memo } from "react";
-import { MoreVertical, Copy, ExternalLink, Edit3, Trash2 } from "lucide-react";
-import { Z_INDEX } from "@/constants/design-system";
+
 import { Portal } from "@/components/ui/Portal";
+import { Z_INDEX } from "@/constants/design-system";
 import type { WalletData } from "@/services/userService";
+
 import type { WalletOperations } from "../types/wallet.types";
 
 interface WalletActionMenuProps {

@@ -1,9 +1,10 @@
 "use client";
 
-import { DashboardShell } from "@/components/DashboardShell";
-import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+import { DashboardShell } from "@/components/DashboardShell";
+import { useUser } from "@/contexts/UserContext";
 
 export default function DashboardApp() {
   const router = useRouter();

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { memo } from "react";
+
 import { ChainSwitcher } from "./ChainSwitcher";
 import { SimpleConnectButton } from "./SimpleConnectButton";
 

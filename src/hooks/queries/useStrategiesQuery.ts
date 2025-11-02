@@ -1,15 +1,17 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { createQueryConfig } from "./queryDefaults";
-import { queryKeys } from "../../lib/queryClient";
-import { getStrategies } from "../../services/intentService";
-import { getLandingPagePortfolioData } from "../../services/analyticsService";
-import { AssetCategory } from "../../components/PortfolioAllocation/types";
+
 import { portfolioLogger } from "@/utils/logger";
+
+import { AssetCategory } from "../../components/PortfolioAllocation/types";
+import { queryKeys } from "../../lib/queryClient";
+import { getLandingPagePortfolioData } from "../../services/analyticsService";
+import { getStrategies } from "../../services/intentService";
 import {
-  transformStrategiesResponse,
   StrategiesApiError,
   StrategiesFetchConfig,
+  transformStrategiesResponse,
 } from "../../types/strategies";
+import { createQueryConfig } from "./queryDefaults";
 
 /**
  * React Query hook for fetching portfolio strategies

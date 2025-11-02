@@ -13,8 +13,8 @@ export interface OperationState {
 
 export interface WalletOperations {
   adding: OperationState;
-  removing: { [walletId: string]: OperationState };
-  editing: { [walletId: string]: OperationState };
+  removing: Record<string, OperationState>;
+  editing: Record<string, OperationState>;
   subscribing: OperationState;
 }
 

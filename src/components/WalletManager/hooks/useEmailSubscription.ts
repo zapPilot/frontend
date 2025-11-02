@@ -1,10 +1,12 @@
+import { useCallback, useEffect, useState } from "react";
+
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError } from "@/services/userService";
-import { useCallback, useEffect, useState } from "react";
+
 import {
-  updateUserEmailSubscription,
   unsubscribeUserEmail,
+  updateUserEmailSubscription,
 } from "../services/WalletService";
 import type { OperationState } from "../types/wallet.types";
 import { validateEmail } from "../utils/validation";

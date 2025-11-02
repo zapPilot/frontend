@@ -2,8 +2,8 @@
  * Bundle Service - Handles bundle metadata and sharing functionality
  */
 
-import { logger } from "@/utils/logger";
 import { formatAddress } from "@/lib/formatters";
+import { logger } from "@/utils/logger";
 
 export interface BundleUser {
   userId: string;

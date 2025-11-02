@@ -161,6 +161,12 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
+      },
       drawdown_data: [],
       summary: {
         max_drawdown_pct: 0,
@@ -174,6 +180,12 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         start_date: "2025-01-01",
         end_date: "2025-01-30",
         days: 30,
+      },
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
       },
       underwater_data: [],
       summary: {
@@ -207,6 +219,17 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         reliable_data_points: 0,
         statistical_reliability: "",
       },
+      educational_context: {
+        title: "Sharpe Ratio",
+        summary: "Measures excess return per unit of risk",
+        highlights: ["Values above 1 suggest good performance"],
+        links: [
+          {
+            label: "Sharpe Ratio Guide",
+            url: "https://example.com/sharpe-ratio",
+          },
+        ],
+      },
     },
     volatility: {
       period: {
@@ -220,6 +243,17 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         latest_annualized_volatility: 0,
         avg_daily_volatility: 0,
         avg_annualized_volatility: 0,
+      },
+      educational_context: {
+        title: "Volatility",
+        summary: "Tracks dispersion of portfolio returns",
+        highlights: ["High volatility can indicate increased portfolio risk"],
+        links: [
+          {
+            label: "Volatility Primer",
+            url: "https://example.com/volatility",
+          },
+        ],
       },
     },
   },

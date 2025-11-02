@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+
 import { useUser } from "@/contexts/UserContext";
 import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";

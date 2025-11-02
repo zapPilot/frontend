@@ -1,6 +1,6 @@
 import {
-  PortfolioDataPoint,
   AssetAllocationPoint,
+  PortfolioDataPoint,
 } from "../../types/portfolio";
 
 export interface AllocationTimeseriesInputPoint {
@@ -16,29 +16,29 @@ export interface AllocationTimeseriesInputPoint {
   total_portfolio_value_usd?: number;
 }
 
-export type DrawdownOverridePoint = {
+export interface DrawdownOverridePoint {
   date: string;
   drawdown_pct?: number;
   drawdown?: number;
   portfolio_value?: number;
-};
+}
 
-export type SharpeOverridePoint = {
+export interface SharpeOverridePoint {
   date: string;
   rolling_sharpe_ratio?: number;
-};
+}
 
-export type VolatilityOverridePoint = {
+export interface VolatilityOverridePoint {
   date: string;
   annualized_volatility_pct?: number;
   rolling_volatility_daily_pct?: number;
-};
+}
 
-export type UnderwaterOverridePoint = {
+export interface UnderwaterOverridePoint {
   date: string;
   underwater_pct?: number;
   recovery_point?: boolean;
-};
+}
 
 /**
  * Extended portfolio data point with DeFi and Wallet breakdown

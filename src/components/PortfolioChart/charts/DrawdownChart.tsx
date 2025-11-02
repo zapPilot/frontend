@@ -1,27 +1,28 @@
 "use client";
 
-import { memo, useMemo, useCallback } from "react";
+import { memo, useCallback,useMemo } from "react";
+
 import { useChartHover } from "../../../hooks/useChartHover";
-import { ChartIndicator, ChartTooltip } from "../../charts";
-import { CHART_DIMENSIONS, DRAWDOWN_CONSTANTS } from "../chartConstants";
-import {
-  calculateDrawdownY,
-  calculateDrawdownScaleDenominator,
-  calculateDrawdownMinValue,
-} from "../chartHelpers";
 import {
   calculateDaysSincePeak,
   findPeakDate,
 } from "../../../lib/chartHoverUtils";
+import { ChartIndicator, ChartTooltip } from "../../charts";
+import { CHART_DIMENSIONS, DRAWDOWN_CONSTANTS } from "../chartConstants";
 import {
-  getChartInteractionProps,
+  calculateDrawdownMinValue,
+  calculateDrawdownScaleDenominator,
+  calculateDrawdownY,
+} from "../chartHelpers";
+import {
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
+  getChartInteractionProps,
 } from "../utils";
 
 interface DrawdownChartProps {
-  data: Array<{ date: string; drawdown: number }>;
-  referenceData: Array<{ date: string; portfolio_value: number }>;
+  data: { date: string; drawdown: number }[];
+  referenceData: { date: string; portfolio_value: number }[];
   width?: number;
   height?: number;
 }

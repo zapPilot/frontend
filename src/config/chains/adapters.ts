@@ -6,6 +6,7 @@
  */
 
 import type { Chain as ThirdWebChain } from "thirdweb/chains";
+
 import { BaseChainConfig, ChainAdapter, ChainListAdapter } from "./types";
 
 /**

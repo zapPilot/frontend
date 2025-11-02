@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+
 import { logger } from "../../utils/logger";
 import { BundlePageClient } from "./BundlePageClient";
 

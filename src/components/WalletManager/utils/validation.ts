@@ -1,5 +1,6 @@
 import { validateWalletAddress } from "@/services/userService";
-import type { ValidationResult, NewWallet } from "../types/wallet.types";
+
+import type { NewWallet,ValidationResult } from "../types/wallet.types";
 
 /**
  * Validate wallet address format

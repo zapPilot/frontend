@@ -1,7 +1,8 @@
 import React from "react";
+
+import { normalizeProtocolName } from "../../lib/stringUtils";
 import { BaseComponentProps } from "../../types/ui.types";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { normalizeProtocolName } from "../../lib/stringUtils";
 
 interface ProtocolImageProps extends BaseComponentProps {
   protocol: {

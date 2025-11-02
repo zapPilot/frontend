@@ -1,3 +1,6 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback, useEffect, useState } from "react";
+
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
 import { useWallet } from "@/hooks/useWallet";
@@ -9,8 +12,7 @@ import {
   type WalletData,
 } from "@/services/userService";
 import { copyTextToClipboard } from "@/utils/clipboard";
-import { useQueryClient } from "@tanstack/react-query";
-import { useCallback, useEffect, useState } from "react";
+
 import {
   addWallet as addWalletToBundle,
   loadWallets as fetchWallets,

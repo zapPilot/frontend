@@ -1,9 +1,11 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { GlassCard } from "../ui/GlassCard";
-import { GradientButton } from "../ui/GradientButton";
+
 import { logger } from "@/utils/logger";
+
+import { BaseCard } from "../ui/BaseCard";
+import { GradientButton } from "../ui/GradientButton";
 
 const errorLogger = logger.createContextLogger("ErrorBoundary");
 
@@ -12,7 +14,7 @@ interface Props {
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
   resetOnPropsChange?: boolean;
-  resetKeys?: Array<string | number>;
+  resetKeys?: (string | number)[];
 }
 
 interface State {
@@ -47,7 +49,7 @@ interface State {
  */
 export class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;
-  private static errorIdCounter: number = 0;
+  private static errorIdCounter = 0;
 
   constructor(props: Props) {
     super(props);
@@ -164,7 +166,7 @@ export class ErrorBoundary extends Component<Props, State> {
       // Default error UI
       return (
         <div className="min-h-screen flex items-center justify-center p-4">
-          <GlassCard className="max-w-lg w-full">
+          <BaseCard variant="glass" className="max-w-lg w-full">
             <div className="text-center space-y-6">
               {/* Error Icon */}
               <div className="mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
@@ -251,7 +253,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 </p>
               </div>
             </div>
-          </GlassCard>
+          </BaseCard>
         </div>
       );
     }

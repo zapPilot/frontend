@@ -1,13 +1,15 @@
 "use client";
 
+import { memo } from "react";
+
+import { FLEX_PATTERNS } from "@/constants/design-system";
 import {
   ALLOCATION_UI,
   MAX_ALLOCATION_PERCENT,
   MIN_ALLOCATION_PERCENT,
 } from "@/constants/portfolio-allocation";
-import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { memo } from "react";
+
 import { CategoryShift, ProcessedAssetCategory } from "../../types";
 
 interface CategoryAllocationSummaryProps {

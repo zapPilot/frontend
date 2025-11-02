@@ -1,2 +1,2 @@
-export { AssetCategoryRow } from "./CategoryRow";
 export { CategoryListSection } from "./CategoryListSection";
+export { AssetCategoryRow } from "./CategoryRow";

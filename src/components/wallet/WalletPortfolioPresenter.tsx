@@ -2,15 +2,16 @@
 
 import dynamic from "next/dynamic";
 import { ComponentType } from "react";
-import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
+
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
-import { GlassCard } from "@/components/ui";
+import { PortfolioOverview } from "@/components/PortfolioOverview";
+import { BaseCard } from "@/components/ui";
+import { WalletActions } from "@/components/wallet/WalletActions";
 import { WalletHeader } from "@/components/wallet/WalletHeader";
 import { WalletMetrics } from "@/components/wallet/WalletMetrics";
-import { WalletActions } from "@/components/wallet/WalletActions";
-import { PortfolioOverview } from "@/components/PortfolioOverview";
 import type { WalletManagerProps } from "@/components/WalletManager";
 import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
+import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
 import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
@@ -44,7 +45,7 @@ export function WalletPortfolioPresenter({
             vm.portfolioState.isConnected ? "connected" : "disconnected",
           ]}
         >
-          <GlassCard>
+          <BaseCard variant="glass">
             <WalletHeader
               onWalletManagerClick={vm.openWalletManager}
               onToggleBalance={vm.toggleBalanceVisibility}
@@ -68,7 +69,7 @@ export function WalletPortfolioPresenter({
               onOptimizeClick={vm.onOptimizeClick}
               disabled={vm.isVisitorMode}
             />
-          </GlassCard>
+          </BaseCard>
         </ErrorBoundary>
 
         <ErrorBoundary>

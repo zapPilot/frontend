@@ -1,7 +1,8 @@
-import { GradientButton } from "@/components/ui";
-import { GRADIENTS } from "@/constants/design-system";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import { useState } from "react";
+
+import { GradientButton } from "@/components/ui";
+import { GRADIENTS } from "@/constants/design-system";
 
 interface DeleteAccountButtonProps {
   onDelete: () => void;

@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
 import { ArrowRight } from "lucide-react";
+import React from "react";
+
+import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 import { formatCurrency, formatPercentage } from "../lib/formatters";
 import type { CategorySummary } from "../utils/portfolio.utils";
-import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 
 interface CategoryItemProps {
   category: CategorySummary;

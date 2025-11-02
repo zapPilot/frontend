@@ -1,22 +1,23 @@
 "use client";
 
 import { memo, useMemo } from "react";
+
 import { useChartHover } from "../../../hooks/useChartHover";
-import { ChartIndicator, ChartTooltip } from "../../charts";
-import { CHART_DIMENSIONS } from "../chartConstants";
 import {
+  formatAxisLabel,
   generateAreaPath,
   generateSVGPath,
-  formatAxisLabel,
   generateYAxisLabels,
 } from "../../../lib/chartUtils";
 import { ensureNonNegative } from "../../../lib/mathUtils";
+import { ChartIndicator, ChartTooltip } from "../../charts";
+import { CHART_DIMENSIONS } from "../chartConstants";
 import type { PortfolioStackedDataPoint } from "../types";
 import {
-  getStackedTotalValue,
-  getChartInteractionProps,
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
+  getChartInteractionProps,
+  getStackedTotalValue,
 } from "../utils";
 
 interface PerformanceChartProps {

@@ -7,18 +7,6 @@ import { httpUtils } from "../lib/http-utils";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
 // API Response Types
-interface PortfolioTrend {
-  id: string;
-  user_id: string;
-  wallet_address: string;
-  chain: string;
-  protocol: string;
-  net_value_usd: number;
-  pnl_usd: number;
-  date: string;
-  created_at: string;
-}
-
 export interface PoolDetail {
   snapshot_id: string;
   snapshot_ids?: string[] | null;
@@ -52,13 +40,11 @@ export interface LandingPageResponse {
     recommended_period: string;
     recommended_yearly_roi: number;
     estimated_yearly_pnl_usd: number;
-    windows?: {
-      [key: string]: {
+    windows?: Record<string, {
         value: number;
         data_points: number;
         start_balance?: number;
-      };
-    };
+      }>;
     // Legacy fields for backward compatibility
     roi_7d?: {
       value: number;
@@ -72,9 +58,7 @@ export interface LandingPageResponse {
       value: number;
       data_points: number;
     };
-    roi_windows?: {
-      [period: string]: number; // e.g., "7d": 0.02, "30d": 0.08, etc.
-    };
+    roi_windows?: Record<string, number>;
   };
   portfolio_allocation: {
     btc: {
@@ -127,65 +111,6 @@ export interface LandingPageResponse {
   message?: string;
 }
 
-// Transformed data types for UI
-interface PortfolioTrendsResponse {
-  user_id: string;
-  period: {
-    start_date: string;
-    end_date: string;
-    days: number;
-  };
-  daily_totals: PortfolioDailyTotal[];
-  summary: {
-    total_change_usd: number;
-    total_change_percentage: number;
-    best_day?: PortfolioTrend;
-    worst_day?: PortfolioTrend;
-  };
-}
-
-interface PortfolioDailyProtocol {
-  protocol: string | null;
-  chain: string | null;
-  value_usd: number;
-  pnl_usd: number;
-  source_type: string | null;
-  category: string | null;
-}
-
-interface PortfolioDailyCategory {
-  category: string | null;
-  source_type: string | null;
-  value_usd: number;
-  pnl_usd: number;
-}
-
-interface PortfolioDailyTotal {
-  date: string;
-  total_value_usd: number;
-  change_percentage: number;
-  protocols: PortfolioDailyProtocol[];
-  categories?: PortfolioDailyCategory[];
-  chains_count: number;
-}
-
-/**
- * Get portfolio trends for a user
- *
- * @deprecated since v0.2.0 - Use `getPortfolioDashboard` for unified analytics. Will be removed in v0.3.0.
- */
-export const getPortfolioTrends = async (
-  userId: string,
-  days: number = 30
-): Promise<PortfolioTrendsResponse> => {
-  const params = new URLSearchParams({
-    days: days.toString(),
-  });
-  return await httpUtils.analyticsEngine.get<PortfolioTrendsResponse>(
-    `/api/v1/portfolio/trends/by-user/${userId}?${params}`
-  );
-};
-
 /**
  * Get unified landing page portfolio data
  *
@@ -227,6 +152,27 @@ export const getRiskSummary = async (
  * - 12-hour server-side cache
  * - Graceful degradation with partial failure support
  */
+interface AnalyticsPeriodInfo {
+  start_date: string;
+  end_date: string;
+  timezone?: string;
+  label?: string;
+  notes?: string;
+}
+
+interface AnalyticsEducationalLink {
+  label: string;
+  url: string;
+}
+
+interface AnalyticsEducationalContext {
+  title?: string;
+  summary?: string;
+  description?: string;
+  highlights?: string[];
+  links?: AnalyticsEducationalLink[];
+}
+
 export interface UnifiedDashboardResponse {
   user_id: string;
   parameters: {
@@ -245,26 +191,26 @@ export interface UnifiedDashboardResponse {
       end_date: string;
       days: number;
     };
-    daily_totals: Array<{
+    daily_totals: {
       date: string;
       total_value_usd: number;
       change_percentage: number;
-      categories?: Array<{
+      categories?: {
         category: string;
         source_type?: string;
         value_usd: number;
         pnl_usd: number;
-      }>;
-      protocols?: Array<{
+      }[];
+      protocols?: {
         protocol: string;
         chain: string;
         value_usd: number;
         pnl_usd: number;
         source_type?: string;
         category?: string;
-      }>;
+      }[];
       chains_count?: number;
-    }>;
+    }[];
     summary: {
       current_value_usd: number;
       start_value_usd: number;
@@ -329,8 +275,8 @@ export interface UnifiedDashboardResponse {
         end_date: string;
         days: number;
       };
-      period_info?: Record<string, unknown>;
-      drawdown_data: Array<{
+      period_info?: AnalyticsPeriodInfo;
+      drawdown_data: {
         date: string;
         portfolio_value?: number;
         portfolio_value_usd?: number;
@@ -341,7 +287,7 @@ export interface UnifiedDashboardResponse {
         is_underwater?: boolean;
         recovery_point?: boolean;
         [key: string]: unknown;
-      }>;
+      }[];
       summary: {
         max_drawdown_pct: number;
         current_drawdown_pct: number;
@@ -357,8 +303,8 @@ export interface UnifiedDashboardResponse {
         end_date: string;
         days: number;
       };
-      period_info?: Record<string, unknown>;
-      underwater_data: Array<{
+      period_info?: AnalyticsPeriodInfo;
+      underwater_data: {
         date: string;
         underwater_pct: number;
         drawdown_pct?: number;
@@ -367,7 +313,7 @@ export interface UnifiedDashboardResponse {
         is_underwater?: boolean;
         recovery_point?: boolean;
         [key: string]: unknown;
-      }>;
+      }[];
       summary: {
         total_underwater_days: number;
         underwater_percentage: number;
@@ -387,14 +333,14 @@ export interface UnifiedDashboardResponse {
       end_date: string;
       days: number;
     };
-    allocation_data: Array<{
+    allocation_data: {
       date: string;
       category: string;
       category_value_usd: number;
       total_portfolio_value_usd: number;
       allocation_percentage: number;
       [key: string]: unknown;
-    }>;
+    }[];
     summary: {
       unique_dates: number;
       unique_protocols: number;
@@ -411,12 +357,12 @@ export interface UnifiedDashboardResponse {
         end_date: string;
         days: number;
       };
-      rolling_sharpe_data: Array<{
+      rolling_sharpe_data: {
         date: string;
         rolling_sharpe_ratio: number;
         is_statistically_reliable: boolean;
         [key: string]: unknown;
-      }>;
+      }[];
       summary: {
         latest_sharpe_ratio: number;
         avg_sharpe_ratio: number;
@@ -424,7 +370,7 @@ export interface UnifiedDashboardResponse {
         statistical_reliability: string;
       };
       data_points?: number;
-      educational_context?: Record<string, unknown>;
+      educational_context?: AnalyticsEducationalContext;
     };
     volatility: {
       user_id?: string;
@@ -433,13 +379,13 @@ export interface UnifiedDashboardResponse {
         end_date: string;
         days: number;
       };
-      rolling_volatility_data: Array<{
+      rolling_volatility_data: {
         date: string;
         rolling_volatility_pct: number;
         annualized_volatility_pct: number;
         rolling_volatility_daily_pct?: number;
         [key: string]: unknown;
-      }>;
+      }[];
       summary: {
         latest_daily_volatility: number;
         latest_annualized_volatility: number;
@@ -447,7 +393,7 @@ export interface UnifiedDashboardResponse {
         avg_annualized_volatility: number;
       };
       data_points?: number;
-      educational_context?: Record<string, unknown>;
+      educational_context?: AnalyticsEducationalContext;
     };
   };
 

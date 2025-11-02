@@ -1,7 +1,7 @@
 "use client";
 
-import { useWalletPortfolioState } from "@/hooks/useWalletPortfolioState";
 import { WalletPortfolioPresenter } from "@/components/wallet/WalletPortfolioPresenter";
+import { useWalletPortfolioState } from "@/hooks/useWalletPortfolioState";
 
 interface WalletPortfolioProps {
   urlUserId?: string;

@@ -1,15 +1,16 @@
 "use client";
 
-import { QuickSwitchFAB } from "@/components/bundle";
-import { EmailReminderBanner } from "@/components/EmailReminderBanner";
-import { DashboardShell } from "@/components/DashboardShell";
-import { BundleNotFound } from "@/components/ui";
-import type { WalletManagerProps } from "@/components/WalletManager";
 import dynamic from "next/dynamic";
 import { ComponentType, useMemo } from "react";
-import { useBundlePage } from "@/hooks/useBundlePage";
-import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
+
+import { QuickSwitchFAB } from "@/components/bundle";
 import { SwitchPromptBanner } from "@/components/bundle/SwitchPromptBanner";
+import { DashboardShell } from "@/components/DashboardShell";
+import { EmailReminderBanner } from "@/components/EmailReminderBanner";
+import { BundleNotFound } from "@/components/ui";
+import type { WalletManagerProps } from "@/components/WalletManager";
+import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
+import { useBundlePage } from "@/hooks/useBundlePage";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
   () =>

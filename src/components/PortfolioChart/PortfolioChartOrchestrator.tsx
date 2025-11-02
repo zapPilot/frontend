@@ -10,23 +10,24 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
+
 import { useUser } from "../../contexts/UserContext";
 import { formatPercentage } from "../../lib/formatters";
 import { CHART_PERIODS } from "../../lib/portfolio-analytics";
 import { logger } from "../../utils/logger";
-import { GlassCard } from "../ui";
-import type { PortfolioChartProps } from "./types";
-import { CHART_CONTENT_ID } from "./utils";
-import { PortfolioChartSkeleton } from "./PortfolioChartSkeleton";
+import { BaseCard } from "../ui";
 import {
-  PerformanceChart,
   AllocationChart,
   DrawdownChart,
+  PerformanceChart,
   SharpeChart,
-  VolatilityChart,
   UnderwaterChart,
+  VolatilityChart,
 } from "./charts";
 import { useChartData } from "./hooks";
+import { PortfolioChartSkeleton } from "./PortfolioChartSkeleton";
+import type { PortfolioChartProps } from "./types";
+import { CHART_CONTENT_ID } from "./utils";
 
 /**
  * Chart type selector configuration
@@ -133,12 +134,12 @@ const PortfolioChartComponent = ({
   // Error state
   if (chartData.error) {
     return (
-      <GlassCard className="p-6" role="alert" ariaLive="assertive">
+      <BaseCard variant="glass" className="p-6" role="alert" ariaLive="assertive">
         <div className="text-lg font-semibold text-red-400">
           Error loading portfolio analytics
         </div>
         <p className="text-sm text-gray-300 mt-2">{chartData.error}</p>
-      </GlassCard>
+      </BaseCard>
     );
   }
 
@@ -150,7 +151,8 @@ const PortfolioChartComponent = ({
   // Empty state
   if (chartData.portfolioHistory.length === 0) {
     return (
-      <GlassCard
+      <BaseCard
+        variant="glass"
         className="p-6 text-center space-y-2"
         role="status"
         ariaLive="polite"
@@ -161,7 +163,7 @@ const PortfolioChartComponent = ({
         <p className="text-sm text-gray-400">
           Connect a wallet or import data to see performance analytics.
         </p>
-      </GlassCard>
+      </BaseCard>
     );
   }
 
@@ -171,7 +173,7 @@ const PortfolioChartComponent = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
     >
-      <GlassCard className="p-6">
+      <BaseCard variant="glass" className="p-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
           <div className="mb-4 lg:mb-0">
@@ -404,7 +406,7 @@ const PortfolioChartComponent = ({
               </>
             )}
         </div>
-      </GlassCard>
+      </BaseCard>
     </motion.div>
   );
 };

@@ -1,4 +1,5 @@
-import { BarChart3, Wallet, Users, Gift, Settings } from "lucide-react";
+import { BarChart3, Gift, Settings,Users, Wallet } from "lucide-react";
+
 import { NavItem } from "../types/navigation";
 
 export const NAVIGATION_ITEMS: NavItem[] = [

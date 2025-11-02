@@ -5,7 +5,8 @@
  * loading, error states, and cleanup handling.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback,useEffect, useState } from "react";
+
 import { getRiskSummary } from "../services/analyticsService";
 import { ActualRiskSummaryResponse } from "../types/risk";
 

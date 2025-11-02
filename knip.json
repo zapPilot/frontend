@@ -12,7 +12,15 @@
     "eslint.config.mjs",
     "postcss.config.mjs"
   ],
-  "ignoreDependencies": ["@types/*"],
+  "ignoreDependencies": [
+    "@types/*",
+    "eslint-config-next",
+    "eslint-plugin-jsx-a11y",
+    "eslint-plugin-react",
+    "eslint-plugin-react-hooks",
+    "pino-pretty",
+    "tailwindcss"
+  ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": true,
   "next": {

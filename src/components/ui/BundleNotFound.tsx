@@ -1,7 +1,8 @@
 "use client";
 
 import { AlertCircle, ArrowRight } from "lucide-react";
-import { GlassCard } from "./GlassCard";
+
+import { BaseCard } from "./BaseCard";
 import { GradientButton } from "./GradientButton";
 
 interface BundleNotFoundProps {
@@ -17,7 +18,7 @@ export function BundleNotFound({
 }: BundleNotFoundProps) {
   return (
     <div className="flex items-center justify-center min-h-[400px] p-6">
-      <GlassCard className="max-w-md w-full text-center">
+      <BaseCard variant="glass" className="max-w-md w-full text-center">
         <div className="space-y-6">
           {/* Error Icon */}
           <div className="flex justify-center">
@@ -51,7 +52,7 @@ export function BundleNotFound({
             </div>
           )}
         </div>
-      </GlassCard>
+      </BaseCard>
     </div>
   );
 }

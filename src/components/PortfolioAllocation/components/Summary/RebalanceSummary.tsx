@@ -1,6 +1,7 @@
 "use client";
 
 import { memo } from "react";
+
 import { RebalanceData } from "../../types";
 
 interface RebalanceSummaryProps {

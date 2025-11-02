@@ -71,8 +71,8 @@ vi.mock("../../../src/components/wallet/WalletActions", () => ({
 }));
 
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: vi.fn(({ children }) => (
-    <div data-testid="glass-card">{children}</div>
+  BaseCard: vi.fn(({ children }) => (
+    <div data-testid="base-card">{children}</div>
   )),
 }));
 
