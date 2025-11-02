@@ -49,6 +49,9 @@ const CHART_TYPES = [
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
 
+const ACTIVE_SEGMENT_CLASSES =
+  "bg-purple-600/30 text-purple-300 border border-purple-500/30";
+
 /**
  * Main orchestrator for portfolio chart visualization.
  * Manages chart type selection, period selection, and conditional rendering.
@@ -97,7 +100,7 @@ const PortfolioChartComponent = ({
   const { userInfo } = useUser();
 
   // Resolve which userId to use: provided userId or fallback to context
-  const resolvedUserId = userId || userInfo?.userId;
+  const resolvedUserId = userId ?? userInfo?.userId;
 
   // Fetch and process all chart data
   const chartData = useChartData(
@@ -133,7 +136,12 @@ const PortfolioChartComponent = ({
   // Error state
   if (chartData.error) {
     return (
-      <BaseCard variant="glass" className="p-6" role="alert" ariaLive="assertive">
+      <BaseCard
+        variant="glass"
+        className="p-6"
+        role="alert"
+        ariaLive="assertive"
+      >
         <div className="text-lg font-semibold text-red-400">
           Error loading portfolio analytics
         </div>
@@ -210,7 +218,7 @@ const PortfolioChartComponent = ({
                 onClick={() => setSelectedChart(key)}
                 className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
                   selectedChart === key
-                    ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
+                    ? ACTIVE_SEGMENT_CLASSES
                     : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
                 }`}
                 role="tab"
@@ -237,7 +245,7 @@ const PortfolioChartComponent = ({
               onClick={() => setSelectedPeriod(period.value)}
               className={`px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
                 selectedPeriod === period.value
-                  ? "bg-purple-600/30 text-purple-300 border border-purple-500/30"
+                  ? ACTIVE_SEGMENT_CLASSES
                   : "text-gray-400 hover:text-white hover:bg-white/5"
               }`}
             >
@@ -301,7 +309,8 @@ const PortfolioChartComponent = ({
                     Avg Recovery
                   </div>
                   <div className="mt-2 text-xl font-bold text-gray-300">
-                    {chartData.drawdownRecoverySummary.averageRecoveryDays != null
+                    {chartData.drawdownRecoverySummary.averageRecoveryDays !=
+                    null
                       ? `${chartData.drawdownRecoverySummary.averageRecoveryDays} days`
                       : "—"}
                   </div>
@@ -335,7 +344,7 @@ const PortfolioChartComponent = ({
                 <div className="text-lg font-bold text-green-400">
                   {chartData.sharpeData[
                     chartData.sharpeData.length - 1
-                  ]?.sharpe.toFixed(2) || "0.00"}
+                  ]?.sharpe.toFixed(2) ?? "0.00"}
                 </div>
               </div>
               <div className="text-center">
@@ -377,7 +386,7 @@ const PortfolioChartComponent = ({
                   <div className="text-lg font-bold text-amber-400">
                     {chartData.volatilityData[
                       chartData.volatilityData.length - 1
-                    ]?.volatility.toFixed(1) || "0.0"}
+                    ]?.volatility.toFixed(1) ?? "0.0"}
                     %
                   </div>
                 </div>
@@ -413,7 +422,6 @@ const PortfolioChartComponent = ({
                 </div>
               </>
             )}
-
         </div>
       </BaseCard>
     </motion.div>

@@ -11,11 +11,13 @@
  * @see src/components/PortfolioChart.tsx
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../../fixtures/chartTestData";
 import { PortfolioDataFactory } from "../../utils/chartHoverTestFactories";
 
@@ -595,8 +597,12 @@ describe("PortfolioChart Component", () => {
 
         await waitFor(() => {
           const tooltip = screen.queryByTestId("chart-tooltip");
-          // Should format with % symbol
-          expect(tooltip?.textContent).toMatch(/\d+\.?\d*%/);
+          const rawText = tooltip?.textContent ?? "";
+          const numericPortion = Number.parseFloat(
+            rawText.replace(/[^0-9.]/g, "")
+          );
+          expect(Number.isNaN(numericPortion)).toBe(false);
+          expect(rawText).toContain("%");
         });
       }
     });

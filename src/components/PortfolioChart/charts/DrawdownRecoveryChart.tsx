@@ -3,11 +3,10 @@
 import { memo, useCallback, useMemo } from "react";
 
 import { useChartHover } from "@/hooks/useChartHover";
+import type { DrawdownHoverData } from "@/types/chartHover";
+
 import { ChartIndicator, ChartTooltip } from "../../charts";
-import {
-  CHART_DIMENSIONS,
-  DRAWDOWN_CONSTANTS,
-} from "../chartConstants";
+import { CHART_DIMENSIONS, DRAWDOWN_CONSTANTS } from "../chartConstants";
 import {
   calculateDrawdownMinValue,
   calculateDrawdownScaleDenominator,
@@ -16,10 +15,7 @@ import {
   generateAreaChartPath,
   generateLineChartPath,
 } from "../chartHelpers";
-import type {
-  DrawdownRecoveryData,
-  DrawdownRecoverySummary,
-} from "../types";
+import type { DrawdownRecoveryData, DrawdownRecoverySummary } from "../types";
 import {
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
@@ -33,6 +29,8 @@ interface DrawdownRecoveryChartProps {
   height?: number;
 }
 
+const DRAWDOWN_CHART_TYPE = "drawdown-recovery" as const;
+
 function buildHistoricalSegments(
   data: DrawdownRecoveryData[],
   chartWidth: number
@@ -42,23 +40,25 @@ function buildHistoricalSegments(
   const segments: { startIndex: number; endIndex: number }[] = [];
   let startIndex: number | null = null;
 
-  data.forEach((point, index) => {
+  for (const [index, point] of data.entries()) {
     if (point.isHistoricalPeriod) {
-      if (startIndex == null) {
-        startIndex = index;
-      }
-    } else if (startIndex != null) {
+      startIndex ??= index;
+    } else if (startIndex !== null) {
       segments.push({ startIndex, endIndex: index - 1 });
       startIndex = null;
     }
-  });
+  }
 
-  if (startIndex != null) {
+  if (startIndex !== null) {
     segments.push({ startIndex, endIndex: data.length - 1 });
   }
 
   return segments.map(segment => {
-    const startX = calculateXPosition(segment.startIndex, data.length, chartWidth);
+    const startX = calculateXPosition(
+      segment.startIndex,
+      data.length,
+      chartWidth
+    );
     const endX = calculateXPosition(segment.endIndex, data.length, chartWidth);
     const width = Math.max(endX - startX, chartWidth / data.length);
     return {
@@ -76,7 +76,7 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
     height = CHART_DIMENSIONS.HEIGHT,
   }) => {
     const drawdownValues = useMemo(
-      () => data.map(point => point.drawdown ?? 0),
+      () => data.map(point => point.drawdown),
       [data]
     );
 
@@ -95,12 +95,15 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
       [scaleDenominator]
     );
 
-    const zeroLineY = useMemo(() => getY(DRAWDOWN_CONSTANTS.DEFAULT_MAX), [getY]);
+    const zeroLineY = useMemo(
+      () => getY(DRAWDOWN_CONSTANTS.DEFAULT_MAX),
+      [getY]
+    );
 
     const coordinates = useMemo(() => {
       return data.map((point, index) => {
         const x = calculateXPosition(index, data.length, width);
-        const y = getY(point.drawdown ?? 0);
+        const y = getY(point.drawdown);
         return { ...point, x, y };
       });
     }, [data, getY, width]);
@@ -121,36 +124,56 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
     );
 
     const drawdownHover = useChartHover(coordinates, {
-      chartType: "drawdown-recovery",
+      chartType: DRAWDOWN_CHART_TYPE,
       chartWidth: width,
-      chartHeight: DRAWDOWN_CONSTANTS.TOP_OFFSET + DRAWDOWN_CONSTANTS.CHART_HEIGHT,
+      chartHeight:
+        DRAWDOWN_CONSTANTS.TOP_OFFSET + DRAWDOWN_CONSTANTS.CHART_HEIGHT,
       chartPadding: 0,
       minValue,
       maxValue: DRAWDOWN_CONSTANTS.DEFAULT_MAX,
-      getYValue: point => point.drawdown ?? 0,
-      buildHoverData: (point, x, _y, index) => {
-        return {
-          chartType: "drawdown-recovery" as const,
+      getYValue: point => point.drawdown,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      buildHoverData: (point, x, y, _index) => {
+        const hoverData: DrawdownHoverData = {
+          chartType: DRAWDOWN_CHART_TYPE,
           x,
-          y: point.y,
+          y,
           date: new Date(point.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
             year: "numeric",
           }),
-          drawdown: point.drawdown ?? 0,
-          peakDate: point.peakDate
-            ? new Date(point.peakDate).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })
-            : undefined,
-          distanceFromPeak: point.daysFromPeak,
-          isRecoveryPoint: point.isRecoveryPoint,
-          recoveryDurationDays: point.recoveryDurationDays,
-          recoveryDepth: point.recoveryDepth,
+          drawdown: point.drawdown,
         };
+
+        if (point.peakDate) {
+          hoverData.peakDate = new Date(point.peakDate).toLocaleDateString(
+            "en-US",
+            {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            }
+          );
+        }
+
+        if (point.daysFromPeak !== undefined) {
+          hoverData.distanceFromPeak = point.daysFromPeak;
+        }
+
+        if (point.isRecoveryPoint) {
+          hoverData.isRecoveryPoint = point.isRecoveryPoint;
+        }
+
+        if (point.recoveryDurationDays !== undefined) {
+          hoverData.recoveryDurationDays = point.recoveryDurationDays;
+        }
+
+        if (point.recoveryDepth !== undefined) {
+          hoverData.recoveryDepth = point.recoveryDepth;
+        }
+
+        return hoverData;
       },
       testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
     });
@@ -160,18 +183,14 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
       [coordinates]
     );
 
-    const currentStatusClass =
-      summary.currentStatus === "Underwater"
-        ? "bg-red-500/10 text-red-400 border-red-500/30"
-        : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-
     return (
       <div className="relative h-80">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-full"
-          data-chart-type="drawdown-recovery"
-          aria-label={CHART_LABELS.drawdown}
+          data-chart-type={DRAWDOWN_CHART_TYPE}
+          data-current-status={summary.currentStatus}
+          aria-label={`${CHART_LABELS.drawdown}. Current status: ${summary.currentStatus}.`}
           {...getChartInteractionProps(drawdownHover)}
         >
           <text x="16" y="20" opacity="0">
@@ -223,7 +242,9 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
           />
 
           {/* Drawdown area */}
-          {areaPath && <path d={areaPath} fill="url(#drawdownRecoveryGradient)" />}
+          {areaPath && (
+            <path d={areaPath} fill="url(#drawdownRecoveryGradient)" />
+          )}
 
           {/* Drawdown line */}
           {linePath && (

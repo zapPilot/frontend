@@ -3,8 +3,9 @@
  * Provides type-safe assertions and domain-specific matchers
  */
 
-import type { ChartHoverState } from "@/types/chartHover";
 import { expect } from "vitest";
+
+import type { ChartHoverState } from "@/types/chartHover";
 
 /**
  * Type guard to check if value is ChartHoverState
@@ -147,15 +148,29 @@ export const chartMatchers = {
         .filter(([, v]) => !v)
         .map(([k]) => k);
 
+      const formatLine = (
+        label: string,
+        actual: string | null,
+        expected?: string | number | null
+      ) => {
+        const expectedSuffix =
+          expected === undefined || expected === null
+            ? ""
+            : ` (expected: ${expected})`;
+        return `  ${label}: ${actual ?? ""}${expectedSuffix}`;
+      };
+
       return {
         pass: false,
         message: () =>
-          `Vertical line validation failed: ${failures.join(", ")}\n` +
-          `  x1: ${x1} (expected: ${x})\n` +
-          `  x2: ${x2} (expected: ${x})\n` +
-          `  y1: ${y1}${options?.y1 ? ` (expected: ${options.y1})` : ""}\n` +
-          `  y2: ${y2}${options?.y2 ? ` (expected: ${options.y2})` : ""}\n` +
-          `  stroke: ${stroke}${options?.stroke ? ` (expected: ${options.stroke})` : ""}`,
+          [
+            `Vertical line validation failed: ${failures.join(", ")}`,
+            formatLine("x1", x1, x),
+            formatLine("x2", x2, x),
+            formatLine("y1", y1, options?.y1 ?? null),
+            formatLine("y2", y2, options?.y2 ?? null),
+            formatLine("stroke", stroke, options?.stroke ?? null),
+          ].join("\n"),
         actual: { x1, x2, y1, y2, stroke },
         expected: {
           x1: x,

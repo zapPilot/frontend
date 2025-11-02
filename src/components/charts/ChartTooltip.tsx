@@ -36,6 +36,17 @@ const CHARTS_WITH_TOP_LEGEND = new Set([
   "volatility",
 ]);
 
+const SHARPE_INTERPRETATION_COLOR: Record<
+  SharpeHoverData["interpretation"],
+  string
+> = {
+  Excellent: "text-green-400",
+  Good: "text-lime-400",
+  Fair: "text-yellow-400",
+  Poor: "text-orange-400",
+  "Very Poor": "text-red-400",
+};
+
 interface ChartTooltipProps {
   /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
@@ -231,16 +242,7 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
   const indicatorColor = getSharpeColor(data.sharpe);
 
   // Map interpretation to text color class
-  const textColorClass =
-    interpretation === "Excellent"
-      ? "text-green-400"
-      : interpretation === "Good"
-        ? "text-lime-400"
-        : interpretation === "Fair"
-          ? "text-yellow-400"
-          : interpretation === "Poor"
-            ? "text-orange-400"
-            : "text-red-400";
+  const textColorClass = SHARPE_INTERPRETATION_COLOR[interpretation];
 
   return (
     <>

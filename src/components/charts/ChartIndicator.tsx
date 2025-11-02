@@ -20,6 +20,19 @@ import {
   isVolatilityHover,
 } from "@/types/chartHover";
 
+const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
+const INDICATOR_COLOR_MAP: Record<string, string> = {
+  performance: DEFAULT_INDICATOR_COLOR,
+  allocation: DEFAULT_INDICATOR_COLOR,
+  "drawdown-recovery": "#f97316",
+  sharpe: "#10b981",
+  volatility: "#f59e0b",
+};
+
+const MULTI_CIRCLE_VARIANT = "multi-circle" as const;
+const FLAGGED_CIRCLE_VARIANT = "flagged-circle" as const;
+const DRAWDOWN_CHART_TYPE = "drawdown-recovery" as const;
+
 interface ChartIndicatorProps {
   /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
@@ -101,20 +114,7 @@ function IndicatorWrapper({
  * Get color based on chart type
  */
 function getIndicatorColor(chartType: string): string {
-  switch (chartType) {
-    case "performance":
-      return "#8b5cf6"; // Purple
-    case "allocation":
-      return "#8b5cf6"; // Purple (base color, multi-circle has its own colors)
-    case "drawdown-recovery":
-      return "#f97316"; // Orange
-    case "sharpe":
-      return "#10b981"; // Green (default, can be dynamic)
-    case "volatility":
-      return "#f59e0b"; // Amber
-    default:
-      return "#8b5cf6"; // Purple fallback
-  }
+  return INDICATOR_COLOR_MAP[chartType] ?? DEFAULT_INDICATOR_COLOR;
 }
 
 /**
@@ -272,7 +272,7 @@ function FlaggedCircleIndicator({
 }) {
   const color = getIndicatorColor(hoveredPoint.chartType);
   const isRecoveryPoint =
-    hoveredPoint.chartType === "drawdown-recovery" &&
+    hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
     Boolean(hoveredPoint.isRecoveryPoint);
 
   return (
@@ -338,17 +338,17 @@ export function ChartIndicator({
   let effectiveVariant = variant;
   if (variant === "circle") {
     if (hoveredPoint.chartType === "allocation") {
-      effectiveVariant = "multi-circle";
+      effectiveVariant = MULTI_CIRCLE_VARIANT;
     } else if (
-      hoveredPoint.chartType === "drawdown-recovery" &&
+      hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
       hoveredPoint.isRecoveryPoint
     ) {
-      effectiveVariant = "flagged-circle";
+      effectiveVariant = FLAGGED_CIRCLE_VARIANT;
     }
   }
 
   switch (effectiveVariant) {
-    case "multi-circle":
+    case MULTI_CIRCLE_VARIANT:
       return (
         <MultiCircleIndicator
           hoveredPoint={hoveredPoint}
@@ -356,7 +356,7 @@ export function ChartIndicator({
           strokeWidth={strokeWidth}
         />
       );
-    case "flagged-circle":
+    case FLAGGED_CIRCLE_VARIANT:
       return (
         <FlaggedCircleIndicator
           hoveredPoint={hoveredPoint}

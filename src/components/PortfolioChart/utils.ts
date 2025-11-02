@@ -26,81 +26,123 @@ export const ENABLE_TEST_AUTO_HOVER = process.env.NODE_ENV === "test";
  * Builds stacked portfolio data using real protocol source types.
  * Falls back to a deterministic split when source data is unavailable.
  */
+interface SourceTotals {
+  defiValue: number;
+  walletValue: number;
+}
+
+function normalizeSourceType(value: unknown): string | undefined {
+  return typeof value === "string" ? value.toLowerCase() : undefined;
+}
+
+function accumulateFromCategories(
+  categories: PortfolioDataPoint["categories"]
+): SourceTotals {
+  if (!Array.isArray(categories) || categories.length === 0) {
+    return { defiValue: 0, walletValue: 0 };
+  }
+
+  return categories.reduce<SourceTotals>(
+    (totals, categoryEntry) => {
+      const normalizedSource = normalizeSourceType(categoryEntry.sourceType);
+      const rawValue = categoryEntry.value;
+      const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
+
+      if (normalizedSource === "defi") {
+        totals.defiValue += value;
+      } else if (normalizedSource === "wallet") {
+        totals.walletValue += value;
+      }
+
+      return totals;
+    },
+    { defiValue: 0, walletValue: 0 }
+  );
+}
+
+function accumulateFromProtocols(
+  protocols: PortfolioDataPoint["protocols"]
+): SourceTotals {
+  if (!Array.isArray(protocols) || protocols.length === 0) {
+    return { defiValue: 0, walletValue: 0 };
+  }
+
+  return protocols.reduce<SourceTotals>(
+    (totals, protocol) => {
+      const normalizedSource = normalizeSourceType(protocol.sourceType);
+      const rawValue = protocol.value;
+      const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
+
+      if (normalizedSource === "defi") {
+        totals.defiValue += value;
+      } else if (normalizedSource === "wallet") {
+        totals.walletValue += value;
+      }
+
+      return totals;
+    },
+    { defiValue: 0, walletValue: 0 }
+  );
+}
+
+function normalizeStackedTotals(
+  totalValue: number,
+  initialDefi: number,
+  initialWallet: number,
+  fallbackRatio: number
+): SourceTotals & { stackedTotalValue: number } {
+  let defiValue = initialDefi;
+  let walletValue = initialWallet;
+  let stackedTotalValue = defiValue + walletValue;
+
+  if (stackedTotalValue > 0 && totalValue > 0) {
+    const scale = totalValue / stackedTotalValue;
+    defiValue *= scale;
+    walletValue *= scale;
+    stackedTotalValue = defiValue + walletValue;
+  }
+
+  if (stackedTotalValue === 0 && totalValue > 0) {
+    const fallbackDefi = totalValue * fallbackRatio;
+    defiValue = fallbackDefi;
+    walletValue = ensureNonNegative(totalValue - fallbackDefi);
+    stackedTotalValue = defiValue + walletValue;
+  }
+
+  if (stackedTotalValue === 0) {
+    stackedTotalValue = ensureNonNegative(totalValue);
+  }
+
+  return { defiValue, walletValue, stackedTotalValue };
+}
+
 export const buildStackedPortfolioData = (
   data: PortfolioDataPoint[],
   fallbackRatio: number = DEFAULT_STACKED_FALLBACK_RATIO
 ): PortfolioStackedDataPoint[] => {
   return data.map(point => {
-    let defiValue = 0;
-    let walletValue = 0;
+    const categoryTotals = accumulateFromCategories(point.categories);
+    const protocolTotals =
+      categoryTotals.defiValue === 0 && categoryTotals.walletValue === 0
+        ? accumulateFromProtocols(point.protocols)
+        : { defiValue: 0, walletValue: 0 };
 
-    const categories = Array.isArray(point.categories) ? point.categories : [];
+    const initialDefi = categoryTotals.defiValue + protocolTotals.defiValue;
+    const initialWallet =
+      categoryTotals.walletValue + protocolTotals.walletValue;
 
-    if (categories.length > 0) {
-      for (const categoryEntry of categories) {
-        const normalizedSource =
-          typeof categoryEntry.sourceType === "string"
-            ? categoryEntry.sourceType.toLowerCase()
-            : undefined;
-        const rawValue = Number(categoryEntry.value ?? 0);
-        const value = Number.isFinite(rawValue)
-          ? ensureNonNegative(rawValue)
-          : 0;
-
-        if (normalizedSource === "defi") {
-          defiValue += value;
-        } else if (normalizedSource === "wallet") {
-          walletValue += value;
-        }
-      }
-    }
-
-    if (defiValue === 0 && walletValue === 0) {
-      if (Array.isArray(point.protocols) && point.protocols.length > 0) {
-        for (const protocol of point.protocols) {
-          const normalizedSource =
-            typeof protocol.sourceType === "string"
-              ? protocol.sourceType.toLowerCase()
-              : undefined;
-          const rawValue = Number(protocol.value ?? 0);
-          const value = Number.isFinite(rawValue)
-            ? ensureNonNegative(rawValue)
-            : 0;
-
-          if (normalizedSource === "defi") {
-            defiValue += value;
-          } else if (normalizedSource === "wallet") {
-            walletValue += value;
-          }
-        }
-      }
-    }
-
-    let stackedTotalValue = defiValue + walletValue;
-
-    if (stackedTotalValue > 0 && point.value > 0) {
-      const scale = point.value / stackedTotalValue;
-      defiValue *= scale;
-      walletValue *= scale;
-      stackedTotalValue = defiValue + walletValue;
-    }
-
-    if (stackedTotalValue === 0 && point.value > 0) {
-      const fallbackDefi = point.value * fallbackRatio;
-      defiValue = fallbackDefi;
-      walletValue = ensureNonNegative(point.value - fallbackDefi);
-      stackedTotalValue = defiValue + walletValue;
-    }
-
-    if (stackedTotalValue === 0) {
-      stackedTotalValue = ensureNonNegative(point.value);
-    }
+    const normalizedTotals = normalizeStackedTotals(
+      point.value,
+      initialDefi,
+      initialWallet,
+      fallbackRatio
+    );
 
     return {
       ...point,
-      defiValue,
-      walletValue,
-      stackedTotalValue,
+      defiValue: normalizedTotals.defiValue,
+      walletValue: normalizedTotals.walletValue,
+      stackedTotalValue: normalizedTotals.stackedTotalValue,
     } satisfies PortfolioStackedDataPoint;
   });
 };
@@ -108,9 +150,12 @@ export const buildStackedPortfolioData = (
 export const getStackedTotalValue = (
   point: PortfolioStackedDataPoint
 ): number => {
-  const aggregated =
-    point.stackedTotalValue ?? point.defiValue + point.walletValue;
-  return aggregated > 0 ? aggregated : point.value;
+  if (point.stackedTotalValue > 0) {
+    return point.stackedTotalValue;
+  }
+
+  const fallback = point.defiValue + point.walletValue;
+  return fallback > 0 ? fallback : point.value;
 };
 
 /**
@@ -141,71 +186,66 @@ export const getChartInteractionProps = (
 export function buildAllocationHistory(
   rawPoints: AllocationTimeseriesInputPoint[]
 ): AssetAllocationPoint[] {
-  if (!rawPoints || rawPoints.length === 0) {
+  if (rawPoints.length === 0) {
     return [];
   }
 
-  const allocationByDate = rawPoints.reduce(
-    (acc, point) => {
-      const dateKey = point.date;
-      if (!acc[dateKey]) {
-        acc[dateKey] = {
-          date: dateKey,
-          btc: 0,
-          eth: 0,
-          stablecoin: 0,
-          altcoin: 0,
-        };
-      }
+  const allocationByDate: Record<string, AssetAllocationPoint> = {};
 
-      const dayData = acc[dateKey]!;
-      const categoryKey = (point.category ?? point.protocol ?? "")
-        .toString()
-        .toLowerCase();
+  for (const point of rawPoints) {
+    const dateKey = point.date;
+    const dayData =
+      allocationByDate[dateKey] ??
+      (allocationByDate[dateKey] = {
+        date: dateKey,
+        btc: 0,
+        eth: 0,
+        stablecoin: 0,
+        altcoin: 0,
+      });
 
-      const percentageValue = Number(
-        point.allocation_percentage ??
-          point.percentage_of_portfolio ??
-          point.percentage ??
-          0
-      );
+    const categoryKey = (point.category ?? point.protocol ?? "")
+      .toString()
+      .toLowerCase();
 
-      const categoryValue = Number(
-        point.category_value_usd ?? point.category_value ?? 0
-      );
-      const totalValue = Number(
-        point.total_portfolio_value_usd ?? point.total_value ?? 0
-      );
+    const percentageValue = Number(
+      point.allocation_percentage ??
+        point.percentage_of_portfolio ??
+        point.percentage ??
+        0
+    );
 
-      const computedShare =
-        !Number.isNaN(percentageValue) && percentageValue !== 0
-          ? percentageValue
-          : totalValue > 0 && !Number.isNaN(categoryValue)
-            ? (categoryValue / totalValue) * 100
-            : 0;
+    const categoryValue = Number(
+      point.category_value_usd ?? point.category_value ?? 0
+    );
+    const totalValue = Number(
+      point.total_portfolio_value_usd ?? point.total_value ?? 0
+    );
 
-      if (Number.isNaN(computedShare) || computedShare === 0) {
-        return acc;
-      }
+    let computedShare = 0;
+    if (!Number.isNaN(percentageValue) && percentageValue !== 0) {
+      computedShare = percentageValue;
+    } else if (totalValue > 0 && !Number.isNaN(categoryValue)) {
+      computedShare = (categoryValue / totalValue) * 100;
+    }
 
-      if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
-        dayData.btc += computedShare;
-      } else if (
-        categoryKey.includes("eth") ||
-        categoryKey.includes("ethereum")
-      ) {
-        dayData.eth += computedShare;
-      } else if (categoryKey.includes("stable")) {
-        dayData.stablecoin += computedShare;
-      } else {
-        // Map DeFi protocols to altcoin category
-        dayData.altcoin += computedShare;
-      }
+    if (!Number.isFinite(computedShare) || computedShare === 0) {
+      continue;
+    }
 
-      return acc;
-    },
-    {} as Record<string, AssetAllocationPoint>
-  );
+    if (categoryKey.includes("btc") || categoryKey.includes("bitcoin")) {
+      dayData.btc += computedShare;
+    } else if (
+      categoryKey.includes("eth") ||
+      categoryKey.includes("ethereum")
+    ) {
+      dayData.eth += computedShare;
+    } else if (categoryKey.includes("stable")) {
+      dayData.stablecoin += computedShare;
+    } else {
+      dayData.altcoin += computedShare;
+    }
+  }
 
   return Object.values(allocationByDate)
     .map(point => {
