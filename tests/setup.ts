@@ -84,9 +84,6 @@ global.IntersectionObserver = class IntersectionObserver {
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() {
-    // Mock implementation
-  }
   disconnect() {
     // Mock implementation
   }
@@ -96,7 +93,7 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {
     // Mock implementation
   }
-};
+} as any;
 
 // Mock window.matchMedia
 Object.defineProperty(window, "matchMedia", {

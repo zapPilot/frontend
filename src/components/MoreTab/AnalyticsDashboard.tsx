@@ -13,11 +13,11 @@ interface AnalyticsDashboardProps {
 
 const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
   // Fetch real risk data for Key Metrics Grid
-  const { data: riskData } = useRiskSummary(userId || "");
+  const { data: riskData } = useRiskSummary(userId ?? "");
 
   // Generate analytics metrics with real risk data
   const portfolioMetrics = useMemo(
-    () => getAnalyticsMetrics(riskData || undefined),
+    () => getAnalyticsMetrics(riskData ?? undefined),
     [riskData]
   );
 

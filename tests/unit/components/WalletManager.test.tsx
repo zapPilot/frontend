@@ -895,7 +895,6 @@ describe("WalletManager", () => {
       });
 
       it("handles clipboard copy failure gracefully", async () => {
-        const _user = userEvent.setup();
         const mockWriteText = vi
           .fn()
           .mockRejectedValue(new Error("Copy failed"));

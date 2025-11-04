@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import {
   ExternalLink,
-  Github as GithubIcon,
+  // eslint-disable-next-line sonarjs/deprecation -- No non-deprecated alternative available in lucide-react yet
+  Github,
   type LucideIcon,
   MessageCircle,
   MessageSquare,
   Send,
-  Twitter as TwitterIcon,
+  X,
 } from "lucide-react";
 
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
@@ -26,8 +27,9 @@ interface SocialLinksProps {
 }
 
 const defaultLinks: SocialLink[] = [
-  { icon: TwitterIcon, label: "Twitter", url: "https://x.com/zapPilot" },
-  { icon: GithubIcon, label: "GitHub", url: "https://github.com/zapPilot" },
+  { icon: X, label: "X (Twitter)", url: "https://x.com/zapPilot" },
+  // eslint-disable-next-line sonarjs/deprecation -- No non-deprecated alternative available
+  { icon: Github, label: "GitHub", url: "https://github.com/zapPilot" },
   {
     icon: MessageCircle,
     label: "Discord",

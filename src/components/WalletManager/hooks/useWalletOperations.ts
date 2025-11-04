@@ -160,7 +160,7 @@ export const useWalletOperations = ({
               ...prev.removing,
               [walletId]: {
                 isLoading: false,
-                error: response.error || "Failed to remove wallet",
+                error: response.error ?? "Failed to remove wallet",
               },
             },
           }));
@@ -232,7 +232,7 @@ export const useWalletOperations = ({
               ...prev.editing,
               [walletId]: {
                 isLoading: false,
-                error: response.error || "Failed to update wallet label",
+                error: response.error ?? "Failed to update wallet label",
               },
             },
           }));
@@ -272,7 +272,7 @@ export const useWalletOperations = ({
     // Validate input
     const validation = validateNewWallet(newWallet);
     if (!validation.isValid) {
-      setValidationError(validation.error || "Invalid wallet data");
+      setValidationError(validation.error ?? "Invalid wallet data");
       return;
     }
 
@@ -326,7 +326,7 @@ export const useWalletOperations = ({
           ...prev,
           adding: {
             isLoading: false,
-            error: response.error || "Failed to add wallet",
+            error: response.error ?? "Failed to add wallet",
           },
         }));
       }
@@ -422,7 +422,7 @@ export const useWalletOperations = ({
         showToast({
           type: "error",
           title: "Deletion Failed",
-          message: response.error || "Failed to delete account",
+          message: response.error ?? "Failed to delete account",
         });
       }
     } catch (error) {
