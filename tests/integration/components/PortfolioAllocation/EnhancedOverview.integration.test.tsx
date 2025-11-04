@@ -595,7 +595,9 @@ describe("EnhancedOverview Integration Tests", () => {
       // Mock console.error to avoid noise in test output
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => {
+          /* Suppress errors in test */
+        });
 
       (usePortfolioAllocationViewModel as any).mockReturnValue({
         includedCategories: mockCategories.slice(0, 2),

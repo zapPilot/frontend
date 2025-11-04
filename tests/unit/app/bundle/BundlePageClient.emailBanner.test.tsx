@@ -55,7 +55,9 @@ vi.mock("@/contexts/UserContext", () => ({
     loading: false,
     error: null,
     connectedWallet: mockConnectedWallet,
-    refetch: () => {},
+    refetch: () => {
+      /* Mock refetch */
+    },
   }),
 }));
 

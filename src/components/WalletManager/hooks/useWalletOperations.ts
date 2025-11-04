@@ -12,6 +12,7 @@ import {
   type WalletData,
 } from "@/services/userService";
 import { copyTextToClipboard } from "@/utils/clipboard";
+import { walletLogger } from "@/utils/logger";
 
 import {
   addWallet as addWalletToBundle,
@@ -131,7 +132,7 @@ export const useWalletOperations = ({
               queryKey: queryKeys.user.wallets(realUserId),
             });
           } catch (invalidateError) {
-            console.error(
+            walletLogger.error(
               "Failed to invalidate wallet queries after removal",
               invalidateError
             );
@@ -139,7 +140,7 @@ export const useWalletOperations = ({
           try {
             await refetch();
           } catch (refetchError) {
-            console.error(
+            walletLogger.error(
               "Failed to refetch user data after wallet removal",
               refetchError
             );
@@ -302,7 +303,7 @@ export const useWalletOperations = ({
             queryKey: queryKeys.user.wallets(realUserId),
           });
         } catch (invalidateError) {
-          console.error(
+          walletLogger.error(
             "Failed to invalidate wallet queries after adding a wallet",
             invalidateError
           );
@@ -310,7 +311,7 @@ export const useWalletOperations = ({
         try {
           await refetch();
         } catch (refetchError) {
-          console.error(
+          walletLogger.error(
             "Failed to refetch user data after adding a wallet",
             refetchError
           );
@@ -396,7 +397,7 @@ export const useWalletOperations = ({
             queryKey: queryKeys.user.wallets(realUserId),
           });
         } catch (invalidateError) {
-          console.error(
+          walletLogger.error(
             "Failed to invalidate wallet queries after deleting account",
             invalidateError
           );
@@ -404,7 +405,7 @@ export const useWalletOperations = ({
         try {
           await refetch();
         } catch (refetchError) {
-          console.error(
+          walletLogger.error(
             "Failed to refetch user data after deleting account",
             refetchError
           );

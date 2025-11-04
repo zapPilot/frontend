@@ -22,14 +22,22 @@ vi.mock("../../../src/providers/WalletProvider", () => {
       name: "Ethereum",
       symbol: "ETH",
     },
-    connect: async () => {},
-    disconnect: async () => {},
-    switchChain: async () => {},
+    connect: async () => {
+      /* Mock implementation */
+    },
+    disconnect: async () => {
+      /* Mock implementation */
+    },
+    switchChain: async () => {
+      /* Mock implementation */
+    },
     isConnected: true,
     isConnecting: false,
     isDisconnecting: false,
     error: null,
-    clearError: () => {},
+    clearError: () => {
+      /* Mock implementation */
+    },
     signMessage: async () => "signed-message",
     isChainSupported: () => true,
     getSupportedChains: () => [

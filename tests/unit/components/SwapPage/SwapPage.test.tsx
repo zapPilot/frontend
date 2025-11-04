@@ -437,7 +437,9 @@ describe("SwapPage", () => {
       // This would be a type error in TypeScript, but test runtime behavior
       const consoleSpy = vi
         .spyOn(console, "error")
-        .mockImplementation(() => {});
+        .mockImplementation(() => {
+          /* Suppress errors in test */
+        });
 
       // Create a strategy with minimal required fields but missing navigationContext
       const incompleteStrategy = {

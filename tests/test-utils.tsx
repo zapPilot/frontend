@@ -34,9 +34,15 @@ function createTestQueryClient(): QueryClient {
     },
     // Disable error logging during testing
     logger: {
-      log: () => {},
-      warn: () => {},
-      error: () => {},
+      log: () => {
+        // Intentionally empty for test environment
+      },
+      warn: () => {
+        // Intentionally empty for test environment
+      },
+      error: () => {
+        // Intentionally empty for test environment
+      },
     },
   });
 }

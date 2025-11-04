@@ -3,12 +3,12 @@
 import { motion } from "framer-motion";
 import {
   ExternalLink,
-  Github,
-  LucideIcon,
+  Github as GithubIcon,
+  type LucideIcon,
   MessageCircle,
   MessageSquare,
   Send,
-  Twitter,
+  Twitter as TwitterIcon,
 } from "lucide-react";
 
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
@@ -26,8 +26,8 @@ interface SocialLinksProps {
 }
 
 const defaultLinks: SocialLink[] = [
-  { icon: Twitter, label: "Twitter", url: "https://x.com/zapPilot" },
-  { icon: Github, label: "GitHub", url: "https://github.com/zapPilot" },
+  { icon: TwitterIcon, label: "Twitter", url: "https://x.com/zapPilot" },
+  { icon: GithubIcon, label: "GitHub", url: "https://github.com/zapPilot" },
   {
     icon: MessageCircle,
     label: "Discord",

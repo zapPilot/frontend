@@ -28,7 +28,9 @@ describe("BundlePage", () => {
   });
 
   it("shows the suspense fallback while the entry component is loading", async () => {
-    let resolveEntry: () => void = () => {};
+    let resolveEntry: () => void = () => {
+      /* Will be assigned by Promise */
+    };
     const pendingEntry = new Promise<void>(resolve => {
       resolveEntry = resolve;
     });

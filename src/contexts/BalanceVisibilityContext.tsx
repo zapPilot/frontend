@@ -30,7 +30,9 @@ export function useBalanceVisibility() {
   return (
     ctx || {
       balanceHidden: false,
-      toggleBalanceVisibility: () => {},
+      toggleBalanceVisibility: () => {
+        // No-op default implementation
+      },
     }
   );
 }

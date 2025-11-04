@@ -38,7 +38,7 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
       <KeyMetricsGrid metrics={portfolioMetrics} />
-      {/* TODO(ZAP-208): Asset Attribution Analysis - replace with real API data when asset attribution endpoint is available */}
+      {/* ZAP-208: Asset Attribution Analysis - pending asset attribution API endpoint */}
     </div>
   );
 };

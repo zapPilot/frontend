@@ -45,7 +45,9 @@ describe("ErrorBoundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Suppress console.error for these tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {
+      /* Suppress errors in test */
+    });
     // Reset static counter for test isolation
     (ErrorBoundary as any).errorIdCounter = 0;
   });

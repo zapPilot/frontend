@@ -71,17 +71,31 @@ global.IntersectionObserver = class IntersectionObserver {
       : [options?.threshold || 0];
   }
 
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+  disconnect() {
+    // Mock implementation
+  }
+  observe() {
+    // Mock implementation
+  }
+  unobserve() {
+    // Mock implementation
+  }
 } as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
-  unobserve() {}
+  constructor() {
+    // Mock implementation
+  }
+  disconnect() {
+    // Mock implementation
+  }
+  observe() {
+    // Mock implementation
+  }
+  unobserve() {
+    // Mock implementation
+  }
 };
 
 // Mock window.matchMedia

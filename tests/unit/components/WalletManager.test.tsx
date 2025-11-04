@@ -52,14 +52,22 @@ vi.mock("../../../src/providers/WalletProvider", () => {
       name: "Ethereum",
       symbol: "ETH",
     },
-    connect: async () => {},
-    disconnect: async () => {},
-    switchChain: async () => {},
+    connect: async () => {
+      /* Mock implementation */
+    },
+    disconnect: async () => {
+      /* Mock implementation */
+    },
+    switchChain: async () => {
+      /* Mock implementation */
+    },
     isConnected: true,
     isConnecting: false,
     isDisconnecting: false,
     error: null,
-    clearError: () => {},
+    clearError: () => {
+      /* Mock implementation */
+    },
     signMessage: async () => "signed-message",
     isChainSupported: () => true,
     getSupportedChains: () => [
@@ -77,7 +85,9 @@ vi.mock("../../../src/providers/WalletProvider", () => {
   const controls =
     globalThis.__walletContextControls ||
     (globalThis.__walletContextControls = {
-      setWalletContextValue: () => {},
+      setWalletContextValue: () => {
+        /* Will be reassigned below */
+      },
     });
 
   controls.setWalletContextValue = (
