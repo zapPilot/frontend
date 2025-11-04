@@ -3,8 +3,6 @@
 import { motion } from "framer-motion";
 import {
   ExternalLink,
-  // eslint-disable-next-line sonarjs/deprecation -- No non-deprecated alternative available in lucide-react yet
-  Github,
   type LucideIcon,
   MessageCircle,
   MessageSquare,
@@ -12,10 +10,11 @@ import {
   X,
 } from "lucide-react";
 
+import { GithubIcon } from "@/components/icons/GithubIcon";
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface SocialLink {
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   url: string;
 }
@@ -28,8 +27,7 @@ interface SocialLinksProps {
 
 const defaultLinks: SocialLink[] = [
   { icon: X, label: "X (Twitter)", url: "https://x.com/zapPilot" },
-  // eslint-disable-next-line sonarjs/deprecation -- No non-deprecated alternative available
-  { icon: Github, label: "GitHub", url: "https://github.com/zapPilot" },
+  { icon: GithubIcon, label: "GitHub", url: "https://github.com/zapPilot" },
   {
     icon: MessageCircle,
     label: "Discord",

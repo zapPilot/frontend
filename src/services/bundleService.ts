@@ -25,7 +25,7 @@ const resolveBaseUrl = (providedBaseUrl?: string): string => {
     return providedBaseUrl;
   }
 
-  if (typeof window !== "undefined" && window.location?.origin) {
+  if (typeof window !== "undefined") {
     return window.location.origin;
   }
 

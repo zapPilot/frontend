@@ -186,6 +186,15 @@ const eslintConfig = [
       // Allow require() in tests
       "@typescript-eslint/no-require-imports": "off",
 
+      // Allow non-null assertions in test files (test data is controlled)
+      "@typescript-eslint/no-non-null-assertion": "off",
+
+      // Allow require() for Vitest mocks (hoisted before imports)
+      "unicorn/prefer-module": "off",
+
+      // Allow mock constructors (necessary for test setup)
+      "@typescript-eslint/no-useless-constructor": "off",
+
       // Allow console in tests
       "no-console": "off"
     }

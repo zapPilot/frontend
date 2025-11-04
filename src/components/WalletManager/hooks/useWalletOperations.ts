@@ -27,6 +27,11 @@ import type {
 } from "../types/wallet.types";
 import { validateNewWallet } from "../utils/validation";
 
+// Toast message constants to avoid duplicate strings
+const TOAST_MESSAGES = {
+  DELETION_FAILED: "Deletion Failed",
+} as const;
+
 interface UseWalletOperationsParams {
   viewingUserId: string;
   realUserId: string;
@@ -421,7 +426,7 @@ export const useWalletOperations = ({
       } else {
         showToast({
           type: "error",
-          title: "Deletion Failed",
+          title: TOAST_MESSAGES.DELETION_FAILED,
           message: response.error ?? "Failed to delete account",
         });
       }
@@ -429,7 +434,7 @@ export const useWalletOperations = ({
       const errorMessage = handleWalletError(error);
       showToast({
         type: "error",
-        title: "Deletion Failed",
+        title: TOAST_MESSAGES.DELETION_FAILED,
         message: errorMessage,
       });
     } finally {
