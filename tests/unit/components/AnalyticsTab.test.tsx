@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach,describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnalyticsTab } from "../../../src/components/AnalyticsTab";
 import { useUser } from "../../../src/contexts/UserContext";

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
 import { Z_INDEX } from "@/constants/design-system";

@@ -25,7 +25,7 @@ import {
   type UnifiedZapStreamTransaction,
   useUnifiedZapStream,
 } from "../../hooks/useUnifiedZapStream";
-import { formatAddress,formatCurrency } from "../../lib/formatters";
+import { formatAddress, formatCurrency } from "../../lib/formatters";
 import {
   type BaseModalProps,
   type ZapExecutionResult,

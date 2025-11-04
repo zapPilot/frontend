@@ -235,10 +235,7 @@ export function useUnifiedZapStream(
           try {
             const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
 
-            const normalizeProgress = (
-              value: unknown,
-              fallback = 0
-            ) => {
+            const normalizeProgress = (value: unknown, fallback = 0) => {
               if (typeof value !== "number" || Number.isNaN(value)) {
                 return fallback;
               }
@@ -277,9 +274,7 @@ export function useUnifiedZapStream(
 
               for (const candidate of candidates) {
                 if (
-                  (UNIFIED_ZAP_PHASES as readonly string[]).includes(
-                    candidate
-                  )
+                  (UNIFIED_ZAP_PHASES as readonly string[]).includes(candidate)
                 ) {
                   return candidate as UnifiedZapPhase;
                 }

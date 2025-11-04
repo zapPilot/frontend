@@ -7,7 +7,7 @@ import { ASSET_CATEGORIES, CHART_COLORS } from "../../../constants/portfolio";
 import { useChartHover } from "../../../hooks/useChartHover";
 import type { AssetAllocationPoint } from "../../../types/portfolio";
 import { ChartTooltip } from "../../charts";
-import { ALLOCATION_CONSTANTS,CHART_DIMENSIONS } from "../chartConstants";
+import { ALLOCATION_CONSTANTS, CHART_DIMENSIONS } from "../chartConstants";
 import {
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,

@@ -2,7 +2,7 @@
 
 import { memo } from "react";
 
-import { CategoryShift,ProcessedAssetCategory } from "../../types";
+import { CategoryShift, ProcessedAssetCategory } from "../../types";
 import { AssetCategoryRow } from "./CategoryRow";
 
 interface CategoryListSectionProps {

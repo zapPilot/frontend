@@ -1,4 +1,4 @@
-import { beforeEach,describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BundlePageEntry } from "../../../../src/app/bundle/BundlePageEntry";
 import { render, screen } from "../../../test-utils";

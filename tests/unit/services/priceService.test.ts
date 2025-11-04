@@ -1,4 +1,4 @@
-import { beforeAll,beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TokenPriceData } from "@/services/priceService";
 

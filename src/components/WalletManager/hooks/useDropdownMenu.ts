@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import type { MenuPosition } from "../types/wallet.types";
 

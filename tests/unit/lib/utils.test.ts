@@ -1,4 +1,4 @@
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { getChangeColorClasses } from "../../../src/lib/color-utils";
 import {

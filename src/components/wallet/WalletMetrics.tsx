@@ -9,7 +9,7 @@ import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { BalanceLoading,WalletMetricsSkeleton } from "../ui/LoadingSystem";
+import { BalanceLoading, WalletMetricsSkeleton } from "../ui/LoadingSystem";
 import { ROITooltip } from "./ROITooltip";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 

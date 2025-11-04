@@ -89,10 +89,9 @@ describe("useResolvedBalanceVisibility", () => {
         );
       }
 
-      const { result } = renderHook(
-        () => useResolvedBalanceVisibility(),
-        { wrapper: Wrapper }
-      );
+      const { result } = renderHook(() => useResolvedBalanceVisibility(), {
+        wrapper: Wrapper,
+      });
 
       // Should use context default value (false)
       expect(result.current).toBe(false);

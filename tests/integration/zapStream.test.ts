@@ -15,8 +15,8 @@
  * @see src/hooks/useUnifiedZapStream.ts
  */
 
-import { act,renderHook, waitFor } from "@testing-library/react";
-import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   UNIFIED_ZAP_PHASES,

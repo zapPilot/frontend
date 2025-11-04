@@ -6,7 +6,7 @@
  */
 
 import { motion } from "framer-motion";
-import { ArrowDownRight,ArrowUpRight } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 import { scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 

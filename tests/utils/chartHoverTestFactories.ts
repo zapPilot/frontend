@@ -446,9 +446,7 @@ export const ChartHoverOptionsFactory = {
   },
 
   drawdown(data: DrawdownDataPoint[]) {
-    return new ChartHoverOptionsBuilder<DrawdownDataPoint>(
-      "drawdown-recovery"
-    )
+    return new ChartHoverOptionsBuilder<DrawdownDataPoint>("drawdown-recovery")
       .withValueRange(-20, 0)
       .withYValueExtractor(point => point.drawdown_pct)
       .withHoverDataBuilder((point, x, y, index) =>

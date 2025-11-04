@@ -43,10 +43,7 @@ export const AmountInput = memo<AmountInputProps>(
       if (operationMode === "zapOut") {
         return totalPortfolioValue;
       }
-      if (
-        operationMode === "zapIn" &&
-        fromToken?.balance !== undefined
-      ) {
+      if (operationMode === "zapIn" && fromToken?.balance !== undefined) {
         return fromToken.balance;
       }
       return Infinity;

@@ -1,4 +1,4 @@
-import { expect,test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
 /**
  * Ultra-Simple Smoke Tests - Just verify core functionality exists

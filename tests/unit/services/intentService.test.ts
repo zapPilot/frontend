@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, type Mock,vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import {
   checkIntentServiceHealth,
@@ -1106,8 +1106,12 @@ describe("intentService", () => {
     });
 
     it("should handle all status types", async () => {
-      const statuses: ("pending" | "processing" | "completed" | "failed")[] =
-        ["pending", "processing", "completed", "failed"];
+      const statuses: ("pending" | "processing" | "completed" | "failed")[] = [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+      ];
 
       for (const status of statuses) {
         (httpUtils.intentEngine.get as Mock).mockResolvedValue({

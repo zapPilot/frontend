@@ -5,7 +5,7 @@
  * for direct use in service functions without the class-based wrapper.
  */
 
-import type { HTTPMethod,ResponseTransformer } from "../types/api";
+import type { HTTPMethod, ResponseTransformer } from "../types/api";
 
 // API endpoints configuration
 export const API_ENDPOINTS = {
@@ -619,4 +619,4 @@ export function handleHTTPError(error: unknown): string {
 /**
  * Re-export types for external use (HTTPMethod and ResponseTransformer from api types)
  */
-export type { HTTPMethod,ResponseTransformer } from "../types/api";
+export type { HTTPMethod, ResponseTransformer } from "../types/api";

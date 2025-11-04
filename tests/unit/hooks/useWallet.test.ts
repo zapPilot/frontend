@@ -11,7 +11,7 @@
  */
 
 import { renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, Mock,vi } from "vitest";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
 import { isChainSupported } from "@/config/chains";
 import { useWallet } from "@/hooks/useWallet";

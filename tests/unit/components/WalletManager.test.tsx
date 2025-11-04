@@ -26,11 +26,13 @@ let mockUserContextValue = {
 };
 
 declare global {
-  var __walletContextControls: {
-    setWalletContextValue: (
-      overrides?: Partial<WalletProviderInterface>
-    ) => void;
-  } | undefined;
+  var __walletContextControls:
+    | {
+        setWalletContextValue: (
+          overrides?: Partial<WalletProviderInterface>
+        ) => void;
+      }
+    | undefined;
 }
 
 vi.mock("../../../src/providers/WalletProvider", () => {
@@ -107,12 +109,9 @@ vi.mock("../../../src/providers/WalletProvider", () => {
   };
 });
 
-const walletContextControls =
-  globalThis.__walletContextControls as {
-    setWalletContextValue: (
-      overrides?: Partial<WalletProviderInterface>
-    ) => void;
-  };
+const walletContextControls = globalThis.__walletContextControls as {
+  setWalletContextValue: (overrides?: Partial<WalletProviderInterface>) => void;
+};
 
 vi.mock("../../../src/contexts/UserContext", () => {
   const MockUserContext = {

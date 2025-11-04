@@ -39,7 +39,10 @@ export function AirdropTab() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <BaseCard variant="glass" className="p-8 text-center relative overflow-hidden">
+        <BaseCard
+          variant="glass"
+          className="p-8 text-center relative overflow-hidden"
+        >
           {/* Background decorations */}
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
             <div className="absolute top-4 left-4">

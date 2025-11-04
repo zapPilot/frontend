@@ -3,7 +3,7 @@
  */
 
 import { renderHook, waitFor } from "@testing-library/react";
-import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useRiskSummary } from "../../../src/hooks/useRiskSummary";
 import { getRiskSummary } from "../../../src/services/analyticsService";

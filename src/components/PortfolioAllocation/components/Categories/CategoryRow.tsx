@@ -5,7 +5,7 @@ import { memo } from "react";
 
 import { useDropdown } from "@/hooks/useDropdown";
 
-import { CategoryShift,ProcessedAssetCategory } from "../../types";
+import { CategoryShift, ProcessedAssetCategory } from "../../types";
 import { CategoryAllocationSummary } from "./CategoryAllocationSummary";
 import { CategoryProtocolList } from "./CategoryProtocolList";
 import { CategoryRowHeader } from "./CategoryRowHeader";

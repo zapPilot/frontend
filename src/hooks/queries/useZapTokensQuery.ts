@@ -11,7 +11,7 @@ import {
   type UseTokenBalancesParams,
   useTokenBalancesQuery,
 } from "./useTokenBalancesQuery";
-import { type TokenPriceMap,useTokenPricesQuery } from "./useTokenPricesQuery";
+import { type TokenPriceMap, useTokenPricesQuery } from "./useTokenPricesQuery";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain

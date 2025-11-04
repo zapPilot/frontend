@@ -23,11 +23,11 @@ interface ZapTokensResponse {
   chainName: string;
   nativeToken: string;
   tokens: (Omit<SwapToken, "chainId"> & {
-      type?: "native" | "wrapped" | "erc20";
-      wrappedVersion?: string;
-      nativeVersion?: string;
-      hasDeposit?: boolean;
-    })[];
+    type?: "native" | "wrapped" | "erc20";
+    wrappedVersion?: string;
+    nativeVersion?: string;
+    hasDeposit?: boolean;
+  })[];
 }
 
 export const getZapTokens = (chainId: number): Promise<SwapToken[]> =>

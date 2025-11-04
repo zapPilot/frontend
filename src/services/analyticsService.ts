@@ -40,11 +40,14 @@ export interface LandingPageResponse {
     recommended_period: string;
     recommended_yearly_roi: number;
     estimated_yearly_pnl_usd: number;
-    windows?: Record<string, {
+    windows?: Record<
+      string,
+      {
         value: number;
         data_points: number;
         start_balance?: number;
-      }>;
+      }
+    >;
     // Legacy fields for backward compatibility
     roi_7d?: {
       value: number;
