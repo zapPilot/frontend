@@ -2,12 +2,13 @@ import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletManager } from "../../../src/components/WalletManager";
 import { WalletProvider } from "../../../src/providers/WalletProvider";
-import { WalletProviderInterface } from "../../../src/types/wallet";
 // Account service is not used by WalletManager for email updates; keep import removed.
 import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
+import { WalletProviderInterface } from "../../../src/types/wallet";
 import { render } from "../../test-utils";
 
 // Mock animation frame for better control of async operations
@@ -262,7 +263,7 @@ describe("WalletManager", () => {
   };
 
   const renderWalletManager = async (
-    isOpen: boolean = true,
+    isOpen = true,
     onClose: () => void = vi.fn(),
     userContext = mockUserContext,
     walletOverrides?: Partial<WalletProviderInterface>
@@ -325,7 +326,7 @@ describe("WalletManager", () => {
     // Mock clipboard API - setup default that will be overridden in tests
     Object.defineProperty(navigator, "clipboard", {
       value: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: vi.fn().mockResolvedValue(),
       },
       writable: true,
       configurable: true,
@@ -853,7 +854,7 @@ describe("WalletManager", () => {
     describe("Copy Address Feature", () => {
       it("copies wallet address to clipboard", async () => {
         const user = userEvent.setup();
-        const mockWriteText = vi.fn().mockResolvedValue(undefined);
+        const mockWriteText = vi.fn().mockResolvedValue();
 
         // Override the clipboard mock for this test
         Object.defineProperty(navigator, "clipboard", {

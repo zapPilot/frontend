@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletMetrics } from "../../../../src/components/wallet/WalletMetrics";
 import { useLandingPageData } from "../../../../src/hooks/queries/usePortfolioQuery";
 import type { LandingPageResponse } from "../../../../src/services/analyticsEngine";
@@ -279,9 +280,9 @@ describe("WalletMetrics", () => {
         screen.getByText("Estimated Yearly PnL"),
       ];
 
-      labels.forEach(label => {
+      for (const label of labels) {
         expect(label).toHaveClass("text-sm", "text-gray-400");
-      });
+      }
     });
   });
 

@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import { normalizeProtocolName } from "@/lib/stringUtils";
 
 describe("normalizeProtocolName", () => {
@@ -48,7 +49,7 @@ describe("normalizeProtocolName", () => {
   it("handles edge cases", () => {
     expect(normalizeProtocolName("")).toBe("");
     expect(normalizeProtocolName("   ")).toBe("");
-    expect(normalizeProtocolName(undefined)).toBe("");
+    expect(normalizeProtocolName()).toBe("");
   });
 
   it("preserves protocol names without versions", () => {

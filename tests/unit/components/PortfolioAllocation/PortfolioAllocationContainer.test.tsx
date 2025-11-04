@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, waitFor } from "../../../test-utils";
+
 import { PortfolioAllocationContainer } from "../../../../src/components/PortfolioAllocation/PortfolioAllocationContainer";
 import type { AssetCategory } from "../../../../src/components/PortfolioAllocation/types";
+import { act, render, waitFor } from "../../../test-utils";
 
 const componentMocks = vi.hoisted(() => ({
   EnhancedOverview: vi.fn(() => <div data-testid="enhanced-overview-mock" />),

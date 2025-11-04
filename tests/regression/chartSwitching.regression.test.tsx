@@ -11,11 +11,13 @@
  * @see src/hooks/useChartHover.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 
 // Mock Framer Motion
@@ -56,7 +58,7 @@ describe("Chart Switching - Regression Tests", () => {
     });
   });
 
-  const renderChart = (activeTab: string = "performance") => {
+  const renderChart = (activeTab = "performance") => {
     return render(
       <QueryClientProvider client={queryClient}>
         <PortfolioChart

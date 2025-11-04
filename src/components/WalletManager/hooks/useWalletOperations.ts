@@ -90,7 +90,7 @@ export const useWalletOperations = ({
   // Load wallets when component opens or user changes
   useEffect(() => {
     if (isOpen && viewingUserId) {
-      loadWallets();
+      void loadWallets();
     }
   }, [isOpen, viewingUserId, loadWallets]);
 
@@ -99,7 +99,7 @@ export const useWalletOperations = ({
     if (!isOpen || !viewingUserId || !isOwner) return;
 
     const interval = setInterval(() => {
-      loadWallets(true); // Silent refresh
+      void loadWallets(true); // Silent refresh
     }, 30000);
 
     return () => clearInterval(interval);
@@ -126,10 +126,24 @@ export const useWalletOperations = ({
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.user.wallets(realUserId),
-          });
-          refetch();
+          try {
+            await queryClient.invalidateQueries({
+              queryKey: queryKeys.user.wallets(realUserId),
+            });
+          } catch (invalidateError) {
+            console.error(
+              "Failed to invalidate wallet queries after removal",
+              invalidateError
+            );
+          }
+          try {
+            await refetch();
+          } catch (refetchError) {
+            console.error(
+              "Failed to refetch user data after wallet removal",
+              refetchError
+            );
+          }
 
           setOperations(prev => ({
             ...prev,
@@ -283,10 +297,24 @@ export const useWalletOperations = ({
         await loadWallets();
 
         // Invalidate and refetch user data
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.user.wallets(realUserId),
-        });
-        refetch();
+        try {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.user.wallets(realUserId),
+          });
+        } catch (invalidateError) {
+          console.error(
+            "Failed to invalidate wallet queries after adding a wallet",
+            invalidateError
+          );
+        }
+        try {
+          await refetch();
+        } catch (refetchError) {
+          console.error(
+            "Failed to refetch user data after adding a wallet",
+            refetchError
+          );
+        }
 
         setOperations(prev => ({
           ...prev,
@@ -363,10 +391,24 @@ export const useWalletOperations = ({
         });
 
         // Invalidate queries and trigger reconnection flow
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.user.wallets(realUserId),
-        });
-        refetch();
+        try {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.user.wallets(realUserId),
+          });
+        } catch (invalidateError) {
+          console.error(
+            "Failed to invalidate wallet queries after deleting account",
+            invalidateError
+          );
+        }
+        try {
+          await refetch();
+        } catch (refetchError) {
+          console.error(
+            "Failed to refetch user data after deleting account",
+            refetchError
+          );
+        }
 
         if (shouldReload) {
           // Close the wallet manager after a brief delay

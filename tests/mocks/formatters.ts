@@ -179,15 +179,15 @@ export const mockFormatters = {
  * ```
  */
 export function resetFormatterMocks() {
-  Object.values(mockFormatters).forEach(mock => {
+  for (const mock of Object.values(mockFormatters)) {
     if (typeof mock === "function" && "mockClear" in mock) {
       mock.mockClear();
     } else if (typeof mock === "object") {
-      Object.values(mock).forEach(nestedMock => {
+      for (const nestedMock of Object.values(mock)) {
         if (typeof nestedMock === "function" && "mockClear" in nestedMock) {
           nestedMock.mockClear();
         }
-      });
+      }
     }
-  });
+  }
 }

@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
 import type { PerformanceHoverData } from "@/types/chartHover";
 

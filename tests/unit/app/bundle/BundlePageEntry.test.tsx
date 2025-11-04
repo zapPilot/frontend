@@ -1,6 +1,7 @@
-import { render, screen } from "../../../test-utils";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach,describe, expect, it, vi } from "vitest";
+
 import { BundlePageEntry } from "../../../../src/app/bundle/BundlePageEntry";
+import { render, screen } from "../../../test-utils";
 
 // Vitest hoists vi.mock, so create the mock function with vi.hoisted
 const { mockUseSearchParams } = vi.hoisted(() => ({
@@ -194,7 +195,7 @@ describe("BundlePageEntry", () => {
     });
 
     it("handles undefined useSearchParams return", () => {
-      mockUseSearchParams.mockReturnValue(undefined);
+      mockUseSearchParams.mockReturnValue();
 
       // Should not crash even with undefined search params
       expect(() => render(<BundlePageEntry />)).not.toThrow();

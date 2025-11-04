@@ -1,5 +1,6 @@
 import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioOverview } from "../../../src/components/PortfolioOverview";
 import { AssetCategory, PieChartData } from "../../../src/types/portfolio";
 import { render } from "../../test-utils";
@@ -767,9 +768,9 @@ describe("PortfolioOverview", () => {
       expect(pieItems).toHaveLength(4); // 2 assets × 2 views (desktop + mobile)
 
       // No negative values should appear in pie chart
-      pieItems.forEach(item => {
+      for (const item of pieItems) {
         expect(item.textContent).not.toMatch(/-\$/);
-      });
+      }
     });
 
     it("should calculate correct asset percentages when borrowing is present", () => {

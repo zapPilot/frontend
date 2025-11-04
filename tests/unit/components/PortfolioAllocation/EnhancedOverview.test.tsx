@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { EnhancedOverview } from "../../../../src/components/PortfolioAllocation/components/EnhancedOverview";
 import {
   ChartDataPoint,

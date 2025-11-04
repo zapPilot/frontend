@@ -18,13 +18,13 @@
  * - Very large/small balance handling
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
-import { useZapTokensWithStates } from "../../src/hooks/queries/useZapTokensQuery";
-import type { SwapToken } from "../../src/types/swap";
+import { describe, expect, it, vi } from "vitest";
 
+import { useZapTokensWithStates } from "../../src/hooks/queries/useZapTokensQuery";
 // Mock the token service at the source
 import * as tokenService from "../../src/services/tokenService";
+import type { SwapToken } from "../../src/types/swap";
 
 vi.mock("../../src/services/tokenService", () => ({
   getZapTokens: vi.fn(),
@@ -55,15 +55,15 @@ vi.mock("../../src/hooks/queries/useTokenPricesQuery", () => ({
 
 import { useTokenBalancesQuery } from "../../src/hooks/queries/useTokenBalancesQuery";
 import { useTokenPricesQuery } from "../../src/hooks/queries/useTokenPricesQuery";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 import { createMockArray } from "./helpers/mock-factories";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 
 const createWrapper = () => createQueryWrapper().QueryWrapper;
 
 // Mock data generators
-function createMockTokens(count: number = 5): SwapToken[] {
+function createMockTokens(count = 5): SwapToken[] {
   if (count <= 0) return [];
 
   const additional = createMockArray(
@@ -162,13 +162,13 @@ describe("useZapTokensWithStates - Token State Management", () => {
       expect(result.current.tokens.length).toBe(3);
     });
 
-    result.current.tokens.forEach(token => {
+    for (const token of result.current.tokens) {
       if (token.symbol && mockPrices[token.symbol.toUpperCase()]) {
         expect(token.price).toBeDefined();
         expect(typeof token.price).toBe("number");
         expect(token.price).toBeGreaterThan(0);
       }
-    });
+    }
   });
 
   it("enriches tokens with balance data", async () => {
@@ -197,10 +197,10 @@ describe("useZapTokensWithStates - Token State Management", () => {
       expect(result.current.tokens.length).toBe(3);
     });
 
-    result.current.tokens.forEach(token => {
+    for (const token of result.current.tokens) {
       expect(token.balance).toBeDefined();
       expect(parseFloat(token.balance || "0")).toBeGreaterThanOrEqual(0);
-    });
+    }
   });
 
   it("calculates USD values correctly", async () => {
@@ -336,9 +336,9 @@ describe("useZapTokensWithStates - Price Updates", () => {
       expect(result.current.tokens.length).toBe(2);
     });
 
-    result.current.tokens.forEach(token => {
+    for (const token of result.current.tokens) {
       expect(token.price).toBeUndefined();
-    });
+    }
   });
 
   it("handles failed price fetches", async () => {

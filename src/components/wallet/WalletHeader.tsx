@@ -75,7 +75,7 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
         <div className="flex space-x-2">
           {bundleUrl && (
             <button
-              onClick={handleCopyLink}
+              onClick={() => void handleCopyLink()}
               className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
               title="Copy bundle link"
             >

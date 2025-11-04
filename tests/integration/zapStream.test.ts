@@ -15,11 +15,12 @@
  * @see src/hooks/useUnifiedZapStream.ts
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor, act } from "@testing-library/react";
+import { act,renderHook, waitFor } from "@testing-library/react";
+import { afterEach,beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
-  useUnifiedZapStream,
   UNIFIED_ZAP_PHASES,
+  useUnifiedZapStream,
 } from "@/hooks/useUnifiedZapStream";
 
 // Mock EventSource for SSE testing
@@ -28,7 +29,7 @@ class MockEventSource {
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
-  readyState: number = 0;
+  readyState = 0;
   CONNECTING = 0;
   OPEN = 1;
   CLOSED = 2;

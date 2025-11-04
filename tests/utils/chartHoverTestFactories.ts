@@ -3,19 +3,19 @@
  * Provides builders for all chart types with proper TypeScript inference
  */
 
+import type { UseChartHoverOptions } from "@/hooks/useChartHover";
 import type {
-  ChartHoverState,
-  PerformanceHoverData,
   AllocationHoverData,
+  ChartHoverState,
   DrawdownHoverData,
+  PerformanceHoverData,
   SharpeHoverData,
   VolatilityHoverData,
 } from "@/types/chartHover";
 import type {
-  PortfolioDataPoint,
   AssetAllocationPoint,
+  PortfolioDataPoint,
 } from "@/types/portfolio";
-import type { UseChartHoverOptions } from "@/hooks/useChartHover";
 
 /**
  * Base factory interface for creating typed test data

@@ -1,9 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import {
   LoadingState,
-  withLoadingState,
   useLoadingComponent,
+  withLoadingState,
 } from "../../../../src/components/ui/LoadingSystem";
 
 // Mock child components - use importOriginal to preserve other exports

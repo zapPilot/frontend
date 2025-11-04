@@ -17,6 +17,7 @@ import {
   getTokenPrices,
   type TokenPriceData,
 } from "../../services/priceService";
+import { logger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
 
 // Price-specific timing constants
@@ -231,6 +232,16 @@ export const useTokenPricesQuery = (
     return query.data.some(price => isPriceStale(price.timestamp));
   }, [query.data]);
 
+  const triggerRefetch = () => {
+    void (async () => {
+      try {
+        await query.refetch();
+      } catch (error) {
+        logger.error("Failed to refetch token prices", error);
+      }
+    })();
+  };
+
   return {
     prices: query.data,
     priceMap,
@@ -242,7 +253,7 @@ export const useTokenPricesQuery = (
     isFetching: query.isFetching,
     isError: query.isError,
     error: query.error as Error | null,
-    refetch: query.refetch,
+    refetch: triggerRefetch,
   };
 };
 

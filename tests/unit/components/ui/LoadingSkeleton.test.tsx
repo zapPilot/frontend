@@ -1,10 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+
 import {
-  Skeleton as LoadingSkeleton,
   CardSkeleton,
-  MetricsSkeleton,
   ChartSkeleton,
+  MetricsSkeleton,
+  Skeleton as LoadingSkeleton,
 } from "../../../../src/components/ui/LoadingSystem";
 
 describe("LoadingSkeleton", () => {

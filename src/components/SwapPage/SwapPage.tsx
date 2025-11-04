@@ -217,13 +217,20 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   );
 
   // Handle execution completion
-  const handleExecutionComplete = useCallback(() => {
+  const handleExecutionComplete = useCallback(async () => {
     swapLogger.info("UnifiedZap execution completed successfully");
 
     setZapExecution(prev => (prev ? { ...prev, isExecuting: false } : null));
 
     // Optionally refresh strategies data to reflect new positions
-    refetch();
+    try {
+      await refetch();
+    } catch (refetchError) {
+      swapLogger.error(
+        "Failed to refetch strategies after UnifiedZap completion",
+        refetchError
+      );
+    }
   }, [refetch]);
 
   // Handle execution error
@@ -271,7 +278,14 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 {error?.message || "Unable to fetch portfolio strategies"}
               </p>
               <button
-                onClick={() => refetch()}
+                onClick={() =>
+                  refetch().catch(refetchError => {
+                    swapLogger.error(
+                      "Failed to refetch strategies after load failure",
+                      refetchError
+                    );
+                  })
+                }
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Try Again
@@ -294,7 +308,14 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             chainId={zapExecution.chainId}
             totalValue={zapExecution.totalValue}
             strategyCount={zapExecution.strategyCount}
-            onComplete={handleExecutionComplete}
+            onComplete={() => {
+              void handleExecutionComplete().catch(error => {
+                swapLogger.error(
+                  "Failed to finalize UnifiedZap completion sequence",
+                  error
+                );
+              });
+            }}
             onError={handleExecutionError}
             onCancel={handleExecutionCancel}
           />
@@ -323,7 +344,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             assetCategories={strategies}
             operationMode={activeOperationMode}
             isRebalanceMode={isRebalanceMode}
-            onZapAction={handleZapAction}
+            onZapAction={action => {
+              void handleZapAction(action).catch(error => {
+                swapLogger.error("Failed to execute zap action", error);
+              });
+            }}
             excludedCategoryIds={excludedCategoryIds}
             onToggleCategoryExclusion={toggleCategoryExclusion}
             {...(chain?.id !== undefined ? { chainId: chain.id } : {})}

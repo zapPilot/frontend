@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PieChart } from "../../../src/components/PieChart";
 import { PORTFOLIO_CONFIG } from "../../../src/constants/portfolio";
 import { formatCurrency } from "../../../src/lib/formatters";

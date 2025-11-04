@@ -1,8 +1,9 @@
-import { render, screen } from "../../test-utils";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach,describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { render, screen } from "../../test-utils";
 
 vi.mock("../../../src/contexts/UserContext");
 vi.mock("../../../src/hooks/queries/usePortfolioQuery");

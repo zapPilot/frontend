@@ -8,10 +8,11 @@
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
   getLandingPagePortfolioData,
-  getRiskSummary,
   getPortfolioDashboard,
+  getRiskSummary,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
 } from "../../../src/services/analyticsService";

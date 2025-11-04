@@ -1,5 +1,6 @@
 import { render } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import { ProtocolImage } from "@/components/shared/ProtocolImage";
 
 describe("ProtocolImage", () => {
@@ -33,13 +34,13 @@ describe("ProtocolImage", () => {
       { input: "protocol/v2", expected: "protocol" },
     ];
 
-    testCases.forEach(({ input, expected }) => {
+    for (const { input, expected } of testCases) {
       const { container } = render(
         <ProtocolImage protocol={{ name: input }} size={24} />
       );
       const img = container.querySelector("img");
       expect(img?.src).toContain(`/projectPictures/${expected}.webp`);
-    });
+    }
   });
 
   it("preserves protocol names without versions", () => {

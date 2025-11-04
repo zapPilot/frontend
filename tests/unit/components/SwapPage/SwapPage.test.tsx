@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { SwapPage } from "../../../../src/components/SwapPage/SwapPage";
 import type { InvestmentOpportunity } from "../../../../src/types/investment";
 

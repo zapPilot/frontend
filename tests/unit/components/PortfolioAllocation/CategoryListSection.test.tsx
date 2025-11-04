@@ -1,10 +1,11 @@
-import { render, screen, within } from "../../../test-utils";
 import { describe, expect, it, vi } from "vitest";
+
 import { CategoryListSection } from "../../../../src/components/PortfolioAllocation/components/Categories/CategoryListSection";
 import {
   ProcessedAssetCategory,
   RebalanceData,
 } from "../../../../src/components/PortfolioAllocation/types";
+import { render, screen, within } from "../../../test-utils";
 
 vi.mock("framer-motion", () => ({
   motion: {

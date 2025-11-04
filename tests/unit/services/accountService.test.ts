@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach,describe, expect, it, vi } from "vitest";
+
 import { httpUtils } from "@/lib/http-utils";
 import * as accountService from "@/services/accountService";
 import type {
-  ConnectWalletResponse,
-  UserProfileResponse,
   AddWalletResponse,
+  ConnectWalletResponse,
   UpdateEmailResponse,
+  UserProfileResponse,
 } from "@/types/user.types";
 
 // Mock HTTP utilities

@@ -166,6 +166,11 @@ const eslintConfig = [
       // Relax code complexity for tests
       "sonarjs/cognitive-complexity": "off",
       "sonarjs/no-duplicate-string": "off",
+      "sonarjs/no-nested-functions": "off",         // Tests naturally nest describe/it/test
+      "sonarjs/no-identical-functions": "off",      // Test setup may duplicate
+      "sonarjs/assertions-in-tests": "off",         // Some tests are integration tests
+      "sonarjs/no-ignored-exceptions": "off",       // Tests may test error throwing
+      "sonarjs/class-name": "off",                  // Test mocks may use _ClassName pattern
 
       // Relax promise rules for tests
       "promise/prefer-await-to-then": "off",
@@ -209,6 +214,11 @@ const eslintConfig = [
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-floating-promises": "off",
       "@typescript-eslint/no-misused-promises": "off",
+
+      // Allow CommonJS patterns in scripts
+      "unicorn/prefer-module": "off",              // Scripts may use CommonJS require()
+      "unicorn/prefer-node-protocol": "off",       // node: prefix not required in scripts
+      "unicorn/no-array-for-each": "off",          // forEach is acceptable in scripts
     }
   },
   {

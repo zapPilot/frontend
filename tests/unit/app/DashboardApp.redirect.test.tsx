@@ -1,5 +1,6 @@
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { render } from "../../test-utils";
 
 // Mock WalletPortfolio to avoid heavy rendering

@@ -1,18 +1,19 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, type Mock,vi } from "vitest";
+
 import {
   checkIntentServiceHealth,
+  type DustTokenParams,
   executeDustZap,
   executeRebalance,
   executeSwap,
   executeUnifiedZap,
   executeZapIn,
   executeZapOut,
+  type ExecutionIntent,
+  type ExecutionResult,
   getIntentStatus,
   getStrategies,
   getUserIntentHistory,
-  type DustTokenParams,
-  type ExecutionIntent,
-  type ExecutionResult,
   type IntentStatus,
   type UnifiedZapRequest,
   type UnifiedZapResponse,
@@ -1105,7 +1106,7 @@ describe("intentService", () => {
     });
 
     it("should handle all status types", async () => {
-      const statuses: Array<"pending" | "processing" | "completed" | "failed"> =
+      const statuses: ("pending" | "processing" | "completed" | "failed")[] =
         ["pending", "processing", "completed", "failed"];
 
       for (const status of statuses) {
@@ -1122,7 +1123,7 @@ describe("intentService", () => {
     });
 
     it("should handle all priority types", async () => {
-      const priorities: Array<"fast" | "normal" | "slow"> = [
+      const priorities: ("fast" | "normal" | "slow")[] = [
         "fast",
         "normal",
         "slow",

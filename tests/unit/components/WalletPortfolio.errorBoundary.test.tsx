@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import React, { ErrorInfo, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
@@ -115,18 +116,18 @@ class TestErrorBoundary extends React.Component<
   {
     children: ReactNode;
     onError?: (error: Error, errorInfo: ErrorInfo) => void;
-    resetKeys?: Array<string | number>;
+    resetKeys?: (string | number)[];
   },
   {
     hasError: boolean;
     error: Error | null;
-    prevResetKeys?: Array<string | number>;
+    prevResetKeys?: (string | number)[];
   }
 > {
   constructor(props: {
     children: ReactNode;
     onError?: (error: Error, errorInfo: ErrorInfo) => void;
-    resetKeys?: Array<string | number>;
+    resetKeys?: (string | number)[];
   }) {
     super(props);
     this.state = {
@@ -141,8 +142,8 @@ class TestErrorBoundary extends React.Component<
   }
 
   static getDerivedStateFromProps(
-    props: { resetKeys?: Array<string | number> },
-    state: { hasError: boolean; prevResetKeys?: Array<string | number> }
+    props: { resetKeys?: (string | number)[] },
+    state: { hasError: boolean; prevResetKeys?: (string | number)[] }
   ) {
     // Reset error boundary when resetKeys change
     if (

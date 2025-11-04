@@ -1,8 +1,9 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
 import type { ReactNode } from "react";
-import { useResolvedBalanceVisibility } from "../../../src/hooks/useResolvedBalanceVisibility";
+import { describe, expect, it } from "vitest";
+
 import { BalanceVisibilityProvider } from "../../../src/contexts/BalanceVisibilityContext";
+import { useResolvedBalanceVisibility } from "../../../src/hooks/useResolvedBalanceVisibility";
 
 describe("useResolvedBalanceVisibility", () => {
   describe("Basic Functionality", () => {
@@ -89,7 +90,7 @@ describe("useResolvedBalanceVisibility", () => {
       }
 
       const { result } = renderHook(
-        () => useResolvedBalanceVisibility(undefined),
+        () => useResolvedBalanceVisibility(),
         { wrapper: Wrapper }
       );
 

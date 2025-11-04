@@ -17,18 +17,19 @@
  * - Memoization validation
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { useChartData } from "../../src/components/PortfolioChart/hooks/useChartData";
-import type {
-  PortfolioDataPoint,
-  AssetAllocationPoint,
-} from "../../src/types/portfolio";
 import type {
   DrawdownOverridePoint,
   SharpeOverridePoint,
 } from "../../src/components/PortfolioChart/types";
 import type { UnifiedDashboardResponse } from "../../src/services/analyticsService";
+import type {
+  AssetAllocationPoint,
+  PortfolioDataPoint,
+} from "../../src/types/portfolio";
 
 // Mock unified dashboard hook
 vi.mock("../../src/hooks/usePortfolioDashboard", () => ({
@@ -60,15 +61,15 @@ vi.mock("../../src/lib/portfolio-analytics", async () => {
 });
 
 import * as usePortfolioDashboard from "../../src/hooks/usePortfolioDashboard";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
-import { MOCK_BASE_DATE } from "./helpers/test-constants";
 import { createMockArray, generateDateSeries } from "./helpers/mock-factories";
+import { MOCK_BASE_DATE } from "./helpers/test-constants";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 
 const createWrapper = () => createQueryWrapper().QueryWrapper;
 
-const createMockPortfolioData = (days: number = 30): PortfolioDataPoint[] => {
+const createMockPortfolioData = (days = 30): PortfolioDataPoint[] => {
   const dateSeries = generateDateSeries(MOCK_BASE_DATE, days);
 
   return createMockArray(days, index => {
@@ -338,10 +339,10 @@ describe("useChartData - Data Transformations", () => {
       stackedTotalValue: expect.any(Number),
     });
 
-    result.current.stackedPortfolioData.forEach(point => {
+    for (const point of result.current.stackedPortfolioData) {
       const sum = point.defiValue + point.walletValue;
       expect(sum).toBeCloseTo(point.stackedTotalValue, 2);
-    });
+    }
   });
 
   it("transforms allocation history correctly", () => {
@@ -398,10 +399,10 @@ describe("useChartData - Data Transformations", () => {
       altcoin: expect.any(Number),
     });
 
-    result.current.allocationHistory.forEach(point => {
+    for (const point of result.current.allocationHistory) {
       const total = point.btc + point.eth + point.stablecoin + point.altcoin;
       expect(total).toBeCloseTo(100, 1);
-    });
+    }
   });
 
   it("calculates drawdown data correctly", () => {
@@ -617,10 +618,10 @@ describe("useChartData - Edge Cases", () => {
     });
 
     expect(result.current.stackedPortfolioData.length).toBe(2);
-    result.current.stackedPortfolioData.forEach(point => {
+    for (const point of result.current.stackedPortfolioData) {
       expect(Number.isFinite(point.defiValue)).toBe(true);
       expect(Number.isFinite(point.walletValue)).toBe(true);
-    });
+    }
   });
 
   it("handles data overrides correctly", () => {

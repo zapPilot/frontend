@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   render,
-  RenderOptions,
   renderHook as originalRenderHook,
   RenderHookOptions,
+  RenderOptions,
 } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
+
 import { ToastProvider } from "../src/hooks/useToast";
 
 /**

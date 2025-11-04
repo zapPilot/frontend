@@ -10,11 +10,12 @@
  * - Chain utilities
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, Mock,vi } from "vitest";
+
+import { isChainSupported } from "@/config/chains";
 import { useWallet } from "@/hooks/useWallet";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { isChainSupported } from "@/config/chains";
 
 // Mock the WalletProvider hook
 vi.mock("@/providers/WalletProvider", () => ({
@@ -105,9 +106,9 @@ describe("useWallet Hook", () => {
       name: "Arbitrum One",
       symbol: "ETH",
     },
-    switchChain: vi.fn().mockResolvedValue(undefined),
-    connect: vi.fn().mockResolvedValue(undefined),
-    disconnect: vi.fn().mockResolvedValue(undefined),
+    switchChain: vi.fn().mockResolvedValue(),
+    connect: vi.fn().mockResolvedValue(),
+    disconnect: vi.fn().mockResolvedValue(),
     isConnecting: false,
     isDisconnecting: false,
     isConnected: true,
@@ -371,14 +372,14 @@ describe("useWallet Hook", () => {
 
       const chains = result.current.getSupportedChains();
 
-      chains.forEach(chain => {
+      for (const chain of chains) {
         expect(chain).toHaveProperty("id");
         expect(chain).toHaveProperty("name");
         expect(chain).toHaveProperty("symbol");
         expect(typeof chain.id).toBe("number");
         expect(typeof chain.name).toBe("string");
         expect(typeof chain.symbol).toBe("string");
-      });
+      }
     });
   });
 

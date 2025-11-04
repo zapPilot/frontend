@@ -2,14 +2,15 @@
  * Tests for Risk Classification Utilities
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect,it } from "vitest";
+
 import {
-  getVolatilityLevel,
-  getDrawdownLevel,
-  getVolatilityDescription,
   generateKeyTakeaway,
-  isInDrawdown,
+  getDrawdownLevel,
   getRiskRecommendations,
+  getVolatilityDescription,
+  getVolatilityLevel,
+  isInDrawdown,
 } from "../../../../src/utils/risk/riskClassification";
 
 describe("getVolatilityLevel", () => {

@@ -12,15 +12,16 @@ import {
   it,
   vi,
 } from "vitest";
+
 import {
-  APIError,
   API_ENDPOINTS,
-  NetworkError,
-  TimeoutError,
+  APIError,
   handleHTTPError,
   httpGet,
   httpPost,
   httpUtils,
+  NetworkError,
+  TimeoutError,
 } from "../../../src/lib/http-utils";
 
 // Preserve original fetch so we can restore after the suite runs

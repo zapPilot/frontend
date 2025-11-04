@@ -1,6 +1,7 @@
-import { expect, afterEach, beforeEach, vi } from "vitest";
-import { cleanup, configure } from "@testing-library/react";
 import * as matchers from "@testing-library/jest-dom/matchers";
+import { cleanup, configure } from "@testing-library/react";
+import { afterEach, beforeEach, expect, vi } from "vitest";
+
 import { chartMatchers } from "./utils/chartTypeGuards";
 
 // Configure React Testing Library to work better with React 18+
@@ -56,8 +57,8 @@ afterEach(() => {
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
   root: Element | null = null;
-  rootMargin: string = "";
-  thresholds: ReadonlyArray<number> = [];
+  rootMargin = "";
+  thresholds: readonly number[] = [];
 
   constructor(
     _callback: IntersectionObserverCallback,
@@ -116,8 +117,8 @@ Object.defineProperty(window, "scrollTo", {
   twist: number;
   pointerType: string;
   isPrimary: boolean;
-  altitudeAngle: number = 0;
-  azimuthAngle: number = 0;
+  altitudeAngle = 0;
+  azimuthAngle = 0;
 
   constructor(type: string, eventInitDict: any = {}) {
     super(type, eventInitDict);

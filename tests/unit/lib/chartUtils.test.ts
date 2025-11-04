@@ -1,8 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
 import {
-  generateSVGPath,
-  generateAreaPath,
   formatAxisLabel,
+  generateAreaPath,
+  generateSVGPath,
   generateYAxisLabels,
   transformToPieChartData,
 } from "../../../src/lib/chartUtils";

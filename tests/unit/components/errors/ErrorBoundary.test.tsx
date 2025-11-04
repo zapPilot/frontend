@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
   ErrorBoundary,
-  withErrorBoundary,
   useErrorHandler,
+  withErrorBoundary,
 } from "../../../../src/components/errors/ErrorBoundary";
 
 // Mock child component that can throw errors

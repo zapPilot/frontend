@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen } from "../../../test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
+import { act, fireEvent, render, screen } from "../../../test-utils";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -144,7 +145,7 @@ describe("WalletHeader", () => {
 
       const buttons = screen.getAllByRole("button");
 
-      buttons.forEach(button => {
+      for (const button of buttons) {
         expect(button).toHaveClass(
           "p-3",
           "rounded-xl",
@@ -154,7 +155,7 @@ describe("WalletHeader", () => {
           "duration-300",
           "cursor-pointer"
         );
-      });
+      }
     });
 
     it("should have correct button container layout", () => {
@@ -195,17 +196,17 @@ describe("WalletHeader", () => {
       expect(buttons.length).toBeGreaterThan(0);
 
       // Verify buttons can receive focus
-      buttons.forEach(button => {
+      for (const button of buttons) {
         expect(button).not.toBeDisabled();
         button.focus();
         expect(button).toHaveFocus();
-      });
+      }
     });
   });
 
   describe("Bundle link copy", () => {
     it("renders copy button when bundleUrl provided and copies to clipboard", async () => {
-      const writeText = vi.fn().mockResolvedValue(undefined);
+      const writeText = vi.fn().mockResolvedValue();
       Object.defineProperty(navigator, "clipboard", {
         value: { writeText },
         configurable: true,

@@ -8,11 +8,13 @@
  * @see src/components/PortfolioChart.tsx:848-866
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 import { AllocationDataFactory } from "../utils/chartHoverTestFactories";
 import { SVGEventFactory } from "../utils/eventFactories";

@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
+import { beforeAll,beforeEach, describe, expect, it, vi } from "vitest";
+
 import type { TokenPriceData } from "@/services/priceService";
 
 // Mock HTTP utilities
