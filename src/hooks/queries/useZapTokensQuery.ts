@@ -274,7 +274,7 @@ export const useZapTokensWithStates = (
     isPriceLoading: prices.isLoading,
     isPriceFetching: prices.isFetching,
     priceError: prices.isError ? (prices.error as Error | null) : null,
-    refetchPrices: prices.refetch,
+    refetchPrices: () => Promise.resolve(prices.refetch()),
     priceMap: prices.priceMap,
     // React Query base states
     data: query.data,

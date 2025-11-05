@@ -250,6 +250,13 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   }, []);
 
   const renderTabContent = () => {
+    const activeZapExecution =
+      zapExecution &&
+      Boolean(zapExecution.intentId) &&
+      Boolean(zapExecution.chainId)
+        ? zapExecution
+        : null;
+
     // Show loading state
     if (isInitialLoading) {
       return (
@@ -304,14 +311,14 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     return (
       <div className="space-y-6">
         {/* UnifiedZap Execution Progress - Only render when we have valid intentId AND chainId */}
-        {Boolean(zapExecution?.intentId && zapExecution?.chainId) && (
+        {activeZapExecution && (
           <ZapExecutionProgress
             isOpen={true}
             onClose={handleExecutionCancel}
-            intentId={zapExecution.intentId}
-            chainId={zapExecution.chainId}
-            totalValue={zapExecution.totalValue}
-            strategyCount={zapExecution.strategyCount}
+            intentId={activeZapExecution.intentId}
+            chainId={activeZapExecution.chainId}
+            totalValue={activeZapExecution.totalValue}
+            strategyCount={activeZapExecution.strategyCount}
             onComplete={() => {
               void (async () => {
                 try {

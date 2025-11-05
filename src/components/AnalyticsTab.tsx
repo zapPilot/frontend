@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { ComponentType } from "react";
 
 import { LoadingSpinner } from "@/components/ui";
 import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
@@ -15,7 +14,7 @@ import { PoolPerformanceTable } from "./PoolAnalytics";
 import type { PortfolioChartProps } from "./PortfolioChart/";
 
 // Dynamic import for heavy chart component
-const PortfolioChart: ComponentType<PortfolioChartProps> = dynamic(
+const PortfolioChart = dynamic<PortfolioChartProps>(
   async () => {
     const mod = await import("./PortfolioChart/");
     return { default: mod.PortfolioChart };
