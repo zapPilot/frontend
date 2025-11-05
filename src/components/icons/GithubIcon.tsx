@@ -4,7 +4,10 @@ import type React from "react";
  * Custom GitHub icon component
  * Created because lucide-react deprecated the Github icon without a direct replacement
  */
-export const GithubIcon = ({ className, ...props }: React.SVGProps<SVGSVGElement>) => (
+export const GithubIcon = ({
+  className,
+  ...props
+}: React.SVGProps<SVGSVGElement>) => (
   <svg
     viewBox="0 0 24 24"
     fill="currentColor"

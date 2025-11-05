@@ -593,11 +593,9 @@ describe("EnhancedOverview Integration Tests", () => {
   describe("Error Boundary Integration", () => {
     it("recovers from child component errors gracefully", () => {
       // Mock console.error to avoid noise in test output
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {
-          /* Suppress errors in test */
-        });
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        /* Suppress errors in test */
+      });
 
       (usePortfolioAllocationViewModel as any).mockReturnValue({
         includedCategories: mockCategories.slice(0, 2),
