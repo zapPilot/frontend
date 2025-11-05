@@ -40,6 +40,7 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
   const query = useQuery({
     ...createQueryConfig({ dataType: "dynamic" }),
     queryKey: queryKeys.balances.list(
+      // Safe: queryEnabled ensures chainId and normalizedWallet are non-null
       chainId!,
       normalizedWallet!,
       normalizedTokens,
@@ -47,6 +48,7 @@ export const useTokenBalancesQuery = (params: UseTokenBalancesParams) => {
     ),
     queryFn: () =>
       getTokenBalances({
+        // Safe: queryEnabled ensures chainId and normalizedWallet are non-null
         chainId: chainId!,
         walletAddress: normalizedWallet!,
         tokenAddresses: normalizedTokens,

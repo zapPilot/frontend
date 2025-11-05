@@ -12,6 +12,7 @@ import {
   type UseZapTokensWithStatesOptions,
 } from "@/hooks/queries/useZapTokensQuery";
 import type { SwapToken } from "@/types/swap";
+import { logger } from "@/utils/logger";
 
 import { TokenSummary } from "./TokenSummary";
 
@@ -108,7 +109,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                         try {
                           await refetch();
                         } catch (refetchError) {
-                          console.error(
+                          logger.error(
                             "Failed to refetch tokens after load failure",
                             refetchError
                           );

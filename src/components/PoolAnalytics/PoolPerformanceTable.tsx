@@ -215,11 +215,11 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
   },
 ];
 
-const CARD_SECTIONS: Array<{
+const CARD_SECTIONS: {
   key: string;
   label: string;
   render: (entry: PoolEntry) => React.ReactNode;
-}> = [
+}[] = [
   {
     key: "apr",
     label: "APR",

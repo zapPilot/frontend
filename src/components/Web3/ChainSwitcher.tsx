@@ -9,10 +9,10 @@ import {
   useSwitchActiveWalletChain,
 } from "thirdweb/react";
 
+import { AnimatedDropdown } from "@/components/ui/AnimatedDropdown";
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 import { Z_INDEX } from "@/constants/design-system";
-import { AnimatedDropdown } from "@/components/ui/AnimatedDropdown";
 import { useDropdown } from "@/hooks/useDropdown";
 import type { ButtonVariant } from "@/types/ui.types";
 import { chainLogger } from "@/utils/logger";

@@ -99,6 +99,7 @@ export function usePortfolioDashboard(
       rolling_days,
     ],
     queryFn: () =>
+      // Safe: enabled condition ensures userId is non-null
       getPortfolioDashboard(userId!, {
         trend_days,
         risk_days,

@@ -8,11 +8,12 @@ import { BaseCard } from "@/components/ui";
 import { UnifiedLoading } from "@/components/ui/LoadingSystem";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
+import { logger } from "@/utils/logger";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
-import { ModalBackdrop } from "./components/ModalBackdrop";
 import { EmailSubscription } from "./components/EmailSubscription";
+import { ModalBackdrop } from "./components/ModalBackdrop";
 import { WalletList } from "./components/WalletList";
 import { useDropdownMenu } from "./hooks/useDropdownMenu";
 import { useEmailSubscription } from "./hooks/useEmailSubscription";
@@ -150,7 +151,7 @@ const WalletManagerComponent = ({
                     try {
                       await refetch();
                     } catch (refetchError) {
-                      console.error(
+                      logger.error(
                         "Failed to refetch user data in WalletManager",
                         refetchError
                       );
