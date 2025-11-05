@@ -133,11 +133,11 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
       maxValue: DRAWDOWN_CONSTANTS.DEFAULT_MAX,
       getYValue: point => point.drawdown,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      buildHoverData: (point, x, y, _index) => {
+      buildHoverData: (point, _x, _y, _index) => {
         const hoverData: DrawdownHoverData = {
           chartType: DRAWDOWN_CHART_TYPE,
-          x,
-          y,
+          x: point.x,
+          y: point.y,
           date: new Date(point.date).toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",

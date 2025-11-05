@@ -159,16 +159,21 @@ export function useChartHover<T>(
 
       let viewBoxX: number | null = null;
 
-      const ctm = svg.getScreenCTM();
-      if (ctm && typeof svg.createSVGPoint === "function") {
+      const supportsCtm =
+        typeof svg.getScreenCTM === "function" &&
+        typeof svg.createSVGPoint === "function";
+      if (supportsCtm) {
+        const ctm = svg.getScreenCTM();
         const point = svg.createSVGPoint();
         point.x = effectiveClientX;
         point.y = effectiveClientY;
 
-        const inverseMatrix = ctm.inverse();
-        const transformedPoint = point.matrixTransform(inverseMatrix);
-        if (Number.isFinite(transformedPoint.x)) {
-          viewBoxX = transformedPoint.x;
+        if (ctm) {
+          const inverseMatrix = ctm.inverse();
+          const transformedPoint = point.matrixTransform(inverseMatrix);
+          if (Number.isFinite(transformedPoint.x)) {
+            viewBoxX = transformedPoint.x;
+          }
         }
       }
 
