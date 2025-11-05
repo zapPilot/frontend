@@ -294,11 +294,7 @@ function createServiceHttpClient(baseURL: string) {
       config?: GetConfig,
       transformer?: ResponseTransformer<T>
     ) =>
-      httpGet(
-        endpoint,
-        withBaseURL(baseURL, config) as GetConfig,
-        transformer
-      ),
+      httpGet(endpoint, withBaseURL(baseURL, config) as GetConfig, transformer),
 
     post: <T = unknown>(
       endpoint: string,

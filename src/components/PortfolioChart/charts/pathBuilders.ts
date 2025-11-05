@@ -54,4 +54,3 @@ export function buildAreaPath<T>({
 
   return `M 0 ${baseY} ${segments} L ${width} ${baseY} Z`;
 }
-

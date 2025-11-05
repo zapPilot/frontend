@@ -7,6 +7,9 @@ import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
+// Re-export PoolDetail for components that import from this service
+export type { PoolDetail } from "../types/pool";
+
 // Unified Landing Page Response Type
 export interface LandingPageResponse {
   total_assets_usd: number;

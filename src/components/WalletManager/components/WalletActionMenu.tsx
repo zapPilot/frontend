@@ -33,29 +33,29 @@ export const WalletActionMenu = memo((props: WalletActionMenuProps) => {
     onCloseDropdown,
   } = props;
 
-    const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-      e.stopPropagation();
-      onToggleDropdown(wallet.id, e.currentTarget);
-    };
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    onToggleDropdown(wallet.id, e.currentTarget);
+  };
 
-    const handleCopyAddress = () => {
-      onCopyAddress(wallet.address, wallet.id);
-      onCloseDropdown();
-    };
+  const handleCopyAddress = () => {
+    onCopyAddress(wallet.address, wallet.id);
+    onCloseDropdown();
+  };
 
-    const handleEditWallet = () => {
-      onEditWallet(wallet.id, wallet.label);
-      onCloseDropdown();
-    };
+  const handleEditWallet = () => {
+    onEditWallet(wallet.id, wallet.label);
+    onCloseDropdown();
+  };
 
-    const handleDeleteWallet = () => {
-      onDeleteWallet(wallet.id);
-      onCloseDropdown();
-    };
+  const handleDeleteWallet = () => {
+    onDeleteWallet(wallet.id);
+    onCloseDropdown();
+  };
 
-    const handleViewOnDeBank = () => {
-      onCloseDropdown();
-    };
+  const handleViewOnDeBank = () => {
+    onCloseDropdown();
+  };
 
   return (
     <div className="relative">

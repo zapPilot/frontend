@@ -36,9 +36,7 @@ function normalizeSourceType(value: unknown): string | undefined {
 }
 
 function accumulateSourceTotals(
-  entries:
-    | PortfolioDataPoint["categories"]
-    | PortfolioDataPoint["protocols"]
+  entries: PortfolioDataPoint["categories"] | PortfolioDataPoint["protocols"]
 ): SourceTotals {
   if (!Array.isArray(entries) || entries.length === 0) {
     return { defiValue: 0, walletValue: 0 };

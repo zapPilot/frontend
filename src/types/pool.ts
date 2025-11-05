@@ -18,4 +18,3 @@ export interface PoolDetail {
   };
   contribution_to_portfolio: number;
 }
-

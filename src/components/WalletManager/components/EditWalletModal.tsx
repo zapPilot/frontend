@@ -65,7 +65,8 @@ export const EditWalletModal = ({
         </div>
 
         <p className="text-sm text-gray-400 mb-4">
-          Update the display name for {wallet ? formatAddress(wallet.address) : ""}
+          Update the display name for{" "}
+          {wallet ? formatAddress(wallet.address) : ""}
         </p>
 
         <div className="space-y-4">

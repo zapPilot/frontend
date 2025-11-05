@@ -23,4 +23,3 @@ export const ChartGrid = memo<ChartGridProps>(({ lines = 5, className }) => {
 });
 
 ChartGrid.displayName = "ChartGrid";
-

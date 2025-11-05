@@ -140,7 +140,7 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
     content: (
       <>
         <div className="flex items-center -space-x-2 mb-2">
-          {pool.pool_symbols.slice(0, 3).map((symbol, idx) => (
+          {pool.pool_symbols.slice(0, 3).map((symbol: string, idx: number) => (
             <TokenImage
               key={`${symbol}-${idx}`}
               token={{ symbol }}
@@ -155,7 +155,7 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
           )}
         </div>
         <div className="flex flex-wrap gap-1">
-          {pool.pool_symbols.slice(0, 3).map(symbol => (
+          {pool.pool_symbols.slice(0, 3).map((symbol: string) => (
             <span
               key={symbol}
               className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded"
@@ -175,9 +175,7 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
   {
     key: "snapshots",
     className: "py-4 text-center",
-    content: (
-      <span className="text-gray-300 font-medium">{snapshotCount}</span>
-    ),
+    content: <span className="text-gray-300 font-medium">{snapshotCount}</span>,
   },
   {
     key: "apr",
@@ -257,7 +255,7 @@ const CARD_SECTIONS: Array<{
     label: "Assets",
     render: ({ pool }) => (
       <div className="flex flex-wrap gap-1">
-        {pool.pool_symbols.slice(0, 2).map(symbol => (
+        {pool.pool_symbols.slice(0, 2).map((symbol: string) => (
           <span
             key={symbol}
             className="px-1.5 py-0.5 bg-gray-700/50 text-gray-300 text-xs rounded"
@@ -334,7 +332,7 @@ const PoolMobileCard = ({ entry }: { entry: PoolEntry }) => (
   </motion.div>
 );
 
-type HeadingTag = keyof Pick<JSX.IntrinsicElements, "h3" | "p">;
+type HeadingTag = keyof Pick<React.JSX.IntrinsicElements, "h3" | "p">;
 
 interface ProtocolInfoProps {
   pool: PoolDetail;
@@ -352,8 +350,12 @@ const ProtocolNameAndChain = ({
   chainClassName = "",
 }: ProtocolInfoProps) => (
   <div>
-    <NameComponent className={nameClassName}>{pool.protocol_name}</NameComponent>
-    <div className={`${CHAIN_BADGE_BASE} ${chainClassName} ${getChainStyle(pool.chain)}`}>
+    <NameComponent className={nameClassName}>
+      {pool.protocol_name}
+    </NameComponent>
+    <div
+      className={`${CHAIN_BADGE_BASE} ${chainClassName} ${getChainStyle(pool.chain)}`}
+    >
       {pool.chain}
     </div>
   </div>
@@ -649,10 +651,7 @@ export function PoolPerformanceTable({
             </thead>
             <tbody>
               {poolEntries.map(entry => (
-                <PoolTableRow
-                  key={entry.pool.snapshot_id}
-                  entry={entry}
-                />
+                <PoolTableRow key={entry.pool.snapshot_id} entry={entry} />
               ))}
             </tbody>
           </table>
@@ -661,10 +660,7 @@ export function PoolPerformanceTable({
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
           {poolEntries.map(entry => (
-            <PoolMobileCard
-              key={entry.pool.snapshot_id}
-              entry={entry}
-            />
+            <PoolMobileCard key={entry.pool.snapshot_id} entry={entry} />
           ))}
         </div>
 
