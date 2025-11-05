@@ -152,9 +152,10 @@ export function useChartHover<T>(
       const effectiveClientX = Number.isFinite(clientX)
         ? clientX
         : rect.left + svgWidth / 2;
-      const effectiveClientY = Number.isFinite(clientY)
-        ? clientY
-        : rect.top + svgHeight / 2;
+      const effectiveClientY =
+        typeof clientY === "number" && Number.isFinite(clientY)
+          ? clientY
+          : rect.top + svgHeight / 2;
 
       let viewBoxX: number | null = null;
 
