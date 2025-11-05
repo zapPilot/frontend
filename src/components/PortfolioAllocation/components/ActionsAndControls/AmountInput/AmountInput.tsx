@@ -69,8 +69,9 @@ export const AmountInput = memo<AmountInputProps>(
           return;
         }
 
-        // Allow partial decimal input (e.g., "0.", "10.")
-        if (/^\d*\.?\d*$/.test(rawValue)) {
+        // Allow partial decimal input (e.g., "0.", "10.", ".5")
+        // Fixed regex to prevent catastrophic backtracking
+        if (/^(\d+\.?\d*|\.\d+)$/.test(rawValue)) {
           setInputValue(rawValue);
 
           // Only update parent if it's a valid number

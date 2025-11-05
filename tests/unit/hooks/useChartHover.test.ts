@@ -454,7 +454,7 @@ describe("useChartHover", () => {
       });
 
       expect(buildHoverDataSpy).toHaveBeenCalled();
-      const [point, _x, y, _index] = buildHoverDataSpy.mock.calls[0];
+      const [point, , y] = buildHoverDataSpy.mock.calls[0];
 
       // Verify Y calculation for minimum value
       expect(point.value).toBe(10000);

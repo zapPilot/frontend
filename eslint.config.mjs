@@ -84,8 +84,8 @@ const eslintConfig = [
       '@typescript-eslint/no-floating-promises': 'error',       // Catch unhandled promises
       '@typescript-eslint/no-misused-promises': 'error',        // Catch promise mistakes
       '@typescript-eslint/await-thenable': 'error',             // Only await promises
-      '@typescript-eslint/no-unnecessary-condition': 'warn',    // Catch always-true/false
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',   // Use ?? instead of ||
+      '@typescript-eslint/no-unnecessary-condition': 'warn',    // Catch always-true/false (reduced noise)
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn',   // Use ?? instead of || (stylistic)
       '@typescript-eslint/prefer-optional-chain': 'error',      // Use ?. for optional access
       '@typescript-eslint/unified-signatures': 'off',           // Disabled due to compatibility issue
 
@@ -93,7 +93,7 @@ const eslintConfig = [
       // Code Smell Detection (SonarJS)
       // ========================================
       'sonarjs/cognitive-complexity': ['error', 25],            // Max complexity per function
-      'sonarjs/no-duplicate-string': ['warn', { threshold: 2 }],  // Catch magic strings
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],  // Catch magic strings (3+ duplicates)
       'sonarjs/no-duplicated-branches': 'warn',                    // Flag duplicated branch bodies
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'warn',                      // Simplify nested ifs

@@ -116,10 +116,11 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
         const fractionPart = rawBigInt % divisor;
         const fractionString = fractionPart
           .toString()
-          .padStart(decimals, "0")
-          .replace(/0+$/, "");
-        const assembled = fractionString
-          ? `${integerPart.toString()}.${fractionString}`
+          .padStart(decimals, "0");
+        // Remove trailing zeros safely (no backtracking risk with greedy quantifier at end)
+        const trimmedFraction = fractionString.replace(/0+$/, "");
+        const assembled = trimmedFraction
+          ? `${integerPart.toString()}.${trimmedFraction}`
           : integerPart.toString();
         const parsed = Number(assembled);
         return Number.isNaN(parsed) ? 0 : parsed;

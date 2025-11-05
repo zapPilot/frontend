@@ -56,7 +56,8 @@ export const validateEmail = (email: string): ValidationResult => {
     };
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // More specific email regex to prevent catastrophic backtracking
+  const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
     return {
       isValid: false,

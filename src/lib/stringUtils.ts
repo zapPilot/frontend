@@ -395,7 +395,8 @@ export function normalizeProtocolName(name: string | undefined): string {
     name
       .trim()
       // Remove version patterns with separators: " v2", "-v3", "_V1", "/v2"
-      .replace(/[\s\-_/]+v\d+$/i, "")
+      // Limited repetition to prevent catastrophic backtracking
+      .replace(/[\s\-_/]{1,5}v\d+$/i, "")
       // Remove embedded versions: "aerodromeV2" → "aerodrome"
       .replace(/v\d+$/i, "")
       .trim()
