@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import { useChartHover } from "../../../hooks/useChartHover";
 import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
@@ -11,6 +11,8 @@ import {
   ENABLE_TEST_AUTO_HOVER,
   getChartInteractionProps,
 } from "../utils";
+import { ChartGrid } from "./ChartGrid";
+import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
 interface VolatilityChartProps {
   data: { date: string; volatility: number }[];
@@ -66,14 +68,36 @@ export const VolatilityChart = memo<VolatilityChartProps>(
       testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
     });
 
+    const toVolatilityY = (value: number) =>
+      250 -
+      ((value - VOLATILITY_CONSTANTS.MIN_VALUE) /
+        (VOLATILITY_CONSTANTS.MAX_VALUE - VOLATILITY_CONSTANTS.MIN_VALUE)) *
+        200;
+
+    const volatilityLinePath = useMemo(
+      () =>
+        buildLinePath({
+          data,
+          width,
+          getY: point => toVolatilityY(point.volatility ?? 0),
+        }),
+      [data, width]
+    );
+
+    const volatilityAreaPath = useMemo(
+      () =>
+        buildAreaPath({
+          data,
+          width,
+          baseY: 250,
+          getY: point => toVolatilityY(point.volatility ?? 0),
+        }),
+      [data, width]
+    );
+
     return (
       <div className="relative h-80">
-        {/* Grid lines */}
-        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-700/60" />
-          ))}
-        </div>
+        <ChartGrid />
 
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -99,41 +123,20 @@ export const VolatilityChart = memo<VolatilityChartProps>(
           </defs>
 
           {/* Volatility line */}
-          <path
-            d={`M ${data
-              .map((point, index) => {
-                const x = (index / (data.length - 1)) * width;
-                const y =
-                  250 -
-                  ((point.volatility - VOLATILITY_CONSTANTS.MIN_VALUE) /
-                    (VOLATILITY_CONSTANTS.MAX_VALUE -
-                      VOLATILITY_CONSTANTS.MIN_VALUE)) *
-                    200;
-                return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
-              })
-              .join(" ")}`}
-            fill="none"
-            stroke="#f59e0b"
-            strokeWidth="3"
-            className="drop-shadow-lg"
-          />
+          {volatilityLinePath && (
+            <path
+              d={volatilityLinePath}
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="3"
+              className="drop-shadow-lg"
+            />
+          )}
 
           {/* Fill area under curve */}
-          <path
-            d={`M 0 250 ${data
-              .map((point, index) => {
-                const x = (index / (data.length - 1)) * width;
-                const y =
-                  250 -
-                  ((point.volatility - VOLATILITY_CONSTANTS.MIN_VALUE) /
-                    (VOLATILITY_CONSTANTS.MAX_VALUE -
-                      VOLATILITY_CONSTANTS.MIN_VALUE)) *
-                    200;
-                return `L ${x} ${y}`;
-              })
-              .join(" ")} L ${width} 250 Z`}
-            fill="url(#volatilityGradient)"
-          />
+          {volatilityAreaPath && (
+            <path d={volatilityAreaPath} fill="url(#volatilityGradient)" />
+          )}
 
           {/* Hover indicator */}
           <ChartIndicator hoveredPoint={volatilityHover.hoveredPoint} />

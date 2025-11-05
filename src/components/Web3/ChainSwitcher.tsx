@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2, Network } from "lucide-react";
 import Image from "next/image";
 import { memo, useState } from "react";
@@ -12,6 +12,7 @@ import {
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 import { Z_INDEX } from "@/constants/design-system";
+import { AnimatedDropdown } from "@/components/ui/AnimatedDropdown";
 import { useDropdown } from "@/hooks/useDropdown";
 import type { ButtonVariant } from "@/types/ui.types";
 import { chainLogger } from "@/utils/logger";
@@ -113,10 +114,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
 
       <AnimatePresence>
         {dropdown.isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+          <AnimatedDropdown
             className={`absolute top-full left-0 right-0 mt-2 glass-morphism border border-gray-700 rounded-lg shadow-lg ${Z_INDEX.TOAST} backdrop-blur-md`}
           >
             <div className="p-2 space-y-1">
@@ -156,7 +154,7 @@ export const ChainSwitcher = memo(function ChainSwitcher({
                 </button>
               ))}
             </div>
-          </motion.div>
+          </AnimatedDropdown>
         )}
       </AnimatePresence>
     </div>

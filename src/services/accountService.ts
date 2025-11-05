@@ -39,6 +39,24 @@ export class AccountServiceError extends Error {
   }
 }
 
+export interface AccountToken {
+  id: string;
+  chain: string;
+  name: string;
+  symbol: string;
+  display_symbol: string;
+  optimized_symbol: string;
+  decimals: number;
+  logo_url: string;
+  protocol_id: string;
+  price: number;
+  is_verified: boolean;
+  is_core: boolean;
+  is_wallet: boolean;
+  time_at: number;
+  amount: number;
+}
+
 /**
  * API Error Response Structure
  */
@@ -242,43 +260,9 @@ export const checkAccountServiceHealth = (): Promise<{
 export const getUserTokens = (
   accountAddress: string,
   chainName: string
-): Promise<
-  {
-    id: string;
-    chain: string;
-    name: string;
-    symbol: string;
-    display_symbol: string;
-    optimized_symbol: string;
-    decimals: number;
-    logo_url: string;
-    protocol_id: string;
-    price: number;
-    is_verified: boolean;
-    is_core: boolean;
-    is_wallet: boolean;
-    time_at: number;
-    amount: number;
-  }[]
-> =>
+): Promise<AccountToken[]> =>
   callAccountApi(() =>
-    backendApiClient.get<
-      {
-        id: string;
-        chain: string;
-        name: string;
-        symbol: string;
-        display_symbol: string;
-        optimized_symbol: string;
-        decimals: number;
-        logo_url: string;
-        protocol_id: string;
-        price: number;
-        is_verified: boolean;
-        is_core: boolean;
-        is_wallet: boolean;
-        time_at: number;
-        amount: number;
-      }[]
-    >(`/user/${accountAddress}/${chainName}/tokens`)
+    backendApiClient.get<AccountToken[]>(
+      `/user/${accountAddress}/${chainName}/tokens`
+    )
   );

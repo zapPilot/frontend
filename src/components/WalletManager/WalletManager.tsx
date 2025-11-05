@@ -1,16 +1,17 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, useCallback } from "react";
 
 import { BaseCard } from "@/components/ui";
 import { UnifiedLoading } from "@/components/ui/LoadingSystem";
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
+import { ModalBackdrop } from "./components/ModalBackdrop";
 import { EmailSubscription } from "./components/EmailSubscription";
 import { WalletList } from "./components/WalletList";
 import { useDropdownMenu } from "./hooks/useDropdownMenu";
@@ -78,21 +79,11 @@ const WalletManagerComponent = ({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className={`fixed inset-0 ${Z_INDEX.MODAL} bg-gray-950/80 backdrop-blur-lg flex items-center justify-center p-4`}
-        onClick={onClose}
+      <ModalBackdrop
+        onDismiss={onClose}
+        innerClassName="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
-          onClick={e => e.stopPropagation()}
-        >
-          <BaseCard variant="glass" className="p-0 overflow-hidden">
+        <BaseCard variant="glass" className="p-0 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
               <div className="flex items-center space-x-3">
@@ -230,8 +221,7 @@ const WalletManagerComponent = ({
                   />
                 </div>
               )}
-          </BaseCard>
-        </motion.div>
+        </BaseCard>
 
         {/* Edit Wallet Modal */}
         <EditWalletModal
@@ -241,7 +231,7 @@ const WalletManagerComponent = ({
           onSave={walletOperations.handleEditLabel}
           onClose={handleCloseEditModal}
         />
-      </motion.div>
+      </ModalBackdrop>
     </AnimatePresence>
   );
 };

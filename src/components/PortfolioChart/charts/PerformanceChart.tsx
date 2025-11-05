@@ -19,6 +19,7 @@ import {
   getChartInteractionProps,
   getStackedTotalValue,
 } from "../utils";
+import { ChartGrid } from "./ChartGrid";
 
 interface PerformanceChartProps {
   data: PortfolioStackedDataPoint[];
@@ -177,12 +178,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
 
     return (
       <div className="relative h-80">
-        {/* Grid lines */}
-        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-700/60" />
-          ))}
-        </div>
+        <ChartGrid />
 
         {/* Chart area */}
         <svg

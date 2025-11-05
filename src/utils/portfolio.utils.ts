@@ -5,6 +5,8 @@
  * for progressive disclosure UX (show summaries on landing, full details in analytics)
  */
 
+import type { PoolDetail } from "@/types/pool";
+
 export interface CategorySummary {
   id: string;
   name: string;
@@ -18,26 +20,6 @@ export interface CategorySummary {
     value: number;
     count: number;
   }[];
-}
-
-export interface PoolDetail {
-  snapshot_id: string;
-  chain: string;
-  protocol: string;
-  protocol_name: string;
-  asset_usd_value: number;
-  pool_symbols: string[];
-  final_apr: number;
-  protocol_matched: boolean;
-  apr_data: {
-    apr_protocol: string | null;
-    apr_symbol: string | null;
-    apr: number | null;
-    apr_base: number | null;
-    apr_reward: number | null;
-    apr_updated_at: string | null;
-  };
-  contribution_to_portfolio: number;
 }
 
 /**

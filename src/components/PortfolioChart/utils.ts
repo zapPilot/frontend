@@ -35,42 +35,19 @@ function normalizeSourceType(value: unknown): string | undefined {
   return typeof value === "string" ? value.toLowerCase() : undefined;
 }
 
-function accumulateFromCategories(
-  categories: PortfolioDataPoint["categories"]
+function accumulateSourceTotals(
+  entries:
+    | PortfolioDataPoint["categories"]
+    | PortfolioDataPoint["protocols"]
 ): SourceTotals {
-  if (!Array.isArray(categories) || categories.length === 0) {
+  if (!Array.isArray(entries) || entries.length === 0) {
     return { defiValue: 0, walletValue: 0 };
   }
 
-  return categories.reduce<SourceTotals>(
-    (totals, categoryEntry) => {
-      const normalizedSource = normalizeSourceType(categoryEntry.sourceType);
-      const rawValue = categoryEntry.value;
-      const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
-
-      if (normalizedSource === "defi") {
-        totals.defiValue += value;
-      } else if (normalizedSource === "wallet") {
-        totals.walletValue += value;
-      }
-
-      return totals;
-    },
-    { defiValue: 0, walletValue: 0 }
-  );
-}
-
-function accumulateFromProtocols(
-  protocols: PortfolioDataPoint["protocols"]
-): SourceTotals {
-  if (!Array.isArray(protocols) || protocols.length === 0) {
-    return { defiValue: 0, walletValue: 0 };
-  }
-
-  return protocols.reduce<SourceTotals>(
-    (totals, protocol) => {
-      const normalizedSource = normalizeSourceType(protocol.sourceType);
-      const rawValue = protocol.value;
+  return entries.reduce<SourceTotals>(
+    (totals, entry) => {
+      const normalizedSource = normalizeSourceType(entry.sourceType);
+      const rawValue = entry.value;
       const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
 
       if (normalizedSource === "defi") {
@@ -121,10 +98,10 @@ export const buildStackedPortfolioData = (
   fallbackRatio: number = DEFAULT_STACKED_FALLBACK_RATIO
 ): PortfolioStackedDataPoint[] => {
   return data.map(point => {
-    const categoryTotals = accumulateFromCategories(point.categories);
+    const categoryTotals = accumulateSourceTotals(point.categories);
     const protocolTotals =
       categoryTotals.defiValue === 0 && categoryTotals.walletValue === 0
-        ? accumulateFromProtocols(point.protocols)
+        ? accumulateSourceTotals(point.protocols)
         : { defiValue: 0, walletValue: 0 };
 
     const initialDefi = categoryTotals.defiValue + protocolTotals.defiValue;

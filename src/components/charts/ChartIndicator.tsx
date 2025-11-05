@@ -33,6 +33,13 @@ const MULTI_CIRCLE_VARIANT = "multi-circle" as const;
 const FLAGGED_CIRCLE_VARIANT = "flagged-circle" as const;
 const DRAWDOWN_CHART_TYPE = "drawdown-recovery" as const;
 
+const BASE_CIRCLE_ANIMATION = {
+  initial: { opacity: 0, scale: 0 },
+  animate: { opacity: 1, scale: 1 },
+  exit: { opacity: 0, scale: 0 },
+  transition: { duration: 0.2 },
+} as const;
+
 interface ChartIndicatorProps {
   /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
@@ -117,6 +124,44 @@ function getIndicatorColor(chartType: string): string {
   return INDICATOR_COLOR_MAP[chartType] ?? DEFAULT_INDICATOR_COLOR;
 }
 
+interface IndicatorCircleProps {
+  hoveredPoint: ChartHoverState;
+  radius: number;
+  strokeWidth: number;
+  fill: string;
+  delay?: number;
+  offsetX?: number;
+  offsetY?: number;
+  className?: string;
+}
+
+function IndicatorCircle({
+  hoveredPoint,
+  radius,
+  strokeWidth,
+  fill,
+  delay = 0,
+  offsetX = 0,
+  offsetY = 0,
+  className,
+}: IndicatorCircleProps) {
+  return (
+    <motion.circle
+      cx={hoveredPoint.x + offsetX}
+      cy={hoveredPoint.y + offsetY}
+      r={radius}
+      fill={fill}
+      stroke="#ffffff"
+      strokeWidth={strokeWidth}
+      initial={BASE_CIRCLE_ANIMATION.initial}
+      animate={BASE_CIRCLE_ANIMATION.animate}
+      exit={BASE_CIRCLE_ANIMATION.exit}
+      transition={{ ...BASE_CIRCLE_ANIMATION.transition, delay }}
+      className={className ? `drop-shadow-lg ${className}` : "drop-shadow-lg"}
+    />
+  );
+}
+
 /**
  * Single circle indicator for most chart types with special effects
  */
@@ -143,18 +188,11 @@ function SingleCircleIndicator({
   return (
     <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {/* Main indicator circle */}
-      <motion.circle
-        cx={hoveredPoint.x}
-        cy={hoveredPoint.y}
-        r={radius}
-        fill={color}
-        stroke="#ffffff"
+      <IndicatorCircle
+        hoveredPoint={hoveredPoint}
+        radius={radius}
         strokeWidth={strokeWidth}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0 }}
-        transition={{ duration: 0.2 }}
-        className="drop-shadow-lg"
+        fill={color}
       />
 
       {/* Pulse animation for high volatility */}
@@ -217,18 +255,11 @@ function MultiCircleIndicator({
   if (significantColors.length === 1 && significantColors[0]) {
     return (
       <IndicatorWrapper hoveredPoint={hoveredPoint}>
-        <motion.circle
-          cx={hoveredPoint.x}
-          cy={hoveredPoint.y}
-          r={radius}
-          fill={significantColors[0].color}
-          stroke="#ffffff"
+        <IndicatorCircle
+          hoveredPoint={hoveredPoint}
+          radius={radius}
           strokeWidth={strokeWidth}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0 }}
-          transition={{ duration: 0.2 }}
-          className="drop-shadow-lg"
+          fill={significantColors[0].color}
         />
       </IndicatorWrapper>
     );
@@ -238,19 +269,15 @@ function MultiCircleIndicator({
   return (
     <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {significantColors.slice(0, 3).map((item, index) => (
-        <motion.circle
+        <IndicatorCircle
           key={index}
-          cx={hoveredPoint.x + index * 3}
-          cy={hoveredPoint.y - index * 3}
-          r={radius - index * 0.5}
-          fill={item.color}
-          stroke="#ffffff"
+          hoveredPoint={hoveredPoint}
+          radius={radius - index * 0.5}
           strokeWidth={strokeWidth}
-          initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0 }}
-          transition={{ duration: 0.2, delay: index * 0.05 }}
-          className="drop-shadow-lg"
+          fill={item.color}
+          offsetX={index * 3}
+          offsetY={-index * 3}
+          delay={index * 0.05}
         />
       ))}
     </IndicatorWrapper>
@@ -278,18 +305,11 @@ function FlaggedCircleIndicator({
   return (
     <IndicatorWrapper hoveredPoint={hoveredPoint}>
       {/* Main circle */}
-      <motion.circle
-        cx={hoveredPoint.x}
-        cy={hoveredPoint.y}
-        r={radius}
-        fill={color}
-        stroke="#ffffff"
+      <IndicatorCircle
+        hoveredPoint={hoveredPoint}
+        radius={radius}
         strokeWidth={strokeWidth}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0 }}
-        transition={{ duration: 0.2 }}
-        className="drop-shadow-lg"
+        fill={color}
       />
 
       {/* Recovery flag */}
