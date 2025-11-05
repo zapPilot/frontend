@@ -278,14 +278,18 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 {error?.message || "Unable to fetch portfolio strategies"}
               </p>
               <button
-                onClick={() =>
-                  refetch().catch(refetchError => {
-                    swapLogger.error(
-                      "Failed to refetch strategies after load failure",
-                      refetchError
-                    );
-                  })
-                }
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      await refetch();
+                    } catch (refetchError) {
+                      swapLogger.error(
+                        "Failed to refetch strategies after load failure",
+                        refetchError
+                      );
+                    }
+                  })();
+                }}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Try Again
@@ -300,7 +304,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     return (
       <div className="space-y-6">
         {/* UnifiedZap Execution Progress - Only render when we have valid intentId AND chainId */}
-        {zapExecution?.intentId && zapExecution?.chainId && (
+        {Boolean(zapExecution?.intentId && zapExecution?.chainId) && (
           <ZapExecutionProgress
             isOpen={true}
             onClose={handleExecutionCancel}
@@ -309,12 +313,16 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             totalValue={zapExecution.totalValue}
             strategyCount={zapExecution.strategyCount}
             onComplete={() => {
-              void handleExecutionComplete().catch(error => {
-                swapLogger.error(
-                  "Failed to finalize UnifiedZap completion sequence",
-                  error
-                );
-              });
+              void (async () => {
+                try {
+                  await handleExecutionComplete();
+                } catch (error) {
+                  swapLogger.error(
+                    "Failed to finalize UnifiedZap completion sequence",
+                    error
+                  );
+                }
+              })();
             }}
             onError={handleExecutionError}
             onCancel={handleExecutionCancel}
@@ -345,9 +353,13 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             operationMode={activeOperationMode}
             isRebalanceMode={isRebalanceMode}
             onZapAction={action => {
-              void handleZapAction(action).catch(error => {
-                swapLogger.error("Failed to execute zap action", error);
-              });
+              void (async () => {
+                try {
+                  await handleZapAction(action);
+                } catch (error) {
+                  swapLogger.error("Failed to execute zap action", error);
+                }
+              })();
             }}
             excludedCategoryIds={excludedCategoryIds}
             onToggleCategoryExclusion={toggleCategoryExclusion}

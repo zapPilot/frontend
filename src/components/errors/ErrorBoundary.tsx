@@ -117,6 +117,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private generateEventId(): string {
     ErrorBoundary.errorIdCounter += 1;
+    // eslint-disable-next-line sonarjs/deprecation -- Legacy browser compatibility
     return `${Date.now()}-${ErrorBoundary.errorIdCounter}-${Math.random().toString(36).substr(2, 9)}`;
   }
 

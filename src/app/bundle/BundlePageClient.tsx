@@ -13,10 +13,10 @@ import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerS
 import { useBundlePage } from "@/hooks/useBundlePage";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
-  () =>
-    import("@/components/WalletManager").then(mod => ({
-      default: mod.WalletManager,
-    })),
+  async () => {
+    const mod = await import("@/components/WalletManager");
+    return { default: mod.WalletManager };
+  },
   {
     loading: () => <WalletManagerSkeleton />, // Friendly skeleton while loading chunk
   }

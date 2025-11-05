@@ -23,6 +23,7 @@ export async function copyTextToClipboard(text: string): Promise<boolean> {
       textArea.style.left = "-9999px";
       document.body.appendChild(textArea);
       textArea.select();
+      // eslint-disable-next-line sonarjs/deprecation -- Intentional fallback for older browsers
       const succeeded = document.execCommand("copy");
       document.body.removeChild(textArea);
       return succeeded;

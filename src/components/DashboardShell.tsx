@@ -30,32 +30,34 @@ const createLoadingComponent = (message: string) => {
 };
 
 const CommunityTab: ComponentType = dynamic(
-  () =>
-    import("@/components/CommunityTab").then(mod => ({
-      default: mod.CommunityTab,
-    })),
+  async () => {
+    const mod = await import("@/components/CommunityTab");
+    return { default: mod.CommunityTab };
+  },
   { loading: createLoadingComponent("Loading Community...") }
 );
 
 const AirdropTab: ComponentType = dynamic(
-  () =>
-    import("@/components/AirdropTab").then(mod => ({
-      default: mod.AirdropTab,
-    })),
+  async () => {
+    const mod = await import("@/components/AirdropTab");
+    return { default: mod.AirdropTab };
+  },
   { loading: createLoadingComponent("Loading Airdrop...") }
 );
 
 const SettingsTab: ComponentType = dynamic(
-  () =>
-    import("@/components/SettingsTab").then(mod => ({
-      default: mod.SettingsTab,
-    })),
+  async () => {
+    const mod = await import("@/components/SettingsTab");
+    return { default: mod.SettingsTab };
+  },
   { loading: createLoadingComponent("Loading Settings...") }
 );
 
 const SwapPage: ComponentType<SwapPageProps> = dynamic(
-  () =>
-    import("@/components/SwapPage").then(mod => ({ default: mod.SwapPage })),
+  async () => {
+    const mod = await import("@/components/SwapPage");
+    return { default: mod.SwapPage };
+  },
   { loading: createLoadingComponent("Loading Swap Interface...") }
 );
 

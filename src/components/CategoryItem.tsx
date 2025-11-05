@@ -57,7 +57,7 @@ export const CategoryItem = React.memo(
         tabIndex={onCategoryClick ? 0 : undefined}
         aria-label={
           onCategoryClick
-            ? `${isAssets ? "View" : "View"} ${category.name} ${isAssets ? "analytics" : "debt analytics"}`
+            ? `View ${category.name} ${isAssets ? "analytics" : "debt analytics"}`
             : undefined
         }
         onKeyDown={handleKeyDown}

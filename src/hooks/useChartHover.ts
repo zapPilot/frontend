@@ -105,11 +105,7 @@ export function useChartHover<T>(
     typeof window !== "undefined" &&
     typeof window.PointerEvent === "undefined"
   ) {
-    class PointerEventPolyfill extends MouseEvent {
-      constructor(type: string, props?: MouseEventInit) {
-        super(type, props);
-      }
-    }
+    class PointerEventPolyfill extends MouseEvent {}
 
     (window as unknown as { PointerEvent: typeof PointerEvent }).PointerEvent =
       PointerEventPolyfill as unknown as typeof PointerEvent;

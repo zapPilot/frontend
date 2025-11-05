@@ -152,7 +152,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!disconnect || !wallet) return;
 
     try {
-      await disconnect(wallet);
+      await Promise.resolve(disconnect(wallet));
     } catch (err) {
       walletLogger.error("Failed to disconnect wallet:", err);
       throw err;
@@ -194,7 +194,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
       }
 
       try {
-        return await account.signMessage({ message });
+        const signature = await Promise.resolve(
+          account.signMessage({ message })
+        );
+        return signature;
       } catch (err) {
         walletLogger.error("Failed to sign message:", err);
         throw err;

@@ -130,11 +130,14 @@ class Logger {
 
     // Remote logging (if enabled)
     if (this.config.enableRemote && this.config.remoteEndpoint) {
-      this.sendToRemote(entry).catch(err => {
-        // Fallback to console if remote fails
-
-        console.error("Failed to send log to remote endpoint:", err);
-      });
+      void (async () => {
+        try {
+          await this.sendToRemote(entry);
+        } catch (err) {
+          // Fallback to console if remote fails
+          console.error("Failed to send log to remote endpoint:", err);
+        }
+      })();
     }
   }
 

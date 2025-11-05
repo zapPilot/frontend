@@ -114,11 +114,15 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
         const divisor = BigInt(10) ** BigInt(decimals);
         const integerPart = rawBigInt / divisor;
         const fractionPart = rawBigInt % divisor;
-        const fractionString = fractionPart
-          .toString()
-          .padStart(decimals, "0");
-        // Remove trailing zeros safely (no backtracking risk with greedy quantifier at end)
-        const trimmedFraction = fractionString.replace(/0+$/, "");
+        const fractionString = fractionPart.toString().padStart(decimals, "0");
+        let trimIndex = fractionString.length;
+        while (
+          trimIndex > 0 &&
+          fractionString.charCodeAt(trimIndex - 1) === "0".charCodeAt(0)
+        ) {
+          trimIndex -= 1;
+        }
+        const trimmedFraction = fractionString.slice(0, trimIndex);
         const assembled = trimmedFraction
           ? `${integerPart.toString()}.${trimmedFraction}`
           : integerPart.toString();

@@ -106,7 +106,18 @@ export const TokenSelector = memo<TokenSelectorProps>(
                     {error?.message || "Unknown error"}
                   </div>
                   <button
-                    onClick={() => refetch()}
+                    onClick={() => {
+                      void (async () => {
+                        try {
+                          await refetch();
+                        } catch (refetchError) {
+                          console.error(
+                            "Failed to refetch tokens after load failure",
+                            refetchError
+                          );
+                        }
+                      })();
+                    }}
                     disabled={isRefetching}
                     className="inline-flex items-center space-x-2 px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
                   >

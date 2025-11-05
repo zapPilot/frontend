@@ -16,8 +16,10 @@ import type { PortfolioChartProps } from "./PortfolioChart/";
 
 // Dynamic import for heavy chart component
 const PortfolioChart: ComponentType<PortfolioChartProps> = dynamic(
-  () =>
-    import("./PortfolioChart/").then(mod => ({ default: mod.PortfolioChart })),
+  async () => {
+    const mod = await import("./PortfolioChart/");
+    return { default: mod.PortfolioChart };
+  },
   {
     loading: () => (
       <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">

@@ -115,7 +115,7 @@ export function useRefreshUser() {
       }
 
       // Invalidate current user cache
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.user.byWallet(connectedWallet),
       });
 
@@ -126,7 +126,7 @@ export function useRefreshUser() {
     },
     onSuccess: () => {
       // Optionally invalidate related queries
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.portfolio.all,
       });
     },

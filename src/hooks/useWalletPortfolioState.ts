@@ -84,7 +84,7 @@ export interface WalletPortfolioViewModel {
   openWalletManager: () => void;
   closeWalletManager: () => void;
   // Requery
-  onRetry: () => void;
+  onRetry: () => Promise<unknown>;
 }
 
 export function useWalletPortfolioState(

@@ -144,7 +144,7 @@ export function useBundlePage(userId: string): UseBundlePageResult {
         setBundleNotFound(true);
       }
     };
-    loadBundleUser();
+    void loadBundleUser();
   }, [userId]);
 
   // Redirect when disconnected from own bundle + switch prompt visibility

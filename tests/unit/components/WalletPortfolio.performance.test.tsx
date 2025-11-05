@@ -568,8 +568,8 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
       const categoryButtons = screen.getAllByTestId(/^category-/);
       const buttonsToClick = categoryButtons.slice(0, 20);
 
-      for (let i = 0; i < buttonsToClick.length; i++) {
-        await user.click(buttonsToClick[i]);
+      for (const button of buttonsToClick) {
+        await user.click(button);
       }
 
       expect(onCategoryClick).toHaveBeenCalledTimes(20);

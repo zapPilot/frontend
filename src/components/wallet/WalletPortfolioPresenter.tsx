@@ -15,10 +15,10 @@ import { BalanceVisibilityProvider } from "@/contexts/BalanceVisibilityContext";
 import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
 
 const WalletManager: ComponentType<WalletManagerProps> = dynamic(
-  () =>
-    import("@/components/WalletManager").then(mod => ({
-      default: mod.WalletManager,
-    })),
+  async () => {
+    const mod = await import("@/components/WalletManager");
+    return { default: mod.WalletManager };
+  },
   {
     loading: () => <WalletManagerSkeleton />,
   }

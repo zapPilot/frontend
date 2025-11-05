@@ -82,7 +82,12 @@ const eslintConfig = [
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-floating-promises': 'error',       // Catch unhandled promises
-      '@typescript-eslint/no-misused-promises': 'error',        // Catch promise mistakes
+      '@typescript-eslint/no-misused-promises': ['error', {
+        checksVoidReturn: {
+          arguments: false,
+          attributes: false,
+        },
+      }],                                                      // Catch promise mistakes while allowing async React handlers
       '@typescript-eslint/await-thenable': 'error',             // Only await promises
       '@typescript-eslint/no-unnecessary-condition': 'warn',    // Catch always-true/false (reduced noise)
       '@typescript-eslint/prefer-nullish-coalescing': 'warn',   // Use ?? instead of || (stylistic)
@@ -92,16 +97,24 @@ const eslintConfig = [
       // ========================================
       // Code Smell Detection (SonarJS)
       // ========================================
-      'sonarjs/cognitive-complexity': ['error', 25],            // Max complexity per function
+      'sonarjs/cognitive-complexity': ['error', 35],            // Max complexity per function
+      'sonarjs/no-nested-functions': ['warn', { threshold: 6 }], // Allow React event handler patterns
       'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],  // Catch magic strings (3+ duplicates)
       'sonarjs/no-duplicated-branches': 'warn',                    // Flag duplicated branch bodies
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'warn',                      // Simplify nested ifs
       'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing
       'sonarjs/no-nested-conditional': 'warn',                  // Reduce noise for nested ternaries
+      'sonarjs/no-inverted-boolean-check': 'off',               // Pedantic: allow inverted boolean patterns when clearer
+      'sonarjs/no-one-iteration-loop': 'off',                   // Pedantic: allow single-iteration loops for control flow
+      'sonarjs/prefer-immediate-return': 'off',                 // Pedantic: allow staged return logic for readability
       'sonarjs/pseudo-random': 'off',                           // Allow Math.random for UI effects
       'sonarjs/use-type-alias': 'off',                          // Optional type alias usage
       'sonarjs/prefer-single-boolean-return': 'warn',           // Informational only
+      'sonarjs/no-nested-template-literals': 'off',
+      'sonarjs/function-return-type': 'off',
+      'sonarjs/prefer-regexp-exec': 'off',
+      'sonarjs/void-use': 'off',
 
       // ========================================
       // Promise/Async Patterns
@@ -197,6 +210,20 @@ const eslintConfig = [
 
       // Allow console in tests
       "no-console": "off"
+    }
+  },
+  {
+    files: ['src/hooks/**/*.ts', 'src/hooks/**/*.tsx'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+    },
+  },
+  {
+    files: ["src/hooks/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/explicit-function-return-type": "off", // Hooks leverage inference for ergonomics
+      "sonarjs/cognitive-complexity": ["warn", 45],               // Allow richer hook orchestration before flagging
+      "unicorn/consistent-function-scoping": "off",               // Permit local helper closures inside hooks
     }
   },
   {

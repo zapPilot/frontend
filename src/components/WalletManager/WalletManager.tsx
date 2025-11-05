@@ -154,7 +154,18 @@ const WalletManagerComponent = ({
                 <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
                 <p className="text-red-400 text-sm mb-3">{error}</p>
                 <button
-                  onClick={refetch}
+                  onClick={() => {
+                    void (async () => {
+                      try {
+                        await refetch();
+                      } catch (refetchError) {
+                        console.error(
+                          "Failed to refetch user data in WalletManager",
+                          refetchError
+                        );
+                      }
+                    })();
+                  }}
                   className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors"
                 >
                   Retry

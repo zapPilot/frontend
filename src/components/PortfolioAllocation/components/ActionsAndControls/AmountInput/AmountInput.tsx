@@ -11,6 +11,38 @@ import type { SwapToken } from "@/types/swap";
 import type { OperationMode } from "../../../types";
 import { constrainValue, formatCryptoAmount, parseInputValue } from "./utils";
 
+const isValidDecimalInput = (value: string): boolean => {
+  if (value === "") {
+    return true;
+  }
+
+  let dotCount = 0;
+  for (const char of value) {
+    if (char === ".") {
+      dotCount += 1;
+      if (dotCount > 1) {
+        return false;
+      }
+      continue;
+    }
+
+    if (char < "0" || char > "9") {
+      return false;
+    }
+  }
+
+  if (value === "." || value.endsWith(".")) {
+    return true;
+  }
+
+  if (dotCount === 0) {
+    return true;
+  }
+
+  const [, fractionalPart = ""] = value.split(".");
+  return fractionalPart.length > 0;
+};
+
 interface AmountInputProps {
   operationMode: OperationMode;
   amount: string;
@@ -70,8 +102,7 @@ export const AmountInput = memo<AmountInputProps>(
         }
 
         // Allow partial decimal input (e.g., "0.", "10.", ".5")
-        // Fixed regex to prevent catastrophic backtracking
-        if (/^(\d+\.?\d*|\.\d+)$/.test(rawValue)) {
+        if (isValidDecimalInput(rawValue)) {
           setInputValue(rawValue);
 
           // Only update parent if it's a valid number

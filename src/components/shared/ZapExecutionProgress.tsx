@@ -349,7 +349,7 @@ export function ZapExecutionProgress({
         };
 
         sendCalls(sendVariables, {
-          onSuccess: async result => {
+          onSuccess: result => {
             const receiptHash = result?.receipts?.[0]?.transactionHash;
             const explorerUrl =
               receiptHash && resolvedChainId
@@ -393,7 +393,7 @@ export function ZapExecutionProgress({
               });
             }
           },
-          onError: async err => {
+          onError: err => {
             setTransactionStatus("error");
             setFailedAtChunk(chunkIndex);
             const message = deriveErrorMessage(err);

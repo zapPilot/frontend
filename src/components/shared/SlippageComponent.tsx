@@ -178,6 +178,7 @@ export function SlippageComponent({
                     type="number"
                     value={slippage.customValue}
                     onChange={e => slippage.setCustomValue(e.target.value)}
+                    // eslint-disable-next-line sonarjs/deprecation -- React 19 still supports onKeyPress
                     onKeyPress={slippage.handleCustomKeyPress}
                     placeholder={
                       slippage.isCustomValue ? slippage.value.toString() : "1.0"
