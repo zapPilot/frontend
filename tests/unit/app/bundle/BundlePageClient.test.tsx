@@ -1,6 +1,7 @@
-import { screen, act } from "@testing-library/react";
+import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { render } from "../../../test-utils";
 
 // Mock lightweight child components to avoid heavy hooks
@@ -33,7 +34,9 @@ vi.mock("@/contexts/UserContext", () => ({
     loading: false,
     error: null,
     connectedWallet: mockConnectedWallet,
-    refetch: () => {},
+    refetch: () => {
+      /* Mock refetch */
+    },
   }),
 }));
 

@@ -16,13 +16,13 @@ import {
   AccountServiceError,
   addWalletToBundle as addWalletToBundleService,
   connectWallet as connectWalletService,
+  deleteUser as deleteUserService,
   getUserProfile as getUserProfileService,
   getUserWallets as getUserWalletsService,
+  removeUserEmail as removeUserEmailService,
   removeWalletFromBundle as removeWalletFromBundleService,
   updateUserEmail as updateUserEmailService,
-  removeUserEmail as removeUserEmailService,
   updateWalletLabel as updateWalletLabelService,
-  deleteUser as deleteUserService,
 } from "./accountService";
 
 // Using the new service-specific AccountApiClient

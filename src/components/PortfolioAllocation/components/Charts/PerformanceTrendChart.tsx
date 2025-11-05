@@ -1,11 +1,11 @@
 "use client";
-import { Z_INDEX } from "@/constants/design-system";
-import { formatPercentage } from "@/lib/formatters";
-import { ensureNonNegative } from "@/lib/mathUtils";
-
 import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
+
+import { Z_INDEX } from "@/constants/design-system";
+import { formatPercentage } from "@/lib/formatters";
+import { ensureNonNegative } from "@/lib/mathUtils";
 
 // APR data point interface
 interface APRDataPoint {
@@ -59,7 +59,7 @@ const generateAPRAreaPath = (
 // Mock historical data generator - in real app this would come from API
 const generateHistoricalAPR = (
   days: number,
-  filtered: boolean = false
+  filtered = false
 ): APRDataPoint[] => {
   const data: APRDataPoint[] = [];
   const baseAPR = filtered ? 16.2 : 18.5; // Lower APR when categories filtered
@@ -99,11 +99,11 @@ interface PerformanceTrendChartProps {
 
 type TimeframePeriod = "7d" | "30d" | "90d";
 
-const TIMEFRAME_OPTIONS: Array<{
+const TIMEFRAME_OPTIONS: {
   value: TimeframePeriod;
   label: string;
   days: number;
-}> = [
+}[] = [
   { value: "7d", label: "7 Days", days: 7 },
   { value: "30d", label: "30 Days", days: 30 },
   { value: "90d", label: "90 Days", days: 90 },

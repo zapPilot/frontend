@@ -57,13 +57,13 @@ vi.mock("../../../src/lib/http-utils", () => ({
     }
   },
   NetworkError: class NetworkError extends Error {
-    constructor(message: string = "Network connection failed") {
+    constructor(message = "Network connection failed") {
       super(message);
       this.name = "NetworkError";
     }
   },
   TimeoutError: class TimeoutError extends Error {
-    constructor(message: string = "Request timed out") {
+    constructor(message = "Request timed out") {
       super(message);
       this.name = "TimeoutError";
     }
@@ -91,14 +91,18 @@ vi.mock("../../../src/services/accountService", () => ({
 }));
 
 // Import types and functions after mocking
-import type {
-  AddWalletResponse,
-  ConnectWalletResponse,
-  UpdateEmailResponse,
-  UserCryptoWallet,
-  UserProfileResponse,
-} from "../../../src/types/user.types";
-
+// Import the mocked modules
+import { handleHTTPError } from "../../../src/lib/http-utils";
+import {
+  AccountServiceError,
+  addWalletToBundle as addWalletToBundleService,
+  connectWallet as connectWalletService,
+  getUserProfile as getUserProfileService,
+  getUserWallets as getUserWalletsService,
+  removeUserEmail as removeUserEmailService,
+  removeWalletFromBundle as removeWalletFromBundleService,
+  updateUserEmail as updateUserEmailService,
+} from "../../../src/services/accountService";
 import {
   addWalletToBundle,
   connectWallet,
@@ -110,19 +114,13 @@ import {
   updateUserEmail,
   validateWalletAddress,
 } from "../../../src/services/userService";
-
-// Import the mocked modules
-import { handleHTTPError } from "../../../src/lib/http-utils";
-import {
-  connectWallet as connectWalletService,
-  getUserProfile as getUserProfileService,
-  getUserWallets as getUserWalletsService,
-  addWalletToBundle as addWalletToBundleService,
-  removeWalletFromBundle as removeWalletFromBundleService,
-  updateUserEmail as updateUserEmailService,
-  removeUserEmail as removeUserEmailService,
-  AccountServiceError,
-} from "../../../src/services/accountService";
+import type {
+  AddWalletResponse,
+  ConnectWalletResponse,
+  UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
+} from "../../../src/types/user.types";
 
 const mockHandleHTTPError = vi.mocked(handleHTTPError);
 const mockConnectWalletService = vi.mocked(connectWalletService);

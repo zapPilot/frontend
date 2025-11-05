@@ -18,8 +18,9 @@
  * - Cache invalidation
  */
 
-import { describe, it, expect, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+
 import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
 import type {
   LandingPageResponse,
@@ -33,16 +34,16 @@ vi.mock("../../src/services/analyticsService", () => ({
 }));
 
 import * as analyticsService from "../../src/services/analyticsService";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 import { createMockArray } from "./helpers/mock-factories";
 import { TEST_TIMEOUT } from "./helpers/test-constants";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 
 const createWrapper = () => createQueryWrapper().QueryWrapper;
 
 // Mock data generators
-function createMockPoolDetails(count: number = 3): PoolDetail[] {
+function createMockPoolDetails(count = 3): PoolDetail[] {
   const pools = createMockArray(count, index => {
     const assetValue = 10_000 + index * 5_000;
     return {
@@ -98,7 +99,7 @@ function createMockAPRSummary(pools: PoolDetail[]): PortfolioAPRSummary {
 }
 
 function createMockLandingPageResponse(
-  poolCount: number = 3,
+  poolCount = 3,
   overrides?: Partial<LandingPageResponse>
 ): LandingPageResponse {
   const pools = createMockPoolDetails(poolCount);
@@ -486,7 +487,7 @@ describe("useLandingPageData - Edge Cases", () => {
   });
 
   it("handles undefined userId", () => {
-    const { result } = renderHook(() => useLandingPageData(undefined), {
+    const { result } = renderHook(() => useLandingPageData(), {
       wrapper: createWrapper(),
     });
 

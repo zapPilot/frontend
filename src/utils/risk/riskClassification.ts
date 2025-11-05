@@ -5,10 +5,10 @@
  */
 
 import {
-  VOLATILITY_THRESHOLDS,
   DRAWDOWN_THRESHOLDS,
-  RiskLevel,
   DrawdownLevel,
+  RiskLevel,
+  VOLATILITY_THRESHOLDS,
 } from "./riskConstants";
 
 /**
@@ -209,8 +209,8 @@ export function isInDrawdown(currentDrawdownPct: number): boolean {
 export function getRiskRecommendations(
   volatilityPct: number,
   drawdownPct: number
-): Array<{ title: string; description: string }> {
-  const recommendations: Array<{ title: string; description: string }> = [];
+): { title: string; description: string }[] {
+  const recommendations: { title: string; description: string }[] = [];
 
   if (volatilityPct > VOLATILITY_THRESHOLDS.HIGH) {
     recommendations.push({

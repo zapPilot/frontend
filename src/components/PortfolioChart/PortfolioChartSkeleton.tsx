@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GlassCard } from "../ui";
+
+import { BaseCard } from "../ui";
 import { ButtonSkeleton, Skeleton } from "../ui/LoadingSystem";
 
 /**
@@ -17,7 +18,7 @@ export function PortfolioChartSkeleton() {
       role="status"
       aria-live="polite"
     >
-      <GlassCard className="p-6">
+      <BaseCard variant="glass" className="p-6">
         <div className="text-sm font-medium text-gray-300 mb-4">
           Loading portfolio analytics...
         </div>
@@ -94,7 +95,7 @@ export function PortfolioChartSkeleton() {
             </div>
           ))}
         </div>
-      </GlassCard>
+      </BaseCard>
     </motion.div>
   );
 }

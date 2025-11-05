@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, ReactNode, useContext } from "react";
+
 import { useCurrentUser, type UserInfo } from "../hooks/queries/useUserQuery";
+import { logger } from "../utils/logger";
 
 // Types are now imported from useUserQuery hook
 
@@ -11,7 +13,8 @@ interface UserContextType {
   error: string | null;
   isConnected: boolean;
   connectedWallet: string | null;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
+  triggerRefetch: () => void;
 }
 
 const UserContext = createContext<UserContextType | null>(null);
@@ -31,6 +34,16 @@ export function UserProvider({ children }: UserProviderProps) {
     refetch,
   } = useCurrentUser();
 
+  const triggerRefetch = () => {
+    void (async () => {
+      try {
+        await refetch();
+      } catch (error) {
+        logger.error("Failed to refetch user data", error);
+      }
+    })();
+  };
+
   const value: UserContextType = {
     userInfo,
     loading,
@@ -38,6 +51,7 @@ export function UserProvider({ children }: UserProviderProps) {
     isConnected,
     connectedWallet,
     refetch,
+    triggerRefetch,
   };
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

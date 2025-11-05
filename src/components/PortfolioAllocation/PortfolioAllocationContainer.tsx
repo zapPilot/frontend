@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
+
 import {
   DEFAULT_CATEGORY_WEIGHTS,
   DEFAULT_PORTFOLIO_TOTAL_VALUE,
@@ -8,8 +10,8 @@ import {
   PERCENTAGE_BASE,
 } from "@/constants/portfolio-allocation";
 import { SLIPPAGE_CONFIG } from "@/constants/slippage";
-import { useEffect, useMemo, useRef, useState } from "react";
 import { clamp, clampMin, ensureNonNegative } from "@/lib/mathUtils";
+
 import { EnhancedOverview, SwapControls } from "./components";
 import type { SwapControlsRef } from "./components/SwapControls";
 import { usePortfolioData, useRebalanceData } from "./hooks";
@@ -46,12 +48,12 @@ export function PortfolioAllocationContainer({
 
     const allocations: Record<string, number> = {};
     let curatedTotal = 0;
-    curatedEntries.forEach(([id, value]) => {
+    for (const [id, value] of curatedEntries) {
       if (value !== undefined) {
         allocations[id] = value;
         curatedTotal += value;
       }
-    });
+    }
 
     const remainingCategories = assetCategories.filter(
       category => allocations[category.id] === undefined
@@ -63,9 +65,9 @@ export function PortfolioAllocationContainer({
         ? remainingBudget / remainingCategories.length
         : 0;
 
-    remainingCategories.forEach(category => {
+    for (const category of remainingCategories) {
       allocations[category.id] = fallbackValue;
-    });
+    }
 
     const total = Object.values(allocations).reduce(
       (sum, value) => sum + value,
@@ -73,9 +75,9 @@ export function PortfolioAllocationContainer({
     );
     if (total === 0) {
       const equalShare = PERCENTAGE_BASE / clampMin(assetCategories.length, 1);
-      assetCategories.forEach(category => {
+      for (const category of assetCategories) {
         allocations[category.id] = equalShare;
-      });
+      }
       return allocations;
     }
 

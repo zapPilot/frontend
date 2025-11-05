@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface Stat {

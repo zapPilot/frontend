@@ -1,13 +1,47 @@
 "use client";
 
-import { GRADIENTS } from "@/constants/design-system";
-import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
-import type { SwapToken } from "@/types/swap";
 import { motion } from "framer-motion";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
+
+import { GRADIENTS } from "@/constants/design-system";
+import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
+import type { SwapToken } from "@/types/swap";
+
 import type { OperationMode } from "../../../types";
 import { constrainValue, formatCryptoAmount, parseInputValue } from "./utils";
+
+const isValidDecimalInput = (value: string): boolean => {
+  if (value === "") {
+    return true;
+  }
+
+  let dotCount = 0;
+  for (const char of value) {
+    if (char === ".") {
+      dotCount += 1;
+      if (dotCount > 1) {
+        return false;
+      }
+      continue;
+    }
+
+    if (char < "0" || char > "9") {
+      return false;
+    }
+  }
+
+  if (value === "." || value.endsWith(".")) {
+    return true;
+  }
+
+  if (dotCount === 0) {
+    return true;
+  }
+
+  const [, fractionalPart = ""] = value.split(".");
+  return fractionalPart.length > 0;
+};
 
 interface AmountInputProps {
   operationMode: OperationMode;
@@ -41,11 +75,7 @@ export const AmountInput = memo<AmountInputProps>(
       if (operationMode === "zapOut") {
         return totalPortfolioValue;
       }
-      if (
-        operationMode === "zapIn" &&
-        fromToken &&
-        fromToken.balance !== undefined
-      ) {
+      if (operationMode === "zapIn" && fromToken?.balance !== undefined) {
         return fromToken.balance;
       }
       return Infinity;
@@ -71,8 +101,8 @@ export const AmountInput = memo<AmountInputProps>(
           return;
         }
 
-        // Allow partial decimal input (e.g., "0.", "10.")
-        if (/^\d*\.?\d*$/.test(rawValue)) {
+        // Allow partial decimal input (e.g., "0.", "10.", ".5")
+        if (isValidDecimalInput(rawValue)) {
           setInputValue(rawValue);
 
           // Only update parent if it's a valid number
@@ -158,7 +188,7 @@ export const AmountInput = memo<AmountInputProps>(
     const displayBalance =
       operationMode === "zapOut"
         ? formatCurrency(totalPortfolioValue)
-        : fromToken && fromToken.balance !== undefined
+        : fromToken?.balance !== undefined
           ? `${formatTokenAmount(fromToken.balance, fromToken.symbol)}`
           : formatCurrency(0);
 

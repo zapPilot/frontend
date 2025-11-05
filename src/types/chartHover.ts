@@ -64,13 +64,19 @@ export interface AllocationHoverData extends BaseHoverData {
  * Shows drawdown percentage and peak information
  */
 export interface DrawdownHoverData extends BaseHoverData {
-  chartType: "drawdown";
+  chartType: "drawdown-recovery";
   /** Drawdown percentage (negative value) */
   drawdown: number;
   /** Date of the peak value before drawdown */
-  peakDate: string;
+  peakDate?: string;
   /** Days elapsed since peak */
-  distanceFromPeak: number;
+  distanceFromPeak?: number;
+  /** Whether this point marks a recovery */
+  isRecoveryPoint?: boolean;
+  /** Duration of the last recovery cycle in days */
+  recoveryDurationDays?: number;
+  /** Depth of the recovery cycle */
+  recoveryDepth?: number;
 }
 
 /**
@@ -101,16 +107,6 @@ export interface VolatilityHoverData extends BaseHoverData {
  * Underwater chart hover data
  * Shows underwater periods and recovery status
  */
-export interface UnderwaterHoverData extends BaseHoverData {
-  chartType: "underwater";
-  /** Underwater percentage (negative value) */
-  underwater: number;
-  /** Whether this point marks a recovery to peak */
-  isRecoveryPoint: boolean;
-  /** Current recovery status */
-  recoveryStatus: "Recovered" | "Recovering" | "Underwater";
-}
-
 /**
  * Discriminated union of all chart hover states
  * Use the chartType discriminator to narrow the type
@@ -120,8 +116,7 @@ export type ChartHoverState =
   | AllocationHoverData
   | DrawdownHoverData
   | SharpeHoverData
-  | VolatilityHoverData
-  | UnderwaterHoverData;
+  | VolatilityHoverData;
 
 /**
  * Helper type guard functions for type narrowing
@@ -141,7 +136,7 @@ export function isAllocationHover(
 export function isDrawdownHover(
   state: ChartHoverState | null
 ): state is DrawdownHoverData {
-  return state?.chartType === "drawdown";
+  return state?.chartType === "drawdown-recovery";
 }
 
 export function isSharpeHover(
@@ -154,10 +149,4 @@ export function isVolatilityHover(
   state: ChartHoverState | null
 ): state is VolatilityHoverData {
   return state?.chartType === "volatility";
-}
-
-export function isUnderwaterHover(
-  state: ChartHoverState | null
-): state is UnderwaterHoverData {
-  return state?.chartType === "underwater";
 }

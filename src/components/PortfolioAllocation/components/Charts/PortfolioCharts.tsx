@@ -1,9 +1,10 @@
 "use client";
 
 import { memo } from "react";
+
 import { PieChart } from "../../../PieChart";
-import { ChartDataPoint } from "../../types";
 import { useChartDataTransforms } from "../../hooks";
+import { ChartDataPoint } from "../../types";
 
 interface PortfolioChartsProps {
   chartData: ChartDataPoint[];

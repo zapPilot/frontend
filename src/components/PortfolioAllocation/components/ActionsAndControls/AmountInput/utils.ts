@@ -29,6 +29,15 @@ export function formatCryptoAmount(value: number): string {
 
   // For values < 1, use up to 6 decimals and remove trailing zeros
   const formatted = value.toFixed(6);
-  // Remove trailing zeros and trailing decimal point
-  return formatted.replace(/\.?0+$/, "");
+
+  let trimmed = formatted;
+  while (trimmed.endsWith("0")) {
+    trimmed = trimmed.slice(0, -1);
+  }
+
+  if (trimmed.endsWith(".")) {
+    trimmed = trimmed.slice(0, -1);
+  }
+
+  return trimmed;
 }

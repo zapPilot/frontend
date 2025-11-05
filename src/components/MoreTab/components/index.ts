@@ -2,5 +2,5 @@
  * MoreTab Components Export
  */
 
-export { KeyMetricsGrid } from "./KeyMetricsGrid";
 export { KeyMetricCard } from "./KeyMetricCard";
+export { KeyMetricsGrid } from "./KeyMetricsGrid";

@@ -1,6 +1,5 @@
 "use client";
 
-import THIRDWEB_CLIENT from "@/utils/thirdweb";
 import { memo } from "react";
 import { ConnectButton, useActiveAccount } from "thirdweb/react";
 import { createWallet, Wallet } from "thirdweb/wallets";
@@ -9,6 +8,7 @@ import { createWallet, Wallet } from "thirdweb/wallets";
 import { getThirdWebChains } from "@/config/chains";
 import { formatAddress } from "@/lib/formatters";
 import type { StandardSize } from "@/types/ui.types";
+import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 const WALLETS = [
   createWallet("com.ambire"),

@@ -1,17 +1,18 @@
 import {
+  ALLOCATION_THRESHOLDS,
+  MOCK_VALUES,
+  PERCENTAGE_BASE,
+} from "@/constants/portfolio-allocation";
+import { createCategoriesFromApiData } from "@/utils/portfolio.utils";
+
+import { clamp, clampMin, ensureNonNegative } from "../../../lib/mathUtils";
+import {
   AssetCategory,
   CategoryShift,
   ChartDataPoint,
   ProcessedAssetCategory,
   RebalanceData,
 } from "../types";
-import { clamp, clampMin, ensureNonNegative } from "../../../lib/mathUtils";
-import {
-  ALLOCATION_THRESHOLDS,
-  MOCK_VALUES,
-  PERCENTAGE_BASE,
-} from "@/constants/portfolio-allocation";
-import { createCategoriesFromApiData } from "@/utils/portfolio.utils";
 
 // Generate mock target allocation data for rebalancing demo
 export const generateTargetAllocation = (

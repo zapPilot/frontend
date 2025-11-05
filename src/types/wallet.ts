@@ -150,8 +150,8 @@ export const chainUtils = {
 // Export all types
 export type {
   WalletAccount as Account,
-  Chain as WalletChain,
   WalletError as Error,
-  ConnectionStatus as Status,
   WalletProviderInterface as Provider,
+  ConnectionStatus as Status,
+  Chain as WalletChain,
 };

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+
 import { BaseComponentProps } from "../../types/ui.types";
 import { BaseCard } from "./BaseCard";
 

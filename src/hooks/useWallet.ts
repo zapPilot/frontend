@@ -7,11 +7,11 @@
 
 "use client";
 
-import { useWalletProvider } from "@/providers/WalletProvider";
 import {
-  SUPPORTED_CHAINS,
   isChainSupported as configIsChainSupported,
+  SUPPORTED_CHAINS,
 } from "@/config/chains";
+import { useWalletProvider } from "@/providers/WalletProvider";
 
 // Compatible interface matching the original useWalletConnection
 interface WalletHooks {
@@ -48,7 +48,7 @@ interface WalletHooks {
 
   // Utility methods for backward compatibility
   isChainSupported: (chainId: number) => boolean;
-  getSupportedChains: () => Array<{ id: number; name: string; symbol: string }>;
+  getSupportedChains: () => { id: number; name: string; symbol: string }[];
 }
 
 /**

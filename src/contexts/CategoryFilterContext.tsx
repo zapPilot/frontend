@@ -10,8 +10,12 @@ interface CategoryFilterContextValue {
 
 const defaultValue: CategoryFilterContextValue = {
   selectedCategoryId: null,
-  setSelectedCategoryId: () => {},
-  clearCategoryFilter: () => {},
+  setSelectedCategoryId: () => {
+    // No-op default implementation
+  },
+  clearCategoryFilter: () => {
+    // No-op default implementation
+  },
 };
 
 const CategoryFilterContext =

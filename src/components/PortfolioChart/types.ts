@@ -1,6 +1,6 @@
 import {
-  PortfolioDataPoint,
   AssetAllocationPoint,
+  PortfolioDataPoint,
 } from "../../types/portfolio";
 
 export interface AllocationTimeseriesInputPoint {
@@ -16,29 +16,50 @@ export interface AllocationTimeseriesInputPoint {
   total_portfolio_value_usd?: number;
 }
 
-export type DrawdownOverridePoint = {
+export interface DrawdownOverridePoint {
   date: string;
   drawdown_pct?: number;
   drawdown?: number;
   portfolio_value?: number;
-};
+  isRecoveryPoint?: boolean;
+  daysFromPeak?: number;
+  peakDate?: string;
+  recoveryDurationDays?: number;
+  recoveryDepth?: number;
+  isHistoricalPeriod?: boolean;
+}
 
-export type SharpeOverridePoint = {
+export interface DrawdownRecoveryData {
+  date: string;
+  drawdown: number;
+  isRecoveryPoint?: boolean;
+  daysFromPeak?: number;
+  peakDate?: string;
+  recoveryDurationDays?: number;
+  recoveryDepth?: number;
+  isHistoricalPeriod?: boolean;
+}
+
+export interface DrawdownRecoverySummary {
+  maxDrawdown: number;
+  totalRecoveries: number;
+  averageRecoveryDays: number | null;
+  currentDrawdown: number;
+  currentStatus: "Underwater" | "At Peak";
+  latestPeakDate?: string;
+  latestRecoveryDurationDays?: number;
+}
+
+export interface SharpeOverridePoint {
   date: string;
   rolling_sharpe_ratio?: number;
-};
+}
 
-export type VolatilityOverridePoint = {
+export interface VolatilityOverridePoint {
   date: string;
   annualized_volatility_pct?: number;
   rolling_volatility_daily_pct?: number;
-};
-
-export type UnderwaterOverridePoint = {
-  date: string;
-  underwater_pct?: number;
-  recovery_point?: boolean;
-};
+}
 
 /**
  * Extended portfolio data point with DeFi and Wallet breakdown
@@ -57,14 +78,12 @@ export interface PortfolioChartProps {
   drawdownData?: DrawdownOverridePoint[];
   sharpeData?: SharpeOverridePoint[];
   volatilityData?: VolatilityOverridePoint[];
-  underwaterData?: UnderwaterOverridePoint[];
   activeTab?:
     | "performance"
     | "allocation"
     | "drawdown"
     | "sharpe"
-    | "volatility"
-    | "underwater";
+    | "volatility";
   isLoading?: boolean;
   error?: Error | string | null;
 }

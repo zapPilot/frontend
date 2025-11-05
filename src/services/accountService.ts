@@ -4,6 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import { createServiceCaller } from "../lib/createServiceCaller";
 import { httpUtils } from "../lib/http-utils";
 import type {
   AddWalletResponse,
@@ -12,7 +13,6 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../types/user.types";
-import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Account Service Error Details
@@ -243,7 +243,7 @@ export const getUserTokens = (
   accountAddress: string,
   chainName: string
 ): Promise<
-  Array<{
+  {
     id: string;
     chain: string;
     name: string;
@@ -259,11 +259,11 @@ export const getUserTokens = (
     is_wallet: boolean;
     time_at: number;
     amount: number;
-  }>
+  }[]
 > =>
   callAccountApi(() =>
     backendApiClient.get<
-      Array<{
+      {
         id: string;
         chain: string;
         name: string;
@@ -279,6 +279,6 @@ export const getUserTokens = (
         is_wallet: boolean;
         time_at: number;
         amount: number;
-      }>
+      }[]
     >(`/user/${accountAddress}/${chainName}/tokens`)
   );

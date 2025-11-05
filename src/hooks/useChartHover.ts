@@ -6,17 +6,18 @@
  */
 
 import {
+  type MouseEvent,
+  type PointerEvent,
+  type TouchEvent,
   useCallback,
   useEffect,
   useRef,
   useState,
-  type MouseEvent,
-  type PointerEvent,
-  type TouchEvent,
 } from "react";
-import { logger } from "../utils/logger";
-import type { ChartHoverState } from "../types/chartHover";
+
 import { clamp, clampMin } from "../lib/mathUtils";
+import type { ChartHoverState } from "../types/chartHover";
+import { logger } from "../utils/logger";
 
 /**
  * Configuration options for chart hover behavior
@@ -104,11 +105,7 @@ export function useChartHover<T>(
     typeof window !== "undefined" &&
     typeof window.PointerEvent === "undefined"
   ) {
-    class PointerEventPolyfill extends MouseEvent {
-      constructor(type: string, props?: MouseEventInit) {
-        super(type, props);
-      }
-    }
+    class PointerEventPolyfill extends MouseEvent {}
 
     (window as unknown as { PointerEvent: typeof PointerEvent }).PointerEvent =
       PointerEventPolyfill as unknown as typeof PointerEvent;
@@ -144,19 +141,56 @@ export function useChartHover<T>(
    * Mouse move handler with RAF optimization
    * Calculates hover position and builds chart-specific hover state
    */
-  const updateHoverFromClientX = useCallback(
-    (clientX: number, svg: SVGSVGElement) => {
+  const updateHoverFromClientPoint = useCallback(
+    (clientX: number, clientY: number | undefined, svg: SVGSVGElement) => {
       if (!enabled || data.length === 0) return;
 
       const rect = svg.getBoundingClientRect();
       const svgWidth = rect.width || chartWidth || 1;
+      const svgHeight = rect.height || chartHeight || 1;
+
       const effectiveClientX = Number.isFinite(clientX)
         ? clientX
         : rect.left + svgWidth / 2;
-      const mouseX = effectiveClientX - rect.left;
+      const effectiveClientY =
+        typeof clientY === "number" && Number.isFinite(clientY)
+          ? clientY
+          : rect.top + svgHeight / 2;
+
+      let viewBoxX: number | null = null;
+
+      const supportsCtm =
+        typeof svg.getScreenCTM === "function" &&
+        typeof svg.createSVGPoint === "function";
+      if (supportsCtm) {
+        const ctm = svg.getScreenCTM();
+        const point = svg.createSVGPoint();
+        point.x = effectiveClientX;
+        point.y = effectiveClientY;
+
+        if (ctm) {
+          const inverseMatrix = ctm.inverse();
+          const transformedPoint = point.matrixTransform(inverseMatrix);
+          if (Number.isFinite(transformedPoint.x)) {
+            viewBoxX = transformedPoint.x;
+          }
+        }
+      }
+
+      if (viewBoxX == null) {
+        const mouseX = effectiveClientX - rect.left;
+        const normalizedX = svgWidth > 0 ? mouseX / svgWidth : 0;
+        viewBoxX = normalizedX * chartWidth;
+      }
+
+      const normalizedViewBoxX = clamp(
+        chartWidth > 0 ? viewBoxX / chartWidth : 0,
+        0,
+        1
+      );
 
       // Calculate the data index based on pointer position
-      const rawIndex = (mouseX / svgWidth) * (data.length - 1);
+      const rawIndex = normalizedViewBoxX * (data.length - 1);
       const clampedIndex = clamp(Math.round(rawIndex), 0, data.length - 1);
 
       // Drop updates if index didn't change (reduces state churn)
@@ -182,7 +216,6 @@ export function useChartHover<T>(
           ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding);
 
         // Build chart-specific hover data
-        const svgHeight = rect.height || chartHeight || 1;
         const scaleX = chartWidth > 0 ? svgWidth / chartWidth : 1;
         const scaleY = chartHeight > 0 ? svgHeight / chartHeight : 1;
         const screenX = x * scaleX;
@@ -236,16 +269,24 @@ export function useChartHover<T>(
 
   const handleMouseMove = useCallback(
     (event: MouseEvent<SVGSVGElement>) => {
-      updateHoverFromClientX(event.clientX, event.currentTarget);
+      updateHoverFromClientPoint(
+        event.clientX,
+        event.clientY,
+        event.currentTarget
+      );
     },
-    [updateHoverFromClientX]
+    [updateHoverFromClientPoint]
   );
 
   const handlePointerMove = useCallback(
     (event: PointerEvent<SVGSVGElement>) => {
-      updateHoverFromClientX(event.clientX, event.currentTarget);
+      updateHoverFromClientPoint(
+        event.clientX,
+        event.clientY,
+        event.currentTarget
+      );
     },
-    [updateHoverFromClientX]
+    [updateHoverFromClientPoint]
   );
 
   const handlePointerDown = useCallback(
@@ -253,9 +294,13 @@ export function useChartHover<T>(
       if (process.env.NODE_ENV === "test") {
         logger.debug("pointer down", chartType ?? "unknown", "ChartHover");
       }
-      updateHoverFromClientX(event.clientX, event.currentTarget);
+      updateHoverFromClientPoint(
+        event.clientX,
+        event.clientY,
+        event.currentTarget
+      );
     },
-    [chartType, updateHoverFromClientX]
+    [chartType, updateHoverFromClientPoint]
   );
 
   /**
@@ -277,9 +322,13 @@ export function useChartHover<T>(
         event.preventDefault();
       }
 
-      updateHoverFromClientX(touch.clientX, event.currentTarget);
+      updateHoverFromClientPoint(
+        touch.clientX,
+        touch.clientY,
+        event.currentTarget
+      );
     },
-    [updateHoverFromClientX]
+    [updateHoverFromClientPoint]
   );
 
   const handleTouchEnd = useCallback(() => {

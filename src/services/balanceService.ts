@@ -1,6 +1,6 @@
 import { createIntentServiceError } from "../lib/base-error";
-import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
 
 const MAX_TOKEN_ADDRESSES = 50;
@@ -114,12 +114,17 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
         const divisor = BigInt(10) ** BigInt(decimals);
         const integerPart = rawBigInt / divisor;
         const fractionPart = rawBigInt % divisor;
-        const fractionString = fractionPart
-          .toString()
-          .padStart(decimals, "0")
-          .replace(/0+$/, "");
-        const assembled = fractionString
-          ? `${integerPart.toString()}.${fractionString}`
+        const fractionString = fractionPart.toString().padStart(decimals, "0");
+        let trimIndex = fractionString.length;
+        while (
+          trimIndex > 0 &&
+          fractionString.charCodeAt(trimIndex - 1) === "0".charCodeAt(0)
+        ) {
+          trimIndex -= 1;
+        }
+        const trimmedFraction = fractionString.slice(0, trimIndex);
+        const assembled = trimmedFraction
+          ? `${integerPart.toString()}.${trimmedFraction}`
           : integerPart.toString();
         const parsed = Number(assembled);
         return Number.isNaN(parsed) ? 0 : parsed;

@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
 import {
+  type DefaultOptions,
   QueryClient,
   QueryClientProvider,
-  type DefaultOptions,
 } from "@tanstack/react-query";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, vi } from "vitest";
+
 import { DEFAULT_QUERY_CONFIG } from "./test-constants";
 
 export interface TestQueryClientOptions {

@@ -10,8 +10,9 @@
  * - Callback stability
  */
 
-import { describe, it, expect, vi, beforeEach, Mock } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
+
 import { useChain } from "@/hooks/useChain";
 import { useWallet } from "@/hooks/useWallet";
 import { chainUtils } from "@/types/wallet";
@@ -83,7 +84,7 @@ describe("useChain Hook", () => {
     symbol: "ETH",
   };
 
-  const mockSwitchChain = vi.fn().mockResolvedValue(undefined);
+  const mockSwitchChain = vi.fn().mockResolvedValue();
   const mockIsChainSupported = vi.fn();
 
   const mockWalletHooks = {
@@ -300,7 +301,7 @@ describe("useChain Hook", () => {
     });
 
     it("should return undefined for unknown chain info", () => {
-      mockGetChainInfo.mockReturnValue(undefined);
+      mockGetChainInfo.mockReturnValue();
 
       const { result } = renderHook(() => useChain());
 
@@ -415,7 +416,7 @@ describe("useChain Hook", () => {
       const firstSwitchChain = result.current.switchChain;
 
       // Update wallet's switchChain function
-      const newSwitchChain = vi.fn().mockResolvedValue(undefined);
+      const newSwitchChain = vi.fn().mockResolvedValue();
       mockUseWallet.mockReturnValue({
         ...mockWalletHooks,
         switchChain: newSwitchChain,
@@ -633,11 +634,11 @@ describe("useChain Hook", () => {
 
       const chains = result.current.getSupportedChains();
 
-      chains.forEach(chain => {
+      for (const chain of chains) {
         const info = result.current.getChainInfo(chain.id);
         expect(info).toBeDefined();
         expect(info?.id).toBe(chain.id);
-      });
+      }
     });
   });
 });

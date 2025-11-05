@@ -1,5 +1,6 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
@@ -44,8 +45,8 @@ vi.mock("../../../src/components/WalletManager", () => ({
 }));
 
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: vi.fn(({ children }: { children: React.ReactNode }) => (
-    <div data-testid="glass-card">{children}</div>
+  BaseCard: vi.fn(({ children }: { children: React.ReactNode }) => (
+    <div data-testid="base-card">{children}</div>
   )),
   GradientButton: vi.fn(
     ({
@@ -638,21 +639,7 @@ describe("WalletPortfolio", () => {
     });
 
     it("should maintain backward compatibility with legacy structure", async () => {
-      // Mock legacy structure compatibility
-      const _legacyCategories = [
-        {
-          id: "mixed",
-          name: "Mixed Assets",
-          totalValue: 15000,
-          percentage: 100,
-          color: "#333333",
-          change24h: 2.5,
-          assets: [
-            ...mockAssetCategories[0].assets,
-            ...mockAssetCategories[1].assets,
-          ],
-        },
-      ];
+      // Mock legacy structure compatibility - previously verified with mixed asset categories
 
       mockUseLandingPageData.mockReturnValue({
         data: {
@@ -717,12 +704,8 @@ describe("WalletPortfolio", () => {
 
   describe("Edge Cases and Data Validation", () => {
     it("should handle mixed positive and negative values correctly", async () => {
-      // Create data with both positive assets and negative borrowing
-      const _mixedPieChartData = [
-        { label: "BTC", value: 8000, percentage: 60, color: "#F7931A" },
-        { label: "ETH", value: 5000, percentage: 40, color: "#627EEA" },
-        // Note: No negative borrowing values in pie chart
-      ];
+      // Test data with both positive assets and negative borrowing
+      // Note: Pie chart should not include negative borrowing values
 
       mockUseLandingPageData.mockReturnValue({
         data: {
@@ -847,11 +830,7 @@ describe("WalletPortfolio", () => {
 
     it("should validate pie chart data structure and prevent invalid borrowing inclusion", async () => {
       // Test that even if somehow borrowing data leaks into pie chart, it's handled
-      const _validPieChartData = [
-        { label: "BTC", value: 7500, percentage: 50, color: "#F7931A" },
-        { label: "ETH", value: 4500, percentage: 30, color: "#627EEA" },
-        // Borrowing should be filtered out by preparePortfolioDataWithBorrowing
-      ];
+      // Borrowing should be filtered out by preparePortfolioDataWithBorrowing
 
       mockUseLandingPageData.mockReturnValue({
         data: {

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { vi } from "vitest";
+
 import { WalletActions } from "../../../../src/components/wallet/WalletActions";
 
 // Mock lucide-react icons
@@ -109,11 +110,11 @@ describe("WalletActions", () => {
       ];
 
       // Simulate rapid clicking
-      buttons.forEach(button => {
+      for (const button of buttons) {
         for (let i = 0; i < 3; i++) {
           fireEvent.click(button);
         }
-      });
+      }
 
       expect(mockOnZapIn).toHaveBeenCalledTimes(3);
       expect(mockOnZapOut).toHaveBeenCalledTimes(3);
@@ -153,9 +154,9 @@ describe("WalletActions", () => {
       render(<WalletActions {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
-      buttons.forEach(button => {
+      for (const button of buttons) {
         expect(button).not.toBeDisabled();
-      });
+      }
     });
   });
 
@@ -166,10 +167,10 @@ describe("WalletActions", () => {
       const buttons = screen.getAllByRole("button");
       expect(buttons).toHaveLength(3);
 
-      buttons.forEach(button => {
+      for (const button of buttons) {
         expect(button).toBeInTheDocument();
         expect(button).not.toBeDisabled();
-      });
+      }
     });
 
     it("maintains proper button structure", () => {
@@ -208,12 +209,12 @@ describe("WalletActions", () => {
 
       const buttons = screen.getAllByRole("button");
 
-      buttons.forEach(button => {
+      for (const button of buttons) {
         // Each button should have an icon and text
         const iconElements = button.querySelectorAll('[data-testid*="icon"]');
         expect(iconElements).toHaveLength(1);
         expect(button.textContent).toBeTruthy();
-      });
+      }
     });
   });
 

@@ -11,6 +11,7 @@ import { motion } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { prepareTransaction } from "thirdweb";
 import { useSendAndConfirmCalls } from "thirdweb/react";
+
 import {
   getChainBlockExplorer,
   getChainById,
@@ -21,10 +22,10 @@ import {
 import { Z_INDEX } from "../../constants/design-system";
 import { useToast } from "../../hooks/useToast";
 import {
-  useUnifiedZapStream,
   type UnifiedZapStreamTransaction,
+  useUnifiedZapStream,
 } from "../../hooks/useUnifiedZapStream";
-import { formatCurrency, formatAddress } from "../../lib/formatters";
+import { formatAddress, formatCurrency } from "../../lib/formatters";
 import {
   type BaseModalProps,
   type ZapExecutionResult,
@@ -348,7 +349,7 @@ export function ZapExecutionProgress({
         };
 
         sendCalls(sendVariables, {
-          onSuccess: async result => {
+          onSuccess: result => {
             const receiptHash = result?.receipts?.[0]?.transactionHash;
             const explorerUrl =
               receiptHash && resolvedChainId
@@ -392,7 +393,7 @@ export function ZapExecutionProgress({
               });
             }
           },
-          onError: async err => {
+          onError: err => {
             setTransactionStatus("error");
             setFailedAtChunk(chunkIndex);
             const message = deriveErrorMessage(err);

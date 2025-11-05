@@ -1,11 +1,13 @@
-import { memo } from "react";
 import { motion } from "framer-motion";
+import { memo } from "react";
+
 import { LoadingSpinner } from "@/components/ui";
-import { formatAddress } from "@/lib/formatters";
-import { WalletActionMenu } from "./WalletActionMenu";
-import type { WalletData } from "@/services/userService";
-import type { WalletOperations } from "../types/wallet.types";
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import { formatAddress } from "@/lib/formatters";
+import type { WalletData } from "@/services/userService";
+
+import type { WalletOperations } from "../types/wallet.types";
+import { WalletActionMenu } from "./WalletActionMenu";
 
 interface WalletCardProps {
   wallet: WalletData;

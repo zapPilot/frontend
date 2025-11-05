@@ -5,9 +5,9 @@
  */
 
 import { createIntentServiceError } from "../lib/base-error";
+import { createServiceCaller } from "../lib/createServiceCaller";
 import { httpUtils } from "../lib/http-utils";
 import { StrategiesApiResponse } from "../types/strategies";
-import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Intent Engine interfaces
@@ -26,12 +26,12 @@ export interface ExecutionIntent {
 export interface ExecutionResult {
   intentId: string;
   status: "pending" | "processing" | "completed" | "failed";
-  transactions: Array<{
+  transactions: {
     hash: string;
     status: "pending" | "confirmed" | "failed";
     gasUsed?: string;
     effectiveGasPrice?: string;
-  }>;
+  }[];
   executionTime?: number;
   error?: string;
 }
@@ -42,11 +42,11 @@ export interface IntentStatus {
   progress: number; // 0-100
   currentStep?: string;
   estimatedTimeRemaining?: number;
-  transactions: Array<{
+  transactions: {
     hash: string;
     status: "pending" | "confirmed" | "failed";
     blockNumber?: number;
-  }>;
+  }[];
 }
 
 // Get configured client
@@ -124,10 +124,10 @@ export interface DustTokenParams {
  * UnifiedZap interfaces for multi-strategy allocation
  */
 interface UnifiedZapParams {
-  strategyAllocations: Array<{
+  strategyAllocations: {
     strategyId: string;
     percentage: number;
-  }>;
+  }[];
   inputToken: string;
   inputAmount: string;
   slippage: number;

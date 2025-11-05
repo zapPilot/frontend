@@ -1,6 +1,7 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
@@ -71,8 +72,8 @@ vi.mock("../../../src/components/wallet/WalletActions", () => ({
 }));
 
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: vi.fn(({ children }) => (
-    <div data-testid="glass-card">{children}</div>
+  BaseCard: vi.fn(({ children }) => (
+    <div data-testid="base-card">{children}</div>
   )),
 }));
 
@@ -567,8 +568,8 @@ describe("WalletPortfolio - Performance and Edge Cases", () => {
       const categoryButtons = screen.getAllByTestId(/^category-/);
       const buttonsToClick = categoryButtons.slice(0, 20);
 
-      for (let i = 0; i < buttonsToClick.length; i++) {
-        await user.click(buttonsToClick[i]);
+      for (const button of buttonsToClick) {
+        await user.click(button);
       }
 
       expect(onCategoryClick).toHaveBeenCalledTimes(20);

@@ -28,9 +28,11 @@ export function BalanceVisibilityProvider({
 export function useBalanceVisibility() {
   const ctx = useContext(BalanceVisibilityContext);
   return (
-    ctx || {
+    ctx ?? {
       balanceHidden: false,
-      toggleBalanceVisibility: () => {},
+      toggleBalanceVisibility: () => {
+        // No-op default implementation
+      },
     }
   );
 }

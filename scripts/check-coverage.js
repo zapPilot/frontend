@@ -31,7 +31,6 @@ function checkCoverageThresholds() {
   console.log("─".repeat(50));
 
   let failed = false;
-  const results = [];
 
   Object.entries(THRESHOLDS).forEach(([metric, threshold]) => {
     const actual = total[metric].pct;
@@ -41,8 +40,6 @@ function checkCoverageThresholds() {
 
     const status = passed ? "✅" : "❌";
     const result = `${status} ${metric.padEnd(12)}: ${actual.toFixed(2).padStart(6)}% (threshold: ${threshold}%)`;
-
-    results.push(result);
     console.log(result);
   });
 

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
+
 import { InvestmentOpportunity } from "../../types/investment";
 
 interface SwapPageHeaderProps {

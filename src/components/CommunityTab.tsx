@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+
 import { CommunityStats, PodcastSection, SocialLinks } from "./MoreTab/index";
 
 export function CommunityTab() {

@@ -5,6 +5,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+
 import { API_ENDPOINTS } from "../lib/http-utils";
 import { logger } from "../utils/logger";
 
@@ -94,11 +95,11 @@ interface UnifiedZapStreamEventMetadata {
   estimatedDuration?: string;
   processedStrategies?: number;
   processedProtocols?: number;
-  chainBreakdown?: Array<{
+  chainBreakdown?: {
     name: string;
     chainId: number;
     protocolCount: number;
-  }>;
+  }[];
   message?: string;
   description?: string;
   progressPercent?: number;
@@ -160,7 +161,7 @@ interface UseUnifiedZapStreamReturn {
  */
 export function useUnifiedZapStream(
   intentId: string | null,
-  enabled: boolean = true
+  enabled = true
 ): UseUnifiedZapStreamReturn {
   const [events, setEvents] = useState<UnifiedZapStreamEvent[]>([]);
   const [isConnected, setIsConnected] = useState(false);
@@ -234,10 +235,7 @@ export function useUnifiedZapStream(
           try {
             const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
 
-            const normalizeProgress = (
-              value: unknown,
-              fallback: number = 0
-            ) => {
+            const normalizeProgress = (value: unknown, fallback = 0) => {
               if (typeof value !== "number" || Number.isNaN(value)) {
                 return fallback;
               }
@@ -276,9 +274,7 @@ export function useUnifiedZapStream(
 
               for (const candidate of candidates) {
                 if (
-                  (UNIFIED_ZAP_PHASES as ReadonlyArray<string>).includes(
-                    candidate
-                  )
+                  (UNIFIED_ZAP_PHASES as readonly string[]).includes(candidate)
                 ) {
                   return candidate as UnifiedZapPhase;
                 }

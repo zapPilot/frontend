@@ -3,19 +3,21 @@
 import { motion } from "framer-motion";
 import { ArrowDownLeft, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
+
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
+import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../hooks/usePortfolioState";
 import { PieChartData } from "../types/portfolio";
 import { PortfolioState } from "../types/portfolioState";
+import { BaseComponentProps } from "../types/ui.types";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
-import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 import { PieChartLoading } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
-import { BaseComponentProps } from "../types/ui.types";
-import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 
 type TabType = "assets" | "borrowing";
 

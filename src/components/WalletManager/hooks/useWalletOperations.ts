@@ -1,27 +1,36 @@
-import { useCallback, useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryClient";
+import { useCallback, useEffect, useState } from "react";
+
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
+import { useWallet } from "@/hooks/useWallet";
+import { formatAddress } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryClient";
 import {
+  deleteUser as deleteUserAccount,
   handleWalletError,
   type WalletData,
-  deleteUser as deleteUserAccount,
 } from "@/services/userService";
+import { copyTextToClipboard } from "@/utils/clipboard";
+import { walletLogger } from "@/utils/logger";
+
 import {
   addWallet as addWalletToBundle,
   loadWallets as fetchWallets,
   removeWallet as removeWalletFromBundle,
   updateWalletLabel as updateWalletLabelRequest,
 } from "../services/WalletService";
-import { validateNewWallet } from "../utils/validation";
-import { formatAddress } from "@/lib/formatters";
-import { copyTextToClipboard } from "@/utils/clipboard";
 import type {
-  WalletOperations,
-  NewWallet,
   EditingWallet,
+  NewWallet,
+  WalletOperations,
 } from "../types/wallet.types";
+import { validateNewWallet } from "../utils/validation";
+
+// Toast message constants to avoid duplicate strings
+const TOAST_MESSAGES = {
+  DELETION_FAILED: "Deletion Failed",
+} as const;
 
 interface UseWalletOperationsParams {
   viewingUserId: string;
@@ -39,6 +48,7 @@ export const useWalletOperations = ({
   const queryClient = useQueryClient();
   const { refetch } = useUser();
   const { showToast } = useToast();
+  const { disconnect, isConnected } = useWallet();
 
   // State
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -86,7 +96,7 @@ export const useWalletOperations = ({
   // Load wallets when component opens or user changes
   useEffect(() => {
     if (isOpen && viewingUserId) {
-      loadWallets();
+      void loadWallets();
     }
   }, [isOpen, viewingUserId, loadWallets]);
 
@@ -95,7 +105,7 @@ export const useWalletOperations = ({
     if (!isOpen || !viewingUserId || !isOwner) return;
 
     const interval = setInterval(() => {
-      loadWallets(true); // Silent refresh
+      void loadWallets(true); // Silent refresh
     }, 30000);
 
     return () => clearInterval(interval);
@@ -122,10 +132,24 @@ export const useWalletOperations = ({
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.user.wallets(realUserId),
-          });
-          refetch();
+          try {
+            await queryClient.invalidateQueries({
+              queryKey: queryKeys.user.wallets(realUserId),
+            });
+          } catch (invalidateError) {
+            walletLogger.error(
+              "Failed to invalidate wallet queries after removal",
+              invalidateError
+            );
+          }
+          try {
+            await refetch();
+          } catch (refetchError) {
+            walletLogger.error(
+              "Failed to refetch user data after wallet removal",
+              refetchError
+            );
+          }
 
           setOperations(prev => ({
             ...prev,
@@ -141,7 +165,7 @@ export const useWalletOperations = ({
               ...prev.removing,
               [walletId]: {
                 isLoading: false,
-                error: response.error || "Failed to remove wallet",
+                error: response.error ?? "Failed to remove wallet",
               },
             },
           }));
@@ -213,7 +237,7 @@ export const useWalletOperations = ({
               ...prev.editing,
               [walletId]: {
                 isLoading: false,
-                error: response.error || "Failed to update wallet label",
+                error: response.error ?? "Failed to update wallet label",
               },
             },
           }));
@@ -253,7 +277,7 @@ export const useWalletOperations = ({
     // Validate input
     const validation = validateNewWallet(newWallet);
     if (!validation.isValid) {
-      setValidationError(validation.error || "Invalid wallet data");
+      setValidationError(validation.error ?? "Invalid wallet data");
       return;
     }
 
@@ -279,10 +303,24 @@ export const useWalletOperations = ({
         await loadWallets();
 
         // Invalidate and refetch user data
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.user.wallets(realUserId),
-        });
-        refetch();
+        try {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.user.wallets(realUserId),
+          });
+        } catch (invalidateError) {
+          walletLogger.error(
+            "Failed to invalidate wallet queries after adding a wallet",
+            invalidateError
+          );
+        }
+        try {
+          await refetch();
+        } catch (refetchError) {
+          walletLogger.error(
+            "Failed to refetch user data after adding a wallet",
+            refetchError
+          );
+        }
 
         setOperations(prev => ({
           ...prev,
@@ -293,7 +331,7 @@ export const useWalletOperations = ({
           ...prev,
           adding: {
             isLoading: false,
-            error: response.error || "Failed to add wallet",
+            error: response.error ?? "Failed to add wallet",
           },
         }));
       }
@@ -331,42 +369,78 @@ export const useWalletOperations = ({
       const response = await deleteUserAccount(realUserId);
 
       if (response.success) {
+        let shouldReload = true;
+
+        if (isConnected) {
+          try {
+            await disconnect();
+          } catch (disconnectError) {
+            const disconnectMessage =
+              handleWalletError(disconnectError) ||
+              "Account deleted, but we couldn't disconnect your wallet automatically.";
+
+            showToast({
+              type: "warning",
+              title: "Disconnect Wallet",
+              message: `${disconnectMessage} Please disconnect manually to prevent automatic reconnection.`,
+            });
+
+            shouldReload = false;
+          }
+        }
+
         showToast({
           type: "success",
           title: "Account Deleted",
           message:
-            "Account successfully deleted. Reconnect with a different wallet to consolidate.",
+            "Account successfully deleted. Wallet connection has been cleared to prevent automatic reconnection.",
         });
 
         // Invalidate queries and trigger reconnection flow
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.user.wallets(realUserId),
-        });
-        refetch();
+        try {
+          await queryClient.invalidateQueries({
+            queryKey: queryKeys.user.wallets(realUserId),
+          });
+        } catch (invalidateError) {
+          walletLogger.error(
+            "Failed to invalidate wallet queries after deleting account",
+            invalidateError
+          );
+        }
+        try {
+          await refetch();
+        } catch (refetchError) {
+          walletLogger.error(
+            "Failed to refetch user data after deleting account",
+            refetchError
+          );
+        }
 
-        // Close the wallet manager after a brief delay
-        setTimeout(() => {
-          // Trigger logout/reconnect flow
-          window.location.reload();
-        }, 1500);
+        if (shouldReload) {
+          // Close the wallet manager after a brief delay
+          setTimeout(() => {
+            // Trigger logout/reconnect flow
+            window.location.reload();
+          }, 1500);
+        }
       } else {
         showToast({
           type: "error",
-          title: "Deletion Failed",
-          message: response.error || "Failed to delete account",
+          title: TOAST_MESSAGES.DELETION_FAILED,
+          message: response.error ?? "Failed to delete account",
         });
       }
     } catch (error) {
       const errorMessage = handleWalletError(error);
       showToast({
         type: "error",
-        title: "Deletion Failed",
+        title: TOAST_MESSAGES.DELETION_FAILED,
         message: errorMessage,
       });
     } finally {
       setIsDeletingAccount(false);
     }
-  }, [realUserId, queryClient, refetch, showToast]);
+  }, [realUserId, queryClient, refetch, showToast, disconnect, isConnected]);
 
   return {
     // State

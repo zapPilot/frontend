@@ -13,11 +13,11 @@ export interface CategorySummary {
   percentage: number;
   averageAPR: number;
   // Removed poolCount as this data is no longer provided by the unified API
-  topProtocols: Array<{
+  topProtocols: {
     name: string;
     value: number;
     count: number;
-  }>;
+  }[];
 }
 
 export interface PoolDetail {
@@ -45,9 +45,9 @@ export interface PoolDetail {
  */
 import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
 import {
-  ASSET_CATEGORIES,
   API_CATEGORY_KEY_MAP,
   type ApiCategoryKey,
+  ASSET_CATEGORIES,
 } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
 import type { PieChartData } from "@/types/portfolio";
@@ -149,7 +149,7 @@ export function createCategoriesFromApiData(
   }
 
   const categories = (
-    Object.entries(categoryData) as Array<[ApiCategoryKey, number]>
+    Object.entries(categoryData) as [ApiCategoryKey, number][]
   ).map(([categoryId, value]) => ({
     id: categoryId,
     value,

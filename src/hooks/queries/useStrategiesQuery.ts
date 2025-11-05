@@ -1,15 +1,53 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { createQueryConfig } from "./queryDefaults";
-import { queryKeys } from "../../lib/queryClient";
-import { getStrategies } from "../../services/intentService";
-import { getLandingPagePortfolioData } from "../../services/analyticsService";
-import { AssetCategory } from "../../components/PortfolioAllocation/types";
+
 import { portfolioLogger } from "@/utils/logger";
+
+import { AssetCategory } from "../../components/PortfolioAllocation/types";
+import { queryKeys } from "../../lib/queryClient";
+import { getLandingPagePortfolioData } from "../../services/analyticsService";
+import { getStrategies } from "../../services/intentService";
 import {
-  transformStrategiesResponse,
   StrategiesApiError,
   StrategiesFetchConfig,
+  transformStrategiesResponse,
 } from "../../types/strategies";
+import { createQueryConfig } from "./queryDefaults";
+
+const STRATEGIES_RETRY_CONFIG = {
+  maxRetries: 3,
+  customRetry: (failureCount: number, error: unknown) => {
+    if (
+      error instanceof StrategiesApiError &&
+      error.statusCode &&
+      error.statusCode < 500
+    ) {
+      return false;
+    }
+
+    return failureCount < 3;
+  },
+};
+
+const STATIC_STRATEGIES_QUERY_CONFIG = createQueryConfig({
+  dataType: "static",
+  retryConfig: STRATEGIES_RETRY_CONFIG,
+});
+
+const DYNAMIC_STRATEGIES_QUERY_CONFIG = createQueryConfig({
+  dataType: "dynamic",
+  retryConfig: STRATEGIES_RETRY_CONFIG,
+});
+
+function normalizeStrategiesError(error: unknown): StrategiesApiError {
+  if (error instanceof StrategiesApiError) {
+    return error;
+  }
+
+  const message =
+    error instanceof Error ? error.message : "Failed to fetch strategies";
+
+  return new StrategiesApiError(message, "FETCH_ERROR");
+}
 
 /**
  * React Query hook for fetching portfolio strategies
@@ -18,38 +56,14 @@ export function useStrategiesQuery(
   config?: StrategiesFetchConfig
 ): UseQueryResult<AssetCategory[], StrategiesApiError> {
   return useQuery<AssetCategory[], StrategiesApiError>({
-    ...createQueryConfig({
-      dataType: "static",
-      retryConfig: {
-        maxRetries: 3,
-        customRetry: (failureCount, error) => {
-          // Don't retry on client errors (4xx)
-          if (
-            error instanceof StrategiesApiError &&
-            error.statusCode &&
-            error.statusCode < 500
-          ) {
-            return false;
-          }
-          return failureCount < 3;
-        },
-      },
-    }),
+    ...STATIC_STRATEGIES_QUERY_CONFIG,
     queryKey: queryKeys.strategies.list(config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
         const apiResponse = await getStrategies();
         return transformStrategiesResponse(apiResponse);
       } catch (error) {
-        // Transform error to StrategiesApiError if needed
-        if (error instanceof StrategiesApiError) {
-          throw error;
-        }
-
-        // Handle API errors from intentService
-        const message =
-          error instanceof Error ? error.message : "Failed to fetch strategies";
-        throw new StrategiesApiError(message, "FETCH_ERROR");
+        throw normalizeStrategiesError(error);
       }
     },
     refetchOnWindowFocus: false,
@@ -65,23 +79,7 @@ export function useStrategiesWithPortfolioQuery(
   config?: StrategiesFetchConfig
 ): UseQueryResult<AssetCategory[], StrategiesApiError> {
   return useQuery<AssetCategory[], StrategiesApiError>({
-    ...createQueryConfig({
-      dataType: "dynamic",
-      retryConfig: {
-        maxRetries: 3,
-        customRetry: (failureCount, error) => {
-          // Don't retry on client errors (4xx)
-          if (
-            error instanceof StrategiesApiError &&
-            error.statusCode &&
-            error.statusCode < 500
-          ) {
-            return false;
-          }
-          return failureCount < 3;
-        },
-      },
-    }),
+    ...DYNAMIC_STRATEGIES_QUERY_CONFIG,
     queryKey: queryKeys.strategies.withPortfolio(userId, config),
     queryFn: async (): Promise<AssetCategory[]> => {
       try {
@@ -107,15 +105,7 @@ export function useStrategiesWithPortfolioQuery(
         // Return strategies without portfolio data for unauthenticated users
         return transformStrategiesResponse(strategiesResponse, []);
       } catch (error) {
-        // Transform error to StrategiesApiError if needed
-        if (error instanceof StrategiesApiError) {
-          throw error;
-        }
-
-        // Handle API errors from intentService
-        const message =
-          error instanceof Error ? error.message : "Failed to fetch strategies";
-        throw new StrategiesApiError(message, "FETCH_ERROR");
+        throw normalizeStrategiesError(error);
       }
     },
     refetchOnWindowFocus: false,

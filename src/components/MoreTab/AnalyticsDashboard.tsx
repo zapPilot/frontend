@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
+
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getAnalyticsMetrics } from "../../lib/portfolio-analytics";
 import { KeyMetricsGrid } from "./components";
@@ -12,11 +13,11 @@ interface AnalyticsDashboardProps {
 
 const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
   // Fetch real risk data for Key Metrics Grid
-  const { data: riskData } = useRiskSummary(userId || "");
+  const { data: riskData } = useRiskSummary(userId ?? "");
 
   // Generate analytics metrics with real risk data
   const portfolioMetrics = useMemo(
-    () => getAnalyticsMetrics(riskData || undefined),
+    () => getAnalyticsMetrics(riskData ?? undefined),
     [riskData]
   );
 
@@ -37,7 +38,7 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
       <KeyMetricsGrid metrics={portfolioMetrics} />
-      {/* TODO(ZAP-208): Asset Attribution Analysis - replace with real API data when asset attribution endpoint is available */}
+      {/* ZAP-208: Asset Attribution Analysis - pending asset attribution API endpoint */}
     </div>
   );
 };

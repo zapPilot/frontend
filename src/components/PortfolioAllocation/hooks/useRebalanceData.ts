@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+
 import { ProcessedAssetCategory } from "../types";
 import { generateRebalanceData } from "../utils";
 
@@ -7,7 +8,7 @@ export const useRebalanceData = (
   isRebalanceMode: boolean
 ) => {
   return useMemo(() => {
-    if (!isRebalanceMode) return undefined;
+    if (!isRebalanceMode) return;
     return generateRebalanceData(processedCategories);
   }, [isRebalanceMode, processedCategories]);
 };

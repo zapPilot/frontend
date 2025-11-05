@@ -1,14 +1,13 @@
 /**
  * Integration tests for useChartData hook
  *
- * Tests comprehensive data transformations for 6 chart types powered by the
+ * Tests comprehensive data transformations for 5 chart types powered by the
  * unified dashboard endpoint:
  * 1. Stacked Portfolio (DeFi + Wallet breakdown)
  * 2. Allocation History (BTC, ETH, Stablecoins, Altcoins)
- * 3. Drawdown Analysis
+ * 3. Drawdown & Recovery Analysis
  * 4. Sharpe Ratio (Risk-adjusted returns)
  * 5. Volatility Tracking
- * 6. Underwater Recovery
  *
  * Coverage includes:
  * - Happy path transformations
@@ -18,18 +17,19 @@
  * - Memoization validation
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { useChartData } from "../../src/components/PortfolioChart/hooks/useChartData";
-import type {
-  PortfolioDataPoint,
-  AssetAllocationPoint,
-} from "../../src/types/portfolio";
 import type {
   DrawdownOverridePoint,
   SharpeOverridePoint,
 } from "../../src/components/PortfolioChart/types";
 import type { UnifiedDashboardResponse } from "../../src/services/analyticsService";
+import type {
+  AssetAllocationPoint,
+  PortfolioDataPoint,
+} from "../../src/types/portfolio";
 
 // Mock unified dashboard hook
 vi.mock("../../src/hooks/usePortfolioDashboard", () => ({
@@ -61,15 +61,15 @@ vi.mock("../../src/lib/portfolio-analytics", async () => {
 });
 
 import * as usePortfolioDashboard from "../../src/hooks/usePortfolioDashboard";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
-import { MOCK_BASE_DATE } from "./helpers/test-constants";
 import { createMockArray, generateDateSeries } from "./helpers/mock-factories";
+import { MOCK_BASE_DATE } from "./helpers/test-constants";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 
 const createWrapper = () => createQueryWrapper().QueryWrapper;
 
-const createMockPortfolioData = (days: number = 30): PortfolioDataPoint[] => {
+const createMockPortfolioData = (days = 30): PortfolioDataPoint[] => {
   const dateSeries = generateDateSeries(MOCK_BASE_DATE, days);
 
   return createMockArray(days, index => {
@@ -161,6 +161,12 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
+      },
       drawdown_data: [],
       summary: {
         max_drawdown_pct: 0,
@@ -174,6 +180,12 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         start_date: "2025-01-01",
         end_date: "2025-01-30",
         days: 30,
+      },
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
       },
       underwater_data: [],
       summary: {
@@ -207,6 +219,17 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         reliable_data_points: 0,
         statistical_reliability: "",
       },
+      educational_context: {
+        title: "Sharpe Ratio",
+        summary: "Measures excess return per unit of risk",
+        highlights: ["Values above 1 suggest good performance"],
+        links: [
+          {
+            label: "Sharpe Ratio Guide",
+            url: "https://example.com/sharpe-ratio",
+          },
+        ],
+      },
     },
     volatility: {
       period: {
@@ -220,6 +243,17 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
         latest_annualized_volatility: 0,
         avg_daily_volatility: 0,
         avg_annualized_volatility: 0,
+      },
+      educational_context: {
+        title: "Volatility",
+        summary: "Tracks dispersion of portfolio returns",
+        highlights: ["High volatility can indicate increased portfolio risk"],
+        links: [
+          {
+            label: "Volatility Primer",
+            url: "https://example.com/volatility",
+          },
+        ],
       },
     },
   },
@@ -305,10 +339,10 @@ describe("useChartData - Data Transformations", () => {
       stackedTotalValue: expect.any(Number),
     });
 
-    result.current.stackedPortfolioData.forEach(point => {
+    for (const point of result.current.stackedPortfolioData) {
       const sum = point.defiValue + point.walletValue;
       expect(sum).toBeCloseTo(point.stackedTotalValue, 2);
-    });
+    }
   });
 
   it("transforms allocation history correctly", () => {
@@ -365,10 +399,10 @@ describe("useChartData - Data Transformations", () => {
       altcoin: expect.any(Number),
     });
 
-    result.current.allocationHistory.forEach(point => {
+    for (const point of result.current.allocationHistory) {
       const total = point.btc + point.eth + point.stablecoin + point.altcoin;
       expect(total).toBeCloseTo(100, 1);
-    });
+    }
   });
 
   it("calculates drawdown data correctly", () => {
@@ -406,8 +440,8 @@ describe("useChartData - Data Transformations", () => {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.drawdownData).toHaveLength(4);
-    expect(result.current.drawdownData[2].drawdown).toBeCloseTo(10, 1);
+    expect(result.current.drawdownRecoveryData).toHaveLength(4);
+    expect(result.current.drawdownRecoveryData[2].drawdown).toBeCloseTo(10, 1);
   });
 
   it("calculates Sharpe ratio data correctly", () => {
@@ -474,26 +508,26 @@ describe("useChartData - Data Transformations", () => {
     expect(result.current.volatilityData[2].volatility).toBe(12.1);
   });
 
-  it("calculates underwater data correctly", () => {
+  it("calculates drawdown recovery insights correctly", () => {
     const dashboard = createMockDashboard();
-    dashboard.drawdown_analysis.underwater_recovery.underwater_data = [
+    dashboard.drawdown_analysis.enhanced.drawdown_data = [
       {
         date: "2025-01-01",
-        underwater_pct: -5.5,
-        recovery_point: false,
-        is_underwater: true,
+        drawdown_pct: 0,
+        portfolio_value: 10000,
+        peak_value: 10000,
       },
       {
         date: "2025-01-10",
-        underwater_pct: 0,
-        recovery_point: true,
-        is_underwater: false,
+        drawdown_pct: -6.2,
+        portfolio_value: 9380,
+        peak_value: 10000,
       },
       {
-        date: "2025-02-01",
-        underwater_pct: -3.2,
-        recovery_point: false,
-        is_underwater: true,
+        date: "2025-01-20",
+        drawdown_pct: 0,
+        portfolio_value: 10200,
+        peak_value: 10200,
       },
     ];
 
@@ -503,15 +537,18 @@ describe("useChartData - Data Transformations", () => {
       wrapper: createWrapper(),
     });
 
-    expect(result.current.underwaterData).toHaveLength(3);
-    expect(result.current.underwaterData[0]).toMatchObject({
-      date: "2025-01-01",
-      underwater: -5.5,
+    expect(result.current.drawdownRecoveryData).toHaveLength(3);
+    expect(result.current.drawdownRecoveryData[1]).toMatchObject({
+      drawdown: -6.2,
+      isRecoveryPoint: false,
     });
-    expect(result.current.underwaterData[1]).toMatchObject({
-      date: "2025-01-10",
-      underwater: 0,
-      recovery: true,
+    expect(
+      result.current.drawdownRecoveryData.find(point => point.isRecoveryPoint)
+    ).toBeTruthy();
+
+    expect(result.current.drawdownRecoverySummary).toMatchObject({
+      totalRecoveries: 1,
+      currentStatus: "At Peak",
     });
   });
 });
@@ -581,10 +618,10 @@ describe("useChartData - Edge Cases", () => {
     });
 
     expect(result.current.stackedPortfolioData.length).toBe(2);
-    result.current.stackedPortfolioData.forEach(point => {
+    for (const point of result.current.stackedPortfolioData) {
       expect(Number.isFinite(point.defiValue)).toBe(true);
       expect(Number.isFinite(point.walletValue)).toBe(true);
-    });
+    }
   });
 
   it("handles data overrides correctly", () => {
@@ -633,10 +670,10 @@ describe("useChartData - Edge Cases", () => {
       { wrapper: createWrapper() }
     );
 
-    expect(result.current.drawdownData).toHaveLength(3);
-    expect(result.current.drawdownData[0].drawdown).toBe(0);
-    expect(result.current.drawdownData[1].drawdown).toBe(0);
-    expect(result.current.drawdownData[2].drawdown).toBe(5.5);
+    expect(result.current.drawdownRecoveryData).toHaveLength(3);
+    expect(result.current.drawdownRecoveryData[0].drawdown).toBe(0);
+    expect(result.current.drawdownRecoveryData[1].drawdown).toBe(0);
+    expect(result.current.drawdownRecoveryData[2].drawdown).toBe(5.5);
   });
 
   it("filters out null sharpe ratios", () => {

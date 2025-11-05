@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { memo, ReactNode } from "react";
 import { LucideIcon } from "lucide-react";
+import { memo, ReactNode } from "react";
+
 import { InteractiveComponentProps } from "../../types/ui.types";
 
 interface GradientButtonProps extends InteractiveComponentProps {

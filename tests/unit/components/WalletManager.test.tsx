@@ -1,10 +1,14 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletManager } from "../../../src/components/WalletManager";
+import { WalletProvider } from "../../../src/providers/WalletProvider";
 // Account service is not used by WalletManager for email updates; keep import removed.
 import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
+import { WalletProviderInterface } from "../../../src/types/wallet";
 import { render } from "../../test-utils";
 
 // Mock animation frame for better control of async operations
@@ -19,6 +23,104 @@ let mockUserContextValue = {
   isConnected: true,
   connectedWallet: "0x1234567890123456789012345678901234567890",
   refetch: vi.fn(),
+};
+
+declare global {
+  var __walletContextControls:
+    | {
+        setWalletContextValue: (
+          overrides?: Partial<WalletProviderInterface>
+        ) => void;
+      }
+    | undefined;
+}
+
+vi.mock("../../../src/providers/WalletProvider", () => {
+  const React = require("react");
+  const { createContext, useContext } = React;
+
+  const buildWalletContextValue = (
+    overrides: Partial<WalletProviderInterface> = {}
+  ): WalletProviderInterface => ({
+    account: {
+      address: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      isConnected: true,
+      balance: "0",
+    },
+    chain: {
+      id: 1,
+      name: "Ethereum",
+      symbol: "ETH",
+    },
+    connect: async () => {
+      /* Mock implementation */
+    },
+    disconnect: async () => {
+      /* Mock implementation */
+    },
+    switchChain: async () => {
+      /* Mock implementation */
+    },
+    isConnected: true,
+    isConnecting: false,
+    isDisconnecting: false,
+    error: null,
+    clearError: () => {
+      /* Mock implementation */
+    },
+    signMessage: async () => "signed-message",
+    isChainSupported: () => true,
+    getSupportedChains: () => [
+      {
+        id: 1,
+        name: "Ethereum",
+        symbol: "ETH",
+      },
+    ],
+    ...overrides,
+  });
+
+  let walletContextValue = buildWalletContextValue();
+
+  const controls =
+    globalThis.__walletContextControls ||
+    (globalThis.__walletContextControls = {
+      setWalletContextValue: () => {
+        /* Will be reassigned below */
+      },
+    });
+
+  controls.setWalletContextValue = (
+    overrides?: Partial<WalletProviderInterface>
+  ) => {
+    walletContextValue = buildWalletContextValue(overrides);
+  };
+
+  const WalletContext = createContext<WalletProviderInterface | null>(null);
+
+  const WalletProviderMock = ({ children }: { children: ReactNode }) =>
+    React.createElement(
+      WalletContext.Provider,
+      { value: walletContextValue },
+      children
+    );
+
+  const useWalletProviderMock = () => {
+    const context = useContext(WalletContext);
+    if (!context) {
+      throw new Error("useWalletProvider must be used within a WalletProvider");
+    }
+    return context;
+  };
+
+  return {
+    WalletProvider: WalletProviderMock,
+    useWalletProvider: useWalletProviderMock,
+  };
+});
+
+const walletContextControls = globalThis.__walletContextControls as {
+  setWalletContextValue: (overrides?: Partial<WalletProviderInterface>) => void;
 };
 
 vi.mock("../../../src/contexts/UserContext", () => {
@@ -88,8 +190,8 @@ vi.mock("@tanstack/react-query", async () => {
 
 // Mock UI components
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: ({ children, className }: any) => (
-    <div className={`glass-card ${className}`}>{children}</div>
+  BaseCard: ({ children, className }: any) => (
+    <div className={`base-card ${className}`}>{children}</div>
   ),
   GradientButton: ({ children, onClick, disabled, className }: any) => (
     <button
@@ -170,16 +272,25 @@ describe("WalletManager", () => {
   };
 
   const renderWalletManager = async (
-    isOpen: boolean = true,
+    isOpen = true,
     onClose: () => void = vi.fn(),
-    userContext = mockUserContext
+    userContext = mockUserContext,
+    walletOverrides?: Partial<WalletProviderInterface>
   ) => {
     // Update the mock context value
     mockUserContextValue = { ...userContext };
 
+    if (walletOverrides) {
+      walletContextControls.setWalletContextValue(walletOverrides);
+    }
+
     let result: any;
     await act(async () => {
-      result = render(<WalletManager isOpen={isOpen} onClose={onClose} />);
+      result = render(
+        <WalletProvider>
+          <WalletManager isOpen={isOpen} onClose={onClose} />
+        </WalletProvider>
+      );
       // Flush any immediate effects
       await Promise.resolve();
     });
@@ -188,6 +299,7 @@ describe("WalletManager", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    walletContextControls.setWalletContextValue();
 
     // Reset mock context to default values
     mockUserContextValue = {
@@ -223,7 +335,7 @@ describe("WalletManager", () => {
     // Mock clipboard API - setup default that will be overridden in tests
     Object.defineProperty(navigator, "clipboard", {
       value: {
-        writeText: vi.fn().mockResolvedValue(undefined),
+        writeText: vi.fn().mockResolvedValue(),
       },
       writable: true,
       configurable: true,
@@ -751,7 +863,7 @@ describe("WalletManager", () => {
     describe("Copy Address Feature", () => {
       it("copies wallet address to clipboard", async () => {
         const user = userEvent.setup();
-        const mockWriteText = vi.fn().mockResolvedValue(undefined);
+        const mockWriteText = vi.fn().mockResolvedValue();
 
         // Override the clipboard mock for this test
         Object.defineProperty(navigator, "clipboard", {
@@ -783,7 +895,6 @@ describe("WalletManager", () => {
       });
 
       it("handles clipboard copy failure gracefully", async () => {
-        const _user = userEvent.setup();
         const mockWriteText = vi
           .fn()
           .mockRejectedValue(new Error("Copy failed"));
@@ -1031,7 +1142,7 @@ describe("WalletManager", () => {
       vi.useFakeTimers({ shouldAdvanceTime: true });
 
       try {
-        renderWalletManager();
+        await renderWalletManager();
 
         // Wait for initial load
         await waitFor(() => {
@@ -1069,8 +1180,12 @@ describe("WalletManager", () => {
           expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
         });
 
-        // Re-render with closed modal
-        rerender(<WalletManager isOpen={false} onClose={vi.fn()} />);
+        // Re-render with closed modal (preserve provider context)
+        rerender(
+          <WalletProvider>
+            <WalletManager isOpen={false} onClose={vi.fn()} />
+          </WalletProvider>
+        );
 
         // Fast-forward time and ensure no additional calls
         await act(async () => {

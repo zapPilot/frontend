@@ -1,15 +1,17 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
-import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
+
+import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
+
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
+import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
-import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { WalletMetricsSkeleton, BalanceLoading } from "../ui/LoadingSystem";
-import { WelcomeNewUser } from "./WelcomeNewUser";
+import { BalanceLoading, WalletMetricsSkeleton } from "../ui/LoadingSystem";
 import { ROITooltip } from "./ROITooltip";
+import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
   portfolioState: PortfolioState;

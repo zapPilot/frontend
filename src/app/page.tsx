@@ -1,9 +1,10 @@
 "use client";
 
-import { DashboardShell } from "@/components/DashboardShell";
-import { useUser } from "@/contexts/UserContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+
+import { DashboardShell } from "@/components/DashboardShell";
+import { useUser } from "@/contexts/UserContext";
 
 export default function DashboardApp() {
   const router = useRouter();
@@ -19,7 +20,8 @@ export default function DashboardApp() {
         // Ensure the userId is part of the query for static export routing
         searchParams.set("userId", userInfo.userId);
         const queryString = searchParams.toString();
-        const newUrl = `/bundle${queryString ? `?${queryString}` : ""}`;
+        const newUrl =
+          queryString.length > 0 ? `/bundle?${queryString}` : "/bundle";
 
         // Replace current history entry to avoid redirect loops
         router.replace(newUrl);

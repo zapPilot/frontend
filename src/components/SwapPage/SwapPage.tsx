@@ -2,9 +2,11 @@
 
 import { motion } from "framer-motion";
 import { useCallback, useState } from "react";
+
+import { useChain } from "@/hooks/useChain";
+
 import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
-import { useChain } from "@/hooks/useChain";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
 import { formatCurrency } from "../../lib/formatters";
 import {
@@ -215,13 +217,20 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   );
 
   // Handle execution completion
-  const handleExecutionComplete = useCallback(() => {
+  const handleExecutionComplete = useCallback(async () => {
     swapLogger.info("UnifiedZap execution completed successfully");
 
     setZapExecution(prev => (prev ? { ...prev, isExecuting: false } : null));
 
     // Optionally refresh strategies data to reflect new positions
-    refetch();
+    try {
+      await refetch();
+    } catch (refetchError) {
+      swapLogger.error(
+        "Failed to refetch strategies after UnifiedZap completion",
+        refetchError
+      );
+    }
   }, [refetch]);
 
   // Handle execution error
@@ -241,6 +250,13 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   }, []);
 
   const renderTabContent = () => {
+    const activeZapExecution =
+      zapExecution &&
+      Boolean(zapExecution.intentId) &&
+      Boolean(zapExecution.chainId)
+        ? zapExecution
+        : null;
+
     // Show loading state
     if (isInitialLoading) {
       return (
@@ -269,7 +285,18 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
                 {error?.message || "Unable to fetch portfolio strategies"}
               </p>
               <button
-                onClick={() => refetch()}
+                onClick={() => {
+                  void (async () => {
+                    try {
+                      await refetch();
+                    } catch (refetchError) {
+                      swapLogger.error(
+                        "Failed to refetch strategies after load failure",
+                        refetchError
+                      );
+                    }
+                  })();
+                }}
                 className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Try Again
@@ -284,22 +311,33 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     return (
       <div className="space-y-6">
         {/* UnifiedZap Execution Progress - Only render when we have valid intentId AND chainId */}
-        {zapExecution?.intentId && zapExecution?.chainId && (
+        {activeZapExecution && (
           <ZapExecutionProgress
             isOpen={true}
             onClose={handleExecutionCancel}
-            intentId={zapExecution.intentId}
-            chainId={zapExecution.chainId}
-            totalValue={zapExecution.totalValue}
-            strategyCount={zapExecution.strategyCount}
-            onComplete={handleExecutionComplete}
+            intentId={activeZapExecution.intentId}
+            chainId={activeZapExecution.chainId}
+            totalValue={activeZapExecution.totalValue}
+            strategyCount={activeZapExecution.strategyCount}
+            onComplete={() => {
+              void (async () => {
+                try {
+                  await handleExecutionComplete();
+                } catch (error) {
+                  swapLogger.error(
+                    "Failed to finalize UnifiedZap completion sequence",
+                    error
+                  );
+                }
+              })();
+            }}
             onError={handleExecutionError}
             onCancel={handleExecutionCancel}
           />
         )}
 
         {/* Execution Error Display (when no intent ID) */}
-        {zapExecution && zapExecution.error && !zapExecution.intentId && (
+        {zapExecution?.error && !zapExecution.intentId && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <div className="flex items-center space-x-2">
               <span className="text-red-500">❌</span>
@@ -321,7 +359,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             assetCategories={strategies}
             operationMode={activeOperationMode}
             isRebalanceMode={isRebalanceMode}
-            onZapAction={handleZapAction}
+            onZapAction={action => {
+              void (async () => {
+                try {
+                  await handleZapAction(action);
+                } catch (error) {
+                  swapLogger.error("Failed to execute zap action", error);
+                }
+              })();
+            }}
             excludedCategoryIds={excludedCategoryIds}
             onToggleCategoryExclusion={toggleCategoryExclusion}
             {...(chain?.id !== undefined ? { chainId: chain.id } : {})}

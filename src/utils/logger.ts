@@ -130,11 +130,14 @@ class Logger {
 
     // Remote logging (if enabled)
     if (this.config.enableRemote && this.config.remoteEndpoint) {
-      this.sendToRemote(entry).catch(err => {
-        // Fallback to console if remote fails
-
-        console.error("Failed to send log to remote endpoint:", err);
-      });
+      void (async () => {
+        try {
+          await this.sendToRemote(entry);
+        } catch (err) {
+          // Fallback to console if remote fails
+          console.error("Failed to send log to remote endpoint:", err);
+        }
+      })();
     }
   }
 
@@ -255,5 +258,5 @@ export const swapLogger = logger.createContextLogger("Swap");
 export const chainLogger = logger.createContextLogger("Chain");
 
 // Export types and classes
-export type { LogEntry, LogConfig };
-export { Logger, ContextLogger };
+export type { LogConfig, LogEntry };
+export { ContextLogger, Logger };

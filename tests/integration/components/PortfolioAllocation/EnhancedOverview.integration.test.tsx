@@ -1,5 +1,6 @@
 import { within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { EnhancedOverview } from "../../../../src/components/PortfolioAllocation/components/EnhancedOverview";
 import {
   ChartDataPoint,
@@ -165,7 +166,7 @@ describe("EnhancedOverview Integration Tests", () => {
     },
   ];
 
-  const createRebalanceMode = (enabled: boolean = true): RebalanceMode => ({
+  const createRebalanceMode = (enabled = true): RebalanceMode => ({
     isEnabled: enabled,
     data: enabled
       ? {
@@ -592,9 +593,9 @@ describe("EnhancedOverview Integration Tests", () => {
   describe("Error Boundary Integration", () => {
     it("recovers from child component errors gracefully", () => {
       // Mock console.error to avoid noise in test output
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        /* Suppress errors in test */
+      });
 
       (usePortfolioAllocationViewModel as any).mockReturnValue({
         includedCategories: mockCategories.slice(0, 2),

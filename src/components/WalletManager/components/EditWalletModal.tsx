@@ -1,11 +1,13 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
 import { Z_INDEX } from "@/constants/design-system";
-import { GlassCard, GradientButton, LoadingSpinner } from "@/components/ui";
 import { formatAddress } from "@/lib/formatters";
-import type { EditingWallet, WalletOperations } from "../types/wallet.types";
 import type { WalletData } from "@/services/userService";
+
+import type { EditingWallet, WalletOperations } from "../types/wallet.types";
 
 interface EditWalletModalProps {
   editingWallet: EditingWallet | null;
@@ -65,7 +67,7 @@ export const EditWalletModal = ({
         className="w-full max-w-md"
         onClick={e => e.stopPropagation()}
       >
-        <GlassCard className="p-6">
+        <BaseCard variant="glass" className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-white">Edit Wallet Label</h3>
             <button
@@ -116,7 +118,7 @@ export const EditWalletModal = ({
               </button>
             </div>
           </div>
-        </GlassCard>
+        </BaseCard>
       </motion.div>
     </motion.div>
   );

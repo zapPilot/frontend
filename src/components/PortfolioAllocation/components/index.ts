@@ -5,13 +5,13 @@ export { SwapControls } from "./SwapControls";
 // Consolidated components (formerly deeply nested)
 export {
   ActionButton,
-  TokenSelector,
   AmountInput,
+  TokenSelector,
   ValidationMessages,
 } from "./ActionsAndControls";
 
 // Feature-specific components (reduced nesting)
 export { AssetCategoryRow, CategoryListSection } from "./Categories";
 export { PortfolioCharts } from "./Charts";
-export { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";
 export { OverviewHeader } from "./Headers";
+export { ExcludedCategoriesChips, RebalanceSummary } from "./Summary";

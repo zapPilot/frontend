@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createQueryConfig } from "./queryDefaults";
+
 import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
@@ -8,6 +8,7 @@ import {
 // Types no longer needed after landing page refactor
 // import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { portfolioLogger } from "../../utils/logger";
+import { createQueryConfig } from "./queryDefaults";
 
 // Unused - kept for reference but not exported
 // interface UsePortfolioQueryReturn {

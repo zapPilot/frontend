@@ -1,6 +1,5 @@
 "use client";
 
-import { useDropdown } from "@/hooks/useDropdown";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Loader2, Network } from "lucide-react";
 import Image from "next/image";
@@ -12,9 +11,10 @@ import {
 
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
-import { chainLogger } from "@/utils/logger";
 import { Z_INDEX } from "@/constants/design-system";
+import { useDropdown } from "@/hooks/useDropdown";
 import type { ButtonVariant } from "@/types/ui.types";
+import { chainLogger } from "@/utils/logger";
 
 const SUPPORTED_CHAINS = getThirdWebChains();
 

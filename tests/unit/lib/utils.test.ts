@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
+import { getChangeColorClasses } from "../../../src/lib/color-utils";
 import {
   formatCurrency,
   formatNumber,
   formatPercentage,
 } from "../../../src/lib/formatters";
-import { getChangeColorClasses } from "../../../src/lib/color-utils";
 
 describe("utils", () => {
   describe("formatCurrency", () => {

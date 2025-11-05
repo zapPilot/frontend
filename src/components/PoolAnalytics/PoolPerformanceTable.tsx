@@ -9,13 +9,14 @@ import {
   X,
 } from "lucide-react";
 import React, { useMemo, useState } from "react";
+
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { PoolDetail } from "../../services/analyticsService";
 import { categorizePool } from "../../utils/portfolio.utils";
-import { GlassCard } from "../ui";
-import { UnifiedLoading } from "../ui/LoadingSystem";
 import { ProtocolImage } from "../shared/ProtocolImage";
 import { TokenImage } from "../shared/TokenImage";
+import { BaseCard } from "../ui";
+import { UnifiedLoading } from "../ui/LoadingSystem";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -157,7 +158,7 @@ export function PoolPerformanceTable({
 
   if (isLoading) {
     return (
-      <GlassCard>
+      <BaseCard variant="glass">
         <div className="flex items-center justify-center p-8">
           <UnifiedLoading
             variant="rectangular"
@@ -167,13 +168,13 @@ export function PoolPerformanceTable({
           />
           <span className="ml-3 text-gray-400">Loading pool analytics...</span>
         </div>
-      </GlassCard>
+      </BaseCard>
     );
   }
 
   if (error) {
     return (
-      <GlassCard>
+      <BaseCard variant="glass">
         <div className="text-center p-8">
           <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
           <p className="text-red-400 mb-4">{error}</p>
@@ -186,17 +187,17 @@ export function PoolPerformanceTable({
             </button>
           )}
         </div>
-      </GlassCard>
+      </BaseCard>
     );
   }
 
   if (!pools.length) {
     return (
-      <GlassCard>
+      <BaseCard variant="glass">
         <div className="text-center p-8">
           <p className="text-gray-400">No pool data available</p>
         </div>
-      </GlassCard>
+      </BaseCard>
     );
   }
 
@@ -211,7 +212,7 @@ export function PoolPerformanceTable({
   };
 
   return (
-    <GlassCard>
+    <BaseCard variant="glass">
       <div className="p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
           <div>
@@ -603,6 +604,6 @@ export function PoolPerformanceTable({
           </div>
         </div>
       </div>
-    </GlassCard>
+    </BaseCard>
   );
 }

@@ -1,12 +1,13 @@
 "use client";
 
-import { GlassCard } from "@/components/ui";
-import { UnifiedLoading } from "@/components/ui/LoadingSystem";
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
-import { useUser } from "@/contexts/UserContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, useCallback } from "react";
+
+import { BaseCard } from "@/components/ui";
+import { UnifiedLoading } from "@/components/ui/LoadingSystem";
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+import { useUser } from "@/contexts/UserContext";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
@@ -91,7 +92,7 @@ const WalletManagerComponent = ({
           className="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
           onClick={e => e.stopPropagation()}
         >
-          <GlassCard className="p-0 overflow-hidden">
+          <BaseCard variant="glass" className="p-0 overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
               <div className="flex items-center space-x-3">
@@ -153,7 +154,18 @@ const WalletManagerComponent = ({
                 <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
                 <p className="text-red-400 text-sm mb-3">{error}</p>
                 <button
-                  onClick={refetch}
+                  onClick={() => {
+                    void (async () => {
+                      try {
+                        await refetch();
+                      } catch (refetchError) {
+                        console.error(
+                          "Failed to refetch user data in WalletManager",
+                          refetchError
+                        );
+                      }
+                    })();
+                  }}
                   className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors"
                 >
                   Retry
@@ -218,7 +230,7 @@ const WalletManagerComponent = ({
                   />
                 </div>
               )}
-          </GlassCard>
+          </BaseCard>
         </motion.div>
 
         {/* Edit Wallet Modal */}

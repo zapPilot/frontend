@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { BarChart3, Shield, TrendingUp, Wallet } from "lucide-react";
 import React from "react";
-import { EmptyStateCard } from "./EmptyStateCard";
+
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+
+import { EmptyStateCard } from "./EmptyStateCard";
 
 interface WalletConnectionPromptProps {
   title?: string;

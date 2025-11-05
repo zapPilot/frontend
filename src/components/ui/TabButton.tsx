@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
 import type { LucideIcon } from "lucide-react";
+import React from "react";
+
 import { InteractiveComponentProps } from "../../types/ui.types";
 
 interface TabButtonProps extends InteractiveComponentProps {

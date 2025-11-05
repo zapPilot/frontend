@@ -1,7 +1,8 @@
-import React from "react";
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, waitFor, act } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { useBundlePage } from "../../../src/hooks/useBundlePage";
 
 const mockReplace = vi.fn();

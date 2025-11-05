@@ -2,35 +2,18 @@
  * Comprehensive test suite for analyticsService
  *
  * Tests all exported functions:
- * - getPortfolioTrends (HTTP)
  * - getLandingPagePortfolioData (HTTP)
  * - getRiskSummary (HTTP)
- * - getRollingSharpe (HTTP)
- * - getRollingVolatility (HTTP)
- * - getEnhancedDrawdown (HTTP)
- * - getUnderwaterRecovery (HTTP)
- * - getAllocationTimeseries (HTTP)
  * - getPortfolioDashboard (HTTP)
  */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
-  getAllocationTimeseries,
-  getEnhancedDrawdown,
   getLandingPagePortfolioData,
-  getPortfolioTrends,
-  getRiskSummary,
-  getRollingSharpe,
-  getRollingVolatility,
-  getUnderwaterRecovery,
   getPortfolioDashboard,
-  type AllocationTimeseriesResponse,
-  type EnhancedDrawdownResponse,
+  getRiskSummary,
   type LandingPageResponse,
-  type PortfolioTrendsResponse,
-  type RollingSharpeResponse,
-  type RollingVolatilityResponse,
-  type UnderwaterRecoveryResponse,
   type UnifiedDashboardResponse,
 } from "../../../src/services/analyticsService";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
@@ -66,7 +49,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
       end_date: "2025-01-30",
       days: 30,
     },
-    daily_values: [],
+    daily_totals: [],
     summary: {
       current_value_usd: 0,
       start_value_usd: 0,
@@ -126,7 +109,13 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      daily_drawdowns: [],
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
+      },
+      drawdown_data: [],
       summary: {
         max_drawdown_pct: 0,
         current_drawdown_pct: 0,
@@ -140,7 +129,13 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      underwater_periods: [],
+      period_info: {
+        start_date: "2025-01-01",
+        end_date: "2025-01-30",
+        timezone: "UTC",
+        label: "Last 30 Days",
+      },
+      underwater_data: [],
       summary: {
         total_underwater_days: 0,
         underwater_percentage: 0,
@@ -151,7 +146,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
-    daily_allocations: [],
+    allocation_data: [],
     summary: {
       unique_dates: 0,
       unique_protocols: 0,
@@ -165,12 +160,23 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      rolling_sharpe_timeseries: [],
+      rolling_sharpe_data: [],
       summary: {
         latest_sharpe_ratio: 0,
         avg_sharpe_ratio: 0,
         reliable_data_points: 0,
         statistical_reliability: "",
+      },
+      educational_context: {
+        title: "Sharpe Ratio",
+        summary: "Measures excess return per unit of risk",
+        highlights: ["Sharpe ratio above 1.0 indicates strong performance"],
+        links: [
+          {
+            label: "What is Sharpe Ratio?",
+            url: "https://example.com/sharpe-ratio",
+          },
+        ],
       },
     },
     volatility: {
@@ -179,12 +185,23 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
         end_date: "2025-01-30",
         days: 30,
       },
-      rolling_volatility_timeseries: [],
+      rolling_volatility_data: [],
       summary: {
         latest_daily_volatility: 0,
         latest_annualized_volatility: 0,
         avg_daily_volatility: 0,
         avg_annualized_volatility: 0,
+      },
+      educational_context: {
+        title: "Volatility",
+        summary: "Tracks dispersion of portfolio returns",
+        highlights: ["Lower volatility typically indicates more stability"],
+        links: [
+          {
+            label: "Volatility basics",
+            url: "https://example.com/volatility",
+          },
+        ],
       },
     },
   },
@@ -198,277 +215,6 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
 describe("analyticsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  describe("getPortfolioTrends", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch portfolio trends with default parameters", async () => {
-        const mockResponse: PortfolioTrendsResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2025-01-08",
-            end_date: "2025-02-07",
-            days: 30,
-          },
-          daily_totals: [
-            {
-              date: "2025-01-08",
-              total_value_usd: 1000,
-              change_percentage: 5,
-              protocols: [
-                {
-                  protocol: "aave",
-                  chain: "ethereum",
-                  value_usd: 1000,
-                  pnl_usd: 50,
-                },
-              ],
-              chains_count: 1,
-            },
-          ],
-          summary: {
-            total_change_usd: 50,
-            total_change_percentage: 5,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getPortfolioTrends(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch portfolio trends with custom days parameter", async () => {
-        const mockResponse: PortfolioTrendsResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-17",
-            end_date: "2025-02-07",
-            days: 60,
-          },
-          daily_totals: [],
-          summary: {
-            total_change_usd: 0,
-            total_change_percentage: 0,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getPortfolioTrends(testUserId, 60);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=60`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch portfolio trends with custom limit parameter", async () => {
-        const mockResponse: PortfolioTrendsResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2025-01-08",
-            end_date: "2025-02-07",
-            days: 30,
-          },
-
-          daily_totals: [],
-          summary: {
-            total_change_usd: 0,
-            total_change_percentage: 0,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getPortfolioTrends(testUserId, 30);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch portfolio trends with both custom days and limit", async () => {
-        const mockResponse: PortfolioTrendsResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-11-27",
-            end_date: "2025-02-07",
-            days: 90,
-          },
-
-          daily_totals: [],
-          summary: {
-            total_change_usd: 0,
-            total_change_percentage: 0,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getPortfolioTrends(testUserId, 90);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=90`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-    });
-
-    describe("Query Parameter Building", () => {
-      it("should correctly build URLSearchParams with days=1", async () => {
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: testUserId,
-          period: { start_date: "", end_date: "", days: 1 },
-
-          daily_totals: [],
-          summary: { total_change_usd: 0, total_change_percentage: 0 },
-        });
-
-        await getPortfolioTrends(testUserId, 1);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=1`
-        );
-      });
-
-      it("should correctly build URLSearchParams with limit=1", async () => {
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: testUserId,
-          period: { start_date: "", end_date: "", days: 30 },
-
-          daily_totals: [],
-          summary: { total_change_usd: 0, total_change_percentage: 0 },
-        });
-
-        await getPortfolioTrends(testUserId, 30);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=30`
-        );
-      });
-
-      it("should handle zero days parameter", async () => {
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: testUserId,
-          period: { start_date: "", end_date: "", days: 0 },
-
-          daily_totals: [],
-          summary: { total_change_usd: 0, total_change_percentage: 0 },
-        });
-
-        await getPortfolioTrends(testUserId, 0);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${testUserId}?days=0`
-        );
-      });
-    });
-
-    describe("UserId Path Interpolation", () => {
-      it("should correctly interpolate userId with special characters", async () => {
-        const specialUserId = "0x123abc-DEF_456";
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: specialUserId,
-          period: { start_date: "", end_date: "", days: 30 },
-
-          daily_totals: [],
-          summary: { total_change_usd: 0, total_change_percentage: 0 },
-        });
-
-        await getPortfolioTrends(specialUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/${specialUserId}?days=30`
-        );
-      });
-
-      it("should handle empty userId", async () => {
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: "",
-          period: { start_date: "", end_date: "", days: 30 },
-
-          daily_totals: [],
-          summary: { total_change_usd: 0, total_change_percentage: 0 },
-        });
-
-        await getPortfolioTrends("");
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/trends/by-user/?days=30`
-        );
-      });
-    });
-
-    describe("Response Data Pass-Through", () => {
-      it("should return complete response with all fields", async () => {
-        const mockResponse: PortfolioTrendsResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2025-01-01",
-            end_date: "2025-01-30",
-            days: 30,
-          },
-          daily_totals: [
-            {
-              date: "2025-01-15",
-              total_value_usd: 5000,
-              change_percentage: 4,
-              protocols: [
-                {
-                  protocol: "compound",
-                  chain: "ethereum",
-                  value_usd: 5000,
-                  pnl_usd: 200,
-                },
-              ],
-              chains_count: 1,
-            },
-          ],
-          summary: {
-            total_change_usd: 200,
-            total_change_percentage: 4,
-            best_day: {
-              id: "1",
-              user_id: testUserId,
-              wallet_address: "0xABC",
-              chain: "ethereum",
-              protocol: "compound",
-              net_value_usd: 5000,
-              pnl_usd: 200,
-              date: "2025-01-15",
-              created_at: "2025-01-15T12:00:00Z",
-            },
-            worst_day: {
-              id: "2",
-              user_id: testUserId,
-              wallet_address: "0xABC",
-              chain: "ethereum",
-              protocol: "compound",
-              net_value_usd: 4800,
-              pnl_usd: -100,
-              date: "2025-01-10",
-              created_at: "2025-01-10T12:00:00Z",
-            },
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getPortfolioTrends(testUserId);
-
-        expect(result).toEqual(mockResponse);
-        expect(result.summary.best_day).toBeDefined();
-        expect(result.summary.worst_day).toBeDefined();
-      });
-    });
   });
 
   describe("getLandingPagePortfolioData", () => {
@@ -911,582 +657,6 @@ describe("analyticsService", () => {
 
         expect(result.risk_summary.sharpe_ratio).toBeDefined();
         expect(result.summary_metrics.sharpe_ratio).toBe(1.5);
-      });
-    });
-  });
-
-  // NOTE: Deprecated analytics endpoints kept for backward compatibility.
-  describe("getRollingSharpe", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch rolling Sharpe with default days parameter", async () => {
-        const mockResponse: RollingSharpeResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          rolling_sharpe_data: [
-            {
-              date: "2025-01-01",
-              portfolio_value: 10000,
-              daily_return_pct: 0.5,
-              rolling_avg_return_pct: 0.4,
-              rolling_volatility_pct: 1.2,
-              rolling_sharpe_ratio: 1.5,
-              window_size: 20,
-              is_statistically_reliable: true,
-            },
-          ],
-          data_points: 1,
-          summary: {
-            latest_sharpe_ratio: 1.5,
-            avg_sharpe_ratio: 1.4,
-            reliable_data_points: 1,
-            statistical_reliability: "reliable",
-          },
-          educational_context: {
-            reliability_warning: "Sufficient data points",
-            recommended_minimum: "30 days",
-            window_size: 20,
-            interpretation: "Good risk-adjusted performance",
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingSharpe(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/sharpe/rolling/${testUserId}?days=40`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch rolling Sharpe with custom days parameter", async () => {
-        const mockResponse: RollingSharpeResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-11-27",
-            end_date: "2025-02-07",
-            days: 90,
-          },
-          rolling_sharpe_data: [],
-          data_points: 0,
-          summary: {
-            latest_sharpe_ratio: 0,
-            avg_sharpe_ratio: 0,
-            reliable_data_points: 0,
-            statistical_reliability: "insufficient",
-          },
-          educational_context: {
-            reliability_warning: "Insufficient data",
-            recommended_minimum: "30 days",
-            window_size: 20,
-            interpretation: "Not enough data",
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingSharpe(testUserId, 90);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/sharpe/rolling/${testUserId}?days=90`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should handle response with optional message field", async () => {
-        const mockResponse: RollingSharpeResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          rolling_sharpe_data: [],
-          data_points: 0,
-          summary: {
-            latest_sharpe_ratio: 0,
-            avg_sharpe_ratio: 0,
-            reliable_data_points: 0,
-            statistical_reliability: "insufficient",
-          },
-          educational_context: {
-            reliability_warning: "Insufficient data",
-            recommended_minimum: "30 days",
-            window_size: 20,
-            interpretation: "Not enough data",
-          },
-          message: "No data available for this period",
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingSharpe(testUserId);
-
-        expect(result.message).toBe("No data available for this period");
-      });
-    });
-
-    describe("Query Parameter Building", () => {
-      it("should handle days=1", async () => {
-        mockAnalyticsEngineGet.mockResolvedValue({
-          user_id: testUserId,
-          period: { start_date: "", end_date: "", days: 1 },
-          rolling_sharpe_data: [],
-          data_points: 0,
-          summary: {
-            latest_sharpe_ratio: 0,
-            avg_sharpe_ratio: 0,
-            reliable_data_points: 0,
-            statistical_reliability: "insufficient",
-          },
-          educational_context: {
-            reliability_warning: "",
-            recommended_minimum: "",
-            window_size: 0,
-            interpretation: "",
-          },
-        });
-
-        await getRollingSharpe(testUserId, 1);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/sharpe/rolling/${testUserId}?days=1`
-        );
-      });
-    });
-  });
-
-  describe("getRollingVolatility", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch rolling volatility with default days parameter", async () => {
-        const mockResponse: RollingVolatilityResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          rolling_volatility_data: [
-            {
-              date: "2025-01-15",
-              portfolio_value: 10000,
-              daily_return_pct: 0.5,
-              rolling_volatility_daily_pct: 1.2,
-              annualized_volatility_pct: 19.0,
-              rolling_avg_return_pct: 0.4,
-              window_size: 20,
-              is_statistically_reliable: true,
-            },
-          ],
-          data_points: 1,
-          summary: {
-            latest_daily_volatility: 1.2,
-            latest_annualized_volatility: 19.0,
-            avg_daily_volatility: 1.1,
-            avg_annualized_volatility: 17.4,
-            reliable_data_points: 1,
-          },
-          educational_context: {
-            volatility_note: "Moderate volatility",
-            calculation_method: "Rolling standard deviation",
-            annualization_factor: "sqrt(252)",
-            window_size: 20,
-            interpretation: "Normal market conditions",
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingVolatility(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/volatility/rolling/${testUserId}?days=40`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch rolling volatility with custom days parameter", async () => {
-        const mockResponse: RollingVolatilityResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-10-28",
-            end_date: "2025-02-07",
-            days: 120,
-          },
-          rolling_volatility_data: [],
-          data_points: 0,
-          summary: {
-            latest_daily_volatility: 0,
-            latest_annualized_volatility: 0,
-            avg_daily_volatility: 0,
-            avg_annualized_volatility: 0,
-            reliable_data_points: 0,
-          },
-          educational_context: {
-            volatility_note: "",
-            calculation_method: "",
-            annualization_factor: "",
-            window_size: 0,
-            interpretation: "",
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingVolatility(testUserId, 120);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/volatility/rolling/${testUserId}?days=120`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should handle response with optional message field", async () => {
-        const mockResponse: RollingVolatilityResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          rolling_volatility_data: [],
-          data_points: 0,
-          summary: {
-            latest_daily_volatility: 0,
-            latest_annualized_volatility: 0,
-            avg_daily_volatility: 0,
-            avg_annualized_volatility: 0,
-            reliable_data_points: 0,
-          },
-          educational_context: {
-            volatility_note: "",
-            calculation_method: "",
-            annualization_factor: "",
-            window_size: 0,
-            interpretation: "",
-          },
-          message: "Insufficient data for volatility calculation",
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getRollingVolatility(testUserId);
-
-        expect(result.message).toBe(
-          "Insufficient data for volatility calculation"
-        );
-      });
-    });
-  });
-
-  describe("getEnhancedDrawdown", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch enhanced drawdown with default days parameter", async () => {
-        const mockResponse: EnhancedDrawdownResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          drawdown_data: [
-            {
-              date: "2025-01-15",
-              portfolio_value: 9500,
-              peak_value: 10000,
-              drawdown_pct: -5,
-              is_underwater: true,
-            },
-          ],
-          data_points: 1,
-          summary: {
-            max_drawdown_pct: -10,
-            current_drawdown_pct: -5,
-            peak_value: 10000,
-            current_value: 9500,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getEnhancedDrawdown(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/drawdown/enhanced/${testUserId}?days=40`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch enhanced drawdown with custom days parameter", async () => {
-        const mockResponse: EnhancedDrawdownResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-08-30",
-            end_date: "2025-02-07",
-            days: 180,
-          },
-          drawdown_data: [],
-          data_points: 0,
-          summary: {
-            max_drawdown_pct: 0,
-            current_drawdown_pct: 0,
-            peak_value: 0,
-            current_value: 0,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getEnhancedDrawdown(testUserId, 180);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/drawdown/enhanced/${testUserId}?days=180`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should handle response with optional message field", async () => {
-        const mockResponse: EnhancedDrawdownResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          drawdown_data: [],
-          data_points: 0,
-          summary: {
-            max_drawdown_pct: 0,
-            current_drawdown_pct: 0,
-            peak_value: 0,
-            current_value: 0,
-          },
-          message: "No drawdown data available",
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getEnhancedDrawdown(testUserId);
-
-        expect(result.message).toBe("No drawdown data available");
-      });
-    });
-  });
-
-  describe("getUnderwaterRecovery", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch underwater recovery with default days parameter", async () => {
-        const mockResponse: UnderwaterRecoveryResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          underwater_data: [
-            {
-              date: "2025-01-15",
-              underwater_pct: -5,
-              is_underwater: true,
-              recovery_point: false,
-              portfolio_value: 9500,
-              peak_value: 10000,
-            },
-            {
-              date: "2025-01-20",
-              underwater_pct: 0,
-              is_underwater: false,
-              recovery_point: true,
-              portfolio_value: 10100,
-              peak_value: 10100,
-            },
-          ],
-          data_points: 2,
-          summary: {
-            total_underwater_days: 5,
-            underwater_percentage: 12.5,
-            recovery_points: 1,
-            current_underwater_pct: 0,
-            is_currently_underwater: false,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getUnderwaterRecovery(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/underwater/${testUserId}?days=40`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch underwater recovery with custom days parameter", async () => {
-        const mockResponse: UnderwaterRecoveryResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-11-08",
-            end_date: "2025-02-07",
-            days: 100,
-          },
-          underwater_data: [],
-          data_points: 0,
-          summary: {
-            total_underwater_days: 0,
-            underwater_percentage: 0,
-            recovery_points: 0,
-            current_underwater_pct: 0,
-            is_currently_underwater: false,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getUnderwaterRecovery(testUserId, 100);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/risk/underwater/${testUserId}?days=100`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should handle response with optional message field", async () => {
-        const mockResponse: UnderwaterRecoveryResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          underwater_data: [],
-          data_points: 0,
-          summary: {
-            total_underwater_days: 0,
-            underwater_percentage: 0,
-            recovery_points: 0,
-            current_underwater_pct: 0,
-            is_currently_underwater: false,
-          },
-          message: "No underwater periods detected",
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getUnderwaterRecovery(testUserId);
-
-        expect(result.message).toBe("No underwater periods detected");
-      });
-    });
-  });
-
-  describe("getAllocationTimeseries", () => {
-    const testUserId = "0xTestUser123";
-
-    describe("Successful API Calls", () => {
-      it("should fetch allocation timeseries with default days parameter", async () => {
-        const mockResponse: AllocationTimeseriesResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          allocation_data: [
-            {
-              date: "2025-01-15",
-              protocol: "aave",
-              chain: "ethereum",
-              net_value_usd: 5000,
-              percentage_of_portfolio: 50,
-            },
-            {
-              date: "2025-01-15",
-              protocol: "compound",
-              chain: "polygon",
-              net_value_usd: 5000,
-              percentage_of_portfolio: 50,
-            },
-          ],
-          data_points: 2,
-          summary: {
-            unique_dates: 1,
-            unique_protocols: 2,
-            unique_chains: 2,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getAllocationTimeseries(testUserId);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/allocation/timeseries/${testUserId}?days=40`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should fetch allocation timeseries with custom days parameter", async () => {
-        const mockResponse: AllocationTimeseriesResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-04-01",
-            end_date: "2025-02-07",
-            days: 365,
-          },
-          allocation_data: [],
-          data_points: 0,
-          summary: {
-            unique_dates: 0,
-            unique_protocols: 0,
-            unique_chains: 0,
-          },
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getAllocationTimeseries(testUserId, 365);
-
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
-          `/api/v1/portfolio/allocation/timeseries/${testUserId}?days=365`
-        );
-        expect(result).toEqual(mockResponse);
-      });
-
-      it("should handle response with optional message field", async () => {
-        const mockResponse: AllocationTimeseriesResponse = {
-          user_id: testUserId,
-          period: {
-            start_date: "2024-12-29",
-            end_date: "2025-02-07",
-            days: 40,
-          },
-          allocation_data: [],
-          data_points: 0,
-          summary: {
-            unique_dates: 0,
-            unique_protocols: 0,
-            unique_chains: 0,
-          },
-          message: "No allocation data available",
-        };
-
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
-
-        const result = await getAllocationTimeseries(testUserId);
-
-        expect(result.message).toBe("No allocation data available");
       });
     });
   });

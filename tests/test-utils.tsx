@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   render,
-  RenderOptions,
   renderHook as originalRenderHook,
   RenderHookOptions,
+  RenderOptions,
 } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
+
 import { ToastProvider } from "../src/hooks/useToast";
 
 /**
@@ -33,9 +34,15 @@ function createTestQueryClient(): QueryClient {
     },
     // Disable error logging during testing
     logger: {
-      log: () => {},
-      warn: () => {},
-      error: () => {},
+      log: () => {
+        // Intentionally empty for test environment
+      },
+      warn: () => {
+        // Intentionally empty for test environment
+      },
+      error: () => {
+        // Intentionally empty for test environment
+      },
     },
   });
 }

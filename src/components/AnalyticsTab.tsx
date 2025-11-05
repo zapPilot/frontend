@@ -2,21 +2,23 @@
 
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { ComponentType } from "react";
+
+import { LoadingSpinner } from "@/components/ui";
+import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
+
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
-import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
-import { LoadingSpinner } from "@/components/ui";
-
 // Import component props interface for proper typing
 import type { PortfolioChartProps } from "./PortfolioChart/";
 
 // Dynamic import for heavy chart component
-const PortfolioChart: ComponentType<PortfolioChartProps> = dynamic(
-  () =>
-    import("./PortfolioChart/").then(mod => ({ default: mod.PortfolioChart })),
+const PortfolioChart = dynamic<PortfolioChartProps>(
+  async () => {
+    const mod = await import("./PortfolioChart/");
+    return { default: mod.PortfolioChart };
+  },
   {
     loading: () => (
       <div className="glass-morphism rounded-3xl p-6 border border-gray-800 flex items-center justify-center h-96">

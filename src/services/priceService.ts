@@ -9,8 +9,8 @@
  */
 
 import { createIntentServiceError } from "../lib/base-error";
-import { httpUtils } from "../lib/http-utils";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { httpUtils } from "../lib/http-utils";
 import { normalizeSymbol, normalizeSymbols } from "../lib/stringUtils";
 
 // Get configured client
@@ -159,7 +159,7 @@ export const getTokenPrices = (symbols: string[]): Promise<TokenPriceData[]> =>
       `/tokens/prices?tokens=${normalizedSymbols.join(",")}`
     );
 
-    if (!response || !response.results) {
+    if (!response?.results) {
       return normalizedSymbols.map(symbol => ({
         symbol,
         price: null,
@@ -233,34 +233,29 @@ export const getTokenPrice = (symbol: string): Promise<TokenPriceData> =>
       };
     }
 
-    try {
-      const response = await intentEngineClient.get<SinglePriceResponse>(
-        `/tokens/price/${normalizedSymbol}`
-      );
+    const response = await intentEngineClient.get<SinglePriceResponse>(
+      `/tokens/price/${normalizedSymbol}`
+    );
 
-      if (!response || !response.success) {
-        return {
-          symbol: normalizedSymbol,
-          price: null,
-          success: false,
-          error: `Price unavailable for ${normalizedSymbol}`,
-          timestamp: response?.timestamp || new Date().toISOString(),
-          fromCache: false,
-        };
-      }
-
+    if (!response?.success) {
       return {
-        symbol: response.symbol,
-        price: response.price,
-        success: true,
-        timestamp: response.timestamp,
-        fromCache: response.fromCache,
-        metadata: response.metadata,
+        symbol: normalizedSymbol,
+        price: null,
+        success: false,
+        error: `Price unavailable for ${normalizedSymbol}`,
+        timestamp: response?.timestamp || new Date().toISOString(),
+        fromCache: false,
       };
-    } catch (error) {
-      // Service call wrapper will handle error mapping
-      throw error;
     }
+
+    return {
+      symbol: response.symbol,
+      price: response.price,
+      success: true,
+      timestamp: response.timestamp,
+      fromCache: response.fromCache,
+      metadata: response.metadata,
+    };
   });
 
 // =============================================================================

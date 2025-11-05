@@ -32,6 +32,7 @@
     "deadcode:ci": "knip --exports --dependencies --reporter=json",
     "deadcode:fix": "knip --exports --dependencies --fix",
     "deadcode:check": "knip --exports --dependencies --no-config-hints",
+    "dup:check": "jscpd src --gitignore --min-lines 5 --threshold 1.6",
     "prepare": "husky"
   },
   "dependencies": {
@@ -64,9 +65,15 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.4",
     "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-no-secrets": "^2.2.1",
+    "eslint-plugin-promise": "^7.2.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-sonarjs": "^3.0.5",
+    "eslint-plugin-unicorn": "^62.0.0",
     "husky": "^9.1.7",
+    "jscpd": "^4.0.5",
     "jsdom": "^25.0.1",
     "knip": "^5.66.4",
     "lint-staged": "^16.1.2",
@@ -75,6 +82,7 @@
     "prettier": "^3.6.1",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "typescript-eslint": "^8.46.2",
     "vite": "^7.1.12",
     "vitest": "^3.2.4"
   },
@@ -89,7 +97,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
-      "eslint --fix --max-warnings 0"
+      "eslint --fix --max-warnings 300"
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"

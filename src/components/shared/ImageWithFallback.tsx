@@ -1,8 +1,9 @@
 import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
-import { BaseComponentProps } from "../../types/ui.types";
+
 import { normalizeForComparison } from "../../lib/stringUtils";
+import { BaseComponentProps } from "../../types/ui.types";
 
 interface ImageWithFallbackProps extends BaseComponentProps {
   src: string;

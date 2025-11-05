@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
+
 import { queryKeys } from "../../lib/queryClient";
-import { createQueryConfig } from "./queryDefaults";
 // Use user service wrappers to connect and fetch the aggregated profile data
 import { connectWallet, getUserProfile } from "../../services/userService";
 import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "../../types/user.types";
+import { createQueryConfig } from "./queryDefaults";
 
 // Removed ApiBundleResponse in favor of account API wallets
 
@@ -15,11 +16,11 @@ export interface UserInfo {
   userId: string;
   email: string;
   bundleWallets: string[];
-  additionalWallets: Array<{
+  additionalWallets: {
     wallet_address: string;
     label: string | null;
     created_at: string;
-  }>;
+  }[];
   visibleWallets: string[];
   totalWallets: number;
   totalVisibleWallets: number;
@@ -114,7 +115,7 @@ export function useRefreshUser() {
       }
 
       // Invalidate current user cache
-      await queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.user.byWallet(connectedWallet),
       });
 
@@ -125,7 +126,7 @@ export function useRefreshUser() {
     },
     onSuccess: () => {
       // Optionally invalidate related queries
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: queryKeys.portfolio.all,
       });
     },

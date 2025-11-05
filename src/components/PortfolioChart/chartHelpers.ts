@@ -108,7 +108,7 @@ export function calculateChartY(
  * Consolidates the common pattern of mapping data points to SVG path commands
  */
 export function generateLineChartPath(
-  dataPoints: Array<{ x: number; y: number }>
+  dataPoints: { x: number; y: number }[]
 ): string {
   if (dataPoints.length === 0) return "";
 
@@ -125,7 +125,7 @@ export function generateLineChartPath(
  * Common pattern for charts with filled areas below the line
  */
 export function generateAreaChartPath(
-  dataPoints: Array<{ x: number; y: number }>,
+  dataPoints: { x: number; y: number }[],
   baselineY: number,
   chartWidth: number = CHART_DIMENSIONS.WIDTH
 ): string {

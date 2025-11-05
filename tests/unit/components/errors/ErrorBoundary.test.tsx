@@ -1,9 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
   ErrorBoundary,
-  withErrorBoundary,
   useErrorHandler,
+  withErrorBoundary,
 } from "../../../../src/components/errors/ErrorBoundary";
 
 // Mock child component that can throw errors
@@ -31,10 +32,10 @@ vi.mock("../../../../src/components/ui/GradientButton", () => ({
   )),
 }));
 
-// Mock GlassCard
-vi.mock("../../../../src/components/ui/GlassCard", () => ({
-  GlassCard: vi.fn(({ children, className }) => (
-    <div className={className} data-testid="glass-card">
+// Mock BaseCard
+vi.mock("../../../../src/components/ui/BaseCard", () => ({
+  BaseCard: vi.fn(({ children, className }) => (
+    <div className={className} data-testid="base-card">
       {children}
     </div>
   )),
@@ -44,7 +45,9 @@ describe("ErrorBoundary", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Suppress console.error for these tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {
+      /* Suppress errors in test */
+    });
     // Reset static counter for test isolation
     (ErrorBoundary as any).errorIdCounter = 0;
   });

@@ -1,11 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { WalletPortfolioPresenter } from "../../../src/components/wallet/WalletPortfolioPresenter";
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import {
   useWalletPortfolioState,
   type WalletPortfolioViewModel,
 } from "../../../src/hooks/useWalletPortfolioState";
-import { WalletPortfolioPresenter } from "../../../src/components/wallet/WalletPortfolioPresenter";
 
 vi.mock("../../../src/hooks/useWalletPortfolioState");
 vi.mock("../../../src/components/wallet/WalletPortfolioPresenter", () => {

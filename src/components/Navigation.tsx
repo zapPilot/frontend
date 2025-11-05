@@ -1,9 +1,11 @@
 "use client";
 
-import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { memo, useCallback } from "react";
+
+import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
+
 import { NAVIGATION_ITEMS } from "../constants/navigation";
 import { HeaderWalletControls } from "./Web3/HeaderWalletControls";
 

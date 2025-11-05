@@ -27,8 +27,8 @@ import type {
 import type { ActualRiskSummaryResponse } from "../types/risk";
 import { getVolatilityLevel } from "../utils/risk";
 import {
-  formatSharpeRatio,
   formatDrawdown,
+  formatSharpeRatio,
   formatVolatility,
 } from "./formatters";
 
@@ -212,7 +212,7 @@ export function getPerformanceData(
  */
 export function calculateDrawdownData(
   portfolioHistory: PortfolioDataPoint[]
-): Array<{ date: string; drawdown: number }> {
+): { date: string; drawdown: number }[] {
   let peak = 0;
   return portfolioHistory.map(point => {
     peak = Math.max(peak, point.value);

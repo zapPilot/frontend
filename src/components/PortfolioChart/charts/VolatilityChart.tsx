@@ -1,18 +1,19 @@
 "use client";
 
 import { memo } from "react";
+
 import { useChartHover } from "../../../hooks/useChartHover";
+import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, VOLATILITY_CONSTANTS } from "../chartConstants";
-import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
 import {
-  getChartInteractionProps,
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
+  getChartInteractionProps,
 } from "../utils";
 
 interface VolatilityChartProps {
-  data: Array<{ date: string; volatility: number }>;
+  data: { date: string; volatility: number }[];
   width?: number;
   height?: number;
   padding?: number;

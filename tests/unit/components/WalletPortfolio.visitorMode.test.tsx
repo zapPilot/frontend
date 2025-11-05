@@ -1,8 +1,9 @@
-import { render, screen } from "../../test-utils";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { render, screen } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
@@ -79,8 +80,8 @@ vi.mock("../../../src/components/wallet/WalletHeader", () => ({
 
 // Mock other components to avoid complexity
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: vi.fn(({ children }) => (
-    <div data-testid="glass-card">{children}</div>
+  BaseCard: vi.fn(({ children }) => (
+    <div data-testid="base-card">{children}</div>
   )),
 }));
 

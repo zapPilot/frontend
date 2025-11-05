@@ -1,10 +1,75 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletManager } from "../../../src/components/WalletManager";
 import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 import { render } from "../../test-utils";
+
+vi.mock("../../../src/providers/WalletProvider", () => {
+  const React = require("react");
+  const { createContext, useContext } = React;
+
+  const walletContextValue = {
+    account: {
+      address: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      isConnected: true,
+      balance: "0",
+    },
+    chain: {
+      id: 1,
+      name: "Ethereum",
+      symbol: "ETH",
+    },
+    connect: async () => {
+      /* Mock implementation */
+    },
+    disconnect: async () => {
+      /* Mock implementation */
+    },
+    switchChain: async () => {
+      /* Mock implementation */
+    },
+    isConnected: true,
+    isConnecting: false,
+    isDisconnecting: false,
+    error: null,
+    clearError: () => {
+      /* Mock implementation */
+    },
+    signMessage: async () => "signed-message",
+    isChainSupported: () => true,
+    getSupportedChains: () => [
+      {
+        id: 1,
+        name: "Ethereum",
+        symbol: "ETH",
+      },
+    ],
+  };
+
+  const WalletContext = createContext(walletContextValue);
+
+  const WalletProviderMock = ({ children }: { children: React.ReactNode }) => (
+    <WalletContext.Provider value={walletContextValue}>
+      {children}
+    </WalletContext.Provider>
+  );
+
+  const useWalletProviderMock = () => {
+    const context = useContext(WalletContext);
+    if (!context) {
+      throw new Error("useWalletProvider must be used within a WalletProvider");
+    }
+    return context;
+  };
+
+  return {
+    WalletProvider: WalletProviderMock,
+    useWalletProvider: useWalletProviderMock,
+  };
+});
 
 // Mock UserContext
 let mockUserContextValue = {
@@ -45,8 +110,8 @@ vi.mock("@tanstack/react-query", async () => {
 
 // Mock UI primitives
 vi.mock("../../../src/components/ui", () => ({
-  GlassCard: ({ children, className }: any) => (
-    <div className={`glass-card ${className || ""}`}>{children}</div>
+  BaseCard: ({ children, className }: any) => (
+    <div className={`base-card ${className || ""}`}>{children}</div>
   ),
   GradientButton: ({ children, onClick, disabled, className }: any) => (
     <button onClick={onClick} disabled={disabled} className={className}>

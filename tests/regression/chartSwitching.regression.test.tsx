@@ -11,11 +11,13 @@
  * @see src/hooks/useChartHover.ts
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 
 // Mock Framer Motion
@@ -56,7 +58,7 @@ describe("Chart Switching - Regression Tests", () => {
     });
   });
 
-  const renderChart = (activeTab: string = "performance") => {
+  const renderChart = (activeTab = "performance") => {
     return render(
       <QueryClientProvider client={queryClient}>
         <PortfolioChart
@@ -65,7 +67,6 @@ describe("Chart Switching - Regression Tests", () => {
           drawdownData={ChartTestFixtures.drawdownData()}
           sharpeData={ChartTestFixtures.sharpeData()}
           volatilityData={ChartTestFixtures.volatilityData()}
-          underwaterData={ChartTestFixtures.underwaterData()}
           activeTab={activeTab}
         />
       </QueryClientProvider>
@@ -74,7 +75,7 @@ describe("Chart Switching - Regression Tests", () => {
 
   describe("Hover State Isolation", () => {
     it("should not carry over hover state when switching charts", async () => {
-      const { rerender } = renderChart("performance");
+      const { rerender, container } = renderChart("performance");
 
       // Hover on performance chart
       const performanceSvg = container.querySelector(
@@ -378,13 +379,7 @@ describe("Chart Switching - Regression Tests", () => {
       const { rerender, container } = renderChart("performance");
 
       // Switch through all chart types
-      const chartTypes = [
-        "allocation",
-        "drawdown",
-        "sharpe",
-        "volatility",
-        "underwater",
-      ];
+      const chartTypes = ["allocation", "drawdown", "sharpe", "volatility"];
 
       for (const chartType of chartTypes) {
         rerender(
@@ -395,18 +390,18 @@ describe("Chart Switching - Regression Tests", () => {
               drawdownData={ChartTestFixtures.drawdownData()}
               sharpeData={ChartTestFixtures.sharpeData()}
               volatilityData={ChartTestFixtures.volatilityData()}
-              underwaterData={ChartTestFixtures.underwaterData()}
               activeTab={chartType}
             />
           </QueryClientProvider>
         );
 
         await waitFor(() => {
-          // Each chart should have date labels
-          const dateLabels = container.querySelectorAll(
-            '[data-testid*="date"]'
+          const dataChartType =
+            chartType === "drawdown" ? "drawdown-recovery" : chartType;
+          const svg = container.querySelector(
+            `svg[data-chart-type="${dataChartType}"]`
           );
-          expect(dateLabels.length).toBeGreaterThanOrEqual(0);
+          expect(svg).not.toBeNull();
         });
       }
     });

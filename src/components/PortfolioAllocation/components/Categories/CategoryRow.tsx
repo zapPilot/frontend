@@ -1,12 +1,14 @@
 "use client";
 
-import { useDropdown } from "@/hooks/useDropdown";
 import { motion } from "framer-motion";
 import { memo } from "react";
-import { ProcessedAssetCategory, CategoryShift } from "../../types";
-import { CategoryRowHeader } from "./CategoryRowHeader";
+
+import { useDropdown } from "@/hooks/useDropdown";
+
+import { CategoryShift, ProcessedAssetCategory } from "../../types";
 import { CategoryAllocationSummary } from "./CategoryAllocationSummary";
 import { CategoryProtocolList } from "./CategoryProtocolList";
+import { CategoryRowHeader } from "./CategoryRowHeader";
 
 interface AssetCategoryRowProps {
   category: ProcessedAssetCategory;

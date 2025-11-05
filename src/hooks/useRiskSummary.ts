@@ -5,7 +5,8 @@
  * loading, error states, and cleanup handling.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+
 import { getRiskSummary } from "../services/analyticsService";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
@@ -170,7 +171,7 @@ export function useRiskSummary(userId: string): UseRiskSummaryResult {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetchRiskSummary(controller.signal);
+    void fetchRiskSummary(controller.signal);
 
     // Return cleanup function
     return () => {
@@ -179,7 +180,7 @@ export function useRiskSummary(userId: string): UseRiskSummaryResult {
   }, [fetchRiskSummary]);
 
   const refetch = () => {
-    fetchRiskSummary();
+    void fetchRiskSummary();
   };
 
   return {

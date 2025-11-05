@@ -7,12 +7,16 @@ import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
 } from "@/types/portfolio";
+
 import {
   DrawdownDataPoint,
   SharpeDataPoint,
-  UnderwaterDataPoint,
   VolatilityDataPoint,
 } from "../utils/chartHoverTestFactories";
+
+function toIsoDate(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
 
 /**
  * Portfolio data builder with fluent API
@@ -37,7 +41,7 @@ export class PortfolioDataBuilder {
       date.setDate(date.getDate() + i);
 
       this.add({
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         value: startValue + i * 100,
         change: (i * 100) / startValue,
         benchmark: (startValue + i * 100) * 0.98,
@@ -57,7 +61,7 @@ export class PortfolioDataBuilder {
       date.setDate(date.getDate() + i);
 
       this.add({
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         value: startValue + i * increment,
         change: (i * increment) / startValue,
         benchmark: (startValue + i * increment) * 0.95,
@@ -87,7 +91,7 @@ export class PortfolioDataBuilder {
       currentValue += change;
 
       this.add({
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         value: currentValue,
         change: change / startValue,
         benchmark: currentValue * 0.97,
@@ -130,7 +134,7 @@ export class AllocationDataBuilder {
       date.setDate(date.getDate() + i);
 
       this.add({
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         btc: 30,
         eth: 25,
         stablecoin: 20,
@@ -152,7 +156,7 @@ export class AllocationDataBuilder {
 
       const shift = (i / count) * 20; // Shift up to 20%
       const base: AssetAllocationPoint = {
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         btc: 30,
         eth: 25,
         stablecoin: 20,
@@ -273,11 +277,19 @@ export const ChartTestFixtures = {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
 
+      const drawdown = Math.min(0, i <= 15 ? -i * 0.6 : -(30 - i) * 0.6);
+      const isRecoveryPoint = i === 0 || drawdown >= -0.1;
+
       return {
-        date: date.toISOString().split("T")[0]!,
-        drawdown_pct: Math.min(0, -i * 0.5),
-        portfolio_value: 10000 - i * 50,
-      };
+        date: toIsoDate(date),
+        drawdown_pct: drawdown,
+        portfolio_value: 10000 + drawdown * 80,
+        is_recovery_point: isRecoveryPoint,
+        days_from_peak: isRecoveryPoint ? 0 : Math.max(0, i - 8),
+        peak_date:
+          i === 0 ? toIsoDate(date) : toIsoDate(new Date("2025-01-01")),
+        recovery_depth_pct: drawdown,
+      } satisfies DrawdownDataPoint;
     });
   },
 
@@ -289,13 +301,25 @@ export const ChartTestFixtures = {
       const date = new Date("2025-01-01");
       date.setDate(date.getDate() + i);
 
-      const drawdown = i < 15 ? -i * 0.7 : -(15 - (i - 15)) * 0.7;
+      const decline = i < 12 ? -i * 0.8 : -(12 - Math.max(0, i - 12)) * 0.8;
+      const drawdown = Math.min(0, decline);
+      const isRecoveryPoint = drawdown >= -0.05;
 
       return {
-        date: date.toISOString().split("T")[0]!,
-        drawdown_pct: Math.min(0, drawdown),
-        portfolio_value: 10000 + drawdown * 100,
-      };
+        date: toIsoDate(date),
+        drawdown_pct: drawdown,
+        portfolio_value: 10000 + drawdown * 90,
+        is_recovery_point: isRecoveryPoint,
+        days_from_peak: isRecoveryPoint ? 0 : Math.max(0, i - 7),
+        peak_date:
+          i <= 12
+            ? toIsoDate(new Date("2025-01-01"))
+            : toIsoDate(new Date("2025-01-13")),
+        recovery_duration_days: isRecoveryPoint
+          ? Math.max(0, i - 12)
+          : undefined,
+        recovery_depth_pct: drawdown,
+      } satisfies DrawdownDataPoint;
     });
   },
 
@@ -308,7 +332,7 @@ export const ChartTestFixtures = {
       date.setDate(date.getDate() + i);
 
       return {
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         rolling_sharpe_ratio: 1.0 + Math.sin(i / 5) * 0.5,
       };
     });
@@ -325,26 +349,8 @@ export const ChartTestFixtures = {
       const spike = i % 10 === 0 ? 10 : 0;
 
       return {
-        date: date.toISOString().split("T")[0]!,
+        date: toIsoDate(date),
         annualized_volatility_pct: 20 + spike + Math.random() * 5,
-      };
-    });
-  },
-
-  /**
-   * Underwater data with recovery points
-   */
-  underwaterData(): UnderwaterDataPoint[] {
-    return Array.from({ length: 30 }, (_, i) => {
-      const date = new Date("2025-01-01");
-      date.setDate(date.getDate() + i);
-
-      const isRecoveryPoint = i % 10 === 0 && i > 0;
-
-      return {
-        date: date.toISOString().split("T")[0]!,
-        underwater_pct: isRecoveryPoint ? 0 : -(i % 10) * 1.5,
-        recovery_point: isRecoveryPoint,
       };
     });
   },
@@ -359,7 +365,6 @@ export const ChartTestFixtures = {
       drawdown: this.drawdownData(),
       sharpe: this.sharpeData(),
       volatility: this.volatilityData(),
-      underwater: this.underwaterData(),
     };
   },
 };

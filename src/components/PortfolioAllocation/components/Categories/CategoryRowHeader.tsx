@@ -2,6 +2,7 @@
 
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { memo, ReactNode } from "react";
+
 import { ProcessedAssetCategory } from "../../types";
 
 interface CategoryRowHeaderProps {

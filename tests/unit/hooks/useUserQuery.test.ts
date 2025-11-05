@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { renderHook, waitFor } from "../../test-utils";
 
 // Mock user service functions used by the hook

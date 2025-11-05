@@ -15,13 +15,16 @@ export const TokenSummary = ({ token, className = "" }: TokenSummaryProps) => {
     ? `${FLEX_PATTERNS.CENTER_GAP_3} ${className}`
     : FLEX_PATTERNS.CENTER_GAP_3;
 
-  const hasBalance = token.balance !== undefined;
-  const formattedBalance = hasBalance
-    ? formatTokenAmount(token.balance!, token.symbol)
-    : null;
+  const balanceAmount = token.balance;
+  const priceValue = typeof token.price === "number" ? token.price : null;
+
+  const formattedBalance =
+    typeof balanceAmount === "number"
+      ? formatTokenAmount(balanceAmount, token.symbol)
+      : null;
   const formattedUsd =
-    hasBalance && typeof token.price === "number"
-      ? formatCurrency(token.balance! * token.price)
+    typeof balanceAmount === "number" && priceValue !== null
+      ? formatCurrency(balanceAmount * priceValue)
       : null;
 
   return (

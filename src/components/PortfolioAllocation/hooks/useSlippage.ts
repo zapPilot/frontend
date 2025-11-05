@@ -1,6 +1,8 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
-import { formatNumber } from "../../../lib/formatters";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { SLIPPAGE_CONFIG } from "@/constants/slippage";
+
+import { formatNumber } from "../../../lib/formatters";
 
 export interface SlippagePreset {
   label: string;

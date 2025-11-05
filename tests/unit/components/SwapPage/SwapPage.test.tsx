@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+
 import { SwapPage } from "../../../../src/components/SwapPage/SwapPage";
 import type { InvestmentOpportunity } from "../../../../src/types/investment";
 
@@ -434,9 +435,9 @@ describe("SwapPage", () => {
   describe("Error Handling", () => {
     it("should handle missing strategy gracefully", () => {
       // This would be a type error in TypeScript, but test runtime behavior
-      const consoleSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        /* Suppress errors in test */
+      });
 
       // Create a strategy with minimal required fields but missing navigationContext
       const incompleteStrategy = {

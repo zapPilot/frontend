@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/app/**/*.{ts,tsx}", "next.config.ts", "src/middleware.ts"],
+  "entry": ["src/app/**/*.{ts,tsx}"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignore": [
     "**/*.test.{ts,tsx}",
@@ -8,24 +8,29 @@
     "tests/**",
     "scripts/**",
     "playwright.config.ts",
-    "vitest.config.ts"
+    "vitest.config.ts",
+    "eslint.config.mjs",
+    "postcss.config.mjs"
   ],
   "ignoreDependencies": [
     "@types/*",
-    "husky",
-    "lint-staged",
-    "cross-env",
-    "pino-pretty",
     "eslint-config-next",
     "eslint-plugin-jsx-a11y",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
-    "tailwindcss",
-    "postcss"
+    "pino-pretty",
+    "tailwindcss"
   ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": true,
   "next": {
-    "entry": ["src/app/**", "src/middleware.ts"]
+    "entry": ["src/app/**"]
+  },
+  "vitest": {
+    "config": ["vitest.config.ts"],
+    "entry": ["tests/**/*.{test,spec}.{ts,tsx}"]
+  },
+  "playwright": {
+    "config": ["playwright.config.ts"]
   }
 }

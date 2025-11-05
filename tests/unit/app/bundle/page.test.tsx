@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "../../../test-utils";
+
 import BundlePage from "../../../../src/app/bundle/page";
+import { render, screen, waitFor } from "../../../test-utils";
 
 const defaultBundlePageEntry = () => (
   <div data-testid="bundle-page-entry">Bundle Page Entry Component</div>
@@ -27,7 +28,10 @@ describe("BundlePage", () => {
   });
 
   it("shows the suspense fallback while the entry component is loading", async () => {
-    let resolveEntry: () => void = () => {};
+    // eslint-disable-next-line unicorn/consistent-function-scoping -- Intentional closure pattern
+    let resolveEntry: () => void = () => {
+      /* Will be assigned by Promise */
+    };
     const pendingEntry = new Promise<void>(resolve => {
       resolveEntry = resolve;
     });

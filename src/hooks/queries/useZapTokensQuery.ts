@@ -1,16 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { createQueryConfig } from "./queryDefaults";
+
 import { queryKeys } from "../../lib/queryClient";
+import { dedupeStrings } from "../../lib/stringUtils";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
 import type { SwapToken } from "../../types/swap";
+import { createQueryConfig } from "./queryDefaults";
 import {
-  useTokenBalancesQuery,
   type UseTokenBalancesParams,
+  useTokenBalancesQuery,
 } from "./useTokenBalancesQuery";
-import { useTokenPricesQuery, type TokenPriceMap } from "./useTokenPricesQuery";
-import { dedupeStrings } from "../../lib/stringUtils";
+import { type TokenPriceMap, useTokenPricesQuery } from "./useTokenPricesQuery";
 
 /**
  * Hook to fetch supported zap tokens for a specific chain
@@ -53,13 +54,13 @@ interface UseZapTokensWithStatesResult {
   isBalanceLoading: boolean;
   isBalanceFetching: boolean;
   balanceError: Error | null;
-  refetchBalances: () => void;
+  refetchBalances: () => Promise<unknown>;
   balances: WalletTokenBalances | undefined;
   // Price states
   isPriceLoading: boolean;
   isPriceFetching: boolean;
   priceError: Error | null;
-  refetchPrices: () => void;
+  refetchPrices: () => Promise<unknown>;
   priceMap: TokenPriceMap;
   // React Query base states
   data?: SwapToken[] | undefined;
@@ -68,7 +69,7 @@ interface UseZapTokensWithStatesResult {
   isFetching: boolean;
   isSuccess: boolean;
   isError: boolean;
-  refetch: () => void;
+  refetch: () => Promise<unknown>;
 }
 
 const NATIVE_SENTINEL = "native";
@@ -83,8 +84,9 @@ const resolveNativeAddressSentinel = (
   address: string | null | undefined,
   type?: string | null
 ): string[] => {
+  const normalizedType = type?.toLowerCase();
   if (
-    type === "native" ||
+    normalizedType === "native" ||
     isNativeAddress(address) ||
     address === "" ||
     address === null ||
@@ -102,17 +104,19 @@ const normalizeBalanceLookupKeys = (token: {
 }): string[] => {
   const keys: string[] = [];
 
-  const address = token.address?.toLowerCase();
-  if (address) {
-    keys.push(address);
+  const rawAddress = token.address;
+  const normalizedAddress = rawAddress?.toLowerCase();
+  if (normalizedAddress) {
+    keys.push(normalizedAddress);
   }
 
+  const normalizedType = token.type?.toLowerCase();
   const isNativeToken =
-    token.type === "native" ||
-    address === NATIVE_SENTINEL ||
-    address === "" ||
-    address === null ||
-    address === undefined;
+    normalizedType === "native" ||
+    isNativeAddress(rawAddress) ||
+    rawAddress === "" ||
+    rawAddress === null ||
+    rawAddress === undefined;
 
   if (isNativeToken) {
     keys.push(NATIVE_SENTINEL);
@@ -270,7 +274,7 @@ export const useZapTokensWithStates = (
     isPriceLoading: prices.isLoading,
     isPriceFetching: prices.isFetching,
     priceError: prices.isError ? (prices.error as Error | null) : null,
-    refetchPrices: prices.refetch,
+    refetchPrices: () => Promise.resolve(prices.refetch()),
     priceMap: prices.priceMap,
     // React Query base states
     data: query.data,

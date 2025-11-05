@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ExternalLink, Headphones, Music } from "lucide-react";
+
 import {
   fadeInUp,
   slideInLeft,

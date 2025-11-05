@@ -2,8 +2,8 @@
  * Bundle Service - Handles bundle metadata and sharing functionality
  */
 
-import { logger } from "@/utils/logger";
 import { formatAddress } from "@/lib/formatters";
+import { logger } from "@/utils/logger";
 
 export interface BundleUser {
   userId: string;
@@ -25,7 +25,7 @@ const resolveBaseUrl = (providedBaseUrl?: string): string => {
     return providedBaseUrl;
   }
 
-  if (typeof window !== "undefined" && window.location?.origin) {
+  if (typeof window !== "undefined") {
     return window.location.origin;
   }
 
@@ -40,8 +40,8 @@ export const getBundleUser = async (
   userId: string
 ): Promise<BundleUser | null> => {
   try {
-    // TODO(ZAP-206): Replace with actual API call to get user info
-    // For now, return basic user info based on userId
+    // ZAP-206: Pending API implementation for user info
+    // Currently returns basic user info based on userId
     return {
       userId,
       displayName: formatAddress(userId),

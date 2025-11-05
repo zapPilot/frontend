@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
   handleWalletError,
   transformWalletData,
@@ -63,13 +64,13 @@ vi.mock("../../../src/lib/http-utils", () => ({
     }
   },
   NetworkError: class NetworkError extends Error {
-    constructor(message: string = "Network connection failed") {
+    constructor(message = "Network connection failed") {
       super(message);
       this.name = "NetworkError";
     }
   },
   TimeoutError: class TimeoutError extends Error {
-    constructor(message: string = "Request timed out") {
+    constructor(message = "Request timed out") {
       super(message);
       this.name = "TimeoutError";
     }
@@ -314,9 +315,9 @@ describe("userService - Pure Functions", () => {
         { input: "0x" + "0".repeat(40) + " ", expected: false },
       ];
 
-      testCases.forEach(({ input, expected }) => {
+      for (const { input, expected } of testCases) {
         expect(validateWalletAddress(input)).toBe(expected);
-      });
+      }
     });
 
     it("transformWalletData preserves data integrity", () => {

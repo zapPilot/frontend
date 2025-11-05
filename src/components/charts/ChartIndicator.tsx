@@ -5,20 +5,33 @@
  * Supports single circles, multi-colored circles, and flagged circles for recovery points.
  */
 
+import { motion } from "framer-motion";
+import type { ReactNode } from "react";
+
 import { CHART_COLORS } from "@/constants/portfolio";
-import { formatters } from "@/lib/formatters";
 import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
+import { formatters } from "@/lib/formatters";
 import {
+  type ChartHoverState,
   isAllocationHover,
   isDrawdownHover,
   isPerformanceHover,
   isSharpeHover,
-  isUnderwaterHover,
   isVolatilityHover,
-  type ChartHoverState,
 } from "@/types/chartHover";
-import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+
+const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
+const INDICATOR_COLOR_MAP: Record<string, string> = {
+  performance: DEFAULT_INDICATOR_COLOR,
+  allocation: DEFAULT_INDICATOR_COLOR,
+  "drawdown-recovery": "#f97316",
+  sharpe: "#10b981",
+  volatility: "#f59e0b",
+};
+
+const MULTI_CIRCLE_VARIANT = "multi-circle" as const;
+const FLAGGED_CIRCLE_VARIANT = "flagged-circle" as const;
+const DRAWDOWN_CHART_TYPE = "drawdown-recovery" as const;
 
 interface ChartIndicatorProps {
   /** Current hover state or null */
@@ -58,7 +71,10 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
 
   if (isDrawdownHover(hoveredPoint)) {
     const severity = getDrawdownSeverity(hoveredPoint.drawdown);
-    return `Drawdown on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity.`;
+    const recoveryText = hoveredPoint.isRecoveryPoint
+      ? " and marks a new peak"
+      : "";
+    return `Drawdown on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity${recoveryText}.`;
   }
 
   if (isSharpeHover(hoveredPoint)) {
@@ -67,13 +83,6 @@ function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
 
   if (isVolatilityHover(hoveredPoint)) {
     return `Volatility on ${formattedDate} is ${formatters.percent(hoveredPoint.volatility)} with ${hoveredPoint.riskLevel} risk.`;
-  }
-
-  if (isUnderwaterHover(hoveredPoint)) {
-    const recoveryText = hoveredPoint.isRecoveryPoint
-      ? " and marks a recovery point"
-      : "";
-    return `Underwater level on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.underwater), 2)} with status ${hoveredPoint.recoveryStatus}${recoveryText}.`;
   }
 
   return `Chart value on ${formattedDate}.`;
@@ -105,22 +114,7 @@ function IndicatorWrapper({
  * Get color based on chart type
  */
 function getIndicatorColor(chartType: string): string {
-  switch (chartType) {
-    case "performance":
-      return "#8b5cf6"; // Purple
-    case "allocation":
-      return "#8b5cf6"; // Purple (base color, multi-circle has its own colors)
-    case "drawdown":
-      return "#f97316"; // Orange
-    case "sharpe":
-      return "#10b981"; // Green (default, can be dynamic)
-    case "volatility":
-      return "#f59e0b"; // Amber
-    case "underwater":
-      return "#ef4444"; // Red
-    default:
-      return "#8b5cf6"; // Purple fallback
-  }
+  return INDICATOR_COLOR_MAP[chartType] ?? DEFAULT_INDICATOR_COLOR;
 }
 
 /**
@@ -264,8 +258,8 @@ function MultiCircleIndicator({
 }
 
 /**
- * Flagged circle indicator for underwater chart
- * Shows recovery points with a green flag
+ * Flagged circle indicator for recovery markers
+ * Highlights new peaks with a green flag on the baseline
  */
 function FlaggedCircleIndicator({
   hoveredPoint,
@@ -278,9 +272,8 @@ function FlaggedCircleIndicator({
 }) {
   const color = getIndicatorColor(hoveredPoint.chartType);
   const isRecoveryPoint =
-    hoveredPoint.chartType === "underwater"
-      ? hoveredPoint.isRecoveryPoint
-      : false;
+    hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
+    Boolean(hoveredPoint.isRecoveryPoint);
 
   return (
     <IndicatorWrapper hoveredPoint={hoveredPoint}>
@@ -345,14 +338,17 @@ export function ChartIndicator({
   let effectiveVariant = variant;
   if (variant === "circle") {
     if (hoveredPoint.chartType === "allocation") {
-      effectiveVariant = "multi-circle";
-    } else if (hoveredPoint.chartType === "underwater") {
-      effectiveVariant = "flagged-circle";
+      effectiveVariant = MULTI_CIRCLE_VARIANT;
+    } else if (
+      hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
+      hoveredPoint.isRecoveryPoint
+    ) {
+      effectiveVariant = FLAGGED_CIRCLE_VARIANT;
     }
   }
 
   switch (effectiveVariant) {
-    case "multi-circle":
+    case MULTI_CIRCLE_VARIANT:
       return (
         <MultiCircleIndicator
           hoveredPoint={hoveredPoint}
@@ -360,7 +356,7 @@ export function ChartIndicator({
           strokeWidth={strokeWidth}
         />
       );
-    case "flagged-circle":
+    case FLAGGED_CIRCLE_VARIANT:
       return (
         <FlaggedCircleIndicator
           hoveredPoint={hoveredPoint}

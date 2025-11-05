@@ -2,17 +2,19 @@
 
 import { motion } from "framer-motion";
 import {
-  Gift,
+  ArrowRight,
+  Bell,
   Calendar,
+  Gift,
+  Sparkles,
+  Star,
   Users,
   Zap,
-  Star,
-  Bell,
-  ArrowRight,
-  Sparkles,
 } from "lucide-react";
+
 import { GRADIENTS } from "@/constants/design-system";
-import { GlassCard, GradientButton } from "./ui";
+
+import { BaseCard, GradientButton } from "./ui";
 
 export function AirdropTab() {
   return (
@@ -37,7 +39,10 @@ export function AirdropTab() {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
       >
-        <GlassCard className="p-8 text-center relative overflow-hidden">
+        <BaseCard
+          variant="glass"
+          className="p-8 text-center relative overflow-hidden"
+        >
           {/* Background decorations */}
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
             <div className="absolute top-4 left-4">
@@ -109,7 +114,7 @@ export function AirdropTab() {
               Notify Me When Available
             </GradientButton>
           </motion.div>
-        </GlassCard>
+        </BaseCard>
       </motion.div>
 
       {/* What to Expect */}
@@ -118,7 +123,7 @@ export function AirdropTab() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <GlassCard className="p-6">
+        <BaseCard variant="glass" className="p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center">
             <Star className="w-5 h-5 mr-2 text-yellow-400" />
             What to Expect
@@ -173,7 +178,7 @@ export function AirdropTab() {
               );
             })}
           </div>
-        </GlassCard>
+        </BaseCard>
       </motion.div>
 
       {/* How to Qualify */}
@@ -182,7 +187,7 @@ export function AirdropTab() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <GlassCard className="p-6">
+        <BaseCard variant="glass" className="p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center">
             <ArrowRight className="w-5 h-5 mr-2 text-green-400" />
             How to Qualify for Airdrops
@@ -257,7 +262,7 @@ export function AirdropTab() {
               </motion.div>
             ))}
           </div>
-        </GlassCard>
+        </BaseCard>
       </motion.div>
 
       {/* Newsletter Signup */}
@@ -266,7 +271,7 @@ export function AirdropTab() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
-        <GlassCard className="p-6 text-center">
+        <BaseCard variant="glass" className="p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">
             Stay Updated on Airdrop News
           </h3>
@@ -283,7 +288,7 @@ export function AirdropTab() {
               Subscribe
             </GradientButton>
           </div>
-        </GlassCard>
+        </BaseCard>
       </motion.div>
     </div>
   );

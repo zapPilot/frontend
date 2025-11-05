@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolioPresenter } from "../../src/components/wallet/WalletPortfolioPresenter";
 import { useBalanceVisibility } from "../../src/contexts/BalanceVisibilityContext";
 import type { WalletPortfolioViewModel } from "../../src/hooks/useWalletPortfolioState";

@@ -1,10 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Settings, AlertTriangle, ChevronDown } from "lucide-react";
-import { useSlippage, type SlippagePreset } from "../PortfolioAllocation/hooks";
+import { AlertTriangle, ChevronDown, Settings } from "lucide-react";
+
 import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks/useDropdown";
+
+import { type SlippagePreset, useSlippage } from "../PortfolioAllocation/hooks";
 
 interface SlippageComponentProps {
   value: number;
@@ -176,6 +178,7 @@ export function SlippageComponent({
                     type="number"
                     value={slippage.customValue}
                     onChange={e => slippage.setCustomValue(e.target.value)}
+                    // eslint-disable-next-line sonarjs/deprecation -- React 19 still supports onKeyPress
                     onKeyPress={slippage.handleCustomKeyPress}
                     placeholder={
                       slippage.isCustomValue ? slippage.value.toString() : "1.0"

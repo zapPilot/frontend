@@ -10,13 +10,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
+
+import { queryKeys } from "../../lib/queryClient";
+import { normalizeSymbols } from "../../lib/stringUtils";
 import {
   getTokenPrices,
   type TokenPriceData,
 } from "../../services/priceService";
+import { logger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
-import { queryKeys } from "../../lib/queryClient";
-import { normalizeSymbols } from "../../lib/stringUtils";
 
 // Price-specific timing constants
 const PRICE_STALE_TIME = 2 * 60 * 1000; // 2 minutes - prices change frequently
@@ -230,6 +232,16 @@ export const useTokenPricesQuery = (
     return query.data.some(price => isPriceStale(price.timestamp));
   }, [query.data]);
 
+  const triggerRefetch = () => {
+    void (async () => {
+      try {
+        await query.refetch();
+      } catch (error) {
+        logger.error("Failed to refetch token prices", error);
+      }
+    })();
+  };
+
   return {
     prices: query.data,
     priceMap,
@@ -241,7 +253,7 @@ export const useTokenPricesQuery = (
     isFetching: query.isFetching,
     isError: query.isError,
     error: query.error as Error | null,
-    refetch: query.refetch,
+    refetch: triggerRefetch,
   };
 };
 
@@ -291,11 +303,11 @@ export const useTokenPricesWithStates = (
     let oldestAge = 0;
 
     if (prices) {
-      prices.forEach(price => {
+      for (const price of prices) {
         const age = getPriceAge(price.timestamp);
         totalAge += age;
         oldestAge = Math.max(oldestAge, age);
-      });
+      }
     }
 
     const averageAge = symbolCount > 0 ? totalAge / symbolCount : 0;

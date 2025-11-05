@@ -10,11 +10,13 @@
  * @see src/components/PortfolioChart.tsx
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 
 // Mock Framer Motion
@@ -64,7 +66,6 @@ describe("User Flows - Integration Tests", () => {
           drawdownData={ChartTestFixtures.drawdownData()}
           sharpeData={ChartTestFixtures.sharpeData()}
           volatilityData={ChartTestFixtures.volatilityData()}
-          underwaterData={ChartTestFixtures.underwaterData()}
           activeTab={activeTab}
         />
       </QueryClientProvider>
@@ -223,8 +224,8 @@ describe("User Flows - Integration Tests", () => {
       const { container, rerender } = renderChart("drawdown");
 
       // Step 1: Check maximum drawdown
-      const drawdownSvg = container.querySelector(
-        'svg[data-chart-type="drawdown"]'
+      let drawdownSvg = container.querySelector(
+        'svg[data-chart-type="drawdown-recovery"]'
       );
       if (drawdownSvg) {
         await userEvent.pointer({
@@ -302,28 +303,32 @@ describe("User Flows - Integration Tests", () => {
         expect(tooltip?.textContent).toMatch(/volatility|%/i);
       });
 
-      // Step 4: Check underwater periods
+      // Step 4: Inspect recovery markers on drawdown chart
       rerender(
         <QueryClientProvider client={queryClient}>
           <PortfolioChart
             portfolioData={ChartTestFixtures.mediumPortfolioData()}
-            underwaterData={ChartTestFixtures.underwaterData()}
-            activeTab="underwater"
+            drawdownData={ChartTestFixtures.drawdownWithRecovery()}
+            activeTab="drawdown"
           />
         </QueryClientProvider>
       );
 
       await waitFor(() => {
         expect(
-          container.querySelector('svg[data-chart-type="underwater"]')
+          container.querySelector('svg[data-chart-type="drawdown-recovery"]')
         ).not.toBeNull();
       });
 
-      // User has now completed full risk analysis
-      const underwaterSvg = container.querySelector(
-        'svg[data-chart-type="underwater"]'
+      drawdownSvg = container.querySelector(
+        'svg[data-chart-type="drawdown-recovery"]'
       );
-      expect(underwaterSvg).not.toBeNull();
+      expect(drawdownSvg).not.toBeNull();
+
+      const recoveryMarkers = container.querySelectorAll(
+        'circle[fill="#10b981"]'
+      );
+      expect(recoveryMarkers.length).toBeGreaterThan(0);
     });
 
     it("should identify worst risk periods across metrics", async () => {
@@ -331,7 +336,7 @@ describe("User Flows - Integration Tests", () => {
 
       // Find worst drawdown
       const drawdownSvg = container.querySelector(
-        'svg[data-chart-type="drawdown"]'
+        'svg[data-chart-type="drawdown-recovery"]'
       );
       if (drawdownSvg) {
         // Scan across the chart
@@ -466,13 +471,7 @@ describe("User Flows - Integration Tests", () => {
     it("should support rapid tab switching on mobile", async () => {
       const { container, rerender } = renderChart("performance");
 
-      const tabs = [
-        "allocation",
-        "drawdown",
-        "sharpe",
-        "volatility",
-        "underwater",
-      ];
+      const tabs = ["allocation", "drawdown", "sharpe", "volatility"];
 
       for (const tab of tabs) {
         rerender(
@@ -483,14 +482,16 @@ describe("User Flows - Integration Tests", () => {
               drawdownData={ChartTestFixtures.drawdownData()}
               sharpeData={ChartTestFixtures.sharpeData()}
               volatilityData={ChartTestFixtures.volatilityData()}
-              underwaterData={ChartTestFixtures.underwaterData()}
               activeTab={tab}
             />
           </QueryClientProvider>
         );
 
         await waitFor(() => {
-          const svg = container.querySelector(`svg[data-chart-type="${tab}"]`);
+          const chartType = tab === "drawdown" ? "drawdown-recovery" : tab;
+          const svg = container.querySelector(
+            `svg[data-chart-type="${chartType}"]`
+          );
           expect(svg).not.toBeNull();
         });
       }
@@ -601,7 +602,7 @@ describe("User Flows - Integration Tests", () => {
       );
 
       const drawdownSvg = container.querySelector(
-        'svg[data-chart-type="drawdown"]'
+        'svg[data-chart-type="drawdown-recovery"]'
       );
       if (drawdownSvg) {
         await userEvent.pointer({

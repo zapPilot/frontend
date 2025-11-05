@@ -3,17 +3,18 @@
 import { motion } from "framer-motion";
 import {
   ExternalLink,
-  Github,
+  type LucideIcon,
   MessageCircle,
-  Twitter,
   MessageSquare,
   Send,
-  LucideIcon,
+  X,
 } from "lucide-react";
+
+import { GithubIcon } from "@/components/icons/GithubIcon";
 import { fadeInUp, scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 interface SocialLink {
-  icon: LucideIcon;
+  icon: LucideIcon | React.ComponentType<React.SVGProps<SVGSVGElement>>;
   label: string;
   url: string;
 }
@@ -25,8 +26,8 @@ interface SocialLinksProps {
 }
 
 const defaultLinks: SocialLink[] = [
-  { icon: Twitter, label: "Twitter", url: "https://x.com/zapPilot" },
-  { icon: Github, label: "GitHub", url: "https://github.com/zapPilot" },
+  { icon: X, label: "X (Twitter)", url: "https://x.com/zapPilot" },
+  { icon: GithubIcon, label: "GitHub", url: "https://github.com/zapPilot" },
   {
     icon: MessageCircle,
     label: "Discord",

@@ -11,11 +11,13 @@
  * @see src/components/PortfolioChart.tsx
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { PortfolioChart } from "@/components/PortfolioChart/";
+
 import { ChartTestFixtures } from "../../fixtures/chartTestData";
 import { PortfolioDataFactory } from "../../utils/chartHoverTestFactories";
 
@@ -66,7 +68,6 @@ describe("PortfolioChart Component", () => {
       drawdownData: ChartTestFixtures.drawdownData(),
       sharpeData: ChartTestFixtures.sharpeData(),
       volatilityData: ChartTestFixtures.volatilityData(),
-      underwaterData: ChartTestFixtures.underwaterData(),
       activeTab: "performance" as const,
       ...props,
     };
@@ -97,10 +98,12 @@ describe("PortfolioChart Component", () => {
       expect(areas.length).toBeGreaterThan(0);
     });
 
-    it("should render drawdown chart with area fill", () => {
+    it("should render drawdown & recovery chart with area fill", () => {
       const { container } = renderChart({ activeTab: "drawdown" });
 
-      const svg = container.querySelector('svg[data-chart-type="drawdown"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="drawdown-recovery"]'
+      );
       expect(svg).not.toBeNull();
     });
 
@@ -115,13 +118,6 @@ describe("PortfolioChart Component", () => {
       const { container } = renderChart({ activeTab: "volatility" });
 
       const svg = container.querySelector('svg[data-chart-type="volatility"]');
-      expect(svg).not.toBeNull();
-    });
-
-    it("should render underwater chart", () => {
-      const { container } = renderChart({ activeTab: "underwater" });
-
-      const svg = container.querySelector('svg[data-chart-type="underwater"]');
       expect(svg).not.toBeNull();
     });
 
@@ -601,8 +597,12 @@ describe("PortfolioChart Component", () => {
 
         await waitFor(() => {
           const tooltip = screen.queryByTestId("chart-tooltip");
-          // Should format with % symbol
-          expect(tooltip?.textContent).toMatch(/\d+\.?\d*%/);
+          const rawText = tooltip?.textContent ?? "";
+          const numericPortion = Number.parseFloat(
+            rawText.replace(/[^0-9.]/g, "")
+          );
+          expect(Number.isNaN(numericPortion)).toBe(false);
+          expect(rawText).toContain("%");
         });
       }
     });

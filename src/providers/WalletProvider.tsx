@@ -9,24 +9,25 @@
 
 import {
   createContext,
-  useContext,
-  useCallback,
-  useMemo,
   ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
 } from "react";
 import {
   useActiveAccount,
-  useConnect,
-  useDisconnect,
   useActiveWallet,
   useActiveWalletChain,
+  useConnect,
+  useConnectedWallets,
+  useDisconnect,
   useSwitchActiveWalletChain,
   useWalletBalance,
-  useConnectedWallets,
 } from "thirdweb/react";
+
+import { walletLogger } from "@/utils/logger";
 // Chain types are handled internally
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
-import { walletLogger } from "@/utils/logger";
 
 // Essential types for simplified wallet
 interface SimplifiedWalletAccount {
@@ -151,7 +152,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!disconnect || !wallet) return;
 
     try {
-      await disconnect(wallet);
+      await Promise.resolve(disconnect(wallet));
     } catch (err) {
       walletLogger.error("Failed to disconnect wallet:", err);
       throw err;
@@ -193,7 +194,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
       }
 
       try {
-        return await account.signMessage({ message });
+        const signature = await Promise.resolve(
+          account.signMessage({ message })
+        );
+        return signature;
       } catch (err) {
         walletLogger.error("Failed to sign message:", err);
         throw err;
