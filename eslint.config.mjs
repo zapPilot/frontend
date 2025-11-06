@@ -164,6 +164,13 @@ const eslintConfig = [
     }
   },
   {
+    files: ["src/lib/http-utils.ts"],
+    rules: {
+      // Early return pattern is clearer for retry logic
+      "sonarjs/prefer-single-boolean-return": "off"
+    }
+  },
+  {
     files: ["tests/**/*", "**/*.test.*", "**/*.spec.*"],
     rules: {
       // Disable React hooks rules for test files
@@ -215,9 +222,10 @@ const eslintConfig = [
   {
     files: ['src/hooks/**/*.ts', 'src/hooks/**/*.tsx'],
     rules: {
-      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/no-non-null-assertion': 'off',
       "@typescript-eslint/explicit-function-return-type": "off", // Hooks leverage inference for ergonomics
       "sonarjs/cognitive-complexity": ["warn", 45],               // Allow richer hook orchestration before flagging
+      'sonarjs/prefer-single-boolean-return': 'off',              // React Query's enabled pattern is idiomatic
     }
   },
   {
