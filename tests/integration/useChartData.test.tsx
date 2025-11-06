@@ -25,11 +25,15 @@ import type {
   DrawdownOverridePoint,
   SharpeOverridePoint,
 } from "../../src/components/PortfolioChart/types";
+import * as usePortfolioDashboard from "../../src/hooks/usePortfolioDashboard";
 import type { UnifiedDashboardResponse } from "../../src/services/analyticsService";
 import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
 } from "../../src/types/portfolio";
+import { createMockArray, generateDateSeries } from "./helpers/mock-factories";
+import { MOCK_BASE_DATE } from "./helpers/test-constants";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 // Mock unified dashboard hook
 vi.mock("../../src/hooks/usePortfolioDashboard", () => ({
@@ -59,11 +63,6 @@ vi.mock("../../src/lib/portfolio-analytics", async () => {
     }),
   };
 });
-
-import * as usePortfolioDashboard from "../../src/hooks/usePortfolioDashboard";
-import { createMockArray, generateDateSeries } from "./helpers/mock-factories";
-import { MOCK_BASE_DATE } from "./helpers/test-constants";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 

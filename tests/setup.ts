@@ -1,5 +1,7 @@
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup, configure } from "@testing-library/react";
+// Import React for the dynamic component mock
+import React from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { chartMatchers } from "./utils/chartTypeGuards";
@@ -327,9 +329,6 @@ vi.mock("next/dynamic", () => {
     },
   };
 });
-
-// Import React for the dynamic component mock
-import React from "react";
 
 // Provide a default mock for UserContext to avoid provider requirements in unit tests
 vi.mock("@/contexts/UserContext", () => {

@@ -1,5 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Import types and functions after mocking
+// Import the mocked modules
+import { handleHTTPError } from "@/lib/http-utils";
+import {
+  AccountServiceError,
+  addWalletToBundle as addWalletToBundleService,
+  connectWallet as connectWalletService,
+  getUserProfile as getUserProfileService,
+  getUserWallets as getUserWalletsService,
+  removeUserEmail as removeUserEmailService,
+  removeWalletFromBundle as removeWalletFromBundleService,
+  updateUserEmail as updateUserEmailService,
+} from "@/services/accountService";
+import {
+  addWalletToBundle,
+  connectWallet,
+  getUserProfile,
+  getUserWallets,
+  handleWalletError,
+  removeWalletFromBundle,
+  transformWalletData,
+  updateUserEmail,
+  validateWalletAddress,
+} from "@/services/userService";
+import type {
+  AddWalletResponse,
+  ConnectWalletResponse,
+  UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
+} from "@/types/user.types";
+
 // Mock the HTTP utils module
 vi.mock("@/lib/http-utils", () => ({
   httpUtils: {
@@ -89,38 +121,6 @@ vi.mock("@/services/accountService", () => ({
     }
   },
 }));
-
-// Import types and functions after mocking
-// Import the mocked modules
-import { handleHTTPError } from "@/lib/http-utils";
-import {
-  AccountServiceError,
-  addWalletToBundle as addWalletToBundleService,
-  connectWallet as connectWalletService,
-  getUserProfile as getUserProfileService,
-  getUserWallets as getUserWalletsService,
-  removeUserEmail as removeUserEmailService,
-  removeWalletFromBundle as removeWalletFromBundleService,
-  updateUserEmail as updateUserEmailService,
-} from "@/services/accountService";
-import {
-  addWalletToBundle,
-  connectWallet,
-  getUserProfile,
-  getUserWallets,
-  handleWalletError,
-  removeWalletFromBundle,
-  transformWalletData,
-  updateUserEmail,
-  validateWalletAddress,
-} from "@/services/userService";
-import type {
-  AddWalletResponse,
-  ConnectWalletResponse,
-  UpdateEmailResponse,
-  UserCryptoWallet,
-  UserProfileResponse,
-} from "@/types/user.types";
 
 const mockHandleHTTPError = vi.mocked(handleHTTPError);
 const mockConnectWalletService = vi.mocked(connectWalletService);

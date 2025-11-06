@@ -7,6 +7,7 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import noSecrets from 'eslint-plugin-no-secrets';
 import promisePlugin from 'eslint-plugin-promise';
+import importPlugin from 'eslint-plugin-import';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -100,7 +101,7 @@ const eslintConfig = [
       'sonarjs/cognitive-complexity': ['error', 35],            // Max complexity per function
       'sonarjs/no-nested-functions': ['warn', { threshold: 6 }], // Allow React event handler patterns
       'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],  // Catch magic strings (5+ duplicates, reduced noise)
-      'sonarjs/no-duplicated-branches': 'off',                  // False positives with intentional fallback patterns
+      'sonarjs/no-duplicated-branches': 'warn',                 // Catch duplicate logic in branches
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'off',                       // Sometimes separate conditions are clearer
       'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing
@@ -150,6 +151,40 @@ const eslintConfig = [
       "no-eval": "error",
       "no-implied-eval": "error",
       "no-new-func": "error",
+    }
+  },
+
+  // ========================================
+  // Import Quality & Circular Dependency Detection
+  // ========================================
+  {
+    plugins: {
+      'import': importPlugin,
+    },
+    settings: {
+      'import/resolver': {
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+      'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx'],
+      },
+    },
+    rules: {
+      // Import organization and quality
+      'import/no-duplicates': 'error',                    // Merge duplicate imports
+      'import/no-deprecated': 'warn',                     // Warn on deprecated APIs
+      'import/first': 'error',                            // Imports at top of file
+      'import/newline-after-import': 'error',             // Blank line after imports
+      'import/no-anonymous-default-export': 'warn',       // Named exports preferred
+
+      // Circular dependency detection (disabled due to resolver complexity with Next.js)
+      'import/no-cycle': 'off',                           // Disabled: complex setup needed for Next.js path aliases
+
+      // Unused exports detection (disabled for Next.js App Router)
+      'import/no-unused-modules': 'off',                  // Conflicts with Next.js conventions
     }
   },
 

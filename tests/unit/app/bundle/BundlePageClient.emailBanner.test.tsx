@@ -2,6 +2,8 @@ import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BundlePageClient } from "@/app/bundle/BundlePageClient";
+
 import { render } from "../../../test-utils";
 
 // Lightweight stubs to isolate the banner logic
@@ -74,8 +76,6 @@ Object.defineProperty(window, "localStorage", {
   },
   writable: true,
 });
-
-import { BundlePageClient } from "@/app/bundle/BundlePageClient";
 
 describe("EmailReminderBanner behavior (no localStorage persistence)", () => {
   beforeEach(() => {

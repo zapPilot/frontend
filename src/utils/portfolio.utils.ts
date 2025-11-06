@@ -5,7 +5,18 @@
  * for progressive disclosure UX (show summaries on landing, full details in analytics)
  */
 
+/**
+ * Categorize pool details by asset type based on symbols
+ */
+import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
+import {
+  API_CATEGORY_KEY_MAP,
+  type ApiCategoryKey,
+  ASSET_CATEGORIES,
+} from "@/constants/portfolio";
+import { transformToPieChartData } from "@/lib/chartUtils";
 import type { PoolDetail } from "@/types/pool";
+import type { PieChartData } from "@/types/portfolio";
 
 export interface CategorySummary {
   id: string;
@@ -21,18 +32,6 @@ export interface CategorySummary {
     count: number;
   }[];
 }
-
-/**
- * Categorize pool details by asset type based on symbols
- */
-import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
-import {
-  API_CATEGORY_KEY_MAP,
-  type ApiCategoryKey,
-  ASSET_CATEGORIES,
-} from "@/constants/portfolio";
-import { transformToPieChartData } from "@/lib/chartUtils";
-import type { PieChartData } from "@/types/portfolio";
 
 interface PortfolioCategoryInput {
   id: ApiCategoryKey;

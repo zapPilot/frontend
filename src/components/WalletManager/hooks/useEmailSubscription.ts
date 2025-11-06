@@ -10,6 +10,7 @@ import {
 } from "../services/WalletService";
 import type { OperationState } from "../types/wallet.types";
 import { validateEmail } from "../utils/validation";
+
 interface UseEmailSubscriptionParams {
   viewingUserId: string;
   realUserId: string;

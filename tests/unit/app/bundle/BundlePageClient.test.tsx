@@ -2,6 +2,8 @@ import { act, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { BundlePageClient } from "@/app/bundle/BundlePageClient";
+
 import { render } from "../../../test-utils";
 
 // Mock lightweight child components to avoid heavy hooks
@@ -39,8 +41,6 @@ vi.mock("@/contexts/UserContext", () => ({
     },
   }),
 }));
-
-import { BundlePageClient } from "@/app/bundle/BundlePageClient";
 
 describe("BundlePageClient switch prompt", () => {
   beforeEach(() => {

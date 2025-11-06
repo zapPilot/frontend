@@ -9,6 +9,8 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Import mocked module
+import { httpUtils } from "../../../src/lib/http-utils";
 import {
   getLandingPagePortfolioData,
   getPortfolioDashboard,
@@ -26,9 +28,6 @@ vi.mock("../../../src/lib/http-utils", () => ({
     },
   },
 }));
-
-// Import mocked module
-import { httpUtils } from "../../../src/lib/http-utils";
 
 const mockAnalyticsEngineGet = httpUtils.analyticsEngine.get as ReturnType<
   typeof vi.fn

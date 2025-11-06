@@ -27,16 +27,15 @@ import type {
   PoolDetail,
   PortfolioAPRSummary,
 } from "../../src/services/analyticsService";
+import * as analyticsService from "../../src/services/analyticsService";
+import { createMockArray } from "./helpers/mock-factories";
+import { TEST_TIMEOUT } from "./helpers/test-constants";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 // Mock the analytics service
 vi.mock("../../src/services/analyticsService", () => ({
   getLandingPagePortfolioData: vi.fn(),
 }));
-
-import * as analyticsService from "../../src/services/analyticsService";
-import { createMockArray } from "./helpers/mock-factories";
-import { TEST_TIMEOUT } from "./helpers/test-constants";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 

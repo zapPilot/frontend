@@ -21,10 +21,14 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { useTokenBalancesQuery } from "../../src/hooks/queries/useTokenBalancesQuery";
+import { useTokenPricesQuery } from "../../src/hooks/queries/useTokenPricesQuery";
 import { useZapTokensWithStates } from "../../src/hooks/queries/useZapTokensQuery";
 // Mock the token service at the source
 import * as tokenService from "../../src/services/tokenService";
 import type { SwapToken } from "../../src/types/swap";
+import { createMockArray } from "./helpers/mock-factories";
+import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 vi.mock("../../src/services/tokenService", () => ({
   getZapTokens: vi.fn(),
@@ -52,11 +56,6 @@ vi.mock("../../src/hooks/queries/useTokenPricesQuery", () => ({
     refetch: vi.fn(),
   })),
 }));
-
-import { useTokenBalancesQuery } from "../../src/hooks/queries/useTokenBalancesQuery";
-import { useTokenPricesQuery } from "../../src/hooks/queries/useTokenPricesQuery";
-import { createMockArray } from "./helpers/mock-factories";
-import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 setupMockCleanup();
 

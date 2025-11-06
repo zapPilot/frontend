@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Import AccountServiceError after mocking
+import { AccountServiceError } from "../../../src/services/accountService";
 import {
   handleWalletError,
   transformWalletData,
@@ -106,9 +108,6 @@ vi.mock("../../../src/services/accountService", () => {
     updateUserEmail: vi.fn(),
   };
 });
-
-// Import AccountServiceError after mocking
-import { AccountServiceError } from "../../../src/services/accountService";
 
 describe("userService - Pure Functions", () => {
   beforeEach(() => {
