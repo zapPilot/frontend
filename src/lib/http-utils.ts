@@ -5,7 +5,9 @@
  * for direct use in service functions without the class-based wrapper.
  */
 
-import type { HTTPMethod, ResponseTransformer } from "../types/api";
+// Internal types for HTTP utilities
+type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+type ResponseTransformer<T = unknown> = (data: unknown) => T;
 
 // API endpoints configuration
 export const API_ENDPOINTS = {

@@ -21,7 +21,10 @@
     "pino-pretty",
     "tailwindcss"
   ],
-  "ignoreExportsUsedInFile": false,
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
   "includeEntryExports": true,
   "next": {
     "entry": ["src/app/**"]

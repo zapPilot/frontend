@@ -25,14 +25,6 @@ import {
 } from "../services/analyticsService";
 
 /**
- * Return type for usePortfolioDashboard hook
- */
-type UsePortfolioDashboardReturn = UseQueryResult<UnifiedDashboardResponse> & {
-  // Alias for data with better naming
-  dashboard: UnifiedDashboardResponse | undefined;
-};
-
-/**
  * Unified portfolio dashboard hook with React Query
  *
  * Fetches all dashboard analytics in a single optimized API call with:
@@ -78,7 +70,9 @@ type UsePortfolioDashboardReturn = UseQueryResult<UnifiedDashboardResponse> & {
 export function usePortfolioDashboard(
   userId: string | undefined,
   params: DashboardParams = {}
-): UsePortfolioDashboardReturn {
+): UseQueryResult<UnifiedDashboardResponse> & {
+  dashboard: UnifiedDashboardResponse | undefined;
+} {
   const {
     trend_days = 30,
     risk_days = 30,

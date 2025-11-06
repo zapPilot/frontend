@@ -4,8 +4,9 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import { httpUtils } from "@/lib/http-utils";
+
 import { createServiceCaller } from "../lib/createServiceCaller";
-import { httpUtils } from "../lib/http-utils";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
@@ -39,6 +40,9 @@ export class AccountServiceError extends Error {
   }
 }
 
+/**
+ * Internal token interface for getUserTokens endpoint
+ */
 interface AccountToken {
   id: string;
   chain: string;

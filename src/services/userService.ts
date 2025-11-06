@@ -3,7 +3,8 @@
  * Provides wallet bundle management and user profile operations
  */
 
-import { handleHTTPError } from "../lib/http-utils";
+import { handleHTTPError } from "@/lib/http-utils";
+
 import {
   AddWalletResponse,
   ConnectWalletResponse,

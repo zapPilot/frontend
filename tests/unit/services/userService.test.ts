@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the HTTP utils module
-vi.mock("../../../src/lib/http-utils", () => ({
+vi.mock("@/lib/http-utils", () => ({
   httpUtils: {
     accountApi: {
       get: vi.fn(),
@@ -74,7 +74,7 @@ vi.mock("../../../src/lib/http-utils", () => ({
 // No longer needed - userService now uses handleHTTPError from http-utils
 
 // Mock the account service instead of clients
-vi.mock("../../../src/services/accountService", () => ({
+vi.mock("@/services/accountService", () => ({
   connectWallet: vi.fn(),
   getUserProfile: vi.fn(),
   getUserWallets: vi.fn(),
@@ -92,7 +92,7 @@ vi.mock("../../../src/services/accountService", () => ({
 
 // Import types and functions after mocking
 // Import the mocked modules
-import { handleHTTPError } from "../../../src/lib/http-utils";
+import { handleHTTPError } from "@/lib/http-utils";
 import {
   AccountServiceError,
   addWalletToBundle as addWalletToBundleService,
@@ -102,7 +102,7 @@ import {
   removeUserEmail as removeUserEmailService,
   removeWalletFromBundle as removeWalletFromBundleService,
   updateUserEmail as updateUserEmailService,
-} from "../../../src/services/accountService";
+} from "@/services/accountService";
 import {
   addWalletToBundle,
   connectWallet,
@@ -113,14 +113,14 @@ import {
   transformWalletData,
   updateUserEmail,
   validateWalletAddress,
-} from "../../../src/services/userService";
+} from "@/services/userService";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
   UpdateEmailResponse,
   UserCryptoWallet,
   UserProfileResponse,
-} from "../../../src/types/user.types";
+} from "@/types/user.types";
 
 const mockHandleHTTPError = vi.mocked(handleHTTPError);
 const mockConnectWalletService = vi.mocked(connectWalletService);
@@ -465,9 +465,7 @@ describe("userService", () => {
     it("successfully removes email (unsubscribe)", async () => {
       mockRemoveUserEmailService.mockResolvedValue(mockEmailResponse);
 
-      const { removeUserEmail } = await import(
-        "../../../src/services/userService"
-      );
+      const { removeUserEmail } = await import("@/services/userService");
       const result = await removeUserEmail("user-123");
 
       expect(result).toEqual({
@@ -481,9 +479,7 @@ describe("userService", () => {
       const apiError = new AccountServiceError("User not found", 404);
       mockRemoveUserEmailService.mockRejectedValue(apiError);
 
-      const { removeUserEmail } = await import(
-        "../../../src/services/userService"
-      );
+      const { removeUserEmail } = await import("@/services/userService");
       const result = await removeUserEmail("nonexistent-user");
 
       expect(result).toEqual({
