@@ -222,10 +222,15 @@ export class StrategiesApiError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public statusCode?: number
+    public status?: number
   ) {
     super(message);
     this.name = "StrategiesApiError";
+  }
+
+  // Backward compatibility - deprecated
+  get statusCode() {
+    return this.status;
   }
 }
 

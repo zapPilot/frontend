@@ -1,55 +1,71 @@
+import { transformWalletData, type WalletData } from "../../../lib/walletUtils";
 import {
   addWalletToBundle,
   getUserWallets,
   removeUserEmail as removeUserEmailRequest,
   removeWalletFromBundle,
-  transformWalletData,
   updateUserEmail,
   updateWalletLabel as updateWalletLabelRequest,
-  type WalletData,
-} from "../../../services/userService";
+} from "../../../services/accountService";
 
 /**
  * Load wallets for a specific user and normalise the API response.
  */
 export async function loadWallets(userId: string): Promise<WalletData[]> {
-  const response = await getUserWallets(userId);
-  if (response.success && response.data) {
-    return transformWalletData(response.data);
+  try {
+    const wallets = await getUserWallets(userId);
+    return transformWalletData(wallets);
+  } catch {
+    // Return empty array if fetching wallets fails
+    return [];
   }
-  return [];
 }
 
 /**
  * Add a wallet to a user's bundle.
  */
-export function addWallet(
+export async function addWallet(
   userId: string,
   address: string,
   label: string
 ): Promise<{ success: boolean; error?: string }> {
-  return addWalletToBundle(userId, address, label);
+  try {
+    await addWalletToBundle(userId, address, label);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
 }
 
 /**
  * Remove a wallet from the user's bundle.
  */
-export function removeWallet(
+export async function removeWallet(
   userId: string,
   walletId: string
 ): Promise<{ success: boolean; error?: string }> {
-  return removeWalletFromBundle(userId, walletId);
+  try {
+    await removeWalletFromBundle(userId, walletId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
 }
 
 /**
  * Update a wallet label within the user's bundle.
  */
-export function updateWalletLabel(
+export async function updateWalletLabel(
   userId: string,
   walletAddress: string,
   newLabel: string
 ): Promise<{ success: boolean; error?: string }> {
-  return updateWalletLabelRequest(userId, walletAddress, newLabel);
+  try {
+    await updateWalletLabelRequest(userId, walletAddress, newLabel);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
+  }
 }
 
 /**

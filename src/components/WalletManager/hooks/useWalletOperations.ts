@@ -6,11 +6,8 @@ import { useToast } from "@/hooks/useToast";
 import { useWallet } from "@/hooks/useWallet";
 import { formatAddress } from "@/lib/formatters";
 import { queryKeys } from "@/lib/queryClient";
-import {
-  deleteUser as deleteUserAccount,
-  handleWalletError,
-  type WalletData,
-} from "@/services/userService";
+import { handleWalletError, type WalletData } from "@/lib/walletUtils";
+import { deleteUser as deleteUserAccount } from "@/services/accountService";
 import { copyTextToClipboard } from "@/utils/clipboard";
 import { walletLogger } from "@/utils/logger";
 
@@ -366,69 +363,61 @@ export const useWalletOperations = ({
     setIsDeletingAccount(true);
 
     try {
-      const response = await deleteUserAccount(realUserId);
+      await deleteUserAccount(realUserId);
 
-      if (response.success) {
-        let shouldReload = true;
+      let shouldReload = true;
 
-        if (isConnected) {
-          try {
-            await disconnect();
-          } catch (disconnectError) {
-            const disconnectMessage =
-              handleWalletError(disconnectError) ||
-              "Account deleted, but we couldn't disconnect your wallet automatically.";
-
-            showToast({
-              type: "warning",
-              title: "Disconnect Wallet",
-              message: `${disconnectMessage} Please disconnect manually to prevent automatic reconnection.`,
-            });
-
-            shouldReload = false;
-          }
-        }
-
-        showToast({
-          type: "success",
-          title: "Account Deleted",
-          message:
-            "Account successfully deleted. Wallet connection has been cleared to prevent automatic reconnection.",
-        });
-
-        // Invalidate queries and trigger reconnection flow
+      if (isConnected) {
         try {
-          await queryClient.invalidateQueries({
-            queryKey: queryKeys.user.wallets(realUserId),
+          await disconnect();
+        } catch (disconnectError) {
+          const disconnectMessage =
+            handleWalletError(disconnectError) ||
+            "Account deleted, but we couldn't disconnect your wallet automatically.";
+
+          showToast({
+            type: "warning",
+            title: "Disconnect Wallet",
+            message: `${disconnectMessage} Please disconnect manually to prevent automatic reconnection.`,
           });
-        } catch (invalidateError) {
-          walletLogger.error(
-            "Failed to invalidate wallet queries after deleting account",
-            invalidateError
-          );
-        }
-        try {
-          await refetch();
-        } catch (refetchError) {
-          walletLogger.error(
-            "Failed to refetch user data after deleting account",
-            refetchError
-          );
-        }
 
-        if (shouldReload) {
-          // Close the wallet manager after a brief delay
-          setTimeout(() => {
-            // Trigger logout/reconnect flow
-            window.location.reload();
-          }, 1500);
+          shouldReload = false;
         }
-      } else {
-        showToast({
-          type: "error",
-          title: TOAST_MESSAGES.DELETION_FAILED,
-          message: response.error ?? "Failed to delete account",
+      }
+
+      showToast({
+        type: "success",
+        title: "Account Deleted",
+        message:
+          "Account successfully deleted. Wallet connection has been cleared to prevent automatic reconnection.",
+      });
+
+      // Invalidate queries and trigger reconnection flow
+      try {
+        await queryClient.invalidateQueries({
+          queryKey: queryKeys.user.wallets(realUserId),
         });
+      } catch (invalidateError) {
+        walletLogger.error(
+          "Failed to invalidate wallet queries after deleting account",
+          invalidateError
+        );
+      }
+      try {
+        await refetch();
+      } catch (refetchError) {
+        walletLogger.error(
+          "Failed to refetch user data after deleting account",
+          refetchError
+        );
+      }
+
+      if (shouldReload) {
+        // Close the wallet manager after a brief delay
+        setTimeout(() => {
+          // Trigger logout/reconnect flow
+          window.location.reload();
+        }, 1500);
       }
     } catch (error) {
       const errorMessage = handleWalletError(error);

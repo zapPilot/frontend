@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Import AccountServiceError after mocking
-import { AccountServiceError } from "../../../src/services/accountService";
 import {
   handleWalletError,
   transformWalletData,
   validateWalletAddress,
-} from "../../../src/services/userService";
+} from "../../../src/lib/walletUtils";
+// Import AccountServiceError after mocking
+import { AccountServiceError } from "../../../src/services/accountService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 
 // Mock the HTTP utils module

@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
 import { formatAddress } from "@/lib/formatters";
-import type { WalletData } from "@/services/userService";
+import type { WalletData } from "@/lib/walletUtils";
 
 import type { EditingWallet, WalletOperations } from "../types/wallet.types";
 import { ModalBackdrop } from "./ModalBackdrop";

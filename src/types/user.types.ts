@@ -54,10 +54,3 @@ export interface UserProfileResponse {
   wallets: UserCryptoWallet[];
   subscription?: UserSubscription;
 }
-
-// Service Response Wrapper
-export interface ServiceResponse<T> {
-  data?: T;
-  error?: string;
-  success: boolean;
-}

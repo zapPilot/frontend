@@ -4,7 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
-import { httpUtils } from "@/lib/http-utils";
+import { APIError, httpUtils } from "@/lib/http-utils";
 
 import { createServiceCaller } from "../lib/createServiceCaller";
 import type {
@@ -25,20 +25,8 @@ interface AccountServiceErrorDetails {
   [key: string]: unknown;
 }
 
-/**
- * Account Service Error
- */
-export class AccountServiceError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string,
-    public details?: AccountServiceErrorDetails
-  ) {
-    super(message);
-    this.name = "AccountServiceError";
-  }
-}
+// Re-export APIError as AccountServiceError for backward compatibility in tests
+export { APIError as AccountServiceError };
 
 /**
  * Internal token interface for getUserTokens endpoint
@@ -84,7 +72,7 @@ function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
 /**
  * Create enhanced error messages for common account API errors
  */
-const createAccountServiceError = (error: unknown): AccountServiceError => {
+const createAccountServiceError = (error: unknown): APIError => {
   const apiError = isApiErrorResponse(error) ? error : {};
   const status = apiError.status || apiError.response?.status || 500;
   let message = apiError.message || "Account service error";
@@ -122,7 +110,7 @@ const createAccountServiceError = (error: unknown): AccountServiceError => {
       ? (error as Record<string, unknown>)
       : {};
 
-  return new AccountServiceError(
+  return new APIError(
     message,
     status,
     errorData["code"] as string,

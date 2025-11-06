@@ -2,12 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 
 import { queryKeys } from "../../lib/queryClient";
-// Use user service wrappers to connect and fetch the aggregated profile data
-import { connectWallet, getUserProfile } from "../../services/userService";
-import type {
-  UserCryptoWallet,
-  UserProfileResponse,
-} from "../../types/user.types";
+// Use account service directly for wallet connection and profile data
+import { connectWallet, getUserProfile } from "../../services/accountService";
+import type { UserProfileResponse } from "../../types/user.types";
 import { createQueryConfig } from "./queryDefaults";
 
 // Removed ApiBundleResponse in favor of account API wallets
@@ -41,25 +38,13 @@ export function useUserByWallet(walletAddress: string | null) {
         throw new Error("No wallet address provided");
       }
 
-      // Connect wallet to create/retrieve user
-      const connectResult = await connectWallet(walletAddress);
-      if (!connectResult.success || !connectResult.data) {
-        throw new Error(connectResult.error || "Failed to connect wallet");
-      }
-
-      const { user_id: userId } = connectResult.data;
+      // Connect wallet to create/retrieve user (returns data directly or throws)
+      const { user_id: userId } = await connectWallet(walletAddress);
 
       // Fetch complete user profile once (includes wallets and email)
-      let wallets: UserCryptoWallet[] = [];
-      let userEmail = "";
-      const profileResult = await getUserProfile(userId);
-      if (profileResult.success && profileResult.data) {
-        const data: UserProfileResponse = profileResult.data;
-        wallets = data.wallets || [];
-        userEmail = data.user?.email || "";
-      } else if (profileResult.error) {
-        throw new Error(profileResult.error);
-      }
+      const profileData: UserProfileResponse = await getUserProfile(userId);
+      const wallets = profileData.wallets || [];
+      const userEmail = profileData.user?.email || "";
 
       // Derive fields compatible with previous structure
       const bundleWallets =
@@ -73,7 +58,7 @@ export function useUserByWallet(walletAddress: string | null) {
 
       return {
         userId,
-        email: userEmail, // Now populated from getUserProfile
+        email: userEmail,
         bundleWallets,
         additionalWallets,
         visibleWallets: bundleWallets,

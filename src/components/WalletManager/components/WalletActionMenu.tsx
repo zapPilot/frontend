@@ -3,7 +3,7 @@ import { memo } from "react";
 
 import { Portal } from "@/components/ui/Portal";
 import { Z_INDEX } from "@/constants/design-system";
-import type { WalletData } from "@/services/userService";
+import type { WalletData } from "@/lib/walletUtils";
 
 import type {
   MenuPosition,

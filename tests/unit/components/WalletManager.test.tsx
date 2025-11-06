@@ -6,7 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { WalletManager } from "../../../src/components/WalletManager";
 import { WalletProvider } from "../../../src/providers/WalletProvider";
 // Account service is not used by WalletManager for email updates; keep import removed.
-import * as userService from "../../../src/services/userService";
 import { UserCryptoWallet } from "../../../src/types/user.types";
 import { WalletProviderInterface } from "../../../src/types/wallet";
 import { render } from "../../test-utils";

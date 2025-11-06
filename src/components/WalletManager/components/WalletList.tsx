@@ -2,7 +2,7 @@ import { Plus, Wallet } from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
-import type { WalletData } from "@/services/userService";
+import type { WalletData } from "@/lib/walletUtils";
 
 import type {
   MenuPosition,
