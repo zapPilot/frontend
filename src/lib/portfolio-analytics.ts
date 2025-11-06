@@ -21,7 +21,6 @@ import {
 import type {
   AnalyticsMetric,
   ChartPeriod,
-  PerformancePeriod,
   PortfolioDataPoint,
 } from "../types/portfolio";
 import type { ActualRiskSummaryResponse } from "../types/risk";
@@ -138,64 +137,6 @@ export function getAnalyticsMetrics(
       trend: "neutral",
       icon: Clock,
       description: "Portfolio age",
-    },
-  ];
-}
-
-/**
- * Generate performance data for different time periods
- *
- * @param riskData - Optional real risk data from API
- * @returns Array of performance period data with real or mock values
- */
-export function getPerformanceData(
-  riskData?: ActualRiskSummaryResponse
-): PerformancePeriod[] {
-  const sharpeRatio =
-    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
-    riskData?.summary_metrics?.sharpe_ratio;
-  return [
-    {
-      period: "1D",
-      return: 2.34,
-      volatility: 1.2,
-      sharpe: 1.95,
-      maxDrawdown: -0.8,
-    },
-    {
-      period: "1W",
-      return: 8.67,
-      volatility: 4.3,
-      sharpe: 2.01,
-      maxDrawdown: -3.2,
-    },
-    {
-      period: "1M",
-      return: 12.45,
-      volatility: 18.7,
-      sharpe: sharpeRatio || 0.67,
-      maxDrawdown: -8.9,
-    },
-    {
-      period: "3M",
-      return: 18.23,
-      volatility: 21.4,
-      sharpe: 0.85,
-      maxDrawdown: -12.4,
-    },
-    {
-      period: "6M",
-      return: 24.89,
-      volatility: 22.1,
-      sharpe: 1.13,
-      maxDrawdown: -15.6,
-    },
-    {
-      period: "1Y",
-      return: 18.67,
-      volatility: 22.8,
-      sharpe: 0.82,
-      maxDrawdown: -18.3,
     },
   ];
 }

@@ -34,18 +34,18 @@ import {
 import { transformToPieChartData } from "@/lib/chartUtils";
 import type { PieChartData } from "@/types/portfolio";
 
-export interface PortfolioCategoryInput {
+interface PortfolioCategoryInput {
   id: ApiCategoryKey;
   value: number;
   percentage?: number;
 }
 
-export interface TransformPortfolioCategoriesResult {
+interface TransformPortfolioCategoriesResult {
   summaries: CategorySummary[];
   pieChartData: PieChartData[];
 }
 
-export interface TransformPortfolioCategoriesOptions {
+interface TransformPortfolioCategoriesOptions {
   totalValue?: number;
   colorVariant?: "brand" | "chart";
 }

@@ -5,72 +5,14 @@
  * Focused on current ThirdWeb usage while maintaining future flexibility.
  */
 
-// Core wallet account information
-export interface WalletAccount {
-  address: string;
-  isConnected: boolean;
-  balance?: string;
-  displayName?: string;
-}
-
 // Chain/network information
-export interface Chain {
+interface Chain {
   id: number;
   name: string;
   symbol: string;
   rpcUrl?: string;
   blockExplorer?: string;
   isTestnet?: boolean;
-}
-
-// Wallet error types
-export interface WalletError {
-  message: string;
-  code?: string;
-  originalError?: Error;
-}
-
-// Connection status
-export type ConnectionStatus =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "disconnecting"
-  | "error";
-
-// Wallet provider interface for future flexibility
-export interface WalletProviderInterface {
-  // Account state
-  account: WalletAccount | null;
-
-  // Chain state
-  chain: Chain | null;
-
-  // Connection methods
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  switchChain: (chainId: number) => Promise<void>;
-
-  // Status
-  isConnected: boolean;
-  isConnecting: boolean;
-  isDisconnecting: boolean;
-
-  // Error handling
-  error: WalletError | null;
-  clearError: () => void;
-
-  // Signing
-  signMessage: (message: string) => Promise<string>;
-  signTypedData?: (
-    domain: unknown,
-    types: unknown,
-    value: unknown
-  ) => Promise<string>;
-
-  // Utilities
-  isChainSupported: (chainId: number) => boolean;
-  getSupportedChains: () => Chain[];
 }
 
 // Supported chain configurations
@@ -81,7 +23,7 @@ export const SUPPORTED_CHAINS = {
   OPTIMISM: 10,
 } as const;
 
-export type SupportedChainId =
+type SupportedChainId =
   (typeof SUPPORTED_CHAINS)[keyof typeof SUPPORTED_CHAINS];
 
 // Chain metadata
@@ -145,13 +87,4 @@ export const chainUtils = {
     const info = chainUtils.getChainInfo(chainId);
     return info?.symbol || "ETH";
   },
-};
-
-// Export all types
-export type {
-  WalletAccount as Account,
-  WalletError as Error,
-  WalletProviderInterface as Provider,
-  ConnectionStatus as Status,
-  Chain as WalletChain,
 };

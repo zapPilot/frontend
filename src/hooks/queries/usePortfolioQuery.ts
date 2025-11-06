@@ -5,21 +5,8 @@ import {
   getLandingPagePortfolioData,
   type LandingPageResponse,
 } from "../../services/analyticsService";
-// Types no longer needed after landing page refactor
-// import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { portfolioLogger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
-
-// Unused - kept for reference but not exported
-// interface UsePortfolioQueryReturn {
-//   totalValue: number | null;
-//   categories: AssetCategory[] | null;
-//   pieChartData: PieChartData[] | null;
-//   isLoading: boolean;
-//   error: string | null;
-//   refetch: () => void;
-//   isRefetching: boolean;
-// }
 
 // Hook for unified landing page data - replaces dual API calls
 export function useLandingPageData(userId: string | null | undefined) {

@@ -2,7 +2,6 @@
 export { BaseCard } from "./BaseCard";
 export { BundleNotFound } from "./BundleNotFound";
 export { GradientButton } from "./GradientButton";
-export { ModalCloseButton } from "./ModalCloseButton";
 
 // Loading system - comprehensive re-exports for backward compatibility
 export {

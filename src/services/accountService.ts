@@ -39,7 +39,7 @@ export class AccountServiceError extends Error {
   }
 }
 
-export interface AccountToken {
+interface AccountToken {
   id: string;
   chain: string;
   name: string;

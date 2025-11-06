@@ -1,6 +1,6 @@
 // Types matching account-engine API responses
 
-export interface User {
+interface User {
   id: string;
   email?: string;
   is_active: boolean;
@@ -16,13 +16,13 @@ export interface UserCryptoWallet {
   created_at: string;
 }
 
-export interface Plan {
+interface Plan {
   code: string;
   name: string;
   tier: number;
 }
 
-export interface UserSubscription {
+interface UserSubscription {
   id: string;
   user_id: string;
   plan_code: string;

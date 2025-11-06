@@ -6,10 +6,11 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 
 import { GRADIENTS } from "@/constants/design-system";
 import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
+import { clamp } from "@/lib/mathUtils";
 import type { SwapToken } from "@/types/swap";
 
 import type { OperationMode } from "../../../types";
-import { constrainValue, formatCryptoAmount, parseInputValue } from "./utils";
+import { formatCryptoAmount, parseInputValue } from "./utils";
 
 const isValidDecimalInput = (value: string): boolean => {
   if (value === "") {
@@ -108,7 +109,7 @@ export const AmountInput = memo<AmountInputProps>(
           // Only update parent if it's a valid number
           const numValue = parseFloat(rawValue);
           if (!isNaN(numValue)) {
-            const constrained = constrainValue(numValue, minAmount, maxAmount);
+            const constrained = clamp(numValue, minAmount, maxAmount);
             onAmountChange(constrained.toString());
           }
         }
@@ -119,7 +120,7 @@ export const AmountInput = memo<AmountInputProps>(
     // Handle blur - cleanup partial inputs
     const handleBlur = useCallback(() => {
       const numValue = parseInputValue(inputValue);
-      const constrained = constrainValue(numValue, minAmount, maxAmount);
+      const constrained = clamp(numValue, minAmount, maxAmount);
       const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);
@@ -130,7 +131,7 @@ export const AmountInput = memo<AmountInputProps>(
     const handleIncrement = useCallback(() => {
       const current = parseInputValue(inputValue);
       const incremented = current + step;
-      const constrained = constrainValue(incremented, minAmount, maxAmount);
+      const constrained = clamp(incremented, minAmount, maxAmount);
       const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);
@@ -141,7 +142,7 @@ export const AmountInput = memo<AmountInputProps>(
     const handleDecrement = useCallback(() => {
       const current = parseInputValue(inputValue);
       const decremented = current - step;
-      const constrained = constrainValue(decremented, minAmount, maxAmount);
+      const constrained = clamp(decremented, minAmount, maxAmount);
       const formatted = formatCryptoAmount(constrained);
 
       setInputValue(formatted);

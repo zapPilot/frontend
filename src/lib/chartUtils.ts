@@ -8,12 +8,6 @@ import {
 import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
 import { formatLargeNumber, formatPercentage } from "./formatters";
 
-// Unused type - points are inline in generateSVGPath
-// interface SVGPathPoint {
-//   x: number;
-//   y: number;
-// }
-
 export const generateSVGPath = (
   data: PortfolioDataPoint[],
   getValue: (point: PortfolioDataPoint) => number,

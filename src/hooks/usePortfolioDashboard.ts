@@ -27,11 +27,10 @@ import {
 /**
  * Return type for usePortfolioDashboard hook
  */
-export type UsePortfolioDashboardReturn =
-  UseQueryResult<UnifiedDashboardResponse> & {
-    // Alias for data with better naming
-    dashboard: UnifiedDashboardResponse | undefined;
-  };
+type UsePortfolioDashboardReturn = UseQueryResult<UnifiedDashboardResponse> & {
+  // Alias for data with better naming
+  dashboard: UnifiedDashboardResponse | undefined;
+};
 
 /**
  * Unified portfolio dashboard hook with React Query

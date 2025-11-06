@@ -258,5 +258,5 @@ export const swapLogger = logger.createContextLogger("Swap");
 export const chainLogger = logger.createContextLogger("Chain");
 
 // Export types and classes
-export type { LogConfig, LogEntry };
+export type { LogEntry };
 export { ContextLogger, Logger };

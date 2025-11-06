@@ -403,8 +403,3 @@ export function handleHTTPError(error: unknown): string {
 
   return "An unexpected error occurred. Please try again.";
 }
-
-/**
- * Re-export types for external use (HTTPMethod and ResponseTransformer from api types)
- */
-export type { HTTPMethod, ResponseTransformer } from "../types/api";

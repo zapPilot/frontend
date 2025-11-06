@@ -1,4 +1,4 @@
-export interface AssetDetail {
+interface AssetDetail {
   name: string;
   symbol: string;
   protocol: string;
@@ -77,12 +77,4 @@ export interface AnalyticsMetric {
   trend: "up" | "down" | "neutral";
   icon: React.ComponentType<{ className?: string }>;
   description?: string;
-}
-
-export interface PerformancePeriod {
-  period: string;
-  return: number;
-  volatility: number;
-  sharpe: number;
-  maxDrawdown: number;
 }
