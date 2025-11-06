@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/app/**/*.{ts,tsx}"],
-  "project": ["src/**/*.{ts,tsx}"],
+  "entry": ["src/app/**/*.{ts,tsx}", "scripts/**/*.{js,ts}"],
+  "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{js,ts}"],
   "ignore": [
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
@@ -16,7 +16,9 @@
     "eslint-config-next",
     "eslint-plugin-jsx-a11y",
     "eslint-plugin-react",
-    "eslint-plugin-react-hooks"
+    "eslint-plugin-react-hooks",
+    "pino-pretty",
+    "tailwindcss"
   ],
   "ignoreExportsUsedInFile": {
     "interface": false,
@@ -32,8 +34,5 @@
   },
   "playwright": {
     "config": ["playwright.config.ts"]
-  },
-  "scripts": {
-    "entry": ["scripts/**/*.{js,ts}"]
   }
 }
