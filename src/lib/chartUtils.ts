@@ -1,5 +1,3 @@
-import { portfolioStateUtils } from "@/hooks/usePortfolioState";
-
 import {
   API_CATEGORY_KEY_MAP,
   type ApiCategoryKey,
@@ -8,6 +6,10 @@ import {
 import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
 import { formatLargeNumber, formatPercentage } from "./formatters";
 
+/**
+ * Generate SVG path for line chart from portfolio data points
+ * Scales data points to fit within specified dimensions
+ */
 export const generateSVGPath = (
   data: PortfolioDataPoint[],
   getValue: (point: PortfolioDataPoint) => number,
@@ -15,7 +17,7 @@ export const generateSVGPath = (
   height = 300,
   padding = 20
 ): string => {
-  if (portfolioStateUtils.isEmptyArray(data)) return "";
+  if (!data || data.length === 0) return "";
 
   const values = data.map(getValue);
   const minValue = Math.min(...values);
@@ -38,6 +40,10 @@ export const generateSVGPath = (
     .join(" ");
 };
 
+/**
+ * Generate SVG area path from portfolio data points
+ * Creates filled area chart by adding baseline closure to line path
+ */
 export const generateAreaPath = (
   data: PortfolioDataPoint[],
   getValue: (point: PortfolioDataPoint) => number,
