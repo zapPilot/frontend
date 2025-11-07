@@ -15,7 +15,6 @@ import {
   ASSET_CATEGORIES,
 } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
-import type { PoolDetail } from "@/types/pool";
 import type { PieChartData } from "@/types/portfolio";
 
 export interface CategorySummary {
@@ -139,21 +138,4 @@ export function createCategoriesFromApiData(
   return transformPortfolioCategories(categories, {
     totalValue,
   }).summaries;
-}
-
-/**
- * Filter pool details by category for analytics tab
- */
-export function filterPoolDetailsByCategory(
-  poolDetails: PoolDetail[],
-  categoryId: string
-): PoolDetail[] {
-  if (!poolDetails || poolDetails.length === 0) {
-    return [];
-  }
-
-  return poolDetails.filter(pool => {
-    const category = categorizePool(pool.pool_symbols);
-    return category === categoryId;
-  });
 }

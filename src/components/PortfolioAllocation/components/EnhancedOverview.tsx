@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 
+import { BaseCard } from "@/components/ui";
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 import { usePortfolioAllocationViewModel } from "../hooks";
@@ -89,12 +90,17 @@ export function EnhancedOverview({
         {/* Left Column: Action Controls */}
         <div className="space-y-4 md:space-y-6">
           {swapControls && (
-            <div className="bg-gradient-to-br from-green-500/10 to-blue-500/10 backdrop-blur-sm rounded-xl p-6">
+            <BaseCard
+              variant="glass"
+              padding="xl"
+              borderRadius="xl"
+              className="bg-gradient-to-br from-green-500/10 to-blue-500/10"
+            >
               <h3 className="text-lg font-semibold mb-4 text-green-400">
                 Quick Action
               </h3>
               {swapControls}
-            </div>
+            </BaseCard>
           )}
           <ActionButton
             operationMode={operationMode}
@@ -107,7 +113,12 @@ export function EnhancedOverview({
         </div>
 
         {/* Right Column: Charts */}
-        <div className="bg-slate-800/20 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-slate-700/30 min-w-0 overflow-hidden">
+        <BaseCard
+          variant="glass"
+          padding="md"
+          borderRadius="xl"
+          className="bg-slate-800/20 border-slate-700/30 min-w-0 overflow-hidden"
+        >
           {rebalanceMode?.isEnabled ? (
             <div className="space-y-4 md:space-y-6">
               <PortfolioCharts
@@ -122,7 +133,7 @@ export function EnhancedOverview({
           ) : (
             <PortfolioCharts chartData={chartData} />
           )}
-        </div>
+        </BaseCard>
       </div>
 
       {/* Full-width sections below */}

@@ -248,7 +248,7 @@ export const AmountInput = memo<AmountInputProps>(
             max={maxAmount}
             className={`
               w-full h-14 px-14
-              bg-black/30 backdrop-blur-sm
+              glass-morphism
               border border-purple-500/20
               rounded-xl
               text-white text-center text-lg font-medium

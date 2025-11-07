@@ -252,7 +252,6 @@ export const logger = new Logger();
 
 // Export context-aware loggers for common areas
 export const walletLogger = logger.createContextLogger("Wallet");
-export const apiLogger = logger.createContextLogger("API");
 export const portfolioLogger = logger.createContextLogger("Portfolio");
 export const swapLogger = logger.createContextLogger("Swap");
 export const chainLogger = logger.createContextLogger("Chain");

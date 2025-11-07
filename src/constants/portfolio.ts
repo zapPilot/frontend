@@ -96,27 +96,6 @@ export const CHART_COLORS: Record<AssetCategoryKey, string> = {
   altcoin: ASSET_CATEGORIES.altcoin.chartColor,
 } as const;
 
-/**
- * Display labels for asset categories
- */
-export const ASSET_LABELS: Record<AssetCategoryKey, string> = {
-  btc: ASSET_CATEGORIES.btc.label,
-  eth: ASSET_CATEGORIES.eth.label,
-  stablecoin: ASSET_CATEGORIES.stablecoin.label,
-  altcoin: ASSET_CATEGORIES.altcoin.label,
-} as const;
-
-/**
- * Stacking order for allocation charts
- * From bottom to top in visualization
- */
-export const ALLOCATION_STACK_ORDER: AssetCategoryKey[] = [
-  "altcoin",
-  "stablecoin",
-  "eth",
-  "btc",
-] as const;
-
 // Portfolio Display Configuration
 export const PORTFOLIO_CONFIG = {
   // Chart configuration

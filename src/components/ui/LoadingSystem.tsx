@@ -695,26 +695,101 @@ export function useLoadingComponent(
 // LEGACY COMPATIBILITY EXPORTS
 // =============================================================================
 
+/**
+ * @deprecated Use `Skeleton` component directly instead.
+ * UnifiedLoading is a legacy alias for better code clarity.
+ * This alias will be removed in a future version.
+ *
+ * Migration guide:
+ * ```tsx
+ * // Before
+ * import { UnifiedLoading } from '@/components/ui/LoadingSystem';
+ * <UnifiedLoading variant="text" lines={3} />
+ *
+ * // After
+ * import { Skeleton } from '@/components/ui/LoadingSystem';
+ * <Skeleton variant="text" lines={3} />
+ * ```
+ *
+ * @see Skeleton
+ */
 export function UnifiedLoading({
   [DATA_TEST_ID_PROP]: testId,
   ...rest
 }: SkeletonProps) {
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[DEPRECATED] UnifiedLoading is deprecated. Use Skeleton component directly. " +
+        "Import from @/components/ui/LoadingSystem and replace <UnifiedLoading /> with <Skeleton />."
+    );
+  }
   return <Skeleton data-testid={testId ?? "unified-loading"} {...rest} />;
 }
 
+/**
+ * @deprecated Use `BalanceSkeleton` component directly instead.
+ * BalanceLoading is a legacy alias for better code clarity.
+ * This alias will be removed in a future version.
+ *
+ * Migration guide:
+ * ```tsx
+ * // Before
+ * import { BalanceLoading } from '@/components/ui/LoadingSystem';
+ * <BalanceLoading size="default" />
+ *
+ * // After
+ * import { BalanceSkeleton } from '@/components/ui/LoadingSystem';
+ * <BalanceSkeleton size="default" />
+ * ```
+ *
+ * @see BalanceSkeleton
+ */
 export function BalanceLoading({
   [DATA_TEST_ID_PROP]: testId,
   ...rest
 }: BalanceSkeletonProps) {
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[DEPRECATED] BalanceLoading is deprecated. Use BalanceSkeleton component directly. " +
+        "Import from @/components/ui/LoadingSystem and replace <BalanceLoading /> with <BalanceSkeleton />."
+    );
+  }
   return (
     <BalanceSkeleton data-testid={testId ?? "balance-loading"} {...rest} />
   );
 }
 
+/**
+ * @deprecated Use `PieChartSkeleton` component directly instead.
+ * PieChartLoading is a legacy alias for better code clarity.
+ * This alias will be removed in a future version.
+ *
+ * Migration guide:
+ * ```tsx
+ * // Before
+ * import { PieChartLoading } from '@/components/ui/LoadingSystem';
+ * <PieChartLoading size={200} />
+ *
+ * // After
+ * import { PieChartSkeleton } from '@/components/ui/LoadingSystem';
+ * <PieChartSkeleton size={200} />
+ * ```
+ *
+ * @see PieChartSkeleton
+ */
 export function PieChartLoading({
   [DATA_TEST_ID_PROP]: testId,
   ...rest
 }: CircularSkeletonComponentProps) {
+  if (process.env.NODE_ENV === "development") {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[DEPRECATED] PieChartLoading is deprecated. Use PieChartSkeleton component directly. " +
+        "Import from @/components/ui/LoadingSystem and replace <PieChartLoading /> with <PieChartSkeleton />."
+    );
+  }
   return (
     <PieChartSkeleton data-testid={testId ?? "pie-chart-loading"} {...rest} />
   );

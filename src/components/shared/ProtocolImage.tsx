@@ -1,5 +1,6 @@
 import React from "react";
 
+import { getAssetUrl } from "../../config/assets";
 import { normalizeProtocolName } from "../../lib/stringUtils";
 import { BaseComponentProps } from "../../types/ui.types";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -11,9 +12,6 @@ interface ProtocolImageProps extends BaseComponentProps {
   };
   size?: number;
 }
-
-const ZAP_ASSET_WORKER_BASE_URL =
-  "https://zap-assets-worker.davidtnfsh.workers.dev";
 
 export function ProtocolImage({
   protocol,
@@ -30,7 +28,7 @@ export function ProtocolImage({
 
     // Normalize protocol name: lowercase + strip version suffixes
     const normalizedName = normalizeProtocolName(protocol.name);
-    return `${ZAP_ASSET_WORKER_BASE_URL}/projectPictures/${normalizedName}.webp`;
+    return getAssetUrl("protocol", normalizedName);
   };
 
   return (
