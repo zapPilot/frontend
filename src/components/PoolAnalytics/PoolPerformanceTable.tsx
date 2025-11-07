@@ -16,7 +16,7 @@ import { categorizePool } from "../../utils/portfolio.utils";
 import { ProtocolImage } from "../shared/ProtocolImage";
 import { TokenImage } from "../shared/TokenImage";
 import { BaseCard } from "../ui";
-import { UnifiedLoading } from "../ui/LoadingSystem";
+import { Skeleton } from "../ui/LoadingSystem";
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -361,7 +361,7 @@ const ProtocolNameAndChain = ({
   </div>
 );
 
-export function PoolPerformanceTable({
+const PoolPerformanceTableComponent = ({
   pools,
   isLoading,
   error,
@@ -370,7 +370,7 @@ export function PoolPerformanceTable({
   onClearCategoryFilter,
   defaultTopN = 5,
   topNOptions = [5, 10, 20, 50],
-}: PoolPerformanceTableProps) {
+}: PoolPerformanceTableProps) => {
   const [sortState, setSortState] = useState<SortState>({
     field: "value",
     direction: "desc",
@@ -467,7 +467,7 @@ export function PoolPerformanceTable({
     return (
       <BaseCard variant="glass">
         <div className="flex items-center justify-center p-8">
-          <UnifiedLoading
+          <Skeleton
             variant="rectangular"
             width={200}
             height={40}
@@ -695,4 +695,6 @@ export function PoolPerformanceTable({
       </div>
     </BaseCard>
   );
-}
+};
+
+export const PoolPerformanceTable = React.memo(PoolPerformanceTableComponent);

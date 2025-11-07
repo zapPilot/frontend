@@ -13,24 +13,22 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 
+import { getChainById, getSupportedMainnetChains } from "@/config/chains";
 import { useChain } from "@/hooks/useChain";
 import { useWallet } from "@/hooks/useWallet";
-import { chainUtils } from "@/types/wallet";
 
 // Mock useWallet hook
 vi.mock("@/hooks/useWallet", () => ({
   useWallet: vi.fn(),
 }));
 
-// Mock chain utilities from wallet types
-vi.mock("@/types/wallet", () => ({
-  chainUtils: {
-    getChainInfo: vi.fn(),
-    getSupportedChains: vi.fn(),
-    isSupported: vi.fn(),
-    getChainName: vi.fn(),
-    getChainSymbol: vi.fn(),
-  },
+// Mock chain utilities from config/chains
+vi.mock("@/config/chains", () => ({
+  getChainById: vi.fn(),
+  getSupportedMainnetChains: vi.fn(),
+  isChainSupported: vi.fn(),
+  getChainName: vi.fn(),
+  getChainSymbol: vi.fn(),
   SUPPORTED_CHAINS: {
     ETHEREUM: 1,
     ARBITRUM: 42161,
@@ -75,8 +73,8 @@ vi.mock("@/types/wallet", () => ({
 
 describe("useChain Hook", () => {
   const mockUseWallet = useWallet as Mock;
-  const mockGetChainInfo = chainUtils.getChainInfo as Mock;
-  const mockGetSupportedChains = chainUtils.getSupportedChains as Mock;
+  const mockGetChainById = getChainById as Mock;
+  const mockGetSupportedMainnetChains = getSupportedMainnetChains as Mock;
 
   const mockChain = {
     id: 42161,
@@ -115,7 +113,7 @@ describe("useChain Hook", () => {
       const supportedIds = [42161, 8453, 10];
       return supportedIds.includes(chainId);
     });
-    mockGetChainInfo.mockImplementation((chainId: number) => {
+    mockGetChainById.mockImplementation((chainId: number) => {
       const chainInfoMap: Record<number, any> = {
         1: {
           id: 1,
@@ -152,7 +150,7 @@ describe("useChain Hook", () => {
       };
       return chainInfoMap[chainId] || undefined;
     });
-    mockGetSupportedChains.mockReturnValue([
+    mockGetSupportedMainnetChains.mockReturnValue([
       {
         id: 42161,
         name: "Arbitrum One",
@@ -284,12 +282,12 @@ describe("useChain Hook", () => {
   });
 
   describe("Chain Utilities", () => {
-    it("should call chainUtils.getChainInfo", () => {
+    it("should call getChainById", () => {
       const { result } = renderHook(() => useChain());
 
       const chainInfo = result.current.getChainInfo(42161);
 
-      expect(mockGetChainInfo).toHaveBeenCalledWith(42161);
+      expect(mockGetChainById).toHaveBeenCalledWith(42161);
       expect(chainInfo).toEqual({
         id: 42161,
         name: "Arbitrum One",
@@ -301,22 +299,22 @@ describe("useChain Hook", () => {
     });
 
     it("should return undefined for unknown chain info", () => {
-      mockGetChainInfo.mockReturnValue();
+      mockGetChainById.mockReturnValue();
 
       const { result } = renderHook(() => useChain());
 
       const chainInfo = result.current.getChainInfo(999999);
 
-      expect(mockGetChainInfo).toHaveBeenCalledWith(999999);
+      expect(mockGetChainById).toHaveBeenCalledWith(999999);
       expect(chainInfo).toBeUndefined();
     });
 
-    it("should call chainUtils.getSupportedChains", () => {
+    it("should call getSupportedMainnetChains", () => {
       const { result } = renderHook(() => useChain());
 
       const supportedChains = result.current.getSupportedChains();
 
-      expect(mockGetSupportedChains).toHaveBeenCalledTimes(1);
+      expect(mockGetSupportedMainnetChains).toHaveBeenCalledTimes(1);
       expect(supportedChains).toHaveLength(3);
       expect(supportedChains[0]).toHaveProperty("id");
       expect(supportedChains[0]).toHaveProperty("name");
@@ -549,8 +547,8 @@ describe("useChain Hook", () => {
       );
     });
 
-    it("should handle chainUtils.getChainInfo errors", () => {
-      mockGetChainInfo.mockImplementation(() => {
+    it("should handle getChainById errors", () => {
+      mockGetChainById.mockImplementation(() => {
         throw new Error("Chain info not available");
       });
 
@@ -561,8 +559,8 @@ describe("useChain Hook", () => {
       );
     });
 
-    it("should handle chainUtils.getSupportedChains errors", () => {
-      mockGetSupportedChains.mockImplementation(() => {
+    it("should handle getSupportedMainnetChains errors", () => {
+      mockGetSupportedMainnetChains.mockImplementation(() => {
         throw new Error("Chains not available");
       });
 

@@ -54,18 +54,21 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
     const symbol = (record["symbol"] as string | undefined)?.toLowerCase();
     const name = (record["name"] as string | undefined)?.toLowerCase();
 
-    // Common native token patterns
-    if (
-      symbol === "eth" ||
-      name?.includes("ethereum") ||
-      name?.includes("ether")
-    ) {
-      address = "native";
-    } else if (symbol === "arb" || name?.includes("arbitrum")) {
-      address = "native";
-    } else if (symbol === "op" || name?.includes("optimism")) {
-      address = "native";
-    } else if (symbol === "base" || name?.includes("base")) {
+    const symbolIndicators = ["eth", "arb", "op", "base"];
+    const nameIndicators = [
+      "ethereum",
+      "ether",
+      "arbitrum",
+      "optimism",
+      "base",
+    ];
+
+    const matchesSymbol = symbol ? symbolIndicators.includes(symbol) : false;
+    const matchesName = name
+      ? nameIndicators.some(indicator => name.includes(indicator))
+      : false;
+
+    if (matchesSymbol || matchesName) {
       address = "native";
     }
   }

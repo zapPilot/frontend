@@ -93,7 +93,7 @@ export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
  * <LoadingState variant="inline" size="sm" />
  * ```
  */
-type LoadingVariant = "spinner" | "card" | "skeleton" | "inline";
+export type LoadingVariant = "spinner" | "card" | "skeleton" | "inline";
 
 /**
  * Spinner animation variants for visual loading indicators.

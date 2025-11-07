@@ -9,7 +9,7 @@ import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { BalanceLoading, WalletMetricsSkeleton } from "../ui/LoadingSystem";
+import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
 import { ROITooltip } from "./ROITooltip";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
@@ -96,7 +96,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       if (shouldShowLoading) {
         return (
           <div className="flex items-center space-x-2">
-            <BalanceLoading size="default" className="" />
+            <BalanceSkeleton size="default" />
           </div>
         );
       }

@@ -15,7 +15,7 @@ import { BaseComponentProps } from "../types/ui.types";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
-import { PieChartLoading } from "./ui/LoadingSystem";
+import { PieChartSkeleton } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 
@@ -253,7 +253,10 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data-testid="pie-chart-container"
               >
                 {shouldShowLoading ? (
-                  <PieChartLoading size={250} className="h-[250px] w-[250px]" />
+                  <PieChartSkeleton
+                    size={250}
+                    className="h-[250px] w-[250px]"
+                  />
                 ) : (
                   <PieChart
                     data={pieChartData}
@@ -286,7 +289,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               data-testid="pie-chart-container-mobile"
             >
               {shouldShowLoading ? (
-                <PieChartLoading size={200} className="h-[200px] w-[200px]" />
+                <PieChartSkeleton size={200} className="h-[200px] w-[200px]" />
               ) : (
                 <PieChart
                   data={pieChartData}

@@ -5,7 +5,7 @@ import { AlertTriangle, Wallet, X } from "lucide-react";
 import { memo, useCallback } from "react";
 
 import { BaseCard } from "@/components/ui";
-import { UnifiedLoading } from "@/components/ui/LoadingSystem";
+import { Skeleton } from "@/components/ui/LoadingSystem";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { logger } from "@/utils/logger";
@@ -125,7 +125,7 @@ const WalletManagerComponent = ({
           {(loading || walletOperations.isRefreshing) && (
             <div className="p-6 text-center">
               <div className="flex justify-center mb-3">
-                <UnifiedLoading
+                <Skeleton
                   variant="rectangular"
                   width="8rem"
                   height={32}

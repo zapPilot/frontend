@@ -8,7 +8,13 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion } from "framer-motion";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { prepareTransaction } from "thirdweb";
 import { useSendAndConfirmCalls } from "thirdweb/react";
 
@@ -142,7 +148,7 @@ const deriveErrorMessage = (error: unknown): string => {
   return "Failed to dispatch transaction bundle.";
 };
 
-export function ZapExecutionProgress({
+const ZapExecutionProgressComponent = ({
   isOpen,
   onClose,
   intentId,
@@ -153,7 +159,7 @@ export function ZapExecutionProgress({
   onError,
   onCancel,
   className = "",
-}: ZapExecutionProgressProps) {
+}: ZapExecutionProgressProps) => {
   const {
     latestEvent,
     isConnected,
@@ -615,4 +621,6 @@ export function ZapExecutionProgress({
       </Dialog.Portal>
     </Dialog.Root>
   );
-}
+};
+
+export const ZapExecutionProgress = React.memo(ZapExecutionProgressComponent);
