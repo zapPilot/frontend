@@ -4,7 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
-import { APIError, httpUtils } from "@/lib/http-utils";
+import { httpUtils } from "@/lib/http-utils";
 
 import { createServiceCaller } from "../lib/createServiceCaller";
 import type {
@@ -25,8 +25,33 @@ interface AccountServiceErrorDetails {
   [key: string]: unknown;
 }
 
-// Re-export APIError as AccountServiceError for backward compatibility in tests
-export { APIError as AccountServiceError };
+/**
+ * AccountServiceError maintains the shape of API errors without depending on the
+ * HTTP utilities module (which is frequently mocked in tests).
+ * This keeps the constructor available even when http-utils is mocked.
+ */
+export class AccountServiceError extends Error {
+  status: number;
+  code?: string;
+  details?: AccountServiceErrorDetails;
+
+  constructor(
+    message: string,
+    status: number,
+    code?: string,
+    details?: AccountServiceErrorDetails
+  ) {
+    super(message);
+    this.name = "AccountServiceError";
+    this.status = status;
+    if (code !== undefined) {
+      this.code = code;
+    }
+    if (details !== undefined) {
+      this.details = details;
+    }
+  }
+}
 
 /**
  * Internal token interface for getUserTokens endpoint
@@ -72,7 +97,7 @@ function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
 /**
  * Create enhanced error messages for common account API errors
  */
-const createAccountServiceError = (error: unknown): APIError => {
+const createAccountServiceError = (error: unknown): AccountServiceError => {
   const apiError = isApiErrorResponse(error) ? error : {};
   const status = apiError.status || apiError.response?.status || 500;
   let message = apiError.message || "Account service error";
@@ -110,7 +135,7 @@ const createAccountServiceError = (error: unknown): APIError => {
       ? (error as Record<string, unknown>)
       : {};
 
-  return new APIError(
+  return new AccountServiceError(
     message,
     status,
     errorData["code"] as string,

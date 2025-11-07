@@ -18,6 +18,16 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      ".jscpd/**/*",
+      ".next/**/*",
+      "coverage/**/*",
+      "out/**/*",
+      "playwright-report/**/*",
+      "test-results/**/*",
+    ],
+  },
   // Base Next.js configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 

@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletManager } from "../../../src/components/WalletManager";
-import { UserCryptoWallet } from "../../../src/types/user.types";
+import * as walletService from "../../../src/components/WalletManager/services/WalletService";
 import { render } from "../../test-utils";
 
 vi.mock("../../../src/providers/WalletProvider", () => {
@@ -130,37 +130,26 @@ vi.mock("../../../src/components/ui/LoadingSpinner", () => ({
 }));
 
 // Mock service layer
-vi.mock("../../../src/services/userService", () => ({
-  getUserWallets: vi.fn(),
-  addWalletToBundle: vi.fn(),
-  removeWalletFromBundle: vi.fn(),
-  validateWalletAddress: vi.fn(),
-  transformWalletData: vi.fn(),
-  handleWalletError: vi.fn(),
-  getUserProfile: vi.fn(),
-  updateUserEmail: vi.fn(),
-  removeUserEmail: vi.fn(),
-}));
+vi.mock("../../../src/components/WalletManager/services/WalletService", () => {
+  const loadWallets = vi.fn();
+  const addWallet = vi.fn();
+  const removeWallet = vi.fn();
+  const updateWalletLabel = vi.fn();
+  const updateUserEmailSubscription = vi.fn();
+  const unsubscribeUserEmail = vi.fn();
+
+  return {
+    loadWallets,
+    addWallet,
+    removeWallet,
+    updateWalletLabel,
+    updateUserEmailSubscription,
+    unsubscribeUserEmail,
+  };
+});
 
 describe("WalletManager owner/viewer behavior", () => {
-  const mockUserService = vi.mocked(userService);
-
-  const mockWallets: UserCryptoWallet[] = [
-    {
-      id: "wallet-1",
-      user_id: "user-123",
-      wallet: "0x1234567890123456789012345678901234567890",
-      label: "Primary Wallet",
-      created_at: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "wallet-2",
-      user_id: "user-123",
-      wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-      label: "Trading Wallet",
-      created_at: "2024-01-02T00:00:00Z",
-    },
-  ];
+  const mockWalletService = vi.mocked(walletService);
 
   const mockTransformed = [
     {
@@ -202,18 +191,14 @@ describe("WalletManager owner/viewer behavior", () => {
       connectedWallet: "0x1234567890123456789012345678901234567890",
       refetch: vi.fn(),
     };
-    mockUserService.getUserWallets.mockResolvedValue({
-      success: true,
-      data: mockWallets,
-    });
-    mockUserService.transformWalletData.mockReturnValue(mockTransformed);
+    mockWalletService.loadWallets.mockResolvedValue(mockTransformed);
   });
 
   it("uses urlUserId for fetching when viewing another user's bundle", async () => {
     await renderManager({ urlUserId: "viewer-xyz" });
 
     await waitFor(() => {
-      expect(mockUserService.getUserWallets).toHaveBeenCalledWith("viewer-xyz");
+      expect(mockWalletService.loadWallets).toHaveBeenCalledWith("viewer-xyz");
     });
   });
 
@@ -246,7 +231,7 @@ describe("WalletManager owner/viewer behavior", () => {
       await renderManager({ urlUserId: "viewer-xyz" });
 
       await waitFor(() => {
-        expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
+        expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(1);
       });
 
       await act(async () => {
@@ -255,7 +240,7 @@ describe("WalletManager owner/viewer behavior", () => {
       });
 
       // Still only the initial fetch
-      expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
+      expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();
     }

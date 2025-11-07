@@ -39,7 +39,9 @@ class MockEventSource {
     // Simulate async connection
     setTimeout(() => {
       this.readyState = this.OPEN;
-      this.onopen?.(new Event("open"));
+      act(() => {
+        this.onopen?.(new Event("open"));
+      });
     }, 0);
   }
 
@@ -53,14 +55,18 @@ class MockEventSource {
       const event = new MessageEvent("message", {
         data: JSON.stringify(data),
       });
-      this.onmessage(event);
+      act(() => {
+        this.onmessage?.(event);
+      });
     }
   }
 
   // Test helper to simulate an error
   simulateError() {
     if (this.onerror) {
-      this.onerror(new Event("error"));
+      act(() => {
+        this.onerror?.(new Event("error"));
+      });
     }
   }
 }
@@ -506,12 +512,16 @@ describe("useUnifiedZapStream - Connection Management", () => {
     await waitFor(() => expect(result.current.isConnected).toBe(true));
 
     // Close connection
-    result.current.closeStream();
+    await act(async () => {
+      result.current.closeStream();
+    });
 
     await waitFor(() => expect(result.current.isConnected).toBe(false));
 
     // Trigger reconnect
-    result.current.reconnect();
+    await act(async () => {
+      result.current.reconnect();
+    });
 
     await waitFor(() => expect(result.current.isConnected).toBe(true));
 
@@ -968,7 +978,9 @@ describe("useUnifiedZapStream - State Management", () => {
     await waitFor(() => expect(result.current.events.length).toBe(1));
 
     // Manual reconnect should clear events
-    result.current.reconnect();
+    await act(async () => {
+      result.current.reconnect();
+    });
 
     await waitFor(() => {
       expect(result.current.events.length).toBe(0);
