@@ -31,7 +31,7 @@ import type {
 
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",
-  "allocation",
+  "asset-allocation",
   "sharpe",
   "volatility",
 ]);
@@ -57,20 +57,30 @@ interface ChartTooltipProps {
 }
 
 /**
- * Render Performance chart tooltip content
+ * Render Performance chart tooltip content with percentage breakdown
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
   const formattedValue = formatters.currencyPrecise(data.value);
+  const totalValue = data.value;
+
+  // Calculate percentages for breakdown (handle optional values)
+  const defiValue = data.defiValue ?? 0;
+  const walletValue = data.walletValue ?? 0;
+  const defiPercent = totalValue > 0 ? (defiValue / totalValue) * 100 : 0;
+  const walletPercent = totalValue > 0 ? (walletValue / totalValue) * 100 : 0;
+
   const breakdownRows = [
     {
       label: "DeFi",
       colorClass: "text-purple-300",
-      value: data.defiValue,
+      value: defiValue,
+      percent: defiPercent,
     },
     {
       label: "Wallet",
       colorClass: "text-cyan-300",
-      value: data.walletValue,
+      value: walletValue,
+      percent: walletPercent,
     },
   ].filter(
     (
@@ -79,6 +89,7 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
       label: string;
       colorClass: string;
       value: number;
+      percent: number;
     } => typeof entry.value === "number" && Number.isFinite(entry.value)
   );
 
@@ -92,11 +103,14 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
             {formattedValue}
           </span>
         </div>
-        {breakdownRows.map(({ label, colorClass, value }) => (
+        {breakdownRows.map(({ label, colorClass, value, percent }) => (
           <div key={label} className="flex items-center justify-between gap-3">
             <span className={`text-xs ${colorClass}`}>{label}</span>
             <span className="text-sm font-semibold text-gray-200">
-              {formatters.currencyPrecise(value)}
+              {formatters.currencyPrecise(value)}{" "}
+              <span className="text-xs text-gray-400">
+                ({percent.toFixed(1)}%)
+              </span>
             </span>
           </div>
         ))}
@@ -404,7 +418,7 @@ export function ChartTooltip({
             data={hoveredPoint as PerformanceHoverData}
           />
         )}
-        {hoveredPoint.chartType === "allocation" && (
+        {hoveredPoint.chartType === "asset-allocation" && (
           <AllocationTooltipContent
             data={hoveredPoint as AllocationHoverData}
           />

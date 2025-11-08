@@ -7,6 +7,31 @@ import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
+export interface YieldBreakdown {
+  token_yield_usd: number;
+  token_gains_usd: number;
+  token_losses_usd: number;
+  reward_yield_usd: number;
+  borrowing_cost_usd: number;
+}
+
+export interface YieldROIResponse {
+  user_id: string;
+  period_start: string;
+  period_end: string;
+  period_days: number;
+  days_with_data: number;
+  initial_nav_usd: number;
+  net_yield_usd: number;
+  yield_roi_percent: number;
+  annualized_yield_roi_percent: number;
+  estimated_apy_percent: number;
+  breakdown: YieldBreakdown;
+  confidence: "high" | "medium" | "low";
+  avg_daily_yield_usd: number | null;
+  yield_volatility: number | null;
+}
+
 // Re-export PoolDetail for components that import from this service
 export type { PoolDetail } from "../types/pool";
 
@@ -94,6 +119,7 @@ export interface LandingPageResponse {
     matched_asset_value_usd: number;
   };
   message?: string;
+  yield_roi?: YieldROIResponse;
 }
 
 /**
@@ -107,6 +133,14 @@ export const getLandingPagePortfolioData = async (
 ): Promise<LandingPageResponse> => {
   const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
+};
+
+export const getYieldRoiData = async (
+  userId: string,
+  days = 30
+): Promise<YieldROIResponse> => {
+  const endpoint = `/api/v1/yield/roi/${userId}?days=${days}`;
+  return await httpUtils.analyticsEngine.get<YieldROIResponse>(endpoint);
 };
 
 /**

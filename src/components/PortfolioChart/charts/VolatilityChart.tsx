@@ -13,6 +13,7 @@ import {
 } from "../utils";
 import { ChartGrid } from "./ChartGrid";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
+import { ChartHelpModal } from "../components";
 
 interface VolatilityChartProps {
   data: { date: string; volatility: number }[];
@@ -142,13 +143,13 @@ export const VolatilityChart = memo<VolatilityChartProps>(
           <ChartIndicator hoveredPoint={volatilityHover.hoveredPoint} />
         </svg>
 
-        {/* Y-axis labels */}
+        {/* Y-axis labels - DeFi-adjusted range (5-100%) */}
         <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
-          <span>40%</span>
-          <span>32%</span>
+          <span>100%</span>
+          <span>75%</span>
+          <span>50%</span>
           <span>25%</span>
-          <span>18%</span>
-          <span>10%</span>
+          <span>5%</span>
         </div>
 
         {/* Legend */}

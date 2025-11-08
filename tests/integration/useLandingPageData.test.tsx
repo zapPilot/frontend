@@ -26,6 +26,7 @@ import type {
   LandingPageResponse,
   PoolDetail,
   PortfolioAPRSummary,
+  YieldROIResponse,
 } from "../../src/services/analyticsService";
 import * as analyticsService from "../../src/services/analyticsService";
 import { createMockArray } from "./helpers/mock-factories";
@@ -33,9 +34,16 @@ import { TEST_TIMEOUT } from "./helpers/test-constants";
 import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
 
 // Mock the analytics service
-vi.mock("../../src/services/analyticsService", () => ({
-  getLandingPagePortfolioData: vi.fn(),
-}));
+vi.mock("../../src/services/analyticsService", async () => {
+  const actual = await vi.importActual<
+    typeof import("../../src/services/analyticsService")
+  >("../../src/services/analyticsService");
+  return {
+    ...actual,
+    getLandingPagePortfolioData: vi.fn(),
+    getYieldRoiData: vi.fn(),
+  };
+});
 
 setupMockCleanup();
 
@@ -111,6 +119,40 @@ function createMockLandingPageResponse(
     ...overrides,
   };
 }
+
+function createMockYieldRoiResponse(
+  overrides: Partial<YieldROIResponse> = {}
+): YieldROIResponse {
+  return {
+    user_id: "test-user-123",
+    period_start: "2025-10-09",
+    period_end: "2025-11-08",
+    period_days: 30,
+    days_with_data: 30,
+    initial_nav_usd: 40000,
+    net_yield_usd: 340,
+    yield_roi_percent: 0.85,
+    annualized_yield_roi_percent: 10.35,
+    estimated_apy_percent: 10.87,
+    breakdown: {
+      token_yield_usd: 205,
+      token_gains_usd: 550,
+      token_losses_usd: 345,
+      reward_yield_usd: 260,
+      borrowing_cost_usd: 125,
+    },
+    confidence: "high",
+    avg_daily_yield_usd: 11.33,
+    yield_volatility: 25.5,
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  vi.mocked(analyticsService.getYieldRoiData).mockResolvedValue(
+    createMockYieldRoiResponse()
+  );
+});
 
 describe("useLandingPageData - APR Calculations", () => {
   it("calculates weighted average APR correctly", async () => {

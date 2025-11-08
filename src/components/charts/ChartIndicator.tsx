@@ -23,7 +23,7 @@ import {
 const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
 const INDICATOR_COLOR_MAP: Record<string, string> = {
   performance: DEFAULT_INDICATOR_COLOR,
-  allocation: DEFAULT_INDICATOR_COLOR,
+  "asset-allocation": DEFAULT_INDICATOR_COLOR,
   "drawdown-recovery": "#f97316",
   sharpe: "#10b981",
   volatility: "#f59e0b",
@@ -231,7 +231,7 @@ function MultiCircleIndicator({
   radius: number;
   strokeWidth: number;
 }) {
-  if (hoveredPoint.chartType !== "allocation") {
+  if (hoveredPoint.chartType !== "asset-allocation") {
     return (
       <SingleCircleIndicator
         hoveredPoint={hoveredPoint}
@@ -357,7 +357,7 @@ export function ChartIndicator({
   // Auto-detect variant from chart type if not specified
   let effectiveVariant = variant;
   if (variant === "circle") {
-    if (hoveredPoint.chartType === "allocation") {
+    if (hoveredPoint.chartType === "asset-allocation") {
       effectiveVariant = MULTI_CIRCLE_VARIANT;
     } else if (
       hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&

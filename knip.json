@@ -17,8 +17,7 @@
     "eslint-plugin-jsx-a11y",
     "eslint-plugin-react",
     "eslint-plugin-react-hooks",
-    "pino-pretty",
-    "tailwindcss"
+    "pino-pretty"
   ],
   "ignoreExportsUsedInFile": {
     "interface": false,

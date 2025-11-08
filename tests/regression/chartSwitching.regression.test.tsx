@@ -142,7 +142,7 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Allocation chart: vertical line indicator
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -189,7 +189,7 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Hover at position 2 on allocation
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -228,7 +228,7 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Create cursor on allocation
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -258,7 +258,7 @@ describe("Chart Switching - Regression Tests", () => {
       await waitFor(() => {
         expect(
           container.querySelector(
-            'svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]'
+            'svg[data-chart-type="asset-allocation"] line[stroke="#8b5cf6"]'
           )
         ).toBeNull();
       });
@@ -326,7 +326,7 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Hover allocation
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -462,7 +462,7 @@ describe("Chart Switching - Regression Tests", () => {
 
       // Hover to create animated indicator
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -491,7 +491,7 @@ describe("Chart Switching - Regression Tests", () => {
       // Should not have both charts visible during transition
       await waitFor(() => {
         const allocationCharts = container.querySelectorAll(
-          'svg[data-chart-type="allocation"]'
+          'svg[data-chart-type="asset-allocation"]'
         );
         expect(allocationCharts.length).toBe(0);
       });

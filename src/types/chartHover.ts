@@ -44,11 +44,11 @@ export interface PerformanceHoverData extends BaseHoverData {
 }
 
 /**
- * Allocation chart hover data
+ * Asset allocation chart hover data
  * Shows percentage breakdown across asset categories
  */
 export interface AllocationHoverData extends BaseHoverData {
-  chartType: "allocation";
+  chartType: "asset-allocation";
   /** BTC allocation percentage (0-100) */
   btc: number;
   /** ETH allocation percentage (0-100) */
@@ -130,7 +130,7 @@ export function isPerformanceHover(
 export function isAllocationHover(
   state: ChartHoverState | null
 ): state is AllocationHoverData {
-  return state?.chartType === "allocation";
+  return state?.chartType === "asset-allocation";
 }
 
 export function isDrawdownHover(

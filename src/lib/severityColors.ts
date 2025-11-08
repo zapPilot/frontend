@@ -48,15 +48,16 @@ export const severityMappers = {
 
   /**
    * Map volatility percentage to severity
+   * DeFi-adjusted thresholds: 60-80% volatility is normal for crypto markets
    * @param value - Annualized volatility percentage
    * @returns Severity level
    */
   volatility: (value: number): SeverityLevel => {
-    if (value < 10) return "excellent";
-    if (value < 15) return "good";
-    if (value < 25) return "fair";
-    if (value < 35) return "poor";
-    return "critical";
+    if (value < 20) return "excellent"; // Stablecoin-heavy portfolios
+    if (value < 40) return "good";      // Conservative DeFi
+    if (value < 60) return "fair";      // Typical DeFi (most users)
+    if (value < 85) return "poor";      // Aggressive DeFi
+    return "critical";                   // >= 85%: Very high risk
   },
 
   /**

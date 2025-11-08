@@ -885,12 +885,12 @@ export function useChartData(
       .filter(
         point =>
           point.annualized_volatility_pct != null ||
-          point.rolling_volatility_pct != null
+          point.rolling_volatility_daily_pct != null
       )
       .map(point => ({
         date: toDateString(point.date),
         volatility: Number(
-          point.annualized_volatility_pct ?? point.rolling_volatility_pct ?? 0
+          point.annualized_volatility_pct ?? point.rolling_volatility_daily_pct ?? 0
         ),
       }));
   }, [rollingVolatilityData, overrides?.volatilityData]);

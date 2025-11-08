@@ -130,6 +130,7 @@ const WalletManagerComponent = ({
                   width="8rem"
                   height={32}
                   aria-label="Loading wallet data"
+                  data-testid="unified-loading"
                 />
               </div>
               <p className="text-gray-400 text-sm">

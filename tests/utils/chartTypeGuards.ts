@@ -258,13 +258,18 @@ export function narrowHoverState<T extends ChartHoverState["chartType"]>(
 }
 
 /**
- * Type guard for allocation hover data
+ * Type guard for asset allocation hover data
  */
-export function isAllocationHoverData(
+export function isAssetAllocationHoverData(
   state: ChartHoverState | null
-): state is Extract<ChartHoverState, { chartType: "allocation" }> {
-  return state?.chartType === "allocation";
+): state is Extract<ChartHoverState, { chartType: "asset-allocation" }> {
+  return state?.chartType === "asset-allocation";
 }
+
+/**
+ * @deprecated Use isAssetAllocationHoverData - 'allocation' renamed to 'asset-allocation'
+ */
+export const isAllocationHoverData = isAssetAllocationHoverData;
 
 /**
  * Type guard for performance hover data

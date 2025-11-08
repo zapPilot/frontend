@@ -80,7 +80,7 @@ export interface PortfolioChartProps {
   volatilityData?: VolatilityOverridePoint[];
   activeTab?:
     | "performance"
-    | "allocation"
+    | "asset-allocation"
     | "drawdown"
     | "sharpe"
     | "volatility";

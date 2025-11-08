@@ -73,6 +73,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
+    const avgDailyYieldUsd = data?.yield_roi?.avg_daily_yield_usd ?? null;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -231,13 +232,49 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       );
     };
 
+    const renderAvgDailyYieldDisplay = () => {
+      if (shouldShowLoading || landingPageLoading) {
+        return (
+          <WalletMetricsSkeleton
+            showValue={true}
+            showPercentage={false}
+            className="w-24"
+          />
+        );
+      }
+
+      if (portfolioState.errorMessage === "USER_NOT_FOUND") {
+        return null;
+      }
+
+      if (avgDailyYieldUsd === null) {
+        return (
+          <div className="flex items-center space-x-2 text-gray-400">
+            <p className="text-xl font-semibold">No data available</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex items-center space-x-2 text-emerald-300">
+          <p className="text-xl font-semibold">
+            {formatCurrency(avgDailyYieldUsd, {
+              smartPrecision: true,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
+      );
+    };
+
     // Show welcome message for new users
     if (portfolioState.errorMessage === "USER_NOT_FOUND") {
       return <WelcomeNewUser />;
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <p className="text-sm text-gray-400 mb-1">Total Balance</p>
           <div className="text-3xl font-bold text-white h-10 flex items-center">
@@ -282,6 +319,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <p className="text-sm text-gray-400 mb-1">Estimated Yearly PnL</p>
           {renderPnLDisplay()}
+        </div>
+
+        <div>
+          <p className="text-sm text-gray-400 mb-1">Avg Daily Yield (30d)</p>
+          {renderAvgDailyYieldDisplay()}
         </div>
       </div>
     );

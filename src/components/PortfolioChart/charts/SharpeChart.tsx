@@ -13,6 +13,7 @@ import {
 } from "../utils";
 import { ChartGrid } from "./ChartGrid";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
+import { ChartHelpModal } from "../components";
 
 interface SharpeChartProps {
   data: { date: string; sharpe: number }[];
@@ -158,31 +159,39 @@ export const SharpeChart = memo<SharpeChartProps>(
           <ChartIndicator hoveredPoint={sharpeHover.hoveredPoint} />
         </svg>
 
-        {/* Y-axis labels */}
+        {/* Y-axis labels - DeFi-adjusted range (-1.0 to 3.5) */}
         <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
+          <span>3.5</span>
           <span>2.5</span>
-          <span>2.0</span>
           <span>1.5</span>
-          <span>1.0</span>
           <span>0.5</span>
-          <span>0.0</span>
+          <span>-0.5</span>
+          <span>-1.0</span>
         </div>
 
-        {/* Legend */}
-        <div className="absolute top-4 right-4 text-xs pointer-events-none">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-0.5 bg-emerald-500"></div>
-            <span className="text-white">Rolling Sharpe Ratio</span>
+        {/* Header with Legend and Help */}
+        <div className="absolute top-4 right-4 flex items-start gap-3">
+          {/* Legend */}
+          <div className="text-xs pointer-events-none">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-0.5 bg-emerald-500"></div>
+              <span className="text-white">Rolling Sharpe Ratio</span>
+            </div>
+            <div className="flex items-center space-x-2 mt-1">
+              <div
+                className="w-3 h-0.5 bg-gray-500 opacity-50"
+                style={{
+                  backgroundImage:
+                    "repeating-linear-gradient(to right, #6b7280, #6b7280 2px, transparent 2px, transparent 4px)",
+                }}
+              ></div>
+              <span className="text-gray-400">Sharpe = 1.0</span>
+            </div>
           </div>
-          <div className="flex items-center space-x-2 mt-1">
-            <div
-              className="w-3 h-0.5 bg-gray-500 opacity-50"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(to right, #6b7280, #6b7280 2px, transparent 2px, transparent 4px)",
-              }}
-            ></div>
-            <span className="text-gray-400">Sharpe = 1.0</span>
+
+          {/* Help Button */}
+          <div className="pointer-events-auto">
+            <ChartHelpModal chartType="sharpe" />
           </div>
         </div>
 

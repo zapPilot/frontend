@@ -17,7 +17,7 @@ import { CHART_PERIODS } from "../../lib/portfolio-analytics";
 import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
-  AllocationChart,
+  AssetAllocationChart,
   DrawdownRecoveryChart,
   PerformanceChart,
   SharpeChart,
@@ -29,18 +29,22 @@ import type { PortfolioChartProps } from "./types";
 import { CHART_CONTENT_ID } from "./utils";
 
 /**
- * Chart type selector configuration
+ * Chart type selector configuration with industry-standard labels
  */
 const CHART_TYPES = [
   {
     key: "performance" as const,
-    label: "Portfolio Value",
+    label: "Total Return",
     icon: TrendingUp,
   },
-  { key: "allocation" as const, label: "Allocation", icon: PieChart },
+  {
+    key: "asset-allocation" as const,
+    label: "Asset Allocation",
+    icon: PieChart,
+  },
   {
     key: "drawdown" as const,
-    label: "Drawdown & Recovery",
+    label: "Drawdown Analysis",
     icon: Activity,
   },
   { key: "sharpe" as const, label: "Sharpe Ratio", icon: Target },
@@ -190,7 +194,7 @@ const PortfolioChartComponent = ({
                 aria-hidden="true"
                 role="presentation"
               />
-              Portfolio Value
+              Total Return
             </h3>
             <div className="flex items-center space-x-4 text-sm">
               <div
@@ -262,8 +266,8 @@ const PortfolioChartComponent = ({
               selectedPeriod={selectedPeriod}
             />
           )}
-          {selectedChart === "allocation" && (
-            <AllocationChart data={chartData.allocationHistory} />
+          {selectedChart === "asset-allocation" && (
+            <AssetAllocationChart data={chartData.allocationHistory} />
           )}
           {selectedChart === "drawdown" && (
             <DrawdownRecoveryChart

@@ -40,7 +40,7 @@ describe("ChartTooltip", () => {
     render(
       <ChartTooltip
         hoveredPoint={{
-          chartType: "allocation",
+          chartType: "asset-allocation",
           date: "2025-02-01",
           x: 320,
           y: 180,

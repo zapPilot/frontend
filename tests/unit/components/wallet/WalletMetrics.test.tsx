@@ -107,6 +107,28 @@ vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
         coverage_percentage: 0,
         matched_asset_value_usd: 0,
       },
+      yield_roi: {
+        user_id: "test-user-123",
+        period_start: "2025-10-09",
+        period_end: "2025-11-08",
+        period_days: 30,
+        days_with_data: 30,
+        initial_nav_usd: 15000,
+        net_yield_usd: 450,
+        yield_roi_percent: 3,
+        annualized_yield_roi_percent: 36,
+        estimated_apy_percent: 37,
+        breakdown: {
+          token_yield_usd: 300,
+          token_gains_usd: 500,
+          token_losses_usd: 200,
+          reward_yield_usd: 150,
+          borrowing_cost_usd: 50,
+        },
+        confidence: "high",
+        avg_daily_yield_usd: 15,
+        yield_volatility: 5,
+      },
     },
     isLoading: false,
     error: null,
@@ -204,6 +226,28 @@ describe("WalletMetrics", () => {
       coverage_percentage: 0,
       matched_asset_value_usd: 0,
     },
+    yield_roi: {
+      user_id: "test-user-123",
+      period_start: "2025-10-09",
+      period_end: "2025-11-08",
+      period_days: 30,
+      days_with_data: 30,
+      initial_nav_usd: 15000,
+      net_yield_usd: 450,
+      yield_roi_percent: 3,
+      annualized_yield_roi_percent: 36,
+      estimated_apy_percent: 37,
+      breakdown: {
+        token_yield_usd: 300,
+        token_gains_usd: 500,
+        token_losses_usd: 200,
+        reward_yield_usd: 150,
+        borrowing_cost_usd: 50,
+      },
+      confidence: "high",
+      avg_daily_yield_usd: 15,
+      yield_volatility: 5,
+    },
   };
 
   const defaultProps = {
@@ -248,12 +292,15 @@ describe("WalletMetrics", () => {
   });
 
   describe("UI Structure and Layout", () => {
-    it("should render all three metric sections", () => {
+    it("should render all four metric sections", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
+      expect(
+        screen.getByText("Avg Daily Yield (30d)")
+      ).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -265,7 +312,7 @@ describe("WalletMetrics", () => {
       expect(container).toHaveClass(
         "grid",
         "grid-cols-1",
-        "md:grid-cols-3",
+        "md:grid-cols-4",
         "gap-4",
         "mb-6"
       );
@@ -278,6 +325,7 @@ describe("WalletMetrics", () => {
         screen.getByText("Total Balance"),
         screen.getByText(/Estimated Yearly ROI/),
         screen.getByText("Estimated Yearly PnL"),
+        screen.getByText("Avg Daily Yield (30d)"),
       ];
 
       for (const label of labels) {
@@ -635,7 +683,7 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL/
+        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield \(30d\)/
       );
       expect(sections).toHaveLength(3);
     });

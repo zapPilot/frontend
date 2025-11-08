@@ -87,10 +87,12 @@ describe("PortfolioChart Component", () => {
       expect(svg).not.toBeNull();
     });
 
-    it("should render allocation chart with stacked bars", () => {
-      const { container } = renderChart({ activeTab: "allocation" });
+    it("should render asset allocation chart with stacked bars", () => {
+      const { container } = renderChart({ activeTab: "asset-allocation" });
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       expect(svg).not.toBeNull();
 
       // Should have areas for each asset class
@@ -131,7 +133,7 @@ describe("PortfolioChart Component", () => {
     });
 
     it("should highlight active tab", () => {
-      renderChart({ activeTab: "allocation" });
+      renderChart({ activeTab: "asset-allocation" });
 
       // Active tab should be visually distinguished
       const activeTab = screen.queryByRole("tab", { selected: true });
@@ -185,13 +187,13 @@ describe("PortfolioChart Component", () => {
           <PortfolioChart
             portfolioData={ChartTestFixtures.mediumPortfolioData()}
             allocationData={ChartTestFixtures.balancedAllocation()}
-            activeTab="allocation"
+            activeTab="asset-allocation"
           />
         </QueryClientProvider>
       );
 
       expect(
-        container.querySelector('svg[data-chart-type="allocation"]')
+        container.querySelector('svg[data-chart-type="asset-allocation"]')
       ).not.toBeNull();
     });
 
@@ -375,14 +377,16 @@ describe("PortfolioChart Component", () => {
     it("should switch tabs on tab click", async () => {
       const { container } = renderChart();
 
-      const allocationTab = screen.queryByRole("tab", { name: /allocation/i });
+      const allocationTab = screen.queryByRole("tab", {
+        name: /asset allocation/i,
+      });
 
       if (allocationTab) {
         await userEvent.click(allocationTab);
 
         await waitFor(() => {
           expect(
-            container.querySelector('svg[data-chart-type="allocation"]')
+            container.querySelector('svg[data-chart-type="asset-allocation"]')
           ).not.toBeNull();
         });
       }
@@ -586,7 +590,7 @@ describe("PortfolioChart Component", () => {
     });
 
     it("should format percentages correctly", async () => {
-      const { container } = renderChart({ activeTab: "allocation" });
+      const { container } = renderChart({ activeTab: "asset-allocation" });
 
       const svg = container.querySelector("svg");
       if (svg) {

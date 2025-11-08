@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
+  getYieldRoiData,
   type LandingPageResponse,
 } from "../../services/analyticsService";
 import { portfolioLogger } from "../../utils/logger";
@@ -23,8 +24,35 @@ export function useLandingPageData(userId: string | null | undefined) {
         throw new Error("User ID is required");
       }
 
-      // Single API call to get all landing page data
-      return await getLandingPagePortfolioData(userId);
+      const [landingResult, yieldResult] = await Promise.allSettled([
+        getLandingPagePortfolioData(userId),
+        getYieldRoiData(userId, 30),
+      ]);
+
+      if (landingResult.status === "rejected") {
+        throw landingResult.reason;
+      }
+
+      const landingData = landingResult.value;
+
+      if (yieldResult.status === "fulfilled") {
+        return {
+          ...landingData,
+          yield_roi: yieldResult.value,
+        };
+      }
+
+      if (yieldResult.status === "rejected") {
+        portfolioLogger.warn("Failed to fetch yield ROI for landing page", {
+          error:
+            yieldResult.reason instanceof Error
+              ? yieldResult.reason.message
+              : String(yieldResult.reason),
+          userId,
+        });
+      }
+
+      return landingData;
     },
     enabled: !!userId, // Only run when userId is available
     refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active

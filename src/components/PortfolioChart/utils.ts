@@ -12,11 +12,11 @@ import type {
 export const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
 
 export const CHART_LABELS = {
-  performance: "Portfolio value chart showing net worth over time",
-  allocation: "Portfolio allocation chart",
-  drawdown: "Drawdown and recovery analysis chart",
-  sharpe: "Rolling Sharpe ratio chart",
-  volatility: "Portfolio volatility chart",
+  performance: "Total return chart showing portfolio value over time",
+  "asset-allocation": "Asset allocation chart showing portfolio composition",
+  drawdown: "Drawdown analysis chart showing peak-to-trough declines",
+  sharpe: "Sharpe ratio chart showing risk-adjusted returns",
+  volatility: "Volatility chart showing portfolio risk metrics",
 } as const;
 
 export const CHART_CONTENT_ID = "portfolio-chart-content";
