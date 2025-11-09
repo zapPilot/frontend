@@ -1,4 +1,4 @@
-import { AlertCircle, Info, TrendingUp } from "lucide-react";
+import { AlertCircle, Clock, Info, TrendingUp } from "lucide-react";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
@@ -250,6 +250,33 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       );
     };
 
+    // Helper to determine yield display state based on data availability
+    const determineYieldState = () => {
+      if (!data?.yield_roi || avgDailyYieldUsd === null) {
+        return { status: "no_data" as const, daysWithData: 0 };
+      }
+
+      const daysWithData = data.yield_roi.days_with_data || 0;
+
+      if (daysWithData < 7) {
+        return {
+          status: "insufficient" as const,
+          daysWithData,
+          badge: "Preliminary",
+        };
+      }
+
+      if (daysWithData < 30) {
+        return {
+          status: "low_confidence" as const,
+          daysWithData,
+          badge: "Improving",
+        };
+      }
+
+      return { status: "normal" as const, daysWithData };
+    };
+
     const renderAvgDailyYieldDisplay = () => {
       if (shouldShowLoading || landingPageLoading) {
         return (
@@ -265,18 +292,62 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         return null;
       }
 
-      if (avgDailyYieldUsd === null) {
+      const yieldState = determineYieldState();
+
+      // No data state - educational message
+      if (yieldState.status === "no_data") {
         return (
-          <div className="flex items-center space-x-2 text-gray-400">
-            <p className="text-xl font-semibold">No data available</p>
+          <div className="flex flex-col space-y-1">
+            <div className="flex items-center space-x-2 text-purple-400">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Available in 1 day</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              After 24 hours of portfolio activity
+            </p>
           </div>
         );
       }
 
+      // Insufficient or low confidence state
+      if (
+        yieldState.status === "insufficient" ||
+        yieldState.status === "low_confidence"
+      ) {
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2 text-emerald-300">
+              <p className="text-xl font-semibold">
+                {formatCurrency(avgDailyYieldUsd!, {
+                  smartPrecision: true,
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <span
+                className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                  yieldState.status === "insufficient"
+                    ? "bg-yellow-900/20 text-yellow-400"
+                    : "bg-blue-900/20 text-blue-400"
+                }`}
+              >
+                {yieldState.badge}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500 mt-1">
+              {yieldState.status === "insufficient"
+                ? `Early estimate (${yieldState.daysWithData}/7 days)`
+                : `Based on ${yieldState.daysWithData} days`}
+            </span>
+          </div>
+        );
+      }
+
+      // Normal state
       return (
         <div className="flex items-center space-x-2 text-emerald-300">
           <p className="text-xl font-semibold">
-            {formatCurrency(avgDailyYieldUsd, {
+            {formatCurrency(avgDailyYieldUsd!, {
               smartPrecision: true,
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
