@@ -1,7 +1,7 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 
 interface ChartHelpModalProps {
   chartType: "sharpe" | "volatility";
@@ -13,12 +13,30 @@ const HELP_CONTENT = {
     description:
       "Measures risk-adjusted returns. Higher is better. Calculated as (portfolio return - risk-free rate) / portfolio volatility.",
     interpretation: [
-      { label: "Exceptional (≥2.0)", description: "Outstanding risk-adjusted performance (top 5% of DeFi)" },
-      { label: "Excellent (1.5-2.0)", description: "Strong returns for risk taken (top 20%)" },
-      { label: "Good (1.0-1.5)", description: "Solid performance, beating risk-free rate" },
-      { label: "Moderate (0.5-1.0)", description: "Acceptable but could optimize further" },
-      { label: "Low (0-0.5)", description: "Weak risk-adjusted returns, rebalance recommended" },
-      { label: "Negative (<0)", description: "Losing money relative to safe alternatives" },
+      {
+        label: "Exceptional (≥2.0)",
+        description: "Outstanding risk-adjusted performance (top 5% of DeFi)",
+      },
+      {
+        label: "Excellent (1.5-2.0)",
+        description: "Strong returns for risk taken (top 20%)",
+      },
+      {
+        label: "Good (1.0-1.5)",
+        description: "Solid performance, beating risk-free rate",
+      },
+      {
+        label: "Moderate (0.5-1.0)",
+        description: "Acceptable but could optimize further",
+      },
+      {
+        label: "Low (0-0.5)",
+        description: "Weak risk-adjusted returns, rebalance recommended",
+      },
+      {
+        label: "Negative (<0)",
+        description: "Losing money relative to safe alternatives",
+      },
     ],
   },
   volatility: {
@@ -26,11 +44,20 @@ const HELP_CONTENT = {
     description:
       "Measures price fluctuation (standard deviation of returns). Shows how much your portfolio value swings day-to-day. Lower volatility = more stable portfolio.",
     interpretation: [
-      { label: "Very Low (<20%)", description: "Stable, stablecoin-heavy portfolios" },
+      {
+        label: "Very Low (<20%)",
+        description: "Stable, stablecoin-heavy portfolios",
+      },
       { label: "Low (20-40%)", description: "Conservative DeFi, low risk" },
-      { label: "Moderate (40-60%)", description: "Typical DeFi range, balanced" },
+      {
+        label: "Moderate (40-60%)",
+        description: "Typical DeFi range, balanced",
+      },
       { label: "High (60-85%)", description: "Aggressive DeFi, crypto-heavy" },
-      { label: "Extreme (≥85%)", description: "Very high risk, significant swings" },
+      {
+        label: "Extreme (≥85%)",
+        description: "Very high risk, significant swings",
+      },
     ],
   },
 } as const;
@@ -75,7 +102,7 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               {/* Header */}
               <div className="sticky top-0 bg-gray-900/98 backdrop-blur-md border-b border-gray-700/50 px-6 py-4 flex items-center justify-between z-10">
@@ -87,8 +114,18 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
                   className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded p-1 transition-colors"
                   aria-label="Close panel"
                 >
-                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 </button>
               </div>
@@ -108,8 +145,16 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
                 {/* DeFi Context */}
                 <section className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-lg p-4">
                   <h4 className="text-sm font-semibold text-blue-300 mb-3 flex items-center gap-2">
-                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     DeFi Context
                   </h4>
@@ -136,7 +181,9 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li className="flex gap-2">
                         <span className="text-emerald-400">•</span>
-                        <span>Higher Sharpe = better risk-adjusted returns</span>
+                        <span>
+                          Higher Sharpe = better risk-adjusted returns
+                        </span>
                       </li>
                       <li className="flex gap-2">
                         <span className="text-emerald-400">•</span>
@@ -144,18 +191,24 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
                       </li>
                       <li className="flex gap-2">
                         <span className="text-emerald-400">•</span>
-                        <span>Negative means you're losing vs stablecoins</span>
+                        <span>
+                          Negative means you&apos;re losing vs stablecoins
+                        </span>
                       </li>
                     </ul>
                   ) : (
                     <ul className="space-y-2 text-sm text-gray-300">
                       <li className="flex gap-2">
                         <span className="text-amber-400">•</span>
-                        <span>60-80% volatility is normal for crypto portfolios</span>
+                        <span>
+                          60-80% volatility is normal for crypto portfolios
+                        </span>
                       </li>
                       <li className="flex gap-2">
                         <span className="text-amber-400">•</span>
-                        <span>Lower volatility = more stable, less stressful</span>
+                        <span>
+                          Lower volatility = more stable, less stressful
+                        </span>
                       </li>
                       <li className="flex gap-2">
                         <span className="text-amber-400">•</span>

@@ -61,6 +61,20 @@ export interface VolatilityOverridePoint {
   rolling_volatility_daily_pct?: number;
 }
 
+export interface DailyYieldProtocol {
+  protocol_name: string;
+  chain: string;
+  yield_return_usd: number;
+}
+
+export interface DailyYieldOverridePoint {
+  date: string;
+  total_yield_usd: number;
+  protocol_count?: number;
+  cumulative_yield_usd?: number;
+  protocols?: DailyYieldProtocol[];
+}
+
 /**
  * Extended portfolio data point with DeFi and Wallet breakdown
  * Used for stacked area chart visualization
@@ -78,12 +92,14 @@ export interface PortfolioChartProps {
   drawdownData?: DrawdownOverridePoint[];
   sharpeData?: SharpeOverridePoint[];
   volatilityData?: VolatilityOverridePoint[];
+  dailyYieldData?: DailyYieldOverridePoint[];
   activeTab?:
     | "performance"
     | "asset-allocation"
     | "drawdown"
     | "sharpe"
-    | "volatility";
+    | "volatility"
+    | "daily-yield";
   isLoading?: boolean;
   error?: Error | string | null;
 }

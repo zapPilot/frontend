@@ -5,6 +5,7 @@ import {
   Activity,
   BarChart3,
   Calendar,
+  DollarSign,
   PieChart,
   Target,
   TrendingUp,
@@ -18,6 +19,7 @@ import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
   AssetAllocationChart,
+  DailyYieldChart,
   DrawdownRecoveryChart,
   PerformanceChart,
   SharpeChart,
@@ -49,6 +51,7 @@ const CHART_TYPES = [
   },
   { key: "sharpe" as const, label: "Sharpe Ratio", icon: Target },
   { key: "volatility" as const, label: "Volatility", icon: BarChart3 },
+  { key: "daily-yield" as const, label: "Daily Yield", icon: DollarSign },
 ] as const;
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
@@ -80,6 +83,7 @@ const PortfolioChartComponent = ({
   drawdownData: drawdownDataOverride,
   sharpeData: sharpeDataOverride,
   volatilityData: volatilityDataOverride,
+  dailyYieldData: dailyYieldDataOverride,
   activeTab,
   isLoading: externalLoading,
   error: externalError,
@@ -116,6 +120,7 @@ const PortfolioChartComponent = ({
       drawdownData: drawdownDataOverride,
       sharpeData: sharpeDataOverride,
       volatilityData: volatilityDataOverride,
+      dailyYieldData: dailyYieldDataOverride,
     },
     externalLoading,
     externalError
@@ -280,6 +285,9 @@ const PortfolioChartComponent = ({
           )}
           {selectedChart === "volatility" && (
             <VolatilityChart data={chartData.volatilityData} />
+          )}
+          {selectedChart === "daily-yield" && (
+            <DailyYieldChart data={chartData.dailyYieldData} />
           )}
         </div>
 

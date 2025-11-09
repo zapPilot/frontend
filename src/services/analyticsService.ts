@@ -7,12 +7,24 @@ import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
+export interface ProtocolYieldBreakdown {
+  protocol_name: string;
+  chain: string;
+  token_yield_usd: number;
+  token_gains_usd: number;
+  token_losses_usd: number;
+  reward_yield_usd: number;
+  net_yield_usd: number;
+  reward_token_count: number;
+}
+
 export interface YieldBreakdown {
   token_yield_usd: number;
   token_gains_usd: number;
   token_losses_usd: number;
   reward_yield_usd: number;
   borrowing_cost_usd: number;
+  by_protocol?: ProtocolYieldBreakdown[];
 }
 
 export interface YieldROIResponse {
@@ -493,5 +505,79 @@ export const getPortfolioDashboard = async (
 
   return await httpUtils.analyticsEngine.get<UnifiedDashboardResponse>(
     `/api/v1/dashboard/portfolio-analytics/${userId}?${queryParams}`
+  );
+};
+
+// ============================================================================
+// DAILY YIELD RETURNS ENDPOINT
+// ============================================================================
+
+/**
+ * Token details for daily yield returns
+ */
+export interface DailyYieldToken {
+  symbol: string;
+  amount_change: number;
+  current_price: number;
+  yield_return_usd: number;
+}
+
+/**
+ * Individual daily yield return entry (per protocol/position)
+ */
+export interface DailyYieldReturn {
+  date: string;
+  protocol_name: string;
+  chain: string;
+  position_type: string;
+  yield_return_usd: number;
+  tokens: DailyYieldToken[];
+}
+
+/**
+ * Period metadata for daily yield returns
+ */
+export interface DailyYieldPeriod {
+  start_date: string;
+  end_date: string;
+  days: number;
+}
+
+/**
+ * Response structure for daily yield returns endpoint
+ */
+export interface DailyYieldReturnsResponse {
+  user_id: string;
+  period: DailyYieldPeriod;
+  daily_returns: DailyYieldReturn[];
+}
+
+/**
+ * Get daily yield returns for a user
+ *
+ * Retrieves granular daily yield data broken down by protocol and position.
+ * Each date may have multiple entries (one per protocol/position).
+ *
+ * @param userId - User identifier
+ * @param days - Number of days to retrieve (default: 30)
+ * @returns Daily yield returns with per-protocol breakdown
+ *
+ * @example
+ * ```typescript
+ * const dailyYield = await getDailyYieldReturns('user-123', 30);
+ *
+ * // Access daily returns
+ * dailyYield.daily_returns.forEach(entry => {
+ *   console.log(`${entry.date}: ${entry.protocol_name} = $${entry.yield_return_usd}`);
+ * });
+ * ```
+ */
+export const getDailyYieldReturns = async (
+  userId: string,
+  days = 30
+): Promise<DailyYieldReturnsResponse> => {
+  const endpoint = `/api/v1/yield/returns/daily/${userId}?days=${days}`;
+  return await httpUtils.analyticsEngine.get<DailyYieldReturnsResponse>(
+    endpoint
   );
 };

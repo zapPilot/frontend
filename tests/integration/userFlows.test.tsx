@@ -15,8 +15,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { PortfolioChart } from "@/components/PortfolioChart/";
 import type { PortfolioChartProps } from "@/components/PortfolioChart";
+import { PortfolioChart } from "@/components/PortfolioChart/";
 
 import { ChartTestFixtures } from "../fixtures/chartTestData";
 

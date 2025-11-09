@@ -7,6 +7,7 @@
  * - 83% network overhead reduction (6 requests → 1 request)
  */
 
+import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
@@ -14,7 +15,10 @@ import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../../../lib/portfolio-analytics";
-import type { UnifiedDashboardResponse } from "../../../services/analyticsService";
+import {
+  getDailyYieldReturns,
+  type UnifiedDashboardResponse,
+} from "../../../services/analyticsService";
 import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
@@ -22,6 +26,7 @@ import type {
 import { DRAWDOWN_CONSTANTS } from "../chartConstants";
 import type {
   AllocationTimeseriesInputPoint,
+  DailyYieldOverridePoint,
   DrawdownOverridePoint,
   DrawdownRecoveryData,
   DrawdownRecoverySummary,
@@ -415,6 +420,7 @@ interface ChartDataOverrides {
   drawdownData?: DrawdownOverridePoint[] | undefined;
   sharpeData?: SharpeOverridePoint[] | undefined;
   volatilityData?: VolatilityOverridePoint[] | undefined;
+  dailyYieldData?: DailyYieldOverridePoint[] | undefined;
 }
 
 /**
@@ -428,6 +434,7 @@ interface ChartData {
   drawdownRecoverySummary: DrawdownRecoverySummary;
   sharpeData: { date: string; sharpe: number }[];
   volatilityData: { date: string; volatility: number }[];
+  dailyYieldData: DailyYieldOverridePoint[];
 
   // Raw portfolio history for reference
   portfolioHistory: PortfolioDataPoint[];
@@ -474,7 +481,8 @@ export function useChartData(
     (overrides?.allocationData?.length ?? 0) > 0 ||
     (overrides?.drawdownData?.length ?? 0) > 0 ||
     (overrides?.sharpeData?.length ?? 0) > 0 ||
-    (overrides?.volatilityData?.length ?? 0) > 0;
+    (overrides?.volatilityData?.length ?? 0) > 0 ||
+    (overrides?.dailyYieldData?.length ?? 0) > 0;
 
   // UNIFIED DASHBOARD FETCH - Replaces 6 separate API calls
   const dashboardQuery = usePortfolioDashboard(userId, {
@@ -488,6 +496,13 @@ export function useChartData(
   const { dashboard } = dashboardQuery;
   const isDashboardLoading = dashboardQuery.isLoading;
   const dashboardError = dashboardQuery.error;
+
+  // DAILY YIELD FETCH - Separate endpoint for daily yield returns
+  const dailyYieldQuery = useQuery({
+    queryKey: ["daily-yield", userId, selectedDays],
+    queryFn: () => (userId ? getDailyYieldReturns(userId, selectedDays) : null),
+    enabled: !!userId && !((overrides?.dailyYieldData?.length ?? 0) > 0),
+  });
 
   // Normalize error
   let normalizedError: string | null;
@@ -890,13 +905,85 @@ export function useChartData(
       .map(point => ({
         date: toDateString(point.date),
         volatility: Number(
-          point.annualized_volatility_pct ?? point.rolling_volatility_daily_pct ?? 0
+          point.annualized_volatility_pct ??
+            point.rolling_volatility_daily_pct ??
+            0
         ),
       }));
   }, [rollingVolatilityData, overrides?.volatilityData]);
 
   const drawdownRecoveryData = drawdownRecovery.data;
   const drawdownRecoverySummary = drawdownRecovery.summary;
+
+  // Process daily yield data
+  const dailyYieldData: DailyYieldOverridePoint[] = useMemo(() => {
+    // Use override data if provided
+    if (overrides?.dailyYieldData?.length) {
+      return overrides.dailyYieldData;
+    }
+
+    // Return empty array if no API data
+    if (!dailyYieldQuery.data?.daily_returns) {
+      return [];
+    }
+
+    // Group returns by date and aggregate
+    const groupedByDate = new Map<
+      string,
+      {
+        totalYield: number;
+        protocols: {
+          protocol_name: string;
+          chain: string;
+          yield_return_usd: number;
+        }[];
+      }
+    >();
+
+    for (const entry of dailyYieldQuery.data.daily_returns) {
+      const existing = groupedByDate.get(entry.date);
+      if (existing) {
+        existing.totalYield += entry.yield_return_usd;
+        existing.protocols.push({
+          protocol_name: entry.protocol_name,
+          chain: entry.chain,
+          yield_return_usd: entry.yield_return_usd,
+        });
+      } else {
+        groupedByDate.set(entry.date, {
+          totalYield: entry.yield_return_usd,
+          protocols: [
+            {
+              protocol_name: entry.protocol_name,
+              chain: entry.chain,
+              yield_return_usd: entry.yield_return_usd,
+            },
+          ],
+        });
+      }
+    }
+
+    // Convert to array and sort by date
+    const aggregated = Array.from(groupedByDate.entries())
+      .map(([date, data]) => ({
+        date,
+        total_yield_usd: data.totalYield,
+        protocol_count: data.protocols.length,
+        protocols: data.protocols,
+        cumulative_yield_usd: 0, // Will be calculated next
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    // Calculate cumulative yield
+    let cumulative = 0;
+    return aggregated.map(point => {
+      cumulative += point.total_yield_usd;
+      return {
+        ...point,
+        cumulative_yield_usd: cumulative,
+      };
+    });
+  }, [dailyYieldQuery.data, overrides?.dailyYieldData]);
 
   // Check for partial failures in unified dashboard
   return {
@@ -906,6 +993,7 @@ export function useChartData(
     drawdownRecoverySummary,
     sharpeData,
     volatilityData,
+    dailyYieldData,
     portfolioHistory,
     drawdownReferenceData,
     isLoading,

@@ -71,21 +71,28 @@ export function getSharpeInterpretation(
  * @param volatility - Annualized volatility percentage
  * @returns Risk level label
  */
+const VOLATILITY_RISK_THRESHOLDS = {
+  LOW_MAX: 20,
+  MODERATE_MAX: 30,
+  HIGH_MAX: 40,
+} as const;
+
 export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
-  const severity = severityMappers.volatility(volatility);
-  const mapping: Record<
-    SeverityLevel,
-    "Low" | "Moderate" | "High" | "Very High"
-  > = {
-    excellent: "Low",
-    good: "Low",
-    fair: "Moderate",
-    poor: "High",
-    critical: "Very High",
-  };
-  return mapping[severity];
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) {
+    return "Low";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) {
+    return "Moderate";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) {
+    return "High";
+  }
+
+  return "Very High";
 }
 
 /**
@@ -142,6 +149,16 @@ export function getDrawdownSeverityColor(
 export function getVolatilityRiskColor(
   riskLevel: "Low" | "Moderate" | "High" | "Very High"
 ): { color: string; bgColor: string } {
-  const severityLevel = legacyLabelMapping[riskLevel];
+  const riskToSeverity: Record<
+    "Low" | "Moderate" | "High" | "Very High",
+    SeverityLevel
+  > = {
+    Low: "excellent",
+    Moderate: "good",
+    High: "poor",
+    "Very High": "critical",
+  };
+
+  const severityLevel = riskToSeverity[riskLevel];
   return getColorForSeverity(severityLevel);
 }

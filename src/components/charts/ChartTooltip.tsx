@@ -23,6 +23,7 @@ import { formatters } from "@/lib/formatters";
 import type {
   AllocationHoverData,
   ChartHoverState,
+  DailyYieldHoverData,
   DrawdownHoverData,
   PerformanceHoverData,
   SharpeHoverData,
@@ -334,6 +335,81 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
 }
 
 /**
+ * Render Daily Yield chart tooltip content with protocol breakdown
+ */
+function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
+  const isPositive = data.totalYield >= 0;
+  const colorClass = isPositive ? "text-emerald-400" : "text-red-400";
+
+  // Sort protocols by yield (descending absolute value)
+  const sortedProtocols =
+    data.protocols
+      ?.slice()
+      .sort(
+        (a, b) => Math.abs(b.yield_return_usd) - Math.abs(a.yield_return_usd)
+      ) ?? [];
+
+  return (
+    <>
+      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-gray-300">Daily Yield</span>
+          <span className={`text-sm font-semibold ${colorClass}`}>
+            {isPositive ? "+" : ""}
+            {formatters.currency(data.totalYield)}
+          </span>
+        </div>
+        {data.cumulativeYield !== undefined && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-purple-300">Cumulative</span>
+            <span className="text-sm font-semibold text-white">
+              {formatters.currency(data.cumulativeYield)}
+            </span>
+          </div>
+        )}
+        {sortedProtocols.length > 0 && (
+          <>
+            <div className="border-t border-gray-700 pt-1.5 mt-1.5">
+              <div className="text-xs text-gray-400 mb-1">
+                By Protocol ({data.protocolCount})
+              </div>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {sortedProtocols.map((protocol, idx) => {
+                  const protocolPositive = protocol.yield_return_usd >= 0;
+                  const protocolColor = protocolPositive
+                    ? "text-emerald-300"
+                    : "text-red-300";
+                  return (
+                    <div
+                      key={`${protocol.protocol_name}-${protocol.chain}-${idx}`}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="text-xs text-gray-300 truncate">
+                        {protocol.protocol_name}
+                        <span className="text-gray-500 ml-1">
+                          ({protocol.chain})
+                        </span>
+                      </span>
+                      <span
+                        className={`text-xs font-semibold ${protocolColor}`}
+                      >
+                        {protocolPositive ? "+" : ""}
+                        {formatters.currency(protocol.yield_return_usd)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
  * ChartTooltip component with smart positioning
  */
 export function ChartTooltip({
@@ -432,6 +508,11 @@ export function ChartTooltip({
         {hoveredPoint.chartType === "volatility" && (
           <VolatilityTooltipContent
             data={hoveredPoint as VolatilityHoverData}
+          />
+        )}
+        {hoveredPoint.chartType === "daily-yield" && (
+          <DailyYieldTooltipContent
+            data={hoveredPoint as DailyYieldHoverData}
           />
         )}
       </div>

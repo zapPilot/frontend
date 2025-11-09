@@ -17,6 +17,7 @@ export const CHART_LABELS = {
   drawdown: "Drawdown analysis chart showing peak-to-trough declines",
   sharpe: "Sharpe ratio chart showing risk-adjusted returns",
   volatility: "Volatility chart showing portfolio risk metrics",
+  "daily-yield": "Daily yield returns chart showing earnings over time",
 } as const;
 
 export const CHART_CONTENT_ID = "portfolio-chart-content";

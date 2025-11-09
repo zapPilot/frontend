@@ -1,5 +1,5 @@
 import { AlertCircle, Info, TrendingUp } from "lucide-react";
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 
@@ -10,7 +10,7 @@ import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
-import { ROITooltip } from "./ROITooltip";
+import { ProtocolROIItem, ROITooltip } from "./ROITooltip";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
@@ -90,6 +90,24 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               deriveRoiWindowSortScore(a.key) - deriveRoiWindowSortScore(b.key)
           ) // Shortest period first
       : [];
+
+    // Extract and transform protocol yield data for tooltip display
+    const protocolROIData: ProtocolROIItem[] = useMemo(() => {
+      const protocolBreakdown = data?.yield_roi?.breakdown?.by_protocol;
+      if (!protocolBreakdown || protocolBreakdown.length === 0) return [];
+
+      return protocolBreakdown
+        .map(protocol => ({
+          protocol: protocol.protocol_name,
+          chain: protocol.chain,
+          netYieldUsd: protocol.net_yield_usd,
+          tokenYieldUsd: protocol.token_yield_usd,
+          rewardYieldUsd: protocol.reward_yield_usd,
+          rewardTokenCount: protocol.reward_token_count,
+        }))
+        .sort((a, b) => b.netYieldUsd - a.netYieldUsd)
+        .slice(0, 7); // Show top 7 protocols by net yield
+    }, [data?.yield_roi?.breakdown?.by_protocol]);
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -302,6 +320,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   <ROITooltip
                     position={roiTooltipPos}
                     windows={roiWindows}
+                    protocols={protocolROIData}
                     recommendedPeriodLabel={
                       portfolioROI?.recommended_period?.replace("roi_", "") ||
                       null
@@ -322,7 +341,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">Avg Daily Yield (30d)</p>
+          <p className="text-sm text-gray-400 mb-1">Avg Daily Yield</p>
           {renderAvgDailyYieldDisplay()}
         </div>
       </div>

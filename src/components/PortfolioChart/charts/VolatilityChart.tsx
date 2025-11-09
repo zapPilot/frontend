@@ -13,7 +13,6 @@ import {
 } from "../utils";
 import { ChartGrid } from "./ChartGrid";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
-import { ChartHelpModal } from "../components";
 
 interface VolatilityChartProps {
   data: { date: string; volatility: number }[];

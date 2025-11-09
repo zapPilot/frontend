@@ -6,6 +6,7 @@
  */
 
 export { AssetAllocationChart } from "./AssetAllocationChart";
+export { DailyYieldChart } from "./DailyYieldChart";
 export { DrawdownRecoveryChart } from "./DrawdownRecoveryChart";
 export { PerformanceChart } from "./PerformanceChart";
 export { SharpeChart } from "./SharpeChart";

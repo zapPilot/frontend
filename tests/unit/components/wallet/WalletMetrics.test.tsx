@@ -298,9 +298,7 @@ describe("WalletMetrics", () => {
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
-      expect(
-        screen.getByText("Avg Daily Yield (30d)")
-      ).toBeInTheDocument();
+      expect(screen.getByText("Avg Daily Yield (30d)")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -685,7 +683,7 @@ describe("WalletMetrics", () => {
       const sections = screen.getAllByText(
         /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield \(30d\)/
       );
-      expect(sections).toHaveLength(3);
+      expect(sections).toHaveLength(4);
     });
   });
 
@@ -957,7 +955,7 @@ describe("WalletMetrics", () => {
       );
 
       // Should show no data available messages for visitors without data (ROI and PnL sections)
-      expect(screen.getAllByText("No data available")).toHaveLength(2);
+      expect(screen.getAllByText("No data available")).toHaveLength(3);
     });
 
     it("should handle visitor with zero data correctly", () => {
@@ -1072,7 +1070,7 @@ describe("WalletMetrics", () => {
 
       // Should show loading indicators for visitor
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(4); // ROI + PnL skeletons
+      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(6); // ROI + PnL + Avg Daily skeleton pairs
     });
   });
 });

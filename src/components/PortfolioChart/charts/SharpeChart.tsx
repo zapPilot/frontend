@@ -6,6 +6,7 @@ import { useChartHover } from "../../../hooks/useChartHover";
 import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
+import { ChartHelpModal } from "../components";
 import {
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
@@ -13,7 +14,6 @@ import {
 } from "../utils";
 import { ChartGrid } from "./ChartGrid";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
-import { ChartHelpModal } from "../components";
 
 interface SharpeChartProps {
   data: { date: string; sharpe: number }[];
