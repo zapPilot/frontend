@@ -295,6 +295,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         );
       }
 
+      // Safety guard: formatting helpers require a numeric value
+      if (avgDailyYieldUsd === null) {
+        return null;
+      }
+
       // Insufficient or low confidence state
       if (
         yieldState.status === "insufficient" ||
@@ -304,7 +309,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           <div className="flex flex-col">
             <div className="flex items-center space-x-2 text-emerald-300">
               <p className="text-xl font-semibold">
-                {formatCurrency(avgDailyYieldUsd!, {
+                {formatCurrency(avgDailyYieldUsd, {
                   smartPrecision: true,
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
@@ -333,7 +338,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       return (
         <div className="flex items-center space-x-2 text-emerald-300">
           <p className="text-xl font-semibold">
-            {formatCurrency(avgDailyYieldUsd!, {
+            {formatCurrency(avgDailyYieldUsd, {
               smartPrecision: true,
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
