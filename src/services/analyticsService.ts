@@ -7,26 +7,6 @@ import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
-interface ProtocolYieldBreakdown {
-  protocol_name: string;
-  chain: string;
-  token_yield_usd: number;
-  token_gains_usd: number;
-  token_losses_usd: number;
-  reward_yield_usd: number;
-  net_yield_usd: number;
-  reward_token_count: number;
-}
-
-interface YieldBreakdown {
-  token_yield_usd: number;
-  token_gains_usd: number;
-  token_losses_usd: number;
-  reward_yield_usd: number;
-  borrowing_cost_usd: number;
-  by_protocol?: ProtocolYieldBreakdown[];
-}
-
 /**
  * Yield returns summary with IQR outlier detection
  *

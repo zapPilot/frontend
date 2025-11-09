@@ -6,6 +6,7 @@ import { useChartHover } from "../../../hooks/useChartHover";
 import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, VOLATILITY_CONSTANTS } from "../chartConstants";
+import { ChartHelpModal } from "../components";
 import {
   CHART_LABELS,
   ENABLE_TEST_AUTO_HOVER,
@@ -151,11 +152,19 @@ export const VolatilityChart = memo<VolatilityChartProps>(
           <span>5%</span>
         </div>
 
-        {/* Legend */}
-        <div className="absolute top-4 right-4 text-xs pointer-events-none">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-0.5 bg-amber-500"></div>
-            <span className="text-white">30-Day Volatility</span>
+        {/* Header with Legend and Help */}
+        <div className="absolute top-4 right-4 flex items-start gap-3">
+          {/* Legend */}
+          <div className="text-xs pointer-events-none">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-0.5 bg-amber-500"></div>
+              <span className="text-white">30-Day Volatility</span>
+            </div>
+          </div>
+
+          {/* Help Button */}
+          <div className="pointer-events-auto">
+            <ChartHelpModal chartType="volatility" />
           </div>
         </div>
 
