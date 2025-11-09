@@ -88,11 +88,13 @@ vi.mock("lucide-react", () => ({
     <span data-testid="arrow-up-right-icon">ArrowUpRight</span>
   )),
   BarChart3: vi.fn(() => <span data-testid="bar-chart3-icon">BarChart3</span>),
+  Clock: vi.fn(() => <span data-testid="clock-icon">Clock</span>),
   DollarSign: vi.fn(() => (
     <span data-testid="dollar-sign-icon">DollarSign</span>
   )),
   Eye: vi.fn(() => <span data-testid="eye-icon">Eye</span>),
   EyeOff: vi.fn(() => <span data-testid="eye-off-icon">EyeOff</span>),
+  Info: vi.fn(() => <span data-testid="info-icon">Info</span>),
   Loader: vi.fn(() => <span data-testid="loader-icon">Loader</span>),
   Settings: vi.fn(() => <span data-testid="settings-icon">Settings</span>),
   TrendingDown: vi.fn(() => (

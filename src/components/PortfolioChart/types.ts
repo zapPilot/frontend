@@ -61,7 +61,7 @@ export interface VolatilityOverridePoint {
   rolling_volatility_daily_pct?: number;
 }
 
-export interface DailyYieldProtocol {
+interface DailyYieldProtocol {
   protocol_name: string;
   chain: string;
   yield_return_usd: number;

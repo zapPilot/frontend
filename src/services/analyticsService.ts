@@ -7,7 +7,7 @@ import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
-export interface ProtocolYieldBreakdown {
+interface ProtocolYieldBreakdown {
   protocol_name: string;
   chain: string;
   token_yield_usd: number;
@@ -18,7 +18,7 @@ export interface ProtocolYieldBreakdown {
   reward_token_count: number;
 }
 
-export interface YieldBreakdown {
+interface YieldBreakdown {
   token_yield_usd: number;
   token_gains_usd: number;
   token_losses_usd: number;
@@ -554,7 +554,7 @@ export const getPortfolioDashboard = async (
 /**
  * Token details for daily yield returns
  */
-export interface DailyYieldToken {
+interface DailyYieldToken {
   symbol: string;
   amount_change: number;
   current_price: number;
@@ -564,7 +564,7 @@ export interface DailyYieldToken {
 /**
  * Individual daily yield return entry (per protocol/position)
  */
-export interface DailyYieldReturn {
+interface DailyYieldReturn {
   date: string;
   protocol_name: string;
   chain: string;
@@ -576,7 +576,7 @@ export interface DailyYieldReturn {
 /**
  * Period metadata for daily yield returns
  */
-export interface DailyYieldPeriod {
+interface DailyYieldPeriod {
   start_date: string;
   end_date: string;
   days: number;
@@ -585,7 +585,7 @@ export interface DailyYieldPeriod {
 /**
  * Response structure for daily yield returns endpoint
  */
-export interface DailyYieldReturnsResponse {
+interface DailyYieldReturnsResponse {
   user_id: string;
   period: DailyYieldPeriod;
   daily_returns: DailyYieldReturn[];
