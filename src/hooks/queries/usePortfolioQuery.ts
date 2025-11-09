@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
-  getYieldRoiData,
+  getYieldReturnsSummary,
   type LandingPageResponse,
 } from "../../services/analyticsService";
 import { portfolioLogger } from "../../utils/logger";
@@ -26,7 +26,7 @@ export function useLandingPageData(userId: string | null | undefined) {
 
       const [landingResult, yieldResult] = await Promise.allSettled([
         getLandingPagePortfolioData(userId),
-        getYieldRoiData(userId, 30),
+        getYieldReturnsSummary(userId, 30),
       ]);
 
       if (landingResult.status === "rejected") {
@@ -38,18 +38,21 @@ export function useLandingPageData(userId: string | null | undefined) {
       if (yieldResult.status === "fulfilled") {
         return {
           ...landingData,
-          yield_roi: yieldResult.value,
+          yield_summary: yieldResult.value,
         };
       }
 
       if (yieldResult.status === "rejected") {
-        portfolioLogger.warn("Failed to fetch yield ROI for landing page", {
-          error:
-            yieldResult.reason instanceof Error
-              ? yieldResult.reason.message
-              : String(yieldResult.reason),
-          userId,
-        });
+        portfolioLogger.warn(
+          "Failed to fetch yield returns summary for landing page",
+          {
+            error:
+              yieldResult.reason instanceof Error
+                ? yieldResult.reason.message
+                : String(yieldResult.reason),
+            userId,
+          }
+        );
       }
 
       return landingData;

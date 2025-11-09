@@ -1,5 +1,5 @@
 import { AlertCircle, Clock, Info, TrendingUp } from "lucide-react";
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 
@@ -73,7 +73,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
-    const avgDailyYieldUsd = data?.yield_roi?.avg_daily_yield_usd ?? null;
+    const avgDailyYieldUsd = data?.yield_summary?.average_daily_yield_usd ?? null;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -91,23 +91,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           ) // Shortest period first
       : [];
 
-    // Extract and transform protocol yield data for tooltip display
-    const protocolROIData: ProtocolROIItem[] = useMemo(() => {
-      const protocolBreakdown = data?.yield_roi?.breakdown?.by_protocol;
-      if (!protocolBreakdown || protocolBreakdown.length === 0) return [];
-
-      return protocolBreakdown
-        .map(protocol => ({
-          protocol: protocol.protocol_name,
-          chain: protocol.chain,
-          netYieldUsd: protocol.net_yield_usd,
-          tokenYieldUsd: protocol.token_yield_usd,
-          rewardYieldUsd: protocol.reward_yield_usd,
-          rewardTokenCount: protocol.reward_token_count,
-        }))
-        .sort((a, b) => b.netYieldUsd - a.netYieldUsd)
-        .slice(0, 7); // Show top 7 protocols by net yield
-    }, [data?.yield_roi?.breakdown?.by_protocol]);
+    // Note: Protocol breakdown is not available in the new yield_summary endpoint
+    // This data would need to come from a separate endpoint if needed for tooltips
+    const protocolROIData: ProtocolROIItem[] = [];
 
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
@@ -252,11 +238,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper to determine yield display state based on data availability
     const determineYieldState = () => {
-      if (!data?.yield_roi || avgDailyYieldUsd === null) {
+      if (!data?.yield_summary || avgDailyYieldUsd === null) {
         return { status: "no_data" as const, daysWithData: 0 };
       }
 
-      const daysWithData = data.yield_roi.days_with_data || 0;
+      const daysWithData = data.yield_summary.statistics.filtered_days || 0;
 
       if (daysWithData < 7) {
         return {
@@ -412,7 +398,18 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         </div>
 
         <div>
-          <p className="text-sm text-gray-400 mb-1">Avg Daily Yield</p>
+          <div className="flex items-center space-x-1 mb-1">
+            <p className="text-sm text-gray-400">Avg Daily Yield</p>
+            {data?.yield_summary?.statistics.outliers_removed &&
+              data.yield_summary.statistics.outliers_removed > 0 && (
+                <span
+                  title={`${data.yield_summary.statistics.outliers_removed} outlier${data.yield_summary.statistics.outliers_removed !== 1 ? "s" : ""} removed for accuracy (IQR method)`}
+                  className="inline-flex"
+                >
+                  <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                </span>
+              )}
+          </div>
           {renderAvgDailyYieldDisplay()}
         </div>
       </div>

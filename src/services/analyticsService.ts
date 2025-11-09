@@ -27,21 +27,39 @@ export interface YieldBreakdown {
   by_protocol?: ProtocolYieldBreakdown[];
 }
 
-export interface YieldROIResponse {
+/**
+ * Yield returns summary with IQR outlier detection
+ *
+ * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
+ * providing more accurate average daily yield calculations for DeFi portfolios.
+ */
+export interface YieldReturnsSummaryResponse {
   user_id: string;
-  period_start: string;
-  period_end: string;
-  period_days: number;
-  days_with_data: number;
-  initial_nav_usd: number;
-  net_yield_usd: number;
-  yield_roi_percent: number;
-  annualized_yield_roi_percent: number;
-  estimated_apy_percent: number;
-  breakdown: YieldBreakdown;
-  confidence: "high" | "medium" | "low";
-  avg_daily_yield_usd: number | null;
-  yield_volatility: number | null;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
+  };
+  average_daily_yield_usd: number;
+  median_daily_yield_usd: number;
+  total_yield_usd: number;
+  statistics: {
+    mean: number;
+    median: number;
+    std_dev: number;
+    min_value: number;
+    max_value: number;
+    total_days: number;
+    filtered_days: number;
+    outliers_removed: number;
+  };
+  outlier_strategy: "iqr" | "none";
+  outliers_detected: {
+    date: string;
+    value: number;
+    reason: string;
+    z_score: number | null;
+  }[];
 }
 
 // Re-export PoolDetail for components that import from this service
@@ -131,7 +149,7 @@ export interface LandingPageResponse {
     matched_asset_value_usd: number;
   };
   message?: string;
-  yield_roi?: YieldROIResponse;
+  yield_summary?: YieldReturnsSummaryResponse;
 }
 
 /**
@@ -147,12 +165,33 @@ export const getLandingPagePortfolioData = async (
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
 };
 
-export const getYieldRoiData = async (
+/**
+ * Get yield returns summary with IQR outlier detection
+ *
+ * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
+ * providing more accurate average daily yield calculations for DeFi portfolios.
+ *
+ * @param userId - User wallet address
+ * @param days - Number of days to analyze (default: 30)
+ * @returns Yield summary with outlier-filtered averages and detection statistics
+ *
+ * @example
+ * const summary = await getYieldReturnsSummary('0x123...', 30);
+ * console.log(`Avg: $${summary.average_daily_yield_usd}`);
+ * console.log(`Outliers removed: ${summary.statistics.outliers_removed}`);
+ */
+export const getYieldReturnsSummary = async (
   userId: string,
   days = 30
-): Promise<YieldROIResponse> => {
-  const endpoint = `/api/v1/yield/roi/${userId}?days=${days}`;
-  return await httpUtils.analyticsEngine.get<YieldROIResponse>(endpoint);
+): Promise<YieldReturnsSummaryResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+    outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
+  });
+  const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;
+  return await httpUtils.analyticsEngine.get<YieldReturnsSummaryResponse>(
+    endpoint
+  );
 };
 
 /**

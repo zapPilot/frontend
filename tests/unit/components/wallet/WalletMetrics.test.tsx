@@ -18,6 +18,7 @@ vi.mock("lucide-react", () => ({
     <span data-testid="alert-circle-icon">AlertCircle</span>
   )),
   Info: vi.fn(() => <span data-testid="info-icon">Info</span>),
+  Clock: vi.fn(() => <span data-testid="clock-icon">Clock</span>),
 }));
 
 // Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed
@@ -107,27 +108,28 @@ vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
         coverage_percentage: 0,
         matched_asset_value_usd: 0,
       },
-      yield_roi: {
+      yield_summary: {
         user_id: "test-user-123",
-        period_start: "2025-10-09",
-        period_end: "2025-11-08",
-        period_days: 30,
-        days_with_data: 30,
-        initial_nav_usd: 15000,
-        net_yield_usd: 450,
-        yield_roi_percent: 3,
-        annualized_yield_roi_percent: 36,
-        estimated_apy_percent: 37,
-        breakdown: {
-          token_yield_usd: 300,
-          token_gains_usd: 500,
-          token_losses_usd: 200,
-          reward_yield_usd: 150,
-          borrowing_cost_usd: 50,
+        period: {
+          start_date: "2025-10-09T00:00:00Z",
+          end_date: "2025-11-08T00:00:00Z",
+          days: 30,
         },
-        confidence: "high",
-        avg_daily_yield_usd: 15,
-        yield_volatility: 5,
+        average_daily_yield_usd: 15,
+        median_daily_yield_usd: 14,
+        total_yield_usd: 450,
+        statistics: {
+          mean: 15,
+          median: 14,
+          std_dev: 5,
+          min_value: 5,
+          max_value: 25,
+          total_days: 30,
+          filtered_days: 30,
+          outliers_removed: 0,
+        },
+        outlier_strategy: "iqr",
+        outliers_detected: [],
       },
     },
     isLoading: false,
@@ -226,27 +228,28 @@ describe("WalletMetrics", () => {
       coverage_percentage: 0,
       matched_asset_value_usd: 0,
     },
-    yield_roi: {
+    yield_summary: {
       user_id: "test-user-123",
-      period_start: "2025-10-09",
-      period_end: "2025-11-08",
-      period_days: 30,
-      days_with_data: 30,
-      initial_nav_usd: 15000,
-      net_yield_usd: 450,
-      yield_roi_percent: 3,
-      annualized_yield_roi_percent: 36,
-      estimated_apy_percent: 37,
-      breakdown: {
-        token_yield_usd: 300,
-        token_gains_usd: 500,
-        token_losses_usd: 200,
-        reward_yield_usd: 150,
-        borrowing_cost_usd: 50,
+      period: {
+        start_date: "2025-10-09T00:00:00Z",
+        end_date: "2025-11-08T00:00:00Z",
+        days: 30,
       },
-      confidence: "high",
-      avg_daily_yield_usd: 15,
-      yield_volatility: 5,
+      average_daily_yield_usd: 15,
+      median_daily_yield_usd: 14,
+      total_yield_usd: 450,
+      statistics: {
+        mean: 15,
+        median: 14,
+        std_dev: 5,
+        min_value: 5,
+        max_value: 25,
+        total_days: 30,
+        filtered_days: 30,
+        outliers_removed: 0,
+      },
+      outlier_strategy: "iqr" as const,
+      outliers_detected: [],
     },
   };
 
@@ -298,7 +301,7 @@ describe("WalletMetrics", () => {
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
-      expect(screen.getByText("Avg Daily Yield (30d)")).toBeInTheDocument();
+      expect(screen.getByText("Avg Daily Yield")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -323,7 +326,7 @@ describe("WalletMetrics", () => {
         screen.getByText("Total Balance"),
         screen.getByText(/Estimated Yearly ROI/),
         screen.getByText("Estimated Yearly PnL"),
-        screen.getByText("Avg Daily Yield (30d)"),
+        screen.getByText("Avg Daily Yield"),
       ];
 
       for (const label of labels) {
@@ -681,7 +684,7 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield \(30d\)/
+        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield/
       );
       expect(sections).toHaveLength(4);
     });
@@ -955,7 +958,8 @@ describe("WalletMetrics", () => {
       );
 
       // Should show no data available messages for visitors without data (ROI and PnL sections)
-      expect(screen.getAllByText("No data available")).toHaveLength(3);
+      // Protocol breakdown was removed, so only 2 "No data available" messages now
+      expect(screen.getAllByText("No data available")).toHaveLength(2);
     });
 
     it("should handle visitor with zero data correctly", () => {

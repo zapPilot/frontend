@@ -26,7 +26,7 @@ import type {
   LandingPageResponse,
   PoolDetail,
   PortfolioAPRSummary,
-  YieldROIResponse,
+  YieldReturnsSummaryResponse,
 } from "../../src/services/analyticsService";
 import * as analyticsService from "../../src/services/analyticsService";
 import { createMockArray } from "./helpers/mock-factories";
@@ -41,7 +41,7 @@ vi.mock("../../src/services/analyticsService", async () => {
   return {
     ...actual,
     getLandingPagePortfolioData: vi.fn(),
-    getYieldRoiData: vi.fn(),
+    getYieldReturnsSummary: vi.fn(),
   };
 });
 
@@ -120,37 +120,38 @@ function createMockLandingPageResponse(
   };
 }
 
-function createMockYieldRoiResponse(
-  overrides: Partial<YieldROIResponse> = {}
-): YieldROIResponse {
+function createMockYieldSummary(
+  overrides: Partial<YieldReturnsSummaryResponse> = {}
+): YieldReturnsSummaryResponse {
   return {
     user_id: "test-user-123",
-    period_start: "2025-10-09",
-    period_end: "2025-11-08",
-    period_days: 30,
-    days_with_data: 30,
-    initial_nav_usd: 40000,
-    net_yield_usd: 340,
-    yield_roi_percent: 0.85,
-    annualized_yield_roi_percent: 10.35,
-    estimated_apy_percent: 10.87,
-    breakdown: {
-      token_yield_usd: 205,
-      token_gains_usd: 550,
-      token_losses_usd: 345,
-      reward_yield_usd: 260,
-      borrowing_cost_usd: 125,
+    period: {
+      start_date: "2025-10-09",
+      end_date: "2025-11-08",
+      days: 30,
     },
-    confidence: "high",
-    avg_daily_yield_usd: 11.33,
-    yield_volatility: 25.5,
+    average_daily_yield_usd: 15,
+    median_daily_yield_usd: 14,
+    total_yield_usd: 450,
+    statistics: {
+      mean: 15,
+      median: 14,
+      std_dev: 3.5,
+      min_value: 8,
+      max_value: 22,
+      total_days: 30,
+      filtered_days: 30,
+      outliers_removed: 0,
+    },
+    outlier_strategy: "iqr",
+    outliers_detected: [],
     ...overrides,
   };
 }
 
 beforeEach(() => {
-  vi.mocked(analyticsService.getYieldRoiData).mockResolvedValue(
-    createMockYieldRoiResponse()
+  vi.mocked(analyticsService.getYieldReturnsSummary).mockResolvedValue(
+    createMockYieldSummary()
   );
 });
 
