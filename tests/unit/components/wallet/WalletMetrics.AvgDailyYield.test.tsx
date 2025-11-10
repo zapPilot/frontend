@@ -9,21 +9,22 @@
  */
 
 import { render, screen, within } from "@testing-library/react";
-import { Clock, Info } from "lucide-react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletMetrics } from "@/components/wallet/WalletMetrics";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { PortfolioState } from "@/types/portfolioState";
 
-// Mock formatters - must be declared before vi.mock due to hoisting
-vi.mock("@/lib/formatters", () => ({
-  formatCurrency: vi.fn((value: number) => `$${value.toFixed(2)}`),
-  formatPercentage: vi.fn((value: number) => `${value.toFixed(2)}%`),
+// Mock formatters - expose the mock function for assertions
+const { mockFormatCurrency, mockFormatPercentage } = vi.hoisted(() => ({
+  mockFormatCurrency: vi.fn((value: number) => `$${value.toFixed(2)}`),
+  mockFormatPercentage: vi.fn((value: number) => `${value.toFixed(2)}%`),
 }));
 
-// Import mocked functions after mock is defined
-import { formatCurrency as mockFormatCurrency } from "@/lib/formatters";
+vi.mock("@/lib/formatters", () => ({
+  formatCurrency: mockFormatCurrency,
+  formatPercentage: mockFormatPercentage,
+}));
 
 // Mock useResolvedBalanceVisibility
 vi.mock("@/hooks/useResolvedBalanceVisibility", () => ({
@@ -184,8 +185,8 @@ function createLandingPageData(
  */
 function createYieldSummaryWithDays(
   filteredDays: number,
-  avgDailyYield: number = 1.5,
-  outliersRemoved: number = 0
+  avgDailyYield = 1.5,
+  outliersRemoved = 0
 ): NonNullable<LandingPageResponse["yield_summary"]> {
   return {
     user_id: "0x123",
@@ -299,7 +300,7 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
       const portfolioState = createPortfolioState();
       const landingPageData = createLandingPageData();
 
-      const { container } = render(
+      render(
         <WalletMetrics
           portfolioState={portfolioState}
           portfolioChangePercentage={5.5}
@@ -970,7 +971,7 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
         createYieldSummaryWithDays(3, 50.0)
       );
 
-      const { container } = render(
+      render(
         <WalletMetrics
           portfolioState={portfolioState}
           portfolioChangePercentage={5.5}
