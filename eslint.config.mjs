@@ -7,6 +7,7 @@ import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
 import noSecrets from 'eslint-plugin-no-secrets';
 import promisePlugin from 'eslint-plugin-promise';
+import importPlugin from 'eslint-plugin-import';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,6 +18,16 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  {
+    ignores: [
+      ".jscpd/**/*",
+      ".next/**/*",
+      "coverage/**/*",
+      "out/**/*",
+      "playwright-report/**/*",
+      "test-results/**/*",
+    ],
+  },
   // Base Next.js configs
   ...compat.extends("next/core-web-vitals", "next/typescript"),
 
@@ -43,7 +54,7 @@ const eslintConfig = [
       'unicorn/prefer-node-protocol': 'error',
       'unicorn/prefer-ternary': 'warn',
       'unicorn/no-useless-undefined': 'error',
-      'unicorn/consistent-function-scoping': 'warn',
+      'unicorn/consistent-function-scoping': 'off',  // React closures over props/state are intentional
     }
   },
 
@@ -89,8 +100,8 @@ const eslintConfig = [
         },
       }],                                                      // Catch promise mistakes while allowing async React handlers
       '@typescript-eslint/await-thenable': 'error',             // Only await promises
-      '@typescript-eslint/no-unnecessary-condition': 'warn',    // Catch always-true/false (reduced noise)
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',   // Use ?? instead of || (stylistic)
+      '@typescript-eslint/no-unnecessary-condition': 'off',     // Too many false positives with optional chaining
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',    // Pure bikeshedding - no safety benefit
       '@typescript-eslint/prefer-optional-chain': 'error',      // Use ?. for optional access
       '@typescript-eslint/unified-signatures': 'off',           // Disabled due to compatibility issue
 
@@ -99,12 +110,12 @@ const eslintConfig = [
       // ========================================
       'sonarjs/cognitive-complexity': ['error', 35],            // Max complexity per function
       'sonarjs/no-nested-functions': ['warn', { threshold: 6 }], // Allow React event handler patterns
-      'sonarjs/no-duplicate-string': ['warn', { threshold: 3 }],  // Catch magic strings (3+ duplicates)
-      'sonarjs/no-duplicated-branches': 'warn',                    // Flag duplicated branch bodies
+      'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],  // Catch magic strings (5+ duplicates, reduced noise)
+      'sonarjs/no-duplicated-branches': 'warn',                 // Catch duplicate logic in branches
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
-      'sonarjs/no-collapsible-if': 'warn',                      // Simplify nested ifs
+      'sonarjs/no-collapsible-if': 'off',                       // Sometimes separate conditions are clearer
       'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing
-      'sonarjs/no-nested-conditional': 'warn',                  // Reduce noise for nested ternaries
+      'sonarjs/no-nested-conditional': 'off',                   // Nested ternaries in JSX are idiomatic React
       'sonarjs/no-inverted-boolean-check': 'off',               // Pedantic: allow inverted boolean patterns when clearer
       'sonarjs/no-one-iteration-loop': 'off',                   // Pedantic: allow single-iteration loops for control flow
       'sonarjs/prefer-immediate-return': 'off',                 // Pedantic: allow staged return logic for readability
@@ -154,6 +165,40 @@ const eslintConfig = [
   },
 
   // ========================================
+  // Import Quality & Circular Dependency Detection
+  // ========================================
+  {
+    plugins: {
+      'import': importPlugin,
+    },
+    settings: {
+      'import/resolver': {
+        node: {
+          extensions: ['.js', '.jsx', '.ts', '.tsx'],
+        },
+      },
+      'import/extensions': ['.js', '.jsx', '.ts', '.tsx'],
+      'import/parsers': {
+        '@typescript-eslint/parser': ['.ts', '.tsx'],
+      },
+    },
+    rules: {
+      // Import organization and quality
+      'import/no-duplicates': 'error',                    // Merge duplicate imports
+      'import/no-deprecated': 'warn',                     // Warn on deprecated APIs
+      'import/first': 'error',                            // Imports at top of file
+      'import/newline-after-import': 'error',             // Blank line after imports
+      'import/no-anonymous-default-export': 'warn',       // Named exports preferred
+
+      // Circular dependency detection (disabled due to resolver complexity with Next.js)
+      'import/no-cycle': 'off',                           // Disabled: complex setup needed for Next.js path aliases
+
+      // Unused exports detection (disabled for Next.js App Router)
+      'import/no-unused-modules': 'off',                  // Conflicts with Next.js conventions
+    }
+  },
+
+  // ========================================
   // File-Specific Overrides
   // ========================================
   {
@@ -161,6 +206,13 @@ const eslintConfig = [
     rules: {
       // Centralized logger is allowed to use console
       "no-console": "off"
+    }
+  },
+  {
+    files: ["src/lib/http-utils.ts"],
+    rules: {
+      // Early return pattern is clearer for retry logic
+      "sonarjs/prefer-single-boolean-return": "off"
     }
   },
   {
@@ -215,15 +267,10 @@ const eslintConfig = [
   {
     files: ['src/hooks/**/*.ts', 'src/hooks/**/*.tsx'],
     rules: {
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-    },
-  },
-  {
-    files: ["src/hooks/**/*.{ts,tsx}"],
-    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
       "@typescript-eslint/explicit-function-return-type": "off", // Hooks leverage inference for ergonomics
       "sonarjs/cognitive-complexity": ["warn", 45],               // Allow richer hook orchestration before flagging
-      "unicorn/consistent-function-scoping": "off",               // Permit local helper closures inside hooks
+      'sonarjs/prefer-single-boolean-return': 'off',              // React Query's enabled pattern is idiomatic
     }
   },
   {

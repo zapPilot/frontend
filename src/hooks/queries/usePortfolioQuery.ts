@@ -3,23 +3,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "../../lib/queryClient";
 import {
   getLandingPagePortfolioData,
+  getYieldReturnsSummary,
   type LandingPageResponse,
 } from "../../services/analyticsService";
-// Types no longer needed after landing page refactor
-// import type { AssetCategory, PieChartData } from "../../types/portfolio";
 import { portfolioLogger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
-
-// Unused - kept for reference but not exported
-// interface UsePortfolioQueryReturn {
-//   totalValue: number | null;
-//   categories: AssetCategory[] | null;
-//   pieChartData: PieChartData[] | null;
-//   isLoading: boolean;
-//   error: string | null;
-//   refetch: () => void;
-//   isRefetching: boolean;
-// }
 
 // Hook for unified landing page data - replaces dual API calls
 export function useLandingPageData(userId: string | null | undefined) {
@@ -36,8 +24,38 @@ export function useLandingPageData(userId: string | null | undefined) {
         throw new Error("User ID is required");
       }
 
-      // Single API call to get all landing page data
-      return await getLandingPagePortfolioData(userId);
+      const [landingResult, yieldResult] = await Promise.allSettled([
+        getLandingPagePortfolioData(userId),
+        getYieldReturnsSummary(userId, 30),
+      ]);
+
+      if (landingResult.status === "rejected") {
+        throw landingResult.reason;
+      }
+
+      const landingData = landingResult.value;
+
+      if (yieldResult.status === "fulfilled") {
+        return {
+          ...landingData,
+          yield_summary: yieldResult.value,
+        };
+      }
+
+      if (yieldResult.status === "rejected") {
+        portfolioLogger.warn(
+          "Failed to fetch yield returns summary for landing page",
+          {
+            error:
+              yieldResult.reason instanceof Error
+                ? yieldResult.reason.message
+                : String(yieldResult.reason),
+            userId,
+          }
+        );
+      }
+
+      return landingData;
     },
     enabled: !!userId, // Only run when userId is available
     refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active

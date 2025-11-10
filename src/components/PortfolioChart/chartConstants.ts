@@ -43,20 +43,22 @@ export const DRAWDOWN_CONSTANTS = {
 /**
  * Sharpe ratio chart scale constants
  * Defines the Y-axis scale for Sharpe ratio visualization
+ * DeFi-adjusted range: -1.0 to 3.5 (allows negative Sharpe and high performers)
  */
 export const SHARPE_CONSTANTS = {
-  MIN_VALUE: 0,
-  MAX_VALUE: 2.5,
+  MIN_VALUE: -1.0,
+  MAX_VALUE: 3.5,
   GOOD_THRESHOLD: 1.0, // Reference line for "good" Sharpe ratio
 } as const;
 
 /**
  * Volatility chart scale constants
  * Defines the Y-axis scale for volatility percentage visualization
+ * DeFi-adjusted range: 5-100% (realistic for 24/7 crypto markets)
  */
 export const VOLATILITY_CONSTANTS = {
-  MIN_VALUE: 10, // 10% minimum volatility
-  MAX_VALUE: 40, // 40% maximum volatility
+  MIN_VALUE: 5, // 5% minimum volatility (stablecoin-heavy portfolios)
+  MAX_VALUE: 100, // 100% maximum volatility (crypto-heavy DeFi portfolios)
 } as const;
 
 /**

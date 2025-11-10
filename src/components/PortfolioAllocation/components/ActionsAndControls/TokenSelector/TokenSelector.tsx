@@ -1,10 +1,10 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { AlertCircle, ChevronDown, RefreshCw } from "lucide-react";
 import { memo, useMemo } from "react";
 
 import { TokenListSkeleton } from "@/components/ui";
+import { AnimatedDropdown } from "@/components/ui/AnimatedDropdown";
 import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks";
 import {
@@ -12,6 +12,7 @@ import {
   type UseZapTokensWithStatesOptions,
 } from "@/hooks/queries/useZapTokensQuery";
 import type { SwapToken } from "@/types/swap";
+import { logger } from "@/utils/logger";
 
 import { TokenSummary } from "./TokenSummary";
 
@@ -86,10 +87,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
 
         {dropdown.isOpen && (
           <>
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+            <AnimatedDropdown
               className={`absolute top-full left-0 right-0 mt-2 bg-gray-900 border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST} max-h-64 overflow-auto`}
             >
               {/* Loading State - Compact Skeleton */}
@@ -111,7 +109,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                         try {
                           await refetch();
                         } catch (refetchError) {
-                          console.error(
+                          logger.error(
                             "Failed to refetch tokens after load failure",
                             refetchError
                           );
@@ -167,7 +165,7 @@ export const TokenSelector = memo<TokenSelectorProps>(
                   Unable to refresh token balances. Balances may be outdated.
                 </div>
               )}
-            </motion.div>
+            </AnimatedDropdown>
             <div
               className={`fixed inset-0 ${Z_INDEX.HEADER}`}
               onClick={() => dropdown.close()}

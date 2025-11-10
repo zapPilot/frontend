@@ -7,7 +7,7 @@ export type RiskLevel = "Low" | "Medium" | "High" | "Very High";
 /**
  * Period information for risk analysis
  */
-export interface PeriodInfo {
+interface PeriodInfo {
   start_date: string;
   end_date: string;
 }
@@ -15,7 +15,7 @@ export interface PeriodInfo {
 /**
  * Volatility analysis data structure
  */
-export interface VolatilityData {
+interface VolatilityData {
   user_id: string;
   period_days: number;
   data_points: number;
@@ -28,7 +28,7 @@ export interface VolatilityData {
 /**
  * Drawdown analysis data structure
  */
-export interface DrawdownData {
+interface DrawdownData {
   user_id: string;
   period_days: number;
   data_points: number;
@@ -46,7 +46,7 @@ export interface DrawdownData {
 /**
  * Summary metrics for portfolio risk
  */
-export interface SummaryMetrics {
+interface SummaryMetrics {
   annualized_volatility_percentage: number;
   max_drawdown_percentage: number;
   sharpe_ratio?: number;
@@ -55,7 +55,7 @@ export interface SummaryMetrics {
 /**
  * Sharpe ratio analysis data structure
  */
-export interface SharpeRatioData {
+interface SharpeRatioData {
   user_id: string;
   period_days: number;
   data_points: number;
@@ -71,7 +71,7 @@ export interface SharpeRatioData {
 /**
  * Risk summary data structure
  */
-export interface RiskSummaryData {
+interface RiskSummaryData {
   volatility: VolatilityData;
   drawdown: DrawdownData;
   sharpe_ratio?: SharpeRatioData;

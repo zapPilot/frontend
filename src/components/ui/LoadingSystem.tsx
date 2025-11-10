@@ -3,6 +3,7 @@ import React from "react";
 
 import type {
   ComponentSize,
+  LoadingVariant,
   SkeletonVariant,
   SpinnerVariant,
 } from "@/types/ui.types";
@@ -449,7 +450,7 @@ export const ChartSkeleton = createCircularSkeletonComponent("chart-skeleton");
 ChartSkeleton.displayName = "ChartSkeleton";
 
 export const PieChartSkeleton =
-  createCircularSkeletonComponent("pie-chart-skeleton");
+  createCircularSkeletonComponent("pie-chart-loading");
 PieChartSkeleton.displayName = "PieChartSkeleton";
 
 export function ButtonSkeleton({
@@ -482,7 +483,7 @@ interface BalanceSkeletonProps extends BaseLoadingProps {
 export function BalanceSkeleton({
   size = "default",
   className = "",
-  [DATA_TEST_ID_PROP]: testId = "balance-skeleton",
+  [DATA_TEST_ID_PROP]: testId = "balance-loading",
   [ARIA_LABEL_PROP]: ariaLabel = "Loading balance",
 }: BalanceSkeletonProps) {
   const heights = {
@@ -580,7 +581,7 @@ export function AssetCategorySkeleton({
 }
 
 interface LoadingStateProps {
-  variant?: "spinner" | "card" | "skeleton" | "inline";
+  variant?: LoadingVariant;
   size?: ComponentSize;
   message?: string;
   className?: string;
@@ -689,35 +690,6 @@ export function useLoadingComponent(
       DefaultLoadingComponent.displayName = "DefaultLoadingComponent";
       return DefaultLoadingComponent;
   }
-}
-
-// =============================================================================
-// LEGACY COMPATIBILITY EXPORTS
-// =============================================================================
-
-export function UnifiedLoading({
-  [DATA_TEST_ID_PROP]: testId,
-  ...rest
-}: SkeletonProps) {
-  return <Skeleton data-testid={testId ?? "unified-loading"} {...rest} />;
-}
-
-export function BalanceLoading({
-  [DATA_TEST_ID_PROP]: testId,
-  ...rest
-}: BalanceSkeletonProps) {
-  return (
-    <BalanceSkeleton data-testid={testId ?? "balance-loading"} {...rest} />
-  );
-}
-
-export function PieChartLoading({
-  [DATA_TEST_ID_PROP]: testId,
-  ...rest
-}: CircularSkeletonComponentProps) {
-  return (
-    <PieChartSkeleton data-testid={testId ?? "pie-chart-loading"} {...rest} />
-  );
 }
 
 // =============================================================================

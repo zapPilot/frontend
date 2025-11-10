@@ -228,7 +228,7 @@ export const HoverDataBuilders = {
     const total =
       point.btc + point.eth + point.stablecoin + point.defi + point.altcoin;
     return {
-      chartType: "allocation" as const,
+      chartType: "asset-allocation" as const,
       x,
       y,
       date: new Date(point.date).toLocaleDateString("en-US", {

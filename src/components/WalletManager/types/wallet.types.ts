@@ -37,3 +37,11 @@ export interface ValidationResult {
   isValid: boolean;
   error?: string;
 }
+
+export interface WalletMenuHandlers {
+  onCopyAddress: (address: string, walletId: string) => void;
+  onEditWallet: (walletId: string, label: string) => void;
+  onDeleteWallet: (walletId: string) => void;
+  onToggleDropdown: (walletId: string, element: HTMLElement) => void;
+  onCloseDropdown: () => void;
+}

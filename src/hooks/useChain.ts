@@ -9,7 +9,7 @@
 
 import { useCallback } from "react";
 
-import { chainUtils } from "@/types/wallet";
+import { getChainById, getSupportedMainnetChains } from "@/config/chains";
 
 import { useWallet } from "./useWallet";
 
@@ -38,12 +38,12 @@ export function useChain() {
 
   // Get chain info
   const getChainInfo = useCallback((chainId: number) => {
-    return chainUtils.getChainInfo(chainId);
+    return getChainById(chainId);
   }, []);
 
   // Get supported chains
   const getSupportedChains = useCallback(() => {
-    return chainUtils.getSupportedChains();
+    return getSupportedMainnetChains();
   }, []);
 
   return {

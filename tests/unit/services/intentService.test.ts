@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
+// Import mocked modules after mocking
+import { httpUtils } from "../../../src/lib/http-utils";
 import {
   checkIntentServiceHealth,
   type DustTokenParams,
@@ -18,6 +20,7 @@ import {
   type UnifiedZapRequest,
   type UnifiedZapResponse,
 } from "../../../src/services/intentService";
+import { executeServiceCall } from "../../../src/services/serviceHelpers";
 import type { StrategiesApiResponse } from "../../../src/types/strategies";
 
 // Mock http-utils module
@@ -39,10 +42,6 @@ vi.mock("../../../src/services/serviceHelpers", () => ({
 vi.mock("../../../src/lib/base-error", () => ({
   createIntentServiceError: vi.fn((error: unknown) => error),
 }));
-
-// Import mocked modules after mocking
-import { httpUtils } from "../../../src/lib/http-utils";
-import { executeServiceCall } from "../../../src/services/serviceHelpers";
 
 describe("intentService", () => {
   beforeEach(() => {

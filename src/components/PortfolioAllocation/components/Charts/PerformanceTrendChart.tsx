@@ -1,8 +1,8 @@
 "use client";
-import { motion } from "framer-motion";
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { BaseCard } from "@/components/ui";
 import { Z_INDEX } from "@/constants/design-system";
 import { formatPercentage } from "@/lib/formatters";
 import { ensureNonNegative } from "@/lib/mathUtils";
@@ -184,13 +184,13 @@ export function PerformanceTrendChart({
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className={`bg-gradient-to-br from-slate-800/30 via-slate-700/20 to-slate-800/30 
-        backdrop-blur-xl rounded-2xl p-6 border border-slate-600/20 
-        shadow-[0_8px_32px_rgba(31,38,135,0.37)] ${className}`}
+    <BaseCard
+      variant="glass"
+      padding="xl"
+      borderRadius="2xl"
+      animate={true}
+      className={`bg-gradient-to-br from-slate-800/30 via-slate-700/20 to-slate-800/30
+        border-slate-600/20 shadow-[0_8px_32px_rgba(31,38,135,0.37)] ${className}`}
     >
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
@@ -368,6 +368,6 @@ export function PerformanceTrendChart({
           </div>
         )}
       </div>
-    </motion.div>
+    </BaseCard>
   );
 }

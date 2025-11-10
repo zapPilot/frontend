@@ -3,18 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http-utils";
 import * as tokenService from "@/services/tokenService";
 
-// Mock HTTP utilities
-vi.mock("@/lib/http-utils", () => ({
-  httpUtils: {
-    intentEngine: {
-      get: vi.fn(),
-    },
-  },
-}));
+const mockIntentGet = () => vi.spyOn(httpUtils.intentEngine, "get");
 
 describe("tokenService", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("getZapTokens", () => {
@@ -43,7 +36,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -51,7 +45,7 @@ describe("tokenService", () => {
       expect(result[0].chainId).toBe(1);
       expect(result[0].symbol).toBe("WETH");
       expect(result[1].symbol).toBe("USDC");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith("/tokens/zap/1");
+      expect(getSpy).toHaveBeenCalledWith("/tokens/zap/1");
     });
 
     it("should fetch tokens for Arbitrum (chainId: 42161)", async () => {
@@ -79,7 +73,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(42161);
 
@@ -87,9 +82,7 @@ describe("tokenService", () => {
       expect(result[0].chainId).toBe(42161);
       expect(result[0].symbol).toBe("WETH");
       expect(result[1].symbol).toBe("USDT");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
-        "/tokens/zap/42161"
-      );
+      expect(getSpy).toHaveBeenCalledWith("/tokens/zap/42161");
     });
 
     it("should fetch tokens for Polygon (chainId: 137)", async () => {
@@ -117,7 +110,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(137);
 
@@ -125,9 +119,7 @@ describe("tokenService", () => {
       expect(result[0].chainId).toBe(137);
       expect(result[0].symbol).toBe("WMATIC");
       expect(result[1].symbol).toBe("USDC");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
-        "/tokens/zap/137"
-      );
+      expect(getSpy).toHaveBeenCalledWith("/tokens/zap/137");
     });
 
     it("should fetch tokens for Base (chainId: 8453)", async () => {
@@ -147,16 +139,15 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(8453);
 
       expect(result).toHaveLength(1);
       expect(result[0].chainId).toBe(8453);
       expect(result[0].symbol).toBe("WETH");
-      expect(httpUtils.intentEngine.get).toHaveBeenCalledWith(
-        "/tokens/zap/8453"
-      );
+      expect(getSpy).toHaveBeenCalledWith("/tokens/zap/8453");
     });
 
     it("should handle empty token list", async () => {
@@ -167,7 +158,8 @@ describe("tokenService", () => {
         tokens: [],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -176,7 +168,8 @@ describe("tokenService", () => {
     });
 
     it("should handle null response", async () => {
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(null);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(null);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -190,7 +183,8 @@ describe("tokenService", () => {
         nativeToken: "ETH",
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -203,7 +197,8 @@ describe("tokenService", () => {
         message: "Invalid chain ID",
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockRejectedValue(mockError);
+      const getSpy = mockIntentGet();
+      getSpy.mockRejectedValue(mockError);
 
       await expect(tokenService.getZapTokens(999999)).rejects.toThrow();
     });
@@ -234,7 +229,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -261,7 +257,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -287,7 +284,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -310,7 +308,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -332,7 +331,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -340,17 +340,15 @@ describe("tokenService", () => {
     });
 
     it("should handle network errors", async () => {
-      vi.mocked(httpUtils.intentEngine.get).mockRejectedValue(
-        new Error("Network error")
-      );
+      const getSpy = mockIntentGet();
+      getSpy.mockRejectedValue(new Error("Network error"));
 
       await expect(tokenService.getZapTokens(1)).rejects.toThrow();
     });
 
     it("should handle timeout errors", async () => {
-      vi.mocked(httpUtils.intentEngine.get).mockRejectedValue(
-        new Error("Request timeout")
-      );
+      const getSpy = mockIntentGet();
+      getSpy.mockRejectedValue(new Error("Request timeout"));
 
       await expect(tokenService.getZapTokens(1)).rejects.toThrow();
     });
@@ -372,7 +370,8 @@ describe("tokenService", () => {
         tokens,
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 
@@ -398,7 +397,8 @@ describe("tokenService", () => {
         ],
       };
 
-      vi.mocked(httpUtils.intentEngine.get).mockResolvedValue(mockResponse);
+      const getSpy = mockIntentGet();
+      getSpy.mockResolvedValue(mockResponse);
 
       const result = await tokenService.getZapTokens(1);
 

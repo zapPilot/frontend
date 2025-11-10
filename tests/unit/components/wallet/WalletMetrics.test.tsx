@@ -18,6 +18,7 @@ vi.mock("lucide-react", () => ({
     <span data-testid="alert-circle-icon">AlertCircle</span>
   )),
   Info: vi.fn(() => <span data-testid="info-icon">Info</span>),
+  Clock: vi.fn(() => <span data-testid="clock-icon">Clock</span>),
 }));
 
 // Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed
@@ -106,6 +107,29 @@ vi.mock("../../../../src/hooks/queries/usePortfolioQuery", () => ({
         total_pools: 0,
         coverage_percentage: 0,
         matched_asset_value_usd: 0,
+      },
+      yield_summary: {
+        user_id: "test-user-123",
+        period: {
+          start_date: "2025-10-09T00:00:00Z",
+          end_date: "2025-11-08T00:00:00Z",
+          days: 30,
+        },
+        average_daily_yield_usd: 15,
+        median_daily_yield_usd: 14,
+        total_yield_usd: 450,
+        statistics: {
+          mean: 15,
+          median: 14,
+          std_dev: 5,
+          min_value: 5,
+          max_value: 25,
+          total_days: 30,
+          filtered_days: 30,
+          outliers_removed: 0,
+        },
+        outlier_strategy: "iqr",
+        outliers_detected: [],
       },
     },
     isLoading: false,
@@ -204,6 +228,29 @@ describe("WalletMetrics", () => {
       coverage_percentage: 0,
       matched_asset_value_usd: 0,
     },
+    yield_summary: {
+      user_id: "test-user-123",
+      period: {
+        start_date: "2025-10-09T00:00:00Z",
+        end_date: "2025-11-08T00:00:00Z",
+        days: 30,
+      },
+      average_daily_yield_usd: 15,
+      median_daily_yield_usd: 14,
+      total_yield_usd: 450,
+      statistics: {
+        mean: 15,
+        median: 14,
+        std_dev: 5,
+        min_value: 5,
+        max_value: 25,
+        total_days: 30,
+        filtered_days: 30,
+        outliers_removed: 0,
+      },
+      outlier_strategy: "iqr" as const,
+      outliers_detected: [],
+    },
   };
 
   const defaultProps = {
@@ -248,12 +295,13 @@ describe("WalletMetrics", () => {
   });
 
   describe("UI Structure and Layout", () => {
-    it("should render all three metric sections", () => {
+    it("should render all four metric sections", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
+      expect(screen.getByText("Avg Daily Yield")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -265,7 +313,7 @@ describe("WalletMetrics", () => {
       expect(container).toHaveClass(
         "grid",
         "grid-cols-1",
-        "md:grid-cols-3",
+        "md:grid-cols-4",
         "gap-4",
         "mb-6"
       );
@@ -278,6 +326,7 @@ describe("WalletMetrics", () => {
         screen.getByText("Total Balance"),
         screen.getByText(/Estimated Yearly ROI/),
         screen.getByText("Estimated Yearly PnL"),
+        screen.getByText("Avg Daily Yield"),
       ];
 
       for (const label of labels) {
@@ -635,9 +684,9 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL/
+        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield/
       );
-      expect(sections).toHaveLength(3);
+      expect(sections).toHaveLength(4);
     });
   });
 
@@ -909,6 +958,7 @@ describe("WalletMetrics", () => {
       );
 
       // Should show no data available messages for visitors without data (ROI and PnL sections)
+      // Protocol breakdown was removed, so only 2 "No data available" messages now
       expect(screen.getAllByText("No data available")).toHaveLength(2);
     });
 
@@ -1024,7 +1074,7 @@ describe("WalletMetrics", () => {
 
       // Should show loading indicators for visitor
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(4); // ROI + PnL skeletons
+      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(6); // ROI + PnL + Avg Daily skeleton pairs
     });
   });
 });

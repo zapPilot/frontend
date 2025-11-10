@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
-import { handleWalletError } from "@/services/userService";
+import { handleWalletError } from "@/lib/walletUtils";
 
 import {
   unsubscribeUserEmail,
@@ -10,6 +10,7 @@ import {
 } from "../services/WalletService";
 import type { OperationState } from "../types/wallet.types";
 import { validateEmail } from "../utils/validation";
+
 interface UseEmailSubscriptionParams {
   viewingUserId: string;
   realUserId: string;

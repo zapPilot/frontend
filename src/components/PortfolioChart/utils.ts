@@ -12,11 +12,12 @@ import type {
 export const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
 
 export const CHART_LABELS = {
-  performance: "Portfolio value chart showing net worth over time",
-  allocation: "Portfolio allocation chart",
-  drawdown: "Drawdown and recovery analysis chart",
-  sharpe: "Rolling Sharpe ratio chart",
-  volatility: "Portfolio volatility chart",
+  performance: "Total return chart showing portfolio value over time",
+  "asset-allocation": "Asset allocation chart showing portfolio composition",
+  drawdown: "Drawdown analysis chart showing peak-to-trough declines",
+  sharpe: "Sharpe ratio chart showing risk-adjusted returns",
+  volatility: "Volatility chart showing portfolio risk metrics",
+  "daily-yield": "Daily yield returns chart showing earnings over time",
 } as const;
 
 export const CHART_CONTENT_ID = "portfolio-chart-content";
@@ -35,42 +36,17 @@ function normalizeSourceType(value: unknown): string | undefined {
   return typeof value === "string" ? value.toLowerCase() : undefined;
 }
 
-function accumulateFromCategories(
-  categories: PortfolioDataPoint["categories"]
+function accumulateSourceTotals(
+  entries: PortfolioDataPoint["categories"] | PortfolioDataPoint["protocols"]
 ): SourceTotals {
-  if (!Array.isArray(categories) || categories.length === 0) {
+  if (!Array.isArray(entries) || entries.length === 0) {
     return { defiValue: 0, walletValue: 0 };
   }
 
-  return categories.reduce<SourceTotals>(
-    (totals, categoryEntry) => {
-      const normalizedSource = normalizeSourceType(categoryEntry.sourceType);
-      const rawValue = categoryEntry.value;
-      const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
-
-      if (normalizedSource === "defi") {
-        totals.defiValue += value;
-      } else if (normalizedSource === "wallet") {
-        totals.walletValue += value;
-      }
-
-      return totals;
-    },
-    { defiValue: 0, walletValue: 0 }
-  );
-}
-
-function accumulateFromProtocols(
-  protocols: PortfolioDataPoint["protocols"]
-): SourceTotals {
-  if (!Array.isArray(protocols) || protocols.length === 0) {
-    return { defiValue: 0, walletValue: 0 };
-  }
-
-  return protocols.reduce<SourceTotals>(
-    (totals, protocol) => {
-      const normalizedSource = normalizeSourceType(protocol.sourceType);
-      const rawValue = protocol.value;
+  return entries.reduce<SourceTotals>(
+    (totals, entry) => {
+      const normalizedSource = normalizeSourceType(entry.sourceType);
+      const rawValue = entry.value;
       const value = Number.isFinite(rawValue) ? ensureNonNegative(rawValue) : 0;
 
       if (normalizedSource === "defi") {
@@ -121,10 +97,10 @@ export const buildStackedPortfolioData = (
   fallbackRatio: number = DEFAULT_STACKED_FALLBACK_RATIO
 ): PortfolioStackedDataPoint[] => {
   return data.map(point => {
-    const categoryTotals = accumulateFromCategories(point.categories);
+    const categoryTotals = accumulateSourceTotals(point.categories);
     const protocolTotals =
       categoryTotals.defiValue === 0 && categoryTotals.walletValue === 0
-        ? accumulateFromProtocols(point.protocols)
+        ? accumulateSourceTotals(point.protocols)
         : { defiValue: 0, walletValue: 0 };
 
     const initialDefi = categoryTotals.defiValue + protocolTotals.defiValue;

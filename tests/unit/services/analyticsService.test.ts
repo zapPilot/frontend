@@ -7,8 +7,9 @@
  * - getPortfolioDashboard (HTTP)
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { httpUtils } from "../../../src/lib/http-utils";
 import {
   getLandingPagePortfolioData,
   getPortfolioDashboard,
@@ -18,21 +19,7 @@ import {
 } from "../../../src/services/analyticsService";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
 
-// Mock dependencies
-vi.mock("../../../src/lib/http-utils", () => ({
-  httpUtils: {
-    analyticsEngine: {
-      get: vi.fn(),
-    },
-  },
-}));
-
-// Import mocked module
-import { httpUtils } from "../../../src/lib/http-utils";
-
-const mockAnalyticsEngineGet = httpUtils.analyticsEngine.get as ReturnType<
-  typeof vi.fn
->;
+const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
 
 const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
   user_id: "0xDashboardUser",
@@ -215,6 +202,11 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
 describe("analyticsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    analyticsEngineGetSpy.mockReset();
+  });
+
+  afterAll(() => {
+    analyticsEngineGetSpy.mockRestore();
   });
 
   describe("getLandingPagePortfolioData", () => {
@@ -284,11 +276,11 @@ describe("analyticsService", () => {
           },
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getLandingPagePortfolioData(testUserId);
 
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+        expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
           `/api/v1/landing-page/portfolio/${testUserId}`
         );
         expect(result).toEqual(mockResponse);
@@ -358,7 +350,7 @@ describe("analyticsService", () => {
           message: "No portfolio data available",
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getLandingPagePortfolioData(testUserId);
 
@@ -446,7 +438,7 @@ describe("analyticsService", () => {
           },
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getLandingPagePortfolioData(testUserId);
 
@@ -531,7 +523,7 @@ describe("analyticsService", () => {
           },
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getLandingPagePortfolioData(testUserId);
 
@@ -585,11 +577,11 @@ describe("analyticsService", () => {
           },
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getRiskSummary(testUserId);
 
-        expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+        expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
           `/api/v1/risk/summary/${testUserId}`
         );
         expect(result).toEqual(mockResponse);
@@ -651,7 +643,7 @@ describe("analyticsService", () => {
           },
         };
 
-        mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+        analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
         const result = await getRiskSummary(testUserId);
 
@@ -668,11 +660,11 @@ describe("analyticsService", () => {
       const mockResponse = createMockDashboardResponse();
       mockResponse.user_id = testUserId;
 
-      mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
       const result = await getPortfolioDashboard(testUserId);
 
-      expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
         `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=30&risk_days=30&drawdown_days=90&allocation_days=40&rolling_days=40`
       );
       expect(result).toEqual(mockResponse);
@@ -689,7 +681,7 @@ describe("analyticsService", () => {
         rolling_days: 60,
       };
 
-      mockAnalyticsEngineGet.mockResolvedValue(mockResponse);
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
       const result = await getPortfolioDashboard(testUserId, {
         trend_days: 45,
@@ -699,7 +691,7 @@ describe("analyticsService", () => {
         rolling_days: 60,
       });
 
-      expect(mockAnalyticsEngineGet).toHaveBeenCalledWith(
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
         `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=45&risk_days=45&drawdown_days=120&allocation_days=60&rolling_days=60`
       );
       expect(result).toEqual(mockResponse);

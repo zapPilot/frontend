@@ -71,19 +71,6 @@ export function calculateDrawdownMinValue(drawdownValues: number[]): number {
 }
 
 /**
- * Format date for chart tooltip
- * Consistent date formatting across all charts
- */
-export function formatChartDate(date: string | Date): string {
-  const dateObj = typeof date === "string" ? new Date(date) : date;
-  return dateObj.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-/**
  * Calculate Y position for a value in a standard chart
  * Generic helper for performance, sharpe, volatility charts
  */

@@ -4,8 +4,9 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import { httpUtils } from "@/lib/http-utils";
+
 import { createServiceCaller } from "../lib/createServiceCaller";
-import { httpUtils } from "../lib/http-utils";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
@@ -25,18 +26,52 @@ interface AccountServiceErrorDetails {
 }
 
 /**
- * Account Service Error
+ * AccountServiceError maintains the shape of API errors without depending on the
+ * HTTP utilities module (which is frequently mocked in tests).
+ * This keeps the constructor available even when http-utils is mocked.
  */
 export class AccountServiceError extends Error {
+  status: number;
+  code?: string;
+  details?: AccountServiceErrorDetails;
+
   constructor(
     message: string,
-    public status: number,
-    public code?: string,
-    public details?: AccountServiceErrorDetails
+    status: number,
+    code?: string,
+    details?: AccountServiceErrorDetails
   ) {
     super(message);
     this.name = "AccountServiceError";
+    this.status = status;
+    if (code !== undefined) {
+      this.code = code;
+    }
+    if (details !== undefined) {
+      this.details = details;
+    }
   }
+}
+
+/**
+ * Internal token interface for getUserTokens endpoint
+ */
+interface AccountToken {
+  id: string;
+  chain: string;
+  name: string;
+  symbol: string;
+  display_symbol: string;
+  optimized_symbol: string;
+  decimals: number;
+  logo_url: string;
+  protocol_id: string;
+  price: number;
+  is_verified: boolean;
+  is_core: boolean;
+  is_wallet: boolean;
+  time_at: number;
+  amount: number;
 }
 
 /**
@@ -242,43 +277,9 @@ export const checkAccountServiceHealth = (): Promise<{
 export const getUserTokens = (
   accountAddress: string,
   chainName: string
-): Promise<
-  {
-    id: string;
-    chain: string;
-    name: string;
-    symbol: string;
-    display_symbol: string;
-    optimized_symbol: string;
-    decimals: number;
-    logo_url: string;
-    protocol_id: string;
-    price: number;
-    is_verified: boolean;
-    is_core: boolean;
-    is_wallet: boolean;
-    time_at: number;
-    amount: number;
-  }[]
-> =>
+): Promise<AccountToken[]> =>
   callAccountApi(() =>
-    backendApiClient.get<
-      {
-        id: string;
-        chain: string;
-        name: string;
-        symbol: string;
-        display_symbol: string;
-        optimized_symbol: string;
-        decimals: number;
-        logo_url: string;
-        protocol_id: string;
-        price: number;
-        is_verified: boolean;
-        is_core: boolean;
-        is_wallet: boolean;
-        time_at: number;
-        amount: number;
-      }[]
-    >(`/user/${accountAddress}/${chainName}/tokens`)
+    backendApiClient.get<AccountToken[]>(
+      `/user/${accountAddress}/${chainName}/tokens`
+    )
   );

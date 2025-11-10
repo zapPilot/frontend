@@ -2,13 +2,18 @@ import { Plus, Wallet } from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
-import type { WalletData } from "@/services/userService";
+import type { WalletData } from "@/lib/walletUtils";
 
-import type { NewWallet, WalletOperations } from "../types/wallet.types";
+import type {
+  MenuPosition,
+  NewWallet,
+  WalletMenuHandlers,
+  WalletOperations,
+} from "../types/wallet.types";
 import { AddWalletForm } from "./AddWalletForm";
 import { WalletCard } from "./WalletCard";
 
-interface WalletListProps {
+interface WalletListProps extends WalletMenuHandlers {
   wallets: WalletData[];
   operations: WalletOperations;
   isOwner: boolean;
@@ -16,12 +21,7 @@ interface WalletListProps {
   newWallet: NewWallet;
   validationError: string | null;
   openDropdown: string | null;
-  menuPosition: { top: number; left: number } | null;
-  onCopyAddress: (address: string, walletId: string) => void;
-  onEditWallet: (walletId: string, label: string) => void;
-  onDeleteWallet: (walletId: string) => void;
-  onToggleDropdown: (walletId: string, element: HTMLElement) => void;
-  onCloseDropdown: () => void;
+  menuPosition: MenuPosition | null;
   onWalletChange: (wallet: Partial<NewWallet>) => void;
   onAddWallet: () => void;
   onStartAdding: () => void;

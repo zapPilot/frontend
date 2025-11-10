@@ -15,7 +15,7 @@ import { categorizePool } from "../utils/portfolio.utils";
  * Actual API Strategy Response from /api/v1/strategies
  * Based on real API response structure
  */
-export interface StrategyProtocolResponse {
+interface StrategyProtocolResponse {
   name: string;
   protocol?: string; // Protocol identifier (e.g., 'aave-v3', 'uniswap-v3')
   chain: string; // e.g., 'base'
@@ -23,7 +23,7 @@ export interface StrategyProtocolResponse {
   targetTokens: string[]; // e.g., ['usdc']
 }
 
-export interface StrategyResponse {
+interface StrategyResponse {
   id: string;
   displayName: string;
   description: string;
@@ -222,10 +222,15 @@ export class StrategiesApiError extends Error {
   constructor(
     message: string,
     public code?: string,
-    public statusCode?: number
+    public status?: number
   ) {
     super(message);
     this.name = "StrategiesApiError";
+  }
+
+  // Backward compatibility - deprecated
+  get statusCode() {
+    return this.status;
   }
 }
 

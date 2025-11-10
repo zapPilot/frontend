@@ -133,6 +133,7 @@ export function useChartHover<T>(
   const lastIndexRef = useRef<number | null>(null);
   const hasTestAutoPopulatedRef = useRef(false);
   const testAutoHideTimerRef = useRef<number | null>(null);
+  const isAutoHoverActiveRef = useRef(false);
 
   // Calculate value range for Y positioning
   const valueRange = clampMin(maxValue - minValue, 1);
@@ -223,6 +224,7 @@ export function useChartHover<T>(
 
         const hoverData = buildHoverData(point, x, y, clampedIndex);
 
+        isAutoHoverActiveRef.current = false;
         setHoveredPoint({
           ...hoverData,
           containerWidth: svgWidth,
@@ -311,6 +313,7 @@ export function useChartHover<T>(
     if (rafId.current != null) cancelAnimationFrame(rafId.current);
     rafId.current = null;
     lastIndexRef.current = null;
+    isAutoHoverActiveRef.current = false;
     setHoveredPoint(null);
   }, []);
 
@@ -371,6 +374,7 @@ export function useChartHover<T>(
 
       setHoveredPoint(buildHoverData(point, x, y, index));
       hasTestAutoPopulatedRef.current = true;
+      isAutoHoverActiveRef.current = true;
     }
   }, [
     buildHoverData,
@@ -391,18 +395,25 @@ export function useChartHover<T>(
       return;
     }
 
-    if (hoveredPoint != null) {
+    if (hoveredPoint != null && isAutoHoverActiveRef.current) {
       if (testAutoHideTimerRef.current != null) {
         clearTimeout(testAutoHideTimerRef.current);
       }
       testAutoHideTimerRef.current = window.setTimeout(() => {
         setHoveredPoint(null);
+        isAutoHoverActiveRef.current = false;
       }, 1000);
+    } else if (hoveredPoint != null) {
+      if (testAutoHideTimerRef.current != null) {
+        clearTimeout(testAutoHideTimerRef.current);
+        testAutoHideTimerRef.current = null;
+      }
     }
 
     return () => {
       if (testAutoHideTimerRef.current != null) {
         clearTimeout(testAutoHideTimerRef.current);
+        testAutoHideTimerRef.current = null;
       }
     };
   }, [hoveredPoint, testAutoPopulate]);

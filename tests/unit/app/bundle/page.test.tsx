@@ -28,7 +28,6 @@ describe("BundlePage", () => {
   });
 
   it("shows the suspense fallback while the entry component is loading", async () => {
-    // eslint-disable-next-line unicorn/consistent-function-scoping -- Intentional closure pattern
     let resolveEntry: () => void = () => {
       /* Will be assigned by Promise */
     };

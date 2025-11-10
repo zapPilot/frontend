@@ -1,4 +1,4 @@
-import { AlertCircle, Info, TrendingUp } from "lucide-react";
+import { AlertCircle, Clock, Info, TrendingUp } from "lucide-react";
 import React, { useCallback, useRef, useState } from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
@@ -9,8 +9,8 @@ import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { LandingPageResponse } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { BalanceLoading, WalletMetricsSkeleton } from "../ui/LoadingSystem";
-import { ROITooltip } from "./ROITooltip";
+import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
+import { ProtocolROIItem, ROITooltip } from "./ROITooltip";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
@@ -73,6 +73,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
+    const avgDailyYieldUsd =
+      data?.yield_summary?.average_daily_yield_usd ?? null;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -90,13 +92,17 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           ) // Shortest period first
       : [];
 
+    // Note: Protocol breakdown is not available in the new yield_summary endpoint
+    // This data would need to come from a separate endpoint if needed for tooltips
+    const protocolROIData: ProtocolROIItem[] = [];
+
     // Helper function to render balance display using centralized state
     const renderBalanceDisplay = () => {
       // Loading state
       if (shouldShowLoading) {
         return (
           <div className="flex items-center space-x-2">
-            <BalanceLoading size="default" className="" />
+            <BalanceSkeleton size="default" />
           </div>
         );
       }
@@ -231,13 +237,125 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       );
     };
 
+    // Helper to determine yield display state based on data availability
+    const determineYieldState = () => {
+      if (!data?.yield_summary || avgDailyYieldUsd === null) {
+        return { status: "no_data" as const, daysWithData: 0 };
+      }
+
+      const daysWithData = data.yield_summary.statistics.filtered_days || 0;
+
+      if (daysWithData < 7) {
+        return {
+          status: "insufficient" as const,
+          daysWithData,
+          badge: "Preliminary",
+        };
+      }
+
+      if (daysWithData < 30) {
+        return {
+          status: "low_confidence" as const,
+          daysWithData,
+          badge: "Improving",
+        };
+      }
+
+      return { status: "normal" as const, daysWithData };
+    };
+
+    const renderAvgDailyYieldDisplay = () => {
+      if (shouldShowLoading || landingPageLoading) {
+        return (
+          <WalletMetricsSkeleton
+            showValue={true}
+            showPercentage={false}
+            className="w-24"
+          />
+        );
+      }
+
+      if (portfolioState.errorMessage === "USER_NOT_FOUND") {
+        return null;
+      }
+
+      const yieldState = determineYieldState();
+
+      // No data state - educational message
+      if (yieldState.status === "no_data") {
+        return (
+          <div className="flex flex-col space-y-1">
+            <div className="flex items-center space-x-2 text-purple-400">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm font-medium">Available in 1 day</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              After 24 hours of portfolio activity
+            </p>
+          </div>
+        );
+      }
+
+      // Safety guard: formatting helpers require a numeric value
+      if (avgDailyYieldUsd === null) {
+        return null;
+      }
+
+      // Insufficient or low confidence state
+      if (
+        yieldState.status === "insufficient" ||
+        yieldState.status === "low_confidence"
+      ) {
+        return (
+          <div className="flex flex-col">
+            <div className="flex items-center space-x-2 text-emerald-300">
+              <p className="text-xl font-semibold">
+                {formatCurrency(avgDailyYieldUsd, {
+                  smartPrecision: true,
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </p>
+              <span
+                className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                  yieldState.status === "insufficient"
+                    ? "bg-yellow-900/20 text-yellow-400"
+                    : "bg-blue-900/20 text-blue-400"
+                }`}
+              >
+                {yieldState.badge}
+              </span>
+            </div>
+            <span className="text-xs text-gray-500 mt-1">
+              {yieldState.status === "insufficient"
+                ? `Early estimate (${yieldState.daysWithData}/7 days)`
+                : `Based on ${yieldState.daysWithData} days`}
+            </span>
+          </div>
+        );
+      }
+
+      // Normal state
+      return (
+        <div className="flex items-center space-x-2 text-emerald-300">
+          <p className="text-xl font-semibold">
+            {formatCurrency(avgDailyYieldUsd, {
+              smartPrecision: true,
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </p>
+        </div>
+      );
+    };
+
     // Show welcome message for new users
     if (portfolioState.errorMessage === "USER_NOT_FOUND") {
       return <WelcomeNewUser />;
     }
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div>
           <p className="text-sm text-gray-400 mb-1">Total Balance</p>
           <div className="text-3xl font-bold text-white h-10 flex items-center">
@@ -265,6 +383,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   <ROITooltip
                     position={roiTooltipPos}
                     windows={roiWindows}
+                    protocols={protocolROIData}
                     recommendedPeriodLabel={
                       portfolioROI?.recommended_period?.replace("roi_", "") ||
                       null
@@ -282,6 +401,22 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <p className="text-sm text-gray-400 mb-1">Estimated Yearly PnL</p>
           {renderPnLDisplay()}
+        </div>
+
+        <div>
+          <div className="flex items-center space-x-1 mb-1">
+            <p className="text-sm text-gray-400">Avg Daily Yield</p>
+            {data?.yield_summary?.statistics.outliers_removed &&
+              data.yield_summary.statistics.outliers_removed > 0 && (
+                <span
+                  title={`${data.yield_summary.statistics.outliers_removed} outlier${data.yield_summary.statistics.outliers_removed !== 1 ? "s" : ""} removed for accuracy (IQR method)`}
+                  className="inline-flex"
+                >
+                  <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                </span>
+              )}
+          </div>
+          {renderAvgDailyYieldDisplay()}
         </div>
       </div>
     );

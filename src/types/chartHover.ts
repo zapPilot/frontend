@@ -44,11 +44,11 @@ export interface PerformanceHoverData extends BaseHoverData {
 }
 
 /**
- * Allocation chart hover data
+ * Asset allocation chart hover data
  * Shows percentage breakdown across asset categories
  */
 export interface AllocationHoverData extends BaseHoverData {
-  chartType: "allocation";
+  chartType: "asset-allocation";
   /** BTC allocation percentage (0-100) */
   btc: number;
   /** ETH allocation percentage (0-100) */
@@ -104,6 +104,28 @@ export interface VolatilityHoverData extends BaseHoverData {
 }
 
 /**
+ * Daily yield chart hover data
+ * Shows daily yield returns with per-protocol breakdown
+ */
+export interface DailyYieldHoverData extends BaseHoverData {
+  chartType: "daily-yield";
+  /** Total yield for the day in USD */
+  totalYield: number;
+  /** Number of protocols contributing to yield */
+  protocolCount?: number;
+  /** Cumulative yield up to this date */
+  cumulativeYield?: number;
+  /** Whether yield is positive or negative */
+  isPositive: boolean;
+  /** Per-protocol breakdown for tooltip */
+  protocols?: {
+    protocol_name: string;
+    chain: string;
+    yield_return_usd: number;
+  }[];
+}
+
+/**
  * Underwater chart hover data
  * Shows underwater periods and recovery status
  */
@@ -116,7 +138,8 @@ export type ChartHoverState =
   | AllocationHoverData
   | DrawdownHoverData
   | SharpeHoverData
-  | VolatilityHoverData;
+  | VolatilityHoverData
+  | DailyYieldHoverData;
 
 /**
  * Helper type guard functions for type narrowing
@@ -130,7 +153,7 @@ export function isPerformanceHover(
 export function isAllocationHover(
   state: ChartHoverState | null
 ): state is AllocationHoverData {
-  return state?.chartType === "allocation";
+  return state?.chartType === "asset-allocation";
 }
 
 export function isDrawdownHover(
@@ -149,4 +172,10 @@ export function isVolatilityHover(
   state: ChartHoverState | null
 ): state is VolatilityHoverData {
   return state?.chartType === "volatility";
+}
+
+export function isDailyYieldHover(
+  state: ChartHoverState | null
+): state is DailyYieldHoverData {
+  return state?.chartType === "daily-yield";
 }

@@ -23,6 +23,7 @@ import { formatters } from "@/lib/formatters";
 import type {
   AllocationHoverData,
   ChartHoverState,
+  DailyYieldHoverData,
   DrawdownHoverData,
   PerformanceHoverData,
   SharpeHoverData,
@@ -31,7 +32,7 @@ import type {
 
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",
-  "allocation",
+  "asset-allocation",
   "sharpe",
   "volatility",
 ]);
@@ -57,20 +58,30 @@ interface ChartTooltipProps {
 }
 
 /**
- * Render Performance chart tooltip content
+ * Render Performance chart tooltip content with percentage breakdown
  */
 function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
   const formattedValue = formatters.currencyPrecise(data.value);
+  const totalValue = data.value;
+
+  // Calculate percentages for breakdown (handle optional values)
+  const defiValue = data.defiValue ?? 0;
+  const walletValue = data.walletValue ?? 0;
+  const defiPercent = totalValue > 0 ? (defiValue / totalValue) * 100 : 0;
+  const walletPercent = totalValue > 0 ? (walletValue / totalValue) * 100 : 0;
+
   const breakdownRows = [
     {
       label: "DeFi",
       colorClass: "text-purple-300",
-      value: data.defiValue,
+      value: defiValue,
+      percent: defiPercent,
     },
     {
       label: "Wallet",
       colorClass: "text-cyan-300",
-      value: data.walletValue,
+      value: walletValue,
+      percent: walletPercent,
     },
   ].filter(
     (
@@ -79,6 +90,7 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
       label: string;
       colorClass: string;
       value: number;
+      percent: number;
     } => typeof entry.value === "number" && Number.isFinite(entry.value)
   );
 
@@ -92,11 +104,14 @@ function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
             {formattedValue}
           </span>
         </div>
-        {breakdownRows.map(({ label, colorClass, value }) => (
+        {breakdownRows.map(({ label, colorClass, value, percent }) => (
           <div key={label} className="flex items-center justify-between gap-3">
             <span className={`text-xs ${colorClass}`}>{label}</span>
             <span className="text-sm font-semibold text-gray-200">
-              {formatters.currencyPrecise(value)}
+              {formatters.currencyPrecise(value)}{" "}
+              <span className="text-xs text-gray-400">
+                ({percent.toFixed(1)}%)
+              </span>
             </span>
           </div>
         ))}
@@ -320,6 +335,81 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
 }
 
 /**
+ * Render Daily Yield chart tooltip content with protocol breakdown
+ */
+function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
+  const isPositive = data.totalYield >= 0;
+  const colorClass = isPositive ? "text-emerald-400" : "text-red-400";
+
+  // Sort protocols by yield (descending absolute value)
+  const sortedProtocols =
+    data.protocols
+      ?.slice()
+      .sort(
+        (a, b) => Math.abs(b.yield_return_usd) - Math.abs(a.yield_return_usd)
+      ) ?? [];
+
+  return (
+    <>
+      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-gray-300">Daily Yield</span>
+          <span className={`text-sm font-semibold ${colorClass}`}>
+            {isPositive ? "+" : ""}
+            {formatters.currency(data.totalYield)}
+          </span>
+        </div>
+        {data.cumulativeYield !== undefined && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-xs text-purple-300">Cumulative</span>
+            <span className="text-sm font-semibold text-white">
+              {formatters.currency(data.cumulativeYield)}
+            </span>
+          </div>
+        )}
+        {sortedProtocols.length > 0 && (
+          <>
+            <div className="border-t border-gray-700 pt-1.5 mt-1.5">
+              <div className="text-xs text-gray-400 mb-1">
+                By Protocol ({data.protocolCount})
+              </div>
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {sortedProtocols.map((protocol, idx) => {
+                  const protocolPositive = protocol.yield_return_usd >= 0;
+                  const protocolColor = protocolPositive
+                    ? "text-emerald-300"
+                    : "text-red-300";
+                  return (
+                    <div
+                      key={`${protocol.protocol_name}-${protocol.chain}-${idx}`}
+                      className="flex items-center justify-between gap-2"
+                    >
+                      <span className="text-xs text-gray-300 truncate">
+                        {protocol.protocol_name}
+                        <span className="text-gray-500 ml-1">
+                          ({protocol.chain})
+                        </span>
+                      </span>
+                      <span
+                        className={`text-xs font-semibold ${protocolColor}`}
+                      >
+                        {protocolPositive ? "+" : ""}
+                        {formatters.currency(protocol.yield_return_usd)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+/**
  * ChartTooltip component with smart positioning
  */
 export function ChartTooltip({
@@ -404,7 +494,7 @@ export function ChartTooltip({
             data={hoveredPoint as PerformanceHoverData}
           />
         )}
-        {hoveredPoint.chartType === "allocation" && (
+        {hoveredPoint.chartType === "asset-allocation" && (
           <AllocationTooltipContent
             data={hoveredPoint as AllocationHoverData}
           />
@@ -418,6 +508,11 @@ export function ChartTooltip({
         {hoveredPoint.chartType === "volatility" && (
           <VolatilityTooltipContent
             data={hoveredPoint as VolatilityHoverData}
+          />
+        )}
+        {hoveredPoint.chartType === "daily-yield" && (
+          <DailyYieldTooltipContent
+            data={hoveredPoint as DailyYieldHoverData}
           />
         )}
       </div>

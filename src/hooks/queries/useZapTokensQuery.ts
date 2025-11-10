@@ -20,6 +20,7 @@ import { type TokenPriceMap, useTokenPricesQuery } from "./useTokenPricesQuery";
 export const useZapTokensQuery = (chainId?: number) => {
   return useQuery({
     ...createQueryConfig({ dataType: "static" }),
+    // Safe: enabled condition ensures chainId is non-null and > 0
     queryKey: queryKeys.zapTokens.byChain(chainId!),
     queryFn: () => tokenService.getZapTokens(chainId!),
     enabled: !!chainId && chainId > 0,

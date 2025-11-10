@@ -73,7 +73,7 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         <PortfolioChart
           portfolioData={portfolioData}
           allocationData={allocationData}
-          activeTab="allocation"
+          activeTab="asset-allocation"
         />
       </QueryClientProvider>
     );
@@ -83,7 +83,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should render only ONE vertical line indicator when hovering", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       expect(svg).not.toBeNull();
 
       // Simulate mouse hover
@@ -104,7 +106,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should render vertical line with correct styling", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       expect(svg).not.toBeNull();
 
       // Trigger hover
@@ -137,7 +141,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should span the full chart height (y1=10, y2=290)", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -158,7 +164,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should NOT render multi-circle indicators for allocation chart", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -178,7 +186,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should update cursor position on mouse move", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       // Move to position 1
       if (svg) {
@@ -212,7 +222,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should remove cursor indicator on mouse leave", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       // Hover
       if (svg) {
@@ -254,7 +266,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         allocationData
       );
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -283,7 +297,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         zeroAllocationData
       );
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -303,7 +319,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should display cursor on touch move", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         // Simulate touch
@@ -322,7 +340,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should persist cursor during touch drag", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         // Start touch
@@ -348,7 +368,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should remove cursor on touch end", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         // Touch move
@@ -377,7 +399,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should maintain cursor on window resize", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         await userEvent.pointer({
@@ -405,7 +429,7 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       const { container: smallContainer } = renderChart();
 
       const smallSvg = smallContainer.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (smallSvg) {
         await userEvent.pointer({
@@ -424,7 +448,7 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       const { container: largeContainer } = renderChart();
 
       const largeSvg = largeContainer.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (largeSvg) {
         await userEvent.pointer({
@@ -444,7 +468,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should animate cursor in/out smoothly", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         await userEvent.pointer({
@@ -467,7 +493,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should not cause layout thrashing on rapid mouse movements", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
 
       if (svg) {
         // Simulate rapid movements
@@ -494,7 +522,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should mark cursor line as aria-hidden", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -511,7 +541,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should not interfere with pointer events", async () => {
       const { container } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -534,7 +566,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         ChartTestFixtures.emptyAllocationData()
       );
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       expect(svg).not.toBeNull();
 
       // Should not crash with empty data
@@ -548,7 +582,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
         singlePoint
       );
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -565,7 +601,9 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
     it("should handle rapid tab switching without cursor artifacts", async () => {
       const { container, rerender } = renderChart();
 
-      const svg = container.querySelector('svg[data-chart-type="allocation"]');
+      const svg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (svg) {
         await userEvent.pointer({
           target: svg,
@@ -593,7 +631,7 @@ describe("Allocation Chart - Cursor Regression Tests", () => {
       // Allocation cursor should be gone
       expect(
         container.querySelector(
-          'svg[data-chart-type="allocation"] line[stroke="#8b5cf6"]'
+          'svg[data-chart-type="asset-allocation"] line[stroke="#8b5cf6"]'
         )
       ).toBeNull();
     });

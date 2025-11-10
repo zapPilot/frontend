@@ -4,10 +4,10 @@ import { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletManager } from "../../../src/components/WalletManager";
+import * as walletService from "../../../src/components/WalletManager/services/WalletService";
+import { handleWalletError } from "../../../src/lib/walletUtils";
 import { WalletProvider } from "../../../src/providers/WalletProvider";
 // Account service is not used by WalletManager for email updates; keep import removed.
-import * as userService from "../../../src/services/userService";
-import { UserCryptoWallet } from "../../../src/types/user.types";
 import { WalletProviderInterface } from "../../../src/types/wallet";
 import { render } from "../../test-utils";
 
@@ -164,17 +164,31 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
-vi.mock("../../../src/services/userService", () => ({
-  getUserWallets: vi.fn(),
-  addWalletToBundle: vi.fn(),
-  removeWalletFromBundle: vi.fn(),
-  validateWalletAddress: vi.fn(),
-  transformWalletData: vi.fn(),
-  handleWalletError: vi.fn(),
-  getUserProfile: vi.fn(),
-  updateUserEmail: vi.fn(),
-  removeUserEmail: vi.fn(),
-}));
+vi.mock("../../../src/components/WalletManager/services/WalletService", () => {
+  const loadWallets = vi.fn();
+  const addWallet = vi.fn();
+  const removeWallet = vi.fn();
+  const updateWalletLabel = vi.fn();
+  const updateUserEmailSubscription = vi.fn();
+  const unsubscribeUserEmail = vi.fn();
+
+  return {
+    loadWallets,
+    addWallet,
+    removeWallet,
+    updateWalletLabel,
+    updateUserEmailSubscription,
+    unsubscribeUserEmail,
+  };
+});
+
+vi.mock("../../../src/lib/walletUtils", async () => {
+  const actual = await vi.importActual("../../../src/lib/walletUtils");
+  return {
+    ...actual,
+    handleWalletError: vi.fn(),
+  };
+});
 
 // No need to mock accountService for this test suite.
 
@@ -218,28 +232,9 @@ vi.mock("../../../src/components/ui/UnifiedLoading", () => ({
 }));
 
 describe("WalletManager", () => {
-  const mockUserService = vi.mocked(userService);
-  // Note: Email subscription uses userService.updateUserEmail
-
-  // Mock data
-  const mockWallets: UserCryptoWallet[] = [
-    {
-      id: "wallet-1",
-      user_id: "user-123",
-      wallet: "0x1234567890123456789012345678901234567890",
-      label: "Primary Wallet",
-
-      created_at: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "wallet-2",
-      user_id: "user-123",
-      wallet: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-      label: "Trading Wallet",
-
-      created_at: "2024-01-02T00:00:00Z",
-    },
-  ];
+  const mockWalletService = vi.mocked(walletService);
+  const mockHandleWalletError = vi.mocked(handleWalletError);
+  // Note: Email subscription uses walletService.updateUserEmailSubscription
 
   const mockTransformedWallets = [
     {
@@ -312,25 +307,19 @@ describe("WalletManager", () => {
     };
 
     // Setup default mocks
-    mockUserService.getUserWallets.mockResolvedValue({
+    mockWalletService.loadWallets.mockResolvedValue(mockTransformedWallets);
+    mockWalletService.addWallet.mockResolvedValue({
       success: true,
-      data: mockWallets,
     });
-    mockUserService.transformWalletData.mockReturnValue(mockTransformedWallets);
-    mockUserService.validateWalletAddress.mockReturnValue(true);
-    mockUserService.addWalletToBundle.mockResolvedValue({
+    mockWalletService.removeWallet.mockResolvedValue({
       success: true,
-      data: { wallet_id: "wallet-new", message: "Wallet added successfully" },
     });
-    mockUserService.removeWalletFromBundle.mockResolvedValue({
+    mockWalletService.updateWalletLabel.mockResolvedValue({
       success: true,
-      data: { message: "Wallet removed successfully" },
     });
-    mockUserService.handleWalletError.mockReturnValue("Mock error message");
-    mockUserService.updateUserEmail.mockResolvedValue({
-      success: true,
-      data: { message: "Email updated" },
-    });
+    mockWalletService.updateUserEmailSubscription.mockResolvedValue();
+    mockWalletService.unsubscribeUserEmail.mockResolvedValue();
+    mockHandleWalletError.mockReturnValue("Mock error message");
 
     // Mock clipboard API - setup default that will be overridden in tests
     Object.defineProperty(navigator, "clipboard", {
@@ -417,13 +406,7 @@ describe("WalletManager", () => {
       await renderWalletManager();
 
       await waitFor(() => {
-        expect(mockUserService.getUserWallets).toHaveBeenCalledWith("user-123");
-      });
-
-      await waitFor(() => {
-        expect(mockUserService.transformWalletData).toHaveBeenCalledWith(
-          mockWallets
-        );
+        expect(mockWalletService.loadWallets).toHaveBeenCalledWith("user-123");
       });
 
       // Use more specific selectors to avoid multiple element matches
@@ -433,17 +416,13 @@ describe("WalletManager", () => {
 
     it("handles empty wallet list", async () => {
       await act(async () => {
-        mockUserService.getUserWallets.mockResolvedValue({
-          success: true,
-          data: [],
-        });
-        mockUserService.transformWalletData.mockReturnValue([]);
+        mockWalletService.loadWallets.mockResolvedValue([]);
       });
 
       await renderWalletManager();
 
       await waitFor(() => {
-        expect(mockUserService.getUserWallets).toHaveBeenCalled();
+        expect(mockWalletService.loadWallets).toHaveBeenCalled();
       });
 
       // Should still show the "Add Your First Wallet" button
@@ -454,16 +433,15 @@ describe("WalletManager", () => {
 
     it("handles API error when loading wallets", async () => {
       await act(async () => {
-        mockUserService.getUserWallets.mockResolvedValue({
-          success: false,
-          error: "Failed to load wallets",
-        });
+        mockWalletService.loadWallets.mockRejectedValue(
+          new Error("Failed to load wallets")
+        );
       });
 
       await renderWalletManager();
 
       await waitFor(() => {
-        expect(mockUserService.getUserWallets).toHaveBeenCalled();
+        expect(mockWalletService.loadWallets).toHaveBeenCalled();
       });
 
       // Component should handle the error gracefully and show empty state
@@ -534,9 +512,6 @@ describe("WalletManager", () => {
 
       it("validates wallet address before adding", async () => {
         const user = userEvent.setup();
-        await act(async () => {
-          mockUserService.validateWalletAddress.mockReturnValue(false);
-        });
 
         await renderWalletManager();
 
@@ -563,7 +538,7 @@ describe("WalletManager", () => {
         expect(
           screen.getByText(/Invalid wallet address format/)
         ).toBeInTheDocument();
-        expect(mockUserService.addWalletToBundle).not.toHaveBeenCalled();
+        expect(mockWalletService.addWallet).not.toHaveBeenCalled();
       });
 
       it("requires both label and address fields", async () => {
@@ -582,7 +557,7 @@ describe("WalletManager", () => {
         expect(
           screen.getByText("Wallet label is required")
         ).toBeInTheDocument();
-        expect(mockUserService.addWalletToBundle).not.toHaveBeenCalled();
+        expect(mockWalletService.addWallet).not.toHaveBeenCalled();
       });
 
       it("successfully adds new wallet", async () => {
@@ -614,7 +589,7 @@ describe("WalletManager", () => {
         });
 
         await waitFor(() => {
-          expect(mockUserService.addWalletToBundle).toHaveBeenCalledWith(
+          expect(mockWalletService.addWallet).toHaveBeenCalledWith(
             "user-123",
             "0x9876543210987654321098765432109876543210",
             "New Trading Wallet"
@@ -625,7 +600,7 @@ describe("WalletManager", () => {
       it("handles add wallet API error", async () => {
         const user = userEvent.setup();
         await act(async () => {
-          mockUserService.addWalletToBundle.mockResolvedValue({
+          mockWalletService.addWallet.mockResolvedValue({
             success: false,
             error: "Wallet already exists",
           });
@@ -684,7 +659,7 @@ describe("WalletManager", () => {
         });
 
         await waitFor(() => {
-          expect(mockUserService.removeWalletFromBundle).toHaveBeenCalledWith(
+          expect(mockWalletService.removeWallet).toHaveBeenCalledWith(
             "user-123",
             "wallet-2"
           );
@@ -712,7 +687,7 @@ describe("WalletManager", () => {
       it("handles remove wallet API error", async () => {
         const user = userEvent.setup();
         await act(async () => {
-          mockUserService.removeWalletFromBundle.mockResolvedValue({
+          mockWalletService.removeWallet.mockResolvedValue({
             success: false,
             error: "Cannot remove main wallet",
           });
@@ -970,7 +945,7 @@ describe("WalletManager", () => {
       const user = userEvent.setup();
       // Mock a delayed response to see loading state
       await act(async () => {
-        mockUserService.addWalletToBundle.mockImplementation(
+        mockWalletService.addWallet.mockImplementation(
           () =>
             new Promise(resolve =>
               setTimeout(
@@ -1022,7 +997,7 @@ describe("WalletManager", () => {
       const user = userEvent.setup();
       // Mock a delayed response
       await act(async () => {
-        mockUserService.removeWalletFromBundle.mockImplementation(
+        mockWalletService.removeWallet.mockImplementation(
           () =>
             new Promise(resolve =>
               setTimeout(
@@ -1063,12 +1038,10 @@ describe("WalletManager", () => {
     it("handles network errors during wallet operations", async () => {
       const user = userEvent.setup();
       await act(async () => {
-        mockUserService.addWalletToBundle.mockRejectedValue(
+        mockWalletService.addWallet.mockRejectedValue(
           new Error("Network error")
         );
-        mockUserService.handleWalletError.mockReturnValue(
-          "Network connection failed"
-        );
+        mockHandleWalletError.mockReturnValue("Network connection failed");
       });
 
       await renderWalletManager();
@@ -1106,7 +1079,7 @@ describe("WalletManager", () => {
     it("displays operation-specific error messages", async () => {
       const user = userEvent.setup();
       await act(async () => {
-        mockUserService.removeWalletFromBundle.mockResolvedValue({
+        mockWalletService.removeWallet.mockResolvedValue({
           success: false,
           error: "Cannot remove primary wallet",
         });
@@ -1146,7 +1119,7 @@ describe("WalletManager", () => {
 
         // Wait for initial load
         await waitFor(() => {
-          expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
+          expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(1);
         });
 
         // Fast-forward 30 seconds to trigger auto-refresh
@@ -1159,7 +1132,7 @@ describe("WalletManager", () => {
         // Allow the auto-refresh to complete with a longer timeout
         await waitFor(
           () => {
-            expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(2);
+            expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(2);
           },
           { timeout: 2000 }
         );
@@ -1177,7 +1150,7 @@ describe("WalletManager", () => {
 
         // Wait for initial load
         await waitFor(() => {
-          expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
+          expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(1);
         });
 
         // Re-render with closed modal (preserve provider context)
@@ -1194,7 +1167,7 @@ describe("WalletManager", () => {
         });
 
         // Should only have the initial call, no additional refresh
-        expect(mockUserService.getUserWallets).toHaveBeenCalledTimes(1);
+        expect(mockWalletService.loadWallets).toHaveBeenCalledTimes(1);
       } finally {
         vi.useRealTimers();
       }
@@ -1219,7 +1192,7 @@ describe("WalletManager", () => {
       await user.click(screen.getByText("Unsubscribe"));
 
       await waitFor(() => {
-        expect(mockUserService.removeUserEmail).toHaveBeenCalledWith(
+        expect(mockWalletService.unsubscribeUserEmail).toHaveBeenCalledWith(
           "user-123"
         );
       });
@@ -1245,9 +1218,6 @@ describe("WalletManager", () => {
 
       await renderWalletManager(true, vi.fn(), contextWithEmail);
 
-      // Should not fetch profile anymore
-      expect(mockUserService.getUserProfile).not.toHaveBeenCalled();
-
       // UI shows subscribed state with the context email
       expect(
         screen.getByText(/You.*subscribed to weekly PnL reports/i)
@@ -1256,12 +1226,6 @@ describe("WalletManager", () => {
     });
     it("successfully subscribes with a valid email", async () => {
       const user = userEvent.setup();
-      await act(async () => {
-        mockUserService.getUserProfile.mockResolvedValue({
-          success: true,
-          data: { user: { email: null } },
-        });
-      });
 
       await renderWalletManager();
 
@@ -1278,10 +1242,9 @@ describe("WalletManager", () => {
       });
 
       await waitFor(() => {
-        expect(mockUserService.updateUserEmail).toHaveBeenCalledWith(
-          "user-123",
-          "test@example.com"
-        );
+        expect(
+          mockWalletService.updateUserEmailSubscription
+        ).toHaveBeenCalledWith("user-123", "test@example.com");
       });
 
       await waitFor(() => {
@@ -1294,12 +1257,10 @@ describe("WalletManager", () => {
     it("handles API errors during subscription", async () => {
       const user = userEvent.setup();
       await act(async () => {
-        mockUserService.updateUserEmail.mockRejectedValue(
+        mockWalletService.updateUserEmailSubscription.mockRejectedValue(
           new Error("Email already subscribed")
         );
-        mockUserService.handleWalletError.mockReturnValue(
-          "Email is already subscribed"
-        );
+        mockHandleWalletError.mockReturnValue("Email is already subscribed");
       });
 
       await renderWalletManager();

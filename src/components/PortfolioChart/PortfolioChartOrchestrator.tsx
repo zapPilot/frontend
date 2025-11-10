@@ -5,6 +5,7 @@ import {
   Activity,
   BarChart3,
   Calendar,
+  DollarSign,
   PieChart,
   Target,
   TrendingUp,
@@ -17,7 +18,8 @@ import { CHART_PERIODS } from "../../lib/portfolio-analytics";
 import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
-  AllocationChart,
+  AssetAllocationChart,
+  DailyYieldChart,
   DrawdownRecoveryChart,
   PerformanceChart,
   SharpeChart,
@@ -29,22 +31,27 @@ import type { PortfolioChartProps } from "./types";
 import { CHART_CONTENT_ID } from "./utils";
 
 /**
- * Chart type selector configuration
+ * Chart type selector configuration with industry-standard labels
  */
 const CHART_TYPES = [
   {
     key: "performance" as const,
-    label: "Portfolio Value",
+    label: "Total Return",
     icon: TrendingUp,
   },
-  { key: "allocation" as const, label: "Allocation", icon: PieChart },
+  {
+    key: "asset-allocation" as const,
+    label: "Asset Allocation",
+    icon: PieChart,
+  },
   {
     key: "drawdown" as const,
-    label: "Drawdown & Recovery",
+    label: "Drawdown Analysis",
     icon: Activity,
   },
   { key: "sharpe" as const, label: "Sharpe Ratio", icon: Target },
   { key: "volatility" as const, label: "Volatility", icon: BarChart3 },
+  { key: "daily-yield" as const, label: "Daily Yield", icon: DollarSign },
 ] as const;
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
@@ -76,6 +83,7 @@ const PortfolioChartComponent = ({
   drawdownData: drawdownDataOverride,
   sharpeData: sharpeDataOverride,
   volatilityData: volatilityDataOverride,
+  dailyYieldData: dailyYieldDataOverride,
   activeTab,
   isLoading: externalLoading,
   error: externalError,
@@ -112,6 +120,7 @@ const PortfolioChartComponent = ({
       drawdownData: drawdownDataOverride,
       sharpeData: sharpeDataOverride,
       volatilityData: volatilityDataOverride,
+      dailyYieldData: dailyYieldDataOverride,
     },
     externalLoading,
     externalError
@@ -190,7 +199,7 @@ const PortfolioChartComponent = ({
                 aria-hidden="true"
                 role="presentation"
               />
-              Portfolio Value
+              Total Return
             </h3>
             <div className="flex items-center space-x-4 text-sm">
               <div
@@ -262,8 +271,8 @@ const PortfolioChartComponent = ({
               selectedPeriod={selectedPeriod}
             />
           )}
-          {selectedChart === "allocation" && (
-            <AllocationChart data={chartData.allocationHistory} />
+          {selectedChart === "asset-allocation" && (
+            <AssetAllocationChart data={chartData.allocationHistory} />
           )}
           {selectedChart === "drawdown" && (
             <DrawdownRecoveryChart
@@ -277,6 +286,9 @@ const PortfolioChartComponent = ({
           {selectedChart === "volatility" && (
             <VolatilityChart data={chartData.volatilityData} />
           )}
+          {selectedChart === "daily-yield" && (
+            <DailyYieldChart data={chartData.dailyYieldData} />
+          )}
         </div>
 
         {/* Chart Summary Statistics */}
@@ -284,7 +296,12 @@ const PortfolioChartComponent = ({
           {selectedChart === "drawdown" &&
             chartData.drawdownRecoveryData.length > 0 && (
               <>
-                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                <BaseCard
+                  variant="glass"
+                  padding="sm"
+                  borderRadius="md"
+                  className="border-white/10"
+                >
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     Max Drawdown
                   </div>
@@ -295,16 +312,26 @@ const PortfolioChartComponent = ({
                       1
                     )}
                   </div>
-                </div>
-                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                </BaseCard>
+                <BaseCard
+                  variant="glass"
+                  padding="sm"
+                  borderRadius="md"
+                  className="border-white/10"
+                >
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     Recoveries
                   </div>
                   <div className="mt-2 text-xl font-bold text-gray-200">
                     {chartData.drawdownRecoverySummary.totalRecoveries}
                   </div>
-                </div>
-                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                </BaseCard>
+                <BaseCard
+                  variant="glass"
+                  padding="sm"
+                  borderRadius="md"
+                  className="border-white/10"
+                >
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     Avg Recovery
                   </div>
@@ -314,8 +341,13 @@ const PortfolioChartComponent = ({
                       ? `${chartData.drawdownRecoverySummary.averageRecoveryDays} days`
                       : "—"}
                   </div>
-                </div>
-                <div className="p-4 rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm">
+                </BaseCard>
+                <BaseCard
+                  variant="glass"
+                  padding="sm"
+                  borderRadius="md"
+                  className="border-white/10"
+                >
                   <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                     Current
                   </div>
@@ -333,7 +365,7 @@ const PortfolioChartComponent = ({
                       )}
                     </span>
                   </div>
-                </div>
+                </BaseCard>
               </>
             )}
 

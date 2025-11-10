@@ -1,5 +1,6 @@
 import React from "react";
 
+import { getAssetUrl } from "../../config/assets";
 import { BaseComponentProps } from "../../types/ui.types";
 import { ImageWithFallback } from "./ImageWithFallback";
 
@@ -11,9 +12,6 @@ interface TokenImageProps extends BaseComponentProps {
   };
   size?: number;
 }
-
-const ZAP_ASSET_WORKER_BASE_URL =
-  "https://zap-assets-worker.davidtnfsh.workers.dev";
 
 export function TokenImage({
   token,
@@ -31,7 +29,7 @@ export function TokenImage({
     }
 
     const symbol = getTokenSymbol().toLowerCase();
-    return `${ZAP_ASSET_WORKER_BASE_URL}/tokenPictures/${symbol}.webp`;
+    return getAssetUrl("token", symbol);
   };
 
   return (

@@ -4,29 +4,46 @@
  */
 
 import { httpUtils } from "../lib/http-utils";
+import type { PoolDetail } from "../types/pool";
 import { ActualRiskSummaryResponse } from "../types/risk";
 
-// API Response Types
-export interface PoolDetail {
-  snapshot_id: string;
-  snapshot_ids?: string[] | null;
-  chain: string;
-  protocol: string;
-  protocol_name: string;
-  asset_usd_value: number;
-  pool_symbols: string[];
-  final_apr: number;
-  protocol_matched: boolean;
-  apr_data: {
-    apr_protocol: string | null;
-    apr_symbol: string | null;
-    apr: number | null;
-    apr_base: number | null;
-    apr_reward: number | null;
-    apr_updated_at: string | null;
+/**
+ * Yield returns summary with IQR outlier detection
+ *
+ * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
+ * providing more accurate average daily yield calculations for DeFi portfolios.
+ */
+export interface YieldReturnsSummaryResponse {
+  user_id: string;
+  period: {
+    start_date: string;
+    end_date: string;
+    days: number;
   };
-  contribution_to_portfolio: number;
+  average_daily_yield_usd: number;
+  median_daily_yield_usd: number;
+  total_yield_usd: number;
+  statistics: {
+    mean: number;
+    median: number;
+    std_dev: number;
+    min_value: number;
+    max_value: number;
+    total_days: number;
+    filtered_days: number;
+    outliers_removed: number;
+  };
+  outlier_strategy: "iqr" | "none";
+  outliers_detected: {
+    date: string;
+    value: number;
+    reason: string;
+    z_score: number | null;
+  }[];
 }
+
+// Re-export PoolDetail for components that import from this service
+export type { PoolDetail } from "../types/pool";
 
 // Unified Landing Page Response Type
 export interface LandingPageResponse {
@@ -112,6 +129,7 @@ export interface LandingPageResponse {
     matched_asset_value_usd: number;
   };
   message?: string;
+  yield_summary?: YieldReturnsSummaryResponse;
 }
 
 /**
@@ -125,6 +143,35 @@ export const getLandingPagePortfolioData = async (
 ): Promise<LandingPageResponse> => {
   const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
+};
+
+/**
+ * Get yield returns summary with IQR outlier detection
+ *
+ * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
+ * providing more accurate average daily yield calculations for DeFi portfolios.
+ *
+ * @param userId - User wallet address
+ * @param days - Number of days to analyze (default: 30)
+ * @returns Yield summary with outlier-filtered averages and detection statistics
+ *
+ * @example
+ * const summary = await getYieldReturnsSummary('0x123...', 30);
+ * console.log(`Avg: $${summary.average_daily_yield_usd}`);
+ * console.log(`Outliers removed: ${summary.statistics.outliers_removed}`);
+ */
+export const getYieldReturnsSummary = async (
+  userId: string,
+  days = 30
+): Promise<YieldReturnsSummaryResponse> => {
+  const params = new URLSearchParams({
+    days: days.toString(),
+    outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
+  });
+  const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;
+  return await httpUtils.analyticsEngine.get<YieldReturnsSummaryResponse>(
+    endpoint
+  );
 };
 
 /**
@@ -477,5 +524,79 @@ export const getPortfolioDashboard = async (
 
   return await httpUtils.analyticsEngine.get<UnifiedDashboardResponse>(
     `/api/v1/dashboard/portfolio-analytics/${userId}?${queryParams}`
+  );
+};
+
+// ============================================================================
+// DAILY YIELD RETURNS ENDPOINT
+// ============================================================================
+
+/**
+ * Token details for daily yield returns
+ */
+interface DailyYieldToken {
+  symbol: string;
+  amount_change: number;
+  current_price: number;
+  yield_return_usd: number;
+}
+
+/**
+ * Individual daily yield return entry (per protocol/position)
+ */
+interface DailyYieldReturn {
+  date: string;
+  protocol_name: string;
+  chain: string;
+  position_type: string;
+  yield_return_usd: number;
+  tokens: DailyYieldToken[];
+}
+
+/**
+ * Period metadata for daily yield returns
+ */
+interface DailyYieldPeriod {
+  start_date: string;
+  end_date: string;
+  days: number;
+}
+
+/**
+ * Response structure for daily yield returns endpoint
+ */
+interface DailyYieldReturnsResponse {
+  user_id: string;
+  period: DailyYieldPeriod;
+  daily_returns: DailyYieldReturn[];
+}
+
+/**
+ * Get daily yield returns for a user
+ *
+ * Retrieves granular daily yield data broken down by protocol and position.
+ * Each date may have multiple entries (one per protocol/position).
+ *
+ * @param userId - User identifier
+ * @param days - Number of days to retrieve (default: 30)
+ * @returns Daily yield returns with per-protocol breakdown
+ *
+ * @example
+ * ```typescript
+ * const dailyYield = await getDailyYieldReturns('user-123', 30);
+ *
+ * // Access daily returns
+ * dailyYield.daily_returns.forEach(entry => {
+ *   console.log(`${entry.date}: ${entry.protocol_name} = $${entry.yield_return_usd}`);
+ * });
+ * ```
+ */
+export const getDailyYieldReturns = async (
+  userId: string,
+  days = 30
+): Promise<DailyYieldReturnsResponse> => {
+  const endpoint = `/api/v1/yield/returns/daily/${userId}?days=${days}`;
+  return await httpUtils.analyticsEngine.get<DailyYieldReturnsResponse>(
+    endpoint
   );
 };

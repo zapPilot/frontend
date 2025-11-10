@@ -1,5 +1,6 @@
 import {
   ALLOCATION_THRESHOLDS,
+  DEFAULT_PORTFOLIO_TOTAL_VALUE,
   MOCK_VALUES,
   PERCENTAGE_BASE,
 } from "@/constants/portfolio-allocation";
@@ -136,8 +137,6 @@ interface ProcessAssetCategoriesOptions {
   totalPortfolioValue?: number;
 }
 
-const DEFAULT_TOTAL_VALUE = 100_000;
-
 // Data processing utility
 export const processAssetCategories = (
   assetCategories: AssetCategory[],
@@ -149,7 +148,7 @@ export const processAssetCategories = (
 } => {
   const {
     allocationOverrides = {},
-    totalPortfolioValue = DEFAULT_TOTAL_VALUE,
+    totalPortfolioValue = DEFAULT_PORTFOLIO_TOTAL_VALUE,
   } = options;
 
   const categoriesWithBasePercentages = assetCategories.map(category => {

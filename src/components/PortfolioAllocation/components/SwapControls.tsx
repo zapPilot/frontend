@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
-import {
+import React, {
   forwardRef,
   type Ref,
   useCallback,
@@ -103,7 +103,7 @@ const OptimizationToggle = ({
   </label>
 );
 
-export const SwapControls = forwardRef<SwapControlsRef, SwapControlsProps>(
+const SwapControlsComponent = forwardRef<SwapControlsRef, SwapControlsProps>(
   (
     {
       operationMode,
@@ -425,4 +425,6 @@ export const SwapControls = forwardRef<SwapControlsRef, SwapControlsProps>(
   }
 );
 
-SwapControls.displayName = "SwapControls";
+SwapControlsComponent.displayName = "SwapControls";
+
+export const SwapControls = React.memo(SwapControlsComponent);

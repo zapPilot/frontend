@@ -1,41 +1,38 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { WalletPortfolioPresenter } from "../../../src/components/wallet/WalletPortfolioPresenter";
-import { WalletPortfolio } from "../../../src/components/WalletPortfolio";
-import {
-  useWalletPortfolioState,
-  type WalletPortfolioViewModel,
-} from "../../../src/hooks/useWalletPortfolioState";
+import type { WalletPortfolioViewModel } from "@/hooks/useWalletPortfolioState";
 
-vi.mock("../../../src/hooks/useWalletPortfolioState");
-vi.mock("../../../src/components/wallet/WalletPortfolioPresenter", () => {
+const mockUseWalletPortfolioState = vi.fn<[], WalletPortfolioViewModel>();
+
+vi.mock("@/hooks/useWalletPortfolioState", () => ({
+  useWalletPortfolioState: mockUseWalletPortfolioState,
+}));
+
+const mockPresenter = vi.fn(({ vm }: { vm: WalletPortfolioViewModel }) => (
+  <div data-testid="wallet-portfolio-presenter">
+    <span data-testid="vm-user">{vm.resolvedUserId ?? "no-user"}</span>
+    <span data-testid="vm-visitor">
+      {vm.isVisitorMode ? "visitor" : "owner"}
+    </span>
+    <span data-testid="vm-hidden">
+      {vm.balanceHidden ? "hidden" : "visible"}
+    </span>
+    <button
+      data-testid="invoke-optimize"
+      onClick={vm.onOptimizeClick}
+      disabled={!vm.onOptimizeClick}
+    >
+      Optimize Action
+    </button>
+  </div>
+));
+
+vi.mock("@/components/wallet/WalletPortfolioPresenter", () => {
   return {
-    WalletPortfolioPresenter: vi.fn(
-      ({ vm }: { vm: WalletPortfolioViewModel }) => (
-        <div data-testid="wallet-portfolio-presenter">
-          <span data-testid="vm-user">{vm.resolvedUserId ?? "no-user"}</span>
-          <span data-testid="vm-visitor">
-            {vm.isVisitorMode ? "visitor" : "owner"}
-          </span>
-          <span data-testid="vm-hidden">
-            {vm.balanceHidden ? "hidden" : "visible"}
-          </span>
-          <button
-            data-testid="invoke-optimize"
-            onClick={vm.onOptimizeClick}
-            disabled={!vm.onOptimizeClick}
-          >
-            Optimize Action
-          </button>
-        </div>
-      )
-    ),
+    WalletPortfolioPresenter: mockPresenter,
   };
 });
-
-const mockUseWalletPortfolioState = vi.mocked(useWalletPortfolioState);
-const mockPresenter = vi.mocked(WalletPortfolioPresenter);
 
 function createViewModel(
   overrides: Partial<WalletPortfolioViewModel> = {}
@@ -77,14 +74,32 @@ function createViewModel(
   };
 }
 
+interface WalletPortfolioProps {
+  urlUserId?: string;
+  onOptimizeClick?: () => void;
+  onZapInClick?: () => void;
+  onZapOutClick?: () => void;
+  onCategoryClick?: (categoryId: string) => void;
+  isOwnBundle?: boolean;
+  bundleUserName?: string;
+  bundleUrl?: string;
+}
+
+async function renderWalletPortfolio(props: WalletPortfolioProps = {}) {
+  vi.resetModules();
+  const { WalletPortfolio } = await import("@/components/WalletPortfolio");
+  render(<WalletPortfolio {...props} />);
+}
+
 describe("WalletPortfolio", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseWalletPortfolioState.mockReturnValue(createViewModel());
+    mockPresenter.mockClear();
   });
 
-  it("renders the presenter with the view model from the hook", () => {
-    render(<WalletPortfolio />);
+  it("renders the presenter with the view model from the hook", async () => {
+    await renderWalletPortfolio();
 
     expect(mockUseWalletPortfolioState).toHaveBeenCalledTimes(1);
     expect(mockPresenter).toHaveBeenCalledTimes(1);
@@ -95,7 +110,7 @@ describe("WalletPortfolio", () => {
     ).toBeInTheDocument();
   });
 
-  it("forwards optional props to the wallet portfolio state hook", () => {
+  it("forwards optional props to the wallet portfolio state hook", async () => {
     const callbacks = {
       onOptimizeClick: vi.fn(),
       onZapInClick: vi.fn(),
@@ -103,15 +118,13 @@ describe("WalletPortfolio", () => {
       onCategoryClick: vi.fn(),
     };
 
-    render(
-      <WalletPortfolio
-        urlUserId="bundle-user"
-        isOwnBundle={false}
-        bundleUserName="Bob"
-        bundleUrl="https://zap.pilot/bundles/bob"
-        {...callbacks}
-      />
-    );
+    await renderWalletPortfolio({
+      urlUserId: "bundle-user",
+      isOwnBundle: false,
+      bundleUserName: "Bob",
+      bundleUrl: "https://zap.pilot/bundles/bob",
+      ...callbacks,
+    });
 
     expect(mockUseWalletPortfolioState).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -124,13 +137,13 @@ describe("WalletPortfolio", () => {
     );
   });
 
-  it("propagates view model callbacks to the presenter component", () => {
+  it("propagates view model callbacks to the presenter component", async () => {
     const onOptimizeClick = vi.fn();
     mockUseWalletPortfolioState.mockReturnValue(
       createViewModel({ onOptimizeClick })
     );
 
-    render(<WalletPortfolio />);
+    await renderWalletPortfolio();
 
     fireEvent.click(screen.getByTestId("invoke-optimize"));
     expect(onOptimizeClick).toHaveBeenCalledTimes(1);

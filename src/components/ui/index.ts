@@ -2,23 +2,19 @@
 export { BaseCard } from "./BaseCard";
 export { BundleNotFound } from "./BundleNotFound";
 export { GradientButton } from "./GradientButton";
-export { ModalCloseButton } from "./ModalCloseButton";
 
-// Loading system - comprehensive re-exports for backward compatibility
+// Loading system - comprehensive re-exports
 export {
   AssetCategorySkeleton,
-  BalanceLoading,
   BalanceSkeleton,
   ButtonSkeleton,
   CardSkeleton,
   LoadingState,
   LoadingWrapper,
-  PieChartLoading,
   PieChartSkeleton,
   Skeleton,
   Spinner,
   TokenListSkeleton,
-  UnifiedLoading,
   WalletMetricsSkeleton,
 } from "./LoadingSystem";
 export {

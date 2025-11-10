@@ -3,7 +3,6 @@
  * Helper functions for chart hover calculations and styling
  */
 
-import { formatters } from "./formatters";
 import {
   getColorForSeverity,
   legacyLabelMapping,
@@ -35,43 +34,6 @@ export function getDrawdownSeverity(
     critical: "Severe",
   };
   return mapping[severity];
-}
-
-/**
- * Finds the peak date before the given index in drawdown data
- * @param drawdownData - Array of drawdown data points
- * @param index - Current index
- * @returns Formatted peak date string
- */
-export function findPeakDate(
-  drawdownData: { date: string; portfolio_value: number }[],
-  index: number
-): string {
-  const priorData = drawdownData.slice(0, index + 1);
-  const peak = Math.max(...priorData.map(p => p.portfolio_value));
-  const peakIndex = priorData.findIndex(p => p.portfolio_value === peak);
-  const peakDate: string =
-    priorData[peakIndex]?.date ||
-    drawdownData[index]?.date ||
-    drawdownData[0]?.date ||
-    new Date().toISOString();
-  return formatters.chartDate(peakDate);
-}
-
-/**
- * Calculates days since peak
- * @param drawdownData - Array of drawdown data points
- * @param index - Current index
- * @returns Number of days since peak
- */
-export function calculateDaysSincePeak(
-  drawdownData: { date: string; portfolio_value: number }[],
-  index: number
-): number {
-  const priorData = drawdownData.slice(0, index + 1);
-  const peak = Math.max(...priorData.map(p => p.portfolio_value));
-  const peakIndex = priorData.findIndex(p => p.portfolio_value === peak);
-  return index - peakIndex;
 }
 
 // ============================================================================
@@ -109,21 +71,28 @@ export function getSharpeInterpretation(
  * @param volatility - Annualized volatility percentage
  * @returns Risk level label
  */
+const VOLATILITY_RISK_THRESHOLDS = {
+  LOW_MAX: 20,
+  MODERATE_MAX: 30,
+  HIGH_MAX: 40,
+} as const;
+
 export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
-  const severity = severityMappers.volatility(volatility);
-  const mapping: Record<
-    SeverityLevel,
-    "Low" | "Moderate" | "High" | "Very High"
-  > = {
-    excellent: "Low",
-    good: "Low",
-    fair: "Moderate",
-    poor: "High",
-    critical: "Very High",
-  };
-  return mapping[severity];
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) {
+    return "Low";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) {
+    return "Moderate";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) {
+    return "High";
+  }
+
+  return "Very High";
 }
 
 /**
@@ -138,19 +107,6 @@ export function calculateDailyVolatility(annualizedVol: number): number {
 // ============================================================================
 // Underwater Recovery Functions
 // ============================================================================
-
-/**
- * Determines recovery status
- * @param underwater - Underwater percentage
- * @returns Recovery status label
- */
-export function getRecoveryStatus(
-  underwater: number
-): "Recovered" | "Recovering" | "Underwater" {
-  if (Math.abs(underwater) < 1) return "Recovered";
-  if (Math.abs(underwater) < 10) return "Recovering";
-  return "Underwater";
-}
 
 // ============================================================================
 // Color Utilities
@@ -193,23 +149,16 @@ export function getDrawdownSeverityColor(
 export function getVolatilityRiskColor(
   riskLevel: "Low" | "Moderate" | "High" | "Very High"
 ): { color: string; bgColor: string } {
-  const severityLevel = legacyLabelMapping[riskLevel];
-  return getColorForSeverity(severityLevel);
-}
-
-/**
- * Gets color for recovery status
- * @param status - Recovery status
- * @returns Object with color Tailwind class
- */
-export function getRecoveryStatusColor(
-  status: "Recovered" | "Recovering" | "Underwater"
-): { color: string } {
-  const mapping: Record<typeof status, SeverityLevel> = {
-    Recovered: "excellent",
-    Recovering: "fair",
-    Underwater: "critical",
+  const riskToSeverity: Record<
+    "Low" | "Moderate" | "High" | "Very High",
+    SeverityLevel
+  > = {
+    Low: "excellent",
+    Moderate: "good",
+    High: "poor",
+    "Very High": "critical",
   };
-  const colors = getColorForSeverity(mapping[status]);
-  return { color: colors.color };
+
+  const severityLevel = riskToSeverity[riskLevel];
+  return getColorForSeverity(severityLevel);
 }

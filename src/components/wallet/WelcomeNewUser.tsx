@@ -1,12 +1,19 @@
 import React from "react";
 
+import { BaseCard } from "@/components/ui";
+
 interface WelcomeNewUserProps {
   onGetStarted?: () => void;
 }
 
 export function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
   return (
-    <div className="flex flex-col space-y-4 p-6 rounded-lg bg-purple-900/20 border border-purple-600/30 backdrop-blur-sm">
+    <BaseCard
+      variant="glass"
+      padding="xl"
+      borderRadius="md"
+      className="flex flex-col space-y-4 bg-purple-900/20 border-purple-600/30"
+    >
       <div className="flex items-center space-x-3 text-purple-400">
         <div className="p-2 bg-purple-600/20 rounded-lg">
           <div className="w-6 h-6 text-purple-400">✨</div>
@@ -38,6 +45,6 @@ export function WelcomeNewUser({ onGetStarted }: WelcomeNewUserProps) {
           Learn More
         </button>
       </div>
-    </div>
+    </BaseCard>
   );
 }

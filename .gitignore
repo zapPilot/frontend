@@ -61,3 +61,5 @@ dev.log
 
 # serena
 .serena/cache
+
+.jscpd/

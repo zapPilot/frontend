@@ -5,11 +5,9 @@ import { memo, useMemo } from "react";
 import { useChartHover } from "../../../hooks/useChartHover";
 import {
   formatAxisLabel,
-  generateAreaPath,
   generateSVGPath,
   generateYAxisLabels,
 } from "../../../lib/chartUtils";
-import { ensureNonNegative } from "../../../lib/mathUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS } from "../chartConstants";
 import type { PortfolioStackedDataPoint } from "../types";
@@ -19,6 +17,7 @@ import {
   getChartInteractionProps,
   getStackedTotalValue,
 } from "../utils";
+import { ChartGrid } from "./ChartGrid";
 
 interface PerformanceChartProps {
   data: PortfolioStackedDataPoint[];
@@ -31,14 +30,14 @@ interface PerformanceChartProps {
 /**
  * PerformanceChart - Portfolio value over time visualization
  *
- * Displays stacked portfolio performance with DeFi and Wallet breakdown.
- * Uses stacked area chart to show composition while maintaining total value visibility.
+ * Displays total portfolio performance as a clean line chart.
+ * Shows aggregate portfolio value with detailed breakdown on hover.
  *
  * Features:
- * - Stacked areas for DeFi (purple) and Wallet (cyan) values
- * - Separation line between regions
- * - Total portfolio outline with glow effect
+ * - Single line showing total portfolio value (purple)
  * - Interactive hover with detailed tooltips
+ * - Breakdown showing DeFi and Wallet values with percentages
+ * - Smooth line rendering with drop shadow
  */
 export const PerformanceChart = memo<PerformanceChartProps>(
   ({
@@ -64,90 +63,18 @@ export const PerformanceChart = memo<PerformanceChartProps>(
       return { minValue: 0, maxValue: 0 };
     }, [data]);
 
-    // Generate stacked area paths for DeFi and Wallet visualization
-    const { defiAreaPath, walletAreaPath, defiLinePath, totalPath } =
-      useMemo(() => {
-        if (data.length === 0) {
-          return {
-            defiAreaPath: "",
-            walletAreaPath: "",
-            defiLinePath: "",
-            totalPath: "",
-          };
-        }
+    // Generate single line path for total portfolio value
+    const linePath = useMemo(() => {
+      if (data.length === 0) return "";
 
-        const totals = data.map(getStackedTotalValue);
-        const minStackedValue = Math.min(...totals);
-        const maxStackedValue = Math.max(...totals);
-        const valueRange = Math.max(maxStackedValue - minStackedValue, 1);
-
-        // DeFi area: from baseline (bottom of chart) to defiValue
-        const defiPath = generateAreaPath(
-          data,
-          p => (p as PortfolioStackedDataPoint).defiValue,
-          width,
-          height,
-          padding
-        );
-
-        const walletSegments = data.map((point, index) => {
-          const x =
-            data.length <= 1 ? width / 2 : (index / (data.length - 1)) * width;
-
-          const defiBoundary = ensureNonNegative(point.defiValue);
-          const totalValue = getStackedTotalValue(point);
-
-          const defiY =
-            height -
-            padding -
-            ((defiBoundary - minStackedValue) / valueRange) *
-              (height - 2 * padding);
-
-          const totalY =
-            height -
-            padding -
-            ((totalValue - minStackedValue) / valueRange) *
-              (height - 2 * padding);
-
-          return { x, defiY, totalY };
-        });
-
-        const forwardPath = walletSegments
-          .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.totalY}`)
-          .join(" ");
-
-        const reversePath = walletSegments
-          .slice()
-          .reverse()
-          .map(seg => `L ${seg.x} ${seg.defiY}`)
-          .join(" ");
-
-        const walletPath = walletSegments.length
-          ? `${forwardPath} ${reversePath} Z`
-          : "";
-
-        // Generate boundary line between DeFi and Wallet regions
-        const defiLine = walletSegments.length
-          ? walletSegments
-              .map((seg, i) => `${i === 0 ? "M" : "L"} ${seg.x} ${seg.defiY}`)
-              .join(" ")
-          : "";
-
-        const totalOutline = generateSVGPath(
-          data,
-          p => getStackedTotalValue(p as PortfolioStackedDataPoint),
-          width,
-          height,
-          padding
-        );
-
-        return {
-          defiAreaPath: defiPath,
-          walletAreaPath: walletPath,
-          defiLinePath: defiLine,
-          totalPath: totalOutline,
-        };
-      }, [data, width, height, padding]);
+      return generateSVGPath(
+        data,
+        p => getStackedTotalValue(p as PortfolioStackedDataPoint),
+        width,
+        height,
+        padding
+      );
+    }, [data, width, height, padding]);
 
     // Performance chart hover
     const performanceHover = useChartHover(data, {
@@ -177,12 +104,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
 
     return (
       <div className="relative h-80">
-        {/* Grid lines */}
-        <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="border-t border-gray-700/60" />
-          ))}
-        </div>
+        <ChartGrid />
 
         {/* Chart area */}
         <svg
@@ -196,65 +118,16 @@ export const PerformanceChart = memo<PerformanceChartProps>(
           <text x="16" y="20" opacity="0">
             Portfolio performance data over the selected period {selectedPeriod}
           </text>
-          <defs>
-            {/* DeFi gradient - Purple with enhanced contrast */}
-            <linearGradient id="defiGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.25" />
-            </linearGradient>
 
-            {/* Wallet gradient - Cyan with enhanced contrast */}
-            <linearGradient
-              id="walletGradient"
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.7" />
-              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
-            </linearGradient>
-          </defs>
-
-          {/* Stacked Areas: DeFi (bottom) + Wallet (top) */}
-          {defiAreaPath && <path d={defiAreaPath} fill="url(#defiGradient)" />}
-
-          {walletAreaPath && (
-            <path d={walletAreaPath} fill="url(#walletGradient)" />
-          )}
-
-          {/* Separation line between DeFi and Wallet */}
-          {defiLinePath && (
+          {/* Single portfolio value line */}
+          {linePath && (
             <path
-              d={defiLinePath}
+              d={linePath}
               fill="none"
-              stroke="#64748b"
-              strokeWidth="1"
-              opacity="0.4"
+              stroke="#c4b5fd"
+              strokeWidth="2.5"
+              className="drop-shadow-lg"
             />
-          )}
-
-          {/* Total portfolio outline with glow effect */}
-          {totalPath && (
-            <>
-              {/* White glow layer for contrast */}
-              <path
-                d={totalPath}
-                fill="none"
-                stroke="white"
-                strokeWidth="4"
-                opacity="0.15"
-                className="blur-sm"
-              />
-              {/* Main outline in lighter purple */}
-              <path
-                d={totalPath}
-                fill="none"
-                stroke="#c4b5fd"
-                strokeWidth="2.5"
-                className="drop-shadow-lg"
-              />
-            </>
           )}
 
           {/* Hover indicator */}
@@ -272,23 +145,12 @@ export const PerformanceChart = memo<PerformanceChartProps>(
         <div className="absolute top-4 right-4 flex items-center space-x-3 text-xs pointer-events-none">
           <div className="flex items-center space-x-1.5">
             <div
-              className="w-3 h-2 rounded-sm"
+              className="w-4 h-0.5 rounded-sm"
               style={{
-                background:
-                  "linear-gradient(to bottom, rgba(139, 92, 246, 0.6), rgba(139, 92, 246, 0.25))",
+                backgroundColor: "#c4b5fd",
               }}
             ></div>
-            <span className="text-white">DeFi</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div
-              className="w-3 h-2 rounded-sm"
-              style={{
-                background:
-                  "linear-gradient(to bottom, rgba(6, 182, 212, 0.7), rgba(6, 182, 212, 0.3))",
-              }}
-            ></div>
-            <span className="text-white">Wallet</span>
+            <span className="text-white">Portfolio Value</span>
           </div>
         </div>
 

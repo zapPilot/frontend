@@ -14,7 +14,7 @@ import {
   getChartInteractionProps,
 } from "../utils";
 
-interface AllocationChartProps {
+interface AssetAllocationChartProps {
   data: AssetAllocationPoint[];
   width?: number;
   height?: number;
@@ -22,7 +22,7 @@ interface AllocationChartProps {
 }
 
 /**
- * AllocationChart - Asset category allocation over time
+ * AssetAllocationChart - Asset category allocation over time
  *
  * Displays portfolio allocation breakdown across asset categories (BTC, ETH, Stablecoin, Altcoin).
  * Uses stacked bars at each time point, normalized to 100% allocation.
@@ -33,16 +33,16 @@ interface AllocationChartProps {
  * - Vertical line hover indicator
  * - Percentage-based tooltip
  */
-export const AllocationChart = memo<AllocationChartProps>(
+export const AssetAllocationChart = memo<AssetAllocationChartProps>(
   ({
     data,
     width = CHART_DIMENSIONS.WIDTH,
     height = CHART_DIMENSIONS.HEIGHT,
     padding = CHART_DIMENSIONS.PADDING,
   }) => {
-    // Allocation chart hover
+    // Asset allocation chart hover
     const allocationHover = useChartHover(data, {
-      chartType: "allocation",
+      chartType: "asset-allocation",
       chartWidth: width,
       chartHeight: height,
       chartPadding: padding,
@@ -52,7 +52,7 @@ export const AllocationChart = memo<AllocationChartProps>(
       buildHoverData: (point, x, y) => {
         const total = point.btc + point.eth + point.stablecoin + point.altcoin;
         return {
-          chartType: "allocation" as const,
+          chartType: "asset-allocation" as const,
           x,
           y,
           date: new Date(point.date).toLocaleDateString("en-US", {
@@ -83,8 +83,8 @@ export const AllocationChart = memo<AllocationChartProps>(
           <svg
             viewBox={`0 0 ${width} ${height}`}
             className="w-full h-full"
-            data-chart-type="allocation"
-            aria-label={CHART_LABELS.allocation}
+            data-chart-type="asset-allocation"
+            aria-label={CHART_LABELS["asset-allocation"]}
             {...getChartInteractionProps(allocationHover)}
           >
             <text x="16" y="20" opacity="0">
@@ -188,4 +188,4 @@ export const AllocationChart = memo<AllocationChartProps>(
   }
 );
 
-AllocationChart.displayName = "AllocationChart";
+AssetAllocationChart.displayName = "AssetAllocationChart";

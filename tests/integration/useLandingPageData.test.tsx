@@ -26,17 +26,24 @@ import type {
   LandingPageResponse,
   PoolDetail,
   PortfolioAPRSummary,
+  YieldReturnsSummaryResponse,
 } from "../../src/services/analyticsService";
-
-// Mock the analytics service
-vi.mock("../../src/services/analyticsService", () => ({
-  getLandingPagePortfolioData: vi.fn(),
-}));
-
 import * as analyticsService from "../../src/services/analyticsService";
 import { createMockArray } from "./helpers/mock-factories";
 import { TEST_TIMEOUT } from "./helpers/test-constants";
 import { createQueryWrapper, setupMockCleanup } from "./helpers/test-setup";
+
+// Mock the analytics service
+vi.mock("../../src/services/analyticsService", async () => {
+  const actual = await vi.importActual<
+    typeof import("../../src/services/analyticsService")
+  >("../../src/services/analyticsService");
+  return {
+    ...actual,
+    getLandingPagePortfolioData: vi.fn(),
+    getYieldReturnsSummary: vi.fn(),
+  };
+});
 
 setupMockCleanup();
 
@@ -112,6 +119,41 @@ function createMockLandingPageResponse(
     ...overrides,
   };
 }
+
+function createMockYieldSummary(
+  overrides: Partial<YieldReturnsSummaryResponse> = {}
+): YieldReturnsSummaryResponse {
+  return {
+    user_id: "test-user-123",
+    period: {
+      start_date: "2025-10-09",
+      end_date: "2025-11-08",
+      days: 30,
+    },
+    average_daily_yield_usd: 15,
+    median_daily_yield_usd: 14,
+    total_yield_usd: 450,
+    statistics: {
+      mean: 15,
+      median: 14,
+      std_dev: 3.5,
+      min_value: 8,
+      max_value: 22,
+      total_days: 30,
+      filtered_days: 30,
+      outliers_removed: 0,
+    },
+    outlier_strategy: "iqr",
+    outliers_detected: [],
+    ...overrides,
+  };
+}
+
+beforeEach(() => {
+  vi.mocked(analyticsService.getYieldReturnsSummary).mockResolvedValue(
+    createMockYieldSummary()
+  );
+});
 
 describe("useLandingPageData - APR Calculations", () => {
   it("calculates weighted average APR correctly", async () => {

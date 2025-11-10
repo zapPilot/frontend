@@ -9,6 +9,8 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Import mocked modules
+import { httpUtils } from "../../../src/lib/http-utils";
 import {
   getTokenBalances,
   type GetTokenBalancesParams,
@@ -35,9 +37,6 @@ vi.mock("../../../src/lib/http-utils", () => ({
 vi.mock("../../../src/services/serviceHelpers", () => ({
   executeServiceCall: vi.fn(<T>(call: () => Promise<T>) => call()),
 }));
-
-// Import mocked modules
-import { httpUtils } from "../../../src/lib/http-utils";
 
 const mockIntentEngineGet = httpUtils.intentEngine.get as ReturnType<
   typeof vi.fn

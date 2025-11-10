@@ -21,6 +21,10 @@
  */
 
 // Canonical chain definitions
+// Re-export for convenience
+import { getMainnetChains, toThirdWebChains } from "./adapters";
+import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
+
 export {
   CHAIN_CONFIG,
   CHAIN_IDS,
@@ -38,10 +42,6 @@ export {
   toThirdWebChain,
   toThirdWebChains,
 } from "./adapters";
-
-// Re-export for convenience
-import { getMainnetChains, toThirdWebChains } from "./adapters";
-import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
 /**
  * Convenience functions for common use cases

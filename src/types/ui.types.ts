@@ -135,41 +135,6 @@ export type SpinnerVariant = "default" | "dots" | "pulse";
 export type SkeletonVariant = "text" | "circular" | "rectangular" | "rounded";
 
 // =============================================================================
-// COLOR TYPES
-// =============================================================================
-
-/**
- * Standard color variants for loading indicators and UI accents.
- *
- * Color Usage Guidelines:
- * - `primary`: Brand blue, primary actions
- * - `secondary`: Gray, secondary content
- * - `white`: White spinners on dark backgrounds
- * - `success`/`green`: Success states, positive actions
- * - `warning`: Warning states, caution indicators
- * - `blue`: Explicit blue accent
- * - `gray`: Neutral, inactive states
- * - `red`: Error states, destructive actions
- *
- * @example
- * ```tsx
- * <Spinner color="primary" />
- * <Spinner color="white" /> // On dark backgrounds
- * <Spinner color="success" /> // Success feedback
- * ```
- */
-export type LoadingColor =
-  | "primary"
-  | "secondary"
-  | "white"
-  | "success"
-  | "warning"
-  | "blue"
-  | "gray"
-  | "green"
-  | "red";
-
-// =============================================================================
 // BASE COMPONENT PROPS
 // =============================================================================
 
@@ -341,28 +306,3 @@ export const SIZE_ORDER: readonly ComponentSize[] = [
 // =============================================================================
 // EXPORTS
 // =============================================================================
-
-/**
- * Re-export all types for convenience and backwards compatibility.
- * Allows importing multiple types in a single statement.
- *
- * @example
- * ```tsx
- * import type {
- *   ComponentSize,
- *   ButtonVariant,
- *   BaseComponentProps,
- *   Size,              // Alias for ComponentSize
- *   ButtonStyle,       // Alias for ButtonVariant
- * } from '@/types/ui.types';
- * ```
- */
-export type {
-  ButtonVariant as ButtonStyle,
-  LoadingColor as Color,
-  LoadingVariant as LoadingStyle,
-  ComponentSize as Size,
-  SkeletonVariant as SkeletonStyle,
-  SpinnerVariant as SpinnerStyle,
-  StandardSize as StandardComponentSize,
-};

@@ -5,7 +5,9 @@
  * for direct use in service functions without the class-based wrapper.
  */
 
-import type { HTTPMethod, ResponseTransformer } from "../types/api";
+// Internal types for HTTP utilities
+type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+type ResponseTransformer<T = unknown> = (data: unknown) => T;
 
 // API endpoints configuration
 export const API_ENDPOINTS = {
@@ -192,400 +194,188 @@ export async function httpRequest<T = unknown>(
 /**
  * Convenience function for GET requests
  */
-export async function httpGet<T = unknown>(
+function buildUrl(endpoint: string, baseURL?: string) {
+  return baseURL ? `${baseURL}${endpoint}` : endpoint;
+}
+
+function requestWithMethod<T>(
+  method: HttpRequestConfig["method"],
+  endpoint: string,
+  config: Partial<HttpRequestConfig>,
+  transformer?: ResponseTransformer<T>,
+  body?: unknown
+) {
+  const url = buildUrl(endpoint, config.baseURL);
+  const requestConfig: HttpRequestConfig = {
+    ...config,
+    method,
+  } as HttpRequestConfig;
+
+  if (body !== undefined) {
+    requestConfig.body = body;
+  }
+
+  return httpRequest(url, requestConfig, transformer);
+}
+
+export function httpGet<T = unknown>(
   endpoint: string,
   config: Omit<HttpRequestConfig, "method" | "body"> = {},
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
-  const url = config.baseURL ? `${config.baseURL}${endpoint}` : endpoint;
-  return httpRequest(url, { ...config, method: "GET" }, transformer);
+  return requestWithMethod("GET", endpoint, config, transformer);
 }
 
 /**
  * Convenience function for POST requests
  */
-export async function httpPost<T = unknown>(
+export function httpPost<T = unknown>(
   endpoint: string,
   body?: unknown,
   config: Omit<HttpRequestConfig, "method"> = {},
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
-  const url = config.baseURL ? `${config.baseURL}${endpoint}` : endpoint;
-  return httpRequest(url, { ...config, method: "POST", body }, transformer);
+  return requestWithMethod("POST", endpoint, config, transformer, body);
 }
 
 /**
  * Convenience function for PUT requests
  */
-export async function httpPut<T = unknown>(
+export function httpPut<T = unknown>(
   endpoint: string,
   body?: unknown,
   config: Omit<HttpRequestConfig, "method"> = {},
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
-  const url = config.baseURL ? `${config.baseURL}${endpoint}` : endpoint;
-  return httpRequest(url, { ...config, method: "PUT", body }, transformer);
+  return requestWithMethod("PUT", endpoint, config, transformer, body);
 }
 
 /**
  * Convenience function for PATCH requests
  */
-export async function httpPatch<T = unknown>(
+export function httpPatch<T = unknown>(
   endpoint: string,
   body?: unknown,
   config: Omit<HttpRequestConfig, "method"> = {},
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
-  const url = config.baseURL ? `${config.baseURL}${endpoint}` : endpoint;
-  return httpRequest(url, { ...config, method: "PATCH", body }, transformer);
+  return requestWithMethod("PATCH", endpoint, config, transformer, body);
 }
 
 /**
  * Convenience function for DELETE requests
  */
-export async function httpDelete<T = unknown>(
+export function httpDelete<T = unknown>(
   endpoint: string,
   config: Omit<HttpRequestConfig, "method" | "body"> = {},
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
-  const url = config.baseURL ? `${config.baseURL}${endpoint}` : endpoint;
-  return httpRequest(url, { ...config, method: "DELETE" }, transformer);
+  return requestWithMethod("DELETE", endpoint, config, transformer);
 }
 
 /**
  * Service-specific HTTP utilities for different API endpoints
  */
+type GetConfig = Omit<HttpRequestConfig, "method" | "body">;
+type MutateConfig = Omit<HttpRequestConfig, "method">;
+
+function withBaseURL<Config extends Record<string, unknown> | undefined>(
+  baseURL: string,
+  config: Config
+): Record<string, unknown> {
+  return {
+    ...(config ?? {}),
+    baseURL,
+  };
+}
+
+function createServiceHttpClient(baseURL: string) {
+  return {
+    get: <T = unknown>(
+      endpoint: string,
+      config?: GetConfig,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      httpGet(endpoint, withBaseURL(baseURL, config) as GetConfig, transformer),
+
+    post: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: MutateConfig,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      httpPost(
+        endpoint,
+        body,
+        withBaseURL(baseURL, config) as MutateConfig,
+        transformer
+      ),
+
+    put: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: MutateConfig,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      httpPut(
+        endpoint,
+        body,
+        withBaseURL(baseURL, config) as MutateConfig,
+        transformer
+      ),
+
+    patch: <T = unknown>(
+      endpoint: string,
+      body?: unknown,
+      config?: MutateConfig,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      httpPatch(
+        endpoint,
+        body,
+        withBaseURL(baseURL, config) as MutateConfig,
+        transformer
+      ),
+
+    delete: <T = unknown>(
+      endpoint: string,
+      config?: GetConfig,
+      transformer?: ResponseTransformer<T>
+    ) =>
+      httpDelete(
+        endpoint,
+        withBaseURL(baseURL, config) as GetConfig,
+        transformer
+      ),
+  } as const;
+}
+
 export const httpUtils = {
   /**
    * Analytics Engine API utilities
    */
-  analyticsEngine: {
-    get: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
-        transformer
-      ),
-
-    post: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
-        transformer
-      ),
-
-    put: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
-        transformer
-      ),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
-        transformer
-      ),
-
-    delete: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.analyticsEngine },
-        transformer
-      ),
-  },
+  analyticsEngine: createServiceHttpClient(API_ENDPOINTS.analyticsEngine),
 
   /**
    * Intent Engine API utilities
    */
-  intentEngine: {
-    get: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.intentEngine },
-        transformer
-      ),
-
-    post: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.intentEngine },
-        transformer
-      ),
-
-    put: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.intentEngine },
-        transformer
-      ),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.intentEngine },
-        transformer
-      ),
-
-    delete: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.intentEngine },
-        transformer
-      ),
-  },
+  intentEngine: createServiceHttpClient(API_ENDPOINTS.intentEngine),
 
   /**
    * Backend API utilities
    */
-  backendApi: {
-    get: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.backendApi },
-        transformer
-      ),
-
-    post: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.backendApi },
-        transformer
-      ),
-
-    put: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.backendApi },
-        transformer
-      ),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.backendApi },
-        transformer
-      ),
-
-    delete: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.backendApi },
-        transformer
-      ),
-  },
+  backendApi: createServiceHttpClient(API_ENDPOINTS.backendApi),
 
   /**
    * Account API utilities
    */
-  accountApi: {
-    get: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.accountApi },
-        transformer
-      ),
-
-    post: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.accountApi },
-        transformer
-      ),
-
-    put: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.accountApi },
-        transformer
-      ),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.accountApi },
-        transformer
-      ),
-
-    delete: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.accountApi },
-        transformer
-      ),
-  },
+  accountApi: createServiceHttpClient(API_ENDPOINTS.accountApi),
 
   /**
    * DeBank API utilities
    */
-  debank: {
-    get: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.debank },
-        transformer
-      ),
-
-    post: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.debank },
-        transformer
-      ),
-
-    put: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.debank },
-        transformer
-      ),
-
-    patch: <T = unknown>(
-      endpoint: string,
-      body?: unknown,
-      config?: Omit<HttpRequestConfig, "method">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        { ...config, baseURL: API_ENDPOINTS.debank },
-        transformer
-      ),
-
-    delete: <T = unknown>(
-      endpoint: string,
-      config?: Omit<HttpRequestConfig, "method" | "body">,
-      transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        { ...config, baseURL: API_ENDPOINTS.debank },
-        transformer
-      ),
-  },
-};
+  debank: createServiceHttpClient(API_ENDPOINTS.debank),
+} as const;
 
 /**
  * Common error handler function
@@ -615,8 +405,3 @@ export function handleHTTPError(error: unknown): string {
 
   return "An unexpected error occurred. Please try again.";
 }
-
-/**
- * Re-export types for external use (HTTPMethod and ResponseTransformer from api types)
- */
-export type { HTTPMethod, ResponseTransformer } from "../types/api";

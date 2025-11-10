@@ -15,11 +15,72 @@ import { BaseComponentProps } from "../types/ui.types";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
-import { PieChartLoading } from "./ui/LoadingSystem";
+import { PieChartSkeleton } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 
 type TabType = "assets" | "borrowing";
+
+interface OverviewTabListProps {
+  idSuffix?: string;
+  compact?: boolean;
+  containerClassName?: string;
+  activeTab: TabType;
+  assetCount: number;
+  debtCount: number;
+  onSelectTab: (tab: TabType) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
+}
+
+const BASE_TAB_CONTAINER_CLASSES =
+  "flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg";
+
+function OverviewTabList({
+  idSuffix = "",
+  compact = false,
+  containerClassName = "",
+  activeTab,
+  assetCount,
+  debtCount,
+  onSelectTab,
+  onKeyDown,
+}: OverviewTabListProps) {
+  const containerClasses = containerClassName
+    ? `${BASE_TAB_CONTAINER_CLASSES} ${containerClassName}`
+    : BASE_TAB_CONTAINER_CLASSES;
+
+  return (
+    <div
+      className={containerClasses}
+      role="tablist"
+      aria-label="Portfolio sections"
+      onKeyDown={onKeyDown}
+    >
+      <TabButton
+        id={`assets-tab${idSuffix}`}
+        label="Assets"
+        active={activeTab === "assets"}
+        onSelect={() => onSelectTab("assets")}
+        icon={TrendingUp}
+        badgeCount={assetCount}
+        variant="assets"
+        compact={compact}
+        controls="assets-tabpanel"
+      />
+      <TabButton
+        id={`borrowing-tab${idSuffix}`}
+        label="Borrowing"
+        active={activeTab === "borrowing"}
+        onSelect={() => onSelectTab("borrowing")}
+        icon={ArrowDownLeft}
+        badgeCount={debtCount}
+        variant="borrowing"
+        compact={compact}
+        controls="borrowing-tabpanel"
+      />
+    </div>
+  );
+}
 
 interface PortfolioOverviewProps extends BaseComponentProps {
   portfolioState: PortfolioState;
@@ -76,6 +137,20 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
       }
     };
 
+    const allocationDetailContent = (
+      <AssetCategoriesDetail
+        categorySummaries={categorySummaries}
+        debtCategorySummaries={debtCategorySummaries}
+        className="!bg-transparent !border-0 !p-0"
+        isLoading={shouldShowLoading}
+        error={portfolioState.errorMessage || null}
+        {...(onRetry && { onRetry })}
+        isRetrying={portfolioState.isRetrying || false}
+        activeTab={activeTab}
+        {...(onCategoryClick && { onCategoryClick })}
+      />
+    );
+
     return (
       <motion.div
         {...fadeInUp}
@@ -88,67 +163,28 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
           {/* Desktop: Title and tabs on same row */}
           <div className="hidden sm:flex items-center justify-between">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-            <div
-              className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg"
-              role="tablist"
-              aria-label="Portfolio sections"
+            <OverviewTabList
+              activeTab={activeTab}
+              assetCount={assetCount}
+              debtCount={debtCount}
+              onSelectTab={setActiveTab}
               onKeyDown={handleTabListKeyDown}
-            >
-              <TabButton
-                id="assets-tab"
-                label="Assets"
-                active={activeTab === "assets"}
-                onSelect={() => setActiveTab("assets")}
-                icon={TrendingUp}
-                badgeCount={assetCount}
-                variant="assets"
-                controls="assets-tabpanel"
-              />
-              <TabButton
-                id="borrowing-tab"
-                label="Borrowing"
-                active={activeTab === "borrowing"}
-                onSelect={() => setActiveTab("borrowing")}
-                icon={ArrowDownLeft}
-                badgeCount={debtCount}
-                variant="borrowing"
-                controls="borrowing-tabpanel"
-              />
-            </div>
+            />
           </div>
 
           {/* Mobile: Title and tabs stacked */}
           <div className="sm:hidden space-y-4">
             <h3 className="text-xl font-bold gradient-text">{title}</h3>
-            <div
-              className="flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 w-fit shadow-lg"
-              role="tablist"
-              aria-label="Portfolio sections"
+            <OverviewTabList
+              idSuffix="-mobile"
+              activeTab={activeTab}
+              assetCount={assetCount}
+              debtCount={debtCount}
+              onSelectTab={setActiveTab}
+              compact
+              containerClassName="w-fit"
               onKeyDown={handleTabListKeyDown}
-            >
-              <TabButton
-                id="assets-tab-mobile"
-                label="Assets"
-                active={activeTab === "assets"}
-                onSelect={() => setActiveTab("assets")}
-                icon={TrendingUp}
-                badgeCount={assetCount}
-                variant="assets"
-                compact
-                controls="assets-tabpanel"
-              />
-              <TabButton
-                id="borrowing-tab-mobile"
-                label="Borrowing"
-                active={activeTab === "borrowing"}
-                onSelect={() => setActiveTab("borrowing")}
-                icon={ArrowDownLeft}
-                badgeCount={debtCount}
-                variant="borrowing"
-                compact
-                controls="borrowing-tabpanel"
-              />
-            </div>
+            />
           </div>
         </div>
 
@@ -217,7 +253,10 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 data-testid="pie-chart-container"
               >
                 {shouldShowLoading ? (
-                  <PieChartLoading size={250} className="h-[250px] w-[250px]" />
+                  <PieChartSkeleton
+                    size={250}
+                    className="h-[250px] w-[250px]"
+                  />
                 ) : (
                   <PieChart
                     data={pieChartData}
@@ -236,17 +275,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 className={`${SCROLLABLE_CONTAINER.PORTFOLIO_DETAILS} pr-2`}
                 data-testid="allocation-list"
               >
-                <AssetCategoriesDetail
-                  categorySummaries={categorySummaries}
-                  debtCategorySummaries={debtCategorySummaries}
-                  className="!bg-transparent !border-0 !p-0"
-                  isLoading={shouldShowLoading}
-                  error={portfolioState.errorMessage || null}
-                  {...(onRetry && { onRetry })}
-                  isRetrying={portfolioState.isRetrying || false}
-                  activeTab={activeTab}
-                  {...(onCategoryClick && { onCategoryClick })}
-                />
+                {allocationDetailContent}
               </div>
             </div>
           </div>
@@ -260,7 +289,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               data-testid="pie-chart-container-mobile"
             >
               {shouldShowLoading ? (
-                <PieChartLoading size={200} className="h-[200px] w-[200px]" />
+                <PieChartSkeleton size={200} className="h-[200px] w-[200px]" />
               ) : (
                 <PieChart
                   data={pieChartData}
@@ -272,17 +301,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               )}
             </div>
             <div data-testid="allocation-list-mobile">
-              <AssetCategoriesDetail
-                categorySummaries={categorySummaries}
-                debtCategorySummaries={debtCategorySummaries}
-                className="!bg-transparent !border-0 !p-0"
-                isLoading={shouldShowLoading}
-                error={portfolioState.errorMessage || null}
-                {...(onRetry && { onRetry })}
-                isRetrying={portfolioState.isRetrying || false}
-                activeTab={activeTab}
-                {...(onCategoryClick && { onCategoryClick })}
-              />
+              {allocationDetailContent}
             </div>
           </div>
         )}

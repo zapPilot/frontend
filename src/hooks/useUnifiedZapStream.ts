@@ -172,6 +172,7 @@ export function useUnifiedZapStream(
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
   // Derived state
+  // Safe: Array access is guarded by length check
   const latestEvent = events.length > 0 ? events[events.length - 1]! : null;
   const isComplete = latestEvent?.type === "complete";
   const hasError = latestEvent?.type === "error" || error !== null;

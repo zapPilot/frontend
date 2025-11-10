@@ -15,6 +15,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { PortfolioChartProps } from "@/components/PortfolioChart";
 import { PortfolioChart } from "@/components/PortfolioChart/";
 
 import { ChartTestFixtures } from "../fixtures/chartTestData";
@@ -97,7 +98,9 @@ describe("User Flows - Integration Tests", () => {
       });
 
       // Step 3: User switches to allocation to understand holdings
-      const allocationTab = screen.queryByRole("tab", { name: /allocation/i });
+      const allocationTab = screen.queryByRole("tab", {
+        name: /asset allocation/i,
+      });
       if (allocationTab) {
         await userEvent.click(allocationTab);
       } else {
@@ -106,7 +109,7 @@ describe("User Flows - Integration Tests", () => {
             <PortfolioChart
               portfolioData={ChartTestFixtures.mediumPortfolioData()}
               allocationData={ChartTestFixtures.balancedAllocation()}
-              activeTab="allocation"
+              activeTab="asset-allocation"
             />
           </QueryClientProvider>
         );
@@ -114,13 +117,13 @@ describe("User Flows - Integration Tests", () => {
 
       await waitFor(() => {
         expect(
-          container.querySelector('svg[data-chart-type="allocation"]')
+          container.querySelector('svg[data-chart-type="asset-allocation"]')
         ).not.toBeNull();
       });
 
       // Step 4: User hovers on allocation to see percentages
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -192,13 +195,13 @@ describe("User Flows - Integration Tests", () => {
           <PortfolioChart
             portfolioData={ChartTestFixtures.mediumPortfolioData()}
             allocationData={ChartTestFixtures.balancedAllocation()}
-            activeTab="allocation"
+            activeTab="asset-allocation"
           />
         </QueryClientProvider>
       );
 
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
       if (allocationSvg) {
         await userEvent.pointer({
@@ -401,7 +404,7 @@ describe("User Flows - Integration Tests", () => {
       const { container } = renderChart("allocation");
 
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
 
       if (allocationSvg) {
@@ -471,7 +474,13 @@ describe("User Flows - Integration Tests", () => {
     it("should support rapid tab switching on mobile", async () => {
       const { container, rerender } = renderChart("performance");
 
-      const tabs = ["allocation", "drawdown", "sharpe", "volatility"];
+      type ChartTabs = Exclude<PortfolioChartProps["activeTab"], undefined>;
+      const tabs: ChartTabs[] = [
+        "asset-allocation",
+        "drawdown",
+        "sharpe",
+        "volatility",
+      ];
 
       for (const tab of tabs) {
         rerender(
@@ -544,7 +553,7 @@ describe("User Flows - Integration Tests", () => {
       const { container } = renderChart("allocation");
 
       const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
+        'svg[data-chart-type="asset-allocation"]'
       );
 
       if (allocationSvg) {
@@ -683,50 +692,45 @@ describe("User Flows - Integration Tests", () => {
     });
 
     it("should maintain user context across data refreshes", async () => {
-      const { container, rerender } = renderChart("allocation");
-
-      // User hovers on specific point
-      const allocationSvg = container.querySelector(
-        'svg[data-chart-type="allocation"]'
-      );
-      if (allocationSvg) {
-        await userEvent.pointer({
-          target: allocationSvg,
-          coords: { clientX: 400, clientY: 150 },
-        });
-      }
+      const { container, rerender } = renderChart("asset-allocation");
 
       await waitFor(() => {
         expect(
-          container.querySelector('line[stroke="#8b5cf6"]')
+          container.querySelector('svg[data-chart-type="asset-allocation"]')
         ).not.toBeNull();
       });
 
-      // Data refreshes
+      // Simulate allocation data refresh
       rerender(
         <QueryClientProvider client={queryClient}>
           <PortfolioChart
             portfolioData={ChartTestFixtures.mediumPortfolioData()}
             allocationData={ChartTestFixtures.allocationBtcToEth()}
-            activeTab="allocation"
+            activeTab="asset-allocation"
           />
         </QueryClientProvider>
       );
 
-      // Chart should update but hover should still work
+      await waitFor(() => {
+        expect(
+          container.querySelector('svg[data-chart-type="asset-allocation"]')
+        ).not.toBeNull();
+      });
+
+      const allocationSvg = container.querySelector(
+        'svg[data-chart-type="asset-allocation"]'
+      );
       if (allocationSvg) {
         await userEvent.pointer({
           target: allocationSvg,
-          coords: { clientX: 500, clientY: 150 },
+          coords: { clientX: 450, clientY: 160 },
         });
       }
 
       await waitFor(() => {
-        const line = container.querySelector('line[stroke="#8b5cf6"]');
-        expect(line).not.toBeNull();
-        const x = Number(line?.getAttribute("x1"));
-        expect(Number.isFinite(x)).toBe(true);
-        expect(Math.abs(x - 500)).toBeLessThanOrEqual(20);
+        const tooltip = screen.queryByTestId("chart-tooltip");
+        expect(tooltip).not.toBeNull();
+        expect(tooltip?.textContent).toMatch(/%/);
       });
     });
   });
@@ -766,7 +770,7 @@ describe("User Flows - Integration Tests", () => {
           <PortfolioChart
             portfolioData={ChartTestFixtures.mediumPortfolioData()}
             allocationData={ChartTestFixtures.balancedAllocation()}
-            activeTab="allocation"
+            activeTab="asset-allocation"
           />
         </QueryClientProvider>
       );

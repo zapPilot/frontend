@@ -2,7 +2,7 @@ import React from "react";
 import { createPortal } from "react-dom";
 
 import { Z_INDEX } from "@/constants/design-system";
-import { formatPercentage } from "@/lib/formatters";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
 
 interface ROIWindowItem {
   key: string;
@@ -11,9 +11,19 @@ interface ROIWindowItem {
   dataPoints: number;
 }
 
+export interface ProtocolROIItem {
+  protocol: string;
+  chain: string;
+  netYieldUsd: number;
+  tokenYieldUsd: number;
+  rewardYieldUsd: number;
+  rewardTokenCount?: number;
+}
+
 interface ROITooltipProps {
   position: { top: number; left: number };
   windows: ROIWindowItem[];
+  protocols?: ProtocolROIItem[];
   recommendedPeriodLabel?: string | null;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
@@ -22,6 +32,7 @@ interface ROITooltipProps {
 export function ROITooltip({
   position,
   windows,
+  protocols,
   recommendedPeriodLabel,
   onMouseEnter,
   onMouseLeave,
@@ -62,6 +73,38 @@ export function ROITooltip({
                 {entry.label} ({entry.dataPoints} data points)
               </span>
               <span>{formatPercentage(entry.value, false, 2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {protocols && protocols.length > 0 && (
+        <div className="mb-3 p-2 bg-gray-800 rounded">
+          <div className="text-gray-300 font-medium mb-2">
+            Top Protocols by Net Yield (30d)
+          </div>
+          {protocols.map((protocol, index) => (
+            <div
+              key={`${protocol.protocol}-${protocol.chain}-${index}`}
+              className="flex justify-between items-start text-gray-300 mb-1 last:mb-0"
+            >
+              <span className="flex flex-col">
+                <span className="font-medium">{protocol.protocol}</span>
+                <span className="text-xs text-gray-500">
+                  {protocol.chain}
+                  {protocol.rewardTokenCount !== undefined &&
+                    protocol.rewardTokenCount > 0 && (
+                      <>
+                        {" "}
+                        · {protocol.rewardTokenCount} reward
+                        {protocol.rewardTokenCount > 1 ? "s" : ""}
+                      </>
+                    )}
+                </span>
+              </span>
+              <span className="ml-2 font-medium text-emerald-300">
+                {formatCurrency(protocol.netYieldUsd, { smartPrecision: true })}
+              </span>
             </div>
           ))}
         </div>

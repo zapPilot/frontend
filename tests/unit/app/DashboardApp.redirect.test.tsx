@@ -1,6 +1,7 @@
 import { act } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import DashboardApp from "../../../src/app/page";
 import { render } from "../../test-utils";
 
 // Mock WalletPortfolio to avoid heavy rendering
@@ -34,8 +35,6 @@ const replaceSpy = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceSpy }),
 }));
-
-import DashboardApp from "../../../src/app/page";
 
 describe("DashboardApp redirect to bundle", () => {
   beforeEach(() => {

@@ -5,6 +5,18 @@
  * for progressive disclosure UX (show summaries on landing, full details in analytics)
  */
 
+/**
+ * Categorize pool details by asset type based on symbols
+ */
+import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
+import {
+  API_CATEGORY_KEY_MAP,
+  type ApiCategoryKey,
+  ASSET_CATEGORIES,
+} from "@/constants/portfolio";
+import { transformToPieChartData } from "@/lib/chartUtils";
+import type { PieChartData } from "@/types/portfolio";
+
 export interface CategorySummary {
   id: string;
   name: string;
@@ -20,50 +32,18 @@ export interface CategorySummary {
   }[];
 }
 
-export interface PoolDetail {
-  snapshot_id: string;
-  chain: string;
-  protocol: string;
-  protocol_name: string;
-  asset_usd_value: number;
-  pool_symbols: string[];
-  final_apr: number;
-  protocol_matched: boolean;
-  apr_data: {
-    apr_protocol: string | null;
-    apr_symbol: string | null;
-    apr: number | null;
-    apr_base: number | null;
-    apr_reward: number | null;
-    apr_updated_at: string | null;
-  };
-  contribution_to_portfolio: number;
-}
-
-/**
- * Categorize pool details by asset type based on symbols
- */
-import { ASSET_SYMBOL_SETS } from "@/constants/assetSymbols";
-import {
-  API_CATEGORY_KEY_MAP,
-  type ApiCategoryKey,
-  ASSET_CATEGORIES,
-} from "@/constants/portfolio";
-import { transformToPieChartData } from "@/lib/chartUtils";
-import type { PieChartData } from "@/types/portfolio";
-
-export interface PortfolioCategoryInput {
+interface PortfolioCategoryInput {
   id: ApiCategoryKey;
   value: number;
   percentage?: number;
 }
 
-export interface TransformPortfolioCategoriesResult {
+interface TransformPortfolioCategoriesResult {
   summaries: CategorySummary[];
   pieChartData: PieChartData[];
 }
 
-export interface TransformPortfolioCategoriesOptions {
+interface TransformPortfolioCategoriesOptions {
   totalValue?: number;
   colorVariant?: "brand" | "chart";
 }
@@ -158,21 +138,4 @@ export function createCategoriesFromApiData(
   return transformPortfolioCategories(categories, {
     totalValue,
   }).summaries;
-}
-
-/**
- * Filter pool details by category for analytics tab
- */
-export function filterPoolDetailsByCategory(
-  poolDetails: PoolDetail[],
-  categoryId: string
-): PoolDetail[] {
-  if (!poolDetails || poolDetails.length === 0) {
-    return [];
-  }
-
-  return poolDetails.filter(pool => {
-    const category = categorizePool(pool.pool_symbols);
-    return category === categoryId;
-  });
 }
