@@ -54,10 +54,10 @@ export const severityMappers = {
    */
   volatility: (value: number): SeverityLevel => {
     if (value < 20) return "excellent"; // Stablecoin-heavy portfolios
-    if (value < 40) return "good";      // Conservative DeFi
-    if (value < 60) return "fair";      // Typical DeFi (most users)
-    if (value < 85) return "poor";      // Aggressive DeFi
-    return "critical";                   // >= 85%: Very high risk
+    if (value < 40) return "good"; // Conservative DeFi
+    if (value < 60) return "fair"; // Typical DeFi (most users)
+    if (value < 85) return "poor"; // Aggressive DeFi
+    return "critical"; // >= 85%: Very high risk
   },
 
   /**

@@ -9,33 +9,30 @@ vi.mock("@/hooks/useWalletPortfolioState", () => ({
   useWalletPortfolioState: mockUseWalletPortfolioState,
 }));
 
-const mockPresenter = vi.fn(
-  ({ vm }: { vm: WalletPortfolioViewModel }) => (
-    <div data-testid="wallet-portfolio-presenter">
-      <span data-testid="vm-user">{vm.resolvedUserId ?? "no-user"}</span>
-      <span data-testid="vm-visitor">
-        {vm.isVisitorMode ? "visitor" : "owner"}
-      </span>
-      <span data-testid="vm-hidden">
-        {vm.balanceHidden ? "hidden" : "visible"}
-      </span>
-      <button
-        data-testid="invoke-optimize"
-        onClick={vm.onOptimizeClick}
-        disabled={!vm.onOptimizeClick}
-      >
-        Optimize Action
-      </button>
-    </div>
-  )
-);
+const mockPresenter = vi.fn(({ vm }: { vm: WalletPortfolioViewModel }) => (
+  <div data-testid="wallet-portfolio-presenter">
+    <span data-testid="vm-user">{vm.resolvedUserId ?? "no-user"}</span>
+    <span data-testid="vm-visitor">
+      {vm.isVisitorMode ? "visitor" : "owner"}
+    </span>
+    <span data-testid="vm-hidden">
+      {vm.balanceHidden ? "hidden" : "visible"}
+    </span>
+    <button
+      data-testid="invoke-optimize"
+      onClick={vm.onOptimizeClick}
+      disabled={!vm.onOptimizeClick}
+    >
+      Optimize Action
+    </button>
+  </div>
+));
 
 vi.mock("@/components/wallet/WalletPortfolioPresenter", () => {
   return {
     WalletPortfolioPresenter: mockPresenter,
   };
 });
-
 
 function createViewModel(
   overrides: Partial<WalletPortfolioViewModel> = {}

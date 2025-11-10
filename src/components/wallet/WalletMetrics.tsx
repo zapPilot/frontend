@@ -73,7 +73,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
-    const avgDailyYieldUsd = data?.yield_summary?.average_daily_yield_usd ?? null;
+    const avgDailyYieldUsd =
+      data?.yield_summary?.average_daily_yield_usd ?? null;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
