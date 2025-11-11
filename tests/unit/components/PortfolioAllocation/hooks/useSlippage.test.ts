@@ -1,5 +1,5 @@
-import { renderHook, act } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useSlippage } from "@/components/PortfolioAllocation/hooks/useSlippage";
 import { SLIPPAGE_CONFIG } from "@/constants/slippage";
@@ -249,7 +249,7 @@ describe("useSlippage", () => {
         result.current.setCustomValue("3.5");
       });
 
-      let submitResult: boolean = false;
+      let submitResult = false;
       act(() => {
         submitResult = result.current.handleCustomSubmit();
       });
@@ -266,7 +266,7 @@ describe("useSlippage", () => {
         result.current.setCustomValue("invalid");
       });
 
-      let submitResult: boolean = true;
+      let submitResult = true;
       act(() => {
         submitResult = result.current.handleCustomSubmit();
       });
@@ -298,7 +298,7 @@ describe("useSlippage", () => {
         result.current.setCustomValue("3.5");
       });
 
-      let submitResult: boolean = true;
+      let submitResult = true;
       act(() => {
         submitResult = result.current.handleCustomSubmit();
       });

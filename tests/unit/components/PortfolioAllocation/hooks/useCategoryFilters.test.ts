@@ -181,9 +181,7 @@ describe("useCategoryFilters", () => {
         ({ cats }) => useCategoryFilters(cats),
         {
           initialProps: {
-            cats: [
-              createMockCategory("btc", false, 100),
-            ],
+            cats: [createMockCategory("btc", false, 100)],
           },
         }
       );
@@ -192,9 +190,7 @@ describe("useCategoryFilters", () => {
       expect(result.current.excludedCategories).toHaveLength(0);
 
       rerender({
-        cats: [
-          createMockCategory("btc", true, 100),
-        ],
+        cats: [createMockCategory("btc", true, 100)],
       });
 
       expect(result.current.includedCategories).toHaveLength(0);
@@ -334,9 +330,9 @@ describe("useCategoryFilters", () => {
       const { result } = renderHook(() => useCategoryFilters(categories));
 
       expect(result.current.includedCategories).toHaveLength(2);
-      expect(result.current.includedCategories.some(cat => cat.id === "eth")).toBe(
-        true
-      );
+      expect(
+        result.current.includedCategories.some(cat => cat.id === "eth")
+      ).toBe(true);
       expect(result.current.excludedCategories).toHaveLength(1);
     });
 

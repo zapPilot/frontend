@@ -1,9 +1,11 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePortfolioData } from "@/components/PortfolioAllocation/hooks/usePortfolioData";
 import { AssetCategory } from "@/components/PortfolioAllocation/types";
 import * as utils from "@/components/PortfolioAllocation/utils/dataProcessing";
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 // Mock the utility module
 vi.mock("@/components/PortfolioAllocation/utils/dataProcessing", () => ({
@@ -216,8 +218,6 @@ describe("usePortfolioData", () => {
         }
       );
 
-      const firstResult = result.current;
-
       const newCategories = [
         ...mockAssetCategories,
         {
@@ -270,7 +270,8 @@ describe("usePortfolioData", () => {
       }));
 
       const { rerender } = renderHook(
-        ({ options }) => usePortfolioData(mockAssetCategories, excludedIds, options),
+        ({ options }) =>
+          usePortfolioData(mockAssetCategories, excludedIds, options),
         {
           initialProps: { options: { totalPortfolioValue: 10000 } },
         }
@@ -317,7 +318,7 @@ describe("usePortfolioData", () => {
 
     it("should handle undefined options gracefully", () => {
       const { result } = renderHook(() =>
-        usePortfolioData(mockAssetCategories, [], undefined)
+        usePortfolioData(mockAssetCategories, [])
       );
 
       expect(utils.processAssetCategories).toHaveBeenCalledWith(

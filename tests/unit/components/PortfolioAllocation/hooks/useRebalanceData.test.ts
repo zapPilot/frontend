@@ -1,8 +1,11 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useRebalanceData } from "@/components/PortfolioAllocation/hooks/useRebalanceData";
-import { ProcessedAssetCategory, RebalanceData } from "@/components/PortfolioAllocation/types";
+import {
+  ProcessedAssetCategory,
+  RebalanceData,
+} from "@/components/PortfolioAllocation/types";
 import * as utils from "@/components/PortfolioAllocation/utils/dataProcessing";
 
 // Mock the utility module

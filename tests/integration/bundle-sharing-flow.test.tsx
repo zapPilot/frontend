@@ -51,7 +51,7 @@ vi.mock("@/components/bundle/SwitchPromptBanner", () => ({
     return (
       <div data-testid="switch-prompt-banner" role="banner">
         <p data-testid="switch-prompt-message">
-          You're viewing someone else's bundle. Switch to your own?
+          You&apos;re viewing someone else&apos;s bundle. Switch to your own?
         </p>
         <button data-testid="stay-on-bundle" onClick={onStay}>
           Stay Here
@@ -66,7 +66,11 @@ vi.mock("@/components/bundle/SwitchPromptBanner", () => ({
 
 // Mock QuickSwitchFAB
 vi.mock("@/components/bundle/QuickSwitchFAB", () => ({
-  QuickSwitchFAB: ({ onSwitchToMyBundle }: { onSwitchToMyBundle: () => void }) => (
+  QuickSwitchFAB: ({
+    onSwitchToMyBundle,
+  }: {
+    onSwitchToMyBundle: () => void;
+  }) => (
     <button
       data-testid="quick-switch-fab"
       onClick={onSwitchToMyBundle}
@@ -117,7 +121,9 @@ vi.mock("@/components/DashboardShell", () => ({
   }) => (
     <div data-testid="dashboard-shell">
       <div data-testid="dashboard-url-user-id">{urlUserId}</div>
-      <div data-testid="dashboard-is-own-bundle">{isOwnBundle ? "own" : "visitor"}</div>
+      <div data-testid="dashboard-is-own-bundle">
+        {isOwnBundle ? "own" : "visitor"}
+      </div>
       {bundleUserName && (
         <div data-testid="dashboard-bundle-user-name">{bundleUserName}</div>
       )}
@@ -126,7 +132,9 @@ vi.mock("@/components/DashboardShell", () => ({
       <div data-testid="dashboard-header-banners">{headerBanners}</div>
 
       <main data-testid="dashboard-main-content">
-        <div data-testid="portfolio-content">Portfolio Content for {urlUserId}</div>
+        <div data-testid="portfolio-content">
+          Portfolio Content for {urlUserId}
+        </div>
       </main>
 
       {/* Footer overlays include WalletManager modal */}
@@ -190,14 +198,19 @@ vi.mock("@/components/WalletManager", () => ({
           Connect Wallet
         </button>
         {onEmailSubscribed && (
-          <button data-testid="subscribe-from-wallet-manager" onClick={onEmailSubscribed}>
+          <button
+            data-testid="subscribe-from-wallet-manager"
+            onClick={onEmailSubscribed}
+          >
             Subscribe
           </button>
         )}
       </div>
     );
   },
-  WalletManagerSkeleton: () => <div data-testid="wallet-manager-skeleton">Loading...</div>,
+  WalletManagerSkeleton: () => (
+    <div data-testid="wallet-manager-skeleton">Loading...</div>
+  ),
 }));
 
 // Mock useBundlePage hook
@@ -303,10 +316,14 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Should be in visitor mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("visitor");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "visitor"
+      );
 
       // Should not show switch prompt (user not connected)
-      expect(screen.queryByTestId("switch-prompt-banner")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("switch-prompt-banner")
+      ).not.toBeInTheDocument();
 
       // Should not show quick switch FAB
       expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
@@ -325,7 +342,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       expect(screen.getByTestId("bundle-not-found")).toBeInTheDocument();
-      expect(screen.getByTestId("bundle-not-found-connect")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("bundle-not-found-connect")
+      ).toBeInTheDocument();
     });
   });
 
@@ -340,7 +359,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Should be in visitor mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("visitor");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "visitor"
+      );
 
       // Should show switch prompt banner
       expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
@@ -399,7 +420,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
 
       // Should navigate to own bundle
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/bundle?userId=0xMyWallet...456");
+        expect(mockReplace).toHaveBeenCalledWith(
+          "/bundle?userId=0xMyWallet...456"
+        );
       });
     });
 
@@ -423,7 +446,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
 
       // Should navigate to own bundle
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/bundle?userId=0xMyWallet...789");
+        expect(mockReplace).toHaveBeenCalledWith(
+          "/bundle?userId=0xMyWallet...789"
+        );
       });
     });
   });
@@ -439,10 +464,14 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Should be in owner mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("own");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
 
       // Should NOT show switch prompt (viewing own bundle)
-      expect(screen.queryByTestId("switch-prompt-banner")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("switch-prompt-banner")
+      ).not.toBeInTheDocument();
 
       // Should NOT show quick switch FAB
       expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
@@ -552,7 +581,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
 
       // Wallet manager should be closed
       await waitFor(() => {
-        expect(screen.queryByTestId("wallet-manager-modal")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("wallet-manager-modal")
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -568,8 +599,12 @@ describe("Bundle Sharing Flow Integration Tests", () => {
         render(<BundlePageClient userId="0xOwner...AAA" />);
       });
 
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("visitor");
-      expect(screen.queryByTestId("switch-prompt-banner")).not.toBeInTheDocument();
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "visitor"
+      );
+      expect(
+        screen.queryByTestId("switch-prompt-banner")
+      ).not.toBeInTheDocument();
 
       // Step 2: Connect wallet (simulate via wallet manager)
       mockIsConnected = true;
@@ -592,7 +627,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       await waitFor(() => {
-        expect(mockReplace).toHaveBeenCalledWith("/bundle?userId=0xMyWallet...BBB");
+        expect(mockReplace).toHaveBeenCalledWith(
+          "/bundle?userId=0xMyWallet...BBB"
+        );
       });
     });
 
@@ -606,7 +643,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Verify owner mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("own");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
       expect(screen.getByTestId("dashboard-bundle-url")).toHaveTextContent(
         "/bundle?userId=0xOwner...CCC"
       );
@@ -620,9 +659,15 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Now in visitor mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("visitor");
-      expect(screen.queryByTestId("switch-prompt-banner")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("email-reminder-banner")).not.toBeInTheDocument();
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "visitor"
+      );
+      expect(
+        screen.queryByTestId("switch-prompt-banner")
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("email-reminder-banner")
+      ).not.toBeInTheDocument();
 
       // Step 3: Re-connect as owner
       mockIsConnected = true;
@@ -633,7 +678,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Back to owner mode
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("own");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
       expect(screen.getByTestId("email-reminder-banner")).toBeInTheDocument();
     });
 
@@ -669,7 +716,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
         rerender(<BundlePageClient userId="0xUser...111" />);
       });
 
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("own");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
 
       // View Bundle B (via new URL)
       await act(async () => {
@@ -721,9 +770,13 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       });
 
       // Own bundle, no switch prompt
-      expect(screen.queryByTestId("switch-prompt-banner")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("switch-prompt-banner")
+      ).not.toBeInTheDocument();
       expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
-      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent("own");
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
     });
   });
 });

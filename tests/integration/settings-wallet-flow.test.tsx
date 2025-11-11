@@ -1,21 +1,33 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SettingsTab } from "@/components/SettingsTab";
+import { WalletManager } from "@/components/WalletManager";
 
 import { render } from "../test-utils";
 
 // Mock Navigation component
-const mockNavigate = vi.fn();
 vi.mock("@/components/Navigation", () => ({
-  Navigation: ({ activeTab, onTabChange }: { activeTab: string; onTabChange: (tab: string) => void }) => (
+  Navigation: ({
+    activeTab,
+    onTabChange,
+  }: {
+    activeTab: string;
+    onTabChange: (tab: string) => void;
+  }) => (
     <nav data-testid="navigation">
-      <button data-testid="nav-portfolio" onClick={() => onTabChange("portfolio")}>
+      <button
+        data-testid="nav-portfolio"
+        onClick={() => onTabChange("portfolio")}
+      >
         Portfolio
       </button>
-      <button data-testid="nav-settings" onClick={() => onTabChange("settings")}>
+      <button
+        data-testid="nav-settings"
+        onClick={() => onTabChange("settings")}
+      >
         Settings
       </button>
       <span data-testid="active-tab">{activeTab}</span>
@@ -26,13 +38,21 @@ vi.mock("@/components/Navigation", () => ({
 // Mock WalletManager component with modal behavior
 let mockIsWalletManagerOpen = false;
 let mockWalletList = [
-  { address: "0x1234...5678", displayName: "Primary Wallet", isConnected: true },
-  { address: "0xabcd...ef00", displayName: "Trading Wallet", isConnected: false },
+  {
+    address: "0x1234...5678",
+    displayName: "Primary Wallet",
+    isConnected: true,
+  },
+  {
+    address: "0xabcd...ef00",
+    displayName: "Trading Wallet",
+    isConnected: false,
+  },
 ];
 
 vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({
-    isOpen,
+    isOpen: _isOpen,
     onClose,
     onWalletAdded,
     onWalletRemoved,
@@ -44,7 +64,7 @@ vi.mock("@/components/WalletManager", () => ({
     onWalletRemoved?: (address: string) => void;
     onWalletSelected?: (address: string) => void;
   }) => {
-    if (!isOpen) return null;
+    if (!_isOpen) return null;
 
     return (
       <div data-testid="wallet-manager-modal" role="dialog">
@@ -57,7 +77,10 @@ vi.mock("@/components/WalletManager", () => ({
 
         <div data-testid="wallet-list">
           {mockWalletList.map(wallet => (
-            <div key={wallet.address} data-testid={`wallet-item-${wallet.address}`}>
+            <div
+              key={wallet.address}
+              data-testid={`wallet-item-${wallet.address}`}
+            >
               <span data-testid={`wallet-address-${wallet.address}`}>
                 {wallet.address}
               </span>
@@ -76,7 +99,9 @@ vi.mock("@/components/WalletManager", () => ({
               <button
                 data-testid={`remove-wallet-${wallet.address}`}
                 onClick={() => {
-                  mockWalletList = mockWalletList.filter(w => w.address !== wallet.address);
+                  mockWalletList = mockWalletList.filter(
+                    w => w.address !== wallet.address
+                  );
                   onWalletRemoved?.(wallet.address);
                 }}
               >
@@ -108,7 +133,8 @@ vi.mock("@/components/WalletManager", () => ({
               if (addressInput?.value) {
                 const newWallet = {
                   address: addressInput.value,
-                  displayName: nameInput?.value || `Wallet ${mockWalletList.length + 1}`,
+                  displayName:
+                    nameInput?.value || `Wallet ${mockWalletList.length + 1}`,
                   isConnected: false,
                 };
                 mockWalletList = [...mockWalletList, newWallet];
@@ -126,15 +152,16 @@ vi.mock("@/components/WalletManager", () => ({
   },
 }));
 
+interface MenuItem {
+  icon: any;
+  label: string;
+  description: string;
+  onClick: () => void;
+}
+
 // Mock MenuSection and VersionInfo from SettingsTab
 vi.mock("@/components/SettingsTab/index", () => ({
-  MenuSection: ({
-    title,
-    items,
-  }: {
-    title: string;
-    items: Array<{ icon: any; label: string; description: string; onClick: () => void }>;
-  }) => (
+  MenuSection: ({ title, items }: { title: string; items: MenuItem[] }) => (
     <div data-testid={`menu-section-${title.toLowerCase().replace(/ /g, "-")}`}>
       <h3 data-testid="menu-section-title">{title}</h3>
       {items.map(item => (
@@ -143,10 +170,14 @@ vi.mock("@/components/SettingsTab/index", () => ({
           data-testid={`menu-item-${item.label.toLowerCase().replace(/ /g, "-")}`}
           onClick={item.onClick}
         >
-          <span data-testid={`menu-item-label-${item.label.toLowerCase().replace(/ /g, "-")}`}>
+          <span
+            data-testid={`menu-item-label-${item.label.toLowerCase().replace(/ /g, "-")}`}
+          >
             {item.label}
           </span>
-          <span data-testid={`menu-item-desc-${item.label.toLowerCase().replace(/ /g, "-")}`}>
+          <span
+            data-testid={`menu-item-desc-${item.label.toLowerCase().replace(/ /g, "-")}`}
+          >
             {item.description}
           </span>
         </button>
@@ -191,108 +222,10 @@ function SettingsPageContainer({
       {children}
 
       {/* Wallet Manager Modal */}
-      <MockWalletManager
+      <WalletManager
         isOpen={mockIsWalletManagerOpen}
         onClose={handleWalletManagerClose}
       />
-    </div>
-  );
-}
-
-// Standalone mock wallet manager for testing
-function MockWalletManager({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  if (!isOpen) return null;
-
-  const handleWalletAdded = (wallet: any) => {
-    // Mock callback
-  };
-
-  const handleWalletRemoved = (address: string) => {
-    // Mock callback
-  };
-
-  const handleWalletSelected = (address: string) => {
-    mockWalletList = mockWalletList.map(w => ({
-      ...w,
-      isConnected: w.address === address,
-    }));
-  };
-
-  return (
-    <div data-testid="wallet-manager-modal" role="dialog">
-      <div data-testid="wallet-manager-header">
-        <h2>Manage Wallets</h2>
-        <button data-testid="close-wallet-manager" onClick={onClose}>
-          Close
-        </button>
-      </div>
-
-      <div data-testid="wallet-list">
-        {mockWalletList.map(wallet => (
-          <div key={wallet.address} data-testid={`wallet-item-${wallet.address}`}>
-            <span data-testid={`wallet-address-${wallet.address}`}>
-              {wallet.address}
-            </span>
-            <span data-testid={`wallet-name-${wallet.address}`}>
-              {wallet.displayName}
-            </span>
-            <span data-testid={`wallet-status-${wallet.address}`}>
-              {wallet.isConnected ? "connected" : "disconnected"}
-            </span>
-            <button
-              data-testid={`select-wallet-${wallet.address}`}
-              onClick={() => handleWalletSelected(wallet.address)}
-            >
-              Select
-            </button>
-            <button
-              data-testid={`remove-wallet-${wallet.address}`}
-              onClick={() => {
-                mockWalletList = mockWalletList.filter(w => w.address !== wallet.address);
-                handleWalletRemoved(wallet.address);
-              }}
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div data-testid="add-wallet-section">
-        <input
-          data-testid="new-wallet-address-input"
-          placeholder="Wallet address"
-        />
-        <input
-          data-testid="new-wallet-name-input"
-          placeholder="Wallet name (optional)"
-        />
-        <button
-          data-testid="add-wallet-button"
-          onClick={() => {
-            const addressInput = document.querySelector(
-              '[data-testid="new-wallet-address-input"]'
-            ) as HTMLInputElement;
-            const nameInput = document.querySelector(
-              '[data-testid="new-wallet-name-input"]'
-            ) as HTMLInputElement;
-
-            if (addressInput?.value) {
-              const newWallet = {
-                address: addressInput.value,
-                displayName: nameInput?.value || `Wallet ${mockWalletList.length + 1}`,
-                isConnected: false,
-              };
-              mockWalletList = [...mockWalletList, newWallet];
-              handleWalletAdded(newWallet);
-              addressInput.value = "";
-              nameInput.value = "";
-            }
-          }}
-        >
-          Add Wallet
-        </button>
-      </div>
     </div>
   );
 }
@@ -302,8 +235,16 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
     vi.clearAllMocks();
     mockIsWalletManagerOpen = false;
     mockWalletList = [
-      { address: "0x1234...5678", displayName: "Primary Wallet", isConnected: true },
-      { address: "0xabcd...ef00", displayName: "Trading Wallet", isConnected: false },
+      {
+        address: "0x1234...5678",
+        displayName: "Primary Wallet",
+        isConnected: true,
+      },
+      {
+        address: "0xabcd...ef00",
+        displayName: "Trading Wallet",
+        isConnected: false,
+      },
     ];
   });
 
@@ -323,12 +264,16 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       expect(
         screen.getByTestId("menu-section-account-&-preferences")
       ).toBeInTheDocument();
-      expect(screen.getByTestId("menu-section-help-&-support")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("menu-section-help-&-support")
+      ).toBeInTheDocument();
 
       // Verify menu items in Account section
       expect(screen.getByTestId("menu-item-app-settings")).toBeInTheDocument();
       expect(screen.getByTestId("menu-item-notifications")).toBeInTheDocument();
-      expect(screen.getByTestId("menu-item-security-&-privacy")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("menu-item-security-&-privacy")
+      ).toBeInTheDocument();
 
       // Verify menu items in Help section
       expect(screen.getByTestId("menu-item-help-center")).toBeInTheDocument();
@@ -370,7 +315,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       });
 
       // Wallet manager should not be visible initially
-      expect(screen.queryByTestId("wallet-manager-modal")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("wallet-manager-modal")
+      ).not.toBeInTheDocument();
 
       // Open wallet manager
       const openButton = screen.getByTestId("global-wallet-manager-trigger");
@@ -385,19 +332,23 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
 
       // Verify wallet list is displayed
       expect(screen.getByTestId("wallet-list")).toBeInTheDocument();
-      expect(screen.getByTestId("wallet-item-0x1234...5678")).toBeInTheDocument();
-      expect(screen.getByTestId("wallet-item-0xabcd...ef00")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("wallet-item-0x1234...5678")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByTestId("wallet-item-0xabcd...ef00")
+      ).toBeInTheDocument();
 
       // Verify wallet details
       expect(screen.getByTestId("wallet-name-0x1234...5678")).toHaveTextContent(
         "Primary Wallet"
       );
-      expect(screen.getByTestId("wallet-status-0x1234...5678")).toHaveTextContent(
-        "connected"
-      );
-      expect(screen.getByTestId("wallet-status-0xabcd...ef00")).toHaveTextContent(
-        "disconnected"
-      );
+      expect(
+        screen.getByTestId("wallet-status-0x1234...5678")
+      ).toHaveTextContent("connected");
+      expect(
+        screen.getByTestId("wallet-status-0xabcd...ef00")
+      ).toHaveTextContent("disconnected");
     });
 
     it("should add a new wallet through wallet manager", async () => {
@@ -437,7 +388,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       // Verify wallet was added
       await waitFor(() => {
         expect(mockWalletList.length).toBe(initialWalletCount + 1);
-        const newWallet = mockWalletList.find(w => w.address === "0x9999...1111");
+        const newWallet = mockWalletList.find(
+          w => w.address === "0x9999...1111"
+        );
         expect(newWallet).toBeDefined();
         expect(newWallet?.displayName).toBe("DeFi Wallet");
         expect(newWallet?.isConnected).toBe(false);
@@ -475,7 +428,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       // Verify wallet was removed
       await waitFor(() => {
         expect(mockWalletList.length).toBe(initialWalletCount - 1);
-        expect(mockWalletList.find(w => w.address === "0xabcd...ef00")).toBeUndefined();
+        expect(
+          mockWalletList.find(w => w.address === "0xabcd...ef00")
+        ).toBeUndefined();
       });
     });
 
@@ -500,12 +455,12 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       });
 
       // Verify initial connected wallet
-      expect(screen.getByTestId("wallet-status-0x1234...5678")).toHaveTextContent(
-        "connected"
-      );
-      expect(screen.getByTestId("wallet-status-0xabcd...ef00")).toHaveTextContent(
-        "disconnected"
-      );
+      expect(
+        screen.getByTestId("wallet-status-0x1234...5678")
+      ).toHaveTextContent("connected");
+      expect(
+        screen.getByTestId("wallet-status-0xabcd...ef00")
+      ).toHaveTextContent("disconnected");
 
       // Select different wallet
       const selectButton = screen.getByTestId("select-wallet-0xabcd...ef00");
@@ -515,8 +470,12 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
 
       // Verify wallet connection switched
       await waitFor(() => {
-        const primaryWallet = mockWalletList.find(w => w.address === "0x1234...5678");
-        const tradingWallet = mockWalletList.find(w => w.address === "0xabcd...ef00");
+        const primaryWallet = mockWalletList.find(
+          w => w.address === "0x1234...5678"
+        );
+        const tradingWallet = mockWalletList.find(
+          w => w.address === "0xabcd...ef00"
+        );
 
         expect(primaryWallet?.isConnected).toBe(false);
         expect(tradingWallet?.isConnected).toBe(true);
@@ -551,7 +510,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
 
       // Verify modal is closed
       await waitFor(() => {
-        expect(screen.queryByTestId("wallet-manager-modal")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("wallet-manager-modal")
+        ).not.toBeInTheDocument();
       });
     });
   });
@@ -586,12 +547,17 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
           screen.getByTestId("new-wallet-address-input"),
           "0xdead...beef"
         );
-        await user.type(screen.getByTestId("new-wallet-name-input"), "Test Wallet");
+        await user.type(
+          screen.getByTestId("new-wallet-name-input"),
+          "Test Wallet"
+        );
         await user.click(screen.getByTestId("add-wallet-button"));
       });
 
       await waitFor(() => {
-        expect(mockWalletList.find(w => w.address === "0xdead...beef")).toBeDefined();
+        expect(
+          mockWalletList.find(w => w.address === "0xdead...beef")
+        ).toBeDefined();
       });
 
       // Step 4: Switch to new wallet
@@ -600,7 +566,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       });
 
       await waitFor(() => {
-        const newWallet = mockWalletList.find(w => w.address === "0xdead...beef");
+        const newWallet = mockWalletList.find(
+          w => w.address === "0xdead...beef"
+        );
         expect(newWallet?.isConnected).toBe(true);
       });
 
@@ -610,7 +578,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       });
 
       await waitFor(() => {
-        expect(screen.queryByTestId("wallet-manager-modal")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("wallet-manager-modal")
+        ).not.toBeInTheDocument();
       });
 
       // Verify settings page is still visible
@@ -657,7 +627,9 @@ describe("Settings & Wallet Management Flow Integration Tests", () => {
       // Verify wallet persisted
       await waitFor(() => {
         expect(mockWalletList.length).toBe(walletCountAfterAdd);
-        expect(mockWalletList.find(w => w.address === "0xaaaa...bbbb")).toBeDefined();
+        expect(
+          mockWalletList.find(w => w.address === "0xaaaa...bbbb")
+        ).toBeDefined();
       });
     });
   });

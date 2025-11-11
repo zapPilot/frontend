@@ -18,13 +18,14 @@ import {
   useStrategiesWithPortfolioData,
   useStrategiesWithPortfolioQuery,
 } from "@/hooks/queries/useStrategiesQuery";
-import { getLandingPagePortfolioData } from "@/services/analyticsService";
-import { getStrategies } from "@/services/intentService";
 import {
-  StrategiesApiError,
-  StrategiesApiResponse,
-} from "@/types/strategies";
-import { LandingPageResponse, PoolDetail } from "@/services/analyticsService";
+  getLandingPagePortfolioData,
+  LandingPageResponse,
+  PoolDetail,
+} from "@/services/analyticsService";
+import { getStrategies } from "@/services/intentService";
+import { StrategiesApiResponse } from "@/types/strategies";
+
 import { renderHook, waitFor } from "../../test-utils";
 
 // Mock service functions
@@ -330,9 +331,7 @@ describe("useStrategiesQuery", () => {
     it("should fetch strategies without portfolio data for unauthenticated user", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioQuery(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioQuery());
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
@@ -398,9 +397,7 @@ describe("useStrategiesQuery", () => {
     it("should provide helper computed values", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioData(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioData());
 
       await waitFor(() => expect(result.current.strategies).toHaveLength(3));
 
@@ -421,9 +418,7 @@ describe("useStrategiesQuery", () => {
       };
       mockGetStrategies.mockResolvedValue(emptyResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioData(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioData());
 
       await waitFor(() => expect(result.current.strategies).toHaveLength(0));
 
@@ -436,9 +431,7 @@ describe("useStrategiesQuery", () => {
     it("should calculate protocol counts correctly", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioData(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioData());
 
       await waitFor(() => expect(result.current.strategies).toHaveLength(3));
 
@@ -450,9 +443,7 @@ describe("useStrategiesQuery", () => {
     it("should distinguish between initial loading and reloading", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioData(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioData());
 
       // Initial loading
       expect(result.current.isInitialLoading).toBe(true);
@@ -468,9 +459,7 @@ describe("useStrategiesQuery", () => {
     it("should provide refetch function", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioData(undefined)
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioData());
 
       await waitFor(() => expect(result.current.strategies).toHaveLength(3));
 
@@ -582,9 +571,7 @@ describe("useStrategiesQuery", () => {
     it("should handle empty userId (falsy value)", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
 
-      const { result } = renderHook(() =>
-        useStrategiesWithPortfolioQuery("")
-      );
+      const { result } = renderHook(() => useStrategiesWithPortfolioQuery(""));
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 

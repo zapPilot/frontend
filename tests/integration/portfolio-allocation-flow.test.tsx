@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -26,19 +26,25 @@ vi.mock("@/components/PortfolioAllocation/components/EnhancedOverview", () => ({
     }) => (
       <div data-testid="enhanced-overview">
         <div data-testid="operation-mode">{operationMode}</div>
-        <div data-testid="action-enabled">{actionEnabled ? "enabled" : "disabled"}</div>
+        <div data-testid="action-enabled">
+          {actionEnabled ? "enabled" : "disabled"}
+        </div>
         {actionDisabledReason && (
           <div data-testid="action-disabled-reason">{actionDisabledReason}</div>
         )}
         <div data-testid="category-count">{processedCategories.length}</div>
         <div data-testid="chart-data-count">{chartData.length}</div>
-        <div data-testid="excluded-count">{excludedCategoryIds?.length || 0}</div>
+        <div data-testid="excluded-count">
+          {excludedCategoryIds?.length || 0}
+        </div>
 
         {/* Simulate category list with toggles */}
         <div data-testid="category-list">
           {processedCategories.map(category => (
             <div key={category.id} data-testid={`category-${category.id}`}>
-              <span data-testid={`category-name-${category.id}`}>{category.name}</span>
+              <span data-testid={`category-name-${category.id}`}>
+                {category.name}
+              </span>
               <span data-testid={`category-excluded-${category.id}`}>
                 {category.isExcluded ? "excluded" : "included"}
               </span>
@@ -53,7 +59,10 @@ vi.mock("@/components/PortfolioAllocation/components/EnhancedOverview", () => ({
                 data-testid={`allocation-input-${category.id}`}
                 value={allocations[category.id] || 0}
                 onChange={e =>
-                  onAllocationChange(category.id, Number.parseFloat(e.target.value))
+                  onAllocationChange(
+                    category.id,
+                    Number.parseFloat(e.target.value)
+                  )
                 }
               />
             </div>
@@ -78,10 +87,17 @@ vi.mock("@/components/PortfolioAllocation/components/EnhancedOverview", () => ({
 
 vi.mock("@/components/PortfolioAllocation/components/SwapControls", () => ({
   SwapControls: vi.fn(
-    ({ operationMode, swapSettings, onSwapSettingsChange, includedCategories }) => (
+    ({
+      operationMode,
+      swapSettings,
+      onSwapSettingsChange,
+      includedCategories,
+    }) => (
       <div data-testid="swap-controls">
         <div data-testid="swap-operation-mode">{operationMode}</div>
-        <div data-testid="included-categories-count">{includedCategories.length}</div>
+        <div data-testid="included-categories-count">
+          {includedCategories.length}
+        </div>
 
         {/* Amount Input */}
         <input
@@ -250,7 +266,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
       expect(screen.getByTestId("category-count")).toHaveTextContent("3");
 
       // Verify action is initially disabled (no token or amount)
-      expect(screen.getByTestId("action-enabled")).toHaveTextContent("disabled");
+      expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+        "disabled"
+      );
       expect(screen.getByTestId("zap-action-button")).toBeDisabled();
 
       // Step 1: Select token
@@ -260,7 +278,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
       });
 
       // Still disabled (no amount)
-      expect(screen.getByTestId("action-enabled")).toHaveTextContent("disabled");
+      expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+        "disabled"
+      );
 
       // Step 2: Enter amount
       const amountInput = screen.getByTestId("amount-input");
@@ -270,7 +290,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Now action should be enabled
       await waitFor(() => {
-        expect(screen.getByTestId("action-enabled")).toHaveTextContent("enabled");
+        expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+          "enabled"
+        );
         expect(screen.getByTestId("zap-action-button")).not.toBeDisabled();
       });
 
@@ -342,12 +364,17 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Step 2: Complete the flow
       await act(async () => {
-        await user.selectOptions(screen.getByTestId("from-token-select"), "ETH");
+        await user.selectOptions(
+          screen.getByTestId("from-token-select"),
+          "ETH"
+        );
         await user.type(screen.getByTestId("amount-input"), "5");
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("action-enabled")).toHaveTextContent("enabled");
+        expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+          "enabled"
+        );
       });
 
       await act(async () => {
@@ -359,7 +386,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
         expect(mockOnZapAction).toHaveBeenCalled();
         const callArg = mockOnZapAction.mock.calls[0]?.[0];
         expect(callArg.includedCategories).toHaveLength(2); // Excluded "stable"
-        expect(callArg.includedCategories.every(cat => cat.id !== "stable")).toBe(true);
+        expect(
+          callArg.includedCategories.every(cat => cat.id !== "stable")
+        ).toBe(true);
       });
     });
 
@@ -380,7 +409,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
       });
 
       // Update allocation for a category
-      const allocationInput = screen.getByTestId("allocation-input-defi-lending");
+      const allocationInput = screen.getByTestId(
+        "allocation-input-defi-lending"
+      );
       await act(async () => {
         await user.clear(allocationInput);
         await user.type(allocationInput, "50");
@@ -393,7 +424,10 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Complete the flow
       await act(async () => {
-        await user.selectOptions(screen.getByTestId("from-token-select"), "USDC");
+        await user.selectOptions(
+          screen.getByTestId("from-token-select"),
+          "USDC"
+        );
         await user.type(screen.getByTestId("amount-input"), "2000");
         await user.click(screen.getByTestId("zap-action-button"));
       });
@@ -438,7 +472,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Verify enabled
       await waitFor(() => {
-        expect(screen.getByTestId("action-enabled")).toHaveTextContent("enabled");
+        expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+          "enabled"
+        );
       });
 
       // Execute
@@ -489,7 +525,10 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Complete flow
       await act(async () => {
-        await user.selectOptions(screen.getByTestId("from-token-select"), "ETH");
+        await user.selectOptions(
+          screen.getByTestId("from-token-select"),
+          "ETH"
+        );
         await user.type(screen.getByTestId("amount-input"), "10");
         await user.click(screen.getByTestId("zap-action-button"));
       });
@@ -525,7 +564,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("action-enabled")).toHaveTextContent("disabled");
+        expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+          "disabled"
+        );
         expect(screen.getByTestId("action-disabled-reason")).toHaveTextContent(
           /select a token/i
         );
@@ -554,7 +595,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId("action-enabled")).toHaveTextContent("disabled");
+        expect(screen.getByTestId("action-enabled")).toHaveTextContent(
+          "disabled"
+        );
         expect(screen.getByTestId("action-disabled-reason")).toHaveTextContent(
           /enter an amount/i
         );
@@ -582,8 +625,6 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
     });
 
     it("should update chart data when categories are excluded", async () => {
-      const user = userEvent.setup();
-
       await act(async () => {
         render(
           <PortfolioAllocationContainer
@@ -599,9 +640,9 @@ describe("Portfolio Allocation Flow Integration Tests", () => {
 
       // Chart should still show all categories (excluded ones just marked differently)
       expect(screen.getByTestId("chart-data-count")).toHaveTextContent("3");
-      expect(screen.getByTestId("category-excluded-defi-dex")).toHaveTextContent(
-        "excluded"
-      );
+      expect(
+        screen.getByTestId("category-excluded-defi-dex")
+      ).toHaveTextContent("excluded");
     });
   });
 });

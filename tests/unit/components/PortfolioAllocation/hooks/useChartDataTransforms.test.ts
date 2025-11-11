@@ -1,5 +1,5 @@
 import { renderHook } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useChartDataTransforms } from "@/components/PortfolioAllocation/hooks/useChartDataTransforms";
 import { ChartDataPoint } from "@/components/PortfolioAllocation/types";
@@ -308,10 +308,10 @@ describe("useChartDataTransforms", () => {
       const callArg = vi.mocked(chartUtils.transformToPieChartData).mock
         .calls[0][0];
 
-      callArg.forEach((item, index) => {
+      for (const [index, item] of callArg.entries()) {
         expect(item.value).toBe(mockChartData[index].value);
         expect(item.percentage).toBe(mockChartData[index].value);
-      });
+      }
     });
 
     it("should preserve color values", () => {
@@ -350,12 +350,12 @@ describe("useChartDataTransforms", () => {
         useChartDataTransforms(mockChartData)
       );
 
-      result.current.forEach(item => {
+      for (const item of result.current) {
         expect(item).toHaveProperty("label");
         expect(item).toHaveProperty("value");
         expect(item).toHaveProperty("percentage");
         expect(item).toHaveProperty("color");
-      });
+      }
     });
 
     it("should preserve data returned from transformToPieChartData", () => {
@@ -551,9 +551,9 @@ describe("useChartDataTransforms", () => {
 
       const calls = vi.mocked(chartUtils.transformToPieChartData).mock.calls;
 
-      calls.forEach(call => {
+      for (const call of calls) {
         expect(call[1]).toEqual({ deriveCategoryMetadata: false });
-      });
+      }
     });
   });
 });
