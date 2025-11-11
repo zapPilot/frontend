@@ -1,6 +1,6 @@
 import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SettingsTab } from "@/components/SettingsTab";
@@ -64,6 +64,9 @@ vi.mock("@/components/WalletManager", () => ({
     onWalletRemoved?: (address: string) => void;
     onWalletSelected?: (address: string) => void;
   }) => {
+    // FIX: Use React state to ensure component re-renders when wallet list changes
+    const [wallets, setWallets] = useState(() => mockWalletList);
+
     if (!_isOpen) return null;
 
     return (
@@ -76,7 +79,7 @@ vi.mock("@/components/WalletManager", () => ({
         </div>
 
         <div data-testid="wallet-list">
-          {mockWalletList.map(wallet => (
+          {wallets.map(wallet => (
             <div
               key={wallet.address}
               data-testid={`wallet-item-${wallet.address}`}
@@ -92,16 +95,27 @@ vi.mock("@/components/WalletManager", () => ({
               </span>
               <button
                 data-testid={`select-wallet-${wallet.address}`}
-                onClick={() => onWalletSelected?.(wallet.address)}
+                onClick={() => {
+                  // Update wallet connection status when selected
+                  const updatedList = wallets.map(w => ({
+                    ...w,
+                    isConnected: w.address === wallet.address,
+                  }));
+                  mockWalletList = updatedList;
+                  setWallets(updatedList);
+                  onWalletSelected?.(wallet.address);
+                }}
               >
                 Select
               </button>
               <button
                 data-testid={`remove-wallet-${wallet.address}`}
                 onClick={() => {
-                  mockWalletList = mockWalletList.filter(
+                  const updatedList = wallets.filter(
                     w => w.address !== wallet.address
                   );
+                  mockWalletList = updatedList;
+                  setWallets(updatedList);
                   onWalletRemoved?.(wallet.address);
                 }}
               >
@@ -134,10 +148,12 @@ vi.mock("@/components/WalletManager", () => ({
                 const newWallet = {
                   address: addressInput.value,
                   displayName:
-                    nameInput?.value || `Wallet ${mockWalletList.length + 1}`,
+                    nameInput?.value || `Wallet ${wallets.length + 1}`,
                   isConnected: false,
                 };
-                mockWalletList = [...mockWalletList, newWallet];
+                const updatedList = [...wallets, newWallet];
+                mockWalletList = updatedList;
+                setWallets(updatedList);
                 onWalletAdded?.(newWallet);
                 addressInput.value = "";
                 nameInput.value = "";
@@ -193,6 +209,7 @@ vi.mock("@/components/SettingsTab/index", () => ({
 }));
 
 // Container component that simulates the app shell with navigation
+// FIX: Use React state instead of module variable to trigger re-renders
 function SettingsPageContainer({
   children,
   onWalletManagerOpen,
@@ -200,13 +217,16 @@ function SettingsPageContainer({
   children: ReactNode;
   onWalletManagerOpen?: () => void;
 }) {
+  // Use React state to properly trigger re-renders when modal opens/closes
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+
   const handleWalletManagerOpen = () => {
-    mockIsWalletManagerOpen = true;
+    setIsWalletManagerOpen(true);
     onWalletManagerOpen?.();
   };
 
   const handleWalletManagerClose = () => {
-    mockIsWalletManagerOpen = false;
+    setIsWalletManagerOpen(false);
   };
 
   return (
@@ -223,7 +243,7 @@ function SettingsPageContainer({
 
       {/* Wallet Manager Modal */}
       <WalletManager
-        isOpen={mockIsWalletManagerOpen}
+        isOpen={isWalletManagerOpen}
         onClose={handleWalletManagerClose}
       />
     </div>

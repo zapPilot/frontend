@@ -73,11 +73,14 @@ export function BundlePageClient({ userId }: BundlePageClientProps) {
   // Handle bundle not found case
   if (vm.bundleNotFound) {
     return (
-      <BundleNotFound
-        message="Bundle not found"
-        showConnectCTA={vm.showConnectCTA}
-        onConnectClick={vm.overlays.openWalletManager}
-      />
+      <>
+        <BundleNotFound
+          message="Bundle not found"
+          showConnectCTA={vm.showConnectCTA}
+          onConnectClick={vm.overlays.openWalletManager}
+        />
+        {footerOverlays}
+      </>
     );
   }
 

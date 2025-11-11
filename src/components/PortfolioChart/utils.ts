@@ -205,7 +205,10 @@ export function buildAllocationHistory(
       computedShare = (categoryValue / totalValue) * 100;
     }
 
-    if (!Number.isFinite(computedShare) || computedShare === 0) {
+    // Filter out negative allocations (debt positions) and invalid values
+    // Debt positions should not be included in asset allocation chart
+    // They are tracked separately in LandingPageResponse.category_summary_debt
+    if (!Number.isFinite(computedShare) || computedShare <= 0) {
       continue;
     }
 

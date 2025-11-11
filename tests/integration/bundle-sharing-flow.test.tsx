@@ -167,6 +167,8 @@ vi.mock("@/components/ui", () => ({
 
 // Mock WalletManager
 let mockIsWalletManagerOpen = false;
+// FIX: Track banner dismissal state to properly test persistence
+let mockBannerDismissed = false;
 
 vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({
@@ -217,7 +219,8 @@ vi.mock("@/components/WalletManager", () => ({
 vi.mock("@/hooks/useBundlePage", () => ({
   useBundlePage: (userId: string) => {
     const isOwnBundle = mockIsConnected && mockUserInfo?.userId === userId;
-    const showSwitchPrompt = mockIsConnected && !isOwnBundle && userId !== "";
+    // FIX: Include banner dismissal state in showSwitchPrompt calculation
+    const showSwitchPrompt = mockIsConnected && !isOwnBundle && userId !== "" && !mockBannerDismissed;
 
     return {
       isOwnBundle,
@@ -233,7 +236,8 @@ vi.mock("@/hooks/useBundlePage", () => ({
       switchPrompt: {
         show: showSwitchPrompt,
         onStay: () => {
-          // Mock: hide switch prompt
+          // FIX: Actually update dismissal state when banner is dismissed
+          mockBannerDismissed = true;
         },
         onSwitch: () => {
           if (mockUserInfo?.userId) {
@@ -252,7 +256,10 @@ vi.mock("@/hooks/useBundlePage", () => ({
       },
       overlays: {
         showQuickSwitch: showSwitchPrompt,
-        isWalletManagerOpen: mockIsWalletManagerOpen,
+        // FIX: Use getter to always return current value instead of captured value
+        get isWalletManagerOpen() {
+          return mockIsWalletManagerOpen;
+        },
         openWalletManager: () => {
           mockIsWalletManagerOpen = true;
         },
@@ -274,6 +281,8 @@ describe("Bundle Sharing Flow Integration Tests", () => {
     mockIsConnected = false;
     mockConnectedWallet = null;
     mockIsWalletManagerOpen = false;
+    // FIX: Reset banner dismissal state before each test
+    mockBannerDismissed = false;
     mockReplace.mockClear();
     mockPush.mockClear();
   });
@@ -469,12 +478,17 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       );
 
       // Should NOT show switch prompt (viewing own bundle)
-      expect(
-        screen.queryByTestId("switch-prompt-banner")
-      ).not.toBeInTheDocument();
+      // FIX: Wrap in waitFor for async state updates
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("switch-prompt-banner")
+        ).not.toBeInTheDocument();
+      });
 
       // Should NOT show quick switch FAB
-      expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
+      });
 
       // Should show email reminder banner in owner mode
       expect(screen.getByTestId("email-reminder-banner")).toBeInTheDocument();
