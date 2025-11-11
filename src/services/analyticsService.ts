@@ -21,6 +21,10 @@ export interface ProtocolYieldWindow {
   negative_days: number;
 }
 
+/**
+ * Represents yield data for a specific day
+ * @public - Used in ProtocolYieldBreakdown.today
+ */
 export interface ProtocolYieldToday {
   date: string;
   yield_usd: number;

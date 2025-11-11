@@ -1,4 +1,3 @@
-/* c8 ignore start */
 /**
  * Comprehensive Formatting Utilities
  *
@@ -376,5 +375,3 @@ export const formatters = {
   /** Format volatility percentage values */
   volatility: formatVolatility,
 } as const;
-
-/* c8 ignore stop */

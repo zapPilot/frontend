@@ -440,6 +440,18 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">Avg Daily Yield</p>
+            {outliersRemoved > 0 && (
+              <span
+                title={
+                  outliersRemoved === 1
+                    ? "1 outlier removed for accuracy (IQR method)"
+                    : `${outliersRemoved} outliers removed for accuracy (IQR method)`
+                }
+                className="inline-flex"
+              >
+                <Info className="w-3 h-3 text-amber-500 cursor-help" />
+              </span>
+            )}
             {hasProtocolBreakdown && (
               <div className="relative">
                 <span
