@@ -36,7 +36,6 @@ vi.mock("@/components/Navigation", () => ({
 }));
 
 // Mock WalletManager component with modal behavior
-let mockIsWalletManagerOpen = false;
 let mockWalletList = [
   {
     address: "0x1234...5678",
@@ -253,7 +252,6 @@ function SettingsPageContainer({
 describe("Settings & Wallet Management Flow Integration Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockIsWalletManagerOpen = false;
     mockWalletList = [
       {
         address: "0x1234...5678",
