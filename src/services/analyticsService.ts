@@ -13,6 +13,30 @@ import { ActualRiskSummaryResponse } from "../types/risk";
  * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
  * providing more accurate average daily yield calculations for DeFi portfolios.
  */
+export interface ProtocolYieldWindow {
+  total_yield_usd: number;
+  average_daily_yield_usd: number;
+  data_points: number;
+  positive_days: number;
+  negative_days: number;
+}
+
+/**
+ * Represents yield data for a specific day
+ * @public - Used in ProtocolYieldBreakdown.today
+ */
+export interface ProtocolYieldToday {
+  date: string;
+  yield_usd: number;
+}
+
+export interface ProtocolYieldBreakdown {
+  protocol: string;
+  chain?: string | null;
+  window: ProtocolYieldWindow;
+  today?: ProtocolYieldToday | null;
+}
+
 export interface YieldReturnsSummaryResponse {
   user_id: string;
   period: {
@@ -33,13 +57,14 @@ export interface YieldReturnsSummaryResponse {
     filtered_days: number;
     outliers_removed: number;
   };
-  outlier_strategy: "iqr" | "none";
+  outlier_strategy: "iqr" | "none" | "zscore" | "percentile";
   outliers_detected: {
     date: string;
     value: number;
     reason: string;
     z_score: number | null;
   }[];
+  protocol_breakdown: ProtocolYieldBreakdown[];
 }
 
 // Re-export PoolDetail for components that import from this service

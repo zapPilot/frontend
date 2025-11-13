@@ -7,9 +7,13 @@ import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import { getChangeColorClasses } from "../../lib/color-utils";
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
-import type { LandingPageResponse } from "../../services/analyticsService";
+import type {
+  LandingPageResponse,
+  ProtocolYieldBreakdown,
+} from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
+import { ProtocolBreakdownTooltip } from "./ProtocolBreakdownTooltip";
 import { ProtocolROIItem, ROITooltip } from "./ROITooltip";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
@@ -43,6 +47,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       left: number;
     }>({ top: 0, left: 0 });
     const infoIconRef = useRef<HTMLSpanElement | null>(null);
+    const [yieldTooltipVisible, setYieldTooltipVisible] = useState(false);
+    const [yieldTooltipPos, setYieldTooltipPos] = useState<{
+      top: number;
+      left: number;
+    }>({ top: 0, left: 0 });
+    const yieldInfoRef = useRef<HTMLSpanElement | null>(null);
 
     const openRoiTooltip = useCallback(() => {
       const el = infoIconRef.current;
@@ -55,6 +65,20 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       setRoiTooltipVisible(true);
     }, []);
     const closeRoiTooltip = useCallback(() => setRoiTooltipVisible(false), []);
+    const openYieldTooltip = useCallback(() => {
+      const el = yieldInfoRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      setYieldTooltipPos({
+        top: rect.bottom + 8 + window.scrollY,
+        left: rect.left + rect.width / 2 + window.scrollX,
+      });
+      setYieldTooltipVisible(true);
+    }, []);
+    const closeYieldTooltip = useCallback(
+      () => setYieldTooltipVisible(false),
+      []
+    );
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -75,6 +99,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
     const avgDailyYieldUsd =
       data?.yield_summary?.average_daily_yield_usd ?? null;
+    const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
+      data?.yield_summary?.protocol_breakdown ?? [];
+    const hasProtocolBreakdown = protocolYieldBreakdown.length > 0;
+    const yieldWindowLabel = data?.yield_summary?.period?.days
+      ? `${data.yield_summary.period.days}d`
+      : "window";
+    const outliersRemoved =
+      data?.yield_summary?.statistics?.outliers_removed ?? 0;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -92,8 +124,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           ) // Shortest period first
       : [];
 
-    // Note: Protocol breakdown is not available in the new yield_summary endpoint
-    // This data would need to come from a separate endpoint if needed for tooltips
     const protocolROIData: ProtocolROIItem[] = [];
 
     // Helper function to render balance display using centralized state
@@ -375,6 +405,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   ref={infoIconRef}
                   onMouseOver={openRoiTooltip}
                   onMouseOut={closeRoiTooltip}
+                  onFocus={openRoiTooltip}
+                  onBlur={closeRoiTooltip}
+                  tabIndex={0}
+                  aria-label="Portfolio ROI tooltip"
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
@@ -406,15 +440,44 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">Avg Daily Yield</p>
-            {data?.yield_summary?.statistics.outliers_removed &&
-              data.yield_summary.statistics.outliers_removed > 0 && (
+            {outliersRemoved > 0 && (
+              <span
+                title={
+                  outliersRemoved === 1
+                    ? "1 outlier removed for accuracy (IQR method)"
+                    : `${outliersRemoved} outliers removed for accuracy (IQR method)`
+                }
+                className="inline-flex"
+              >
+                <Info className="w-3 h-3 text-amber-500 cursor-help" />
+              </span>
+            )}
+            {hasProtocolBreakdown && (
+              <div className="relative">
                 <span
-                  title={`${data.yield_summary.statistics.outliers_removed} outlier${data.yield_summary.statistics.outliers_removed !== 1 ? "s" : ""} removed for accuracy (IQR method)`}
+                  ref={yieldInfoRef}
+                  onMouseOver={openYieldTooltip}
+                  onMouseOut={closeYieldTooltip}
+                  onFocus={openYieldTooltip}
+                  onBlur={closeYieldTooltip}
+                  tabIndex={0}
+                  aria-label="Protocol yield breakdown tooltip"
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 </span>
-              )}
+                {yieldTooltipVisible && (
+                  <ProtocolBreakdownTooltip
+                    position={yieldTooltipPos}
+                    breakdown={protocolYieldBreakdown}
+                    windowLabel={yieldWindowLabel}
+                    outliersRemoved={outliersRemoved}
+                    onMouseEnter={openYieldTooltip}
+                    onMouseLeave={closeYieldTooltip}
+                  />
+                )}
+              </div>
+            )}
           </div>
           {renderAvgDailyYieldDisplay()}
         </div>

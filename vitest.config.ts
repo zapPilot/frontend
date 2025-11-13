@@ -5,23 +5,27 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   plugins: [react()],
   test: {
-    // Resource controls: allow low-memory mode via environment variables
-    // Use with: VITEST_SINGLE_THREAD=true VITEST_MAX_CONCURRENCY=1 npm run test:unit
-    pool: 'threads',
+    // Resource controls: single worker to prevent memory exhaustion
+    // Uses fork pool for better cleanup and isolation
+    pool: 'forks',
     poolOptions: {
-      threads: {
-        singleThread: process.env['VITEST_SINGLE_THREAD'] === 'true',
+      forks: {
+        singleFork: true,
       },
     },
+    maxWorkers: 1,
+    minWorkers: 1,
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/unit/**/*.{test,spec}.{js,ts,tsx}', 'tests/integration/**/*.{test,spec}.{js,ts,tsx}'],
     exclude: ['tests/e2e/**/*'],
     css: false,
-    // Resource optimization settings (applied when using safe mode via CLI)
+    // Resource optimization settings
+    isolate: true, // Better memory cleanup between test files
     testTimeout: 30000, // 30 second timeout to prevent hanging
     hookTimeout: 10000, // 10 second hook timeout
+    teardownTimeout: 10000, // 10 second teardown timeout for graceful cleanup
     // Better React 18+ support
     env: {
       IS_REACT_ACT_ENVIRONMENT: 'true',

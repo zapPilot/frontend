@@ -13,11 +13,11 @@ interface AnalyticsDashboardProps {
 
 const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
   // Fetch real risk data for Key Metrics Grid
-  const { data: riskData } = useRiskSummary(userId ?? "");
+  const { data: riskData, isLoading, error } = useRiskSummary(userId ?? "");
 
-  // Generate analytics metrics with real risk data
+  // Generate analytics metrics with real risk data (only when data is available)
   const portfolioMetrics = useMemo(
-    () => getAnalyticsMetrics(riskData ?? undefined),
+    () => (riskData ? getAnalyticsMetrics(riskData) : []),
     [riskData]
   );
 
@@ -37,7 +37,19 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
         </p>
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
-      <KeyMetricsGrid metrics={portfolioMetrics} />
+      {isLoading && (
+        <div className="text-center text-gray-400 py-8">
+          Loading analytics data...
+        </div>
+      )}
+      {error && (
+        <div className="text-center text-red-400 py-8">
+          Failed to load analytics data. Please try again later.
+        </div>
+      )}
+      {!isLoading && !error && riskData && (
+        <KeyMetricsGrid metrics={portfolioMetrics} />
+      )}
       {/* ZAP-208: Asset Attribution Analysis - pending asset attribution API endpoint */}
     </div>
   );

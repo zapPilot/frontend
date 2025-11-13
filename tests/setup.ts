@@ -271,23 +271,64 @@ vi.mock("next/dynamic", () => {
 
             // Special-case WalletManager so tests can interact with its props synchronously
             if (importString.includes("WalletManager")) {
+              if (!props?.isOpen) {
+                return null;
+              }
+
+              const emailSubscribeControls = props?.onEmailSubscribed
+                ? [
+                    React.createElement(
+                      "button",
+                      {
+                        key: "confirm-email",
+                        type: "button",
+                        "data-testid": "confirm-email-subscribe",
+                        onClick: () => props.onEmailSubscribed?.(),
+                      },
+                      "Confirm Subscribe"
+                    ),
+                    React.createElement(
+                      "button",
+                      {
+                        key: "subscribe-from-manager",
+                        type: "button",
+                        "data-testid": "subscribe-from-wallet-manager",
+                        onClick: () => props.onEmailSubscribed?.(),
+                      },
+                      "Subscribe"
+                    ),
+                  ]
+                : [];
+
               return React.createElement(
                 "div",
-                { "data-testid": "wallet-manager-mock" },
+                { "data-testid": "wallet-manager-modal", role: "dialog" },
                 [
-                  // Only show confirm button when modal would be open
-                  props?.isOpen
-                    ? React.createElement(
+                  React.createElement(
+                    "div",
+                    {
+                      key: "header",
+                      "data-testid": "wallet-manager-header",
+                    },
+                    [
+                      React.createElement(
+                        "h2",
+                        { key: "title" },
+                        "Wallet Manager"
+                      ),
+                      React.createElement(
                         "button",
                         {
-                          key: "confirm",
+                          key: "close",
                           type: "button",
-                          "data-testid": "confirm-email-subscribe",
-                          onClick: () => props?.onEmailSubscribed?.(),
+                          "data-testid": "close-wallet-manager",
+                          onClick: () => props?.onClose?.(),
                         },
-                        "Confirm Subscribe"
-                      )
-                    : null,
+                        "Close"
+                      ),
+                    ]
+                  ),
+                  ...emailSubscribeControls,
                 ]
               );
             }

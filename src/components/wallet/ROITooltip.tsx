@@ -29,14 +29,21 @@ interface ROITooltipProps {
   onMouseLeave: () => void;
 }
 
-export function ROITooltip({
+interface MetricsTooltipContainerProps {
+  position: { top: number; left: number };
+  children: React.ReactNode;
+  onMouseEnter: () => void;
+  onMouseLeave: () => void;
+  className?: string;
+}
+
+export function MetricsTooltipContainer({
   position,
-  windows,
-  protocols,
-  recommendedPeriodLabel,
+  children,
   onMouseEnter,
   onMouseLeave,
-}: ROITooltipProps) {
+  className = "",
+}: MetricsTooltipContainerProps) {
   return createPortal(
     <div
       onMouseEnter={onMouseEnter}
@@ -47,7 +54,27 @@ export function ROITooltip({
         left: position.left,
         transform: "translateX(-50%)",
       }}
-      className={`bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700 ${Z_INDEX.TOOLTIP}`}
+      className={`bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700 ${Z_INDEX.TOOLTIP} ${className}`.trim()}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+}
+
+export function ROITooltip({
+  position,
+  windows,
+  protocols,
+  recommendedPeriodLabel,
+  onMouseEnter,
+  onMouseLeave,
+}: ROITooltipProps) {
+  return (
+    <MetricsTooltipContainer
+      position={position}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <div className="font-semibold text-gray-200 mb-2 text-center">
         📊 Portfolio ROI Estimation
@@ -115,7 +142,6 @@ export function ROITooltip({
         windows and scale linearly to yearly projections. Estimates become more
         accurate as data points increase over time.
       </div>
-    </div>,
-    document.body
+    </MetricsTooltipContainer>
   );
 }

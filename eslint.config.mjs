@@ -236,6 +236,8 @@ const eslintConfig = [
       "sonarjs/assertions-in-tests": "off",         // Some tests are integration tests
       "sonarjs/no-ignored-exceptions": "off",       // Tests may test error throwing
       "sonarjs/class-name": "off",                  // Test mocks may use _ClassName pattern
+      "sonarjs/no-unused-vars": "off",              // Allow unused vars in tests
+      "sonarjs/no-dead-store": "off",               // Allow dead store in tests
 
       // Relax promise rules for tests
       "promise/prefer-await-to-then": "off",

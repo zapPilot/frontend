@@ -9,10 +9,13 @@
  * - Accessibility and ARIA labels
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { LandingPageResponse } from "../../../services/analyticsService";
+import type {
+  LandingPageResponse,
+  ProtocolYieldBreakdown,
+} from "../../../services/analyticsService";
 import type { PortfolioState } from "../../../types/portfolioState";
 import { WalletMetrics } from "../WalletMetrics";
 
@@ -74,6 +77,12 @@ const createMockLandingPageData = (
       },
       outlier_strategy: "iqr",
       outliers_detected: [],
+      protocol_breakdown: [],
+      period: {
+        start_date: "2023-01-01",
+        end_date: "2023-01-30",
+        days: 30,
+      },
     },
     ...overrides,
   }) as LandingPageResponse;
@@ -393,22 +402,43 @@ describe("WalletMetrics - Normal State (30+ days)", () => {
   });
 });
 
-// ==================== OUTLIER INFO ICON TESTS ====================
+// ==================== PROTOCOL BREAKDOWN TOOLTIP TESTS ====================
 
-describe("WalletMetrics - Outlier Info Icon", () => {
-  it("should show info icon when outliers are detected", () => {
-    const portfolioState = createMockPortfolioState();
-    const landingPageData = createMockLandingPageData({
+describe("WalletMetrics - Protocol Breakdown Tooltip", () => {
+  const buildLandingDataWithBreakdown = (
+    overrides?: Partial<ProtocolYieldBreakdown>
+  ) => {
+    const baseBreakdown: ProtocolYieldBreakdown = {
+      protocol: "Aave",
+      chain: "Ethereum",
+      today: { date: "2023-01-30", yield_usd: 25 },
+      window: {
+        total_yield_usd: 125,
+        average_daily_yield_usd: 12.5,
+        data_points: 10,
+        positive_days: 7,
+        negative_days: 3,
+      },
+      ...overrides,
+    };
+
+    return createMockLandingPageData({
       yield_summary: {
         ...createMockLandingPageData().yield_summary!,
+        protocol_breakdown: [baseBreakdown],
         statistics: {
           ...createMockLandingPageData().yield_summary!.statistics,
           outliers_removed: 2,
         },
       },
     });
+  };
 
-    const { container } = render(
+  it("should show info icon when protocol breakdown data exists", () => {
+    const portfolioState = createMockPortfolioState();
+    const landingPageData = buildLandingDataWithBreakdown();
+
+    render(
       <WalletMetrics
         portfolioState={portfolioState}
         portfolioChangePercentage={0}
@@ -416,24 +446,15 @@ describe("WalletMetrics - Outlier Info Icon", () => {
       />
     );
 
-    // Info icon should be present
-    const infoIcon = container.querySelector('svg[class*="w-3 h-3"]');
+    const infoIcon = screen.getByLabelText("Protocol yield breakdown tooltip");
     expect(infoIcon).toBeInTheDocument();
   });
 
-  it("should show correct tooltip text for multiple outliers", () => {
+  it("should display tooltip with today and window metrics", () => {
     const portfolioState = createMockPortfolioState();
-    const landingPageData = createMockLandingPageData({
-      yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          outliers_removed: 3,
-        },
-      },
-    });
+    const landingPageData = buildLandingDataWithBreakdown();
 
-    const { container } = render(
+    render(
       <WalletMetrics
         portfolioState={portfolioState}
         portfolioChangePercentage={0}
@@ -441,26 +462,31 @@ describe("WalletMetrics - Outlier Info Icon", () => {
       />
     );
 
-    const iconSpan = container.querySelector('[title*="outlier"]');
-    expect(iconSpan).toHaveAttribute(
-      "title",
-      "3 outliers removed for accuracy (IQR method)"
-    );
+    const trigger = screen.getByLabelText("Protocol yield breakdown tooltip");
+    fireEvent.mouseOver(trigger);
+
+    expect(screen.getByText(/Protocol Yield Breakdown/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Showing today’s moves vs 30d filtered window/i)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/\+\$25\.00/)).toBeInTheDocument();
+    expect(screen.getByText(/\+\$125\.00/)).toBeInTheDocument();
+    expect(screen.getByText(/7 up · 3 down/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/outliers removed for stats consistency/i)
+    ).toBeInTheDocument();
   });
 
-  it("should show singular tooltip for single outlier", () => {
+  it("should hide info icon when protocol breakdown data is missing", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
         ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          outliers_removed: 1,
-        },
+        protocol_breakdown: [],
       },
     });
 
-    const { container } = render(
+    render(
       <WalletMetrics
         portfolioState={portfolioState}
         portfolioChangePercentage={0}
@@ -468,35 +494,9 @@ describe("WalletMetrics - Outlier Info Icon", () => {
       />
     );
 
-    const iconSpan = container.querySelector('[title*="outlier"]');
-    expect(iconSpan).toHaveAttribute(
-      "title",
-      "1 outlier removed for accuracy (IQR method)"
-    );
-  });
-
-  it("should not show info icon when no outliers detected", () => {
-    const portfolioState = createMockPortfolioState();
-    const landingPageData = createMockLandingPageData({
-      yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          outliers_removed: 0,
-        },
-      },
-    });
-
-    const { container } = render(
-      <WalletMetrics
-        portfolioState={portfolioState}
-        portfolioChangePercentage={0}
-        landingPageData={landingPageData}
-      />
-    );
-
-    const iconSpan = container.querySelector('[title*="outlier"]');
-    expect(iconSpan).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Protocol yield breakdown tooltip")
+    ).not.toBeInTheDocument();
   });
 });
 

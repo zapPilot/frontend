@@ -52,91 +52,83 @@ export const CHART_PERIODS: ChartPeriod[] = [
 /**
  * Generate analytics metrics with real risk data
  *
- * @param riskData - Optional real risk data from API
- * @returns Array of analytics metrics with real or mock data
+ * @param riskData - Real risk data from API (required)
+ * @returns Array of analytics metrics with real data or N/A placeholders
  */
 export function getAnalyticsMetrics(
-  riskData?: ActualRiskSummaryResponse
+  riskData: ActualRiskSummaryResponse
 ): AnalyticsMetric[] {
   // Extract risk metrics from real data
   const sharpeRatio =
-    riskData?.risk_summary?.sharpe_ratio?.sharpe_ratio ||
-    riskData?.summary_metrics?.sharpe_ratio;
+    riskData.risk_summary?.sharpe_ratio?.sharpe_ratio ||
+    riskData.summary_metrics?.sharpe_ratio;
   const volatilityPct =
-    riskData?.summary_metrics?.annualized_volatility_percentage;
-  const drawdownPct = riskData?.summary_metrics?.max_drawdown_percentage;
+    riskData.summary_metrics?.annualized_volatility_percentage;
+  const drawdownPct = riskData.summary_metrics?.max_drawdown_percentage;
   return [
     {
       label: "Total Return",
-      value: "+24.3%",
-      change: 2.4,
-      trend: "up",
+      value: "N/A",
+      change: 0,
+      trend: "neutral",
       icon: TrendingUp,
-      description: "All-time portfolio performance",
+      description: "All-time portfolio performance (pending data source)",
     },
     {
       label: "Annualized Return",
-      value: "+18.7%",
-      change: 1.2,
-      trend: "up",
+      value: "N/A",
+      change: 0,
+      trend: "neutral",
       icon: BarChart3,
-      description: "Year-over-year performance",
+      description: "Year-over-year performance (pending data source)",
     },
     {
       label: "Risk Level",
-      value: volatilityPct ? getVolatilityLevel(volatilityPct) : "Medium",
+      value: volatilityPct ? getVolatilityLevel(volatilityPct) : "N/A",
       change: volatilityPct ? (volatilityPct > 50 ? -0.5 : 0.2) : 0,
       trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "neutral",
       icon: Shield,
-      description: riskData
-        ? "Risk level based on volatility analysis"
-        : "Portfolio risk assessment (mock)",
+      description: "Risk level based on volatility analysis",
     },
     {
       label: "Sharpe Ratio",
-      value: sharpeRatio ? formatSharpeRatio(sharpeRatio) : "1.34",
-      change: sharpeRatio ? (sharpeRatio > 1.5 ? 0.15 : -0.05) : 0.15,
-      trend: sharpeRatio ? (sharpeRatio > 1.5 ? "up" : "down") : "up",
+      value: sharpeRatio ? formatSharpeRatio(sharpeRatio) : "N/A",
+      change: sharpeRatio ? (sharpeRatio > 1.5 ? 0.15 : -0.05) : 0,
+      trend: sharpeRatio ? (sharpeRatio > 1.5 ? "up" : "down") : "neutral",
       icon: Target,
-      description: sharpeRatio
-        ? "Risk-adjusted returns"
-        : "Risk-adjusted returns (mock)",
+      description: "Risk-adjusted returns",
     },
     {
       label: "Max Drawdown",
-      value: drawdownPct ? formatDrawdown(drawdownPct) : "-12.4%",
-      change: drawdownPct ? Math.abs(drawdownPct) * 0.1 : 2.1,
-      trend: "down",
+      value: drawdownPct ? formatDrawdown(drawdownPct) : "N/A",
+      change: drawdownPct ? Math.abs(drawdownPct) * 0.1 : 0,
+      trend: drawdownPct ? "down" : "neutral",
       icon: TrendingDown,
-      description: riskData
-        ? "Largest peak-to-trough portfolio decline"
-        : "Largest peak-to-trough decline (mock)",
+      description: "Largest peak-to-trough portfolio decline",
     },
     {
       label: "Volatility",
-      value: volatilityPct ? formatVolatility(volatilityPct) : "22.8%",
-      change: volatilityPct ? (volatilityPct > 100 ? -2.0 : -0.5) : -1.8,
-      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "up",
+      value: volatilityPct ? formatVolatility(volatilityPct) : "N/A",
+      change: volatilityPct ? (volatilityPct > 100 ? -2.0 : -0.5) : 0,
+      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "neutral",
       icon: Activity,
-      description: riskData
-        ? "Annualized portfolio volatility"
-        : "Portfolio standard deviation (mock)",
+      description: "Annualized portfolio volatility",
     },
     {
       label: "Active Positions",
-      value: "12",
-      change: 2,
-      trend: "up",
+      value: "N/A",
+      change: 0,
+      trend: "neutral",
       icon: PieChart,
-      description: "Currently held assets",
+      description: "Currently held assets (pending data source)",
     },
     {
       label: "Days Invested",
-      value: "147",
-      change: 1,
+      value: "N/A",
+      change: 0,
       trend: "neutral",
       icon: Clock,
-      description: "Portfolio age",
+      description: "Portfolio age (pending data source)",
     },
   ];
 }
