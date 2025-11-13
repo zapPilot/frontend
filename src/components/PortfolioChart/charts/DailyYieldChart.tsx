@@ -25,13 +25,13 @@ interface DailyYieldChartProps {
 /**
  * DailyYieldChart - Daily yield returns visualization
  *
- * Displays daily yield returns as bars with positive/negative coloring
- * and a cumulative yield line overlay showing running total.
+ * Displays daily yield returns as flowing stacked areas with positive/negative
+ * coloring and a bold cumulative yield line overlay showing running total.
  *
  * Features:
- * - Green bars for positive yields
- * - Red bars for negative yields
- * - Purple cumulative line overlay
+ * - Green area for positive yields (gradient)
+ * - Red area for negative yields (gradient)
+ * - Bold purple-pink cumulative line overlay
  * - Zero baseline with dashed line
  * - Per-protocol breakdown in tooltip
  */
@@ -74,31 +74,56 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
     // Zero baseline Y position
     const zeroY = toY(0);
 
-    // Bar rendering
-    const bars = useMemo(() => {
-      if (data.length === 0) return [];
+    // Build area paths for positive and negative yields
+    const { positiveAreaPath, negativeAreaPath } = useMemo(() => {
+      if (data.length === 0)
+        return { positiveAreaPath: "", negativeAreaPath: "" };
 
       const chartWidth = width - 2 * padding;
-      const barWidth = chartWidth / data.length;
-      const barPadding = barWidth * 0.1; // 10% padding between bars
+      const pointSpacing = chartWidth / (data.length - 1);
 
-      return data.map((point, idx) => {
-        const x = padding + idx * barWidth;
-        const yieldValue = point.total_yield_usd;
-        const isPositive = yieldValue >= 0;
+      let positivePath = "";
+      let negativePath = "";
 
-        const barHeight = Math.abs(toY(yieldValue) - zeroY);
-        const barY = isPositive ? toY(yieldValue) : zeroY;
-
-        return {
-          x: x + barPadding / 2,
-          y: barY,
-          width: barWidth - barPadding,
-          height: barHeight,
-          fill: isPositive ? "#10b981" : "#ef4444", // Green for positive, red for negative
-          point,
-        };
+      // Build positive area (above zero)
+      const positivePoints = data.map((point, idx) => {
+        const x = padding + idx * pointSpacing;
+        const yieldValue = Math.max(0, point.total_yield_usd);
+        const y = toY(yieldValue);
+        return { x, y };
       });
+
+      if (positivePoints.length > 0) {
+        positivePath = `M ${padding},${zeroY} `;
+        for (const { x, y } of positivePoints) {
+          positivePath += `L ${x},${y} `;
+        }
+        const lastPoint = positivePoints[positivePoints.length - 1];
+        if (lastPoint) {
+          positivePath += `L ${lastPoint.x},${zeroY} Z`;
+        }
+      }
+
+      // Build negative area (below zero)
+      const negativePoints = data.map((point, idx) => {
+        const x = padding + idx * pointSpacing;
+        const yieldValue = Math.min(0, point.total_yield_usd);
+        const y = toY(yieldValue);
+        return { x, y };
+      });
+
+      if (negativePoints.length > 0) {
+        negativePath = `M ${padding},${zeroY} `;
+        for (const { x, y } of negativePoints) {
+          negativePath += `L ${x},${y} `;
+        }
+        const lastPoint = negativePoints[negativePoints.length - 1];
+        if (lastPoint) {
+          negativePath += `L ${lastPoint.x},${zeroY} Z`;
+        }
+      }
+
+      return { positiveAreaPath: positivePath, negativeAreaPath: negativePath };
     }, [data, width, padding, zeroY, toY]);
 
     // Cumulative line path
@@ -165,6 +190,26 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
               <stop offset="0%" stopColor="#a855f7" />
               <stop offset="100%" stopColor="#ec4899" />
             </linearGradient>
+            <linearGradient
+              id="positiveAreaGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient
+              id="negativeAreaGradient"
+              x1="0%"
+              y1="0%"
+              x2="0%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.4" />
+            </linearGradient>
           </defs>
 
           {/* Zero baseline */}
@@ -179,27 +224,35 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
             opacity="0.5"
           />
 
-          {/* Bars */}
-          {bars.map((bar, idx) => (
-            <rect
-              key={idx}
-              x={bar.x}
-              y={bar.y}
-              width={bar.width}
-              height={bar.height}
-              fill={bar.fill}
-              opacity={0.8}
+          {/* Positive area (green gradient) */}
+          {positiveAreaPath && (
+            <path
+              d={positiveAreaPath}
+              fill="url(#positiveAreaGradient)"
+              stroke="none"
             />
-          ))}
+          )}
 
-          {/* Cumulative line */}
+          {/* Negative area (red gradient) */}
+          {negativeAreaPath && (
+            <path
+              d={negativeAreaPath}
+              fill="url(#negativeAreaGradient)"
+              stroke="none"
+            />
+          )}
+
+          {/* Bold cumulative line with enhanced drop shadow */}
           {cumulativePath && (
             <path
               d={cumulativePath}
               fill="none"
               stroke="url(#cumulativeGradient)"
-              strokeWidth="2.5"
-              className="drop-shadow-lg"
+              strokeWidth="4"
+              className="drop-shadow-2xl"
+              style={{
+                filter: "drop-shadow(0 4px 8px rgba(168, 85, 247, 0.6))",
+              }}
             />
           )}
 
@@ -219,15 +272,15 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
         {/* Legend */}
         <div className="absolute top-4 right-4 flex flex-col space-y-2 text-xs pointer-events-none">
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-emerald-500 rounded"></div>
-            <span className="text-white">Positive Yield</span>
+            <div className="w-4 h-3 bg-gradient-to-b from-emerald-500/40 to-emerald-500/10"></div>
+            <span className="text-white">Positive Flow</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-red-500 rounded"></div>
-            <span className="text-white">Negative Yield</span>
+            <div className="w-4 h-3 bg-gradient-to-b from-red-500/10 to-red-500/40"></div>
+            <span className="text-white">Negative Flow</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+            <div className="w-8 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg shadow-purple-500/50"></div>
             <span className="text-white">Cumulative</span>
           </div>
         </div>
