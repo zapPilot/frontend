@@ -220,7 +220,8 @@ vi.mock("@/hooks/useBundlePage", () => ({
   useBundlePage: (userId: string) => {
     const isOwnBundle = mockIsConnected && mockUserInfo?.userId === userId;
     // FIX: Include banner dismissal state in showSwitchPrompt calculation
-    const showSwitchPrompt = mockIsConnected && !isOwnBundle && userId !== "" && !mockBannerDismissed;
+    const showSwitchPrompt =
+      mockIsConnected && !isOwnBundle && userId !== "" && !mockBannerDismissed;
 
     return {
       isOwnBundle,
@@ -487,7 +488,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
 
       // Should NOT show quick switch FAB
       await waitFor(() => {
-        expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
+        expect(
+          screen.queryByTestId("quick-switch-fab")
+        ).not.toBeInTheDocument();
       });
 
       // Should show email reminder banner in owner mode
