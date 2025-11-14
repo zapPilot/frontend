@@ -65,6 +65,24 @@ export interface YieldReturnsSummaryResponse {
     z_score: number | null;
   }[];
   protocol_breakdown: ProtocolYieldBreakdown[];
+  // Multi-windows support (similar to portfolio_roi.windows)
+  windows?: Record<
+    string,
+    {
+      total_yield_usd: number;
+      average_daily_yield_usd: number;
+      data_points: number;
+      positive_days: number;
+      negative_days: number;
+      period: {
+        start_date: string;
+        end_date: string;
+        days: number;
+      };
+    }
+  >;
+  // Optional backend recommendation for which window to display
+  recommended_period?: string;
 }
 
 // Re-export PoolDetail for components that import from this service
@@ -187,10 +205,10 @@ export const getLandingPagePortfolioData = async (
  */
 export const getYieldReturnsSummary = async (
   userId: string,
-  days = 30
+  windows = "7d,30d,90d",
 ): Promise<YieldReturnsSummaryResponse> => {
   const params = new URLSearchParams({
-    days: days.toString(),
+    windows,
     outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
   });
   const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;

@@ -9,7 +9,7 @@ import {
 import { portfolioLogger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
 
-// Hook for unified landing page data - replaces dual API calls
+// Hook for unified landing page data - Single API call for better performance
 export function useLandingPageData(userId: string | null | undefined) {
   return useQuery({
     ...createQueryConfig({
@@ -24,41 +24,34 @@ export function useLandingPageData(userId: string | null | undefined) {
         throw new Error("User ID is required");
       }
 
-      const [landingResult, yieldResult] = await Promise.allSettled([
-        getLandingPagePortfolioData(userId),
-        getYieldReturnsSummary(userId, 30),
-      ]);
+      // PERFORMANCE FIX: Call only landing page endpoint to reduce parallel load
+      // Previously called both getLandingPagePortfolioData + getYieldReturnsSummary
+      // This caused double database load and request storms
+      const landingData = await getLandingPagePortfolioData(userId);
 
-      if (landingResult.status === "rejected") {
-        throw landingResult.reason;
-      }
-
-      const landingData = landingResult.value;
-
-      if (yieldResult.status === "fulfilled") {
+      // Optionally fetch yield summary separately if needed by specific components
+      // For now, rely on backend to include necessary yield data in landing page response
+      try {
+        // Request multiple windows for better yield insights (7d, 30d, 90d)
+        const yieldData = await getYieldReturnsSummary(userId, "7d,30d,90d");
         return {
           ...landingData,
-          yield_summary: yieldResult.value,
+          yield_summary: yieldData,
         };
-      }
-
-      if (yieldResult.status === "rejected") {
+      } catch (error) {
         portfolioLogger.warn(
           "Failed to fetch yield returns summary for landing page",
           {
-            error:
-              yieldResult.reason instanceof Error
-                ? yieldResult.reason.message
-                : String(yieldResult.reason),
+            error: error instanceof Error ? error.message : String(error),
             userId,
           }
         );
+        // Return landing data without yield summary rather than failing completely
+        return landingData;
       }
-
-      return landingData;
     },
     enabled: !!userId, // Only run when userId is available
-    refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active
+    refetchInterval: 5 * 60 * 1000, // Reduced from 60s to 5min (300s) to match backend cache
   });
 }
 

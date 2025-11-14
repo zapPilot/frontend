@@ -1,5 +1,5 @@
 import { AlertCircle, Clock, Info, TrendingUp } from "lucide-react";
-import React, { useCallback, useRef, useState } from "react";
+import React from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 
@@ -13,8 +13,13 @@ import type {
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
-import { ProtocolBreakdownTooltip } from "./ProtocolBreakdownTooltip";
-import { ProtocolROIItem, ROITooltip } from "./ROITooltip";
+import {
+  ProtocolROIItem,
+  ROITooltip,
+  selectBestYieldWindow,
+  useMetricsTooltip,
+  YieldBreakdownTooltip,
+} from "./tooltips";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
@@ -40,45 +45,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const data = landingPageData;
     const landingPageLoading = !data && portfolioState.isLoading;
 
-    // ROI tooltip portal state
-    const [roiTooltipVisible, setRoiTooltipVisible] = useState(false);
-    const [roiTooltipPos, setRoiTooltipPos] = useState<{
-      top: number;
-      left: number;
-    }>({ top: 0, left: 0 });
-    const infoIconRef = useRef<HTMLSpanElement | null>(null);
-    const [yieldTooltipVisible, setYieldTooltipVisible] = useState(false);
-    const [yieldTooltipPos, setYieldTooltipPos] = useState<{
-      top: number;
-      left: number;
-    }>({ top: 0, left: 0 });
-    const yieldInfoRef = useRef<HTMLSpanElement | null>(null);
-
-    const openRoiTooltip = useCallback(() => {
-      const el = infoIconRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setRoiTooltipPos({
-        top: rect.bottom + 8 + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
-      setRoiTooltipVisible(true);
-    }, []);
-    const closeRoiTooltip = useCallback(() => setRoiTooltipVisible(false), []);
-    const openYieldTooltip = useCallback(() => {
-      const el = yieldInfoRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setYieldTooltipPos({
-        top: rect.bottom + 8 + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
-      setYieldTooltipVisible(true);
-    }, []);
-    const closeYieldTooltip = useCallback(
-      () => setYieldTooltipVisible(false),
-      []
-    );
+    // Tooltip state using shared hook
+    const roiTooltip = useMetricsTooltip();
+    const yieldTooltip = useMetricsTooltip();
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -97,16 +66,25 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
-    const avgDailyYieldUsd =
-      data?.yield_summary?.average_daily_yield_usd ?? null;
+
+    // Multi-window yield data selection
+    const yieldWindows = data?.yield_summary?.windows;
+    const selectedYieldWindow = yieldWindows
+      ? selectBestYieldWindow(yieldWindows)
+      : null;
+
+    // Use selected window data or fall back to legacy single-window data
+    const avgDailyYieldUsd = selectedYieldWindow
+      ? selectedYieldWindow.window.average_daily_yield_usd
+      : data?.yield_summary?.average_daily_yield_usd ?? null;
+
     const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
       data?.yield_summary?.protocol_breakdown ?? [];
     const hasProtocolBreakdown = protocolYieldBreakdown.length > 0;
-    const yieldWindowLabel = data?.yield_summary?.period?.days
-      ? `${data.yield_summary.period.days}d`
-      : "window";
-    const outliersRemoved =
-      data?.yield_summary?.statistics?.outliers_removed ?? 0;
+
+    const outliersRemoved = selectedYieldWindow
+      ? 0 // Multi-window data doesn't expose outliers per window yet
+      : data?.yield_summary?.statistics?.outliers_removed ?? 0;
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -273,7 +251,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         return { status: "no_data" as const, daysWithData: 0 };
       }
 
-      const daysWithData = data.yield_summary.statistics.filtered_days || 0;
+      // Use selected window's data points if available, otherwise fall back to legacy stats
+      const daysWithData = selectedYieldWindow
+        ? selectedYieldWindow.window.data_points
+        : data.yield_summary.statistics.filtered_days || 0;
 
       if (daysWithData < 7) {
         return {
@@ -402,28 +383,28 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             {portfolioROI && (
               <div className="relative">
                 <span
-                  ref={infoIconRef}
-                  onMouseOver={openRoiTooltip}
-                  onMouseOut={closeRoiTooltip}
-                  onFocus={openRoiTooltip}
-                  onBlur={closeRoiTooltip}
+                  ref={roiTooltip.triggerRef}
+                  onMouseOver={roiTooltip.open}
+                  onMouseOut={roiTooltip.close}
+                  onFocus={roiTooltip.open}
+                  onBlur={roiTooltip.close}
                   tabIndex={0}
                   aria-label="Portfolio ROI tooltip"
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 </span>
-                {roiTooltipVisible && (
+                {roiTooltip.visible && (
                   <ROITooltip
-                    position={roiTooltipPos}
+                    position={roiTooltip.position}
                     windows={roiWindows}
                     protocols={protocolROIData}
                     recommendedPeriodLabel={
                       portfolioROI?.recommended_period?.replace("roi_", "") ||
                       null
                     }
-                    onMouseEnter={openRoiTooltip}
-                    onMouseLeave={closeRoiTooltip}
+                    onMouseEnter={roiTooltip.open}
+                    onMouseLeave={roiTooltip.close}
                   />
                 )}
               </div>
@@ -452,28 +433,29 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 <Info className="w-3 h-3 text-amber-500 cursor-help" />
               </span>
             )}
-            {hasProtocolBreakdown && (
+            {hasProtocolBreakdown && selectedYieldWindow && (
               <div className="relative">
                 <span
-                  ref={yieldInfoRef}
-                  onMouseOver={openYieldTooltip}
-                  onMouseOut={closeYieldTooltip}
-                  onFocus={openYieldTooltip}
-                  onBlur={closeYieldTooltip}
+                  ref={yieldTooltip.triggerRef}
+                  onMouseOver={yieldTooltip.open}
+                  onMouseOut={yieldTooltip.close}
+                  onFocus={yieldTooltip.open}
+                  onBlur={yieldTooltip.close}
                   tabIndex={0}
                   aria-label="Protocol yield breakdown tooltip"
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 </span>
-                {yieldTooltipVisible && (
-                  <ProtocolBreakdownTooltip
-                    position={yieldTooltipPos}
+                {yieldTooltip.visible && (
+                  <YieldBreakdownTooltip
+                    position={yieldTooltip.position}
+                    selectedWindow={selectedYieldWindow}
+                    allWindows={yieldWindows}
                     breakdown={protocolYieldBreakdown}
-                    windowLabel={yieldWindowLabel}
                     outliersRemoved={outliersRemoved}
-                    onMouseEnter={openYieldTooltip}
-                    onMouseLeave={closeYieldTooltip}
+                    onMouseEnter={yieldTooltip.open}
+                    onMouseLeave={yieldTooltip.close}
                   />
                 )}
               </div>

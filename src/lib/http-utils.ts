@@ -19,10 +19,11 @@ export const API_ENDPOINTS = {
 } as const;
 
 // Default configuration
+// Updated for analytics endpoints: longer timeout, fewer retries to reduce cancelled request spam
 export const HTTP_CONFIG = {
-  timeout: 10000,
-  retries: 3,
-  retryDelay: 1000,
+  timeout: 30000, // 30s for complex analytics queries (was 10s)
+  retries: 1, // Only retry once to avoid request storms (was 3)
+  retryDelay: 2000, // 2s delay before retry (was 1s)
 } as const;
 
 // Error classes
