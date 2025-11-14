@@ -56,9 +56,9 @@ export const formatWindowSummary = (window: ProtocolYieldWindow): string => {
  * Window selection for yield data
  * Selects the window with the most data points among positive average yields
  */
-export type YieldWindowData = YieldWindowSummary;
+type YieldWindowData = YieldWindowSummary;
 
-export interface SelectedYieldWindow {
+interface SelectedYieldWindow {
   key: string;
   window: YieldWindowData;
   label: string;

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TooltipPosition } from "./types";
 
-export interface UseMetricsTooltipReturn {
+interface UseMetricsTooltipReturn {
   visible: boolean;
   position: TooltipPosition;
   triggerRef: React.RefObject<HTMLElement | null>;

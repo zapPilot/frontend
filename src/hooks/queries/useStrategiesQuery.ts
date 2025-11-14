@@ -1,7 +1,5 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
-import { portfolioLogger } from "@/utils/logger";
-
 import { AssetCategory } from "../../components/PortfolioAllocation/types";
 import { queryKeys } from "../../lib/queryClient";
 import { getStrategies } from "../../services/intentService";

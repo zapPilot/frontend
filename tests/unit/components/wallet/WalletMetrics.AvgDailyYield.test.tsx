@@ -151,30 +151,7 @@ function createLandingPageData(
 
   // Add yield_summary if overrides provided
   if (Object.keys(yieldSummaryOverrides).length > 0) {
-    baseData.yield_summary = {
-      user_id: "0x123",
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-09",
-        days: 30,
-      },
-      average_daily_yield_usd: 1.5,
-      median_daily_yield_usd: 1.4,
-      total_yield_usd: 45,
-      statistics: {
-        mean: 1.5,
-        median: 1.4,
-        std_dev: 0.3,
-        min_value: 0.8,
-        max_value: 2.2,
-        total_days: 30,
-        filtered_days: 30,
-        outliers_removed: 0,
-      },
-      outlier_strategy: "iqr",
-      outliers_detected: [],
-      ...yieldSummaryOverrides,
-    };
+    baseData.yield_summary = yieldSummaryOverrides as any;
   }
 
   return baseData;
@@ -190,26 +167,52 @@ function createYieldSummaryWithDays(
 ): NonNullable<LandingPageResponse["yield_summary"]> {
   return {
     user_id: "0x123",
-    period: {
-      start_date: "2025-01-01",
-      end_date: "2025-01-09",
-      days: filteredDays,
+    windows: {
+      "30d": {
+        user_id: "0x123",
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-09",
+          days: filteredDays,
+        },
+        average_daily_yield_usd: avgDailyYield,
+        median_daily_yield_usd: avgDailyYield * 0.95,
+        total_yield_usd: avgDailyYield * filteredDays,
+        statistics: {
+          mean: avgDailyYield,
+          median: avgDailyYield * 0.95,
+          std_dev: 0.3,
+          min_value: 0.8,
+          max_value: 2.2,
+          total_days: filteredDays,
+          filtered_days: filteredDays,
+          outliers_removed: outliersRemoved,
+        },
+        outlier_strategy: "iqr" as const,
+        outliers_detected: [],
+        protocol_breakdown:
+          outliersRemoved > 0
+            ? [
+                {
+                  protocol: "Aave",
+                  chain: "Ethereum",
+                  window: {
+                    total_yield_usd: avgDailyYield * filteredDays * 0.5,
+                    average_daily_yield_usd: avgDailyYield * 0.5,
+                    data_points: filteredDays,
+                    positive_days: Math.floor(filteredDays * 0.7),
+                    negative_days: Math.floor(filteredDays * 0.3),
+                  },
+                  today: {
+                    date: "2025-01-09",
+                    yield_usd: avgDailyYield * 0.5,
+                  },
+                },
+              ]
+            : [],
+      },
     },
-    average_daily_yield_usd: avgDailyYield,
-    median_daily_yield_usd: avgDailyYield * 0.95,
-    total_yield_usd: avgDailyYield * filteredDays,
-    statistics: {
-      mean: avgDailyYield,
-      median: avgDailyYield * 0.95,
-      std_dev: 0.3,
-      min_value: 0.8,
-      max_value: 2.2,
-      total_days: filteredDays,
-      filtered_days: filteredDays,
-      outliers_removed: outliersRemoved,
-    },
-    outlier_strategy: "iqr",
-    outliers_detected: [],
+    recommended_period: "30d",
   };
 }
 

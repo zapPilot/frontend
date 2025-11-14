@@ -6,7 +6,10 @@
 import { ChevronDown } from "lucide-react";
 import React, { useState } from "react";
 
-import type { ProtocolYieldBreakdown } from "@/services/analyticsService";
+import type {
+  ProtocolYieldBreakdown,
+  YieldWindowSummary,
+} from "@/services/analyticsService";
 
 import { MetricsTooltipContainer } from "./MetricsTooltipContainer";
 import type { MetricsTooltipProps } from "./types";
@@ -15,8 +18,9 @@ import {
   formatWindowSummary,
   formatYieldWindowLabel,
   getValueColor,
-  type YieldWindowData,
 } from "./utils";
+
+type YieldWindowData = YieldWindowSummary;
 
 interface YieldBreakdownTooltipProps extends MetricsTooltipProps {
   /** Ref for the tooltip container */
@@ -112,8 +116,7 @@ function WindowComparisonItem({
           )}
         </span>
         <span className="text-[10px] text-gray-500">
-          {window.statistics.filtered_days} data points · {window.positive_days}{" "}
-          up · {window.negative_days} down
+          {window.statistics.filtered_days} data points
         </span>
       </div>
       <div className="flex flex-col items-end">
@@ -201,8 +204,7 @@ export function YieldBreakdownTooltip({
         <div className="flex justify-between text-xs text-gray-400">
           <span>Window summary</span>
           <span className="text-gray-200 font-medium text-right">
-            {selectedWindow.window.positive_days} up ·{" "}
-            {selectedWindow.window.negative_days} down
+            {selectedWindow.window.statistics.total_days} total days
           </span>
         </div>
       </div>
