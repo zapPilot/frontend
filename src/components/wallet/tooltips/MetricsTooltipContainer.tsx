@@ -3,7 +3,7 @@
  * Provides consistent styling and portal rendering
  */
 
-import React from "react";
+import React, { forwardRef } from "react";
 import { createPortal } from "react-dom";
 
 import { Z_INDEX } from "@/constants/design-system";
@@ -13,8 +13,6 @@ import type { TooltipPosition } from "./types";
 interface MetricsTooltipContainerProps {
   position: TooltipPosition;
   children: React.ReactNode;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
   className?: string;
 }
 
@@ -24,19 +22,15 @@ interface MetricsTooltipContainerProps {
  * Renders tooltip at specified position using createPortal for proper z-index layering.
  * Centers tooltip horizontally relative to trigger element.
  */
-export function MetricsTooltipContainer({
-  position,
-  children,
-  onMouseEnter,
-  onMouseLeave,
-  className = "",
-}: MetricsTooltipContainerProps) {
+export const MetricsTooltipContainer = forwardRef<
+  HTMLDivElement,
+  MetricsTooltipContainerProps
+>(({ position, children, className = "" }, ref) => {
   return createPortal(
     <div
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
+      ref={ref}
       style={{
-        position: "fixed",
+        position: "absolute",
         top: position.top,
         left: position.left,
         transform: "translateX(-50%)",
@@ -47,4 +41,6 @@ export function MetricsTooltipContainer({
     </div>,
     document.body
   );
-}
+});
+
+MetricsTooltipContainer.displayName = "MetricsTooltipContainer";

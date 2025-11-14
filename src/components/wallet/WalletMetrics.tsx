@@ -67,24 +67,32 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
 
-    // Multi-window yield data selection
+    // --- NEW NESTED YIELD DATA LOGIC ---
+
+    // 1. Get all yield windows from the new nested structure
     const yieldWindows = data?.yield_summary?.windows;
+
+    // 2. Select the best window from the available windows
     const selectedYieldWindow = yieldWindows
       ? selectBestYieldWindow(yieldWindows)
       : null;
 
-    // Use selected window data or fall back to legacy single-window data
+    // 3. Extract metrics from the *selected* window
     const avgDailyYieldUsd = selectedYieldWindow
       ? selectedYieldWindow.window.average_daily_yield_usd
-      : data?.yield_summary?.average_daily_yield_usd ?? null;
+      : null;
 
+    // 4. Get the protocol breakdown from the *selected* window
     const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
-      data?.yield_summary?.protocol_breakdown ?? [];
+      selectedYieldWindow?.window.protocol_breakdown ?? [];
     const hasProtocolBreakdown = protocolYieldBreakdown.length > 0;
 
+    // 5. Get outliers from the *selected* window's statistics
     const outliersRemoved = selectedYieldWindow
-      ? 0 // Multi-window data doesn't expose outliers per window yet
-      : data?.yield_summary?.statistics?.outliers_removed ?? 0;
+      ? selectedYieldWindow.window.statistics.outliers_removed
+      : 0;
+
+    // --- END NEW LOGIC ---
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -253,8 +261,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
       // Use selected window's data points if available, otherwise fall back to legacy stats
       const daysWithData = selectedYieldWindow
-        ? selectedYieldWindow.window.data_points
-        : data.yield_summary.statistics.filtered_days || 0;
+        ? selectedYieldWindow.window.statistics.filtered_days
+        : 0;
 
       if (daysWithData < 7) {
         return {
@@ -384,10 +392,9 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               <div className="relative">
                 <span
                   ref={roiTooltip.triggerRef}
-                  onMouseOver={roiTooltip.open}
-                  onMouseOut={roiTooltip.close}
-                  onFocus={roiTooltip.open}
-                  onBlur={roiTooltip.close}
+                  onClick={roiTooltip.toggle}
+                  onKeyDown={e => e.key === "Enter" && roiTooltip.toggle()}
+                  role="button"
                   tabIndex={0}
                   aria-label="Portfolio ROI tooltip"
                   className="inline-flex"
@@ -396,6 +403,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 </span>
                 {roiTooltip.visible && (
                   <ROITooltip
+                    tooltipRef={roiTooltip.tooltipRef}
                     position={roiTooltip.position}
                     windows={roiWindows}
                     protocols={protocolROIData}
@@ -403,8 +411,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                       portfolioROI?.recommended_period?.replace("roi_", "") ||
                       null
                     }
-                    onMouseEnter={roiTooltip.open}
-                    onMouseLeave={roiTooltip.close}
                   />
                 )}
               </div>
@@ -421,26 +427,13 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
         <div>
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">Avg Daily Yield</p>
-            {outliersRemoved > 0 && (
-              <span
-                title={
-                  outliersRemoved === 1
-                    ? "1 outlier removed for accuracy (IQR method)"
-                    : `${outliersRemoved} outliers removed for accuracy (IQR method)`
-                }
-                className="inline-flex"
-              >
-                <Info className="w-3 h-3 text-amber-500 cursor-help" />
-              </span>
-            )}
-            {hasProtocolBreakdown && selectedYieldWindow && (
+            {hasProtocolBreakdown && (
               <div className="relative">
                 <span
                   ref={yieldTooltip.triggerRef}
-                  onMouseOver={yieldTooltip.open}
-                  onMouseOut={yieldTooltip.close}
-                  onFocus={yieldTooltip.open}
-                  onBlur={yieldTooltip.close}
+                  onClick={yieldTooltip.toggle}
+                  onKeyDown={e => e.key === "Enter" && yieldTooltip.toggle()}
+                  role="button"
                   tabIndex={0}
                   aria-label="Protocol yield breakdown tooltip"
                   className="inline-flex"
@@ -449,13 +442,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                 </span>
                 {yieldTooltip.visible && (
                   <YieldBreakdownTooltip
+                    tooltipRef={yieldTooltip.tooltipRef}
                     position={yieldTooltip.position}
                     selectedWindow={selectedYieldWindow}
                     allWindows={yieldWindows}
                     breakdown={protocolYieldBreakdown}
                     outliersRemoved={outliersRemoved}
-                    onMouseEnter={yieldTooltip.open}
-                    onMouseLeave={yieldTooltip.close}
                   />
                 )}
               </div>

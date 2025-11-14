@@ -3,43 +3,35 @@
  * Consolidates duplicate tooltip state management logic
  */
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TooltipPosition } from "./types";
 
 export interface UseMetricsTooltipReturn {
   visible: boolean;
   position: TooltipPosition;
-  triggerRef: React.RefObject<HTMLSpanElement | null>;
-  open: () => void;
+  triggerRef: React.RefObject<HTMLElement | null>;
+  tooltipRef: React.RefObject<HTMLDivElement | null>;
+  toggle: () => void;
   close: () => void;
+  open: () => void; // Keep open for programmatic control if needed
 }
 
 /**
- * Hook for managing tooltip visibility and positioning
- *
- * @example
- * ```tsx
- * const tooltip = useMetricsTooltip();
- *
- * return (
- *   <>
- *     <span
- *       ref={tooltip.triggerRef}
- *       onMouseOver={tooltip.open}
- *       onMouseOut={tooltip.close}
- *     >
- *       <Info />
- *     </span>
- *     {tooltip.visible && <Tooltip position={tooltip.position} />}
- *   </>
- * );
- * ```
+ * Hook for managing a click-to-toggle tooltip
  */
 export function useMetricsTooltip(): UseMetricsTooltipReturn {
   const [visible, setVisible] = useState(false);
-  const [position, setPosition] = useState<TooltipPosition>({ top: 0, left: 0 });
-  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const [position, setPosition] = useState<TooltipPosition>({
+    top: 0,
+    left: 0,
+  });
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  const close = useCallback(() => {
+    setVisible(false);
+  }, []);
 
   const open = useCallback(() => {
     const el = triggerRef.current;
@@ -53,15 +45,41 @@ export function useMetricsTooltip(): UseMetricsTooltipReturn {
     setVisible(true);
   }, []);
 
-  const close = useCallback(() => {
-    setVisible(false);
-  }, []);
+  const toggle = useCallback(() => {
+    if (visible) {
+      close();
+    } else {
+      open();
+    }
+  }, [visible, open, close]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node) &&
+        tooltipRef.current &&
+        !tooltipRef.current.contains(event.target as Node)
+      ) {
+        close();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [visible, close]);
 
   return {
     visible,
     position,
     triggerRef,
-    open,
+    tooltipRef,
+    toggle,
     close,
+    open,
   };
 }

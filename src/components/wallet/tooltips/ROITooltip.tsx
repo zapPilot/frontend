@@ -26,6 +26,7 @@ export interface ProtocolROIItem {
 }
 
 interface ROITooltipProps extends MetricsTooltipProps {
+  tooltipRef: React.RefObject<HTMLDivElement | null>;
   windows: ROIWindowItem[];
   protocols?: ProtocolROIItem[];
   recommendedPeriodLabel?: string | null;
@@ -33,18 +34,13 @@ interface ROITooltipProps extends MetricsTooltipProps {
 
 export function ROITooltip({
   position,
+  tooltipRef,
   windows,
   protocols,
   recommendedPeriodLabel,
-  onMouseEnter,
-  onMouseLeave,
 }: ROITooltipProps) {
   return (
-    <MetricsTooltipContainer
-      position={position}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
+    <MetricsTooltipContainer ref={tooltipRef} position={position}>
       <div className="font-semibold text-gray-200 mb-2 text-center">
         📊 Portfolio ROI Estimation
       </div>

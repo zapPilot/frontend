@@ -9,6 +9,4 @@ export interface TooltipPosition {
 
 export interface MetricsTooltipProps {
   position: TooltipPosition;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
 }

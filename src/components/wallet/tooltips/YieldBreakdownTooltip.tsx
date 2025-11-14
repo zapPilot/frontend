@@ -19,12 +19,14 @@ import {
 } from "./utils";
 
 interface YieldBreakdownTooltipProps extends MetricsTooltipProps {
+  /** Ref for the tooltip container */
+  tooltipRef: React.RefObject<HTMLDivElement | null>;
   /** Selected window to display prominently */
   selectedWindow: {
     key: string;
     window: YieldWindowData;
     label: string;
-  };
+  } | null;
   /** All available windows for comparison */
   allWindows?: Record<string, YieldWindowData> | undefined;
   /** Per-protocol breakdown for the selected window */
@@ -95,7 +97,9 @@ function WindowComparisonItem({
   return (
     <div
       className={`flex justify-between items-center p-2 rounded ${
-        isSelected ? "bg-purple-900/20 border border-purple-500/30" : "bg-gray-800/50"
+        isSelected
+          ? "bg-purple-900/20 border border-purple-500/30"
+          : "bg-gray-800/50"
       }`}
     >
       <div className="flex flex-col">
@@ -108,8 +112,8 @@ function WindowComparisonItem({
           )}
         </span>
         <span className="text-[10px] text-gray-500">
-          {window.data_points} data points · {window.positive_days} up ·{" "}
-          {window.negative_days} down
+          {window.statistics.filtered_days} data points · {window.positive_days}{" "}
+          up · {window.negative_days} down
         </span>
       </div>
       <div className="flex flex-col items-end">
@@ -134,16 +138,33 @@ function WindowComparisonItem({
  */
 export function YieldBreakdownTooltip({
   position,
+  tooltipRef,
   selectedWindow,
   allWindows,
   breakdown,
   outliersRemoved = 0,
-  onMouseEnter,
-  onMouseLeave,
 }: YieldBreakdownTooltipProps) {
   const [isWindowsExpanded, setIsWindowsExpanded] = useState(false);
   const hasBreakdownData = breakdown.length > 0;
   const hasMultipleWindows = allWindows && Object.keys(allWindows).length > 1;
+
+  // Handle case where no window is selected
+  if (!selectedWindow) {
+    return (
+      <MetricsTooltipContainer
+        ref={tooltipRef}
+        position={position}
+        className="w-80 max-w-xs md:max-w-sm"
+      >
+        <div className="font-semibold text-gray-200 mb-2 text-center">
+          🧭 Protocol Yield Breakdown
+        </div>
+        <div className="text-center text-gray-400 text-sm py-4">
+          No yield data available for the selected period.
+        </div>
+      </MetricsTooltipContainer>
+    );
+  }
 
   // Get other windows (excluding selected)
   const otherWindows = hasMultipleWindows
@@ -152,9 +173,8 @@ export function YieldBreakdownTooltip({
 
   return (
     <MetricsTooltipContainer
+      ref={tooltipRef}
       position={position}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       className="w-80 max-w-xs md:max-w-sm"
     >
       {/* Header */}
@@ -175,7 +195,7 @@ export function YieldBreakdownTooltip({
         <div className="flex justify-between text-xs text-gray-400 mb-1">
           <span>Data points</span>
           <span className="text-gray-200 font-medium">
-            {selectedWindow.window.data_points}
+            {selectedWindow.window.statistics.filtered_days}
           </span>
         </div>
         <div className="flex justify-between text-xs text-gray-400">

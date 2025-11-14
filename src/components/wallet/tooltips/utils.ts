@@ -3,7 +3,10 @@
  */
 
 import { formatCurrency } from "@/lib/formatters";
-import type { ProtocolYieldWindow } from "@/services/analyticsService";
+import type {
+  ProtocolYieldWindow,
+  YieldWindowSummary,
+} from "@/services/analyticsService";
 
 /**
  * Get color class based on value (positive/negative/neutral)
@@ -53,18 +56,7 @@ export const formatWindowSummary = (window: ProtocolYieldWindow): string => {
  * Window selection for yield data
  * Selects the window with the most data points among positive average yields
  */
-export interface YieldWindowData {
-  total_yield_usd: number;
-  average_daily_yield_usd: number;
-  data_points: number;
-  positive_days: number;
-  negative_days: number;
-  period: {
-    start_date: string;
-    end_date: string;
-    days: number;
-  };
-}
+export type YieldWindowData = YieldWindowSummary;
 
 export interface SelectedYieldWindow {
   key: string;
@@ -94,9 +86,11 @@ export const selectBestYieldWindow = (
     positiveWindows.length > 0 ? positiveWindows : entries;
 
   // Sort by data points (descending) and take the first - using slice to avoid mutation
-  const sorted = selectedEntries.slice().sort(
-    ([, a], [, b]) => b.data_points - a.data_points
-  );
+  const sorted = selectedEntries
+    .slice()
+    .sort(
+      ([, a], [, b]) => b.statistics.filtered_days - a.statistics.filtered_days
+    );
 
   const firstEntry = sorted[0];
   if (!firstEntry) {

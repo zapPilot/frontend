@@ -37,7 +37,7 @@ export interface ProtocolYieldBreakdown {
   today?: ProtocolYieldToday | null;
 }
 
-export interface YieldReturnsSummaryResponse {
+export interface YieldWindowSummary {
   user_id: string;
   period: {
     start_date: string;
@@ -65,22 +65,11 @@ export interface YieldReturnsSummaryResponse {
     z_score: number | null;
   }[];
   protocol_breakdown: ProtocolYieldBreakdown[];
-  // Multi-windows support (similar to portfolio_roi.windows)
-  windows?: Record<
-    string,
-    {
-      total_yield_usd: number;
-      average_daily_yield_usd: number;
-      data_points: number;
-      positive_days: number;
-      negative_days: number;
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-    }
-  >;
+}
+
+export interface YieldReturnsSummaryResponse {
+  user_id: string;
+  windows: Record<string, YieldWindowSummary>;
   // Optional backend recommendation for which window to display
   recommended_period?: string;
 }
@@ -205,7 +194,7 @@ export const getLandingPagePortfolioData = async (
  */
 export const getYieldReturnsSummary = async (
   userId: string,
-  windows = "7d,30d,90d",
+  windows = "7d,30d,90d"
 ): Promise<YieldReturnsSummaryResponse> => {
   const params = new URLSearchParams({
     windows,
