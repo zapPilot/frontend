@@ -54,6 +54,8 @@ export const queryKeys = {
     apr: (userId: string) => ["portfolio", "apr", userId] as const,
     landingPage: (userId: string) =>
       ["portfolio", "landing-page", userId] as const,
+    yieldSummary: (userId: string) =>
+      ["portfolio", "yield-summary", userId] as const,
   },
 
   // Strategy-related queries

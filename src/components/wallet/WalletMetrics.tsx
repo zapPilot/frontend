@@ -10,6 +10,7 @@ import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type {
   LandingPageResponse,
   ProtocolYieldBreakdown,
+  YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
@@ -27,8 +28,12 @@ interface WalletMetricsProps {
   balanceHidden?: boolean;
   portfolioChangePercentage: number;
   userId?: string | null;
-  // If provided, use this data instead of fetching again
+  // PROGRESSIVE LOADING: Split data sources for independent metric rendering
   landingPageData?: LandingPageResponse | null | undefined;
+  yieldSummaryData?: YieldReturnsSummaryResponse | null | undefined;
+  // Independent loading states for progressive disclosure
+  isLandingLoading?: boolean;
+  isYieldLoading?: boolean;
 }
 
 // Removed unused types and functions - using ROI helpers from lib
@@ -39,11 +44,13 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     balanceHidden,
     portfolioChangePercentage,
     landingPageData,
+    yieldSummaryData,
+    isLandingLoading = false,
+    isYieldLoading = false,
   }) => {
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
-    // Data must be provided by parent; no internal fetching
+    // Split data sources for progressive loading
     const data = landingPageData;
-    const landingPageLoading = !data && portfolioState.isLoading;
 
     // Tooltip state using shared hook
     const roiTooltip = useMetricsTooltip();
@@ -67,10 +74,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
 
-    // --- NEW NESTED YIELD DATA LOGIC ---
+    // --- YIELD DATA LOGIC (from separate yield summary query) ---
 
-    // 1. Get all yield windows from the new nested structure
-    const yieldWindows = data?.yield_summary?.windows;
+    // 1. Get all yield windows from the separate yield summary data
+    const yieldWindows = yieldSummaryData?.windows;
 
     // 2. Select the best window from the available windows
     const selectedYieldWindow = yieldWindows
@@ -92,7 +99,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       ? selectedYieldWindow.window.statistics.outliers_removed
       : 0;
 
-    // --- END NEW LOGIC ---
+    // --- END YIELD LOGIC ---
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -152,8 +159,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper function to render ROI display with consistent state handling
     const renderROIDisplay = () => {
-      // Loading state
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Only check portfolio state + landing data availability
+      if (shouldShowLoading || isLandingLoading) {
         return (
           <WalletMetricsSkeleton showValue={true} showPercentage={false} />
         );
@@ -209,8 +216,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper function to render PnL display with consistent state handling
     const renderPnLDisplay = () => {
-      // Loading state
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Only check portfolio state + landing data availability
+      if (shouldShowLoading || isLandingLoading) {
         return (
           <WalletMetricsSkeleton
             showValue={true}
@@ -255,7 +262,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper to determine yield display state based on data availability
     const determineYieldState = () => {
-      if (!data?.yield_summary || avgDailyYieldUsd === null) {
+      if (!yieldSummaryData || avgDailyYieldUsd === null) {
         return { status: "no_data" as const, daysWithData: 0 };
       }
 
@@ -284,7 +291,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     };
 
     const renderAvgDailyYieldDisplay = () => {
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Independent yield loading state
+      // Only check isYieldLoading - do NOT check shouldShowLoading
+      // (shouldShowLoading tracks landing page API, not yield API)
+      if (isYieldLoading) {
         return (
           <WalletMetricsSkeleton
             showValue={true}
