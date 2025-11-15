@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 
 import { LoadingSpinner } from "@/components/ui";
 import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
+import { createContextLogger } from "@/utils/logger";
 
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
@@ -12,6 +13,9 @@ import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
 // Import component props interface for proper typing
 import type { PortfolioChartProps } from "./PortfolioChart/";
+
+// Create logger for analytics debugging
+const analyticsLogger = createContextLogger("AnalyticsTab");
 
 // Dynamic import for heavy chart component
 const PortfolioChart = dynamic<PortfolioChartProps>(
@@ -52,6 +56,23 @@ export function AnalyticsTab({
   const poolLoading = landingPageQuery.isLoading;
   const poolError = (landingPageQuery.error as Error | null)?.message || null;
   const poolRefetch = landingPageQuery.refetch;
+
+  // DEBUG: Log the data flow to diagnose "No pool data available" issue
+  analyticsLogger.debug("Pool Data Debug", {
+    resolvedUserId,
+    queryState: {
+      isLoading: poolLoading,
+      hasData: !!landingPageQuery.data,
+      dataKeys: landingPageQuery.data ? Object.keys(landingPageQuery.data) : [],
+    },
+    poolDetails: {
+      raw: landingPageQuery.data?.pool_details,
+      length: poolDetails.length,
+      isEmpty: poolDetails.length === 0,
+      firstItem: poolDetails[0],
+    },
+    error: poolError,
+  });
 
   // Use centralized category filter context when available
   const { selectedCategoryId, clearCategoryFilter } = useCategoryFilter();

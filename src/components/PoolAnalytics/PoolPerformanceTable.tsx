@@ -12,11 +12,15 @@ import React, { useMemo, useState } from "react";
 
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type { PoolDetail } from "../../services/analyticsService";
+import { createContextLogger } from "../../utils/logger";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { ProtocolImage } from "../shared/ProtocolImage";
 import { TokenImage } from "../shared/TokenImage";
 import { BaseCard } from "../ui";
 import { Skeleton } from "../ui/LoadingSystem";
+
+// Create logger for pool analytics debugging
+const poolAnalyticsLogger = createContextLogger("PoolPerformanceTable");
 
 interface PoolPerformanceTableProps {
   pools: PoolDetail[];
@@ -377,6 +381,27 @@ const PoolPerformanceTableComponent = ({
   });
   const [topN, setTopN] = useState<number | null>(defaultTopN);
 
+  // DEBUG: Enhanced debugging for empty pool data
+  React.useEffect(() => {
+    if (!isLoading && !error) {
+      poolAnalyticsLogger.debug("Pool data received", {
+        poolsReceived: pools,
+        poolsCount: pools?.length || 0,
+        poolsType: Array.isArray(pools) ? "array" : typeof pools,
+        categoryFilter,
+        firstPoolSample: pools?.length > 0 ? pools[0] : null,
+        poolKeys: pools?.length > 0 ? Object.keys(pools[0] || {}) : [],
+        isEmpty: !pools?.length,
+      });
+
+      if (!pools?.length) {
+        poolAnalyticsLogger.warn(
+          "Pools array is empty - will show 'No pool data available'"
+        );
+      }
+    }
+  }, [pools, isLoading, error, categoryFilter]);
+
   // Filter pools by category if specified
   const filteredPools = useMemo(() => {
     if (!categoryFilter) return pools;
@@ -502,7 +527,22 @@ const PoolPerformanceTableComponent = ({
     return (
       <BaseCard variant="glass">
         <div className="text-center p-8">
-          <p className="text-gray-400">No pool data available</p>
+          <p className="text-gray-400 mb-2">No pool data available</p>
+          {/* Show helpful debugging info in development */}
+          {process.env.NODE_ENV === "development" && (
+            <div className="text-xs text-gray-500 mt-4 space-y-1 max-w-md mx-auto">
+              <p className="font-semibold text-yellow-400 mb-2">
+                🔍 Debug Info (Development Only):
+              </p>
+              <p>• Pools array length: {pools?.length || 0}</p>
+              <p>• Category filter: {categoryFilter || "none"}</p>
+              <p>• Loading: {isLoading ? "yes" : "no"}</p>
+              {error && <p>• Error: {error}</p>}
+              <p className="mt-3 text-gray-400">
+                Check console for detailed data flow logs
+              </p>
+            </div>
+          )}
         </div>
       </BaseCard>
     );
