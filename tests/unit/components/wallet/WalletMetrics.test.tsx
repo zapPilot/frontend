@@ -1074,7 +1074,8 @@ describe("WalletMetrics", () => {
 
       // Should show loading indicators for visitor
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(6); // ROI + PnL + Avg Daily skeleton pairs
+      // Progressive loading decouples yield data, so only ROI + PnL skeletons render here
+      expect(screen.getAllByTestId("loading-skeleton")).toHaveLength(4);
     });
   });
 });

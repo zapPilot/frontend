@@ -627,7 +627,35 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
   // ===========================================================================
 
   describe("Loading States", () => {
-    it("shows skeleton when portfolioState.isLoading is true", () => {
+    it("shows skeleton while yield data is still loading", () => {
+      const portfolioState = createPortfolioState({ isLoading: false });
+      const landingPageData = createLandingPageData(
+        createYieldSummaryWithDays(30, 150.0)
+      );
+
+      render(
+        <WalletMetrics
+          portfolioState={portfolioState}
+          portfolioChangePercentage={5.5}
+          landingPageData={landingPageData}
+          isYieldLoading
+        />
+      );
+
+      // Should NOT show the formatted value or badges
+      expect(screen.queryByText("Preliminary")).not.toBeInTheDocument();
+      expect(screen.queryByText("Improving")).not.toBeInTheDocument();
+      expect(screen.queryByText("Available in 1 day")).not.toBeInTheDocument();
+
+      // formatCurrency should not be called for avg daily yield
+      expect(mockFormatCurrency).not.toHaveBeenCalledWith(150.0, {
+        smartPrecision: true,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+    });
+
+    it("keeps showing latest yield data even if portfolio state is loading", () => {
       const portfolioState = createPortfolioState({ isLoading: true });
       const landingPageData = createLandingPageData(
         createYieldSummaryWithDays(30, 150.0)
@@ -643,17 +671,9 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
         />
       );
 
-      // Should NOT show the formatted value or badges
-      expect(screen.queryByText("Preliminary")).not.toBeInTheDocument();
-      expect(screen.queryByText("Improving")).not.toBeInTheDocument();
+      // Progressive loading keeps yield data visible
+      expect(screen.getByText("$150.00")).toBeInTheDocument();
       expect(screen.queryByText("Available in 1 day")).not.toBeInTheDocument();
-
-      // formatCurrency should not be called for avg daily yield
-      expect(mockFormatCurrency).not.toHaveBeenCalledWith(150.0, {
-        smartPrecision: true,
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      });
     });
 
     it("shows no-data message when landingPageData is null (not loading)", () => {

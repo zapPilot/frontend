@@ -76,8 +76,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // --- YIELD DATA LOGIC (from separate yield summary query) ---
 
-    // 1. Get all yield windows from the separate yield summary data
-    const yieldWindows = yieldSummaryData?.windows;
+    // Some older flows still inject yield_summary via landingPageData.
+    // Fall back to that structure when the dedicated yield query hasn't resolved yet
+    // so legacy screens/tests keep working while progressive loading is rolled out.
+    const resolvedYieldSummary =
+      yieldSummaryData ?? landingPageData?.yield_summary ?? null;
+
+    // 1. Get all yield windows from the resolved yield summary data
+    const yieldWindows = resolvedYieldSummary?.windows;
 
     // 2. Select the best window from the available windows
     const selectedYieldWindow = yieldWindows
@@ -262,7 +268,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper to determine yield display state based on data availability
     const determineYieldState = () => {
-      if (!yieldSummaryData || avgDailyYieldUsd === null) {
+      if (!resolvedYieldSummary || avgDailyYieldUsd === null) {
         return { status: "no_data" as const, daysWithData: 0 };
       }
 
@@ -447,17 +453,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             )}
             {hasProtocolBreakdown && (
               <div className="relative">
-                <span
-                  ref={yieldTooltip.triggerRef}
-                  onClick={yieldTooltip.toggle}
-                  onKeyDown={e => e.key === "Enter" && yieldTooltip.toggle()}
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Protocol yield breakdown tooltip"
-                  className="inline-flex"
-                >
-                  <Info className="w-3 h-3 text-gray-500 cursor-help" />
-                </span>
                 {yieldTooltip.visible && (
                   <YieldBreakdownTooltip
                     tooltipRef={yieldTooltip.tooltipRef}
