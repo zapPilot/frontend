@@ -178,6 +178,32 @@ export const getLandingPagePortfolioData = async (
 };
 
 /**
+ * Get pool performance data for a user's portfolio
+ *
+ * Retrieves pool-level performance metrics with APR data from DeFiLlama and Hyperliquid sources.
+ * Returns detailed information about each pool including:
+ * - Asset values and portfolio contribution percentages
+ * - APR data with source matching (DeFiLlama or Hyperliquid)
+ * - Protocol and chain information
+ * - Pool token composition
+ *
+ * @param userId - User wallet address or user ID
+ * @returns Array of pool performance data
+ *
+ * @example
+ * const pools = await getPoolPerformance('0x123...');
+ * pools.forEach(pool => {
+ *   console.log(`${pool.protocol_name}: ${pool.final_apr * 100}% APR`);
+ * });
+ */
+export const getPoolPerformance = async (
+  userId: string
+): Promise<PoolDetail[]> => {
+  const endpoint = `/api/v1/pools/performance/${userId}`;
+  return await httpUtils.analyticsEngine.get<PoolDetail[]>(endpoint);
+};
+
+/**
  * Get yield returns summary with IQR outlier detection
  *
  * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,

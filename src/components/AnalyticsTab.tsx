@@ -9,6 +9,7 @@ import { createContextLogger } from "@/utils/logger";
 
 import { useUser } from "../contexts/UserContext";
 import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
+import { usePoolPerformance } from "../hooks/queries/usePoolPerformanceQuery";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
 // Import component props interface for proper typing
@@ -50,28 +51,27 @@ export function AnalyticsTab({
   // For bundle viewing: urlUserId should work regardless of connection state
   const resolvedUserId = urlUserId || userInfo?.userId;
 
-  // Fetch unified landing page data (includes pool_details)
-  const landingPageQuery = useLandingPageData(resolvedUserId);
-  const poolDetails = landingPageQuery.data?.pool_details || [];
-  const poolLoading = landingPageQuery.isLoading;
-  const poolError = (landingPageQuery.error as Error | null)?.message || null;
-  const poolRefetch = landingPageQuery.refetch;
+  // Fetch pool performance data from dedicated endpoint
+  const poolQuery = usePoolPerformance(resolvedUserId);
+  const poolDetails = poolQuery.data || [];
+  const poolLoading = poolQuery.isLoading;
+  const poolError = (poolQuery.error as Error | null)?.message || null;
+  const poolRefetch = poolQuery.refetch;
 
-  // DEBUG: Log the data flow to diagnose "No pool data available" issue
-  analyticsLogger.debug("Pool Data Debug", {
+  // DEBUG: Log the data flow for pool performance
+  analyticsLogger.debug("Pool Performance Debug", {
     resolvedUserId,
     queryState: {
       isLoading: poolLoading,
-      hasData: !!landingPageQuery.data,
-      dataKeys: landingPageQuery.data ? Object.keys(landingPageQuery.data) : [],
+      hasData: !!poolQuery.data,
+      error: poolError,
     },
     poolDetails: {
-      raw: landingPageQuery.data?.pool_details,
+      raw: poolQuery.data,
       length: poolDetails.length,
       isEmpty: poolDetails.length === 0,
       firstItem: poolDetails[0],
     },
-    error: poolError,
   });
 
   // Use centralized category filter context when available
