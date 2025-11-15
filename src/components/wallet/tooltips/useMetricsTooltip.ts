@@ -7,10 +7,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { TooltipPosition } from "./types";
 
-interface UseMetricsTooltipReturn {
+interface UseMetricsTooltipReturn<TTrigger extends HTMLElement> {
   visible: boolean;
   position: TooltipPosition;
-  triggerRef: React.RefObject<HTMLElement | null>;
+  triggerRef: React.RefObject<TTrigger | null>;
   tooltipRef: React.RefObject<HTMLDivElement | null>;
   toggle: () => void;
   close: () => void;
@@ -20,13 +20,15 @@ interface UseMetricsTooltipReturn {
 /**
  * Hook for managing a click-to-toggle tooltip
  */
-export function useMetricsTooltip(): UseMetricsTooltipReturn {
+export function useMetricsTooltip<
+  TTrigger extends HTMLElement = HTMLElement,
+>(): UseMetricsTooltipReturn<TTrigger> {
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<TooltipPosition>({
     top: 0,
     left: 0,
   });
-  const triggerRef = useRef<HTMLElement | null>(null);
+  const triggerRef = useRef<TTrigger | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const close = useCallback(() => {

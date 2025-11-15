@@ -53,8 +53,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     const data = landingPageData;
 
     // Tooltip state using shared hook
-    const roiTooltip = useMetricsTooltip();
-    const yieldTooltip = useMetricsTooltip();
+    const roiTooltip = useMetricsTooltip<HTMLSpanElement>();
+    const yieldTooltip = useMetricsTooltip<HTMLDivElement>();
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -440,33 +440,58 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           {renderPnLDisplay()}
         </div>
 
-        <div>
+        <div
+          className="relative"
+          ref={hasProtocolBreakdown ? yieldTooltip.triggerRef : undefined}
+          onClick={hasProtocolBreakdown ? yieldTooltip.toggle : undefined}
+          onKeyDown={
+            hasProtocolBreakdown
+              ? event => {
+                  if (
+                    event.key === "Enter" ||
+                    event.key === " " ||
+                    event.key === "Spacebar"
+                  ) {
+                    event.preventDefault();
+                    yieldTooltip.toggle();
+                  }
+                }
+              : undefined
+          }
+          role={hasProtocolBreakdown ? "button" : undefined}
+          tabIndex={hasProtocolBreakdown ? 0 : undefined}
+          aria-label={
+            hasProtocolBreakdown ? "Toggle yield breakdown" : undefined
+          }
+        >
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">Avg Daily Yield</p>
             {outliersRemoved > 0 && (
               <span
                 title={`${outliersRemoved} outlier${outliersRemoved === 1 ? "" : "s"} removed for accuracy (IQR method)`}
-                className="inline-flex"
+                className={
+                  hasProtocolBreakdown
+                    ? "inline-flex cursor-pointer"
+                    : "inline-flex cursor-help"
+                }
               >
-                <Info className="w-3 h-3 text-gray-500 cursor-help" />
+                <Info className="w-3 h-3 text-gray-500" />
               </span>
             )}
-            {hasProtocolBreakdown && (
-              <div className="relative">
-                {yieldTooltip.visible && (
-                  <YieldBreakdownTooltip
-                    tooltipRef={yieldTooltip.tooltipRef}
-                    position={yieldTooltip.position}
-                    selectedWindow={selectedYieldWindow}
-                    allWindows={yieldWindows}
-                    breakdown={protocolYieldBreakdown}
-                    outliersRemoved={outliersRemoved}
-                  />
-                )}
-              </div>
-            )}
           </div>
-          {renderAvgDailyYieldDisplay()}
+          <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
+            {renderAvgDailyYieldDisplay()}
+          </div>
+          {hasProtocolBreakdown && yieldTooltip.visible && (
+            <YieldBreakdownTooltip
+              tooltipRef={yieldTooltip.tooltipRef}
+              position={yieldTooltip.position}
+              selectedWindow={selectedYieldWindow}
+              allWindows={yieldWindows}
+              breakdown={protocolYieldBreakdown}
+              outliersRemoved={outliersRemoved}
+            />
+          )}
         </div>
       </div>
     );
