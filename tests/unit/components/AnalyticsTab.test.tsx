@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnalyticsTab } from "../../../src/components/AnalyticsTab";
 import { useUser } from "../../../src/contexts/UserContext";
 import { useLandingPageData } from "../../../src/hooks/queries/usePortfolioQuery";
+import { render, screen } from "../../test-utils";
 
 // Mock dependencies
 vi.mock("../../../src/contexts/UserContext");
