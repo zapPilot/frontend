@@ -126,7 +126,7 @@ describe("useTokenPricesQuery", () => {
   });
 
   it("should detect stale data", async () => {
-    const staleTimestamp = new Date(Date.now() - 6 * 60 * 1000).toISOString(); // 6 minutes ago
+    const staleTimestamp = new Date(Date.now() - 11 * 60 * 1000).toISOString(); // 11 minutes ago (threshold is 10 minutes)
     const mockPrices = [
       {
         symbol: "btc",

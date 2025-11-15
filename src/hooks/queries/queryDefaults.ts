@@ -36,9 +36,10 @@ import { BaseServiceError } from "@/lib/base-error";
 /**
  * Data freshness profiles for different query types
  *
+ * Updated for better performance with backend caching:
  * - **static**: Rarely changing data (strategies, token lists) - 10min stale, 30min cache
  * - **dynamic**: Frequently changing data (balances, user data) - 2min stale, 5min cache
- * - **realtime**: Constantly changing data (portfolio, live prices) - 30s stale, 2min cache
+ * - **realtime**: Portfolio/analytics data - 5min stale to match backend cache (was 30s)
  */
 export const QUERY_TIMINGS = {
   static: {
@@ -50,8 +51,8 @@ export const QUERY_TIMINGS = {
     gcTime: 5 * 60 * 1000, // 5 minutes
   },
   realtime: {
-    staleTime: 30 * 1000, // 30 seconds
-    gcTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes (matches backend Cache-Control max-age)
+    gcTime: 10 * 60 * 1000, // 10 minutes (matches backend stale-while-revalidate)
   },
 } as const;
 

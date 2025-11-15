@@ -1,8 +1,13 @@
-import React from "react";
-import { createPortal } from "react-dom";
+/**
+ * Portfolio ROI tooltip with multi-window display
+ */
 
-import { Z_INDEX } from "@/constants/design-system";
+import React from "react";
+
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
+import { MetricsTooltipContainer } from "./MetricsTooltipContainer";
+import type { MetricsTooltipProps } from "./types";
 
 interface ROIWindowItem {
   key: string;
@@ -20,62 +25,22 @@ export interface ProtocolROIItem {
   rewardTokenCount?: number;
 }
 
-interface ROITooltipProps {
-  position: { top: number; left: number };
+interface ROITooltipProps extends MetricsTooltipProps {
+  tooltipRef: React.RefObject<HTMLDivElement | null>;
   windows: ROIWindowItem[];
   protocols?: ProtocolROIItem[];
   recommendedPeriodLabel?: string | null;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-}
-
-interface MetricsTooltipContainerProps {
-  position: { top: number; left: number };
-  children: React.ReactNode;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-  className?: string;
-}
-
-export function MetricsTooltipContainer({
-  position,
-  children,
-  onMouseEnter,
-  onMouseLeave,
-  className = "",
-}: MetricsTooltipContainerProps) {
-  return createPortal(
-    <div
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      style={{
-        position: "fixed",
-        top: position.top,
-        left: position.left,
-        transform: "translateX(-50%)",
-      }}
-      className={`bg-gray-900 text-white text-xs rounded shadow-lg w-72 p-4 border border-gray-700 ${Z_INDEX.TOOLTIP} ${className}`.trim()}
-    >
-      {children}
-    </div>,
-    document.body
-  );
 }
 
 export function ROITooltip({
   position,
+  tooltipRef,
   windows,
   protocols,
   recommendedPeriodLabel,
-  onMouseEnter,
-  onMouseLeave,
 }: ROITooltipProps) {
   return (
-    <MetricsTooltipContainer
-      position={position}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-    >
+    <MetricsTooltipContainer ref={tooltipRef} position={position}>
       <div className="font-semibold text-gray-200 mb-2 text-center">
         📊 Portfolio ROI Estimation
       </div>

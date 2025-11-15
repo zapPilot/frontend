@@ -37,7 +37,7 @@ export interface ProtocolYieldBreakdown {
   today?: ProtocolYieldToday | null;
 }
 
-export interface YieldReturnsSummaryResponse {
+export interface YieldWindowSummary {
   user_id: string;
   period: {
     start_date: string;
@@ -65,6 +65,13 @@ export interface YieldReturnsSummaryResponse {
     z_score: number | null;
   }[];
   protocol_breakdown: ProtocolYieldBreakdown[];
+}
+
+export interface YieldReturnsSummaryResponse {
+  user_id: string;
+  windows: Record<string, YieldWindowSummary>;
+  // Optional backend recommendation for which window to display
+  recommended_period?: string;
 }
 
 // Re-export PoolDetail for components that import from this service
@@ -187,10 +194,10 @@ export const getLandingPagePortfolioData = async (
  */
 export const getYieldReturnsSummary = async (
   userId: string,
-  days = 30
+  windows = "7d,30d,90d"
 ): Promise<YieldReturnsSummaryResponse> => {
   const params = new URLSearchParams({
-    days: days.toString(),
+    windows,
     outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
   });
   const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;

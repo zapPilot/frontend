@@ -313,17 +313,16 @@ describe("useStrategiesQuery", () => {
 
     it("should fetch strategies with portfolio data for authenticated user", async () => {
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
-      mockGetLandingPagePortfolioData.mockResolvedValue(mockPortfolioData);
 
       const userId = "0x1234567890123456789012345678901234567890";
       const { result } = renderHook(() =>
-        useStrategiesWithPortfolioQuery(userId)
+        useStrategiesWithPortfolioQuery(userId, undefined, mockPoolDetails)
       );
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
       expect(mockGetStrategies).toHaveBeenCalledTimes(1);
-      expect(mockGetLandingPagePortfolioData).toHaveBeenCalledWith(userId);
+      expect(mockGetLandingPagePortfolioData).not.toHaveBeenCalled();
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toHaveLength(3);
     });
@@ -361,20 +360,19 @@ describe("useStrategiesQuery", () => {
     it("should handle strategies fetch independently from portfolio", async () => {
       // Test that strategy and portfolio fetching are independent operations
       mockGetStrategies.mockResolvedValue(mockStrategiesResponse);
-      mockGetLandingPagePortfolioData.mockResolvedValue(mockPortfolioData);
 
       const userId = "0x1234567890123456789012345678901234567890";
       const { result } = renderHook(() =>
-        useStrategiesWithPortfolioQuery(userId)
+        useStrategiesWithPortfolioQuery(userId, undefined, mockPoolDetails)
       );
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      // Both services should have been called
+      // Only strategies service should have been called (portfolio data passed as prop)
       expect(mockGetStrategies).toHaveBeenCalled();
-      expect(mockGetLandingPagePortfolioData).toHaveBeenCalledWith(userId);
+      expect(mockGetLandingPagePortfolioData).not.toHaveBeenCalled();
     });
 
     it("should use different refetch interval than basic query", async () => {

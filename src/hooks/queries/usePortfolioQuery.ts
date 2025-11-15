@@ -5,11 +5,18 @@ import {
   getLandingPagePortfolioData,
   getYieldReturnsSummary,
   type LandingPageResponse,
+  type YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { portfolioLogger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
 
-// Hook for unified landing page data - replaces dual API calls
+/**
+ * Hook for landing page core data (Balance, ROI, PnL)
+ *
+ * PERFORMANCE OPTIMIZATION: Fetches only the core portfolio data without yield summary.
+ * This allows Balance, ROI, and PnL metrics to render immediately (~300ms) without
+ * waiting for the slower yield calculations (~1500ms).
+ */
 export function useLandingPageData(userId: string | null | undefined) {
   return useQuery({
     ...createQueryConfig({
@@ -24,41 +31,50 @@ export function useLandingPageData(userId: string | null | undefined) {
         throw new Error("User ID is required");
       }
 
-      const [landingResult, yieldResult] = await Promise.allSettled([
-        getLandingPagePortfolioData(userId),
-        getYieldReturnsSummary(userId, 30),
-      ]);
-
-      if (landingResult.status === "rejected") {
-        throw landingResult.reason;
-      }
-
-      const landingData = landingResult.value;
-
-      if (yieldResult.status === "fulfilled") {
-        return {
-          ...landingData,
-          yield_summary: yieldResult.value,
-        };
-      }
-
-      if (yieldResult.status === "rejected") {
-        portfolioLogger.warn(
-          "Failed to fetch yield returns summary for landing page",
-          {
-            error:
-              yieldResult.reason instanceof Error
-                ? yieldResult.reason.message
-                : String(yieldResult.reason),
-            userId,
-          }
-        );
-      }
-
-      return landingData;
+      // Fetch only core landing page data (Balance, ROI, PnL)
+      // Yield data is fetched separately via useYieldSummaryData for progressive loading
+      return await getLandingPagePortfolioData(userId);
     },
     enabled: !!userId, // Only run when userId is available
-    refetchInterval: 60 * 1000, // Auto-refetch every minute when tab is active
+    refetchInterval: 5 * 60 * 1000, // 5min to match backend cache
+  });
+}
+
+/**
+ * Hook for yield summary data (Avg Daily Yield)
+ *
+ * PERFORMANCE OPTIMIZATION: Fetches yield data independently from core metrics.
+ * This allows the yield metric to load progressively without blocking Balance/ROI/PnL.
+ * Runs in parallel with useLandingPageData for optimal performance.
+ */
+export function useYieldSummaryData(userId: string | null | undefined) {
+  return useQuery({
+    ...createQueryConfig({
+      dataType: "realtime",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND", "404"],
+      },
+    }),
+    queryKey: queryKeys.portfolio.yieldSummary(userId || ""),
+    queryFn: async (): Promise<YieldReturnsSummaryResponse | null> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+
+      try {
+        // Request multiple windows for better yield insights (7d, 30d, 90d)
+        return await getYieldReturnsSummary(userId, "7d,30d,90d");
+      } catch (error) {
+        portfolioLogger.warn("Failed to fetch yield returns summary", {
+          error: error instanceof Error ? error.message : String(error),
+          userId,
+        });
+        // Return null rather than failing - component will handle gracefully
+        return null;
+      }
+    },
+    enabled: !!userId, // Only run when userId is available
+    refetchInterval: 5 * 60 * 1000, // 5min to match backend cache
   });
 }
 

@@ -21,9 +21,10 @@ import { logger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
 
 // Price-specific timing constants
-const PRICE_STALE_TIME = 2 * 60 * 1000; // 2 minutes - prices change frequently
-const PRICE_REFETCH_INTERVAL = 2 * 60 * 1000; // Auto-refetch every 2 minutes
-const PRICE_STALENESS_THRESHOLD = 5 * 60 * 1000; // Consider stale after 5 minutes
+// Updated to reduce API load while keeping prices reasonably fresh
+const PRICE_STALE_TIME = 5 * 60 * 1000; // 5 minutes (was 2min) - align with backend cache
+const PRICE_REFETCH_INTERVAL = 5 * 60 * 1000; // Auto-refetch every 5 minutes (was 2min)
+const PRICE_STALENESS_THRESHOLD = 10 * 60 * 1000; // Consider stale after 10 minutes (was 5min)
 
 // =============================================================================
 // TYPE DEFINITIONS

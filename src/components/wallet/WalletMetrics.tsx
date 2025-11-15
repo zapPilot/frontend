@@ -1,5 +1,5 @@
 import { AlertCircle, Clock, Info, TrendingUp } from "lucide-react";
-import React, { useCallback, useRef, useState } from "react";
+import React from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 
@@ -10,11 +10,17 @@ import { formatCurrency, formatPercentage } from "../../lib/formatters";
 import type {
   LandingPageResponse,
   ProtocolYieldBreakdown,
+  YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceSkeleton, WalletMetricsSkeleton } from "../ui/LoadingSystem";
-import { ProtocolBreakdownTooltip } from "./ProtocolBreakdownTooltip";
-import { ProtocolROIItem, ROITooltip } from "./ROITooltip";
+import {
+  ProtocolROIItem,
+  ROITooltip,
+  selectBestYieldWindow,
+  useMetricsTooltip,
+  YieldBreakdownTooltip,
+} from "./tooltips";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
@@ -22,8 +28,12 @@ interface WalletMetricsProps {
   balanceHidden?: boolean;
   portfolioChangePercentage: number;
   userId?: string | null;
-  // If provided, use this data instead of fetching again
+  // PROGRESSIVE LOADING: Split data sources for independent metric rendering
   landingPageData?: LandingPageResponse | null | undefined;
+  yieldSummaryData?: YieldReturnsSummaryResponse | null | undefined;
+  // Independent loading states for progressive disclosure
+  isLandingLoading?: boolean;
+  isYieldLoading?: boolean;
 }
 
 // Removed unused types and functions - using ROI helpers from lib
@@ -34,51 +44,17 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     balanceHidden,
     portfolioChangePercentage,
     landingPageData,
+    yieldSummaryData,
+    isLandingLoading = false,
+    isYieldLoading = false,
   }) => {
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
-    // Data must be provided by parent; no internal fetching
+    // Split data sources for progressive loading
     const data = landingPageData;
-    const landingPageLoading = !data && portfolioState.isLoading;
 
-    // ROI tooltip portal state
-    const [roiTooltipVisible, setRoiTooltipVisible] = useState(false);
-    const [roiTooltipPos, setRoiTooltipPos] = useState<{
-      top: number;
-      left: number;
-    }>({ top: 0, left: 0 });
-    const infoIconRef = useRef<HTMLSpanElement | null>(null);
-    const [yieldTooltipVisible, setYieldTooltipVisible] = useState(false);
-    const [yieldTooltipPos, setYieldTooltipPos] = useState<{
-      top: number;
-      left: number;
-    }>({ top: 0, left: 0 });
-    const yieldInfoRef = useRef<HTMLSpanElement | null>(null);
-
-    const openRoiTooltip = useCallback(() => {
-      const el = infoIconRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setRoiTooltipPos({
-        top: rect.bottom + 8 + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
-      setRoiTooltipVisible(true);
-    }, []);
-    const closeRoiTooltip = useCallback(() => setRoiTooltipVisible(false), []);
-    const openYieldTooltip = useCallback(() => {
-      const el = yieldInfoRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      setYieldTooltipPos({
-        top: rect.bottom + 8 + window.scrollY,
-        left: rect.left + rect.width / 2 + window.scrollX,
-      });
-      setYieldTooltipVisible(true);
-    }, []);
-    const closeYieldTooltip = useCallback(
-      () => setYieldTooltipVisible(false),
-      []
-    );
+    // Tooltip state using shared hook
+    const roiTooltip = useMetricsTooltip<HTMLSpanElement>();
+    const yieldTooltip = useMetricsTooltip<HTMLDivElement>();
 
     // Use portfolio state helpers for consistent logic
     const {
@@ -97,16 +73,39 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Use estimated_yearly_pnl_usd directly from API
     const estimatedYearlyPnL = portfolioROI?.estimated_yearly_pnl_usd;
-    const avgDailyYieldUsd =
-      data?.yield_summary?.average_daily_yield_usd ?? null;
+
+    // --- YIELD DATA LOGIC (from separate yield summary query) ---
+
+    // Some older flows still inject yield_summary via landingPageData.
+    // Fall back to that structure when the dedicated yield query hasn't resolved yet
+    // so legacy screens/tests keep working while progressive loading is rolled out.
+    const resolvedYieldSummary =
+      yieldSummaryData ?? landingPageData?.yield_summary ?? null;
+
+    // 1. Get all yield windows from the resolved yield summary data
+    const yieldWindows = resolvedYieldSummary?.windows;
+
+    // 2. Select the best window from the available windows
+    const selectedYieldWindow = yieldWindows
+      ? selectBestYieldWindow(yieldWindows)
+      : null;
+
+    // 3. Extract metrics from the *selected* window
+    const avgDailyYieldUsd = selectedYieldWindow
+      ? selectedYieldWindow.window.average_daily_yield_usd
+      : null;
+
+    // 4. Get the protocol breakdown from the *selected* window
     const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
-      data?.yield_summary?.protocol_breakdown ?? [];
+      selectedYieldWindow?.window.protocol_breakdown ?? [];
     const hasProtocolBreakdown = protocolYieldBreakdown.length > 0;
-    const yieldWindowLabel = data?.yield_summary?.period?.days
-      ? `${data.yield_summary.period.days}d`
-      : "window";
-    const outliersRemoved =
-      data?.yield_summary?.statistics?.outliers_removed ?? 0;
+
+    // 5. Get outliers from the *selected* window's statistics
+    const outliersRemoved = selectedYieldWindow
+      ? selectedYieldWindow.window.statistics.outliers_removed
+      : 0;
+
+    // --- END YIELD LOGIC ---
 
     // Convert windows object to array format expected by the UI
     // Sort by time period (ascending) to show shorter periods first
@@ -166,8 +165,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper function to render ROI display with consistent state handling
     const renderROIDisplay = () => {
-      // Loading state
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Only check portfolio state + landing data availability
+      if (shouldShowLoading || isLandingLoading) {
         return (
           <WalletMetricsSkeleton showValue={true} showPercentage={false} />
         );
@@ -223,8 +222,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper function to render PnL display with consistent state handling
     const renderPnLDisplay = () => {
-      // Loading state
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Only check portfolio state + landing data availability
+      if (shouldShowLoading || isLandingLoading) {
         return (
           <WalletMetricsSkeleton
             showValue={true}
@@ -269,11 +268,14 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
     // Helper to determine yield display state based on data availability
     const determineYieldState = () => {
-      if (!data?.yield_summary || avgDailyYieldUsd === null) {
+      if (!resolvedYieldSummary || avgDailyYieldUsd === null) {
         return { status: "no_data" as const, daysWithData: 0 };
       }
 
-      const daysWithData = data.yield_summary.statistics.filtered_days || 0;
+      // Use selected window's data points if available, otherwise fall back to legacy stats
+      const daysWithData = selectedYieldWindow
+        ? selectedYieldWindow.window.statistics.filtered_days
+        : 0;
 
       if (daysWithData < 7) {
         return {
@@ -295,7 +297,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     };
 
     const renderAvgDailyYieldDisplay = () => {
-      if (shouldShowLoading || landingPageLoading) {
+      // PROGRESSIVE LOADING: Independent yield loading state
+      // Only check isYieldLoading - do NOT check shouldShowLoading
+      // (shouldShowLoading tracks landing page API, not yield API)
+      if (isYieldLoading) {
         return (
           <WalletMetricsSkeleton
             showValue={true}
@@ -402,28 +407,26 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             {portfolioROI && (
               <div className="relative">
                 <span
-                  ref={infoIconRef}
-                  onMouseOver={openRoiTooltip}
-                  onMouseOut={closeRoiTooltip}
-                  onFocus={openRoiTooltip}
-                  onBlur={closeRoiTooltip}
+                  ref={roiTooltip.triggerRef}
+                  onClick={roiTooltip.toggle}
+                  onKeyDown={e => e.key === "Enter" && roiTooltip.toggle()}
+                  role="button"
                   tabIndex={0}
                   aria-label="Portfolio ROI tooltip"
                   className="inline-flex"
                 >
                   <Info className="w-3 h-3 text-gray-500 cursor-help" />
                 </span>
-                {roiTooltipVisible && (
+                {roiTooltip.visible && (
                   <ROITooltip
-                    position={roiTooltipPos}
+                    tooltipRef={roiTooltip.tooltipRef}
+                    position={roiTooltip.position}
                     windows={roiWindows}
                     protocols={protocolROIData}
                     recommendedPeriodLabel={
                       portfolioROI?.recommended_period?.replace("roi_", "") ||
                       null
                     }
-                    onMouseEnter={openRoiTooltip}
-                    onMouseLeave={closeRoiTooltip}
                   />
                 )}
               </div>
@@ -437,49 +440,58 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           {renderPnLDisplay()}
         </div>
 
-        <div>
+        <div
+          className="relative"
+          ref={hasProtocolBreakdown ? yieldTooltip.triggerRef : undefined}
+          onClick={hasProtocolBreakdown ? yieldTooltip.toggle : undefined}
+          onKeyDown={
+            hasProtocolBreakdown
+              ? event => {
+                  if (
+                    event.key === "Enter" ||
+                    event.key === " " ||
+                    event.key === "Spacebar"
+                  ) {
+                    event.preventDefault();
+                    yieldTooltip.toggle();
+                  }
+                }
+              : undefined
+          }
+          role={hasProtocolBreakdown ? "button" : undefined}
+          tabIndex={hasProtocolBreakdown ? 0 : undefined}
+          aria-label={
+            hasProtocolBreakdown ? "Toggle yield breakdown" : undefined
+          }
+        >
           <div className="flex items-center space-x-1 mb-1">
             <p className="text-sm text-gray-400">Avg Daily Yield</p>
             {outliersRemoved > 0 && (
               <span
-                title={
-                  outliersRemoved === 1
-                    ? "1 outlier removed for accuracy (IQR method)"
-                    : `${outliersRemoved} outliers removed for accuracy (IQR method)`
+                title={`${outliersRemoved} outlier${outliersRemoved === 1 ? "" : "s"} removed for accuracy (IQR method)`}
+                className={
+                  hasProtocolBreakdown
+                    ? "inline-flex cursor-pointer"
+                    : "inline-flex cursor-help"
                 }
-                className="inline-flex"
               >
-                <Info className="w-3 h-3 text-amber-500 cursor-help" />
+                <Info className="w-3 h-3 text-gray-500" />
               </span>
             )}
-            {hasProtocolBreakdown && (
-              <div className="relative">
-                <span
-                  ref={yieldInfoRef}
-                  onMouseOver={openYieldTooltip}
-                  onMouseOut={closeYieldTooltip}
-                  onFocus={openYieldTooltip}
-                  onBlur={closeYieldTooltip}
-                  tabIndex={0}
-                  aria-label="Protocol yield breakdown tooltip"
-                  className="inline-flex"
-                >
-                  <Info className="w-3 h-3 text-gray-500 cursor-help" />
-                </span>
-                {yieldTooltipVisible && (
-                  <ProtocolBreakdownTooltip
-                    position={yieldTooltipPos}
-                    breakdown={protocolYieldBreakdown}
-                    windowLabel={yieldWindowLabel}
-                    outliersRemoved={outliersRemoved}
-                    onMouseEnter={openYieldTooltip}
-                    onMouseLeave={closeYieldTooltip}
-                  />
-                )}
-              </div>
-            )}
           </div>
-          {renderAvgDailyYieldDisplay()}
+          <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
+            {renderAvgDailyYieldDisplay()}
+          </div>
+          {hasProtocolBreakdown && yieldTooltip.visible && (
+            <YieldBreakdownTooltip
+              tooltipRef={yieldTooltip.tooltipRef}
+              position={yieldTooltip.position}
+              selectedWindow={selectedYieldWindow}
+              allWindows={yieldWindows}
+              breakdown={protocolYieldBreakdown}
+              outliersRemoved={outliersRemoved}
+            />
+          )}
         </div>
       </div>
     );

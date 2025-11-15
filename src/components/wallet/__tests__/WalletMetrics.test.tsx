@@ -62,28 +62,35 @@ const createMockLandingPageData = (
       estimated_yearly_pnl_usd: 1500.0,
     },
     yield_summary: {
-      average_daily_yield_usd: 123.45,
-      median_daily_yield_usd: 120.0,
-      total_yield_usd: 3703.5,
-      statistics: {
-        mean: 123.45,
-        median: 120.0,
-        std_dev: 15.2,
-        min_value: 95.0,
-        max_value: 150.0,
-        total_days: 30,
-        filtered_days: 30,
-        outliers_removed: 0,
+      user_id: "0x123",
+      windows: {
+        "30d": {
+          user_id: "0x123",
+          period: {
+            start_date: "2023-01-01",
+            end_date: "2023-01-30",
+            days: 30,
+          } as any,
+          average_daily_yield_usd: 123.45,
+          median_daily_yield_usd: 120.0,
+          total_yield_usd: 3703.5,
+          statistics: {
+            mean: 123.45,
+            median: 120.0,
+            std_dev: 15.2,
+            min_value: 95.0,
+            max_value: 150.0,
+            total_days: 30,
+            filtered_days: 30,
+            outliers_removed: 0,
+          },
+          outlier_strategy: "iqr" as const,
+          outliers_detected: [],
+          protocol_breakdown: [],
+        },
       },
-      outlier_strategy: "iqr",
-      outliers_detected: [],
-      protocol_breakdown: [],
-      period: {
-        start_date: "2023-01-01",
-        end_date: "2023-01-30",
-        days: 30,
-      },
-    },
+      recommended_period: "30d",
+    } as any,
     ...overrides,
   }) as LandingPageResponse;
 
@@ -94,13 +101,14 @@ describe("WalletMetrics - No Data State (0 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
+        ...createMockLandingPageData().yield_summary!.windows!["30d"]!,
         average_daily_yield_usd: null as any,
         statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
+          ...createMockLandingPageData().yield_summary!.windows!["30d"]!
+            .statistics,
           filtered_days: 0,
-        },
-      },
+        } as any,
+      } as any,
     });
 
     render(
@@ -162,12 +170,35 @@ describe("WalletMetrics - Insufficient Data (1-6 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 1,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 1,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -186,12 +217,35 @@ describe("WalletMetrics - Insufficient Data (1-6 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 6,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 6,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -210,12 +264,35 @@ describe("WalletMetrics - Insufficient Data (1-6 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 3,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 3,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -234,13 +311,14 @@ describe("WalletMetrics - Insufficient Data (1-6 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
+        ...createMockLandingPageData().yield_summary!.windows!["30d"]!,
         average_daily_yield_usd: 123.45,
         statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
+          ...createMockLandingPageData().yield_summary!.windows!["30d"]!
+            .statistics,
           filtered_days: 5,
-        },
-      },
+        } as any,
+      } as any,
     });
 
     render(
@@ -263,12 +341,35 @@ describe("WalletMetrics - Low Confidence (7-29 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 7,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 7,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -287,12 +388,35 @@ describe("WalletMetrics - Low Confidence (7-29 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 29,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 29,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -311,12 +435,35 @@ describe("WalletMetrics - Low Confidence (7-29 days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 15,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 15,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -339,12 +486,35 @@ describe("WalletMetrics - Normal State (30+ days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 30,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 30,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -364,12 +534,35 @@ describe("WalletMetrics - Normal State (30+ days)", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          filtered_days: 90,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 90,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     render(
@@ -424,13 +617,14 @@ describe("WalletMetrics - Protocol Breakdown Tooltip", () => {
 
     return createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
+        ...createMockLandingPageData().yield_summary!.windows!["30d"]!,
         protocol_breakdown: [baseBreakdown],
         statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
+          ...createMockLandingPageData().yield_summary!.windows!["30d"]!
+            .statistics,
           outliers_removed: 2,
-        },
-      },
+        } as any,
+      } as any,
     });
   };
 
@@ -481,9 +675,9 @@ describe("WalletMetrics - Protocol Breakdown Tooltip", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
+        ...createMockLandingPageData().yield_summary!.windows!["30d"]!,
         protocol_breakdown: [],
-      },
+      } as any,
     });
 
     render(
@@ -566,9 +760,9 @@ describe("WalletMetrics - Error States", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
+        ...createMockLandingPageData().yield_summary!.windows!["30d"]!,
         average_daily_yield_usd: null as any,
-      },
+      } as any,
     });
 
     render(
@@ -597,12 +791,35 @@ describe("WalletMetrics - State Transitions", () => {
         portfolioChangePercentage={0}
         landingPageData={createMockLandingPageData({
           yield_summary: {
-            ...createMockLandingPageData().yield_summary!,
-            statistics: {
-              ...createMockLandingPageData().yield_summary!.statistics,
-              filtered_days: 6,
+            user_id: "0x123",
+            windows: {
+              "30d": {
+                user_id: "0x123",
+                period: {
+                  start_date: "2023-01-01",
+                  end_date: "2023-01-30",
+                  days: 30,
+                },
+                average_daily_yield_usd: 123.45,
+                median_daily_yield_usd: 120.0,
+                total_yield_usd: 3703.5,
+                statistics: {
+                  mean: 123.45,
+                  median: 120.0,
+                  std_dev: 15.2,
+                  min_value: 95.0,
+                  max_value: 150.0,
+                  total_days: 30,
+                  filtered_days: 6,
+                  outliers_removed: 0,
+                },
+                outlier_strategy: "iqr" as const,
+                outliers_detected: [],
+                protocol_breakdown: [],
+              },
             },
-          },
+            recommended_period: "30d",
+          } as any,
         })}
       />
     );
@@ -616,12 +833,35 @@ describe("WalletMetrics - State Transitions", () => {
         portfolioChangePercentage={0}
         landingPageData={createMockLandingPageData({
           yield_summary: {
-            ...createMockLandingPageData().yield_summary!,
-            statistics: {
-              ...createMockLandingPageData().yield_summary!.statistics,
-              filtered_days: 7,
+            user_id: "0x123",
+            windows: {
+              "30d": {
+                user_id: "0x123",
+                period: {
+                  start_date: "2023-01-01",
+                  end_date: "2023-01-30",
+                  days: 30,
+                },
+                average_daily_yield_usd: 123.45,
+                median_daily_yield_usd: 120.0,
+                total_yield_usd: 3703.5,
+                statistics: {
+                  mean: 123.45,
+                  median: 120.0,
+                  std_dev: 15.2,
+                  min_value: 95.0,
+                  max_value: 150.0,
+                  total_days: 30,
+                  filtered_days: 7,
+                  outliers_removed: 0,
+                },
+                outlier_strategy: "iqr" as const,
+                outliers_detected: [],
+                protocol_breakdown: [],
+              },
             },
-          },
+            recommended_period: "30d",
+          } as any,
         })}
       />
     );
@@ -640,12 +880,35 @@ describe("WalletMetrics - State Transitions", () => {
         portfolioChangePercentage={0}
         landingPageData={createMockLandingPageData({
           yield_summary: {
-            ...createMockLandingPageData().yield_summary!,
-            statistics: {
-              ...createMockLandingPageData().yield_summary!.statistics,
-              filtered_days: 29,
+            user_id: "0x123",
+            windows: {
+              "30d": {
+                user_id: "0x123",
+                period: {
+                  start_date: "2023-01-01",
+                  end_date: "2023-01-30",
+                  days: 30,
+                },
+                average_daily_yield_usd: 123.45,
+                median_daily_yield_usd: 120.0,
+                total_yield_usd: 3703.5,
+                statistics: {
+                  mean: 123.45,
+                  median: 120.0,
+                  std_dev: 15.2,
+                  min_value: 95.0,
+                  max_value: 150.0,
+                  total_days: 30,
+                  filtered_days: 29,
+                  outliers_removed: 0,
+                },
+                outlier_strategy: "iqr" as const,
+                outliers_detected: [],
+                protocol_breakdown: [],
+              },
             },
-          },
+            recommended_period: "30d",
+          } as any,
         })}
       />
     );
@@ -659,12 +922,35 @@ describe("WalletMetrics - State Transitions", () => {
         portfolioChangePercentage={0}
         landingPageData={createMockLandingPageData({
           yield_summary: {
-            ...createMockLandingPageData().yield_summary!,
-            statistics: {
-              ...createMockLandingPageData().yield_summary!.statistics,
-              filtered_days: 30,
+            user_id: "0x123",
+            windows: {
+              "30d": {
+                user_id: "0x123",
+                period: {
+                  start_date: "2023-01-01",
+                  end_date: "2023-01-30",
+                  days: 30,
+                },
+                average_daily_yield_usd: 123.45,
+                median_daily_yield_usd: 120.0,
+                total_yield_usd: 3703.5,
+                statistics: {
+                  mean: 123.45,
+                  median: 120.0,
+                  std_dev: 15.2,
+                  min_value: 95.0,
+                  max_value: 150.0,
+                  total_days: 30,
+                  filtered_days: 30,
+                  outliers_removed: 0,
+                },
+                outlier_strategy: "iqr" as const,
+                outliers_detected: [],
+                protocol_breakdown: [],
+              },
             },
-          },
+            recommended_period: "30d",
+          } as any,
         })}
       />
     );
@@ -700,12 +986,35 @@ describe("WalletMetrics - Accessibility", () => {
     const portfolioState = createMockPortfolioState();
     const landingPageData = createMockLandingPageData({
       yield_summary: {
-        ...createMockLandingPageData().yield_summary!,
-        statistics: {
-          ...createMockLandingPageData().yield_summary!.statistics,
-          outliers_removed: 1,
+        user_id: "0x123",
+        windows: {
+          "30d": {
+            user_id: "0x123",
+            period: {
+              start_date: "2023-01-01",
+              end_date: "2023-01-30",
+              days: 30,
+            },
+            average_daily_yield_usd: 123.45,
+            median_daily_yield_usd: 120.0,
+            total_yield_usd: 3703.5,
+            statistics: {
+              mean: 123.45,
+              median: 120.0,
+              std_dev: 15.2,
+              min_value: 95.0,
+              max_value: 150.0,
+              total_days: 30,
+              filtered_days: 30,
+              outliers_removed: 0,
+            },
+            outlier_strategy: "iqr" as const,
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
         },
-      },
+        recommended_period: "30d",
+      } as any,
     });
 
     const { container } = render(

@@ -61,6 +61,9 @@ export function WalletPortfolioPresenter({
               }
               userId={vm.resolvedUserId}
               landingPageData={vm.landingPageData}
+              yieldSummaryData={vm.yieldSummaryData}
+              isLandingLoading={vm.isLandingLoading}
+              isYieldLoading={vm.isYieldLoading}
             />
 
             <WalletActions

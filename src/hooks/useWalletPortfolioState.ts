@@ -3,10 +3,16 @@
 import { useCallback, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
-import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
+import {
+  useLandingPageData,
+  useYieldSummaryData,
+} from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
-import type { LandingPageResponse } from "@/services/analyticsService";
+import type {
+  LandingPageResponse,
+  YieldReturnsSummaryResponse,
+} from "@/services/analyticsService";
 
 interface UseWalletPortfolioStateParams {
   urlUserId?: string;
@@ -53,6 +59,7 @@ export interface WalletPortfolioViewModel {
   isVisitorMode: boolean;
   // Data
   landingPageData: LandingPageResponse | undefined;
+  yieldSummaryData: YieldReturnsSummaryResponse | null | undefined;
   pieChartData: ReturnType<typeof useWalletPortfolioTransform>["pieChartData"];
   categorySummaries: ReturnType<
     typeof useWalletPortfolioTransform
@@ -65,6 +72,9 @@ export interface WalletPortfolioViewModel {
   >["portfolioMetrics"];
   // Aggregated portfolio state
   portfolioState: ReturnType<typeof usePortfolioState>;
+  // Progressive loading states
+  isLandingLoading: boolean;
+  isYieldLoading: boolean;
   // Local portfolio view toggles
   balanceHidden: boolean;
   toggleBalanceVisibility: () => void;
@@ -112,9 +122,14 @@ export function useWalletPortfolioState(
   const isVisitorMode =
     !isConnected || (!!urlUserId && urlUserId !== userInfo?.userId);
 
-  // Data query
+  // PERFORMANCE OPTIMIZATION: Parallel data queries for progressive loading
+  // Landing page data (Balance, ROI, PnL) loads first (~300ms)
   const landingPageQuery = useLandingPageData(resolvedUserId);
   const landingPageData = landingPageQuery.data;
+
+  // Yield summary data loads independently (~1500ms) without blocking core metrics
+  const yieldSummaryQuery = useYieldSummaryData(resolvedUserId);
+  const yieldSummaryData = yieldSummaryQuery.data;
 
   // Derived portfolio data
   const {
@@ -157,11 +172,14 @@ export function useWalletPortfolioState(
     resolvedUserId,
     isVisitorMode,
     landingPageData,
+    yieldSummaryData,
     pieChartData,
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
     portfolioState,
+    isLandingLoading: landingPageQuery.isLoading,
+    isYieldLoading: yieldSummaryQuery.isLoading,
     balanceHidden,
     toggleBalanceVisibility,
     expandedCategory,
