@@ -8,7 +8,6 @@ import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
 import { createContextLogger } from "@/utils/logger";
 
 import { useUser } from "../contexts/UserContext";
-import { useLandingPageData } from "../hooks/queries/usePortfolioQuery";
 import { usePoolPerformance } from "../hooks/queries/usePoolPerformanceQuery";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
