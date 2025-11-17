@@ -1,79 +1,32 @@
 /**
  * useUnifiedZapStream Hook
  * Manages Server-Sent Events (SSE) streaming for UnifiedZap intent execution
- * Provides real-time progress updates and error handling
+ * Provides real-time progress updates and error handling with Zod validation
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import {
+  safeHexishString,
+  safeNumber,
+  safeString,
+} from "../lib/dataValidation";
 import { API_ENDPOINTS } from "../lib/http-utils";
+import {
+  type NormalizedZapEvent,
+  type UnifiedZapRawEvent,
+  type UnifiedZapStreamTransaction,
+  validateRawSSEEvent,
+} from "../schemas/sseEventSchemas";
 import { logger } from "../utils/logger";
 
 const zapStreamLogger = logger.createContextLogger("UnifiedZapStream");
 
-interface UnifiedZapRawEventChainBreakdownEntry {
-  name?: string;
-  chainId?: number;
-  protocolCount?: number;
-  [key: string]: unknown;
-}
-
-interface UnifiedZapRawEventMetadata {
-  phase?: string;
-  totalStrategies?: number;
-  strategyCount?: number;
-  totalProtocols?: number;
-  protocolCount?: number;
-  estimatedDuration?: string;
-  processedStrategies?: number;
-  processedProtocols?: number;
-  chainBreakdown?: UnifiedZapRawEventChainBreakdownEntry[];
-  chains?: UnifiedZapRawEventChainBreakdownEntry[];
-  message?: string;
-  description?: string;
-  progressPercent?: number;
-  chainId?: number;
-  transactions?: unknown;
-  [key: string]: unknown;
-}
-
-interface UnifiedZapRawEventError {
-  code?: string;
-  message?: string;
-  details?: unknown;
-  [key: string]: unknown;
-}
-
-interface UnifiedZapRawEvent {
-  type?: string;
-  intentId?: string;
-  progress?: number;
-  progressPercent?: number;
-  currentStep?: string;
-  currentOperation?: string;
-  phase?: string;
-  metadata?: UnifiedZapRawEventMetadata | null;
-  processedTokens?: number;
-  totalTokens?: number;
-  message?: string;
-  description?: string;
-  additionalData?: { message?: string } | null;
-  additionalInfo?: { message?: string } | null;
-  error?: UnifiedZapRawEventError | string | null;
-  errorCode?: string;
-  timestamp?: string;
-  rawTimestamp?: string;
-  totalStrategies?: number;
-  strategyCount?: number;
-  totalProtocols?: number;
-  protocolCount?: number;
-  chainBreakdown?: UnifiedZapRawEventChainBreakdownEntry[];
-  chains?: UnifiedZapRawEventChainBreakdownEntry[];
-  processedStrategies?: number;
-  processedProtocols?: number;
-  estimatedDuration?: string;
-  [key: string]: unknown;
-}
+// ============================================================================
+// Type Re-exports from Schema
+// ============================================================================
+// Note: All data structures are now defined in sseEventSchemas.ts
+// These interfaces are kept for backward compatibility only
 
 export const UNIFIED_ZAP_PHASES = [
   "connected",
@@ -89,56 +42,9 @@ export const UNIFIED_ZAP_PHASES = [
 
 type UnifiedZapPhase = (typeof UNIFIED_ZAP_PHASES)[number];
 
-interface UnifiedZapStreamEventMetadata {
-  totalStrategies?: number;
-  totalProtocols?: number;
-  estimatedDuration?: string;
-  processedStrategies?: number;
-  processedProtocols?: number;
-  chainBreakdown?: {
-    name: string;
-    chainId: number;
-    protocolCount: number;
-  }[];
-  message?: string;
-  description?: string;
-  progressPercent?: number;
-}
-
-export interface UnifiedZapStreamTransaction {
-  to: string;
-  data: string;
-  value?: string;
-  gas?: string;
-  gasPrice?: string;
-  maxFeePerGas?: string;
-  maxPriorityFeePerGas?: string;
-  chainId?: number;
-}
-
-interface UnifiedZapStreamEvent {
-  type: string;
-  intentId?: string;
-  progress: number; // normalized 0-1 value
-  currentStep?: UnifiedZapPhase | null;
-  phase?: string;
-  currentOperation?: string;
-  progressPercent?: number;
-  processedTokens?: number;
-  totalTokens?: number;
-  message?: string;
-  description?: string;
-  metadata?: UnifiedZapStreamEventMetadata;
-  error?: {
-    code?: string;
-    message: string;
-    details?: unknown;
-  } | null;
-  timestamp: string;
-  rawEvent?: unknown;
-  transactions?: UnifiedZapStreamTransaction[];
-  chainId?: number;
-}
+// Type aliases using validated schema types
+type UnifiedZapStreamEvent = NormalizedZapEvent;
+export type { UnifiedZapStreamTransaction };
 
 interface UseUnifiedZapStreamReturn {
   events: UnifiedZapStreamEvent[];
@@ -234,7 +140,18 @@ export function useUnifiedZapStream(
 
         eventSource.onmessage = event => {
           try {
-            const rawData = JSON.parse(event.data) as UnifiedZapRawEvent;
+            // Parse and validate raw SSE event data with Zod
+            const parseResult = validateRawSSEEvent(JSON.parse(event.data));
+
+            if (!parseResult.success) {
+              zapStreamLogger.error("Invalid SSE event data - validation failed", {
+                error: parseResult.error.flatten(),
+                rawData: event.data,
+              });
+              return; // Skip invalid events
+            }
+
+            const rawData = parseResult.data;
 
             const normalizeProgress = (value: unknown, fallback = 0) => {
               if (typeof value !== "number" || Number.isNaN(value)) {
@@ -301,47 +218,6 @@ export function useUnifiedZapStream(
                   ? rawData.progressPercent / 100
                   : 0;
 
-            const safeString = (value: unknown): string | undefined => {
-              if (typeof value === "string" && value.length > 0) {
-                return value;
-              }
-              return undefined;
-            };
-
-            const safeNumber = (value: unknown): number | undefined => {
-              if (typeof value === "number" && !Number.isNaN(value)) {
-                return value;
-              }
-
-              if (typeof value === "string" && value.trim().length > 0) {
-                const parsed = Number(value);
-                return Number.isFinite(parsed) ? parsed : undefined;
-              }
-
-              if (typeof value === "bigint") {
-                const converted = Number(value);
-                return Number.isFinite(converted) ? converted : undefined;
-              }
-
-              return undefined;
-            };
-
-            const safeHexishString = (value: unknown): string | undefined => {
-              if (typeof value === "string" && value.length > 0) {
-                return value;
-              }
-
-              if (typeof value === "number" && Number.isFinite(value)) {
-                return value.toString();
-              }
-
-              if (typeof value === "bigint") {
-                return value.toString();
-              }
-
-              return undefined;
-            };
-
             const normalizeTransactions = (
               input: unknown
             ): UnifiedZapStreamTransaction[] | undefined => {
@@ -355,23 +231,24 @@ export function useUnifiedZapStream(
                     return null;
                   }
 
-                  const tx = item as Record<string, unknown>;
-                  const to = safeString(tx["to"]);
-                  const data = safeString(tx["data"]);
+                  // Type-safe access to transaction fields
+                  const txRecord = item as Record<string, unknown>;
+                  const to = safeString(txRecord["to"]);
+                  const data = safeString(txRecord["data"]);
 
                   if (!to || !data) {
                     return null;
                   }
 
-                  const chainId = safeNumber(tx["chainId"]);
-                  const valueStr = safeHexishString(tx["value"]);
+                  const chainId = safeNumber(txRecord["chainId"]);
+                  const valueStr = safeHexishString(txRecord["value"]);
                   const gasStr =
-                    safeHexishString(tx["gas"]) ??
-                    safeHexishString(tx["gasLimit"]);
-                  const gasPriceStr = safeHexishString(tx["gasPrice"]);
-                  const maxFeePerGas = safeHexishString(tx["maxFeePerGas"]);
+                    safeHexishString(txRecord["gas"]) ??
+                    safeHexishString(txRecord["gasLimit"]);
+                  const gasPriceStr = safeHexishString(txRecord["gasPrice"]);
+                  const maxFeePerGas = safeHexishString(txRecord["maxFeePerGas"]);
                   const maxPriorityFeePerGas = safeHexishString(
-                    tx["maxPriorityFeePerGas"]
+                    txRecord["maxPriorityFeePerGas"]
                   );
 
                   const normalizedTx: UnifiedZapStreamTransaction = {
@@ -431,16 +308,11 @@ export function useUnifiedZapStream(
                       return null;
                     }
 
-                    const name = safeString(
-                      (entry as UnifiedZapRawEventChainBreakdownEntry).name
-                    );
-                    const chainId = safeNumber(
-                      (entry as UnifiedZapRawEventChainBreakdownEntry).chainId
-                    );
-                    const protocolCount = safeNumber(
-                      (entry as UnifiedZapRawEventChainBreakdownEntry)
-                        .protocolCount
-                    );
+                    // Type-safe access to chain breakdown fields
+                    const entryRecord = entry as Record<string, unknown>;
+                    const name = safeString(entryRecord["name"]);
+                    const chainId = safeNumber(entryRecord["chainId"]);
+                    const protocolCount = safeNumber(entryRecord["protocolCount"]);
 
                     if (
                       name &&
@@ -463,7 +335,7 @@ export function useUnifiedZapStream(
                   )
               : undefined;
 
-            const normalizedMetadata: UnifiedZapStreamEventMetadata = {};
+            const normalizedMetadata: Partial<NormalizedZapEvent["metadata"]> = {};
 
             const totalStrategies =
               safeNumber(metadata?.totalStrategies) ??
@@ -514,14 +386,14 @@ export function useUnifiedZapStream(
               normalizedMetadata.progressPercent = metadataProgressPercent;
             }
 
+            // Access transactions from raw data (already validated by Zod)
+            const rawDataRecord = rawData as Record<string, unknown>;
             const normalizedTransactions =
-              normalizeTransactions(
-                (rawData as Record<string, unknown>)["transactions"]
-              ) ?? normalizeTransactions(metadata?.transactions);
+              normalizeTransactions(rawDataRecord["transactions"]) ??
+              normalizeTransactions(metadata?.transactions);
 
             const normalizedChainId =
-              safeNumber((rawData as Record<string, unknown>)["chainId"]) ??
-              safeNumber(metadata?.chainId);
+              safeNumber(rawDataRecord["chainId"]) ?? safeNumber(metadata?.chainId);
 
             const normalizedEvent: UnifiedZapStreamEvent = {
               type: safeString(rawData.type) ?? "progress",
