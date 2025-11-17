@@ -1,9 +1,9 @@
 import { renderHook } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
-import type { LandingPageResponse } from "@/services/analyticsService";
 import * as chartUtils from "@/lib/chartUtils";
+import type { LandingPageResponse } from "@/services/analyticsService";
 import * as portfolioUtils from "@/utils/portfolio.utils";
 
 // Mock dependencies
@@ -136,7 +136,9 @@ describe("useWalletPortfolioTransform", () => {
   describe("Pie Chart Data Transformation", () => {
     it("should transform portfolio_allocation into pie chart data", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(chartUtils.transformToPieChartData).toHaveBeenCalled();
       expect(result.current.pieChartData).not.toBeNull();
@@ -147,7 +149,8 @@ describe("useWalletPortfolioTransform", () => {
       const mockData = createMockLandingPageData();
       renderHook(() => useWalletPortfolioTransform(mockData));
 
-      const callArgs = vi.mocked(chartUtils.transformToPieChartData).mock.calls[0];
+      const callArgs = vi.mocked(chartUtils.transformToPieChartData).mock
+        .calls[0];
       const categories = callArgs[0];
 
       // Should maintain category order: btc, eth, stablecoins, others
@@ -161,7 +164,8 @@ describe("useWalletPortfolioTransform", () => {
       const mockData = createMockLandingPageData();
       renderHook(() => useWalletPortfolioTransform(mockData));
 
-      const callArgs = vi.mocked(chartUtils.transformToPieChartData).mock.calls[0];
+      const callArgs = vi.mocked(chartUtils.transformToPieChartData).mock
+        .calls[0];
       const options = callArgs[1];
 
       expect(options).toEqual({
@@ -203,7 +207,9 @@ describe("useWalletPortfolioTransform", () => {
 
       vi.mocked(chartUtils.transformToPieChartData).mockReturnValue([]);
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.pieChartData).toBeNull();
       expect(result.current.hasZeroData).toBe(true);
@@ -213,7 +219,9 @@ describe("useWalletPortfolioTransform", () => {
       const mockData = createMockLandingPageData();
       vi.mocked(chartUtils.transformToPieChartData).mockReturnValue([]);
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.pieChartData).toBeNull();
     });
@@ -248,7 +256,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.pieChartData).toBeDefined();
     });
@@ -277,7 +287,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       ]);
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.categorySummaries).toHaveLength(2);
     });
@@ -290,7 +302,9 @@ describe("useWalletPortfolioTransform", () => {
   describe("Category Summaries", () => {
     it("should generate category summaries from portfolio allocation", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(portfolioUtils.createCategoriesFromApiData).toHaveBeenCalledWith(
         {
@@ -310,7 +324,9 @@ describe("useWalletPortfolioTransform", () => {
       const mockData = createMockLandingPageData();
       vi.mocked(portfolioUtils.createCategoriesFromApiData).mockReturnValue([]);
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.categorySummaries).toEqual([]);
     });
@@ -322,7 +338,9 @@ describe("useWalletPortfolioTransform", () => {
         null as any
       );
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(Array.isArray(result.current.categorySummaries)).toBe(true);
       expect(result.current.categorySummaries).toEqual([]);
@@ -380,14 +398,18 @@ describe("useWalletPortfolioTransform", () => {
   describe("Debt Categorization", () => {
     it("should generate debt category summaries", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       // Check if createCategoriesFromApiData was called twice (once for assets, once for debt)
-      expect(portfolioUtils.createCategoriesFromApiData).toHaveBeenCalledTimes(2);
+      expect(portfolioUtils.createCategoriesFromApiData).toHaveBeenCalledTimes(
+        2
+      );
 
       // Second call should be for debt
-      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData).mock
-        .calls[1];
+      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData)
+        .mock.calls[1];
       expect(debtCall[0]).toEqual({
         btc: 500,
         eth: 800,
@@ -407,8 +429,8 @@ describe("useWalletPortfolioTransform", () => {
 
       renderHook(() => useWalletPortfolioTransform(mockData));
 
-      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData).mock
-        .calls[1];
+      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData)
+        .mock.calls[1];
       expect(debtCall[0]).toEqual({
         btc: 0,
         eth: 0,
@@ -429,22 +451,28 @@ describe("useWalletPortfolioTransform", () => {
         total_debt_usd: 0,
       });
 
-      vi.mocked(portfolioUtils.createCategoriesFromApiData).mockReturnValueOnce([
-        // Asset summaries
-        {
-          id: "btc",
-          name: "Bitcoin",
-          color: "#000",
-          totalValue: 3000,
-          percentage: 30,
-          averageAPR: 0,
-          topProtocols: [],
-        },
-      ]);
+      vi.mocked(portfolioUtils.createCategoriesFromApiData).mockReturnValueOnce(
+        [
+          // Asset summaries
+          {
+            id: "btc",
+            name: "Bitcoin",
+            color: "#000",
+            totalValue: 3000,
+            percentage: 30,
+            averageAPR: 0,
+            topProtocols: [],
+          },
+        ]
+      );
 
-      vi.mocked(portfolioUtils.createCategoriesFromApiData).mockReturnValueOnce([]);
+      vi.mocked(portfolioUtils.createCategoriesFromApiData).mockReturnValueOnce(
+        []
+      );
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.debtCategorySummaries).toEqual([]);
     });
@@ -456,7 +484,9 @@ describe("useWalletPortfolioTransform", () => {
         .mockReturnValueOnce([]) // Asset summaries
         .mockReturnValueOnce(null as any); // Debt summaries (simulated bad return)
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(Array.isArray(result.current.debtCategorySummaries)).toBe(true);
       expect(result.current.debtCategorySummaries).toEqual([]);
@@ -469,8 +499,8 @@ describe("useWalletPortfolioTransform", () => {
 
       renderHook(() => useWalletPortfolioTransform(mockData));
 
-      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData).mock
-        .calls[1];
+      const debtCall = vi.mocked(portfolioUtils.createCategoriesFromApiData)
+        .mock.calls[1];
       expect(debtCall[1]).toBe(0); // Should default to 0
     });
   });
@@ -485,7 +515,9 @@ describe("useWalletPortfolioTransform", () => {
         total_net_usd: 12345.67,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics).toEqual({
         totalValue: 12345.67,
@@ -499,7 +531,9 @@ describe("useWalletPortfolioTransform", () => {
         total_net_usd: 0,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics?.totalValue).toBe(0);
     });
@@ -511,17 +545,23 @@ describe("useWalletPortfolioTransform", () => {
         total_debt_usd: 6000,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics?.totalValue).toBe(-1000);
     });
 
     it("should always include change metrics (even if zero)", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics).toHaveProperty("totalChange24h");
-      expect(result.current.portfolioMetrics).toHaveProperty("totalChangePercentage");
+      expect(result.current.portfolioMetrics).toHaveProperty(
+        "totalChangePercentage"
+      );
       expect(result.current.portfolioMetrics?.totalChange24h).toBe(0);
       expect(result.current.portfolioMetrics?.totalChangePercentage).toBe(0);
     });
@@ -563,7 +603,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.hasZeroData).toBe(true);
     });
@@ -599,7 +641,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.hasZeroData).toBe(false);
     });
@@ -643,7 +687,7 @@ describe("useWalletPortfolioTransform", () => {
     });
 
     it("should handle undefined data as zero state", () => {
-      const { result } = renderHook(() => useWalletPortfolioTransform(undefined));
+      const { result } = renderHook(() => useWalletPortfolioTransform());
 
       expect(result.current.hasZeroData).toBe(false); // No data = not necessarily zero portfolio
       expect(result.current.pieChartData).toBeNull();
@@ -690,7 +734,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics?.totalValue).toBe(9_000_000);
       expect(result.current.hasZeroData).toBe(false);
@@ -729,7 +775,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.portfolioMetrics?.totalValue).toBe(1);
       expect(result.current.hasZeroData).toBe(false);
@@ -766,7 +814,9 @@ describe("useWalletPortfolioTransform", () => {
         total_assets_usd: 10000,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.categorySummaries).toBeDefined();
       expect(result.current.hasZeroData).toBe(false);
@@ -803,7 +853,9 @@ describe("useWalletPortfolioTransform", () => {
         total_assets_usd: 10000,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.hasZeroData).toBe(false);
     });
@@ -814,7 +866,9 @@ describe("useWalletPortfolioTransform", () => {
         wallet_token_summary: undefined as any,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current.debtCategorySummaries).toBeDefined();
       expect(Array.isArray(result.current.debtCategorySummaries)).toBe(true);
@@ -946,7 +1000,9 @@ describe("useWalletPortfolioTransform", () => {
         },
       });
 
-      const { result } = renderHook(() => useWalletPortfolioTransform(realWorldData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(realWorldData)
+      );
 
       expect(result.current.pieChartData).not.toBeNull();
       expect(result.current.categorySummaries.length).toBeGreaterThan(0);
@@ -956,7 +1012,7 @@ describe("useWalletPortfolioTransform", () => {
     });
 
     it("should handle visitor mode (empty) portfolio", () => {
-      const { result } = renderHook(() => useWalletPortfolioTransform(undefined));
+      const { result } = renderHook(() => useWalletPortfolioTransform());
 
       expect(result.current).toEqual({
         pieChartData: null,
@@ -1057,7 +1113,9 @@ describe("useWalletPortfolioTransform", () => {
   describe("Return Type Structure", () => {
     it("should always return all required fields", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       expect(result.current).toHaveProperty("pieChartData");
       expect(result.current).toHaveProperty("categorySummaries");
@@ -1068,7 +1126,9 @@ describe("useWalletPortfolioTransform", () => {
 
     it("should return correct types for all fields", () => {
       const mockData = createMockLandingPageData();
-      const { result } = renderHook(() => useWalletPortfolioTransform(mockData));
+      const { result } = renderHook(() =>
+        useWalletPortfolioTransform(mockData)
+      );
 
       // pieChartData can be null or array
       expect(
@@ -1093,9 +1153,7 @@ describe("useWalletPortfolioTransform", () => {
     });
 
     it("should match the documented return interface", () => {
-      const { result } = renderHook(() =>
-        useWalletPortfolioTransform(undefined)
-      );
+      const { result } = renderHook(() => useWalletPortfolioTransform());
 
       // When undefined, should return safe defaults
       expect(result.current).toMatchObject({

@@ -4,6 +4,7 @@
  * Provides real-time progress updates and error handling with Zod validation
  */
 
+/* eslint-disable sonarjs/deprecation */
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
@@ -74,6 +75,7 @@ export function useUnifiedZapStream(
   const [error, setError] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isReconnectingRef = useRef(false);
   const hasTerminalEventRef = useRef(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
 
@@ -144,10 +146,13 @@ export function useUnifiedZapStream(
             const parseResult = validateRawSSEEvent(JSON.parse(event.data));
 
             if (!parseResult.success) {
-              zapStreamLogger.error("Invalid SSE event data - validation failed", {
-                error: parseResult.error.flatten(),
-                rawData: event.data,
-              });
+              zapStreamLogger.error(
+                "Invalid SSE event data - validation failed",
+                {
+                  error: parseResult.error.format(),
+                  rawData: event.data,
+                }
+              );
               return; // Skip invalid events
             }
 
@@ -246,7 +251,9 @@ export function useUnifiedZapStream(
                     safeHexishString(txRecord["gas"]) ??
                     safeHexishString(txRecord["gasLimit"]);
                   const gasPriceStr = safeHexishString(txRecord["gasPrice"]);
-                  const maxFeePerGas = safeHexishString(txRecord["maxFeePerGas"]);
+                  const maxFeePerGas = safeHexishString(
+                    txRecord["maxFeePerGas"]
+                  );
                   const maxPriorityFeePerGas = safeHexishString(
                     txRecord["maxPriorityFeePerGas"]
                   );
@@ -312,7 +319,9 @@ export function useUnifiedZapStream(
                     const entryRecord = entry as Record<string, unknown>;
                     const name = safeString(entryRecord["name"]);
                     const chainId = safeNumber(entryRecord["chainId"]);
-                    const protocolCount = safeNumber(entryRecord["protocolCount"]);
+                    const protocolCount = safeNumber(
+                      entryRecord["protocolCount"]
+                    );
 
                     if (
                       name &&
@@ -335,7 +344,8 @@ export function useUnifiedZapStream(
                   )
               : undefined;
 
-            const normalizedMetadata: Partial<NormalizedZapEvent["metadata"]> = {};
+            const normalizedMetadata: Partial<NormalizedZapEvent["metadata"]> =
+              {};
 
             const totalStrategies =
               safeNumber(metadata?.totalStrategies) ??
@@ -393,7 +403,8 @@ export function useUnifiedZapStream(
               normalizeTransactions(metadata?.transactions);
 
             const normalizedChainId =
-              safeNumber(rawDataRecord["chainId"]) ?? safeNumber(metadata?.chainId);
+              safeNumber(rawDataRecord["chainId"]) ??
+              safeNumber(metadata?.chainId);
 
             const normalizedEvent: UnifiedZapStreamEvent = {
               type: safeString(rawData.type) ?? "progress",
@@ -564,8 +575,9 @@ export function useUnifiedZapStream(
             });
 
             reconnectTimeoutRef.current = setTimeout(() => {
+              isReconnectingRef.current = true;
+              closeStream();
               setReconnectAttempts(prev => prev + 1);
-              connectToStream(intentId);
             }, RECONNECT_DELAY);
           } else {
             setError(
@@ -597,17 +609,33 @@ export function useUnifiedZapStream(
 
   // Effect to manage stream connection
   useEffect(() => {
-    if (intentId && enabled && !isComplete) {
-      connectToStream(intentId);
-    } else if (!enabled || isComplete) {
+    if (
+      intentId &&
+      enabled &&
+      !isComplete &&
+      !hasError &&
+      !hasTerminalEventRef.current
+    ) {
+      // Avoid opening duplicate connections when a reconnect is already in flight
+      if (!eventSourceRef.current) {
+        connectToStream(intentId);
+      }
+    } else if (!enabled) {
       closeStream();
+    }
+
+    // Reset reconnect guard after the new effect cycle completes
+    if (isReconnectingRef.current) {
+      isReconnectingRef.current = false;
     }
 
     // Cleanup on unmount or when intentId changes
     return () => {
-      closeStream();
+      if (!isReconnectingRef.current && !hasTerminalEventRef.current) {
+        closeStream();
+      }
     };
-  }, [intentId, enabled, isComplete, connectToStream, closeStream]);
+  }, [intentId, enabled, isComplete, hasError, connectToStream, closeStream]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

@@ -54,6 +54,7 @@ interface YieldState {
  * />
  * ```
  */
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export function YieldMetric({
   yieldSummaryData,
   isYieldLoading,
@@ -196,9 +197,7 @@ export function YieldMetric({
         }
         role={hasProtocolBreakdown ? "button" : undefined}
         tabIndex={hasProtocolBreakdown ? 0 : undefined}
-        aria-label={
-          hasProtocolBreakdown ? "Toggle yield breakdown" : undefined
-        }
+        aria-label={hasProtocolBreakdown ? "Toggle yield breakdown" : undefined}
       >
         <div className="flex items-center space-x-1 mb-1">
           <p className="text-sm text-gray-400">Avg Daily Yield</p>

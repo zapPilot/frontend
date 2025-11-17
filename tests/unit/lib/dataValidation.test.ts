@@ -3,28 +3,29 @@
  * Tests all conversion functions with valid inputs, edge cases, and fallback behavior
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+
 import {
-  toNumber,
-  toString,
+  asPartialArray,
+  clampNumber,
+  getProp,
+  isArray,
+  isNonEmptyString,
+  isObject,
+  isValidDate,
+  isValidNumber,
+  safeHexishString,
+  safeNumber,
+  safeString,
+  toArray,
   toBoolean,
+  toCurrency,
   toDate,
   toDateString,
-  toArray,
-  asPartialArray,
-  getProp,
-  clampNumber,
+  toNumber,
   toNumberInRange,
   toPercentage,
-  toCurrency,
-  safeString,
-  safeNumber,
-  safeHexishString,
-  isObject,
-  isValidNumber,
-  isNonEmptyString,
-  isArray,
-  isValidDate,
+  toString,
 } from "@/lib/dataValidation";
 
 describe("dataValidation", () => {
@@ -297,7 +298,7 @@ describe("dataValidation", () => {
     });
 
     it("should convert undefined to empty array", () => {
-      expect(asPartialArray(undefined)).toEqual([]);
+      expect(asPartialArray()).toEqual([]);
     });
 
     it("should preserve empty array", () => {
@@ -469,7 +470,7 @@ describe("dataValidation", () => {
     });
 
     it("should return undefined for undefined", () => {
-      expect(safeString(undefined)).toBeUndefined();
+      expect(safeString()).toBeUndefined();
     });
 
     it("should return undefined for empty string", () => {
@@ -505,7 +506,7 @@ describe("dataValidation", () => {
     });
 
     it("should return undefined for undefined", () => {
-      expect(safeNumber(undefined)).toBeUndefined();
+      expect(safeNumber()).toBeUndefined();
     });
 
     it("should return undefined for NaN", () => {
@@ -541,7 +542,7 @@ describe("dataValidation", () => {
     });
 
     it("should return undefined for undefined", () => {
-      expect(safeHexishString(undefined)).toBeUndefined();
+      expect(safeHexishString()).toBeUndefined();
     });
 
     it("should return undefined for empty string", () => {
@@ -577,7 +578,7 @@ describe("dataValidation", () => {
     });
 
     it("should return false for undefined", () => {
-      expect(isObject(undefined)).toBe(false);
+      expect(isObject()).toBe(false);
     });
 
     it("should return false for primitives", () => {
@@ -611,7 +612,7 @@ describe("dataValidation", () => {
     it("should return false for non-numbers", () => {
       expect(isValidNumber("123")).toBe(false);
       expect(isValidNumber(null)).toBe(false);
-      expect(isValidNumber(undefined)).toBe(false);
+      expect(isValidNumber()).toBe(false);
     });
   });
 
@@ -635,7 +636,7 @@ describe("dataValidation", () => {
     });
 
     it("should return false for undefined", () => {
-      expect(isNonEmptyString(undefined)).toBe(false);
+      expect(isNonEmptyString()).toBe(false);
     });
 
     it("should return false for non-strings", () => {
@@ -655,7 +656,7 @@ describe("dataValidation", () => {
       expect(isArray(123)).toBe(false);
       expect(isArray({})).toBe(false);
       expect(isArray(null)).toBe(false);
-      expect(isArray(undefined)).toBe(false);
+      expect(isArray()).toBe(false);
     });
   });
 
@@ -673,7 +674,7 @@ describe("dataValidation", () => {
       expect(isValidDate("2024-01-15")).toBe(false);
       expect(isValidDate(1705276800000)).toBe(false);
       expect(isValidDate(null)).toBe(false);
-      expect(isValidDate(undefined)).toBe(false);
+      expect(isValidDate()).toBe(false);
     });
   });
 });

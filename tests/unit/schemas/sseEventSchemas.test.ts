@@ -8,11 +8,9 @@ import { describe, expect, it } from "vitest";
 import {
   CompleteEventSchema,
   ErrorEventSchema,
-  NormalizedZapEventSchema,
   ProgressEventSchema,
   TransactionEventSchema,
   UNIFIED_ZAP_PHASES,
-  UnifiedZapRawEventSchema,
   type UnifiedZapStreamTransaction,
   validateChainBreakdown,
   validateNormalizedEvent,
@@ -53,9 +51,7 @@ describe("UnifiedZapRawEventSchema", () => {
           totalStrategies: 5,
           processedStrategies: 3,
           message: "Processing strategies",
-          chainBreakdown: [
-            { name: "Ethereum", chainId: 1, protocolCount: 2 },
-          ],
+          chainBreakdown: [{ name: "Ethereum", chainId: 1, protocolCount: 2 }],
         },
         processedTokens: 2,
         totalTokens: 5,
@@ -295,9 +291,7 @@ describe("NormalizedZapEventSchema", () => {
         metadata: {
           totalStrategies: 5,
           processedStrategies: 3,
-          chainBreakdown: [
-            { name: "Ethereum", chainId: 1, protocolCount: 2 },
-          ],
+          chainBreakdown: [{ name: "Ethereum", chainId: 1, protocolCount: 2 }],
         },
         timestamp: "2025-01-17T10:00:00Z",
       };
@@ -582,36 +576,28 @@ describe("Chain Breakdown Validation", () => {
   });
 
   it("should reject negative chainId", () => {
-    const breakdown = [
-      { name: "Invalid", chainId: -1, protocolCount: 1 },
-    ];
+    const breakdown = [{ name: "Invalid", chainId: -1, protocolCount: 1 }];
 
     const result = validateChainBreakdown(breakdown);
     expect(result.success).toBe(false);
   });
 
   it("should reject zero chainId", () => {
-    const breakdown = [
-      { name: "Invalid", chainId: 0, protocolCount: 1 },
-    ];
+    const breakdown = [{ name: "Invalid", chainId: 0, protocolCount: 1 }];
 
     const result = validateChainBreakdown(breakdown);
     expect(result.success).toBe(false);
   });
 
   it("should reject negative protocolCount", () => {
-    const breakdown = [
-      { name: "Ethereum", chainId: 1, protocolCount: -5 },
-    ];
+    const breakdown = [{ name: "Ethereum", chainId: 1, protocolCount: -5 }];
 
     const result = validateChainBreakdown(breakdown);
     expect(result.success).toBe(false);
   });
 
   it("should accept zero protocolCount", () => {
-    const breakdown = [
-      { name: "Ethereum", chainId: 1, protocolCount: 0 },
-    ];
+    const breakdown = [{ name: "Ethereum", chainId: 1, protocolCount: 0 }];
 
     const result = validateChainBreakdown(breakdown);
     expect(result.success).toBe(true);
@@ -627,7 +613,11 @@ describe("Chain Breakdown Validation", () => {
   });
 
   it("should reject non-array input", () => {
-    const result = validateChainBreakdown({ name: "Ethereum", chainId: 1, protocolCount: 5 });
+    const result = validateChainBreakdown({
+      name: "Ethereum",
+      chainId: 1,
+      protocolCount: 5,
+    });
     expect(result.success).toBe(false);
   });
 });

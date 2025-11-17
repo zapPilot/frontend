@@ -1,12 +1,12 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useWalletPortfolioState } from "@/hooks/useWalletPortfolioState";
 import * as UserContext from "@/contexts/UserContext";
 import * as usePortfolioQuery from "@/hooks/queries/usePortfolioQuery";
 import * as usePortfolioState from "@/hooks/usePortfolioState";
+import { useWalletPortfolioState } from "@/hooks/useWalletPortfolioState";
 import * as useWalletPortfolioTransform from "@/hooks/useWalletPortfolioTransform";
 
 // Mock dependencies
@@ -96,8 +96,12 @@ function createWrapper() {
     },
   });
 
-  return ({ children }: { children: ReactNode }) =>
+  const Wrapper = ({ children }: { children: ReactNode }) =>
     createElement(QueryClientProvider, { client: queryClient }, children);
+
+  Wrapper.displayName = "WalletPortfolioStateTestWrapper";
+
+  return Wrapper;
 }
 
 describe("useWalletPortfolioState", () => {
@@ -131,11 +135,13 @@ describe("useWalletPortfolioState", () => {
       refetch: vi.fn(),
     } as any);
 
-    vi.mocked(useWalletPortfolioTransform.useWalletPortfolioTransform).mockReturnValue(
-      mockTransformData
-    );
+    vi.mocked(
+      useWalletPortfolioTransform.useWalletPortfolioTransform
+    ).mockReturnValue(mockTransformData);
 
-    vi.mocked(usePortfolioState.usePortfolioState).mockReturnValue(mockPortfolioState);
+    vi.mocked(usePortfolioState.usePortfolioState).mockReturnValue(
+      mockPortfolioState
+    );
   });
 
   afterEach(() => {
@@ -144,7 +150,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("User Identity Resolution", () => {
     it("should resolve userId from connected user when no urlUserId provided", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -171,7 +177,7 @@ describe("useWalletPortfolioState", () => {
         isLoading: false,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -217,7 +223,7 @@ describe("useWalletPortfolioState", () => {
     });
 
     it("should NOT be visitor mode when connected and no urlUserId", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -227,13 +233,17 @@ describe("useWalletPortfolioState", () => {
 
   describe("Data Loading - Progressive Loading", () => {
     it("should load landing page data and yield data in parallel", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
       // Both queries should be called with the same userId
-      expect(usePortfolioQuery.useLandingPageData).toHaveBeenCalledWith("test-user-123");
-      expect(usePortfolioQuery.useYieldSummaryData).toHaveBeenCalledWith("test-user-123");
+      expect(usePortfolioQuery.useLandingPageData).toHaveBeenCalledWith(
+        "test-user-123"
+      );
+      expect(usePortfolioQuery.useYieldSummaryData).toHaveBeenCalledWith(
+        "test-user-123"
+      );
 
       // Data should be available
       expect(result.current.landingPageData).toEqual(mockLandingPageData);
@@ -257,7 +267,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -282,7 +292,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -295,17 +305,23 @@ describe("useWalletPortfolioState", () => {
 
   describe("Data Transformation", () => {
     it("should transform landing page data into chart and metrics", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
-      expect(useWalletPortfolioTransform.useWalletPortfolioTransform).toHaveBeenCalledWith(
-        mockLandingPageData
-      );
+      expect(
+        useWalletPortfolioTransform.useWalletPortfolioTransform
+      ).toHaveBeenCalledWith(mockLandingPageData);
 
-      expect(result.current.pieChartData).toEqual(mockTransformData.pieChartData);
-      expect(result.current.categorySummaries).toEqual(mockTransformData.categorySummaries);
-      expect(result.current.portfolioMetrics).toEqual(mockTransformData.portfolioMetrics);
+      expect(result.current.pieChartData).toEqual(
+        mockTransformData.pieChartData
+      );
+      expect(result.current.categorySummaries).toEqual(
+        mockTransformData.categorySummaries
+      );
+      expect(result.current.portfolioMetrics).toEqual(
+        mockTransformData.portfolioMetrics
+      );
     });
 
     it("should handle undefined landing page data", () => {
@@ -317,13 +333,13 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
-      expect(useWalletPortfolioTransform.useWalletPortfolioTransform).toHaveBeenCalledWith(
-        undefined
-      );
+      expect(
+        useWalletPortfolioTransform.useWalletPortfolioTransform
+      ).toHaveBeenCalledWith(undefined);
     });
   });
 
@@ -390,7 +406,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("View Toggles", () => {
     it("should toggle balance visibility", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -420,7 +436,7 @@ describe("useWalletPortfolioState", () => {
     });
 
     it("should toggle category expansion", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -463,7 +479,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("Wallet Manager Modal", () => {
     it("should manage wallet manager open/close state", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -497,11 +513,13 @@ describe("useWalletPortfolioState", () => {
 
       expect(result.current.isOwnBundle).toBe(true);
       expect(result.current.bundleUserName).toBe("JohnDoe");
-      expect(result.current.bundleUrl).toBe("https://app.zappilot.com/bundle?userId=test-user-123");
+      expect(result.current.bundleUrl).toBe(
+        "https://app.zappilot.com/bundle?userId=test-user-123"
+      );
     });
 
     it("should omit bundle context when not provided", () => {
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -513,7 +531,9 @@ describe("useWalletPortfolioState", () => {
 
   describe("Retry Functionality", () => {
     it("should expose refetch function for retry", async () => {
-      const mockRefetch = vi.fn().mockResolvedValue({ data: mockLandingPageData });
+      const mockRefetch = vi
+        .fn()
+        .mockResolvedValue({ data: mockLandingPageData });
 
       vi.mocked(usePortfolioQuery.useLandingPageData).mockReturnValue({
         data: mockLandingPageData,
@@ -523,7 +543,7 @@ describe("useWalletPortfolioState", () => {
         refetch: mockRefetch,
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -543,7 +563,9 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      vi.mocked(useWalletPortfolioTransform.useWalletPortfolioTransform).mockReturnValue({
+      vi.mocked(
+        useWalletPortfolioTransform.useWalletPortfolioTransform
+      ).mockReturnValue({
         ...mockTransformData,
         hasZeroData: true,
       });
@@ -572,9 +594,11 @@ describe("useWalletPortfolioState", () => {
         showConnectPrompt: false,
       };
 
-      vi.mocked(usePortfolioState.usePortfolioState).mockReturnValue(customPortfolioState);
+      vi.mocked(usePortfolioState.usePortfolioState).mockReturnValue(
+        customPortfolioState
+      );
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -593,7 +617,7 @@ describe("useWalletPortfolioState", () => {
         isLoading: false,
       });
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -612,7 +636,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 

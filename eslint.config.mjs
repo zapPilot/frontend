@@ -26,6 +26,7 @@ const eslintConfig = [
       "out/**/*",
       "playwright-report/**/*",
       "test-results/**/*",
+      ".claude/**/*",
     ],
   },
   // Base Next.js configs

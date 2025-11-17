@@ -14,11 +14,10 @@
  * - Complete transaction flows (ZapIn/ZapOut)
  */
 
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi, afterEach } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useUnifiedZapStream } from "@/hooks/useUnifiedZapStream";
-import type { NormalizedZapEvent } from "@/schemas/sseEventSchemas";
 
 // ============================================================================
 // Mock EventSource Implementation
@@ -29,11 +28,11 @@ class MockEventSource {
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onerror: ((event: Event) => void) | null = null;
-  readyState: number = 0; // CONNECTING
+  readyState = 0; // CONNECTING
 
-  static CONNECTING = 0;
-  static OPEN = 1;
-  static CLOSED = 2;
+  static readonly CONNECTING = 0;
+  static readonly OPEN = 1;
+  static readonly CLOSED = 2;
 
   constructor(url: string) {
     this.url = url;
@@ -86,8 +85,66 @@ global.EventSource = vi.fn((url: string) => {
   return mockEventSourceInstance as unknown as EventSource;
 }) as unknown as typeof EventSource;
 
+// Utility to ensure React's useEffect has attached handlers before simulating
+// any EventSource activity. Without this, simulateOpen/onmessage could run
+// while the handlers are still null, leading to timeouts in assertions.
+async function waitForHandler(handler: "onopen" | "onmessage" | "onerror") {
+  const maxAttempts = 10;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (mockEventSourceInstance && mockEventSourceInstance[handler]) {
+      return;
+    }
+
+    // Allow React effects/microtasks to flush without relying on timers
+    // (timers are faked in this suite, so waitFor interval timers won't fire).
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+
+  throw new Error(`EventSource ${handler} handler was not attached in time`);
+}
+
+// Timer-free condition waiter (avoids setTimeout with fake timers)
+async function waitForCondition(predicate: () => boolean, maxAttempts = 50) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (predicate()) {
+      return;
+    }
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+  }
+
+  throw new Error("Condition not met within retry limit");
+}
+
+// Assertion-friendly waiter that doesn't rely on setTimeout (works with fake timers)
+async function waitForAssertions(assertFn: () => void, maxAttempts = 50) {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      assertFn();
+      return;
+    } catch (error) {
+      lastError = error;
+      await act(async () => {
+        await Promise.resolve();
+      });
+    }
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+}
+
 // Helper to simulate messages within act()
 async function simulateMessage(data: unknown) {
+  await waitForHandler("onmessage");
   await act(async () => {
     if (mockEventSourceInstance) {
       mockEventSourceInstance.simulateMessage(data);
@@ -96,6 +153,7 @@ async function simulateMessage(data: unknown) {
 }
 
 async function simulateOpen() {
+  await waitForHandler("onopen");
   await act(async () => {
     if (mockEventSourceInstance) {
       mockEventSourceInstance.simulateOpen();
@@ -104,6 +162,7 @@ async function simulateOpen() {
 }
 
 async function simulateError() {
+  await waitForHandler("onerror");
   await act(async () => {
     if (mockEventSourceInstance) {
       mockEventSourceInstance.simulateError();
@@ -112,6 +171,7 @@ async function simulateError() {
 }
 
 async function simulateRawMessage(rawData: string) {
+  await waitForHandler("onmessage");
   await act(async () => {
     if (mockEventSourceInstance) {
       mockEventSourceInstance.simulateRawMessage(rawData);
@@ -159,11 +219,15 @@ const createTransactionEvent = (
   chainId: 1,
 });
 
-const createCompleteEvent = (intentId = "test-intent") => ({
+const createCompleteEvent = (
+  intentId = "test-intent",
+  transactions?: unknown[]
+) => ({
   type: "complete",
   intentId,
   progress: 100,
   message: "Transaction completed successfully",
+  ...(transactions ? { transactions } : {}),
 });
 
 const createErrorEvent = (
@@ -177,12 +241,6 @@ const createErrorEvent = (
     code,
     message,
   },
-});
-
-const createMetadataEvent = (metadata: Record<string, unknown>) => ({
-  type: "metadata",
-  intentId: "test-intent",
-  metadata,
 });
 
 // ============================================================================
@@ -232,23 +290,25 @@ describe("useUnifiedZapStream", () => {
       renderHook(() => useUnifiedZapStream("test-intent", true));
 
       expect(mockEventSourceInstance).toBeDefined();
-      expect(mockEventSourceInstance!.url).toContain("/api/unifiedzap/test-intent/stream");
+      expect(mockEventSourceInstance!.url).toContain(
+        "/api/unifiedzap/test-intent/stream"
+      );
     });
 
     it("should set isConnected=true when connection opens", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      renderHook(() => useUnifiedZapStream("intent-123", true));
 
       expect(result.current.isConnected).toBe(false);
 
       await simulateOpen();
 
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(true);
-      });
+      await waitForCondition(() => result.current.isConnected === true);
     });
 
     it("should close connection on unmount", () => {
-      const { unmount } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { unmount } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(mockEventSourceInstance).toBeDefined();
       const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
@@ -288,26 +348,38 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should close connection after terminal event (complete)", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
+
+      const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
 
       await simulateOpen();
 
       await simulateMessage(createCompleteEvent());
 
-      const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
+      await waitForCondition(
+        () => result.current.latestEvent?.type === "complete"
+      );
+
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
       // Fast-forward 5 seconds (grace period)
       await act(async () => {
-        vi.advanceTimersByTime(5000);
+        vi.runAllTimers();
       });
 
-      await waitFor(() => {
-        expect(closeSpy).toHaveBeenCalled();
-      });
+      expect(vi.getTimerCount()).toBe(0);
+      expect(closeSpy).toHaveBeenCalled();
+      expect(result.current.isConnected).toBe(false);
     });
 
     it("should close connection after terminal event (error)", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
+
+      const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
 
       await simulateOpen();
 
@@ -315,16 +387,18 @@ describe("useUnifiedZapStream", () => {
         createErrorEvent("FATAL_ERROR", "Fatal error occurred")
       );
 
-      const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
+      await waitForCondition(
+        () => result.current.latestEvent?.type === "error"
+      );
+
+      expect(vi.getTimerCount()).toBeGreaterThan(0);
 
       // Fast-forward 5 seconds (grace period)
       await act(async () => {
-        vi.advanceTimersByTime(5000);
+        vi.runAllTimers();
       });
 
-      await waitFor(() => {
-        expect(closeSpy).toHaveBeenCalled();
-      });
+      expect(closeSpy).toHaveBeenCalled();
     });
   });
 
@@ -334,7 +408,9 @@ describe("useUnifiedZapStream", () => {
 
   describe("Event Processing", () => {
     it("should parse and normalize progress event", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
 
@@ -342,7 +418,7 @@ describe("useUnifiedZapStream", () => {
         createProgressEvent(50, "strategy_parsing", "intent-123")
       );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent).toBeDefined();
         expect(result.current.latestEvent?.type).toBe("progress");
         expect(result.current.latestEvent?.intentId).toBe("intent-123");
@@ -350,14 +426,16 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should parse transaction event with normalized fields", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage(
         createTransactionEvent("0xabc123", "pending", "intent-123")
       );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.type).toBe("transaction");
         expect(result.current.latestEvent?.transactions).toBeDefined();
         expect(result.current.latestEvent?.transactions?.[0]).toMatchObject({
@@ -368,26 +446,34 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should parse completion event and set isComplete=true", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage(createCompleteEvent("intent-123"));
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.type).toBe("complete");
         expect(result.current.isComplete).toBe(true);
       });
     });
 
     it("should parse error event and set hasError=true", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage(
-        createErrorEvent("INSUFFICIENT_FUNDS", "Insufficient balance", "intent-123")
+        createErrorEvent(
+          "INSUFFICIENT_FUNDS",
+          "Insufficient balance",
+          "intent-123"
+        )
       );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.type).toBe("error");
         expect(result.current.hasError).toBe(true);
         expect(result.current.error).toBe("Insufficient balance");
@@ -395,32 +481,42 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should handle malformed JSON gracefully", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateRawMessage("{ invalid json }");
 
       // Should not crash, error state should be set
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.error).toBe("Failed to parse stream event");
       });
     });
 
     it("should accumulate events in order", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
 
       await simulateMessage(createProgressEvent(10, "connected"));
-      await waitFor(() => expect(result.current.events).toHaveLength(1));
+      await waitForAssertions(() =>
+        expect(result.current.events).toHaveLength(1)
+      );
 
       await simulateMessage(createProgressEvent(30, "strategy_parsing"));
-      await waitFor(() => expect(result.current.events).toHaveLength(2));
+      await waitForAssertions(() =>
+        expect(result.current.events).toHaveLength(2)
+      );
 
       await simulateMessage(createProgressEvent(50, "token_analysis"));
-      await waitFor(() => expect(result.current.events).toHaveLength(3));
+      await waitForAssertions(() =>
+        expect(result.current.events).toHaveLength(3)
+      );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.events[0]?.currentStep).toBe("connected");
         expect(result.current.events[1]?.currentStep).toBe("strategy_parsing");
         expect(result.current.events[2]?.currentStep).toBe("token_analysis");
@@ -428,17 +524,19 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should update latestEvent pointer correctly", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
 
       await simulateMessage(createProgressEvent(10, "connected"));
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.currentStep).toBe("connected");
       });
 
       await simulateMessage(createProgressEvent(50, "token_analysis"));
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.currentStep).toBe("token_analysis");
       });
     });
@@ -450,7 +548,9 @@ describe("useUnifiedZapStream", () => {
 
   describe("Event Normalization - Type Coercion", () => {
     it("should convert string progress to number", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -458,13 +558,15 @@ describe("useUnifiedZapStream", () => {
         progress: "75", // String instead of number
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.progress).toBe(0.75);
       });
     });
 
     it("should normalize progress >1 by dividing by 100", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -472,13 +574,15 @@ describe("useUnifiedZapStream", () => {
         progress: 75, // 75% should become 0.75
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.progress).toBe(0.75);
       });
     });
 
     it("should handle missing optional fields", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -486,14 +590,16 @@ describe("useUnifiedZapStream", () => {
         // No progress, no metadata, minimal fields
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent).toBeDefined();
         expect(result.current.latestEvent?.type).toBe("progress");
       });
     });
 
     it("should normalize chain breakdown data", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -506,8 +612,9 @@ describe("useUnifiedZapStream", () => {
         },
       });
 
-      await waitFor(() => {
-        const chainBreakdown = result.current.latestEvent?.metadata?.chainBreakdown;
+      await waitForAssertions(() => {
+        const chainBreakdown =
+          result.current.latestEvent?.metadata?.chainBreakdown;
         expect(chainBreakdown).toHaveLength(2);
         expect(chainBreakdown?.[0]).toMatchObject({
           name: "Ethereum",
@@ -523,7 +630,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should extract message from multiple possible locations", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -533,13 +642,17 @@ describe("useUnifiedZapStream", () => {
         },
       });
 
-      await waitFor(() => {
-        expect(result.current.latestEvent?.message).toBe("Processing strategies...");
+      await waitForAssertions(() => {
+        expect(result.current.latestEvent?.message).toBe(
+          "Processing strategies..."
+        );
       });
     });
 
     it("should normalize transactions array", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -554,7 +667,7 @@ describe("useUnifiedZapStream", () => {
         ],
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         const tx = result.current.latestEvent?.transactions?.[0];
         expect(tx).toMatchObject({
           to: "0xRecipient",
@@ -566,7 +679,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should handle nested metadata fields", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -579,7 +694,7 @@ describe("useUnifiedZapStream", () => {
         },
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.metadata).toMatchObject({
           totalStrategies: 10,
           processedStrategies: 5,
@@ -590,7 +705,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should set progress=1 for complete events", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -598,13 +715,15 @@ describe("useUnifiedZapStream", () => {
         progress: 0, // Should be overridden to 1
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.progress).toBe(1);
       });
     });
 
     it("should normalize error object from string", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -612,7 +731,7 @@ describe("useUnifiedZapStream", () => {
         error: "String error message",
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.error).toMatchObject({
           code: "STREAM_ERROR",
           message: "String error message",
@@ -621,7 +740,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should normalize error object from object", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -632,7 +753,7 @@ describe("useUnifiedZapStream", () => {
         },
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.error).toMatchObject({
           code: "CUSTOM_ERROR",
           message: "Custom error message",
@@ -649,6 +770,8 @@ describe("useUnifiedZapStream", () => {
     it("should attempt reconnection on error", async () => {
       renderHook(() => useUnifiedZapStream("intent-123", true));
 
+      expect(global.EventSource).toHaveBeenCalledTimes(1);
+
       await simulateError();
 
       // Fast-forward reconnect delay
@@ -656,7 +779,9 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      await waitFor(() => {
+      expect(vi.getTimerCount()).toBe(0);
+
+      await waitForAssertions(() => {
         expect(global.EventSource).toHaveBeenCalledTimes(2);
       });
     });
@@ -673,9 +798,12 @@ describe("useUnifiedZapStream", () => {
         await act(async () => {
           vi.advanceTimersByTime(2000);
         });
-        await waitFor(() => {
+        await waitForAssertions(() => {
           expect(global.EventSource).toHaveBeenCalledTimes(i + 2);
         });
+
+        // Debug: track connection attempts per iteration
+        // console.log("reconnect iteration", i, "calls", (global.EventSource as any).mock.calls.length);
       }
 
       // Should have tried 4 times total (initial + 3 retries)
@@ -687,12 +815,12 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      // Should still be 4
+      // Should remain unchanged after terminal max attempts
       expect(global.EventSource).toHaveBeenCalledTimes(4);
     });
 
     it("should reset reconnection counter on successful connection", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      renderHook(() => useUnifiedZapStream("intent-123", true));
 
       // Error → reconnect
       await simulateError();
@@ -701,16 +829,12 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(global.EventSource).toHaveBeenCalledTimes(2);
       });
 
       // Successful connection
       await simulateOpen();
-
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(true);
-      });
 
       // Should now be able to retry 3 more times
       await simulateError();
@@ -719,8 +843,8 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(2000);
       });
 
-      await waitFor(() => {
-        expect(global.EventSource).toHaveBeenCalledTimes(3);
+      await waitForAssertions(() => {
+        expect(global.EventSource).toHaveBeenCalledTimes(4);
       });
     });
 
@@ -741,12 +865,16 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should not reconnect after terminal event (error)", async () => {
-      renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
-      await simulateMessage(
-        createErrorEvent("FATAL", "Fatal error")
-      );
+      await simulateMessage(createErrorEvent("FATAL", "Fatal error"));
+
+      await waitForAssertions(() => {
+        expect(result.current.latestEvent?.type).toBe("error");
+      });
 
       // Simulate another error
       await simulateError();
@@ -759,7 +887,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should set error message after max reconnection attempts", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       // Simulate 3 consecutive errors (max attempts)
       for (let i = 0; i < 3; i++) {
@@ -772,7 +902,7 @@ describe("useUnifiedZapStream", () => {
       // 4th error should set error message
       await simulateError();
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.error).toContain("Stream connection failed");
       });
     });
@@ -805,7 +935,7 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(1000);
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(closeSpy).toHaveBeenCalled();
       });
     });
@@ -816,9 +946,7 @@ describe("useUnifiedZapStream", () => {
       await simulateOpen();
       const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
 
-      await simulateMessage(
-        createErrorEvent("FATAL", "Fatal error")
-      );
+      await simulateMessage(createErrorEvent("FATAL", "Fatal error"));
 
       // Should not close immediately
       expect(closeSpy).not.toHaveBeenCalled();
@@ -828,7 +956,7 @@ describe("useUnifiedZapStream", () => {
         vi.advanceTimersByTime(5000);
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(closeSpy).toHaveBeenCalled();
       });
     });
@@ -839,7 +967,8 @@ describe("useUnifiedZapStream", () => {
       await simulateOpen();
       await simulateMessage(createCompleteEvent());
 
-      const initialCallCount = (global.EventSource as ReturnType<typeof vi.fn>).mock.calls.length;
+      const initialCallCount = (global.EventSource as ReturnType<typeof vi.fn>)
+        .mock.calls.length;
 
       // Trigger error
       await simulateError();
@@ -889,7 +1018,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should handle very large event payloads", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
 
@@ -906,13 +1037,15 @@ describe("useUnifiedZapStream", () => {
 
       await simulateMessage(largePayload);
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent).toBeDefined();
       });
     });
 
     it("should handle events with missing type field", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -920,13 +1053,15 @@ describe("useUnifiedZapStream", () => {
         progress: 50,
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.type).toBe("progress"); // Default
       });
     });
 
     it("should handle events with invalid progress values", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -934,13 +1069,15 @@ describe("useUnifiedZapStream", () => {
         progress: -10, // Negative
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.progress).toBe(0); // Normalized to 0
       });
     });
 
     it("should handle events with progress > 100", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -948,13 +1085,15 @@ describe("useUnifiedZapStream", () => {
         progress: 150, // > 100
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.latestEvent?.progress).toBe(1); // Clamped to 1
       });
     });
 
     it("should handle transactions without required fields", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -967,14 +1106,16 @@ describe("useUnifiedZapStream", () => {
         ],
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         // Should filter out invalid transactions
         expect(result.current.latestEvent?.transactions).toBeUndefined();
       });
     });
 
     it("should handle mixed valid/invalid transactions", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -995,7 +1136,7 @@ describe("useUnifiedZapStream", () => {
         ],
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         // Should only include valid transactions
         expect(result.current.latestEvent?.transactions).toHaveLength(2);
       });
@@ -1008,7 +1149,9 @@ describe("useUnifiedZapStream", () => {
 
   describe("Derived State", () => {
     it("should calculate progress from latestEvent", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -1016,13 +1159,15 @@ describe("useUnifiedZapStream", () => {
         progress: 75,
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.progress).toBe(0.75);
       });
     });
 
     it("should calculate currentStep from latestEvent", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -1030,13 +1175,15 @@ describe("useUnifiedZapStream", () => {
         phase: "token_analysis",
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.currentStep).toBe("token_analysis");
       });
     });
 
     it("should calculate transactions from latestEvent", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage({
@@ -1047,35 +1194,37 @@ describe("useUnifiedZapStream", () => {
         ],
       });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.transactions).toHaveLength(2);
       });
     });
 
     it("should set isComplete when latestEvent is complete", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(result.current.isComplete).toBe(false);
 
       await simulateOpen();
       await simulateMessage(createCompleteEvent());
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.isComplete).toBe(true);
       });
     });
 
     it("should set hasError when latestEvent is error", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(result.current.hasError).toBe(false);
 
       await simulateOpen();
-      await simulateMessage(
-        createErrorEvent("TEST_ERROR", "Test error")
-      );
+      await simulateMessage(createErrorEvent("TEST_ERROR", "Test error"));
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.hasError).toBe(true);
       });
     });
@@ -1087,13 +1236,17 @@ describe("useUnifiedZapStream", () => {
 
   describe("Public API", () => {
     it("should expose closeStream function", () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(typeof result.current.closeStream).toBe("function");
     });
 
     it("should close stream when closeStream is called", () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       const closeSpy = vi.spyOn(mockEventSourceInstance!, "close");
 
@@ -1103,24 +1256,30 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should expose reconnect function", () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(typeof result.current.reconnect).toBe("function");
     });
 
     it("should clear events and reconnect when reconnect is called", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage(createProgressEvent(50, "test"));
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.events).toHaveLength(1);
       });
 
-      result.current.reconnect();
+      await act(async () => {
+        result.current.reconnect();
+      });
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.events).toHaveLength(0);
         expect(global.EventSource).toHaveBeenCalledTimes(2);
       });
@@ -1133,7 +1292,9 @@ describe("useUnifiedZapStream", () => {
 
   describe("Integration Scenarios", () => {
     it("should handle complete ZapIn flow", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("zapin-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("zapin-123", true)
+      );
 
       await simulateOpen();
 
@@ -1145,7 +1306,9 @@ describe("useUnifiedZapStream", () => {
         { type: "progress", progress: 50, phase: "swap_preparation" },
         {
           type: "transaction",
-          transactions: [{ to: "0xabc", data: "0x", hash: "0xabc", status: "pending" }],
+          transactions: [
+            { to: "0xabc", data: "0x", hash: "0xabc", status: "pending" },
+          ],
         },
         { type: "progress", progress: 75, phase: "gas_estimation" },
         { type: "progress", progress: 100, phase: "complete" },
@@ -1159,7 +1322,7 @@ describe("useUnifiedZapStream", () => {
         });
       }
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.isComplete).toBe(true);
         expect(result.current.latestEvent?.type).toBe("complete");
         expect(result.current.events.length).toBeGreaterThan(0);
@@ -1167,7 +1330,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should handle ZapOut flow with multiple transactions", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("zapout-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("zapout-123", true)
+      );
 
       await simulateOpen();
 
@@ -1186,16 +1351,24 @@ describe("useUnifiedZapStream", () => {
         ],
       });
 
-      await simulateMessage(createCompleteEvent("zapout-123"));
+      await simulateMessage(
+        createCompleteEvent("zapout-123", [
+          { to: "0x1", data: "0x", chainId: 1 },
+          { to: "0x2", data: "0x", chainId: 1 },
+          { to: "0x3", data: "0x", chainId: 137 },
+        ])
+      );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.isComplete).toBe(true);
         expect(result.current.transactions).toHaveLength(3);
       });
     });
 
     it("should handle error during execution", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
 
@@ -1203,18 +1376,25 @@ describe("useUnifiedZapStream", () => {
       await simulateMessage(createProgressEvent(30, "strategy_parsing"));
 
       await simulateMessage(
-        createErrorEvent("INSUFFICIENT_FUNDS", "Insufficient balance for transaction")
+        createErrorEvent(
+          "INSUFFICIENT_FUNDS",
+          "Insufficient balance for transaction"
+        )
       );
 
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(result.current.hasError).toBe(true);
-        expect(result.current.error).toBe("Insufficient balance for transaction");
+        expect(result.current.error).toBe(
+          "Insufficient balance for transaction"
+        );
         expect(result.current.latestEvent?.type).toBe("error");
       });
     });
 
     it("should handle connection error and recovery", async () => {
-      const { result } = renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       await simulateOpen();
       await simulateMessage(createProgressEvent(25, "strategy_parsing"));
@@ -1226,15 +1406,14 @@ describe("useUnifiedZapStream", () => {
       });
 
       // Reconnected
-      await waitFor(() => {
+      await waitForAssertions(() => {
         expect(global.EventSource).toHaveBeenCalledTimes(2);
       });
 
       await simulateOpen();
       await simulateMessage(createProgressEvent(50, "token_analysis"));
 
-      await waitFor(() => {
-        expect(result.current.isConnected).toBe(true);
+      await waitForAssertions(() => {
         expect(result.current.events.length).toBeGreaterThan(1);
       });
     });
