@@ -206,13 +206,16 @@ export const UnifiedZapRawEventSchema = z
     type: z.string().optional().describe("Event type identifier"),
     intentId: z.string().optional().describe("Unique intent identifier"),
     progress: z
-      .preprocess(value => {
-        if (typeof value === "string") {
-          const numeric = Number(value);
-          return Number.isNaN(numeric) ? value : numeric;
-        }
-        return value;
-      }, z.union([z.number(), z.nan(), z.null()]).optional())
+      .preprocess(
+        value => {
+          if (typeof value === "string") {
+            const numeric = Number(value);
+            return Number.isNaN(numeric) ? value : numeric;
+          }
+          return value;
+        },
+        z.union([z.number(), z.nan(), z.null()]).optional()
+      )
       .optional()
       .describe("Progress value (0-1 or 0-100)"),
     progressPercent: z
@@ -258,11 +261,7 @@ export const UnifiedZapRawEventSchema = z
       .nullable()
       .describe("Error information"),
     errorCode: z.string().optional().describe("Error code"),
-    timestamp: z
-      .string()
-      .optional()
-      .nullable()
-      .describe("Event timestamp"),
+    timestamp: z.string().optional().nullable().describe("Event timestamp"),
     rawTimestamp: z
       .string()
       .optional()
@@ -452,7 +451,7 @@ export const ProgressEventSchema = NormalizedZapEventSchema.extend({
   progress: z.number().min(0).max(1),
 }).describe("Progress update event");
 
-export type ProgressEvent = z.infer<typeof ProgressEventSchema>;
+type ProgressEvent = z.infer<typeof ProgressEventSchema>;
 
 /**
  * Complete event schema
@@ -464,7 +463,7 @@ export const CompleteEventSchema = NormalizedZapEventSchema.extend({
   transactions: z.array(UnifiedZapStreamTransactionSchema).optional(),
 }).describe("Completion event");
 
-export type CompleteEvent = z.infer<typeof CompleteEventSchema>;
+type CompleteEvent = z.infer<typeof CompleteEventSchema>;
 
 /**
  * Error event schema
@@ -475,7 +474,7 @@ export const ErrorEventSchema = NormalizedZapEventSchema.extend({
   error: NormalizedErrorSchema,
 }).describe("Error event");
 
-export type ErrorEvent = z.infer<typeof ErrorEventSchema>;
+type ErrorEvent = z.infer<typeof ErrorEventSchema>;
 
 /**
  * Transaction event schema
@@ -486,7 +485,7 @@ export const TransactionEventSchema = NormalizedZapEventSchema.extend({
   chainId: z.number().int().positive(),
 }).describe("Transaction event with tx data");
 
-export type TransactionEvent = z.infer<typeof TransactionEventSchema>;
+type TransactionEvent = z.infer<typeof TransactionEventSchema>;
 
 // ============================================================================
 // Discriminated Union for Type-Safe Event Handling
@@ -501,8 +500,6 @@ export const SSEEventSchema = z.discriminatedUnion("type", [
   CompleteEventSchema,
   ErrorEventSchema,
 ]);
-
-export type SSEEvent = z.infer<typeof SSEEventSchema>;
 
 // ============================================================================
 // Helper Schemas for Validation

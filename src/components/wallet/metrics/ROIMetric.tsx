@@ -130,7 +130,6 @@ export function ROIMetric({
   const recommendedPeriodLabel: string | null = (() => {
     const rawLabel =
       portfolioROI?.recommended_period?.replace("roi_", "") ||
-      portfolioROI?.recommended_roi_period?.replace("roi_", "") ||
       (portfolioROI?.windows &&
       Object.prototype.hasOwnProperty.call(portfolioROI.windows, "roi_30d")
         ? "30d"
@@ -141,7 +140,7 @@ export function ROIMetric({
       return null;
     }
 
-    const compactFormatPattern = /^\d+(d|w|m|y)$/i;
+    const compactFormatPattern = /^\d+[dwmy]$/i;
     return compactFormatPattern.test(rawLabel)
       ? rawLabel
       : formatRoiWindowLabel(rawLabel);

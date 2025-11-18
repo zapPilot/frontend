@@ -14,10 +14,13 @@
  * - User interactions (cancel, close, retry)
  */
 
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { UnifiedZapStreamEvent, UnifiedZapStreamTransaction } from "@/hooks/useUnifiedZapStream";
+import type {
+  UnifiedZapStreamEvent,
+  UnifiedZapStreamTransaction,
+} from "@/hooks/useUnifiedZapStream";
 
 // ============================================================================
 // Mock Dependencies
@@ -64,7 +67,9 @@ vi.mock("@radix-ui/react-dialog", () => {
         </div>
       ) : null;
     },
-    Portal: ({ children }: any) => <div data-testid="dialog-portal">{children}</div>,
+    Portal: ({ children }: any) => (
+      <div data-testid="dialog-portal">{children}</div>
+    ),
     Overlay: ({ asChild, children }: any) => {
       if (asChild) return <>{children}</>;
       return <div data-testid="dialog-overlay">{children}</div>;
@@ -77,8 +82,12 @@ vi.mock("@radix-ui/react-dialog", () => {
         </div>
       );
     },
-    Title: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
-    Description: ({ children }: any) => <p data-testid="dialog-description">{children}</p>,
+    Title: ({ children }: any) => (
+      <h2 data-testid="dialog-title">{children}</h2>
+    ),
+    Description: ({ children }: any) => (
+      <p data-testid="dialog-description">{children}</p>
+    ),
     Close: ({ asChild, children, ...props }: any) => {
       if (asChild) return <>{children}</>;
       return (
@@ -113,7 +122,7 @@ vi.mock("@/hooks/useToast", () => ({
 }));
 
 // Mock useUnifiedZapStream hook
-let mockStreamReturn = {
+const mockStreamReturn = {
   latestEvent: null as UnifiedZapStreamEvent | null,
   isConnected: false,
   isComplete: false,
@@ -166,8 +175,10 @@ vi.mock("@/config/chains", () => ({
     return null;
   },
   getChainById: (chainId: number) => {
-    if (chainId === 1) return { id: 1, name: "Ethereum", nativeCurrency: { symbol: "ETH" } };
-    if (chainId === 137) return { id: 137, name: "Polygon", nativeCurrency: { symbol: "MATIC" } };
+    if (chainId === 1)
+      return { id: 1, name: "Ethereum", nativeCurrency: { symbol: "ETH" } };
+    if (chainId === 137)
+      return { id: 137, name: "Polygon", nativeCurrency: { symbol: "MATIC" } };
     return null;
   },
   isChainSupported: (chainId: number) => chainId === 1 || chainId === 137,
@@ -179,7 +190,9 @@ vi.mock("@/config/chains", () => ({
 }));
 
 // Import component after mocks
-const { ZapExecutionProgress } = await import("@/components/shared/ZapExecutionProgress");
+const { ZapExecutionProgress } = await import(
+  "@/components/shared/ZapExecutionProgress"
+);
 
 // ============================================================================
 // Test Fixtures
@@ -226,20 +239,10 @@ const createTransactionEvent = (
   chainId: 1,
 });
 
-const createCompleteEvent = (): UnifiedZapStreamEvent => ({
-  type: "complete",
-  intentId: "test-intent",
-  progress: 1,
-  phase: "complete",
-  currentStep: "complete",
-  message: "Execution complete",
-  metadata: {},
-  transactions: undefined,
-  error: undefined,
-  chainId: undefined,
-});
-
-const createErrorEvent = (code: string, message: string): UnifiedZapStreamEvent => ({
+const createErrorEvent = (
+  code: string,
+  message: string
+): UnifiedZapStreamEvent => ({
   type: "error",
   intentId: "test-intent",
   progress: 0,
@@ -325,7 +328,13 @@ describe("ZapExecutionProgress", () => {
     });
 
     it("should display totalValue and strategyCount in description", () => {
-      render(<ZapExecutionProgress {...defaultProps} totalValue={25000} strategyCount={10} />);
+      render(
+        <ZapExecutionProgress
+          {...defaultProps}
+          totalValue={25000}
+          strategyCount={10}
+        />
+      );
 
       const description = screen.getByTestId("dialog-description");
       expect(description).toHaveTextContent("$25,000.00");
@@ -455,7 +464,9 @@ describe("ZapExecutionProgress", () => {
 
       // Render with isComplete=true
       updateStreamState({ isComplete: true, progress: 1 });
-      render(<ZapExecutionProgress {...defaultProps} onComplete={onComplete} />);
+      render(
+        <ZapExecutionProgress {...defaultProps} onComplete={onComplete} />
+      );
 
       // Wait for useEffect to trigger
       await waitFor(() => {

@@ -333,7 +333,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      const { result } = renderHook(() => useWalletPortfolioState(), {
+      renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
