@@ -186,24 +186,20 @@ export function WalletModal({ open, onOpenChange }: ModalProps) {
 
 ```typescript
 // src/config/chains.ts
-import { ethereum, polygon, arbitrum } from 'thirdweb/chains';
+import { ethereum, polygon, arbitrum } from "thirdweb/chains";
 
-export const SUPPORTED_CHAINS = [
-  ethereum,
-  polygon,
-  arbitrum,
-] as const;
+export const SUPPORTED_CHAINS = [ethereum, polygon, arbitrum] as const;
 
 export const DEFAULT_CHAIN = ethereum;
 
 export function getChainName(chainId: number): string {
   const chain = SUPPORTED_CHAINS.find(c => c.id === chainId);
-  return chain?.name || 'Unknown Chain';
+  return chain?.name || "Unknown Chain";
 }
 
 export function getChainSymbol(chainId: number): string {
   const chain = SUPPORTED_CHAINS.find(c => c.id === chainId);
-  return chain?.nativeCurrency.symbol || 'ETH';
+  return chain?.nativeCurrency.symbol || "ETH";
 }
 ```
 
@@ -249,15 +245,15 @@ export interface ZapInRequest {
 }
 
 export async function executeZapIn(request: ZapInRequest): Promise<TransactionResult> {
-  const response = await fetch('/api/intents/zap-in', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/intents/zap-in", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(request),
   });
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || 'ZapIn failed');
+    throw new Error(error.message || "ZapIn failed");
   }
 
   return response.json();
@@ -412,14 +408,14 @@ export const WEB3_ERROR_CODES = {
 
 export function handleWeb3Error(error: any): string {
   if (error.code === WEB3_ERROR_CODES.USER_REJECTED) {
-    return 'Transaction was rejected';
+    return "Transaction was rejected";
   }
 
   if (error.code === WEB3_ERROR_CODES.CHAIN_DISCONNECTED) {
-    return 'Chain is disconnected';
+    return "Chain is disconnected";
   }
 
-  return error.message || 'An unknown error occurred';
+  return error.message || "An unknown error occurred";
 }
 ```
 
@@ -459,9 +455,8 @@ function TransactionForm() {
 ```typescript
 // src/services/bundleService.ts
 export function generateBundleURL(userId: string): string {
-  const baseURL = typeof window !== 'undefined'
-    ? window.location.origin
-    : process.env.NEXT_PUBLIC_BASE_URL || '';
+  const baseURL =
+    typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_BASE_URL || "";
 
   return `${baseURL}/bundle?userId=${userId}`;
 }

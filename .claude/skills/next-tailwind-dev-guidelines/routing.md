@@ -334,7 +334,7 @@ export async function generateMetadata({ searchParams }: BundlePageProps): Promi
   const userId = searchParams.userId;
 
   if (!userId) {
-    return { title: 'Bundle Not Found' };
+    return { title: "Bundle Not Found" };
   }
 
   const bundle = await getBundleData(userId);
@@ -422,21 +422,21 @@ src/app/
 
 ```typescript
 // middleware.ts (project root)
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get('auth-token');
+  const token = request.cookies.get("auth-token");
 
-  if (!token && request.nextUrl.pathname.startsWith('/dashboard')) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if (!token && request.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ["/dashboard/:path*"],
 };
 ```
 
@@ -447,7 +447,7 @@ This project uses static export for deployment:
 ```typescript
 // next.config.ts
 const nextConfig = {
-  output: 'export',
+  output: "export",
   trailingSlash: true,
   images: {
     unoptimized: true, // Required for static export

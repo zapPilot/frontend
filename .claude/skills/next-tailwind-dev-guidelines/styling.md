@@ -6,7 +6,7 @@ This project uses Tailwind CSS v4 with PostCSS:
 
 ```javascript
 // postcss.config.mjs
-import tailwindcss from '@tailwindcss/postcss';
+import tailwindcss from "@tailwindcss/postcss";
 
 export default {
   plugins: [tailwindcss()],
@@ -21,18 +21,18 @@ The project uses a custom purple-blue gradient theme optimized for DeFi:
 
 ```typescript
 // Tailwind color utilities
-'bg-gray-950'        // Deep black background
-'bg-gray-900'        // Card backgrounds
-'bg-gray-800'        // Hover states
-'bg-purple-600'      // Primary actions
-'bg-blue-600'        // Secondary actions
-'text-white'         // Primary text
-'text-gray-400'      // Secondary text
-'text-purple-400'    // Accent text
+"bg-gray-950"; // Deep black background
+"bg-gray-900"; // Card backgrounds
+"bg-gray-800"; // Hover states
+"bg-purple-600"; // Primary actions
+"bg-blue-600"; // Secondary actions
+"text-white"; // Primary text
+"text-gray-400"; // Secondary text
+"text-purple-400"; // Accent text
 
 // Gradients
-'bg-gradient-to-r from-purple-600 to-blue-600'
-'bg-gradient-to-br from-purple-900/20 to-blue-900/20'
+"bg-gradient-to-r from-purple-600 to-blue-600";
+"bg-gradient-to-br from-purple-900/20 to-blue-900/20";
 ```
 
 ### Z-Index System
@@ -57,13 +57,13 @@ export const Z_INDEX = {
 
 ```typescript
 export const HEADER = {
-  HEIGHT: 'h-16',
-  TOP_OFFSET: 'top-16',
+  HEIGHT: "h-16",
+  TOP_OFFSET: "top-16",
 } as const;
 
 export const CONTAINER = {
-  MAX_WIDTH: 'max-w-7xl',
-  PADDING: 'px-4 md:px-6 lg:px-8',
+  MAX_WIDTH: "max-w-7xl",
+  PADDING: "px-4 md:px-6 lg:px-8",
 } as const;
 ```
 

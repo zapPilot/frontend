@@ -2,7 +2,9 @@
 
 **Tech Stack**: Next.js 15, React 19, Tailwind CSS v4, Radix UI, TanStack Query, TypeScript 5
 
-This skill provides development guidelines specifically for the Zap Pilot frontend codebase. It follows a **progressive disclosure pattern** - start here for the overview, then consult specific resource files as needed.
+This skill provides development guidelines specifically for the Zap Pilot frontend codebase. It
+follows a **progressive disclosure pattern** - start here for the overview, then consult specific
+resource files as needed.
 
 ## Core Principles
 
@@ -105,7 +107,7 @@ export async function getPortfolioAPR(userId: string): Promise<PortfolioAPRData>
 // src/hooks/queries/usePortfolioQuery.ts
 export function usePortfolioQuery(userId: string) {
   return useSuspenseQuery({
-    queryKey: ['portfolio', userId],
+    queryKey: ["portfolio", userId],
     queryFn: () => analyticsService.getPortfolioData(userId),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });

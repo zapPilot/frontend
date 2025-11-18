@@ -99,7 +99,9 @@ export function BalanceMetric({
   }
 
   // Normal portfolio display
-  const displayValue = getDisplayTotalValue ? getDisplayTotalValue() : totalNetUsd;
+  const displayValue = getDisplayTotalValue
+    ? getDisplayTotalValue()
+    : totalNetUsd;
 
   return (
     <div>

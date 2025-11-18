@@ -148,10 +148,7 @@ export function toDate(value: unknown, fallback: Date = new Date()): Date {
  * toDateString(new Date("2024-01-15")) // "2024-01-15"
  * toDateString(null, "1970-01-01") // "1970-01-01"
  */
-export function toDateString(
-  value: unknown,
-  fallback = "1970-01-01"
-): string {
+export function toDateString(value: unknown, fallback = "1970-01-01"): string {
   // Handle Date objects first
   if (value instanceof Date && !Number.isNaN(value.getTime())) {
     const isoString = value.toISOString().split("T")[0];
@@ -244,11 +241,7 @@ export function getProp<T>(obj: unknown, key: string, fallback: T): T {
  * clampNumber(-10, 0, 100) // 0
  * clampNumber(50, 0, 100) // 50
  */
-export function clampNumber(
-  value: number,
-  min: number,
-  max: number
-): number {
+export function clampNumber(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 

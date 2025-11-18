@@ -296,7 +296,9 @@ describe("useUnifiedZapStream", () => {
     });
 
     it("should set isConnected=true when connection opens", async () => {
-      renderHook(() => useUnifiedZapStream("intent-123", true));
+      const { result } = renderHook(() =>
+        useUnifiedZapStream("intent-123", true)
+      );
 
       expect(result.current.isConnected).toBe(false);
 

@@ -212,19 +212,23 @@ export const UnifiedZapRawEventSchema = z
           return Number.isNaN(numeric) ? value : numeric;
         }
         return value;
-      }, z.number().optional())
+      }, z.union([z.number(), z.nan(), z.null()]).optional())
       .optional()
       .describe("Progress value (0-1 or 0-100)"),
     progressPercent: z
       .number()
       .optional()
       .describe("Progress percentage (0-100)"),
-    currentStep: z.string().optional().describe("Current execution step"),
+    currentStep: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Current execution step"),
     currentOperation: z
       .string()
       .optional()
       .describe("Current operation description"),
-    phase: z.string().optional().describe("Execution phase"),
+    phase: z.string().optional().nullable().describe("Execution phase"),
     metadata: EventMetadataSchema.optional()
       .nullable()
       .describe("Event metadata"),
@@ -242,16 +246,28 @@ export const UnifiedZapRawEventSchema = z
       .describe("Total number of tokens"),
     message: z.string().optional().describe("Event message"),
     description: z.string().optional().describe("Event description"),
-    additionalData: AdditionalDataSchema.describe("Additional data"),
-    additionalInfo: AdditionalDataSchema.describe("Additional info (alias)"),
+    additionalData: AdditionalDataSchema.optional()
+      .nullable()
+      .describe("Additional data"),
+    additionalInfo: AdditionalDataSchema.optional()
+      .nullable()
+      .describe("Additional info (alias)"),
     error: z
       .union([z.string(), ErrorObjectSchema])
       .optional()
       .nullable()
       .describe("Error information"),
     errorCode: z.string().optional().describe("Error code"),
-    timestamp: z.string().optional().describe("Event timestamp"),
-    rawTimestamp: z.string().optional().describe("Raw timestamp (alias)"),
+    timestamp: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Event timestamp"),
+    rawTimestamp: z
+      .string()
+      .optional()
+      .nullable()
+      .describe("Raw timestamp (alias)"),
     totalStrategies: z
       .number()
       .int()
@@ -277,12 +293,14 @@ export const UnifiedZapRawEventSchema = z
       .optional()
       .describe("Protocol count (top-level)"),
     chainBreakdown: z
-      .array(ChainBreakdownEntrySchema)
+      .array(z.unknown())
       .optional()
+      .nullable()
       .describe("Chain breakdown (top-level)"),
     chains: z
-      .array(ChainBreakdownEntrySchema)
+      .array(z.unknown())
       .optional()
+      .nullable()
       .describe("Chains (top-level)"),
     processedStrategies: z
       .number()

@@ -5,13 +5,12 @@ import { useMetricState } from "@/hooks/useMetricState";
 import { getChangeColorClasses } from "@/lib/color-utils";
 import { formatPercentage } from "@/lib/formatters";
 
-import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "../../../lib/roi";
-import type { LandingPageResponse } from "../../../services/analyticsService";
 import {
-  ProtocolROIItem,
-  ROITooltip,
-  useMetricsTooltip,
-} from "../tooltips";
+  deriveRoiWindowSortScore,
+  formatRoiWindowLabel,
+} from "../../../lib/roi";
+import type { LandingPageResponse } from "../../../services/analyticsService";
+import { ProtocolROIItem, ROITooltip, useMetricsTooltip } from "../tooltips";
 
 interface ROIMetricProps {
   /** Portfolio ROI data containing windows and recommendations */
@@ -112,12 +111,14 @@ export function ROIMetric({
   // Prepare data for tooltip
   const roiWindows = portfolioROI?.windows
     ? Object.entries(portfolioROI.windows)
-        .map(([key, value]: [string, { value: number; data_points: number }]) => ({
-          key,
-          label: formatRoiWindowLabel(key),
-          value: value.value,
-          dataPoints: value.data_points,
-        }))
+        .map(
+          ([key, value]: [string, { value: number; data_points: number }]) => ({
+            key,
+            label: formatRoiWindowLabel(key),
+            value: value.value,
+            dataPoints: value.data_points,
+          })
+        )
         .sort(
           (a, b) =>
             deriveRoiWindowSortScore(a.key) - deriveRoiWindowSortScore(b.key)
@@ -126,14 +127,25 @@ export function ROIMetric({
 
   const protocolROIData: ProtocolROIItem[] = [];
 
-  const recommendedPeriodLabel =
-    portfolioROI?.recommended_period?.replace("roi_", "") ||
-    (portfolioROI?.windows &&
-    Object.prototype.hasOwnProperty.call(portfolioROI.windows, "roi_30d")
-      ? "30d"
-      : !isConnected
+  const recommendedPeriodLabel: string | null = (() => {
+    const rawLabel =
+      portfolioROI?.recommended_period?.replace("roi_", "") ||
+      portfolioROI?.recommended_roi_period?.replace("roi_", "") ||
+      (portfolioROI?.windows &&
+      Object.prototype.hasOwnProperty.call(portfolioROI.windows, "roi_30d")
         ? "30d"
-        : undefined);
+        : !isConnected
+          ? "30d"
+          : undefined);
+    if (!rawLabel) {
+      return null;
+    }
+
+    const compactFormatPattern = /^\d+(d|w|m|y)$/i;
+    return compactFormatPattern.test(rawLabel)
+      ? rawLabel
+      : formatRoiWindowLabel(rawLabel);
+  })();
 
   // Normal display with data
   return (
@@ -153,7 +165,12 @@ export function ROIMetric({
               aria-label="Portfolio ROI tooltip"
               className="inline-flex"
             >
-              <Info className="w-3 h-3 text-gray-500 cursor-help" />
+              {" "}
+              <Info
+                className="w-3 h-3 text-gray-500 cursor-help"
+                aria-hidden="true"
+                focusable="false"
+              />
             </span>
             {roiTooltip.visible && (
               <ROITooltip

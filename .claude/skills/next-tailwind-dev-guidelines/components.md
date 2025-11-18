@@ -194,7 +194,7 @@ interface PortfolioMetricsProps {
   totalValue: number;
   apr: number;
   change24h: number;
-  currency?: 'USD' | 'ETH';
+  currency?: "USD" | "ETH";
   showTrend?: boolean;
 }
 
@@ -210,7 +210,7 @@ interface PortfolioMetricsProps {
 ```typescript
 // Use destructuring with defaults
 export function MetricsCard({
-  currency = 'USD',
+  currency = "USD",
   showTrend = true,
   precision = 2,
 }: MetricsCardProps) {

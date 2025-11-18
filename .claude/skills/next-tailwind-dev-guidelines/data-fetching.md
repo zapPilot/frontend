@@ -3,6 +3,7 @@
 ## Core Concepts
 
 React Query (TanStack Query) provides:
+
 - Caching and synchronization
 - Background refetching
 - Optimistic updates
@@ -164,17 +165,17 @@ export function useOptimizePortfolio() {
 
   return useMutation({
     mutationFn: intentService.executeOptimize,
-    onMutate: async (variables) => {
+    onMutate: async variables => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({
-        queryKey: ['portfolio', variables.userId]
+        queryKey: ["portfolio", variables.userId],
       });
 
       // Snapshot current value
-      const previousPortfolio = queryClient.getQueryData(['portfolio', variables.userId]);
+      const previousPortfolio = queryClient.getQueryData(["portfolio", variables.userId]);
 
       // Optimistically update
-      queryClient.setQueryData(['portfolio', variables.userId], (old: any) => ({
+      queryClient.setQueryData(["portfolio", variables.userId], (old: any) => ({
         ...old,
         optimizing: true,
       }));
@@ -183,15 +184,12 @@ export function useOptimizePortfolio() {
     },
     onError: (err, variables, context) => {
       // Rollback on error
-      queryClient.setQueryData(
-        ['portfolio', variables.userId],
-        context?.previousPortfolio
-      );
+      queryClient.setQueryData(["portfolio", variables.userId], context?.previousPortfolio);
     },
     onSettled: (data, error, variables) => {
       // Refetch after success or error
       queryClient.invalidateQueries({
-        queryKey: ['portfolio', variables.userId]
+        queryKey: ["portfolio", variables.userId],
       });
     },
   });
@@ -204,16 +202,15 @@ export function useOptimizePortfolio() {
 
 ```typescript
 // Good: Structured query keys for easy invalidation
-['portfolio', userId]                    // All portfolio data
-['portfolio', userId, 'apr']             // APR data
-['portfolio', userId, 'pools']           // Pools data
-['portfolio', userId, 'pools', poolId]   // Specific pool
+["portfolio", userId][("portfolio", userId, "apr")][("portfolio", userId, "pools")][ // All portfolio data // APR data // Pools data
+  ("portfolio", userId, "pools", poolId)
+]; // Specific pool
 
 // Invalidate all portfolio data
-queryClient.invalidateQueries({ queryKey: ['portfolio', userId] });
+queryClient.invalidateQueries({ queryKey: ["portfolio", userId] });
 
 // Invalidate only APR data
-queryClient.invalidateQueries({ queryKey: ['portfolio', userId, 'apr'] });
+queryClient.invalidateQueries({ queryKey: ["portfolio", userId, "apr"] });
 ```
 
 ### Query Key Factory
@@ -222,16 +219,17 @@ queryClient.invalidateQueries({ queryKey: ['portfolio', userId, 'apr'] });
 // src/hooks/queries/queryKeys.ts
 export const queryKeys = {
   portfolio: {
-    all: ['portfolio'] as const,
+    all: ["portfolio"] as const,
     byUser: (userId: string) => [...queryKeys.portfolio.all, userId] as const,
-    apr: (userId: string) => [...queryKeys.portfolio.byUser(userId), 'apr'] as const,
-    pools: (userId: string) => [...queryKeys.portfolio.byUser(userId), 'pools'] as const,
+    apr: (userId: string) => [...queryKeys.portfolio.byUser(userId), "apr"] as const,
+    pools: (userId: string) => [...queryKeys.portfolio.byUser(userId), "pools"] as const,
     pool: (userId: string, poolId: string) =>
       [...queryKeys.portfolio.pools(userId), poolId] as const,
   },
   analytics: {
-    all: ['analytics'] as const,
-    poolPerformance: (userId: string) => [...queryKeys.analytics.all, 'pool-performance', userId] as const,
+    all: ["analytics"] as const,
+    poolPerformance: (userId: string) =>
+      [...queryKeys.analytics.all, "pool-performance", userId] as const,
   },
 };
 
@@ -414,7 +412,7 @@ function PortfolioCard({ userId }: { userId: string }) {
 // Long cache for static data
 export function useTokenMetadataQuery(address: string) {
   return useQuery({
-    queryKey: ['token', address],
+    queryKey: ["token", address],
     queryFn: () => tokenService.getMetadata(address),
     staleTime: Infinity, // Never becomes stale
     cacheTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -424,7 +422,7 @@ export function useTokenMetadataQuery(address: string) {
 // Short cache for volatile data
 export function useGasPriceQuery() {
   return useQuery({
-    queryKey: ['gas-price'],
+    queryKey: ["gas-price"],
     queryFn: () => web3Service.getGasPrice(),
     staleTime: 1000 * 10, // 10 seconds
     refetchInterval: 1000 * 30, // Refetch every 30 seconds
@@ -434,7 +432,7 @@ export function useGasPriceQuery() {
 // No cache for one-time data
 export function useTransactionStatusQuery(txHash: string) {
   return useQuery({
-    queryKey: ['transaction', txHash],
+    queryKey: ["transaction", txHash],
     queryFn: () => web3Service.getTransactionStatus(txHash),
     staleTime: 0, // Always stale
     cacheTime: 0, // Don't cache

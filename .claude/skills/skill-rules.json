@@ -17,13 +17,7 @@
           "src/lib/**/*",
           "tests/**/*.{ts,tsx}"
         ],
-        "ignorePatterns": [
-          "**/*.md",
-          "**/node_modules/**",
-          "**/.next/**",
-          "**/dist/**",
-          "**/build/**"
-        ]
+        "ignorePatterns": ["**/*.md", "**/node_modules/**", "**/.next/**", "**/dist/**", "**/build/**"]
       },
       "promptTriggers": {
         "keywords": [

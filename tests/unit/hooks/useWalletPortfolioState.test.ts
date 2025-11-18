@@ -150,7 +150,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("User Identity Resolution", () => {
     it("should resolve userId from connected user when no urlUserId provided", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -177,7 +177,7 @@ describe("useWalletPortfolioState", () => {
         isLoading: false,
       });
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -223,7 +223,7 @@ describe("useWalletPortfolioState", () => {
     });
 
     it("should NOT be visitor mode when connected and no urlUserId", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -233,7 +233,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("Data Loading - Progressive Loading", () => {
     it("should load landing page data and yield data in parallel", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -267,7 +267,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -292,7 +292,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -305,7 +305,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("Data Transformation", () => {
     it("should transform landing page data into chart and metrics", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -333,7 +333,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -406,7 +406,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("View Toggles", () => {
     it("should toggle balance visibility", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -436,7 +436,7 @@ describe("useWalletPortfolioState", () => {
     });
 
     it("should toggle category expansion", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -479,7 +479,7 @@ describe("useWalletPortfolioState", () => {
 
   describe("Wallet Manager Modal", () => {
     it("should manage wallet manager open/close state", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -519,7 +519,7 @@ describe("useWalletPortfolioState", () => {
     });
 
     it("should omit bundle context when not provided", () => {
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -543,7 +543,7 @@ describe("useWalletPortfolioState", () => {
         refetch: mockRefetch,
       } as any);
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -570,7 +570,7 @@ describe("useWalletPortfolioState", () => {
         hasZeroData: true,
       });
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result: _result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -598,7 +598,7 @@ describe("useWalletPortfolioState", () => {
         customPortfolioState
       );
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -617,7 +617,7 @@ describe("useWalletPortfolioState", () => {
         isLoading: false,
       });
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 
@@ -636,7 +636,7 @@ describe("useWalletPortfolioState", () => {
         refetch: vi.fn(),
       } as any);
 
-      renderHook(() => useWalletPortfolioState(), {
+      const { result: _result } = renderHook(() => useWalletPortfolioState(), {
         wrapper: createWrapper(),
       });
 

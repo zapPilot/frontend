@@ -69,12 +69,12 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     return (
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <BalanceMetric
-          totalNetUsd={landingPageData?.total_net_usd}
+          totalNetUsd={landingPageData?.total_net_usd ?? null}
           isLoading={isLandingLoading}
           shouldShowLoading={shouldShowLoading}
           balanceHidden={resolvedHidden}
           shouldShowError={shouldShowError}
-          errorMessage={portfolioState.errorMessage}
+          errorMessage={portfolioState.errorMessage ?? null}
           shouldShowNoDataMessage={shouldShowNoDataMessage}
           getDisplayTotalValue={getDisplayTotalValue}
         />
