@@ -174,11 +174,10 @@ interface NormalizedMessageResult {
   found: boolean;
 }
 
-function normalizeErrorMessage(
+function normalizePrimitiveValue(
   value: unknown,
-  fallback: string,
-  seen = new WeakSet<object>()
-): NormalizedMessageResult {
+  fallback: string
+): NormalizedMessageResult | null {
   if (value === undefined || value === null) {
     return { value: fallback, found: false };
   }
@@ -199,56 +198,89 @@ function normalizeErrorMessage(
     return { value: String(value), found: true };
   }
 
-  if (value instanceof Error) {
-    const fromMessage = normalizeErrorMessage(value.message, fallback, seen);
-    if (fromMessage.found) {
-      return fromMessage;
-    }
+  return null;
+}
 
-    if ("cause" in value && value.cause !== undefined) {
-      const fromCause = normalizeErrorMessage(
-        (value as { cause?: unknown }).cause,
-        fallback,
-        seen
-      );
-      if (fromCause.found) {
-        return fromCause;
-      }
-    }
-
-    return { value: fallback, found: false };
+function normalizeErrorInstance(
+  error: Error,
+  fallback: string,
+  seen: WeakSet<object>
+): NormalizedMessageResult {
+  const messageResult = normalizeErrorMessage(error.message, fallback, seen);
+  if (messageResult.found) {
+    return messageResult;
   }
 
-  if (typeof value === "object") {
-    if (seen.has(value)) {
-      return { value: fallback, found: false };
+  if ("cause" in error && (error as { cause?: unknown }).cause !== undefined) {
+    const causeResult = normalizeErrorMessage(
+      (error as { cause?: unknown }).cause,
+      fallback,
+      seen
+    );
+    if (causeResult.found) {
+      return causeResult;
     }
-    seen.add(value);
+  }
 
-    for (const key of MESSAGE_CANDIDATE_KEYS) {
-      if (
-        Object.prototype.hasOwnProperty.call(value, key) &&
-        (value as Record<string, unknown>)[key] !== undefined
-      ) {
-        const result = normalizeErrorMessage(
-          (value as Record<string, unknown>)[key],
-          fallback,
-          seen
-        );
-        if (result.found) {
-          return result;
-        }
-      }
+  return { value: fallback, found: false };
+}
+
+function normalizeObjectValue(
+  value: Record<string, unknown>,
+  fallback: string,
+  seen: WeakSet<object>
+): NormalizedMessageResult {
+  if (seen.has(value)) {
+    return { value: fallback, found: false };
+  }
+  seen.add(value);
+
+  for (const key of MESSAGE_CANDIDATE_KEYS) {
+    if (!Object.prototype.hasOwnProperty.call(value, key)) {
+      continue;
     }
 
-    try {
-      return {
-        value: JSON.stringify(value),
-        found: true,
-      };
-    } catch {
-      return { value: fallback, found: false };
+    const nestedValue = value[key];
+    if (nestedValue === undefined) {
+      continue;
     }
+
+    const result = normalizeErrorMessage(nestedValue, fallback, seen);
+    if (result.found) {
+      return result;
+    }
+  }
+
+  try {
+    return {
+      value: JSON.stringify(value),
+      found: true,
+    };
+  } catch {
+    return { value: fallback, found: false };
+  }
+}
+
+function normalizeErrorMessage(
+  value: unknown,
+  fallback: string,
+  seen = new WeakSet<object>()
+): NormalizedMessageResult {
+  const primitiveResult = normalizePrimitiveValue(value, fallback);
+  if (primitiveResult) {
+    return primitiveResult;
+  }
+
+  if (value instanceof Error) {
+    return normalizeErrorInstance(value, fallback, seen);
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return normalizeObjectValue(
+      value as Record<string, unknown>,
+      fallback,
+      seen
+    );
   }
 
   return { value: String(value), found: true };

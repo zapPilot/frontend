@@ -49,6 +49,49 @@ const ChainBreakdownEntrySchema = z
   })
   .describe("Chain breakdown entry with protocol distribution");
 
+const PROGRESS_METADATA_FIELDS = {
+  totalStrategies: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe("Total number of strategies"),
+  totalProtocols: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe("Total number of protocols"),
+  estimatedDuration: z
+    .string()
+    .optional()
+    .describe("Estimated duration (e.g., '2m 30s')"),
+  processedStrategies: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe("Number of processed strategies"),
+  processedProtocols: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional()
+    .describe("Number of processed protocols"),
+  chainBreakdown: z
+    .array(ChainBreakdownEntrySchema)
+    .optional()
+    .describe("Chain breakdown data"),
+  message: z.string().optional().describe("Metadata message"),
+  description: z.string().optional().describe("Metadata description"),
+  progressPercent: z
+    .number()
+    .min(0)
+    .max(100)
+    .optional()
+    .describe("Progress percentage"),
+} as const;
+
 /**
  * Metadata schema for SSE events
  * Contains progress tracking and execution details
@@ -56,62 +99,23 @@ const ChainBreakdownEntrySchema = z
 const EventMetadataSchema = z
   .object({
     phase: z.string().optional().describe("Current execution phase"),
-    totalStrategies: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Total number of strategies"),
+    ...PROGRESS_METADATA_FIELDS,
     strategyCount: z
       .number()
       .int()
       .nonnegative()
       .optional()
       .describe("Strategy count (alias)"),
-    totalProtocols: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Total number of protocols"),
     protocolCount: z
       .number()
       .int()
       .nonnegative()
       .optional()
       .describe("Protocol count (alias)"),
-    estimatedDuration: z
-      .string()
-      .optional()
-      .describe("Estimated duration (e.g., '2m 30s')"),
-    processedStrategies: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Number of processed strategies"),
-    processedProtocols: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Number of processed protocols"),
-    chainBreakdown: z
-      .array(ChainBreakdownEntrySchema)
-      .optional()
-      .describe("Chain breakdown data"),
     chains: z
       .array(ChainBreakdownEntrySchema)
       .optional()
       .describe("Chains data (alias)"),
-    message: z.string().optional().describe("Metadata message"),
-    description: z.string().optional().describe("Metadata description"),
-    progressPercent: z
-      .number()
-      .min(0)
-      .max(100)
-      .optional()
-      .describe("Progress percentage"),
     chainId: z.number().int().positive().optional().describe("Chain ID"),
     transactions: z
       .unknown()
@@ -332,45 +336,7 @@ export type UnifiedZapRawEvent = z.infer<typeof UnifiedZapRawEventSchema>;
  * Cleaned and validated metadata for client consumption
  */
 const NormalizedMetadataSchema = z
-  .object({
-    totalStrategies: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Total strategies"),
-    totalProtocols: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Total protocols"),
-    estimatedDuration: z.string().optional().describe("Estimated duration"),
-    processedStrategies: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Processed strategies"),
-    processedProtocols: z
-      .number()
-      .int()
-      .nonnegative()
-      .optional()
-      .describe("Processed protocols"),
-    chainBreakdown: z
-      .array(ChainBreakdownEntrySchema)
-      .optional()
-      .describe("Chain breakdown with protocol distribution"),
-    message: z.string().optional().describe("Metadata message"),
-    description: z.string().optional().describe("Metadata description"),
-    progressPercent: z
-      .number()
-      .min(0)
-      .max(100)
-      .optional()
-      .describe("Progress percentage"),
-  })
+  .object(PROGRESS_METADATA_FIELDS)
   .strict()
   .describe("Normalized event metadata");
 

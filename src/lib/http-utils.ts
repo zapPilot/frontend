@@ -101,6 +101,95 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function calculateBackoffDelay(baseDelay: number, attempt: number): number {
+  return baseDelay * Math.pow(2, attempt);
+}
+
+function createTimeoutController(
+  timeout: number,
+  externalSignal?: AbortSignal
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const cleanup = () => {
+    clearTimeout(timeoutId);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", handleExternalAbort);
+    }
+  };
+
+  const handleExternalAbort = () => {
+    controller.abort((externalSignal as AbortSignal).reason);
+  };
+
+  if (externalSignal) {
+    externalSignal.addEventListener("abort", handleExternalAbort);
+  }
+
+  return { signal: controller.signal, cleanup };
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.name === "AbortError") ||
+    (error instanceof DOMException && error.name === "AbortError")
+  );
+}
+
+async function executeRequest<T>(
+  url: string,
+  requestInit: RequestInit,
+  transformer?: ResponseTransformer<T>
+): Promise<T> {
+  const response = await fetch(url, requestInit);
+
+  if (!response.ok) {
+    const errorData = await parseErrorResponse(response);
+    throw new APIError(
+      errorData.message || `HTTP ${response.status}`,
+      response.status,
+      errorData.code,
+      errorData.details
+    );
+  }
+
+  const data = await response.json();
+  return transformer ? transformer(data) : data;
+}
+
+function toError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const fallbackMessage =
+      typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message?: string }).message
+        : JSON.stringify(error);
+    const constructed = new Error(fallbackMessage);
+    if (typeof (error as { name?: unknown }).name === "string") {
+      constructed.name = (error as { name?: string }).name ?? constructed.name;
+    }
+    return constructed;
+  }
+
+  return new Error(String(error));
+}
+
+function shouldAttemptRetry(
+  attempt: number,
+  retries: number,
+  error: unknown
+): boolean {
+  if (attempt >= retries) {
+    return false;
+  }
+
+  return shouldRetry(error);
+}
+
 /**
  * Core HTTP request function with retry logic and error handling
  */
@@ -119,70 +208,50 @@ export async function httpRequest<T = unknown>(
     signal,
   } = config;
 
-  // Create abort controller for timeout if no signal provided
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  const requestSignal = signal || controller.signal;
-
   const requestConfig: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
       ...headers,
     },
-    signal: requestSignal,
   };
 
   if (body && method !== "GET") {
     requestConfig.body = JSON.stringify(body);
   }
 
-  let lastError: Error | undefined = undefined;
+  let lastError: Error | undefined;
 
-  // Retry logic with exponential backoff
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const { signal: composedSignal, cleanup } = createTimeoutController(
+      timeout,
+      signal
+    );
+    requestConfig.signal = composedSignal;
+
     try {
-      const response = await fetch(url, requestConfig);
-      clearTimeout(timeoutId);
-
-      // Handle HTTP errors
-      if (!response.ok) {
-        const errorData = await parseErrorResponse(response);
-        throw new APIError(
-          errorData.message || `HTTP ${response.status}`,
-          response.status,
-          errorData.code,
-          errorData.details
-        );
-      }
-
-      // Parse and transform response
-      const data = await response.json();
-      return transformer ? transformer(data) : data;
+      const result = await executeRequest(url, requestConfig, transformer);
+      cleanup();
+      return result;
     } catch (error) {
-      clearTimeout(timeoutId);
+      cleanup();
+      const normalizedError = toError(error);
 
-      if (error instanceof APIError) {
-        throw error; // Don't retry API errors
+      if (normalizedError instanceof APIError) {
+        throw normalizedError;
       }
 
-      if (
-        (error instanceof Error && error.name === "AbortError") ||
-        (error instanceof DOMException && error.name === "AbortError")
-      ) {
+      if (isAbortError(normalizedError)) {
         throw new TimeoutError();
       }
 
-      lastError = error instanceof Error ? error : new Error(String(error));
+      lastError = normalizedError;
 
-      // Only retry on network errors and timeouts
-      if (attempt < retries && shouldRetry(error)) {
-        await delay(retryDelay * Math.pow(2, attempt)); // Exponential backoff
-        continue;
+      if (!shouldAttemptRetry(attempt, retries, normalizedError)) {
+        break;
       }
 
-      break;
+      await delay(calculateBackoffDelay(retryDelay, attempt));
     }
   }
 

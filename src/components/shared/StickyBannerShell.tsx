@@ -1,0 +1,37 @@
+"use client";
+
+import type { PropsWithChildren } from "react";
+
+import { BaseCard } from "@/components/ui";
+import { HEADER, Z_INDEX } from "@/constants/design-system";
+
+interface StickyBannerShellProps {
+  cardClassName?: string;
+}
+
+const BASE_CARD_CLASSES =
+  "border-indigo-500/30 bg-indigo-950/40 px-4 py-3 text-indigo-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3";
+
+export function StickyBannerShell({
+  children,
+  cardClassName,
+}: PropsWithChildren<StickyBannerShellProps>) {
+  const mergedCardClasses = cardClassName
+    ? `${BASE_CARD_CLASSES} ${cardClassName}`
+    : BASE_CARD_CLASSES;
+
+  return (
+    <div
+      className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}
+    >
+      <BaseCard
+        variant="glass"
+        padding="sm"
+        borderRadius="md"
+        className={mergedCardClasses}
+      >
+        {children}
+      </BaseCard>
+    </div>
+  );
+}

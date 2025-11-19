@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { memo, useState } from "react";
 
+import { ChartCloseIcon } from "./ChartCloseIcon";
+
 type SeverityType = "info" | "warning" | "success" | "critical";
 
 interface InsightAction {
@@ -180,19 +182,7 @@ export const ChartInsightCard = memo<ChartInsightCardProps>(
                   className="flex-shrink-0 text-gray-500 hover:text-white transition-colors p-1 rounded hover:bg-gray-700/50"
                   aria-label="Dismiss insight"
                 >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <ChartCloseIcon size={16} className="w-4 h-4" />
                 </button>
               )}
             </div>

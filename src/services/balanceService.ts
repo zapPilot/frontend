@@ -38,133 +38,158 @@ export interface WalletTokenBalances {
   tokens: NormalizedTokenBalance[];
 }
 
-const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
-  const record = (token ?? {}) as Record<string, unknown>;
+const SYMBOL_NATIVE_INDICATORS = ["eth", "arb", "op", "base"];
+const NAME_NATIVE_INDICATORS = [
+  "ethereum",
+  "ether",
+  "arbitrum",
+  "optimism",
+  "base",
+];
 
-  const addressCandidate =
+const STRING_FALLBACK_KEYS = {
+  symbol: ["symbol", "tokenSymbol", "token_symbol"],
+  name: ["name", "tokenName", "token_name"],
+};
+
+const USD_VALUE_KEYS = ["usdValue", "usd_value", "fiatValue"] as const;
+
+function pickStringField(
+  record: Record<string, unknown>,
+  keys: readonly string[]
+): string | undefined {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string" && value.trim() !== "") {
+      return value;
+    }
+  }
+  return undefined;
+}
+
+function detectNativeAddress(record: Record<string, unknown>): string {
+  const symbol = pickStringField(record, [
+    "symbol",
+    "tokenSymbol",
+  ])?.toLowerCase();
+  const name = pickStringField(record, ["name", "tokenName"])?.toLowerCase();
+
+  const matchesSymbol = symbol
+    ? SYMBOL_NATIVE_INDICATORS.includes(symbol)
+    : false;
+  const matchesName = name
+    ? NAME_NATIVE_INDICATORS.some(indicator => name.includes(indicator))
+    : false;
+
+  return matchesSymbol || matchesName ? "native" : "";
+}
+
+function resolveTokenAddress(record: Record<string, unknown>): string {
+  const candidate =
     (record["address"] as string | undefined) ??
     (record["tokenAddress"] as string | undefined) ??
-    (record["token_address"] as string | undefined) ??
-    "";
+    (record["token_address"] as string | undefined);
 
-  // Handle native tokens - if no address is provided, check if it's a native token
-  let address = normalizeAddress(addressCandidate);
-  if (!addressCandidate || addressCandidate === "") {
-    // Check if this is a native token by looking at symbol or other indicators
-    const symbol = (record["symbol"] as string | undefined)?.toLowerCase();
-    const name = (record["name"] as string | undefined)?.toLowerCase();
-
-    const symbolIndicators = ["eth", "arb", "op", "base"];
-    const nameIndicators = [
-      "ethereum",
-      "ether",
-      "arbitrum",
-      "optimism",
-      "base",
-    ];
-
-    const matchesSymbol = symbol ? symbolIndicators.includes(symbol) : false;
-    const matchesName = name
-      ? nameIndicators.some(indicator => name.includes(indicator))
-      : false;
-
-    if (matchesSymbol || matchesName) {
-      address = "native";
-    }
+  if (candidate && candidate !== "") {
+    return normalizeAddress(candidate);
   }
 
+  return detectNativeAddress(record);
+}
+
+function parseDecimals(record: Record<string, unknown>): number | null {
   const decimalsRaw =
     record["decimals"] ?? record["tokenDecimals"] ?? record["token_decimals"];
-  const decimals =
-    typeof decimalsRaw === "number"
-      ? decimalsRaw
-      : typeof decimalsRaw === "string"
-        ? Number.parseInt(decimalsRaw, 10)
-        : null;
 
-  const formattedCandidate = record["balanceFormatted"];
-  let formattedBalance: number | undefined;
-  if (typeof formattedCandidate === "number") {
-    formattedBalance = formattedCandidate;
-  } else if (typeof formattedCandidate === "string") {
-    const parsed = Number(formattedCandidate);
+  if (typeof decimalsRaw === "number") {
+    return decimalsRaw;
+  }
+
+  if (typeof decimalsRaw === "string") {
+    const parsed = Number.parseInt(decimalsRaw, 10);
+    return Number.isNaN(parsed) ? null : parsed;
+  }
+
+  return null;
+}
+
+function parseMaybeNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
     if (!Number.isNaN(parsed)) {
-      formattedBalance = parsed;
+      return parsed;
     }
   }
 
-  const rawBalanceCandidate = record["balance"];
+  return undefined;
+}
 
-  const rawBalance =
-    typeof rawBalanceCandidate === "string"
-      ? rawBalanceCandidate
-      : typeof rawBalanceCandidate === "number"
-        ? rawBalanceCandidate.toString()
-        : undefined;
+function parseRawBalance(value: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value;
+  }
 
-  const computeBalance = (): number => {
-    if (typeof formattedBalance === "number") {
-      return formattedBalance;
-    }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toString();
+  }
 
-    if (rawBalance && decimals !== null && Number.isFinite(decimals)) {
-      try {
-        const rawBigInt = BigInt(rawBalance);
-        if (decimals <= 0) {
-          return Number(rawBigInt);
-        }
+  return undefined;
+}
 
-        const divisor = BigInt(10) ** BigInt(decimals);
-        const integerPart = rawBigInt / divisor;
-        const fractionPart = rawBigInt % divisor;
-        const fractionString = fractionPart.toString().padStart(decimals, "0");
-        let trimIndex = fractionString.length;
-        while (
-          trimIndex > 0 &&
-          fractionString.charCodeAt(trimIndex - 1) === "0".charCodeAt(0)
-        ) {
-          trimIndex -= 1;
-        }
-        const trimmedFraction = fractionString.slice(0, trimIndex);
-        const assembled = trimmedFraction
-          ? `${integerPart.toString()}.${trimmedFraction}`
-          : integerPart.toString();
-        const parsed = Number(assembled);
-        return Number.isNaN(parsed) ? 0 : parsed;
-      } catch {
-        const parsed = Number(rawBalance);
-        return Number.isNaN(parsed) ? 0 : parsed;
+function computeBalanceValue(
+  formattedBalance: number | undefined,
+  rawBalance: string | undefined,
+  decimals: number | null
+): number {
+  if (typeof formattedBalance === "number") {
+    return formattedBalance;
+  }
+
+  if (rawBalance && decimals !== null && Number.isFinite(decimals)) {
+    try {
+      const rawBigInt = BigInt(rawBalance);
+      if (decimals <= 0) {
+        return Number(rawBigInt);
       }
-    }
 
-    if (rawBalance) {
-      const parsed = Number(rawBalance);
+      const divisor = BigInt(10) ** BigInt(decimals);
+      const integerPart = rawBigInt / divisor;
+      const fractionPart = rawBigInt % divisor;
+      const fractionString = fractionPart.toString().padStart(decimals, "0");
+      let trimIndex = fractionString.length;
+      while (
+        trimIndex > 0 &&
+        fractionString.charCodeAt(trimIndex - 1) === "0".charCodeAt(0)
+      ) {
+        trimIndex -= 1;
+      }
+      const trimmedFraction = fractionString.slice(0, trimIndex);
+      const numericString = trimmedFraction
+        ? `${integerPart.toString()}.${trimmedFraction}`
+        : integerPart.toString();
+      const parsed = Number(numericString);
       return Number.isNaN(parsed) ? 0 : parsed;
+    } catch {
+      const fallbackNumeric = Number(rawBalance);
+      return Number.isNaN(fallbackNumeric) ? 0 : fallbackNumeric;
     }
+  }
 
-    return 0;
-  };
+  if (rawBalance) {
+    const parsed = Number(rawBalance);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
 
-  const balance = computeBalance();
+  return 0;
+}
 
-  const symbol =
-    (record["symbol"] as string | undefined) ??
-    (record["tokenSymbol"] as string | undefined) ??
-    (record["token_symbol"] as string | undefined);
-  const name =
-    (record["name"] as string | undefined) ??
-    (record["tokenName"] as string | undefined) ??
-    (record["token_name"] as string | undefined);
-
-  const usdValueCandidate =
-    record["usdValue"] ?? record["usd_value"] ?? record["fiatValue"];
-  const usdValue =
-    typeof usdValueCandidate === "number"
-      ? usdValueCandidate
-      : typeof usdValueCandidate === "string"
-        ? Number(usdValueCandidate)
-        : undefined;
-
+function buildMetadata(
+  record: Record<string, unknown>
+): Record<string, unknown> | undefined {
   const metadata: Record<string, unknown> = {};
   if (record["fromCache"] !== undefined) {
     metadata["fromCache"] = record["fromCache"];
@@ -176,6 +201,33 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
     metadata["source"] = record["source"];
   }
 
+  return Object.keys(metadata).length > 0 ? metadata : undefined;
+}
+
+function extractUsdValue(record: Record<string, unknown>): number | undefined {
+  for (const key of USD_VALUE_KEYS) {
+    const parsed = parseMaybeNumber(record[key]);
+    if (parsed !== undefined) {
+      return parsed;
+    }
+  }
+
+  return undefined;
+}
+
+const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
+  const record = (token ?? {}) as Record<string, unknown>;
+
+  const address = resolveTokenAddress(record);
+  const decimals = parseDecimals(record);
+  const formattedBalance = parseMaybeNumber(record["balanceFormatted"]);
+  const rawBalance = parseRawBalance(record["balance"]);
+  const balance = computeBalanceValue(formattedBalance, rawBalance, decimals);
+
+  const symbol = pickStringField(record, STRING_FALLBACK_KEYS.symbol);
+  const name = pickStringField(record, STRING_FALLBACK_KEYS.name);
+  const usdValue = extractUsdValue(record);
+
   const normalized: NormalizedTokenBalance = {
     address,
     decimals,
@@ -185,24 +237,21 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
   if (symbol) {
     normalized.symbol = symbol;
   }
-
   if (name) {
     normalized.name = name;
   }
-
   if (rawBalance !== undefined) {
     normalized.rawBalance = rawBalance;
   }
-
   if (formattedBalance !== undefined) {
     normalized.formattedBalance = formattedBalance;
   }
-
   if (usdValue !== undefined && !Number.isNaN(usdValue)) {
     normalized.usdValue = usdValue;
   }
 
-  if (Object.keys(metadata).length > 0) {
+  const metadata = buildMetadata(record);
+  if (metadata) {
     normalized.metadata = metadata;
   }
 

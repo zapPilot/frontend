@@ -41,54 +41,60 @@ export function YieldMetricValue({
   yieldState,
   hasProtocolBreakdown,
 }: YieldMetricValueProps) {
-  // Preliminary or Improving state (with badge)
-  if (
-    yieldState.status === "insufficient" ||
-    yieldState.status === "low_confidence"
-  ) {
-    return (
-      <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
-        <div className="flex flex-col">
-          <div className="flex items-center space-x-2 text-emerald-300">
-            <p className="text-xl font-semibold">
-              {formatCurrency(avgDailyYieldUsd, {
-                smartPrecision: true,
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </p>
+  const formattedValue = formatCurrency(avgDailyYieldUsd, {
+    smartPrecision: true,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  const { badgeClassName, subtitle } = resolveBadgePresentation(
+    yieldState.status,
+    yieldState.daysWithData
+  );
+
+  const containerClass = hasProtocolBreakdown ? "cursor-pointer" : undefined;
+
+  return (
+    <div className={containerClass}>
+      <div className="flex flex-col">
+        <div className="flex items-center space-x-2 text-emerald-300">
+          <p className="text-xl font-semibold">{formattedValue}</p>
+          {yieldState.badge && badgeClassName && (
             <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                yieldState.status === "insufficient"
-                  ? "bg-yellow-900/20 text-yellow-400"
-                  : "bg-blue-900/20 text-blue-400"
-              }`}
+              className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${badgeClassName}`}
             >
               {yieldState.badge}
             </span>
-          </div>
-          <span className="text-xs text-gray-500 mt-1">
-            {yieldState.status === "insufficient"
-              ? `Early estimate (${yieldState.daysWithData}/7 days)`
-              : `Based on ${yieldState.daysWithData} days`}
-          </span>
+          )}
         </div>
-      </div>
-    );
-  }
-
-  // Normal state (no badge)
-  return (
-    <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
-      <div className="flex items-center space-x-2 text-emerald-300">
-        <p className="text-xl font-semibold">
-          {formatCurrency(avgDailyYieldUsd, {
-            smartPrecision: true,
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </p>
+        {subtitle && (
+          <span className="text-xs text-gray-500 mt-1">{subtitle}</span>
+        )}
       </div>
     </div>
   );
+}
+
+function resolveBadgePresentation(
+  status: YieldState["status"],
+  daysWithData: number
+) {
+  if (status === "insufficient") {
+    return {
+      badgeClassName: "bg-yellow-900/20 text-yellow-400",
+      subtitle: `Early estimate (${daysWithData}/7 days)`,
+    };
+  }
+
+  if (status === "low_confidence") {
+    return {
+      badgeClassName: "bg-blue-900/20 text-blue-400",
+      subtitle: `Based on ${daysWithData} days`,
+    };
+  }
+
+  return {
+    badgeClassName: undefined,
+    subtitle: undefined,
+  };
 }

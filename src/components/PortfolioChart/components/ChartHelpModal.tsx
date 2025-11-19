@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
 
+import { ChartCloseIcon } from "./ChartCloseIcon";
+
 interface ChartHelpModalProps {
   chartType: "sharpe" | "volatility";
 }
@@ -114,19 +116,7 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
                   className="text-gray-400 hover:text-white hover:bg-gray-700/50 rounded p-1 transition-colors"
                   aria-label="Close panel"
                 >
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <ChartCloseIcon size={24} className="w-6 h-6" />
                 </button>
               </div>
 
