@@ -180,7 +180,7 @@ describe("SwapPage Test Utilities", () => {
 
       it("should return false for invalid objects", () => {
         expect(isSwapToken(null)).toBe(false);
-        expect(isSwapToken(undefined)).toBe(false);
+        expect(isSwapToken()).toBe(false);
         expect(isSwapToken({})).toBe(false);
         expect(isSwapToken({ symbol: "ETH" })).toBe(false); // Missing required fields
       });
@@ -206,7 +206,7 @@ describe("SwapPage Test Utilities", () => {
 
       it("should return false for invalid objects", () => {
         expect(isAssetCategory(null)).toBe(false);
-        expect(isAssetCategory(undefined)).toBe(false);
+        expect(isAssetCategory()).toBe(false);
         expect(isAssetCategory({})).toBe(false);
         expect(isAssetCategory({ id: "test" })).toBe(false); // Missing required fields
       });

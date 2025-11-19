@@ -5,14 +5,11 @@
  * Copy these patterns into your test files as needed.
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 
-// Example 1: Basic mock setup for SwapPage component tests
 import * as UserContext from "@/contexts/UserContext";
-import * as useChainModule from "@/hooks/useChain";
 import * as useStrategiesQuery from "@/hooks/queries/useStrategiesQuery";
+import * as useChainModule from "@/hooks/useChain";
 import * as intentService from "@/services/intentService";
 
 import {
@@ -23,6 +20,7 @@ import {
   SwapPageTestScenarios,
 } from "../helpers/swapPageTestUtils";
 
+// Example 1: Basic mock setup for SwapPage component tests
 // Mock all dependencies
 vi.mock("@/contexts/UserContext");
 vi.mock("@/hooks/useChain");

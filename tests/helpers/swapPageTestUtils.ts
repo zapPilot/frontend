@@ -10,12 +10,15 @@
 import { QueryClient } from "@tanstack/react-query";
 import { vi } from "vitest";
 
-import type { AssetCategory, Protocol } from "@/components/PortfolioAllocation/types";
-import type { PortfolioSwapAction } from "@/components/PortfolioAllocation/types";
+import type {
+  AssetCategory,
+  PortfolioSwapAction,
+  Protocol,
+} from "@/components/PortfolioAllocation/types";
+import type { UserInfo } from "@/hooks/queries/useUserQuery";
 import type { InvestmentOpportunity } from "@/types/investment";
 import type { RiskLevel } from "@/types/risk";
 import type { SwapToken } from "@/types/swap";
-import type { UserInfo } from "@/hooks/queries/useUserQuery";
 
 // =============================================================================
 // MOCK FACTORIES
@@ -295,7 +298,7 @@ export function setupSwapPageMocks(config: SwapPageMockConfig = {}) {
           symbol: chainId === 1 ? "ETH" : "UNKNOWN",
         }
       : null,
-    switchChain: vi.fn().mockResolvedValue(undefined),
+    switchChain: vi.fn().mockResolvedValue(),
     isChainSupported: vi.fn().mockReturnValue(true),
     getChainInfo: vi.fn().mockReturnValue({
       id: chainId,
@@ -321,7 +324,7 @@ export function setupSwapPageMocks(config: SwapPageMockConfig = {}) {
     totalStrategies: strategies.length,
     isInitialLoading,
     isReloading: isRefetching || (isLoading && strategies.length > 0),
-    hasPoolData: strategies.some((cat) => cat.protocols?.length > 0),
+    hasPoolData: strategies.some(cat => cat.protocols?.length > 0),
     totalProtocols: strategies.reduce(
       (sum, cat) => sum + (cat.protocols?.length || 0),
       0
@@ -387,8 +390,8 @@ export function selectOperationMode(
     rebalance: /optimize|rebalance/i,
   };
 
-  const button = Array.from(container.querySelectorAll("button")).find(
-    (btn) => modeMap[mode].test(btn.textContent || "")
+  const button = Array.from(container.querySelectorAll("button")).find(btn =>
+    modeMap[mode].test(btn.textContent || "")
   );
 
   if (!button) {
