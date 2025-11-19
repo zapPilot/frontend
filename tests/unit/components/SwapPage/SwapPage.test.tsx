@@ -1,8 +1,9 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 
 import { SwapPage } from "../../../../src/components/SwapPage/SwapPage";
 import type { InvestmentOpportunity } from "../../../../src/types/investment";
+import type { PortfolioSwapAction } from "../../../../src/types/portfolio";
 
 // Mock useChain hook
 vi.mock("../../../../src/hooks/useChain", () => ({
@@ -73,10 +74,44 @@ vi.mock("../../../../src/components/SwapPage/OptimizeTab", () => ({
   )),
 }));
 
+// Mock ZapExecutionProgress with interactive controls for testing
 vi.mock("../../../../src/components/shared/ZapExecutionProgress", () => ({
-  ZapExecutionProgress: vi.fn(() => (
-    <div data-testid="zap-execution-progress">Zap Execution Progress</div>
-  )),
+  ZapExecutionProgress: vi.fn(({
+    isOpen,
+    intentId,
+    chainId,
+    totalValue,
+    strategyCount,
+    onComplete,
+    onError,
+    onCancel
+  }: any) => {
+    if (!isOpen) return null;
+
+    return (
+      <div data-testid="zap-execution-progress">
+        <div data-testid="intent-id">{intentId}</div>
+        <div data-testid="chain-id">{chainId}</div>
+        <div data-testid="total-value">{totalValue}</div>
+        <div data-testid="strategy-count">{strategyCount}</div>
+        <button onClick={onComplete} data-testid="trigger-complete">
+          Complete
+        </button>
+        <button onClick={() => onError?.("Test execution error")} data-testid="trigger-error">
+          Error
+        </button>
+        <button onClick={onCancel} data-testid="trigger-cancel">
+          Cancel
+        </button>
+      </div>
+    );
+  }),
+}));
+
+// Mock intentService
+const mockExecuteUnifiedZap = vi.fn();
+vi.mock("../../../../src/services/intentService", () => ({
+  executeUnifiedZap: (...args: any[]) => mockExecuteUnifiedZap(...args),
 }));
 
 // Mock framer-motion
@@ -458,6 +493,28 @@ describe("SwapPage", () => {
 
       // Should still render
       expect(screen.getByTestId("swap-page-header")).toBeInTheDocument();
+    });
+  });
+
+  describe("Props Passed to PortfolioAllocation", () => {
+    it("should pass required props to PortfolioAllocation", () => {
+      render(<SwapPage {...defaultProps} />);
+
+      // The PortfolioAllocationContainer is mocked, so we check if it was rendered
+      expect(screen.getByTestId("portfolio-allocation")).toBeInTheDocument();
+    });
+
+    it("should update when operation mode changes", () => {
+      render(<SwapPage {...defaultProps} />);
+
+      // Initially should be zapIn
+      expect(screen.getByTestId("operation-mode")).toHaveTextContent("zapIn");
+
+      // Switch to zapOut
+      fireEvent.click(screen.getByTestId("operation-zapOut"));
+
+      // Should update to zapOut
+      expect(screen.getByTestId("operation-mode")).toHaveTextContent("zapOut");
     });
   });
 });
