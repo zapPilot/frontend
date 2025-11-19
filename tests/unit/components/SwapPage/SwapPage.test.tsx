@@ -1,8 +1,26 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { PortfolioAllocationContainerProps } from "@/components/PortfolioAllocation/types";
 import { SwapPage } from "@/components/SwapPage/SwapPage";
+import type { SwapPageHeaderProps } from "@/components/SwapPage/SwapPageHeader";
+import type { TabNavigationProps } from "@/components/SwapPage/TabNavigation";
+import type {
+  UnifiedZapRequest,
+  UnifiedZapResponse,
+} from "@/services/intentService";
 import type { InvestmentOpportunity } from "@/types/investment";
+
+interface MockZapExecutionProps {
+  isOpen: boolean;
+  intentId: string;
+  chainId: number;
+  totalValue: number;
+  strategyCount: number;
+  onComplete?: () => void;
+  onError?: (error: string) => void;
+  onCancel?: () => void;
+}
 
 // Mock useChain hook
 vi.mock("../../../../src/hooks/useChain", () => ({
@@ -14,7 +32,7 @@ vi.mock("../../../../src/hooks/useChain", () => ({
 
 // Mock child components
 vi.mock("../../../../src/components/SwapPage/SwapPageHeader", () => ({
-  SwapPageHeader: vi.fn(({ strategy, onBack }: any) => (
+  SwapPageHeader: vi.fn(({ strategy, onBack }: SwapPageHeaderProps) => (
     <div data-testid="swap-page-header">
       <h1 data-testid="strategy-name">{strategy?.name}</h1>
       <button onClick={onBack} data-testid="back-button">
@@ -26,7 +44,7 @@ vi.mock("../../../../src/components/SwapPage/SwapPageHeader", () => ({
 
 vi.mock("../../../../src/components/SwapPage/TabNavigation", () => ({
   TabNavigation: vi.fn(
-    ({ activeOperationMode, onOperationModeChange }: any) => (
+    ({ activeOperationMode, onOperationModeChange }: TabNavigationProps) => (
       <div data-testid="tab-navigation">
         <button
           onClick={() => onOperationModeChange?.("zapIn")}
@@ -56,7 +74,7 @@ vi.mock("../../../../src/components/SwapPage/TabNavigation", () => ({
 
 vi.mock("../../../../src/components/PortfolioAllocation", () => ({
   PortfolioAllocationContainer: vi.fn(
-    ({ operationMode, assetCategories }: any) => (
+    ({ operationMode, assetCategories }: PortfolioAllocationContainerProps) => (
       <div data-testid="portfolio-allocation">
         <div data-testid="operation-mode">{operationMode}</div>
         <div data-testid="asset-categories-count">
@@ -85,7 +103,7 @@ vi.mock("../../../../src/components/shared/ZapExecutionProgress", () => ({
       onComplete,
       onError,
       onCancel,
-    }: any) => {
+    }: MockZapExecutionProps) => {
       if (!isOpen) return null;
 
       return (
@@ -113,9 +131,13 @@ vi.mock("../../../../src/components/shared/ZapExecutionProgress", () => ({
 }));
 
 // Mock intentService
-const mockExecuteUnifiedZap = vi.fn();
+const mockExecuteUnifiedZap = vi.fn<
+  Promise<UnifiedZapResponse>,
+  [UnifiedZapRequest]
+>();
 vi.mock("../../../../src/services/intentService", () => ({
-  executeUnifiedZap: (...args: any[]) => mockExecuteUnifiedZap(...args),
+  executeUnifiedZap: (request: UnifiedZapRequest) =>
+    mockExecuteUnifiedZap(request),
 }));
 
 // Mock framer-motion

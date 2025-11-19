@@ -1,5 +1,13 @@
+#!/bin/sh
+# Pre-commit quality gates
+# - lint-staged: Format & lint
+# - type-check: TypeScript compilation
+# - deadcode:check: Unused code detection
+# - dup:all: Duplicate code detection (jscpd + jsinspect)
+# - test:safeall: Full test suite
+
 npx lint-staged
 npm run type-check
 npm run deadcode:check
-npm run dup:check
+npm run dup:all
 npm run test:safeall

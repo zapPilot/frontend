@@ -5,7 +5,7 @@ import { ArrowLeft } from "lucide-react";
 
 import { InvestmentOpportunity } from "../../types/investment";
 
-interface SwapPageHeaderProps {
+export interface SwapPageHeaderProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
 }

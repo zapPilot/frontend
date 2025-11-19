@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { ArrowDownLeft, TrendingUp } from "lucide-react";
-import React, { useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
@@ -35,7 +35,7 @@ interface OverviewTabListProps {
 const BASE_TAB_CONTAINER_CLASSES =
   "flex rounded-lg bg-gray-900/50 p-1 border border-gray-700 shadow-lg";
 
-function OverviewTabList({
+const OverviewTabList = React.memo(function OverviewTabList({
   idSuffix = "",
   compact = false,
   containerClassName = "",
@@ -80,7 +80,7 @@ function OverviewTabList({
       />
     </div>
   );
-}
+});
 
 interface PortfolioOverviewProps extends BaseComponentProps {
   portfolioState: PortfolioState;
@@ -121,35 +121,67 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     } = usePortfolioStateHelpers(portfolioState);
 
     // Get actual counts for tab badges
-    const assetCount = categorySummaries.length;
-    const debtCount = debtCategorySummaries.length;
-    const handleTabListKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-      if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-        e.preventDefault();
-        const order: TabType[] = ["assets", "borrowing"];
-        const current = order.indexOf(activeTab);
-        const nextIndex =
-          e.key === "ArrowRight"
-            ? (current + 1) % order.length
-            : (current - 1 + order.length) % order.length;
-        const nextTab: TabType = order[nextIndex] ?? "assets";
-        setActiveTab(nextTab);
-      }
-    };
-
-    const allocationDetailContent = (
-      <AssetCategoriesDetail
-        categorySummaries={categorySummaries}
-        debtCategorySummaries={debtCategorySummaries}
-        className="!bg-transparent !border-0 !p-0"
-        isLoading={shouldShowLoading}
-        error={portfolioState.errorMessage || null}
-        {...(onRetry && { onRetry })}
-        isRetrying={portfolioState.isRetrying || false}
-        activeTab={activeTab}
-        {...(onCategoryClick && { onCategoryClick })}
-      />
+    const assetCount = useMemo(
+      () => categorySummaries.length,
+      [categorySummaries]
     );
+    const debtCount = useMemo(
+      () => debtCategorySummaries.length,
+      [debtCategorySummaries]
+    );
+
+    const handleTabListKeyDown = useCallback(
+      (e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+          e.preventDefault();
+          const order: TabType[] = ["assets", "borrowing"];
+          const current = order.indexOf(activeTab);
+          const nextIndex =
+            e.key === "ArrowRight"
+              ? (current + 1) % order.length
+              : (current - 1 + order.length) % order.length;
+          const nextTab: TabType = order[nextIndex] ?? "assets";
+          setActiveTab(nextTab);
+        }
+      },
+      [activeTab]
+    );
+
+    const handleTabChange = useCallback((tab: TabType) => {
+      setActiveTab(tab);
+    }, []);
+
+    const allocationDetailContent = useMemo(
+      () => (
+        <AssetCategoriesDetail
+          categorySummaries={categorySummaries}
+          debtCategorySummaries={debtCategorySummaries}
+          className="!bg-transparent !border-0 !p-0"
+          isLoading={shouldShowLoading}
+          error={portfolioState.errorMessage || null}
+          {...(onRetry && { onRetry })}
+          isRetrying={portfolioState.isRetrying || false}
+          activeTab={activeTab}
+          {...(onCategoryClick && { onCategoryClick })}
+        />
+      ),
+      [
+        categorySummaries,
+        debtCategorySummaries,
+        shouldShowLoading,
+        portfolioState.errorMessage,
+        onRetry,
+        portfolioState.isRetrying,
+        activeTab,
+        onCategoryClick,
+      ]
+    );
+
+    const tabAnnouncement = useMemo(() => {
+      return activeTab === "assets"
+        ? `Assets tab selected, ${assetCount} categories`
+        : `Borrowing tab selected, ${debtCount} categories`;
+    }, [activeTab, assetCount, debtCount]);
 
     return (
       <motion.div
@@ -167,7 +199,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               activeTab={activeTab}
               assetCount={assetCount}
               debtCount={debtCount}
-              onSelectTab={setActiveTab}
+              onSelectTab={handleTabChange}
               onKeyDown={handleTabListKeyDown}
             />
           </div>
@@ -180,7 +212,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               activeTab={activeTab}
               assetCount={assetCount}
               debtCount={debtCount}
-              onSelectTab={setActiveTab}
+              onSelectTab={handleTabChange}
               compact
               containerClassName="w-fit"
               onKeyDown={handleTabListKeyDown}
@@ -189,9 +221,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         </div>
 
         <div className="sr-only" aria-live="polite">
-          {activeTab === "assets"
-            ? `Assets tab selected, ${assetCount} categories`
-            : `Borrowing tab selected, ${debtCount} categories`}
+          {tabAnnouncement}
         </div>
 
         {/* Wallet Not Connected State */}

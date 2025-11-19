@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
 import { useChain } from "@/hooks/useChain";
@@ -20,9 +21,25 @@ import type {
   OperationMode,
   PortfolioSwapAction,
 } from "../PortfolioAllocation/types";
-import { ZapExecutionProgress } from "../shared/ZapExecutionProgress";
 import { SwapPageHeader } from "./SwapPageHeader";
 import { TabNavigation } from "./TabNavigation";
+
+const ZapExecutionProgress = dynamic(
+  async () => {
+    const zapModule = await import("../shared/ZapExecutionProgress");
+    return { default: zapModule.ZapExecutionProgress };
+  },
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-center text-gray-500 text-sm">
+          Preparing zap execution stream...
+        </div>
+      </div>
+    ),
+  }
+);
 
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;

@@ -109,10 +109,10 @@ const eslintConfig = [
       // ========================================
       // Code Smell Detection (SonarJS)
       // ========================================
-      'sonarjs/cognitive-complexity': ['error', 35],            // Max complexity per function
+      'sonarjs/cognitive-complexity': ['error', 20],            // Max complexity per function (reduced from 35)
       'sonarjs/no-nested-functions': ['warn', { threshold: 6 }], // Allow React event handler patterns
       'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],  // Catch magic strings (5+ duplicates, reduced noise)
-      'sonarjs/no-duplicated-branches': 'warn',                 // Catch duplicate logic in branches
+      'sonarjs/no-duplicated-branches': 'error',                // Catch duplicate logic in branches (upgraded from warn)
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'off',                       // Sometimes separate conditions are clearer
       'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing

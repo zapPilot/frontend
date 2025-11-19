@@ -2,7 +2,8 @@
 
 ## Overview
 
-Created comprehensive test utilities for SwapPage and form component testing, providing reusable factories, mock setup functions, and interaction helpers.
+Created comprehensive test utilities for SwapPage and form component testing, providing reusable
+factories, mock setup functions, and interaction helpers.
 
 ## Files Created
 
@@ -253,18 +254,13 @@ All utilities are fully tested:
 1. **Import utilities in new tests:**
 
    ```typescript
-   import {
-     setupSwapPageMocks,
-     SwapPageTestScenarios,
-   } from "tests/helpers/swapPageTestUtils";
+   import { setupSwapPageMocks, SwapPageTestScenarios } from "tests/helpers/swapPageTestUtils";
    ```
 
 2. **Use pre-built scenarios for common cases:**
 
    ```typescript
-   const mocks = setupSwapPageMocks(
-     SwapPageTestScenarios.connectedWithStrategies()
-   );
+   const mocks = setupSwapPageMocks(SwapPageTestScenarios.connectedWithStrategies());
    ```
 
 3. **Customize only when needed:**
@@ -287,16 +283,20 @@ Potential additions based on testing needs:
 
 ## Files Summary
 
-| File                                     | Lines | Purpose                            |
-| ---------------------------------------- | ----- | ---------------------------------- |
-| `swapPageTestUtils.ts`                   | 470   | Main utilities implementation      |
-| `swapPageTestUtils.test.ts`              | 270   | Unit tests for utilities           |
-| `swapPageTestUtils.example.ts`           | 350   | Usage examples                     |
-| `README.md`                              | 500   | Documentation                      |
-| **Total**                                | 1590  | Complete testing toolkit           |
+| File                           | Lines | Purpose                       |
+| ------------------------------ | ----- | ----------------------------- |
+| `swapPageTestUtils.ts`         | 470   | Main utilities implementation |
+| `swapPageTestUtils.test.ts`    | 270   | Unit tests for utilities      |
+| `swapPageTestUtils.example.ts` | 350   | Usage examples                |
+| `README.md`                    | 500   | Documentation                 |
+| **Total**                      | 1590  | Complete testing toolkit      |
 
 ## Conclusion
 
-The SwapPage test utilities provide a comprehensive, type-safe, and easy-to-use toolkit for testing all SwapPage-related components. With realistic mock factories, unified setup functions, and pre-built scenarios, these utilities will significantly speed up test authoring while maintaining high code quality.
+The SwapPage test utilities provide a comprehensive, type-safe, and easy-to-use toolkit for testing
+all SwapPage-related components. With realistic mock factories, unified setup functions, and
+pre-built scenarios, these utilities will significantly speed up test authoring while maintaining
+high code quality.
 
-All utilities follow existing patterns from the codebase, are fully documented with JSDoc comments, include usage examples, and are backed by comprehensive unit tests.
+All utilities follow existing patterns from the codebase, are fully documented with JSDoc comments,
+include usage examples, and are backed by comprehensive unit tests.

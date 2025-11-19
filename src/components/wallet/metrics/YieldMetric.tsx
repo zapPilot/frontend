@@ -1,9 +1,10 @@
-import { Clock, Info } from "lucide-react";
+import { Clock } from "lucide-react";
+import { useMemo } from "react";
 
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
 import { YIELD_DATA_THRESHOLDS } from "@/config/performance-thresholds";
 import { useMetricState } from "@/hooks/useMetricState";
-import { formatCurrency } from "@/lib/formatters";
+import { sortProtocolsByTodayYield } from "@/lib/sortProtocolsByTodayYield";
 
 import type {
   ProtocolYieldBreakdown,
@@ -14,6 +15,9 @@ import {
   useMetricsTooltip,
   YieldBreakdownTooltip,
 } from "../tooltips";
+import { YieldMetricHeader } from "./YieldMetricHeader";
+import { YieldMetricValue } from "./YieldMetricValue";
+import { YieldMetricWrapper } from "./YieldMetricWrapper";
 
 interface YieldMetricProps {
   /** Yield summary data with windows and breakdowns */
@@ -54,7 +58,7 @@ interface YieldState {
  * />
  * ```
  */
-// eslint-disable-next-line sonarjs/cognitive-complexity
+
 export function YieldMetric({
   yieldSummaryData,
   isYieldLoading,
@@ -76,10 +80,15 @@ export function YieldMetric({
     ? selectedYieldWindow.window.average_daily_yield_usd
     : null;
 
-  // Get the protocol breakdown from the selected window
-  const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
-    selectedYieldWindow?.window.protocol_breakdown ?? [];
-  const hasProtocolBreakdown = protocolYieldBreakdown.length > 0;
+  // Get and sort the protocol breakdown from the selected window
+  // Sort protocols by today's yield (DESC) - protocols without data go to the end
+  const sortedProtocolBreakdown = useMemo(() => {
+    const protocolYieldBreakdown: ProtocolYieldBreakdown[] =
+      selectedYieldWindow?.window.protocol_breakdown ?? [];
+    return sortProtocolsByTodayYield(protocolYieldBreakdown);
+  }, [selectedYieldWindow]);
+
+  const hasProtocolBreakdown = sortedProtocolBreakdown.length > 0;
 
   // Get outliers from the selected window's statistics
   const outliersRemoved = selectedYieldWindow
@@ -171,150 +180,31 @@ export function YieldMetric({
     return null;
   }
 
-  // Insufficient or low confidence state
-  if (
-    yieldState.status === "insufficient" ||
-    yieldState.status === "low_confidence"
-  ) {
-    return (
-      <div
-        className="relative"
-        ref={hasProtocolBreakdown ? yieldTooltip.triggerRef : undefined}
-        onClick={hasProtocolBreakdown ? yieldTooltip.toggle : undefined}
-        onKeyDown={
-          hasProtocolBreakdown
-            ? event => {
-                if (
-                  event.key === "Enter" ||
-                  event.key === " " ||
-                  event.key === "Spacebar"
-                ) {
-                  event.preventDefault();
-                  yieldTooltip.toggle();
-                }
-              }
-            : undefined
-        }
-        role={hasProtocolBreakdown ? "button" : undefined}
-        tabIndex={hasProtocolBreakdown ? 0 : undefined}
-        aria-label={hasProtocolBreakdown ? "Toggle yield breakdown" : undefined}
-      >
-        <div className="flex items-center space-x-1 mb-1">
-          <p className="text-sm text-gray-400">Avg Daily Yield</p>
-          {outliersRemoved > 0 && (
-            <span
-              title={`${outliersRemoved} outlier${outliersRemoved === 1 ? "" : "s"} removed for accuracy (IQR method)`}
-              className={
-                hasProtocolBreakdown
-                  ? "inline-flex cursor-pointer"
-                  : "inline-flex cursor-help"
-              }
-            >
-              <Info className="w-3 h-3 text-gray-500" />
-            </span>
-          )}
-        </div>
-        <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
-          <div className="flex flex-col">
-            <div className="flex items-center space-x-2 text-emerald-300">
-              <p className="text-xl font-semibold">
-                {formatCurrency(avgDailyYieldUsd, {
-                  smartPrecision: true,
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-              <span
-                className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                  yieldState.status === "insufficient"
-                    ? "bg-yellow-900/20 text-yellow-400"
-                    : "bg-blue-900/20 text-blue-400"
-                }`}
-              >
-                {yieldState.badge}
-              </span>
-            </div>
-            <span className="text-xs text-gray-500 mt-1">
-              {yieldState.status === "insufficient"
-                ? `Early estimate (${yieldState.daysWithData}/7 days)`
-                : `Based on ${yieldState.daysWithData} days`}
-            </span>
-          </div>
-        </div>
-        {hasProtocolBreakdown && yieldTooltip.visible && (
-          <YieldBreakdownTooltip
-            tooltipRef={yieldTooltip.tooltipRef}
-            position={yieldTooltip.position}
-            selectedWindow={selectedYieldWindow}
-            allWindows={yieldWindows}
-            breakdown={protocolYieldBreakdown}
-            outliersRemoved={outliersRemoved}
-          />
-        )}
-      </div>
-    );
-  }
-
-  // Normal state with full confidence
+  // Render yield metric with all states (insufficient, low_confidence, normal)
   return (
-    <div
-      className="relative"
-      ref={hasProtocolBreakdown ? yieldTooltip.triggerRef : undefined}
-      onClick={hasProtocolBreakdown ? yieldTooltip.toggle : undefined}
-      onKeyDown={
-        hasProtocolBreakdown
-          ? event => {
-              if (
-                event.key === "Enter" ||
-                event.key === " " ||
-                event.key === "Spacebar"
-              ) {
-                event.preventDefault();
-                yieldTooltip.toggle();
-              }
-            }
-          : undefined
-      }
-      role={hasProtocolBreakdown ? "button" : undefined}
-      tabIndex={hasProtocolBreakdown ? 0 : undefined}
-      aria-label={hasProtocolBreakdown ? "Toggle yield breakdown" : undefined}
+    <YieldMetricWrapper
+      hasInteraction={hasProtocolBreakdown}
+      yieldTooltip={yieldTooltip}
     >
-      <div className="flex items-center space-x-1 mb-1">
-        <p className="text-sm text-gray-400">Avg Daily Yield</p>
-        {outliersRemoved > 0 && (
-          <span
-            title={`${outliersRemoved} outlier${outliersRemoved === 1 ? "" : "s"} removed for accuracy (IQR method)`}
-            className={
-              hasProtocolBreakdown
-                ? "inline-flex cursor-pointer"
-                : "inline-flex cursor-help"
-            }
-          >
-            <Info className="w-3 h-3 text-gray-500" />
-          </span>
-        )}
-      </div>
-      <div className={hasProtocolBreakdown ? "cursor-pointer" : undefined}>
-        <div className="flex items-center space-x-2 text-emerald-300">
-          <p className="text-xl font-semibold">
-            {formatCurrency(avgDailyYieldUsd, {
-              smartPrecision: true,
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
-          </p>
-        </div>
-      </div>
+      <YieldMetricHeader
+        outliersRemoved={outliersRemoved}
+        hasProtocolBreakdown={hasProtocolBreakdown}
+      />
+      <YieldMetricValue
+        avgDailyYieldUsd={avgDailyYieldUsd}
+        yieldState={yieldState}
+        hasProtocolBreakdown={hasProtocolBreakdown}
+      />
       {hasProtocolBreakdown && yieldTooltip.visible && (
         <YieldBreakdownTooltip
           tooltipRef={yieldTooltip.tooltipRef}
           position={yieldTooltip.position}
           selectedWindow={selectedYieldWindow}
           allWindows={yieldWindows}
-          breakdown={protocolYieldBreakdown}
+          breakdown={sortedProtocolBreakdown}
           outliersRemoved={outliersRemoved}
         />
       )}
-    </div>
+    </YieldMetricWrapper>
   );
 }

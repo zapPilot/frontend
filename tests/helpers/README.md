@@ -4,7 +4,8 @@ Comprehensive test helpers for SwapPage and form component testing.
 
 ## Overview
 
-The `swapPageTestUtils.ts` file provides a complete testing toolkit for SwapPage and related components, including:
+The `swapPageTestUtils.ts` file provides a complete testing toolkit for SwapPage and related
+components, including:
 
 - **Mock Factories**: Create realistic test data for tokens, strategies, categories, and actions
 - **Setup Utilities**: Configure all necessary mocks with a single function call
@@ -21,10 +22,7 @@ import * as useChainModule from "@/hooks/useChain";
 import * as useStrategiesQuery from "@/hooks/queries/useStrategiesQuery";
 import * as intentService from "@/services/intentService";
 
-import {
-  setupSwapPageMocks,
-  SwapPageTestScenarios,
-} from "tests/helpers/swapPageTestUtils";
+import { setupSwapPageMocks, SwapPageTestScenarios } from "tests/helpers/swapPageTestUtils";
 
 // Mock dependencies
 vi.mock("@/contexts/UserContext");
@@ -41,12 +39,10 @@ describe("SwapPage", () => {
     // Apply mocks
     vi.mocked(UserContext.useUser).mockReturnValue(mocks.useUser());
     vi.mocked(useChainModule.useChain).mockReturnValue(mocks.useChain());
-    vi.mocked(
-      useStrategiesQuery.useStrategiesWithPortfolioData
-    ).mockReturnValue(mocks.useStrategiesWithPortfolioData());
-    vi.mocked(intentService.executeUnifiedZap).mockImplementation(
-      mocks.executeUnifiedZap
+    vi.mocked(useStrategiesQuery.useStrategiesWithPortfolioData).mockReturnValue(
+      mocks.useStrategiesWithPortfolioData()
     );
+    vi.mocked(intentService.executeUnifiedZap).mockImplementation(mocks.executeUnifiedZap);
 
     // Render and test your component
     // ...
