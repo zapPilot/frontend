@@ -73,69 +73,6 @@ export function toString(value: unknown, fallback = ""): string {
 }
 
 /**
- * Safely converts unknown value to boolean with fallback.
- * Handles truthy/falsy values and string representations.
- *
- * @param value - Value to convert
- * @param fallback - Default value if conversion fails (default: false)
- * @returns Validated boolean or fallback
- *
- * @example
- * toBoolean(true) // true
- * toBoolean("true") // true
- * toBoolean("false") // false
- * toBoolean(1) // true
- * toBoolean(0) // false
- * toBoolean(null, false) // false
- */
-export function toBoolean(value: unknown, fallback = false): boolean {
-  if (typeof value === "boolean") {
-    return value;
-  }
-
-  if (typeof value === "string") {
-    const normalized = value.toLowerCase().trim();
-    if (normalized === "true" || normalized === "1") return true;
-    if (normalized === "false" || normalized === "0") return false;
-  }
-
-  if (typeof value === "number") {
-    return value !== 0;
-  }
-
-  return fallback;
-}
-
-/**
- * Safely converts unknown value to Date with fallback.
- * Handles Date objects, valid date strings, and timestamps.
- *
- * @param value - Value to convert
- * @param fallback - Default value if conversion fails (default: new Date())
- * @returns Validated Date or fallback
- *
- * @example
- * toDate("2024-01-15") // Date object
- * toDate(1705276800000) // Date from timestamp
- * toDate(new Date()) // Pass-through
- * toDate("invalid", new Date(0)) // Fallback
- */
-export function toDate(value: unknown, fallback: Date = new Date()): Date {
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value;
-  }
-
-  if (typeof value === "string" || typeof value === "number") {
-    const parsed = new Date(value);
-    if (!Number.isNaN(parsed.getTime())) {
-      return parsed;
-    }
-  }
-
-  return fallback;
-}
-
-/**
  * Safely converts unknown value to date string (YYYY-MM-DD format).
  * Handles Date objects, date strings, and timestamps.
  *
@@ -166,24 +103,6 @@ export function toDateString(value: unknown, fallback = "1970-01-01"): string {
 // =============================================================================
 // ARRAY AND OBJECT HELPERS
 // =============================================================================
-
-/**
- * Safely converts unknown value to array with fallback.
- * Handles null, undefined, and non-array values.
- *
- * @param value - Value to convert
- * @param fallback - Default value if conversion fails (default: [])
- * @returns Validated array or fallback
- *
- * @example
- * toArray([1, 2, 3]) // [1, 2, 3]
- * toArray(null, []) // []
- * toArray("not-array", []) // []
- * toArray(undefined, [42]) // [42]
- */
-export function toArray<T>(value: unknown, fallback: T[] = []): T[] {
-  return Array.isArray(value) ? value : fallback;
-}
 
 /**
  * Converts array or undefined to partial array.
@@ -243,83 +162,6 @@ export function getProp<T>(obj: unknown, key: string, fallback: T): T {
  */
 export function clampNumber(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
-}
-
-/**
- * Validates number is within range, returns fallback if not.
- * Combines toNumber with range validation.
- *
- * @param value - Value to convert and validate
- * @param min - Minimum allowed value
- * @param max - Maximum allowed value
- * @param fallback - Default value if out of range or invalid
- * @returns Validated number in range or fallback
- *
- * @example
- * toNumberInRange("50", 0, 100, 0) // 50
- * toNumberInRange("150", 0, 100, 0) // 0 (out of range)
- * toNumberInRange("invalid", 0, 100, 50) // 50
- */
-export function toNumberInRange(
-  value: unknown,
-  min: number,
-  max: number,
-  fallback: number
-): number {
-  const num = toNumber(value, fallback);
-  if (num < min || num > max) {
-    return fallback;
-  }
-  return num;
-}
-
-// =============================================================================
-// SPECIALIZED CONVERTERS
-// =============================================================================
-
-/**
- * Converts value to percentage (0-100 range).
- * Automatically clamps to valid percentage range.
- *
- * @param value - Value to convert
- * @param fallback - Default value if conversion fails (default: 0)
- * @returns Percentage value (0-100) or fallback
- *
- * @example
- * toPercentage(50) // 50
- * toPercentage(150) // 100 (clamped)
- * toPercentage(-10) // 0 (clamped)
- * toPercentage("75") // 75
- */
-export function toPercentage(value: unknown, fallback = 0): number {
-  return clampNumber(toNumber(value, fallback), 0, 100);
-}
-
-/**
- * Converts value to USD currency string.
- * Formats as locale-aware currency with proper decimals.
- *
- * @param value - Value to convert
- * @param fallback - Default string if conversion fails (default: "$0.00")
- * @returns Formatted currency string
- *
- * @example
- * toCurrency(1234.56) // "$1,234.56"
- * toCurrency("1000") // "$1,000.00"
- * toCurrency(null, "$0.00") // "$0.00"
- */
-export function toCurrency(value: unknown, fallback = "$0.00"): string {
-  const num = toNumber(value, NaN);
-  if (Number.isNaN(num)) {
-    return fallback;
-  }
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
 }
 
 // =============================================================================

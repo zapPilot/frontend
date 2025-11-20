@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   formatAxisLabel,
-  generateAreaPath,
   generateSVGPath,
   generateYAxisLabels,
   transformToPieChartData,
@@ -140,70 +139,6 @@ describe("chartUtils", () => {
 
       expect(result).toBeTruthy();
       expect(result.startsWith("M")).toBe(true);
-    });
-  });
-
-  describe("generateAreaPath", () => {
-    const createMockData = (values: number[]): PortfolioDataPoint[] => {
-      return values.map((value, index) => ({
-        date: `2025-01-${index + 1}`,
-        value,
-        change: 0,
-      }));
-    };
-
-    const getValue = (point: PortfolioDataPoint) => point.value;
-
-    it("should return empty string for empty data array", () => {
-      const result = generateAreaPath([], getValue);
-      expect(result).toBe("");
-    });
-
-    it("should generate area path that closes at bottom", () => {
-      const data = createMockData([100, 200, 150]);
-      const width = 800;
-      const height = 300;
-      const padding = 20;
-
-      const result = generateAreaPath(data, getValue, width, height, padding);
-
-      // Should contain the line path
-      expect(result.startsWith("M")).toBe(true);
-
-      // Should close the area with L commands and Z
-      expect(result).toContain(`L ${width} ${height - padding}`);
-      expect(result).toContain(`L 0 ${height - padding}`);
-      expect(result.endsWith(" Z")).toBe(true);
-    });
-
-    it("should generate area path with custom dimensions", () => {
-      const data = createMockData([100, 200]);
-      const width = 400;
-      const height = 200;
-      const padding = 10;
-
-      const result = generateAreaPath(data, getValue, width, height, padding);
-
-      expect(result).toContain(`L ${width} ${height - padding}`);
-      expect(result).toContain(`L 0 ${height - padding}`);
-      expect(result.endsWith(" Z")).toBe(true);
-    });
-
-    it("should build on generateSVGPath output", () => {
-      const data = createMockData([100, 200, 150]);
-      const svgPath = generateSVGPath(data, getValue, 800, 300, 20);
-      const areaPath = generateAreaPath(data, getValue, 800, 300, 20);
-
-      // Area path should start with the SVG path
-      expect(areaPath.startsWith(svgPath)).toBe(true);
-    });
-
-    it("should handle single point", () => {
-      const data = createMockData([100]);
-      const result = generateAreaPath(data, getValue, 800, 300, 20);
-
-      expect(result).toBeTruthy();
-      expect(result.endsWith(" Z")).toBe(true);
     });
   });
 

@@ -1,13 +1,13 @@
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
-import tseslint from 'typescript-eslint';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import sonarjs from 'eslint-plugin-sonarjs';
-import unicorn from 'eslint-plugin-unicorn';
-import noSecrets from 'eslint-plugin-no-secrets';
-import promisePlugin from 'eslint-plugin-promise';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from "eslint-plugin-import";
+import noSecrets from "eslint-plugin-no-secrets";
+import promisePlugin from "eslint-plugin-promise";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
+import { dirname, join } from "path";
+import tseslint from "typescript-eslint";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -336,9 +336,6 @@ const eslintConfig = [
       "coverage/**",
       "public/**",
       "node_modules/**",
-      "*.config.js",
-      "*.config.mjs",
-      "*.config.ts",
       "next-env.d.ts"
     ]
   }

@@ -1,5 +1,26 @@
 import type { NextConfig } from "next";
 
+const toSeconds = (value: string | undefined, fallback: number): number => {
+  if (!value) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const CACHE_MAX_AGE_SECONDS = toSeconds(
+  process.env.NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS,
+  60 * 60,
+);
+
+const CACHE_STALE_WHILE_REVALIDATE_SECONDS = toSeconds(
+  process.env.NEXT_PUBLIC_CACHE_STALE_WHILE_REVALIDATE_SECONDS,
+  23 * 60 * 60,
+);
+
+const PROD_CACHE_CONTROL_HEADER = `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`;
+
 const nextConfig: NextConfig = {
   compiler: {
     // Remove console.log in production builds, but keep console.warn and console.error
@@ -46,6 +67,7 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
+    const cacheControlValue = isDev ? "no-store" : PROD_CACHE_CONTROL_HEADER;
     
     // Note: For future implementation, nonces could be generated per-request for enhanced CSP security
     // const nonce = Buffer.from(Math.random().toString()).toString('base64').substring(0, 16);
@@ -54,6 +76,10 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
+          {
+            key: "Cache-Control",
+            value: cacheControlValue,
+          },
           {
             key: "Content-Security-Policy",
             value: [

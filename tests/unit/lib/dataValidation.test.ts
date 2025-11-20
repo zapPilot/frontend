@@ -17,14 +17,8 @@ import {
   safeHexishString,
   safeNumber,
   safeString,
-  toArray,
-  toBoolean,
-  toCurrency,
-  toDate,
   toDateString,
   toNumber,
-  toNumberInRange,
-  toPercentage,
   toString,
 } from "@/lib/dataValidation";
 
@@ -128,111 +122,6 @@ describe("dataValidation", () => {
     });
   });
 
-  describe("toBoolean", () => {
-    it("should preserve boolean true", () => {
-      expect(toBoolean(true)).toBe(true);
-    });
-
-    it("should preserve boolean false", () => {
-      expect(toBoolean(false)).toBe(false);
-    });
-
-    it("should convert string 'true'", () => {
-      expect(toBoolean("true")).toBe(true);
-      expect(toBoolean("TRUE")).toBe(true);
-      expect(toBoolean("True")).toBe(true);
-      expect(toBoolean("  true  ")).toBe(true);
-    });
-
-    it("should convert string 'false'", () => {
-      expect(toBoolean("false")).toBe(false);
-      expect(toBoolean("FALSE")).toBe(false);
-      expect(toBoolean("False")).toBe(false);
-      expect(toBoolean("  false  ")).toBe(false);
-    });
-
-    it("should convert string '1' to true", () => {
-      expect(toBoolean("1")).toBe(true);
-    });
-
-    it("should convert string '0' to false", () => {
-      expect(toBoolean("0")).toBe(false);
-    });
-
-    it("should convert number 1 to true", () => {
-      expect(toBoolean(1)).toBe(true);
-      expect(toBoolean(42)).toBe(true);
-    });
-
-    it("should convert number 0 to false", () => {
-      expect(toBoolean(0)).toBe(false);
-    });
-
-    it("should return fallback for null", () => {
-      expect(toBoolean(null, false)).toBe(false);
-      expect(toBoolean(null, true)).toBe(true);
-    });
-
-    it("should return fallback for undefined", () => {
-      expect(toBoolean(undefined, false)).toBe(false);
-      expect(toBoolean(undefined, true)).toBe(true);
-    });
-
-    it("should return fallback for invalid strings", () => {
-      expect(toBoolean("yes", false)).toBe(false);
-      expect(toBoolean("no", true)).toBe(true);
-    });
-  });
-
-  describe("toDate", () => {
-    it("should preserve valid Date object", () => {
-      const date = new Date("2024-01-15");
-      expect(toDate(date)).toBe(date);
-    });
-
-    it("should convert valid date string", () => {
-      const result = toDate("2024-01-15");
-      expect(result).toBeInstanceOf(Date);
-      expect(result.getFullYear()).toBe(2024);
-      expect(result.getMonth()).toBe(0); // January is 0
-    });
-
-    it("should convert timestamp number", () => {
-      const timestamp = 1705276800000; // 2024-01-15
-      const result = toDate(timestamp);
-      expect(result).toBeInstanceOf(Date);
-      expect(result.getTime()).toBe(timestamp);
-    });
-
-    it("should return fallback for invalid Date", () => {
-      const fallback = new Date(0);
-      expect(toDate(new Date("invalid"), fallback)).toBe(fallback);
-    });
-
-    it("should return fallback for null", () => {
-      const fallback = new Date(0);
-      expect(toDate(null, fallback)).toBe(fallback);
-    });
-
-    it("should return fallback for undefined", () => {
-      const fallback = new Date(0);
-      expect(toDate(undefined, fallback)).toBe(fallback);
-    });
-
-    it("should return fallback for invalid string", () => {
-      const fallback = new Date(0);
-      expect(toDate("not a date", fallback)).toBe(fallback);
-    });
-
-    it("should use default fallback when not provided", () => {
-      const before = Date.now();
-      const result = toDate("invalid");
-      const after = Date.now();
-      expect(result.getTime()).toBeGreaterThanOrEqual(before);
-      expect(result.getTime()).toBeLessThanOrEqual(after);
-    });
-  });
-
   describe("toDateString", () => {
     it("should preserve valid date string", () => {
       expect(toDateString("2024-01-15")).toBe("2024-01-15");
@@ -263,32 +152,6 @@ describe("dataValidation", () => {
   // =============================================================================
   // ARRAY AND OBJECT HELPERS
   // =============================================================================
-
-  describe("toArray", () => {
-    it("should preserve valid array", () => {
-      const arr = [1, 2, 3];
-      expect(toArray(arr)).toBe(arr);
-    });
-
-    it("should return fallback for null", () => {
-      expect(toArray(null, [])).toEqual([]);
-      expect(toArray(null, [1, 2])).toEqual([1, 2]);
-    });
-
-    it("should return fallback for undefined", () => {
-      expect(toArray(undefined, [])).toEqual([]);
-    });
-
-    it("should return fallback for non-array", () => {
-      expect(toArray("not array", [])).toEqual([]);
-      expect(toArray(123, [])).toEqual([]);
-      expect(toArray({}, [])).toEqual([]);
-    });
-
-    it("should preserve empty array", () => {
-      expect(toArray([])).toEqual([]);
-    });
-  });
 
   describe("asPartialArray", () => {
     it("should convert array to partial array", () => {
@@ -367,94 +230,9 @@ describe("dataValidation", () => {
     });
   });
 
-  describe("toNumberInRange", () => {
-    it("should convert and validate number in range", () => {
-      expect(toNumberInRange("50", 0, 100, 0)).toBe(50);
-      expect(toNumberInRange(75, 0, 100, 0)).toBe(75);
-    });
-
-    it("should return fallback for value above range", () => {
-      expect(toNumberInRange("150", 0, 100, 0)).toBe(0);
-      expect(toNumberInRange(150, 0, 100, 50)).toBe(50);
-    });
-
-    it("should return fallback for value below range", () => {
-      expect(toNumberInRange("-10", 0, 100, 0)).toBe(0);
-      expect(toNumberInRange(-10, 0, 100, 25)).toBe(25);
-    });
-
-    it("should return fallback for invalid value", () => {
-      expect(toNumberInRange("invalid", 0, 100, 50)).toBe(50);
-      expect(toNumberInRange(null, 0, 100, 75)).toBe(75);
-    });
-
-    it("should handle boundary values", () => {
-      expect(toNumberInRange(0, 0, 100, 50)).toBe(0);
-      expect(toNumberInRange(100, 0, 100, 50)).toBe(100);
-    });
-  });
-
   // =============================================================================
   // SPECIALIZED CONVERTERS
   // =============================================================================
-
-  describe("toPercentage", () => {
-    it("should convert valid percentage", () => {
-      expect(toPercentage(50)).toBe(50);
-      expect(toPercentage("75")).toBe(75);
-    });
-
-    it("should clamp percentage above 100", () => {
-      expect(toPercentage(150)).toBe(100);
-      expect(toPercentage("200")).toBe(100);
-    });
-
-    it("should clamp percentage below 0", () => {
-      expect(toPercentage(-10)).toBe(0);
-      expect(toPercentage("-50")).toBe(0);
-    });
-
-    it("should handle boundary values", () => {
-      expect(toPercentage(0)).toBe(0);
-      expect(toPercentage(100)).toBe(100);
-    });
-
-    it("should use fallback for invalid values", () => {
-      expect(toPercentage("invalid", 50)).toBe(50);
-      expect(toPercentage(null, 25)).toBe(25);
-    });
-  });
-
-  describe("toCurrency", () => {
-    it("should format valid number as currency", () => {
-      expect(toCurrency(1234.56)).toBe("$1,234.56");
-      expect(toCurrency(0)).toBe("$0.00");
-    });
-
-    it("should format string number as currency", () => {
-      expect(toCurrency("1000")).toBe("$1,000.00");
-    });
-
-    it("should return fallback for null", () => {
-      expect(toCurrency(null, "$0.00")).toBe("$0.00");
-    });
-
-    it("should return fallback for undefined", () => {
-      expect(toCurrency(undefined, "$0.00")).toBe("$0.00");
-    });
-
-    it("should return fallback for invalid string", () => {
-      expect(toCurrency("invalid", "$0.00")).toBe("$0.00");
-    });
-
-    it("should handle negative numbers", () => {
-      expect(toCurrency(-100)).toBe("-$100.00");
-    });
-
-    it("should handle large numbers", () => {
-      expect(toCurrency(1234567.89)).toBe("$1,234,567.89");
-    });
-  });
 
   // =============================================================================
   // OPTIONAL TYPE CONVERTERS

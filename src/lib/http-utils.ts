@@ -5,6 +5,9 @@
  * for direct use in service functions without the class-based wrapper.
  */
 
+import { CACHE_WINDOW } from "@/config/cacheWindow";
+import { queryClient } from "@/lib/queryClient";
+
 // Internal types for HTTP utilities
 type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 type ResponseTransformer<T = unknown> = (data: unknown) => T;
@@ -25,6 +28,101 @@ export const HTTP_CONFIG = {
   retries: 1, // Only retry once to avoid request storms (was 3)
   retryDelay: 2000, // 2s delay before retry (was 1s)
 } as const;
+
+interface CacheHint {
+  staleTimeMs: number;
+  gcTimeMs: number;
+}
+
+const DEFAULT_CACHE_HINT: CacheHint = {
+  staleTimeMs: CACHE_WINDOW.staleTimeMs,
+  gcTimeMs: CACHE_WINDOW.gcTimeMs,
+};
+
+let appliedCacheHint: CacheHint = DEFAULT_CACHE_HINT;
+
+const parseDirectiveSeconds = (
+  directive: string,
+  key: string
+): number | undefined => {
+  if (!directive.startsWith(key)) {
+    return undefined;
+  }
+
+  const parsed = Number(directive.slice(key.length));
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+function parseCacheControlForHint(value?: string | null): CacheHint | null {
+  if (!value) {
+    return null;
+  }
+
+  const directives = value
+    .toLowerCase()
+    .split(",")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  let maxAgeSeconds: number | undefined;
+  let staleWhileRevalidateSeconds: number | undefined;
+
+  for (const directive of directives) {
+    if (maxAgeSeconds === undefined) {
+      const parsedMaxAge =
+        parseDirectiveSeconds(directive, "max-age=") ??
+        parseDirectiveSeconds(directive, "s-maxage=");
+      if (parsedMaxAge !== undefined) {
+        maxAgeSeconds = parsedMaxAge;
+        continue;
+      }
+    }
+
+    if (staleWhileRevalidateSeconds === undefined) {
+      const parsedStale = parseDirectiveSeconds(
+        directive,
+        "stale-while-revalidate="
+      );
+      if (parsedStale !== undefined) {
+        staleWhileRevalidateSeconds = parsedStale;
+      }
+    }
+  }
+
+  if (maxAgeSeconds === undefined) {
+    return null;
+  }
+
+  const staleTimeMs = maxAgeSeconds * 1000;
+  const totalSeconds = maxAgeSeconds + (staleWhileRevalidateSeconds ?? 0);
+  const gcTimeMs = totalSeconds > 0 ? totalSeconds * 1000 : staleTimeMs;
+
+  return {
+    staleTimeMs,
+    gcTimeMs,
+  };
+}
+
+function syncQueryCacheDefaultsFromHint(hint: CacheHint): void {
+  if (
+    appliedCacheHint.staleTimeMs === hint.staleTimeMs &&
+    appliedCacheHint.gcTimeMs === hint.gcTimeMs
+  ) {
+    return;
+  }
+
+  const defaults = queryClient.getDefaultOptions();
+  queryClient.setDefaultOptions({
+    ...defaults,
+    queries: {
+      ...(defaults.queries ?? {}),
+      staleTime: hint.staleTimeMs,
+      gcTime: hint.gcTimeMs,
+    },
+  });
+
+  appliedCacheHint = hint;
+}
 
 // Error classes
 export class APIError extends Error {
@@ -143,6 +241,13 @@ async function executeRequest<T>(
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
   const response = await fetch(url, requestInit);
+
+  const cacheHint = parseCacheControlForHint(
+    response.headers.get("cache-control")
+  );
+  if (cacheHint) {
+    syncQueryCacheDefaultsFromHint(cacheHint);
+  }
 
   if (!response.ok) {
     const errorData = await parseErrorResponse(response);
