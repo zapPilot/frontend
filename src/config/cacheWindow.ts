@@ -8,12 +8,12 @@ const toSeconds = (value: string | undefined, fallback: number): number => {
 };
 
 const DEFAULT_MAX_AGE_SECONDS = toSeconds(
-  process.env.NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS,
+  process.env["NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS"],
   60 * 60
 );
 
 const DEFAULT_STALE_WHILE_REVALIDATE_SECONDS = toSeconds(
-  process.env.NEXT_PUBLIC_CACHE_STALE_WHILE_REVALIDATE_SECONDS,
+  process.env["NEXT_PUBLIC_CACHE_STALE_WHILE_REVALIDATE_SECONDS"],
   23 * 60 * 60
 );
 

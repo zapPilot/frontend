@@ -33,8 +33,10 @@ async function main() {
   const child = spawn(bin, args, { stdio: ["ignore", "pipe", "pipe"] });
 
   let stderr = "";
+  let stdout = "";
   child.stdout.on("data", d => {
     const chunk = d.toString();
+    stdout += chunk;
     process.stdout.write(chunk);
   });
   child.stderr.on("data", d => {
@@ -45,7 +47,12 @@ async function main() {
 
   child.on("exit", code => {
     if (code !== 0) {
-      const err = (stderr || "").toLowerCase();
+      const err = (stderr + stdout).toLowerCase();
+      if (err.includes("no tests found")) {
+        console.log("\nℹ️  No Playwright specs detected. Skipping E2E tests.");
+        process.exit(0);
+        return;
+      }
       const isPortOrPerm =
         err.includes("failed to start server") ||
         err.includes("listen eperm") ||

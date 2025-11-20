@@ -34,6 +34,10 @@ interface CacheHint {
   gcTimeMs: number;
 }
 
+interface ResponseLikeWithHeaders {
+  headers?: { get?: (name: string) => string | null };
+}
+
 const DEFAULT_CACHE_HINT: CacheHint = {
   staleTimeMs: CACHE_WINDOW.staleTimeMs,
   gcTimeMs: CACHE_WINDOW.gcTimeMs,
@@ -228,6 +232,14 @@ function createTimeoutController(
   return { signal: controller.signal, cleanup };
 }
 
+function hasHeaders(value: unknown): value is ResponseLikeWithHeaders {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "headers" in (value as Record<string, unknown>)
+  );
+}
+
 function isAbortError(error: unknown): boolean {
   return (
     (error instanceof Error && error.name === "AbortError") ||
@@ -242,9 +254,12 @@ async function executeRequest<T>(
 ): Promise<T> {
   const response = await fetch(url, requestInit);
 
-  const cacheHint = parseCacheControlForHint(
-    response.headers.get("cache-control")
-  );
+  // Some test doubles provide a minimal Response-like object without headers.
+  const cacheControlHeader = hasHeaders(response)
+    ? ((response as Response).headers?.get?.("cache-control") ?? undefined)
+    : undefined;
+
+  const cacheHint = parseCacheControlForHint(cacheControlHeader);
   if (cacheHint) {
     syncQueryCacheDefaultsFromHint(cacheHint);
   }
