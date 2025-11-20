@@ -8,6 +8,8 @@ import type {
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceMetric, PnLMetric, ROIMetric, YieldMetric } from "./metrics";
+import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
+import type { MarketSentimentData } from "@/services/sentimentService";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {
@@ -21,6 +23,8 @@ interface WalletMetricsProps {
   // Independent loading states for progressive disclosure
   isLandingLoading?: boolean;
   isYieldLoading?: boolean;
+  sentimentData?: MarketSentimentData | null;
+  isSentimentLoading?: boolean;
 }
 
 /**
@@ -44,6 +48,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     yieldSummaryData,
     isLandingLoading = false,
     isYieldLoading = false,
+    sentimentData,
+    isSentimentLoading = false,
   }) => {
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
 
@@ -67,7 +73,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       yieldSummaryData ?? landingPageData?.yield_summary ?? null;
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <BalanceMetric
           totalNetUsd={landingPageData?.total_net_usd ?? null}
           isLoading={isLandingLoading}
@@ -100,6 +106,11 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
           yieldSummaryData={resolvedYieldSummary}
           isYieldLoading={isYieldLoading}
           errorMessage={portfolioState.errorMessage}
+        />
+
+        <MarketSentimentMetric
+          sentiment={sentimentData ?? null}
+          isLoading={isSentimentLoading && !sentimentData}
         />
       </div>
     );

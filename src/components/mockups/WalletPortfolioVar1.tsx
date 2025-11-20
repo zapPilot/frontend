@@ -1,12 +1,12 @@
 "use client";
 
-import { Brain, RefreshCw } from "lucide-react";
+import { Brain, Settings } from "lucide-react";
 
 import { PortfolioOverview } from "@/components/PortfolioOverview";
-import { BaseCard } from "@/components/ui";
-import { WalletActions } from "@/components/wallet/WalletActions";
+import { BaseCard, GradientButton } from "@/components/ui";
 import { WalletHeader } from "@/components/wallet/WalletHeader";
 import { BalanceMetric, PnLMetric, ROIMetric, YieldMetric } from "@/components/wallet/metrics";
+import { GRADIENTS } from "@/constants/design-system";
 
 // Mock Data
 const MOCK_PORTFOLIO_STATE = {
@@ -29,7 +29,7 @@ const MOCK_PORTFOLIO_STATE = {
 const MOCK_FEAR_GREED = {
   value: 25,
   status: "Extreme Fear",
-  color: "text-red-500",
+  color: "text-green-500", // Green for fear = good time to buy
   quote: "Be greedy when others are fearful.",
   author: "Warren Buffett"
 };
@@ -152,24 +152,17 @@ export function WalletPortfolioVar1() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-medium text-purple-300">Rebalance Opportunity</p>
-                <p className="text-xs text-gray-400">Market is fearful. Good time to buy.</p>
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg transition-colors text-sm font-medium">
-                <RefreshCw className="w-4 h-4" />
-                Rebalance to 50/50
-              </button>
+              <GradientButton
+                gradient={GRADIENTS.PRIMARY}
+                shadowColor="purple-500"
+                icon={Settings}
+                onClick={() => {}}
+              >
+                <span className="text-sm">Optimize</span>
+              </GradientButton>
             </div>
           </div>
         </div>
-
-        <WalletActions
-          onZapInClick={() => {}}
-          onZapOutClick={() => {}}
-          onOptimizeClick={() => {}}
-          disabled={false}
-        />
       </BaseCard>
 
       <PortfolioOverview
