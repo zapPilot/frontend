@@ -83,6 +83,7 @@ export function WalletPortfolioPresenter({
               isYieldLoading={vm.isYieldLoading}
               sentimentData={vm.sentimentData}
               isSentimentLoading={vm.isSentimentLoading}
+              sentimentError={vm.sentimentError}
             />
 
             <RebalanceSection

@@ -1,10 +1,11 @@
-import { Brain } from "lucide-react";
+import { AlertCircle, Brain } from "lucide-react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 interface MarketSentimentMetricProps {
   sentiment?: MarketSentimentData | null;
   isLoading?: boolean;
+  error?: Error | null;
 }
 
 const SENTIMENT_COLOR_MAP: Record<string, string> = {
@@ -26,6 +27,7 @@ function getSentimentColor(status?: string | null): string {
 export function MarketSentimentMetric({
   sentiment,
   isLoading,
+  error,
 }: MarketSentimentMetricProps) {
   if (isLoading) {
     return (
@@ -37,6 +39,27 @@ export function MarketSentimentMetric({
         </div>
         <div className="h-px w-full bg-gray-800 mb-2" />
         <div className="h-3 w-32 bg-gray-800 rounded" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-gray-900/40 rounded-xl p-4 border border-red-900/30 hover:border-red-800/50 transition-colors h-full">
+        <div className="flex flex-col h-full justify-between">
+          <div>
+            <p className="text-sm text-gray-400 mb-1">Market Sentiment</p>
+            <div className="flex items-center gap-2 text-red-400 mb-2">
+              <AlertCircle className="w-5 h-5" />
+              <span className="text-sm font-medium">Unavailable</span>
+            </div>
+          </div>
+          <div className="mt-2 pt-2 border-t border-gray-800">
+            <p className="text-xs text-gray-500 italic">
+              Unable to load sentiment data. The service may be temporarily unavailable.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -72,7 +95,7 @@ export function MarketSentimentMetric({
             “{sentiment?.quote.quote ?? "Stay patient and disciplined."}”
           </p>
           <p className="text-[11px] text-gray-500 mt-1">
-            — {sentiment?.quote.author ?? "All Weather Protocol"}
+            — {sentiment?.quote.author ?? ""}
           </p>
         </div>
       </div>

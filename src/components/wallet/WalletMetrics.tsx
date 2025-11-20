@@ -25,6 +25,7 @@ interface WalletMetricsProps {
   isYieldLoading?: boolean;
   sentimentData?: MarketSentimentData | null;
   isSentimentLoading?: boolean;
+  sentimentError?: Error | null;
 }
 
 /**
@@ -50,6 +51,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     isYieldLoading = false,
     sentimentData,
     isSentimentLoading = false,
+    sentimentError = null,
   }) => {
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
 
@@ -110,7 +112,8 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
 
         <MarketSentimentMetric
           sentiment={sentimentData ?? null}
-          isLoading={isSentimentLoading && !sentimentData}
+          isLoading={isSentimentLoading}
+          error={sentimentError}
         />
       </div>
     );

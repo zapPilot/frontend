@@ -110,7 +110,7 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
 const DEFAULT_QUOTE: SentimentQuoteResult = {
   sentiment: "Neutral",
   quote: "Stay balanced when the crowd swings too far in either direction.",
-  author: "All Weather Protocol",
+  author: "Warren Buffett",
 };
 
 function selectQuote(quotes: SentimentQuote[], value: number): SentimentQuote {

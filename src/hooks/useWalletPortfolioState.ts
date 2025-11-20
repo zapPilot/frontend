@@ -123,6 +123,7 @@ export interface WalletPortfolioViewModel {
   isLandingLoading: boolean;
   isYieldLoading: boolean;
   isSentimentLoading: boolean;
+  sentimentError: Error | null;
   // Local portfolio view toggles
   balanceHidden: boolean;
   toggleBalanceVisibility: () => void;
@@ -187,6 +188,7 @@ export function useWalletPortfolioState(
     sentimentQuery.isLoading ||
     sentimentQuery.isFetching ||
     sentimentQuery.isRefetching;
+  const sentimentError = sentimentQuery.error;
 
   // Derived portfolio data
   const {
@@ -245,6 +247,7 @@ export function useWalletPortfolioState(
     isLandingLoading: landingPageQuery.isLoading,
     isYieldLoading: yieldSummaryQuery.isLoading,
     isSentimentLoading,
+    sentimentError: sentimentError ?? null,
     balanceHidden,
     toggleBalanceVisibility,
     expandedCategory,
