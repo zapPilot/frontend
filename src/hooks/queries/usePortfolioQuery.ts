@@ -10,6 +10,39 @@ import {
 import { portfolioLogger } from "../../utils/logger";
 import { createQueryConfig } from "./queryDefaults";
 
+const PORTFOLIO_REFETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+interface PortfolioQueryOptions<T> {
+  userId: string | null | undefined;
+  queryKey: readonly unknown[];
+  fetcher: (userId: string) => Promise<T>;
+}
+
+function buildPortfolioQueryConfig<T>({
+  userId,
+  queryKey,
+  fetcher,
+}: PortfolioQueryOptions<T>) {
+  return {
+    ...createQueryConfig({
+      dataType: "realtime",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND", "404"],
+      },
+    }),
+    queryKey,
+    queryFn: async (): Promise<T> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+
+      return fetcher(userId);
+    },
+    enabled: Boolean(userId),
+    refetchInterval: PORTFOLIO_REFETCH_INTERVAL,
+  };
+}
+
 /**
  * Hook for landing page core data (Balance, ROI, PnL)
  *
@@ -18,26 +51,15 @@ import { createQueryConfig } from "./queryDefaults";
  * waiting for the slower yield calculations (~1500ms).
  */
 export function useLandingPageData(userId: string | null | undefined) {
-  return useQuery({
-    ...createQueryConfig({
-      dataType: "realtime",
-      retryConfig: {
-        skipErrorMessages: ["USER_NOT_FOUND", "404"],
+  return useQuery(
+    buildPortfolioQueryConfig<LandingPageResponse>({
+      userId,
+      queryKey: queryKeys.portfolio.landingPage(userId || ""),
+      fetcher: async resolvedUserId => {
+        return getLandingPagePortfolioData(resolvedUserId);
       },
-    }),
-    queryKey: queryKeys.portfolio.landingPage(userId || ""),
-    queryFn: async (): Promise<LandingPageResponse> => {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-
-      // Fetch only core landing page data (Balance, ROI, PnL)
-      // Yield data is fetched separately via useYieldSummaryData for progressive loading
-      return await getLandingPagePortfolioData(userId);
-    },
-    enabled: !!userId, // Only run when userId is available
-    refetchInterval: 5 * 60 * 1000, // 5min to match backend cache
-  });
+    })
+  );
 }
 
 /**
@@ -48,34 +70,23 @@ export function useLandingPageData(userId: string | null | undefined) {
  * Runs in parallel with useLandingPageData for optimal performance.
  */
 export function useYieldSummaryData(userId: string | null | undefined) {
-  return useQuery({
-    ...createQueryConfig({
-      dataType: "realtime",
-      retryConfig: {
-        skipErrorMessages: ["USER_NOT_FOUND", "404"],
+  return useQuery(
+    buildPortfolioQueryConfig<YieldReturnsSummaryResponse | null>({
+      userId,
+      queryKey: queryKeys.portfolio.yieldSummary(userId || ""),
+      fetcher: async resolvedUserId => {
+        try {
+          return await getYieldReturnsSummary(resolvedUserId, "7d,30d,90d");
+        } catch (error) {
+          portfolioLogger.warn("Failed to fetch yield returns summary", {
+            error: error instanceof Error ? error.message : String(error),
+            userId: resolvedUserId,
+          });
+          return null;
+        }
       },
-    }),
-    queryKey: queryKeys.portfolio.yieldSummary(userId || ""),
-    queryFn: async (): Promise<YieldReturnsSummaryResponse | null> => {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-
-      try {
-        // Request multiple windows for better yield insights (7d, 30d, 90d)
-        return await getYieldReturnsSummary(userId, "7d,30d,90d");
-      } catch (error) {
-        portfolioLogger.warn("Failed to fetch yield returns summary", {
-          error: error instanceof Error ? error.message : String(error),
-          userId,
-        });
-        // Return null rather than failing - component will handle gracefully
-        return null;
-      }
-    },
-    enabled: !!userId, // Only run when userId is available
-    refetchInterval: 5 * 60 * 1000, // 5min to match backend cache
-  });
+    })
+  );
 }
 
 // Mutation for manual portfolio refresh

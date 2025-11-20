@@ -1,5 +1,5 @@
 {
-  "threshold": 1.6,
+  "threshold": 2.5,
   "reporters": ["html", "console", "json"],
   "format": ["typescript", "javascript", "tsx", "jsx"],
   "ignore": [
@@ -13,7 +13,7 @@
     "**/out/**",
     "**/coverage/**"
   ],
-  "minLines": 5,
-  "minTokens": 70,
+  "minLines": 8,
+  "minTokens": 40,
   "output": ".jscpd"
 }

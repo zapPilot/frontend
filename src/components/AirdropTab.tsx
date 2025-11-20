@@ -14,24 +14,17 @@ import {
 
 import { GRADIENTS } from "@/constants/design-system";
 
+import { FadeInSection } from "./shared/FadeInSection";
+import { PageIntro } from "./shared/PageIntro";
 import { BaseCard, GradientButton } from "./ui";
 
 export function AirdropTab() {
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
-        <h1 className="text-3xl font-bold gradient-text mb-2">
-          Zap Pilot Airdrops
-        </h1>
-        <p className="text-gray-400">
-          Exclusive token rewards for early adopters and active users
-        </p>
-      </motion.div>
+      <PageIntro
+        title="Zap Pilot Airdrops"
+        subtitle="Exclusive token rewards for early adopters and active users"
+      />
 
       {/* Coming Soon Hero Section */}
       <motion.div
@@ -118,11 +111,7 @@ export function AirdropTab() {
       </motion.div>
 
       {/* What to Expect */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <FadeInSection delay={0.2}>
         <BaseCard variant="glass" className="p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center">
             <Star className="w-5 h-5 mr-2 text-yellow-400" />
@@ -179,14 +168,10 @@ export function AirdropTab() {
             })}
           </div>
         </BaseCard>
-      </motion.div>
+      </FadeInSection>
 
       {/* How to Qualify */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
+      <FadeInSection delay={0.3}>
         <BaseCard variant="glass" className="p-6">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center">
             <ArrowRight className="w-5 h-5 mr-2 text-green-400" />
@@ -263,14 +248,10 @@ export function AirdropTab() {
             ))}
           </div>
         </BaseCard>
-      </motion.div>
+      </FadeInSection>
 
       {/* Newsletter Signup */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
+      <FadeInSection delay={0.4}>
         <BaseCard variant="glass" className="p-6 text-center">
           <h3 className="text-lg font-bold text-white mb-2">
             Stay Updated on Airdrop News
@@ -289,7 +270,7 @@ export function AirdropTab() {
             </GradientButton>
           </div>
         </BaseCard>
-      </motion.div>
+      </FadeInSection>
     </div>
   );
 }

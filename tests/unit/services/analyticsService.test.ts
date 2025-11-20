@@ -11,11 +11,15 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "../../../src/lib/http-utils";
 import {
+  getDailyYieldReturns,
   getLandingPagePortfolioData,
+  getPoolPerformance,
   getPortfolioDashboard,
   getRiskSummary,
+  getYieldReturnsSummary,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
+  type YieldReturnsSummaryResponse,
 } from "../../../src/services/analyticsService";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
 
@@ -530,6 +534,160 @@ describe("analyticsService", () => {
         expect(result.portfolio_roi.windows).toBeDefined();
         expect(result.portfolio_roi.windows?.["7d"].start_balance).toBe(3900);
       });
+    });
+  });
+
+  describe("getPoolPerformance", () => {
+    it("should fetch pool performance data for the user", async () => {
+      const mockPools = [
+        {
+          protocol_id: "aave-v3",
+          protocol_name: "Aave V3",
+          chain: "Ethereum",
+          final_apr: 0.045,
+          total_value_usd: 5000,
+          wallet_tokens_value: 3000,
+          other_sources_value: 2000,
+          pool_tokens: [
+            {
+              symbol: "USDC",
+              amount: 2500,
+              value_usd: 2500,
+            },
+          ],
+        },
+      ];
+
+      analyticsEngineGetSpy.mockResolvedValue(mockPools);
+
+      const result = await getPoolPerformance("user-analytics");
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v1/pools/performance/user-analytics"
+      );
+      expect(result).toEqual(mockPools);
+      expect(result[0]?.protocol_name).toBe("Aave V3");
+    });
+  });
+
+  describe("getYieldReturnsSummary", () => {
+    const testUserId = "user-returns";
+
+    it("should default to multi-window summary with IQR filtering", async () => {
+      const mockSummary: YieldReturnsSummaryResponse = {
+        user_id: testUserId,
+        windows: {
+          "7d": {
+            user_id: testUserId,
+            period: {
+              start_date: "2025-01-01",
+              end_date: "2025-01-07",
+              days: 7,
+            },
+            average_daily_yield_usd: 42,
+            median_daily_yield_usd: 40,
+            total_yield_usd: 294,
+            statistics: {
+              mean: 42,
+              median: 40,
+              std_dev: 5,
+              min_value: 12,
+              max_value: 70,
+              total_days: 7,
+              filtered_days: 6,
+              outliers_removed: 1,
+            },
+            outlier_strategy: "iqr",
+            outliers_detected: [],
+            protocol_breakdown: [],
+          },
+        },
+        recommended_period: "7d",
+      } as YieldReturnsSummaryResponse;
+
+      analyticsEngineGetSpy.mockResolvedValue(mockSummary);
+
+      const result = await getYieldReturnsSummary(testUserId);
+
+      const callArg = (analyticsEngineGetSpy.mock.calls[0] ?? [
+        "",
+      ])[0] as string;
+      expect(callArg).toContain(`/api/v1/yield/returns/summary/${testUserId}`);
+      expect(callArg).toContain("windows=7d%2C30d%2C90d");
+      expect(callArg).toContain("outlier_strategy=iqr");
+      expect(result.windows["7d"]?.statistics.outliers_removed).toBe(1);
+    });
+
+    it("should support custom window parameters", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({
+        user_id: testUserId,
+        windows: {},
+      });
+
+      await getYieldReturnsSummary(testUserId, "14d,60d");
+
+      const customCallArg = (analyticsEngineGetSpy.mock.calls[0] ?? [
+        "",
+      ])[0] as string;
+      expect(customCallArg).toContain(
+        `/api/v1/yield/returns/summary/${testUserId}`
+      );
+      expect(customCallArg).toContain("windows=14d%2C60d");
+    });
+  });
+
+  describe("getDailyYieldReturns", () => {
+    const testUserId = "user-yield";
+
+    it("should fetch daily yield returns with default period", async () => {
+      const mockResponse = {
+        user_id: testUserId,
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        daily_returns: [
+          {
+            date: "2025-01-02",
+            protocol_name: "Lido",
+            chain: "Ethereum",
+            position_type: "staking",
+            yield_return_usd: 12.5,
+            tokens: [
+              {
+                symbol: "stETH",
+                amount_change: 0.1,
+                current_price: 2500,
+                yield_return_usd: 12.5,
+              },
+            ],
+          },
+        ],
+      };
+
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      const result = await getDailyYieldReturns(testUserId);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v1/yield/returns/daily/${testUserId}?days=30`
+      );
+      expect(result.daily_returns[0]?.protocol_name).toBe("Lido");
+    });
+
+    it("should honor custom days parameter", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({
+        user_id: testUserId,
+        period: { start_date: "2025-01-01", end_date: "2025-01-14", days: 14 },
+        daily_returns: [],
+      });
+
+      await getDailyYieldReturns(testUserId, 14);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v1/yield/returns/daily/${testUserId}?days=14`
+      );
     });
   });
 

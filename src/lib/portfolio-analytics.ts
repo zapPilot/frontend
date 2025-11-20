@@ -66,71 +66,115 @@ export function getAnalyticsMetrics(
     riskData.summary_metrics?.annualized_volatility_percentage;
   const drawdownPct = riskData.summary_metrics?.max_drawdown_percentage;
   return [
-    {
-      label: "Total Return",
-      value: "N/A",
-      change: 0,
-      trend: "neutral",
-      icon: TrendingUp,
-      description: "All-time portfolio performance (pending data source)",
-    },
-    {
-      label: "Annualized Return",
-      value: "N/A",
-      change: 0,
-      trend: "neutral",
-      icon: BarChart3,
-      description: "Year-over-year performance (pending data source)",
-    },
-    {
-      label: "Risk Level",
-      value: volatilityPct ? getVolatilityLevel(volatilityPct) : "N/A",
-      change: volatilityPct ? (volatilityPct > 50 ? -0.5 : 0.2) : 0,
-      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "neutral",
-      icon: Shield,
-      description: "Risk level based on volatility analysis",
-    },
-    {
-      label: "Sharpe Ratio",
-      value: sharpeRatio ? formatSharpeRatio(sharpeRatio) : "N/A",
-      change: sharpeRatio ? (sharpeRatio > 1.5 ? 0.15 : -0.05) : 0,
-      trend: sharpeRatio ? (sharpeRatio > 1.5 ? "up" : "down") : "neutral",
-      icon: Target,
-      description: "Risk-adjusted returns",
-    },
-    {
-      label: "Max Drawdown",
-      value: drawdownPct ? formatDrawdown(drawdownPct) : "N/A",
-      change: drawdownPct ? Math.abs(drawdownPct) * 0.1 : 0,
-      trend: drawdownPct ? "down" : "neutral",
-      icon: TrendingDown,
-      description: "Largest peak-to-trough portfolio decline",
-    },
-    {
-      label: "Volatility",
-      value: volatilityPct ? formatVolatility(volatilityPct) : "N/A",
-      change: volatilityPct ? (volatilityPct > 100 ? -2.0 : -0.5) : 0,
-      trend: volatilityPct ? (volatilityPct > 50 ? "down" : "up") : "neutral",
-      icon: Activity,
-      description: "Annualized portfolio volatility",
-    },
-    {
-      label: "Active Positions",
-      value: "N/A",
-      change: 0,
-      trend: "neutral",
-      icon: PieChart,
-      description: "Currently held assets (pending data source)",
-    },
-    {
-      label: "Days Invested",
-      value: "N/A",
-      change: 0,
-      trend: "neutral",
-      icon: Clock,
-      description: "Portfolio age (pending data source)",
-    },
+    createPlaceholderMetric(
+      "Total Return",
+      TrendingUp,
+      "All-time portfolio performance (pending data source)"
+    ),
+    createPlaceholderMetric(
+      "Annualized Return",
+      BarChart3,
+      "Year-over-year performance (pending data source)"
+    ),
+    buildRiskMetric(volatilityPct),
+    buildSharpeMetric(sharpeRatio),
+    buildDrawdownMetric(drawdownPct),
+    buildVolatilityMetric(volatilityPct),
+    createPlaceholderMetric(
+      "Active Positions",
+      PieChart,
+      "Currently held assets (pending data source)"
+    ),
+    createPlaceholderMetric(
+      "Days Invested",
+      Clock,
+      "Portfolio age (pending data source)"
+    ),
   ];
+}
+
+function createPlaceholderMetric(
+  label: string,
+  icon: AnalyticsMetric["icon"],
+  description: string
+): AnalyticsMetric {
+  return {
+    label,
+    value: "N/A",
+    change: 0,
+    trend: "neutral",
+    icon,
+    description,
+  };
+}
+
+function buildRiskMetric(volatilityPct?: number): AnalyticsMetric {
+  const normalized =
+    typeof volatilityPct === "number" ? volatilityPct : undefined;
+  const derivedTrend =
+    normalized !== undefined ? (normalized > 50 ? "down" : "up") : "neutral";
+  const derivedChange =
+    normalized !== undefined ? (normalized > 50 ? -0.5 : 0.2) : 0;
+
+  return {
+    label: "Risk Level",
+    value: normalized !== undefined ? getVolatilityLevel(normalized) : "N/A",
+    change: derivedChange,
+    trend: derivedTrend,
+    icon: Shield,
+    description: "Risk level based on volatility analysis",
+  };
+}
+
+function buildSharpeMetric(sharpeRatio?: number): AnalyticsMetric {
+  const normalized = typeof sharpeRatio === "number" ? sharpeRatio : undefined;
+  const derivedTrend =
+    normalized !== undefined ? (normalized > 1.5 ? "up" : "down") : "neutral";
+  const derivedChange =
+    normalized !== undefined ? (normalized > 1.5 ? 0.15 : -0.05) : 0;
+
+  return {
+    label: "Sharpe Ratio",
+    value: normalized !== undefined ? formatSharpeRatio(normalized) : "N/A",
+    change: derivedChange,
+    trend: derivedTrend,
+    icon: Target,
+    description: "Risk-adjusted returns",
+  };
+}
+
+function buildDrawdownMetric(drawdownPct?: number): AnalyticsMetric {
+  const normalized = typeof drawdownPct === "number" ? drawdownPct : undefined;
+  const formattedValue =
+    normalized !== undefined ? formatDrawdown(normalized) : "N/A";
+  const change = normalized !== undefined ? Math.abs(normalized) * 0.1 : 0;
+
+  return {
+    label: "Max Drawdown",
+    value: formattedValue,
+    change,
+    trend: normalized !== undefined ? "down" : "neutral",
+    icon: TrendingDown,
+    description: "Largest peak-to-trough portfolio decline",
+  };
+}
+
+function buildVolatilityMetric(volatilityPct?: number): AnalyticsMetric {
+  const normalized =
+    typeof volatilityPct === "number" ? volatilityPct : undefined;
+  const trend =
+    normalized !== undefined ? (normalized > 50 ? "down" : "up") : "neutral";
+  const change =
+    normalized !== undefined ? (normalized > 100 ? -2.0 : -0.5) : 0;
+
+  return {
+    label: "Volatility",
+    value: normalized !== undefined ? formatVolatility(normalized) : "N/A",
+    change,
+    trend,
+    icon: Activity,
+    description: "Annualized portfolio volatility",
+  };
 }
 
 // =============================================================================

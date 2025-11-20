@@ -1,14 +1,15 @@
 import { QueryClient } from "@tanstack/react-query";
 
+import { CACHE_WINDOW } from "@/config/cacheWindow";
+
 // Create a client instance with optimized configuration for DeFi app
-// ETL updates data once daily, so we optimize for 24-hour cache cycles
+// ETL updates run once daily, but we bound freshness to the hourly HTTP cache
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Cache data for 24 hours since ETL only updates once daily
-      staleTime: 24 * 60 * 60 * 1000,
-      // Keep data in cache for 24 hours
-      gcTime: 24 * 60 * 60 * 1000,
+      // Keep React Query cache aligned with Cache-Control max-age/stale-while-revalidate
+      staleTime: CACHE_WINDOW.staleTimeMs,
+      gcTime: CACHE_WINDOW.gcTimeMs,
       // Retry failed requests 2 times (good for network issues)
       retry: 2,
       // Disable all automatic refetching since data updates daily

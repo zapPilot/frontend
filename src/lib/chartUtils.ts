@@ -40,23 +40,6 @@ export const generateSVGPath = (
     .join(" ");
 };
 
-/**
- * Generate SVG area path from portfolio data points
- * Creates filled area chart by adding baseline closure to line path
- */
-export const generateAreaPath = (
-  data: PortfolioDataPoint[],
-  getValue: (point: PortfolioDataPoint) => number,
-  width = 800,
-  height = 300,
-  padding = 20
-): string => {
-  const linePath = generateSVGPath(data, getValue, width, height, padding);
-  if (!linePath) return "";
-
-  return `${linePath} L ${width} ${height - padding} L 0 ${height - padding} Z`;
-};
-
 export const formatAxisLabel = (
   value: number,
   type: "currency" | "percentage" = "currency"

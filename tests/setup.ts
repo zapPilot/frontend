@@ -159,6 +159,24 @@ Object.defineProperty(window, "scrollTo", {
 HTMLElement.prototype.setPointerCapture = vi.fn();
 HTMLElement.prototype.releasePointerCapture = vi.fn();
 
+interface DynamicOverride {
+  matcher: string | RegExp;
+  renderer: (props: any) => React.ReactElement | null;
+}
+
+const dynamicOverrides: DynamicOverride[] = [];
+
+(globalThis as any).__registerDynamicOverride = (
+  matcher: string | RegExp,
+  renderer: DynamicOverride["renderer"]
+) => {
+  dynamicOverrides.push({ matcher, renderer });
+};
+
+(globalThis as any).__clearDynamicOverrides = () => {
+  dynamicOverrides.length = 0;
+};
+
 // Mock Next.js dynamic imports to return the actual component in tests
 // This allows individual component mocks to take precedence
 vi.mock("next/dynamic", () => {
@@ -177,6 +195,15 @@ vi.mock("next/dynamic", () => {
           if (modulePromise && typeof modulePromise.then === "function") {
             // Determine what component is being imported based on the import function
             const importString = importFunc.toString();
+
+            const override = dynamicOverrides.find(({ matcher }) =>
+              typeof matcher === "string"
+                ? importString.includes(matcher)
+                : matcher.test(importString)
+            );
+            if (override) {
+              return override.renderer(props);
+            }
 
             // For PortfolioOverview, return a mock aligned with current props
             if (importString.includes("PortfolioOverview")) {

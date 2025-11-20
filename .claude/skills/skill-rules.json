@@ -1,0 +1,63 @@
+{
+  "version": "1.0.0",
+  "skills": {
+    "next-tailwind-dev-guidelines": {
+      "type": "domain",
+      "enforcement": "suggest",
+      "priority": "high",
+      "description": "Development guidelines for Next.js 15, React 19, Tailwind CSS v4, Radix UI, and ThirdWeb SDK",
+      "fileTriggers": {
+        "pathPatterns": [
+          "src/**/*.{ts,tsx}",
+          "src/components/**/*",
+          "src/app/**/*",
+          "src/services/**/*",
+          "src/hooks/**/*",
+          "src/providers/**/*",
+          "src/lib/**/*",
+          "tests/**/*.{ts,tsx}"
+        ],
+        "ignorePatterns": ["**/*.md", "**/node_modules/**", "**/.next/**", "**/dist/**", "**/build/**"]
+      },
+      "promptTriggers": {
+        "keywords": [
+          "component",
+          "nextjs",
+          "next.js",
+          "tailwind",
+          "radix",
+          "react query",
+          "tanstack query",
+          "web3",
+          "thirdweb",
+          "wallet",
+          "route",
+          "routing",
+          "styling",
+          "css",
+          "animation",
+          "data fetching",
+          "mutation",
+          "query",
+          "service",
+          "hook",
+          "provider",
+          "context"
+        ],
+        "intentPatterns": [
+          "create.*component",
+          "build.*ui",
+          "add.*route",
+          "implement.*navigation",
+          "style.*with.*tailwind",
+          "fetch.*data",
+          "connect.*wallet",
+          "execute.*transaction",
+          "zap.*in",
+          "zap.*out",
+          "optimize.*portfolio"
+        ]
+      }
+    }
+  }
+}

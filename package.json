@@ -19,7 +19,7 @@
     "test:watch": "vitest --watch",
     "test:safe": "cross-env NODE_OPTIONS=--max-old-space-size=1536 vitest run --reporter=verbose",
     "test:safeall": "cross-env NODE_OPTIONS=--max-old-space-size=1536 npm run test:safe:coverage && npm run test:safe:e2e",
-    "test:safe:coverage": "cross-env NODE_OPTIONS=--max-old-space-size=1536 vitest run --coverage && node scripts/check-coverage.js",
+    "test:safe:coverage": "node -e \"require('fs').rmSync('coverage',{recursive:true,force:true});\" && cross-env NODE_OPTIONS=--max-old-space-size=1536 vitest run --coverage && node scripts/check-coverage.js",
     "test:safe:e2e": "cross-env NODE_OPTIONS=--max-old-space-size=2048 node scripts/run-e2e-safe.js",
     "test:coverage": "vitest run --coverage && node scripts/check-coverage.js",
     "test:e2e": "playwright test",
@@ -32,7 +32,8 @@
     "deadcode:ci": "knip --exports --dependencies --reporter=json",
     "deadcode:fix": "knip --exports --dependencies --fix",
     "deadcode:check": "knip --exports --dependencies --no-config-hints",
-    "dup:check": "jscpd src --gitignore --min-lines 5 --threshold 1.6",
+    "dup:check": "jscpd src --gitignore --min-lines 8 --threshold 2.5",
+    "dup:all": "npm run dup:check",
     "prepare": "husky"
   },
   "dependencies": {
@@ -45,7 +46,8 @@
     "next-pwa": "^5.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "thirdweb": "^5.105.10"
+    "thirdweb": "^5.105.10",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

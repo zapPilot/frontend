@@ -31,29 +31,35 @@
  * @module hooks/queries/queryDefaults
  */
 
+import { CACHE_WINDOW } from "@/config/cacheWindow";
 import { BaseServiceError } from "@/lib/base-error";
 
 /**
  * Data freshness profiles for different query types
  *
- * Updated for better performance with backend caching:
- * - **static**: Rarely changing data (strategies, token lists) - 10min stale, 30min cache
- * - **dynamic**: Frequently changing data (balances, user data) - 2min stale, 5min cache
- * - **realtime**: Portfolio/analytics data - 5min stale to match backend cache (was 30s)
+ * Updated to keep React Query aligned with server-provided Cache-Control headers.
+ * ETL refresh happens daily, but HTTP cache max-age is held to 1 hour to
+ * avoid 24-hour stale windows directly after an ETL completes.
  */
+const HOURLY_ETL_TIMINGS = {
+  staleTime: CACHE_WINDOW.staleTimeMs,
+  gcTime: CACHE_WINDOW.gcTimeMs,
+} as const;
+
+const VOLATILE_TIMINGS = {
+  staleTime: 5 * 60 * 1000,
+  gcTime: 15 * 60 * 1000,
+} as const;
+
 export const QUERY_TIMINGS = {
-  static: {
-    staleTime: 10 * 60 * 1000, // 10 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
-  },
-  dynamic: {
-    staleTime: 2 * 60 * 1000, // 2 minutes
-    gcTime: 5 * 60 * 1000, // 5 minutes
-  },
-  realtime: {
-    staleTime: 5 * 60 * 1000, // 5 minutes (matches backend Cache-Control max-age)
-    gcTime: 10 * 60 * 1000, // 10 minutes (matches backend stale-while-revalidate)
-  },
+  /** Default timing that mirrors Cache-Control max-age/stale-while-revalidate */
+  etl: HOURLY_ETL_TIMINGS,
+  /** Short-lived override for explicitly real-time data */
+  volatile: VOLATILE_TIMINGS,
+  // Backward-compatible aliases until every hook is migrated
+  static: HOURLY_ETL_TIMINGS,
+  dynamic: HOURLY_ETL_TIMINGS,
+  realtime: HOURLY_ETL_TIMINGS,
 } as const;
 
 /**
@@ -108,7 +114,7 @@ interface QueryConfigOptions {
  * @returns Query configuration object with retry, retryDelay, staleTime, and gcTime
  */
 export const createQueryConfig = (options: QueryConfigOptions = {}) => {
-  const { dataType = "dynamic", retryConfig } = options;
+  const { dataType = "etl", retryConfig } = options;
 
   const {
     maxRetries = 2,
@@ -155,15 +161,15 @@ export const createQueryConfig = (options: QueryConfigOptions = {}) => {
  * Preset configurations for common use cases
  */
 export const QUERY_PRESETS = {
-  /** Portfolio/balance data - realtime with standard retry */
-  portfolio: createQueryConfig({ dataType: "realtime" }),
+  /** Portfolio/balance data */
+  portfolio: createQueryConfig(),
 
-  /** Token prices - dynamic with standard retry */
-  prices: createQueryConfig({ dataType: "dynamic" }),
+  /** Token prices */
+  prices: createQueryConfig(),
 
-  /** User profile - dynamic with standard retry */
-  user: createQueryConfig({ dataType: "dynamic" }),
+  /** User profile */
+  user: createQueryConfig(),
 
-  /** Strategies/tokens list - static with standard retry */
-  metadata: createQueryConfig({ dataType: "static" }),
+  /** Strategies/tokens list */
+  metadata: createQueryConfig(),
 } as const;

@@ -7,7 +7,7 @@ import { GRADIENTS } from "@/constants/design-system";
 
 import { OperationMode } from "../PortfolioAllocation/types";
 
-interface TabNavigationProps {
+export interface TabNavigationProps {
   activeOperationMode: OperationMode;
   onOperationModeChange: (mode: OperationMode) => void;
 }

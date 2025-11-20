@@ -49,9 +49,6 @@ export interface IntentStatus {
   }[];
 }
 
-// Get configured client
-const intentEngineClient = httpUtils.intentEngine;
-
 const callIntentService = createServiceCaller(createIntentServiceError);
 
 // Intent Execution Operations
@@ -63,7 +60,7 @@ export const executeSwap = (
   intent: Omit<ExecutionIntent, "type">
 ): Promise<ExecutionResult> =>
   callIntentService(() =>
-    intentEngineClient.post<ExecutionResult>("/intents/swap", {
+    httpUtils.intentEngine.post<ExecutionResult>("/intents/swap", {
       ...intent,
       type: "swap",
     })
@@ -76,7 +73,7 @@ export const executeZapIn = (
   intent: Omit<ExecutionIntent, "type">
 ): Promise<ExecutionResult> =>
   callIntentService(() =>
-    intentEngineClient.post<ExecutionResult>(`/intents/zapIn`, {
+    httpUtils.intentEngine.post<ExecutionResult>(`/intents/zapIn`, {
       ...intent,
       type: "zapIn",
     })
@@ -89,7 +86,7 @@ export const executeZapOut = (
   intent: Omit<ExecutionIntent, "type">
 ): Promise<ExecutionResult> =>
   callIntentService(() =>
-    intentEngineClient.post<ExecutionResult>(`/intents/zapOut`, {
+    httpUtils.intentEngine.post<ExecutionResult>(`/intents/zapOut`, {
       ...intent,
       type: "zapOut",
     })
@@ -102,7 +99,7 @@ export const executeRebalance = (
   intent: Omit<ExecutionIntent, "type" | "fromToken" | "toToken">
 ): Promise<ExecutionResult> =>
   callIntentService(() =>
-    intentEngineClient.post<ExecutionResult>(`/intents/rebalance`, {
+    httpUtils.intentEngine.post<ExecutionResult>(`/intents/rebalance`, {
       ...intent,
       type: "rebalance",
     })
@@ -167,11 +164,14 @@ export const executeDustZap = (
   }
 ): Promise<{ intentId: string }> =>
   callIntentService(() =>
-    intentEngineClient.post<{ intentId: string }>("/api/v1/intents/dustZap", {
-      userAddress,
-      chainId,
-      params,
-    })
+    httpUtils.intentEngine.post<{ intentId: string }>(
+      "/api/v1/intents/dustZap",
+      {
+        userAddress,
+        chainId,
+        params,
+      }
+    )
   );
 
 /**
@@ -181,7 +181,7 @@ export const executeUnifiedZap = (
   request: UnifiedZapRequest
 ): Promise<UnifiedZapResponse> =>
   callIntentService(() =>
-    intentEngineClient.post<UnifiedZapResponse>(
+    httpUtils.intentEngine.post<UnifiedZapResponse>(
       "/api/v1/intents/unifiedZap",
       request
     )
@@ -194,7 +194,7 @@ export const executeUnifiedZap = (
  */
 export const getIntentStatus = (intentId: string): Promise<IntentStatus> =>
   callIntentService(() =>
-    intentEngineClient.get<IntentStatus>(`/intents/${intentId}/status`)
+    httpUtils.intentEngine.get<IntentStatus>(`/intents/${intentId}/status`)
   );
 
 /**
@@ -214,7 +214,7 @@ export const getUserIntentHistory = (
       offset: offset.toString(),
     });
 
-    return intentEngineClient.get<{
+    return httpUtils.intentEngine.get<{
       intents: ExecutionResult[];
       total: number;
       hasMore: boolean;
@@ -228,7 +228,7 @@ export const getUserIntentHistory = (
  */
 export const getStrategies = (): Promise<StrategiesApiResponse> =>
   callIntentService(() =>
-    intentEngineClient.get<StrategiesApiResponse>(`/api/v1/strategies`)
+    httpUtils.intentEngine.get<StrategiesApiResponse>(`/api/v1/strategies`)
   );
 
 // Utility Operations
@@ -242,7 +242,7 @@ export const checkIntentServiceHealth = (): Promise<{
   processingQueue: number;
 }> =>
   callIntentService(() =>
-    intentEngineClient.get<{
+    httpUtils.intentEngine.get<{
       status: string;
       timestamp: string;
       processingQueue: number;

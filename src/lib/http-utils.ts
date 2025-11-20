@@ -5,6 +5,9 @@
  * for direct use in service functions without the class-based wrapper.
  */
 
+import { CACHE_WINDOW } from "@/config/cacheWindow";
+import { queryClient } from "@/lib/queryClient";
+
 // Internal types for HTTP utilities
 type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
 type ResponseTransformer<T = unknown> = (data: unknown) => T;
@@ -25,6 +28,105 @@ export const HTTP_CONFIG = {
   retries: 1, // Only retry once to avoid request storms (was 3)
   retryDelay: 2000, // 2s delay before retry (was 1s)
 } as const;
+
+interface CacheHint {
+  staleTimeMs: number;
+  gcTimeMs: number;
+}
+
+interface ResponseLikeWithHeaders {
+  headers?: { get?: (name: string) => string | null };
+}
+
+const DEFAULT_CACHE_HINT: CacheHint = {
+  staleTimeMs: CACHE_WINDOW.staleTimeMs,
+  gcTimeMs: CACHE_WINDOW.gcTimeMs,
+};
+
+let appliedCacheHint: CacheHint = DEFAULT_CACHE_HINT;
+
+const parseDirectiveSeconds = (
+  directive: string,
+  key: string
+): number | undefined => {
+  if (!directive.startsWith(key)) {
+    return undefined;
+  }
+
+  const parsed = Number(directive.slice(key.length));
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+function parseCacheControlForHint(value?: string | null): CacheHint | null {
+  if (!value) {
+    return null;
+  }
+
+  const directives = value
+    .toLowerCase()
+    .split(",")
+    .map(part => part.trim())
+    .filter(Boolean);
+
+  let maxAgeSeconds: number | undefined;
+  let staleWhileRevalidateSeconds: number | undefined;
+
+  for (const directive of directives) {
+    if (maxAgeSeconds === undefined) {
+      const parsedMaxAge =
+        parseDirectiveSeconds(directive, "max-age=") ??
+        parseDirectiveSeconds(directive, "s-maxage=");
+      if (parsedMaxAge !== undefined) {
+        maxAgeSeconds = parsedMaxAge;
+        continue;
+      }
+    }
+
+    if (staleWhileRevalidateSeconds === undefined) {
+      const parsedStale = parseDirectiveSeconds(
+        directive,
+        "stale-while-revalidate="
+      );
+      if (parsedStale !== undefined) {
+        staleWhileRevalidateSeconds = parsedStale;
+      }
+    }
+  }
+
+  if (maxAgeSeconds === undefined) {
+    return null;
+  }
+
+  const staleTimeMs = maxAgeSeconds * 1000;
+  const totalSeconds = maxAgeSeconds + (staleWhileRevalidateSeconds ?? 0);
+  const gcTimeMs = totalSeconds > 0 ? totalSeconds * 1000 : staleTimeMs;
+
+  return {
+    staleTimeMs,
+    gcTimeMs,
+  };
+}
+
+function syncQueryCacheDefaultsFromHint(hint: CacheHint): void {
+  if (
+    appliedCacheHint.staleTimeMs === hint.staleTimeMs &&
+    appliedCacheHint.gcTimeMs === hint.gcTimeMs
+  ) {
+    return;
+  }
+
+  const defaults = queryClient.getDefaultOptions();
+  queryClient.setDefaultOptions({
+    ...defaults,
+    queries: {
+      ...(defaults.queries ?? {}),
+      staleTime: hint.staleTimeMs,
+      gcTime: hint.gcTimeMs,
+    },
+  });
+
+  appliedCacheHint = hint;
+}
 
 // Error classes
 export class APIError extends Error {
@@ -101,6 +203,113 @@ function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function calculateBackoffDelay(baseDelay: number, attempt: number): number {
+  return baseDelay * Math.pow(2, attempt);
+}
+
+function createTimeoutController(
+  timeout: number,
+  externalSignal?: AbortSignal
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  const cleanup = () => {
+    clearTimeout(timeoutId);
+    if (externalSignal) {
+      externalSignal.removeEventListener("abort", handleExternalAbort);
+    }
+  };
+
+  const handleExternalAbort = () => {
+    controller.abort((externalSignal as AbortSignal).reason);
+  };
+
+  if (externalSignal) {
+    externalSignal.addEventListener("abort", handleExternalAbort);
+  }
+
+  return { signal: controller.signal, cleanup };
+}
+
+function hasHeaders(value: unknown): value is ResponseLikeWithHeaders {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "headers" in (value as Record<string, unknown>)
+  );
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.name === "AbortError") ||
+    (error instanceof DOMException && error.name === "AbortError")
+  );
+}
+
+async function executeRequest<T>(
+  url: string,
+  requestInit: RequestInit,
+  transformer?: ResponseTransformer<T>
+): Promise<T> {
+  const response = await fetch(url, requestInit);
+
+  // Some test doubles provide a minimal Response-like object without headers.
+  const cacheControlHeader = hasHeaders(response)
+    ? ((response as Response).headers?.get?.("cache-control") ?? undefined)
+    : undefined;
+
+  const cacheHint = parseCacheControlForHint(cacheControlHeader);
+  if (cacheHint) {
+    syncQueryCacheDefaultsFromHint(cacheHint);
+  }
+
+  if (!response.ok) {
+    const errorData = await parseErrorResponse(response);
+    throw new APIError(
+      errorData.message || `HTTP ${response.status}`,
+      response.status,
+      errorData.code,
+      errorData.details
+    );
+  }
+
+  const data = await response.json();
+  return transformer ? transformer(data) : data;
+}
+
+function toError(error: unknown): Error {
+  if (error instanceof Error) {
+    return error;
+  }
+
+  if (typeof error === "object" && error !== null) {
+    const fallbackMessage =
+      typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message?: string }).message
+        : JSON.stringify(error);
+    const constructed = new Error(fallbackMessage);
+    if (typeof (error as { name?: unknown }).name === "string") {
+      constructed.name = (error as { name?: string }).name ?? constructed.name;
+    }
+    return constructed;
+  }
+
+  return new Error(String(error));
+}
+
+function shouldAttemptRetry(
+  attempt: number,
+  retries: number,
+  error: unknown
+): boolean {
+  if (attempt >= retries) {
+    return false;
+  }
+
+  return shouldRetry(error);
+}
+
 /**
  * Core HTTP request function with retry logic and error handling
  */
@@ -119,70 +328,50 @@ export async function httpRequest<T = unknown>(
     signal,
   } = config;
 
-  // Create abort controller for timeout if no signal provided
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  const requestSignal = signal || controller.signal;
-
   const requestConfig: RequestInit = {
     method,
     headers: {
       "Content-Type": "application/json",
       ...headers,
     },
-    signal: requestSignal,
   };
 
   if (body && method !== "GET") {
     requestConfig.body = JSON.stringify(body);
   }
 
-  let lastError: Error | undefined = undefined;
+  let lastError: Error | undefined;
 
-  // Retry logic with exponential backoff
   for (let attempt = 0; attempt <= retries; attempt++) {
+    const { signal: composedSignal, cleanup } = createTimeoutController(
+      timeout,
+      signal
+    );
+    requestConfig.signal = composedSignal;
+
     try {
-      const response = await fetch(url, requestConfig);
-      clearTimeout(timeoutId);
-
-      // Handle HTTP errors
-      if (!response.ok) {
-        const errorData = await parseErrorResponse(response);
-        throw new APIError(
-          errorData.message || `HTTP ${response.status}`,
-          response.status,
-          errorData.code,
-          errorData.details
-        );
-      }
-
-      // Parse and transform response
-      const data = await response.json();
-      return transformer ? transformer(data) : data;
+      const result = await executeRequest(url, requestConfig, transformer);
+      cleanup();
+      return result;
     } catch (error) {
-      clearTimeout(timeoutId);
+      cleanup();
+      const normalizedError = toError(error);
 
-      if (error instanceof APIError) {
-        throw error; // Don't retry API errors
+      if (normalizedError instanceof APIError) {
+        throw normalizedError;
       }
 
-      if (
-        (error instanceof Error && error.name === "AbortError") ||
-        (error instanceof DOMException && error.name === "AbortError")
-      ) {
+      if (isAbortError(normalizedError)) {
         throw new TimeoutError();
       }
 
-      lastError = error instanceof Error ? error : new Error(String(error));
+      lastError = normalizedError;
 
-      // Only retry on network errors and timeouts
-      if (attempt < retries && shouldRetry(error)) {
-        await delay(retryDelay * Math.pow(2, attempt)); // Exponential backoff
-        continue;
+      if (!shouldAttemptRetry(attempt, retries, normalizedError)) {
+        break;
       }
 
-      break;
+      await delay(calculateBackoffDelay(retryDelay, attempt));
     }
   }
 

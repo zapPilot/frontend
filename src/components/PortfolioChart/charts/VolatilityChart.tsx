@@ -4,15 +4,9 @@ import { memo, useMemo } from "react";
 
 import { useChartHover } from "../../../hooks/useChartHover";
 import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
-import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, VOLATILITY_CONSTANTS } from "../chartConstants";
-import { ChartHelpModal } from "../components";
-import {
-  CHART_LABELS,
-  ENABLE_TEST_AUTO_HOVER,
-  getChartInteractionProps,
-} from "../utils";
-import { ChartGrid } from "./ChartGrid";
+import { ENABLE_TEST_AUTO_HOVER, getChartInteractionProps } from "../utils";
+import { MetricChartLayout } from "./MetricChartLayout";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
 interface VolatilityChartProps {
@@ -97,84 +91,31 @@ export const VolatilityChart = memo<VolatilityChartProps>(
     );
 
     return (
-      <div className="relative h-80">
-        <ChartGrid />
-
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full"
-          data-chart-type="volatility"
-          aria-label={CHART_LABELS.volatility}
-          {...getChartInteractionProps(volatilityHover)}
-        >
-          <text x="16" y="20" opacity="0">
-            Rolling volatility expressed as annualized percentage
-          </text>
-          <defs>
-            <linearGradient
-              id="volatilityGradient"
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          {/* Volatility line */}
-          {volatilityLinePath && (
-            <path
-              d={volatilityLinePath}
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="3"
-              className="drop-shadow-lg"
-            />
-          )}
-
-          {/* Fill area under curve */}
-          {volatilityAreaPath && (
-            <path d={volatilityAreaPath} fill="url(#volatilityGradient)" />
-          )}
-
-          {/* Hover indicator */}
-          <ChartIndicator hoveredPoint={volatilityHover.hoveredPoint} />
-        </svg>
-
-        {/* Y-axis labels - DeFi-adjusted range (5-100%) */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
-          <span>100%</span>
-          <span>75%</span>
-          <span>50%</span>
-          <span>25%</span>
-          <span>5%</span>
-        </div>
-
-        {/* Header with Legend and Help */}
-        <div className="absolute top-4 right-4 flex items-start gap-3">
-          {/* Legend */}
-          <div className="text-xs pointer-events-none">
+      <MetricChartLayout
+        chartType="volatility"
+        width={width}
+        height={height}
+        gradientId="volatilityGradient"
+        gradientStops={[
+          { offset: "0%", color: "#f59e0b", opacity: "0.3" },
+          { offset: "100%", color: "#f59e0b", opacity: "0" },
+        ]}
+        linePath={volatilityLinePath}
+        areaPath={volatilityAreaPath}
+        lineColor="#f59e0b"
+        hoveredPoint={volatilityHover.hoveredPoint}
+        interactionProps={getChartInteractionProps(volatilityHover)}
+        yAxisLabels={["100%", "75%", "50%", "25%", "5%"]}
+        legend={
+          <div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-0.5 bg-amber-500"></div>
               <span className="text-white">30-Day Volatility</span>
             </div>
           </div>
-
-          {/* Help Button */}
-          <div className="pointer-events-auto">
-            <ChartHelpModal chartType="volatility" />
-          </div>
-        </div>
-
-        {/* Hover Tooltip */}
-        <ChartTooltip
-          hoveredPoint={volatilityHover.hoveredPoint}
-          chartWidth={width}
-          chartHeight={height}
-        />
-      </div>
+        }
+        description="Rolling volatility expressed as annualized percentage"
+      />
     );
   }
 );

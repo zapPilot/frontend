@@ -12,6 +12,12 @@ import { useMemo } from "react";
 
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
 import {
+  asPartialArray,
+  toDateString,
+  toNumber,
+  toString,
+} from "../../../lib/dataValidation";
+import {
   calculateDrawdownData,
   CHART_PERIODS,
 } from "../../../lib/portfolio-analytics";
@@ -70,27 +76,6 @@ const DEFAULT_DRAWNDOWN_SUMMARY: DrawdownRecoverySummary = {
   currentDrawdown: 0,
   currentStatus: "At Peak",
 };
-
-function toNumber(value: unknown, fallback = 0): number {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function toString(value: unknown, fallback = ""): string {
-  return typeof value === "string" && value.length > 0 ? value : fallback;
-}
-
-function asPartialArray<T>(items: T[] | undefined): Partial<T>[] {
-  return (items ?? []) as Partial<T>[];
-}
-
-function toDateString(value: unknown, fallback = "1970-01-01"): string {
-  const result = toString(value, fallback);
-  return result.length > 0 ? result : fallback;
-}
 
 interface DrawdownCycleMeta {
   data: DrawdownRecoveryData[];

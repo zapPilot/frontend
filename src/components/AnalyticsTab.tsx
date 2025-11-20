@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 
 import { LoadingSpinner } from "@/components/ui";
@@ -11,8 +10,9 @@ import { useUser } from "../contexts/UserContext";
 import { usePoolPerformance } from "../hooks/queries/usePoolPerformanceQuery";
 import { AnalyticsDashboard } from "./MoreTab/index";
 import { PoolPerformanceTable } from "./PoolAnalytics";
-// Import component props interface for proper typing
 import type { PortfolioChartProps } from "./PortfolioChart/";
+import { FadeInSection } from "./shared/FadeInSection";
+import { PageIntro } from "./shared/PageIntro";
 
 // Create logger for analytics debugging
 const analyticsLogger = createContextLogger("AnalyticsTab");
@@ -79,29 +79,16 @@ export function AnalyticsTab({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
-        <h1 className="text-3xl font-bold gradient-text mb-2">
-          Portfolio Analytics
-        </h1>
-        <p className="text-gray-400">
-          Advanced metrics and historical performance analysis
-        </p>
-      </motion.div>
+      <PageIntro
+        title="Portfolio Analytics"
+        subtitle="Advanced metrics and historical performance analysis"
+      />
 
       {/* Historical Performance Chart */}
       <PortfolioChart userId={resolvedUserId} />
 
       {/* Pool Performance Analytics */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <FadeInSection delay={0.2}>
         <PoolPerformanceTable
           pools={poolDetails || []}
           isLoading={poolLoading}
@@ -112,16 +99,12 @@ export function AnalyticsTab({
             ? { onClearCategoryFilter: clearCategoryFilter }
             : {})}
         />
-      </motion.div>
+      </FadeInSection>
 
       {/* Portfolio Analytics Dashboard */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
+      <FadeInSection delay={0.4}>
         <AnalyticsDashboard userId={resolvedUserId} />
-      </motion.div>
+      </FadeInSection>
     </div>
   );
 }

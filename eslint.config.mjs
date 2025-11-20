@@ -1,13 +1,13 @@
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
-import tseslint from 'typescript-eslint';
-import simpleImportSort from 'eslint-plugin-simple-import-sort';
-import sonarjs from 'eslint-plugin-sonarjs';
-import unicorn from 'eslint-plugin-unicorn';
-import noSecrets from 'eslint-plugin-no-secrets';
-import promisePlugin from 'eslint-plugin-promise';
-import importPlugin from 'eslint-plugin-import';
+import importPlugin from "eslint-plugin-import";
+import noSecrets from "eslint-plugin-no-secrets";
+import promisePlugin from "eslint-plugin-promise";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import sonarjs from "eslint-plugin-sonarjs";
+import unicorn from "eslint-plugin-unicorn";
+import { dirname, join } from "path";
+import tseslint from "typescript-eslint";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,6 +26,7 @@ const eslintConfig = [
       "out/**/*",
       "playwright-report/**/*",
       "test-results/**/*",
+      ".claude/**/*",
     ],
   },
   // Base Next.js configs
@@ -108,10 +109,10 @@ const eslintConfig = [
       // ========================================
       // Code Smell Detection (SonarJS)
       // ========================================
-      'sonarjs/cognitive-complexity': ['error', 35],            // Max complexity per function
+      'sonarjs/cognitive-complexity': ['error', 20],            // Max complexity per function (reduced from 35)
       'sonarjs/no-nested-functions': ['warn', { threshold: 6 }], // Allow React event handler patterns
       'sonarjs/no-duplicate-string': ['warn', { threshold: 5 }],  // Catch magic strings (5+ duplicates, reduced noise)
-      'sonarjs/no-duplicated-branches': 'warn',                 // Catch duplicate logic in branches
+      'sonarjs/no-duplicated-branches': 'error',                // Catch duplicate logic in branches (upgraded from warn)
       'sonarjs/no-identical-functions': 'error',                // Detect duplicate functions
       'sonarjs/no-collapsible-if': 'off',                       // Sometimes separate conditions are clearer
       'sonarjs/prefer-read-only-props': 'off',                  // Allow standard React prop typing
@@ -335,9 +336,6 @@ const eslintConfig = [
       "coverage/**",
       "public/**",
       "node_modules/**",
-      "*.config.js",
-      "*.config.mjs",
-      "*.config.ts",
       "next-env.d.ts"
     ]
   }

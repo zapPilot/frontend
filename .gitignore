@@ -63,3 +63,8 @@ dev.log
 .serena/cache
 
 .jscpd/
+.claude/tsc-cache/
+
+# claude hooks dependencies
+.claude/hooks/node_modules/
+.claude/hooks/package-lock.json

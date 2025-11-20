@@ -4,15 +4,9 @@ import { memo, useMemo } from "react";
 
 import { useChartHover } from "../../../hooks/useChartHover";
 import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
-import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
-import { ChartHelpModal } from "../components";
-import {
-  CHART_LABELS,
-  ENABLE_TEST_AUTO_HOVER,
-  getChartInteractionProps,
-} from "../utils";
-import { ChartGrid } from "./ChartGrid";
+import { ENABLE_TEST_AUTO_HOVER, getChartInteractionProps } from "../utils";
+import { MetricChartLayout } from "./MetricChartLayout";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
 interface SharpeChartProps {
@@ -101,78 +95,23 @@ export const SharpeChart = memo<SharpeChartProps>(
     );
 
     return (
-      <div className="relative h-80">
-        <ChartGrid />
-
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full"
-          data-chart-type="sharpe"
-          aria-label={CHART_LABELS.sharpe}
-          {...getChartInteractionProps(sharpeHover)}
-        >
-          <text x="16" y="20" opacity="0">
-            Rolling Sharpe ratio trend for the portfolio
-          </text>
-          <defs>
-            <linearGradient
-              id="sharpeGradient"
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
-              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-              <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          {/* Sharpe ratio line */}
-          {sharpeLinePath && (
-            <path
-              d={sharpeLinePath}
-              fill="none"
-              stroke="#10b981"
-              strokeWidth="3"
-              className="drop-shadow-lg"
-            />
-          )}
-
-          {/* Fill area under curve */}
-          {sharpeAreaPath && (
-            <path d={sharpeAreaPath} fill="url(#sharpeGradient)" />
-          )}
-
-          {/* Reference line at Sharpe = 1.0 */}
-          <line
-            x1="0"
-            y1={referenceLineY}
-            x2={width}
-            y2={referenceLineY}
-            stroke="#6b7280"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.5"
-          />
-
-          {/* Hover indicator */}
-          <ChartIndicator hoveredPoint={sharpeHover.hoveredPoint} />
-        </svg>
-
-        {/* Y-axis labels - DeFi-adjusted range (-1.0 to 3.5) */}
-        <div className="absolute left-0 top-0 h-full flex flex-col justify-between text-xs text-gray-400 pr-2 pointer-events-none">
-          <span>3.5</span>
-          <span>2.5</span>
-          <span>1.5</span>
-          <span>0.5</span>
-          <span>-0.5</span>
-          <span>-1.0</span>
-        </div>
-
-        {/* Header with Legend and Help */}
-        <div className="absolute top-4 right-4 flex items-start gap-3">
-          {/* Legend */}
-          <div className="text-xs pointer-events-none">
+      <MetricChartLayout
+        chartType="sharpe"
+        width={width}
+        height={height}
+        gradientId="sharpeGradient"
+        gradientStops={[
+          { offset: "0%", color: "#10b981", opacity: "0.3" },
+          { offset: "100%", color: "#10b981", opacity: "0" },
+        ]}
+        linePath={sharpeLinePath}
+        areaPath={sharpeAreaPath}
+        lineColor="#10b981"
+        hoveredPoint={sharpeHover.hoveredPoint}
+        interactionProps={getChartInteractionProps(sharpeHover)}
+        yAxisLabels={["3.5", "2.5", "1.5", "0.5", "-0.5", "-1.0"]}
+        legend={
+          <div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-0.5 bg-emerald-500"></div>
               <span className="text-white">Rolling Sharpe Ratio</span>
@@ -188,20 +127,21 @@ export const SharpeChart = memo<SharpeChartProps>(
               <span className="text-gray-400">Sharpe = 1.0</span>
             </div>
           </div>
-
-          {/* Help Button */}
-          <div className="pointer-events-auto">
-            <ChartHelpModal chartType="sharpe" />
-          </div>
-        </div>
-
-        {/* Hover Tooltip */}
-        <ChartTooltip
-          hoveredPoint={sharpeHover.hoveredPoint}
-          chartWidth={width}
-          chartHeight={height}
-        />
-      </div>
+        }
+        description="Rolling Sharpe ratio trend for the portfolio"
+        extraSvgContent={
+          <line
+            x1="0"
+            y1={referenceLineY}
+            x2={width}
+            y2={referenceLineY}
+            stroke="#6b7280"
+            strokeWidth="1"
+            strokeDasharray="3,3"
+            opacity="0.5"
+          />
+        }
+      />
     );
   }
 );
