@@ -9,9 +9,9 @@ import { useQuery } from "@tanstack/react-query";
 
 import { getQuoteForSentiment, type SentimentLabel } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { queryKeys } from "@/lib/queryClient";
-import { httpUtils } from "@/lib/http-utils";
 import { createServiceCaller } from "@/lib/createServiceCaller";
+import { httpUtils } from "@/lib/http-utils";
+import { queryKeys } from "@/lib/queryClient";
 import { logger } from "@/utils/logger";
 
 const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes
@@ -61,9 +61,12 @@ export class SentimentServiceError extends Error {
  * Transforms API errors into user-friendly SentimentServiceError instances
  */
 const createSentimentServiceError = (error: unknown): SentimentServiceError => {
-  const apiError = error && typeof error === "object" ? error : {};
-  const status = (apiError as any).status || 500;
-  let message = (apiError as any).message || "Failed to fetch market sentiment";
+  const apiError =
+    error && typeof error === "object"
+      ? (error as { status?: number; message?: string; code?: string; details?: Record<string, unknown> })
+      : {};
+  const status = apiError.status || 500;
+  let message = apiError.message || "Failed to fetch market sentiment";
 
   // Enhanced error messages based on status code
   switch (status) {
@@ -85,8 +88,8 @@ const createSentimentServiceError = (error: unknown): SentimentServiceError => {
   return new SentimentServiceError(
     message,
     status,
-    (apiError as any).code,
-    (apiError as any).details
+    apiError.code,
+    apiError.details
   );
 };
 
@@ -116,7 +119,7 @@ function transformSentimentData(
  */
 export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   return callSentimentApi(async () => {
-    const response = await httpUtils.backendApi.get<SentimentApiResponse>(
+    const response = await httpUtils.analyticsEngine.get<SentimentApiResponse>(
       "/api/v1/market/sentiment"
     );
 

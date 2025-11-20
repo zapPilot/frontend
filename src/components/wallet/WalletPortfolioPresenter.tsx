@@ -42,7 +42,7 @@ export function WalletPortfolioPresenter({
 
     try {
       setIsOptimizing(true);
-      await optimizeHandler();
+      await Promise.resolve(optimizeHandler());
     } finally {
       setIsOptimizing(false);
     }

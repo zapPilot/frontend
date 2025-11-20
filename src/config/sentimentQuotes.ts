@@ -13,6 +13,8 @@ export type SentimentLabel =
   | "Greed"
   | "Extreme Greed";
 
+const WARREN_BUFFETT = "Warren Buffett";
+
 interface SentimentQuote {
   quote: string;
   author: string;
@@ -25,7 +27,7 @@ interface SentimentQuoteConfig {
   quotes: SentimentQuote[];
 }
 
-export interface SentimentQuoteResult extends SentimentQuote {
+interface SentimentQuoteResult extends SentimentQuote {
   sentiment: SentimentLabel;
 }
 
@@ -37,11 +39,11 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
     quotes: [
       {
         quote: "Be greedy when others are fearful.",
-        author: "Warren Buffett",
+        author: WARREN_BUFFETT,
       },
       {
         quote: "Opportunities come infrequently. When it rains gold, put out the bucket.",
-        author: "Warren Buffett",
+        author: WARREN_BUFFETT,
       },
     ],
   },
@@ -67,7 +69,7 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
     quotes: [
       {
         quote: "Diversification is protection against ignorance.",
-        author: "Warren Buffett",
+        author: WARREN_BUFFETT,
       },
       {
         quote: "In investing, what is comfortable is rarely profitable.",
@@ -101,7 +103,7 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
       },
       {
         quote: "Risk comes from not knowing what you're doing.",
-        author: "Warren Buffett",
+        author: WARREN_BUFFETT,
       },
     ],
   },
@@ -110,7 +112,19 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
 const DEFAULT_QUOTE: SentimentQuoteResult = {
   sentiment: "Neutral",
   quote: "Stay balanced when the crowd swings too far in either direction.",
-  author: "Warren Buffett",
+  author: WARREN_BUFFETT,
+};
+
+const FALLBACK_CONFIG: SentimentQuoteConfig = {
+  min: 45,
+  max: 55,
+  sentiment: DEFAULT_QUOTE.sentiment,
+  quotes: [
+    {
+      quote: DEFAULT_QUOTE.quote,
+      author: WARREN_BUFFETT,
+    },
+  ],
 };
 
 function selectQuote(quotes: SentimentQuote[], value: number): SentimentQuote {
@@ -122,7 +136,10 @@ function selectQuote(quotes: SentimentQuote[], value: number): SentimentQuote {
   }
 
   const index = Math.abs(Math.floor(value)) % quotes.length;
-  return quotes[index];
+  return quotes[index] ?? {
+    quote: DEFAULT_QUOTE.quote,
+    author: DEFAULT_QUOTE.author,
+  };
 }
 
 /**
@@ -138,7 +155,7 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
     SENTIMENT_QUOTE_CONFIG.find(
       quoteConfig =>
         normalizedValue >= quoteConfig.min && normalizedValue <= quoteConfig.max
-    ) ?? SENTIMENT_QUOTE_CONFIG[2];
+    ) ?? SENTIMENT_QUOTE_CONFIG[2] ?? FALLBACK_CONFIG;
 
   const quote = selectQuote(config.quotes, normalizedValue);
 
@@ -150,4 +167,3 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
 }
 
 export const sentimentQuotesConfig = SENTIMENT_QUOTE_CONFIG;
-

@@ -3,20 +3,17 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
-import {
-  useLandingPageData,
-  useYieldSummaryData,
-} from "@/hooks/queries/usePortfolioQuery";
+import { useLandingPageData, useYieldSummaryData } from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
-import {
-  useSentimentData,
-  type MarketSentimentData,
-} from "@/services/sentimentService";
 import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "@/services/analyticsService";
+import {
+  type MarketSentimentData,
+  useSentimentData,
+} from "@/services/sentimentService";
 import type { PortfolioAllocationSplit } from "@/types/portfolio";
 
 const DEFAULT_TARGET_ALLOCATION = 50;

@@ -60,12 +60,12 @@ export function RebalanceSection({
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">
-          {/* TODO(AWP-analytics): emit sentiment_cta_displayed/clicked once Segment client hooks are ready */}
+          {/* NOTE(AWP-analytics): emit sentiment_cta_displayed/clicked once Segment client hooks are ready */}
           <GradientButton
             gradient={GRADIENTS.PRIMARY}
             shadowColor="purple-500"
             icon={Settings}
-            onClick={onOptimizeClick}
+            {...(onOptimizeClick ? { onClick: onOptimizeClick } : {})}
             disabled={disabled || !onOptimizeClick}
           >
             <span className="text-sm">Optimize</span>
@@ -75,4 +75,3 @@ export function RebalanceSection({
     </div>
   );
 }
-

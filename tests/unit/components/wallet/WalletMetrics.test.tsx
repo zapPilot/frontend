@@ -8,6 +8,7 @@ import type { LandingPageResponse } from "../../../../src/services/analyticsEngi
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
   Loader: vi.fn(() => <span data-testid="loader-icon">Loading...</span>),
+  Brain: vi.fn(() => <span data-testid="brain-icon">Brain</span>),
   TrendingUp: vi.fn(() => (
     <span data-testid="trending-up-icon">TrendingUp</span>
   )),
@@ -295,13 +296,14 @@ describe("WalletMetrics", () => {
   });
 
   describe("UI Structure and Layout", () => {
-    it("should render all four metric sections", () => {
+    it("should render all metric sections", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       expect(screen.getByText("Total Balance")).toBeInTheDocument();
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
       expect(screen.getByText("Avg Daily Yield")).toBeInTheDocument();
+      expect(screen.getByText("Market Sentiment")).toBeInTheDocument();
     });
 
     it("should have proper grid layout", () => {
@@ -313,7 +315,7 @@ describe("WalletMetrics", () => {
       expect(container).toHaveClass(
         "grid",
         "grid-cols-1",
-        "md:grid-cols-4",
+        "md:grid-cols-5",
         "gap-4",
         "mb-6"
       );
@@ -327,6 +329,7 @@ describe("WalletMetrics", () => {
         screen.getByText(/Estimated Yearly ROI/),
         screen.getByText("Estimated Yearly PnL"),
         screen.getByText("Avg Daily Yield"),
+        screen.getByText("Market Sentiment"),
       ];
 
       for (const label of labels) {
@@ -684,9 +687,9 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield/
+        /Total Balance|Estimated Yearly ROI|Estimated Yearly PnL|Avg Daily Yield|Market Sentiment/
       );
-      expect(sections).toHaveLength(4);
+      expect(sections).toHaveLength(5);
     });
   });
 

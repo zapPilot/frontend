@@ -1,5 +1,7 @@
 import React from "react";
 
+import type { MarketSentimentData } from "@/services/sentimentService";
+
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import type {
@@ -9,7 +11,6 @@ import type {
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceMetric, PnLMetric, ROIMetric, YieldMetric } from "./metrics";
 import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
-import type { MarketSentimentData } from "@/services/sentimentService";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsProps {

@@ -58,6 +58,9 @@ vi.mock("@/components/ui", () => ({
   BaseCard: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="base-card">{children}</div>
   ),
+  GradientButton: ({ children }: { children: React.ReactNode }) => (
+    <button data-testid="gradient-button">{children}</button>
+  ),
 }));
 
 vi.mock("@/contexts/BalanceVisibilityContext", () => ({
