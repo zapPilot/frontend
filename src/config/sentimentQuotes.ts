@@ -127,7 +127,7 @@ const FALLBACK_CONFIG: SentimentQuoteConfig = {
   ],
 };
 
-function selectQuote(quotes: SentimentQuote[], value: number): SentimentQuote {
+function selectQuote(quotes: SentimentQuote[]): SentimentQuote {
   if (quotes.length === 0) {
     return {
       quote: DEFAULT_QUOTE.quote,
@@ -135,7 +135,7 @@ function selectQuote(quotes: SentimentQuote[], value: number): SentimentQuote {
     };
   }
 
-  const index = Math.abs(Math.floor(value)) % quotes.length;
+  const index = Math.floor(Math.random() * quotes.length);
   return quotes[index] ?? {
     quote: DEFAULT_QUOTE.quote,
     author: DEFAULT_QUOTE.author,
@@ -157,7 +157,7 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
         normalizedValue >= quoteConfig.min && normalizedValue <= quoteConfig.max
     ) ?? SENTIMENT_QUOTE_CONFIG[2] ?? FALLBACK_CONFIG;
 
-  const quote = selectQuote(config.quotes, normalizedValue);
+  const quote = selectQuote(config.quotes);
 
   return {
     sentiment: config.sentiment,
