@@ -1,6 +1,7 @@
 import { AlertCircle, Brain } from "lucide-react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
+import { MetricCard } from "./MetricCard";
 
 interface MarketSentimentMetricProps {
   sentiment?: MarketSentimentData | null;
@@ -31,75 +32,53 @@ export function MarketSentimentMetric({
 }: MarketSentimentMetricProps) {
   if (isLoading) {
     return (
-      <div className="bg-gray-900/40 rounded-xl p-4 border border-gray-800 animate-pulse h-full">
-        <div className="h-4 w-24 bg-gray-800 rounded mb-3" />
-        <div className="flex items-baseline gap-2 mb-2">
-          <div className="h-8 w-10 bg-gray-800 rounded" />
-          <div className="h-4 w-10 bg-gray-800 rounded" />
-        </div>
-        <div className="h-px w-full bg-gray-800 mb-2" />
-        <div className="h-3 w-32 bg-gray-800 rounded" />
-      </div>
+      <MetricCard isLoading={true} icon={Brain}>
+        <div className="h-10 w-24 bg-gray-800 rounded mb-2" />
+        <div className="h-4 w-32 bg-gray-800 rounded" />
+      </MetricCard>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gray-900/40 rounded-xl p-4 border border-red-900/30 hover:border-red-800/50 transition-colors h-full">
-        <div className="flex flex-col h-full justify-between">
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Market Sentiment</p>
-            <div className="flex items-center gap-2 text-red-400 mb-2">
-              <AlertCircle className="w-5 h-5" />
-              <span className="text-sm font-medium">Unavailable</span>
-            </div>
-          </div>
-          <div className="mt-2 pt-2 border-t border-gray-800">
-            <p className="text-xs text-gray-500 italic">
-              Unable to load sentiment data. The service may be temporarily unavailable.
-            </p>
-          </div>
-        </div>
-      </div>
+      <MetricCard error={true} icon={Brain}>
+         <div className="flex items-center gap-2 text-red-400 mb-2">
+            <AlertCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">Unavailable</span>
+         </div>
+         <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Market Sentiment</p>
+      </MetricCard>
     );
   }
 
+  const statusColor = getSentimentColor(sentiment?.status);
+
   return (
-    <div className="bg-gray-900/40 rounded-xl p-4 border border-gray-800 relative overflow-hidden group hover:border-gray-700 transition-colors h-full">
-      <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
-        <Brain className="w-12 h-12" />
+    <MetricCard icon={Brain}>
+      {/* Main Content */}
+      <div className="flex items-end gap-2 mb-1">
+        <span className={`text-3xl md:text-4xl font-bold ${statusColor} tracking-tight`}>
+          {sentiment?.value ?? "--"}
+        </span>
+        <span className="text-sm text-gray-400 mb-2 font-medium">/ 100</span>
       </div>
-      <div className="flex flex-col h-full justify-between relative z-10">
-        <div>
-          <p className="text-sm text-gray-400 mb-1">Market Sentiment</p>
-          <div className="flex items-end gap-2">
-            <span
-              className={`text-2xl font-bold ${getSentimentColor(
-                sentiment?.status
-              )}`}
-            >
-              {sentiment?.value ?? "--"}
-            </span>
-            <span className="text-sm text-gray-400 mb-1">/ 100</span>
-          </div>
-          <p
-            className={`text-xs font-medium ${getSentimentColor(
-              sentiment?.status
-            )} mb-2`}
-          >
-            {sentiment?.status ?? "No data"}
+
+      <p className={`text-sm font-medium ${statusColor} mb-4 uppercase tracking-wide`}>
+        {sentiment?.status ?? "No data"}
+      </p>
+      
+      <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-4">
+        Market Sentiment
+      </p>
+
+      {/* Quote */}
+      {sentiment?.quote && (
+        <div className="pt-3 border-t border-gray-800/50 w-full text-center max-w-[80%]">
+          <p className="text-xs text-gray-400 italic line-clamp-2">
+            “{sentiment.quote.quote}”
           </p>
         </div>
-        <div className="mt-2 pt-2 border-t border-gray-800">
-          <p className="text-xs text-gray-300 italic">
-            “{sentiment?.quote.quote ?? "Stay patient and disciplined."}”
-          </p>
-          <p className="text-[11px] text-gray-500 mt-1">
-            — {sentiment?.quote.author ?? ""}
-          </p>
-        </div>
-      </div>
-    </div>
+      )}
+    </MetricCard>
   );
 }
-

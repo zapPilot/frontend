@@ -112,6 +112,9 @@ export interface WalletPortfolioViewModel {
   portfolioMetrics: ReturnType<
     typeof useWalletPortfolioTransform
   >["portfolioMetrics"];
+  leverageMetrics: ReturnType<
+    typeof useWalletPortfolioTransform
+  >["leverageMetrics"];
   sentimentData: MarketSentimentData | null;
   allocation: PortfolioAllocationSplit | null;
   // Aggregated portfolio state
@@ -193,6 +196,7 @@ export function useWalletPortfolioState(
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
+    leverageMetrics,
     hasZeroData,
   } = useWalletPortfolioTransform(landingPageData);
 
@@ -238,6 +242,7 @@ export function useWalletPortfolioState(
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
+    leverageMetrics,
     sentimentData,
     allocation,
     portfolioState,

@@ -6,7 +6,6 @@ import { TrendingUp, DollarSign, Clock, Info } from "lucide-react";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 import { getChangeColorClasses } from "@/lib/color-utils";
 import { selectBestYieldWindow } from "@/components/wallet/tooltips";
-import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
 import type { PerformanceMetricsProps } from "./types";
 
 /**

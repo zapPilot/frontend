@@ -68,3 +68,4 @@ dev.log
 # claude hooks dependencies
 .claude/hooks/node_modules/
 .claude/hooks/package-lock.json
+zen_generated.code

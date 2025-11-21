@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import type { ApiCategoryKey } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
+import { getLeverageMetrics, type LeverageMetrics } from "@/lib/leverageUtils";
 
 import type { LandingPageResponse } from "../services/analyticsService";
 import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
@@ -17,6 +18,7 @@ interface WalletPortfolioTransformResult {
   categorySummaries: CategorySummary[];
   debtCategorySummaries: CategorySummary[];
   portfolioMetrics: PortfolioMetrics | null;
+  leverageMetrics: LeverageMetrics | null;
   hasZeroData: boolean;
 }
 
@@ -37,6 +39,7 @@ export function useWalletPortfolioTransform(
         categorySummaries: [],
         debtCategorySummaries: [],
         portfolioMetrics: null,
+        leverageMetrics: null,
         hasZeroData: false,
       };
     }
@@ -100,11 +103,18 @@ export function useWalletPortfolioTransform(
       totalChangePercentage: 0,
     };
 
+    // Calculate leverage metrics
+    const leverageMetrics = getLeverageMetrics(
+      landingPageData.total_assets_usd,
+      landingPageData.total_debt_usd || 0
+    );
+
     return {
       pieChartData: pieChartData.length > 0 ? pieChartData : null,
       categorySummaries: assetSummaries,
       debtCategorySummaries: debtSummaries,
       portfolioMetrics,
+      leverageMetrics,
       hasZeroData: hasZeroPortfolioData,
     };
   }, [landingPageData]);

@@ -1,8 +1,9 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Wallet } from "lucide-react";
 
 import { BalanceSkeleton } from "@/components/ui/LoadingSystem";
 import { useMetricState } from "@/hooks/useMetricState";
 import { formatCurrency } from "@/lib/formatters";
+import { MetricCard } from "./MetricCard";
 
 interface BalanceMetricProps {
   /** Total net USD balance */
@@ -55,26 +56,25 @@ export function BalanceMetric({
     value: totalNetUsd,
   });
 
+  const labelClasses = "text-xs text-gray-500 uppercase tracking-wider font-medium";
+  
   // Loading state
   if (metricState.shouldRenderSkeleton) {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
-          <div className="flex items-center space-x-2">
+      <MetricCard icon={Wallet} iconClassName="text-blue-400">
+        <div className="h-10 flex items-center mb-2">
             <BalanceSkeleton size="default" />
-          </div>
         </div>
-      </div>
+        <p className={labelClasses}>Total Balance</p>
+      </MetricCard>
     );
   }
 
   // Error state (but not USER_NOT_FOUND, which shows welcome elsewhere)
   if (shouldShowError && errorMessage && errorMessage !== "USER_NOT_FOUND") {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
+      <MetricCard icon={Wallet} iconClassName="text-blue-400">
+         <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
           <div className="flex flex-col space-y-2">
             <div className="text-sm text-red-400 flex items-center space-x-2">
               <AlertCircle className="w-4 h-4" />
@@ -82,19 +82,20 @@ export function BalanceMetric({
             </div>
           </div>
         </div>
-      </div>
+        <p className={labelClasses}>Total Balance</p>
+      </MetricCard>
     );
   }
 
   // Connected but no data
   if (shouldShowNoDataMessage) {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
+      <MetricCard icon={Wallet} iconClassName="text-blue-400">
+        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
           <div className="text-gray-400 text-lg">No data available</div>
         </div>
-      </div>
+        <p className={labelClasses}>Total Balance</p>
+      </MetricCard>
     );
   }
 
@@ -104,11 +105,11 @@ export function BalanceMetric({
     : totalNetUsd;
 
   return (
-    <div>
-      <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-      <div className="text-3xl font-bold text-white h-10 flex items-center">
+    <MetricCard icon={Wallet} iconClassName="text-blue-400">
+      <div className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 break-all sm:break-normal text-center">
         {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
       </div>
-    </div>
+      <p className={labelClasses}>Total Balance</p>
+    </MetricCard>
   );
 }

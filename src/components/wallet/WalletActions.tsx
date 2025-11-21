@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, Settings } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import React from "react";
 
 import { GRADIENTS } from "../../constants/design-system";
@@ -35,16 +35,6 @@ export const WalletActions = React.memo<WalletActionsProps>(
           {...(!disabled && onZapOutClick ? { onClick: onZapOutClick } : {})}
         >
           <span className="text-sm">Zap Out</span>
-        </GradientButton>
-
-        <GradientButton
-          gradient={GRADIENTS.PRIMARY}
-          shadowColor="purple-500"
-          icon={Settings}
-          disabled={!isOptimizeEnabled}
-          {...(isOptimizeEnabled ? { onClick: onOptimizeClick } : {})}
-        >
-          <span className="text-sm">Optimize</span>
         </GradientButton>
       </div>
     );

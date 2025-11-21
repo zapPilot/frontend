@@ -1019,6 +1019,7 @@ describe("useWalletPortfolioTransform", () => {
         categorySummaries: [],
         debtCategorySummaries: [],
         portfolioMetrics: null,
+        leverageMetrics: null,
         hasZeroData: false,
       });
     });

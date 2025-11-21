@@ -1,19 +1,17 @@
-/**
- * Performance Metrics Components
- *
- * Consolidated performance metric components (ROI, PnL, Yield)
- * for WalletPortfolio page integration
- */
+// Legacy variations
+export * from "./ConsolidatedMetric";
+export * from "./DashboardPerformancePanel";
+export * from "./HeroPerformanceCard";
+export * from "./HorizontalPerformanceBar";
+export * from "./MetricsCard";
+export * from "./MetricsOverlay";
+export * from "./MetricsSplit";
 
-export { HorizontalPerformanceBar } from "./HorizontalPerformanceBar";
-export { HeroPerformanceCard } from "./HeroPerformanceCard";
-export { DashboardPerformancePanel } from "./DashboardPerformancePanel";
-export { CompactMetricDisplay } from "./CompactMetricDisplay";
+// New compact variations (recommended)
+export * from "./InlineMetricsCard";
+export * from "./StackedGridCard";
+export * from "./AccordionCard";
+export * from "./MiniCardsGrid";
 
-export type {
-  PerformanceMetricsProps,
-  HeroPerformanceCardProps,
-  DashboardPerformancePanelProps,
-  PerformanceMetricType,
-  CompactMetricProps,
-} from "./types";
+export * from "./types";
+

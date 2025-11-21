@@ -113,6 +113,7 @@ export function WalletPortfolioPresenter({
             categorySummaries={vm.categorySummaries}
             debtCategorySummaries={vm.debtCategorySummaries}
             pieChartData={vm.pieChartData || []}
+            leverageMetrics={vm.leverageMetrics}
             title="Asset Distribution"
             onRetry={vm.onRetry}
             testId="wallet-portfolio-overview"
