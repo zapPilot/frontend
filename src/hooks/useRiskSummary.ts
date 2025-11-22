@@ -73,8 +73,8 @@ function validateResponse(
 
   const drawdown = riskSummary["drawdown"] as Record<string, unknown>;
   if (
-    (typeof drawdown["max_drawdown_percentage"] !== "number" &&
-      drawdown["max_drawdown_percentage"] !== null) ||
+    (typeof drawdown["max_drawdown_pct"] !== "number" &&
+      drawdown["max_drawdown_pct"] !== null) ||
     typeof drawdown["period_days"] !== "number" ||
     (typeof drawdown["recovery_needed_percentage"] !== "number" &&
       drawdown["recovery_needed_percentage"] !== null)
@@ -116,8 +116,8 @@ function validateResponse(
   if (
     (typeof summaryMetrics["annualized_volatility_percentage"] !== "number" &&
       summaryMetrics["annualized_volatility_percentage"] !== null) ||
-    (typeof summaryMetrics["max_drawdown_percentage"] !== "number" &&
-      summaryMetrics["max_drawdown_percentage"] !== null)
+    (typeof summaryMetrics["max_drawdown_pct"] !== "number" &&
+      summaryMetrics["max_drawdown_pct"] !== null)
   ) {
     return false;
   }

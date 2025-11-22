@@ -18,7 +18,8 @@ export function MetricCard({
   isLoading,
   error,
 }: MetricCardProps) {
-  const baseClasses = "bg-gray-900/50 border border-gray-800 rounded-xl p-6 h-full flex flex-col items-center justify-center relative overflow-hidden group hover:border-gray-700 transition-colors";
+  const baseClasses =
+    "bg-gray-900/50 border border-gray-800 rounded-xl p-6 h-full flex flex-col items-center justify-center relative overflow-hidden group hover:border-gray-700 transition-colors";
 
   // If loading or error, we might want different styles or just render children which handle it
   // But typically the container style is consistent.

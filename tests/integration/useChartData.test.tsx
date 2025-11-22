@@ -100,7 +100,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
       end_date: "2025-01-30",
       days: 30,
     },
-    daily_totals: [],
+    daily_values: [],
     summary: {
       current_value_usd: 0,
       start_value_usd: 0,
@@ -197,7 +197,7 @@ const createMockDashboard = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
-    allocation_data: [],
+    allocations: [],
     summary: {
       unique_dates: 0,
       unique_protocols: 0,
@@ -300,7 +300,7 @@ describe("useChartData - Data Transformations", () => {
   it("transforms stacked portfolio data correctly", () => {
     const mockData = createMockPortfolioData(30);
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = mockData.map(point => ({
+    dashboard.trends.daily_values = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -347,7 +347,7 @@ describe("useChartData - Data Transformations", () => {
   it("transforms allocation history correctly", () => {
     const dashboard = createMockDashboard();
     const dateSeries = generateDateSeries(MOCK_BASE_DATE, 10);
-    dashboard.allocation.allocation_data = dateSeries.flatMap((date, index) => {
+    dashboard.allocation.allocations = dateSeries.flatMap((date, index) => {
       const offset = (index % 3) * 5;
       return [
         {
@@ -591,7 +591,7 @@ describe("useChartData - Edge Cases", () => {
 
   it("handles malformed API responses", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = [
+    dashboard.trends.daily_values = [
       // Missing protocols/chains should be handled gracefully
       {
         date: "2025-01-01",
@@ -743,7 +743,7 @@ describe("useChartData - Loading States", () => {
 
   it("only shows loaded when dashboard completes", async () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -785,7 +785,7 @@ describe("useChartData - Loading States", () => {
 describe("useChartData - Memoization", () => {
   it("memoizes data transformations", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -808,7 +808,7 @@ describe("useChartData - Memoization", () => {
 
   it("recalculates when dependencies change", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = createMockPortfolioData(10).map(point => ({
+    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -865,7 +865,7 @@ describe("useChartData - Portfolio Metrics", () => {
     ];
 
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = mockData.map(point => ({
+    dashboard.trends.daily_values = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -892,7 +892,7 @@ describe("useChartData - Portfolio Metrics", () => {
     ];
 
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_totals = mockData.map(point => ({
+    dashboard.trends.daily_values = mockData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,

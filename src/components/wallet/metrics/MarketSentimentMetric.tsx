@@ -43,11 +43,13 @@ export function MarketSentimentMetric({
   if (error) {
     return (
       <MetricCard error={true} icon={Brain}>
-         <div className="flex items-center gap-2 text-red-400 mb-2">
-            <AlertCircle className="w-5 h-5" />
-            <span className="text-sm font-medium">Unavailable</span>
-         </div>
-         <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">Market Sentiment</p>
+        <div className="flex items-center gap-2 text-red-400 mb-2">
+          <AlertCircle className="w-5 h-5" />
+          <span className="text-sm font-medium">Unavailable</span>
+        </div>
+        <p className="text-xs text-gray-500 uppercase tracking-wider font-medium">
+          Market Sentiment
+        </p>
       </MetricCard>
     );
   }
@@ -58,16 +60,20 @@ export function MarketSentimentMetric({
     <MetricCard icon={Brain}>
       {/* Main Content */}
       <div className="flex items-end gap-2 mb-1">
-        <span className={`text-3xl md:text-4xl font-bold ${statusColor} tracking-tight`}>
+        <span
+          className={`text-3xl md:text-4xl font-bold ${statusColor} tracking-tight`}
+        >
           {sentiment?.value ?? "--"}
         </span>
         <span className="text-sm text-gray-400 mb-2 font-medium">/ 100</span>
       </div>
 
-      <p className={`text-sm font-medium ${statusColor} mb-4 uppercase tracking-wide`}>
+      <p
+        className={`text-sm font-medium ${statusColor} mb-4 uppercase tracking-wide`}
+      >
         {sentiment?.status ?? "No data"}
       </p>
-      
+
       <p className="text-xs text-gray-500 uppercase tracking-wider font-medium mb-4">
         Market Sentiment
       </p>

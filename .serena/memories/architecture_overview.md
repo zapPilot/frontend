@@ -185,6 +185,57 @@ src/services/
 
 ### **Type Safety**: Direct service function types vs generic API client
 
+## 📋 API Schema Migration History
+
+### Analytics Engine API Migration (January 2025)
+
+The analytics-engine backend underwent a major refactor (commit `1457bc5`) introducing **Pydantic response models** with improved type safety and consistent field naming. The frontend was migrated to the new schema on **2025-01-22**.
+
+#### **Field Name Changes**
+
+| Old Field Name | New Field Name | Response Model | Migration Date |
+|---------------|----------------|----------------|----------------|
+| `daily_totals` | `daily_values` | `UnifiedDashboardResponse.trends` | 2025-01-22 |
+| `allocation_data` | `allocations` | `UnifiedDashboardResponse.allocation` | 2025-01-22 |
+| `max_drawdown_percentage` | `max_drawdown_pct` | `RiskSummaryResponse.drawdown` | 2025-01-22 |
+
+#### **Structural Changes**
+
+1. **Period Metadata Enhancement**:
+   - All risk metrics now include both `period` and `period_info` fields
+   - `PeriodInfo` interface expanded to include `days: number` field
+   - Provides both top-level `period_days`, `data_points` and nested period objects
+
+2. **Drawdown Response Improvements**:
+   - Added `max_drawdown_pct` (percentage format: -25.5)
+   - Kept `max_drawdown` (ratio format: -0.255) for backward compatibility
+   - Added `trough_date` and `peak_date` (ISO datetime strings)
+   - Backend provides rounded values (3 decimal precision) for summary metrics
+
+3. **Backend Compatibility**:
+   - Backend maintains legacy field aliases via Pydantic `@computed_field`
+   - Both old and new field names work during transition period
+   - Frontend uses new fields exclusively for future-proofing
+
+#### **Migration Impact**
+
+**Files Modified**:
+- `src/types/risk.ts` - Type definitions updated
+- `src/services/analyticsService.ts` - Response interfaces updated
+- `src/hooks/useRiskSummary.ts` - Validation logic updated
+- `src/components/PortfolioChart/hooks/useChartData.ts` - Data transformation updated
+- `src/lib/portfolio-analytics.ts` - Metric calculations updated
+- All test files - Mock data updated
+
+**Adapter Pattern**:
+- `useChartData.ts` maintains backward compatibility by transforming new API format to legacy format for existing components
+- Components continue to consume `allocation_data` while the hook fetches `allocations` from API
+
+**Verification**:
+- TypeScript compilation: ✅ No new type errors introduced
+- Test suite: All tests updated with new schema
+- Global search: No legacy API field references except in adapter layer
+
 ## 🤖 AI Development Aids
 
 - `.serena/` stores project memories and configuration for the Serena agent.

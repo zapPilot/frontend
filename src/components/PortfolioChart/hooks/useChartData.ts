@@ -50,7 +50,7 @@ type PortfolioCategoryPoint = NonNullable<
 >[number];
 
 type DashboardDailyTotal =
-  UnifiedDashboardResponse["trends"]["daily_totals"][number];
+  UnifiedDashboardResponse["trends"]["daily_values"][number];
 type DashboardProtocolEntry = NonNullable<
   DashboardDailyTotal["protocols"]
 >[number];
@@ -58,7 +58,7 @@ type DashboardCategoryEntry = NonNullable<
   DashboardDailyTotal["categories"]
 >[number];
 type DashboardAllocationEntry =
-  UnifiedDashboardResponse["allocation"]["allocation_data"][number];
+  UnifiedDashboardResponse["allocation"]["allocations"][number];
 type DashboardDrawdownEntry =
   UnifiedDashboardResponse["drawdown_analysis"]["enhanced"]["drawdown_data"][number];
 type DashboardSharpeEntry =
@@ -514,7 +514,7 @@ export function useChartData(
   // Transform trends data to PortfolioDataPoint[] format
   const apiPortfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     const dailyTotals = asPartialArray<DashboardDailyTotal>(
-      dashboard?.trends.daily_totals
+      dashboard?.trends.daily_values
     );
     if (dailyTotals.length === 0) {
       return [];
@@ -668,7 +668,7 @@ export function useChartData(
     }
 
     const allocationSeries = asPartialArray<DashboardAllocationEntry>(
-      dashboard.allocation.allocation_data
+      dashboard.allocation.allocations
     );
     if (allocationSeries.length === 0) {
       return { allocation_data: [] };

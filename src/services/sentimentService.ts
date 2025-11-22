@@ -7,7 +7,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import { getQuoteForSentiment, type SentimentLabel } from "@/config/sentimentQuotes";
+import {
+  getQuoteForSentiment,
+  type SentimentLabel,
+} from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { createServiceCaller } from "@/lib/createServiceCaller";
 import { httpUtils } from "@/lib/http-utils";
@@ -63,7 +66,12 @@ export class SentimentServiceError extends Error {
 const createSentimentServiceError = (error: unknown): SentimentServiceError => {
   const apiError =
     error && typeof error === "object"
-      ? (error as { status?: number; message?: string; code?: string; details?: Record<string, unknown> })
+      ? (error as {
+          status?: number;
+          message?: string;
+          code?: string;
+          details?: Record<string, unknown>;
+        })
       : {};
   const status = apiError.status || 500;
   let message = apiError.message || "Failed to fetch market sentiment";
@@ -145,7 +153,8 @@ export function useSentimentData() {
       } catch (error) {
         logger.error("Failed to fetch market sentiment", {
           error: error instanceof Error ? error.message : String(error),
-          status: error instanceof SentimentServiceError ? error.status : undefined,
+          status:
+            error instanceof SentimentServiceError ? error.status : undefined,
         });
         throw error;
       }

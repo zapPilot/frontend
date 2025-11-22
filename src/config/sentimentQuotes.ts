@@ -42,7 +42,8 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
         author: WARREN_BUFFETT,
       },
       {
-        quote: "Opportunities come infrequently. When it rains gold, put out the bucket.",
+        quote:
+          "Opportunities come infrequently. When it rains gold, put out the bucket.",
         author: WARREN_BUFFETT,
       },
     ],
@@ -57,7 +58,8 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
         author: "Benjamin Graham",
       },
       {
-        quote: "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
+        quote:
+          "The intelligent investor is a realist who sells to optimists and buys from pessimists.",
         author: "Benjamin Graham",
       },
     ],
@@ -98,7 +100,8 @@ const SENTIMENT_QUOTE_CONFIG: SentimentQuoteConfig[] = [
     sentiment: "Extreme Greed",
     quotes: [
       {
-        quote: "The four most dangerous words in investing are: this time it's different.",
+        quote:
+          "The four most dangerous words in investing are: this time it's different.",
         author: "Sir John Templeton",
       },
       {
@@ -136,10 +139,12 @@ function selectQuote(quotes: SentimentQuote[]): SentimentQuote {
   }
 
   const index = Math.floor(Math.random() * quotes.length);
-  return quotes[index] ?? {
-    quote: DEFAULT_QUOTE.quote,
-    author: DEFAULT_QUOTE.author,
-  };
+  return (
+    quotes[index] ?? {
+      quote: DEFAULT_QUOTE.quote,
+      author: DEFAULT_QUOTE.author,
+    }
+  );
 }
 
 /**
@@ -155,7 +160,9 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
     SENTIMENT_QUOTE_CONFIG.find(
       quoteConfig =>
         normalizedValue >= quoteConfig.min && normalizedValue <= quoteConfig.max
-    ) ?? SENTIMENT_QUOTE_CONFIG[2] ?? FALLBACK_CONFIG;
+    ) ??
+    SENTIMENT_QUOTE_CONFIG[2] ??
+    FALLBACK_CONFIG;
 
   const quote = selectQuote(config.quotes);
 

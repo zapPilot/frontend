@@ -5,7 +5,7 @@
  * following DeFi industry standards.
  */
 
-export type LeverageHealthStatus = 'safe' | 'moderate' | 'high' | 'critical';
+export type LeverageHealthStatus = "safe" | "moderate" | "high" | "critical";
 
 export interface LeverageMetrics {
   /** Leverage ratio (e.g., 1.5 means 1.5x leveraged) */
@@ -41,32 +41,32 @@ export const LEVERAGE_THRESHOLDS = {
  */
 export const LEVERAGE_COLORS = {
   safe: {
-    text: 'text-emerald-400',
-    bg: 'bg-emerald-900/20',
-    border: 'border-emerald-700/50',
-    glow: 'shadow-emerald-500/20',
-    icon: 'text-emerald-500',
+    text: "text-emerald-400",
+    bg: "bg-emerald-900/20",
+    border: "border-emerald-700/50",
+    glow: "shadow-emerald-500/20",
+    icon: "text-emerald-500",
   },
   moderate: {
-    text: 'text-amber-400',
-    bg: 'bg-amber-900/20',
-    border: 'border-amber-700/50',
-    glow: 'shadow-amber-500/20',
-    icon: 'text-amber-500',
+    text: "text-amber-400",
+    bg: "bg-amber-900/20",
+    border: "border-amber-700/50",
+    glow: "shadow-amber-500/20",
+    icon: "text-amber-500",
   },
   high: {
-    text: 'text-orange-400',
-    bg: 'bg-orange-900/20',
-    border: 'border-orange-700/50',
-    glow: 'shadow-orange-500/20',
-    icon: 'text-orange-500',
+    text: "text-orange-400",
+    bg: "bg-orange-900/20",
+    border: "border-orange-700/50",
+    glow: "shadow-orange-500/20",
+    icon: "text-orange-500",
   },
   critical: {
-    text: 'text-rose-400',
-    bg: 'bg-rose-900/20',
-    border: 'border-rose-700/50',
-    glow: 'shadow-rose-500/20',
-    icon: 'text-rose-500',
+    text: "text-rose-400",
+    bg: "bg-rose-900/20",
+    border: "border-rose-700/50",
+    glow: "shadow-rose-500/20",
+    icon: "text-rose-500",
   },
 } as const;
 
@@ -123,15 +123,15 @@ export function getLeverageHealthStatus(
   leverageRatio: number
 ): LeverageHealthStatus {
   if (!isFinite(leverageRatio) || leverageRatio >= LEVERAGE_THRESHOLDS.high) {
-    return 'critical';
+    return "critical";
   }
   if (leverageRatio >= LEVERAGE_THRESHOLDS.moderate) {
-    return 'high';
+    return "high";
   }
   if (leverageRatio >= LEVERAGE_THRESHOLDS.safe) {
-    return 'moderate';
+    return "moderate";
   }
-  return 'safe';
+  return "safe";
 }
 
 /**
@@ -142,10 +142,10 @@ export function getLeverageHealthStatus(
  */
 export function getLeverageHealthLabel(status: LeverageHealthStatus): string {
   const labels: Record<LeverageHealthStatus, string> = {
-    safe: 'Safe',
-    moderate: 'Caution',
-    high: 'High Risk',
-    critical: 'Critical',
+    safe: "Safe",
+    moderate: "Caution",
+    high: "High Risk",
+    critical: "Critical",
   };
   return labels[status];
 }
@@ -215,10 +215,10 @@ export function getLeverageMetrics(
  */
 export function formatLeverageRatio(ratio: number): string {
   if (!isFinite(ratio)) {
-    return 'Critical';
+    return "Critical";
   }
   if (ratio === 1.0) {
-    return 'No Leverage';
+    return "No Leverage";
   }
   return `${ratio.toFixed(2)}x`;
 }
@@ -231,10 +231,10 @@ export function formatLeverageRatio(ratio: number): string {
  */
 export function formatHealthFactor(healthFactor: number): string {
   if (!isFinite(healthFactor)) {
-    return '∞';
+    return "∞";
   }
   if (healthFactor === 0) {
-    return '0';
+    return "0";
   }
   return healthFactor.toFixed(2);
 }

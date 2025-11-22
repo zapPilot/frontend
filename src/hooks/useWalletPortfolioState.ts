@@ -3,7 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
-import { useLandingPageData, useYieldSummaryData } from "@/hooks/queries/usePortfolioQuery";
+import {
+  useLandingPageData,
+  useYieldSummaryData,
+} from "@/hooks/queries/usePortfolioQuery";
 import { usePortfolioState } from "@/hooks/usePortfolioState";
 import { useWalletPortfolioTransform } from "@/hooks/useWalletPortfolioTransform";
 import type {

@@ -91,9 +91,7 @@ export function WalletPortfolioPresenter({
               onOptimizeClick={
                 optimizeHandler ? handleOptimizeClick : undefined
               }
-              disabled={
-                vm.isVisitorMode || isOptimizing || !optimizeHandler
-              }
+              disabled={vm.isVisitorMode || isOptimizing || !optimizeHandler}
             />
 
             <WalletActions

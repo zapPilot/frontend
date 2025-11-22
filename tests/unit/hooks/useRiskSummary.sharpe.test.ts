@@ -42,7 +42,7 @@ describe("useRiskSummary - Sharpe Ratio Integration", () => {
         period_days: 90,
         data_points: 29,
         max_drawdown: -0.161932,
-        max_drawdown_percentage: -16.19,
+        max_drawdown_pct: -16.19,
         max_drawdown_date: "2025-09-09",
         peak_value: 159247.9,
         trough_value: 133460.63,
@@ -64,15 +64,21 @@ describe("useRiskSummary - Sharpe Ratio Integration", () => {
         excess_return: 3.7949,
         volatility_annual: 1.569,
         interpretation: "Very Good",
+        period: {
+          start_date: "2025-08-11T05:56:42.816285+00:00",
+          end_date: "2025-09-10T05:56:42.816285+00:00",
+          days: 30,
+        },
         period_info: {
           start_date: "2025-08-11T05:56:42.816285+00:00",
           end_date: "2025-09-10T05:56:42.816285+00:00",
+          days: 30,
         },
       },
     },
     summary_metrics: {
       annualized_volatility_percentage: 156.9,
-      max_drawdown_percentage: -16.19,
+      max_drawdown_pct: -16.19,
       sharpe_ratio: 2.419,
     },
   };
@@ -97,7 +103,7 @@ describe("useRiskSummary - Sharpe Ratio Integration", () => {
         period_days: 90,
         data_points: 29,
         max_drawdown: -0.161932,
-        max_drawdown_percentage: -16.19,
+        max_drawdown_pct: -16.19,
         max_drawdown_date: "2025-09-09",
         peak_value: 159247.9,
         trough_value: 133460.63,
@@ -112,7 +118,7 @@ describe("useRiskSummary - Sharpe Ratio Integration", () => {
     },
     summary_metrics: {
       annualized_volatility_percentage: 156.9,
-      max_drawdown_percentage: -16.19,
+      max_drawdown_pct: -16.19,
     },
   };
 

@@ -91,10 +91,18 @@ describe("leverageUtils", () => {
     });
 
     it("validates threshold boundaries", () => {
-      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.safe - 0.01)).toBe("safe");
-      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.safe)).toBe("moderate");
-      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.moderate)).toBe("high");
-      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.high)).toBe("critical");
+      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.safe - 0.01)).toBe(
+        "safe"
+      );
+      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.safe)).toBe(
+        "moderate"
+      );
+      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.moderate)).toBe(
+        "high"
+      );
+      expect(getLeverageHealthStatus(LEVERAGE_THRESHOLDS.high)).toBe(
+        "critical"
+      );
     });
   });
 

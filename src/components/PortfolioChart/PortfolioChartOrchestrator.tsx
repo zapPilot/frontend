@@ -184,9 +184,7 @@ const PortfolioChartComponent = ({
         <div className="text-lg font-semibold text-gray-200">
           {emptyStateMessage}
         </div>
-        <p className="text-sm text-gray-400">
-          {emptyStateDescription}
-        </p>
+        <p className="text-sm text-gray-400">{emptyStateDescription}</p>
       </BaseCard>
     );
   }

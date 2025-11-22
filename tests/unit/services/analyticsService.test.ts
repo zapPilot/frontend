@@ -40,7 +40,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
       end_date: "2025-01-30",
       days: 30,
     },
-    daily_totals: [],
+    daily_values: [],
     summary: {
       current_value_usd: 0,
       start_value_usd: 0,
@@ -137,7 +137,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
-    allocation_data: [],
+    allocations: [],
     summary: {
       unique_dates: 0,
       unique_protocols: 0,
@@ -716,7 +716,7 @@ describe("analyticsService", () => {
               period_days: 30,
               data_points: 30,
               max_drawdown: -500,
-              max_drawdown_percentage: -0.05,
+              max_drawdown_pct: -0.05,
               max_drawdown_date: "2025-01-20",
               peak_value: 10000,
               trough_value: 9500,
@@ -731,7 +731,7 @@ describe("analyticsService", () => {
           },
           summary_metrics: {
             annualized_volatility_percentage: 47.5,
-            max_drawdown_percentage: -5,
+            max_drawdown_pct: -5,
           },
         };
 
@@ -766,7 +766,7 @@ describe("analyticsService", () => {
               period_days: 30,
               data_points: 30,
               max_drawdown: -500,
-              max_drawdown_percentage: -0.05,
+              max_drawdown_pct: -0.05,
               max_drawdown_date: "2025-01-20",
               peak_value: 10000,
               trough_value: 9500,
@@ -796,7 +796,7 @@ describe("analyticsService", () => {
           },
           summary_metrics: {
             annualized_volatility_percentage: 47.5,
-            max_drawdown_percentage: -5,
+            max_drawdown_pct: -5,
             sharpe_ratio: 1.5,
           },
         };

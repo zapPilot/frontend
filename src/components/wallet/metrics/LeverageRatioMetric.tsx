@@ -59,7 +59,8 @@ export function LeverageRatioMetric({
     value: leverageMetrics?.ratio,
   });
 
-  const labelClasses = "text-xs text-gray-500 uppercase tracking-wider font-medium";
+  const labelClasses =
+    "text-xs text-gray-500 uppercase tracking-wider font-medium";
 
   // Get color scheme based on health status
   const colorScheme = leverageMetrics
@@ -112,10 +113,14 @@ export function LeverageRatioMetric({
     return (
       <MetricCard icon={Shield} iconClassName="text-emerald-400">
         <div className="flex flex-col items-center gap-2 mb-2">
-          <div className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}>
+          <div
+            className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}
+          >
             {formatLeverageRatio(leverageMetrics.ratio)}
           </div>
-          <div className={`px-3 py-1 rounded-full ${colorScheme.bg} ${colorScheme.border} border text-xs font-medium ${colorScheme.text}`}>
+          <div
+            className={`px-3 py-1 rounded-full ${colorScheme.bg} ${colorScheme.border} border text-xs font-medium ${colorScheme.text}`}
+          >
             Unleveraged
           </div>
         </div>
@@ -131,11 +136,17 @@ export function LeverageRatioMetric({
   return (
     <MetricCard
       icon={Shield}
-      iconClassName={leverageMetrics.healthStatus === 'critical' ? 'text-rose-400' : 'text-purple-400'}
+      iconClassName={
+        leverageMetrics.healthStatus === "critical"
+          ? "text-rose-400"
+          : "text-purple-400"
+      }
     >
       <div className="flex flex-col items-center gap-2 mb-2 w-full">
         {/* Main leverage ratio */}
-        <div className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}>
+        <div
+          className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}
+        >
           {formatLeverageRatio(leverageMetrics.ratio)}
         </div>
 
@@ -152,7 +163,9 @@ export function LeverageRatioMetric({
           {isFiniteHealthFactor && (
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <span>HF:</span>
-              <span className="font-medium text-gray-300">{healthFactorDisplay}</span>
+              <span className="font-medium text-gray-300">
+                {healthFactorDisplay}
+              </span>
               <button
                 type="button"
                 className="hover:text-gray-200 transition-colors"

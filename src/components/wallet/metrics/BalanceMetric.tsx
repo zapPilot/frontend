@@ -57,14 +57,15 @@ export function BalanceMetric({
     value: totalNetUsd,
   });
 
-  const labelClasses = "text-xs text-gray-500 uppercase tracking-wider font-medium";
-  
+  const labelClasses =
+    "text-xs text-gray-500 uppercase tracking-wider font-medium";
+
   // Loading state
   if (metricState.shouldRenderSkeleton) {
     return (
       <MetricCard icon={Wallet} iconClassName="text-blue-400">
         <div className="h-10 flex items-center mb-2">
-            <BalanceSkeleton size="default" />
+          <BalanceSkeleton size="default" />
         </div>
         <p className={labelClasses}>Total Balance</p>
       </MetricCard>
@@ -75,7 +76,7 @@ export function BalanceMetric({
   if (shouldShowError && errorMessage && errorMessage !== "USER_NOT_FOUND") {
     return (
       <MetricCard icon={Wallet} iconClassName="text-blue-400">
-         <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
+        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
           <div className="flex flex-col space-y-2">
             <div className="text-sm text-red-400 flex items-center space-x-2">
               <AlertCircle className="w-4 h-4" />

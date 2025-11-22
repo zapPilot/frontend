@@ -10,6 +10,7 @@ export type RiskLevel = "Low" | "Medium" | "High" | "Very High";
 interface PeriodInfo {
   start_date: string;
   end_date: string;
+  days: number;
 }
 
 /**
@@ -23,7 +24,8 @@ interface VolatilityData {
   volatility_daily: number | null;
   volatility_annualized: number | null;
   average_daily_return: number | null;
-  period_info: PeriodInfo;
+  period: PeriodInfo;
+  period_info: PeriodInfo; // Backward compatibility - same as period
 }
 
 /**
@@ -34,24 +36,34 @@ interface DrawdownData {
   user_id: string;
   period_days: number;
   data_points: number;
+  /** Maximum drawdown as negative percentage (e.g., -25.5 for -25.5%) */
+  max_drawdown_pct: number | null;
+  /** Maximum drawdown as negative ratio (e.g., -0.255 for -25.5%) - legacy field */
   max_drawdown: number | null;
-  max_drawdown_percentage: number | null;
+  /** Date of maximum drawdown (ISO date string) */
   max_drawdown_date: string | null;
+  /** Date of trough (ISO datetime string) */
+  trough_date?: string | null;
+  /** Date of peak before drawdown (ISO datetime string) */
+  peak_date?: string | null;
   peak_value: number | null;
   trough_value: number | null;
   recovery_needed_percentage: number | null;
   current_drawdown: number | null;
   current_drawdown_percentage: number | null;
-  period_info: PeriodInfo;
+  period: PeriodInfo;
+  period_info: PeriodInfo; // Backward compatibility - same as period
 }
 
 /**
  * Summary metrics for portfolio risk
  * Note: Metrics may be null when insufficient data exists for calculation
+ * Backend provides rounded values (3 decimal precision)
  */
 interface SummaryMetrics {
   annualized_volatility_percentage: number | null;
-  max_drawdown_percentage: number | null;
+  /** Maximum drawdown as negative percentage (e.g., -25.5 for -25.5%) */
+  max_drawdown_pct: number | null;
   sharpe_ratio?: number | null;
 }
 
@@ -69,7 +81,8 @@ interface SharpeRatioData {
   excess_return: number | null;
   volatility_annual: number | null;
   interpretation: string | null;
-  period_info: PeriodInfo;
+  period: PeriodInfo;
+  period_info: PeriodInfo; // Backward compatibility - same as period
 }
 
 /**

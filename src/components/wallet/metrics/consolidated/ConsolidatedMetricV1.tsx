@@ -4,7 +4,12 @@ import React from "react";
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import { sortProtocolsByTodayYield } from "@/lib/sortProtocolsByTodayYield";
 
-import { ROITooltip, selectBestYieldWindow, useMetricsTooltip, YieldBreakdownTooltip } from "../../tooltips";
+import {
+  ROITooltip,
+  selectBestYieldWindow,
+  useMetricsTooltip,
+  YieldBreakdownTooltip,
+} from "../../tooltips";
 import { MetricCard } from "../MetricCard";
 import type { PerformanceMetricsProps } from "../performance/types";
 
@@ -46,13 +51,16 @@ export function ConsolidatedMetricV1({
       selectedYieldWindow?.window.protocol_breakdown ?? [];
     return sortProtocolsByTodayYield(protocolYieldBreakdown);
   }, [selectedYieldWindow]);
-  const outliersRemoved = selectedYieldWindow?.window.statistics.outliers_removed ?? 0;
+  const outliersRemoved =
+    selectedYieldWindow?.window.statistics.outliers_removed ?? 0;
 
   return (
     <MetricCard icon={TrendingUp}>
       {/* Primary Metric: ROI% */}
       <div className="flex items-center gap-2 mb-0.5">
-        <span className={`text-2xl md:text-3xl font-bold ${roiColor} tracking-tight`}>
+        <span
+          className={`text-2xl md:text-3xl font-bold ${roiColor} tracking-tight`}
+        >
           {formatPercent(roiValue)}
         </span>
         <button
@@ -77,7 +85,9 @@ export function ConsolidatedMetricV1({
             <DollarSign className="w-4 h-4 text-gray-500" />
             <span>{formatCurrency(roiAmount)}</span>
           </div>
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">Yearly PnL</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">
+            Yearly PnL
+          </span>
         </div>
 
         <div className="w-px h-8 bg-gray-800" />
@@ -96,7 +106,9 @@ export function ConsolidatedMetricV1({
               <Info className="w-3 h-3" />
             </button>
           </div>
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">Daily Yield</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">
+            Daily Yield
+          </span>
         </div>
       </div>
 
@@ -108,20 +120,28 @@ export function ConsolidatedMetricV1({
           windows={
             portfolioROI.windows
               ? Object.entries(portfolioROI.windows)
-                  .map(([key, value]: [string, { value: number; data_points: number }]) => ({
-                    key,
-                    label: formatRoiWindowLabel(key),
-                    value: value.value,
-                    dataPoints: value.data_points,
-                  }))
+                  .map(
+                    ([key, value]: [
+                      string,
+                      { value: number; data_points: number },
+                    ]) => ({
+                      key,
+                      label: formatRoiWindowLabel(key),
+                      value: value.value,
+                      dataPoints: value.data_points,
+                    })
+                  )
                   .sort(
                     (a, b) =>
-                      deriveRoiWindowSortScore(a.key) - deriveRoiWindowSortScore(b.key)
+                      deriveRoiWindowSortScore(a.key) -
+                      deriveRoiWindowSortScore(b.key)
                   )
               : []
           }
           protocols={[]}
-          recommendedPeriodLabel={portfolioROI.recommended_period?.replace("roi_", "") || null}
+          recommendedPeriodLabel={
+            portfolioROI.recommended_period?.replace("roi_", "") || null
+          }
         />
       )}
       {yieldTooltip.visible && selectedYieldWindow && (

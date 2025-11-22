@@ -294,12 +294,19 @@ export interface UnifiedDashboardResponse {
   // Historical trends (replaces getPortfolioTrends)
   trends: {
     user_id?: string;
+    period_days: number;
+    data_points: number;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    daily_totals: {
+    period_info?: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    daily_values: {
       date: string;
       total_value_usd: number;
       change_percentage: number;
@@ -436,12 +443,19 @@ export interface UnifiedDashboardResponse {
   // Portfolio allocation over time (replaces getAllocationTimeseries)
   allocation: {
     user_id?: string;
+    period_days: number;
+    data_points: number;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    allocation_data: {
+    period_info?: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    allocations: {
       date: string;
       category: string;
       category_value_usd: number;
@@ -453,6 +467,7 @@ export interface UnifiedDashboardResponse {
       unique_dates: number;
       unique_protocols: number;
       unique_chains: number;
+      categories?: string[];
     };
   };
 

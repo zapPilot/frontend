@@ -66,7 +66,7 @@ export function getAnalyticsMetrics(
   const volatilityPct =
     riskData.summary_metrics?.annualized_volatility_percentage ?? undefined;
   const drawdownPct =
-    riskData.summary_metrics?.max_drawdown_percentage ?? undefined;
+    riskData.summary_metrics?.max_drawdown_pct ?? undefined;
   return [
     createPlaceholderMetric(
       "Total Return",
