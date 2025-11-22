@@ -5,6 +5,7 @@ import { ArrowDownLeft, TrendingUp } from "lucide-react";
 import React, { useCallback, useMemo, useState } from "react";
 
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import type { LeverageMetrics } from "@/lib/leverageUtils";
 
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
@@ -18,6 +19,7 @@ import { PieChart } from "./PieChart";
 import { PieChartSkeleton } from "./ui/LoadingSystem";
 import { TabButton } from "./ui/TabButton";
 import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
+import { LeverageBadge } from "./wallet/metrics/LeverageRatioMetric";
 
 type TabType = "assets" | "borrowing";
 
@@ -87,6 +89,7 @@ interface PortfolioOverviewProps extends BaseComponentProps {
   categorySummaries: CategorySummary[];
   debtCategorySummaries?: CategorySummary[];
   pieChartData: PieChartData[];
+  leverageMetrics?: LeverageMetrics | null;
   renderBalanceDisplay?: () => React.ReactNode;
   title?: string;
   onRetry?: () => void;
@@ -99,6 +102,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
     categorySummaries,
     debtCategorySummaries = [],
     pieChartData,
+    leverageMetrics,
     title = "Asset Distribution",
     className = "",
     testId,
@@ -223,6 +227,16 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
         <div className="sr-only" aria-live="polite">
           {tabAnnouncement}
         </div>
+
+        {/* Leverage Ratio Banner - Only shown in Borrowing tab when there's debt */}
+        {activeTab === "borrowing" &&
+          leverageMetrics &&
+          leverageMetrics.hasDebt &&
+          (shouldShowPortfolioContent || shouldShowLoading) && (
+            <div className="mb-6" data-testid="leverage-ratio-banner">
+              <LeverageBadge leverageMetrics={leverageMetrics} />
+            </div>
+          )}
 
         {/* Wallet Not Connected State */}
         {shouldShowConnectPrompt && (

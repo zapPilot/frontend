@@ -164,8 +164,16 @@ const PortfolioChartComponent = ({
     return <PortfolioChartSkeleton />;
   }
 
-  // Empty state
+  // Empty state - Check if user has connected wallet but no data yet
   if (chartData.portfolioHistory.length === 0) {
+    const emptyStateMessage = resolvedUserId
+      ? "No historical data available for this portfolio"
+      : "Connect a wallet to view portfolio analytics";
+
+    const emptyStateDescription = resolvedUserId
+      ? "This portfolio doesn't have enough transaction history yet. Make some transactions and check back later."
+      : "Connect your wallet to track your portfolio's performance over time.";
+
     return (
       <BaseCard
         variant="glass"
@@ -174,10 +182,10 @@ const PortfolioChartComponent = ({
         ariaLive="polite"
       >
         <div className="text-lg font-semibold text-gray-200">
-          No data available for this portfolio
+          {emptyStateMessage}
         </div>
         <p className="text-sm text-gray-400">
-          Connect a wallet or import data to see performance analytics.
+          {emptyStateDescription}
         </p>
       </BaseCard>
     );

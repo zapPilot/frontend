@@ -43,12 +43,23 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
         </div>
       )}
       {error && (
-        <div className="text-center text-red-400 py-8">
-          Failed to load analytics data. Please try again later.
+        <div className="text-center py-8">
+          <div className="text-red-400 font-semibold mb-2">
+            Failed to load analytics data
+          </div>
+          <p className="text-sm text-gray-400">
+            {error.message || "Please try again later"}
+          </p>
         </div>
       )}
-      {!isLoading && !error && riskData && (
+      {!isLoading && !error && riskData && portfolioMetrics.length > 0 && (
         <KeyMetricsGrid metrics={portfolioMetrics} />
+      )}
+      {!isLoading && !error && riskData && portfolioMetrics.length === 0 && (
+        <div className="text-center text-gray-400 py-8">
+          No metrics available. This may happen for new portfolios with
+          insufficient transaction history.
+        </div>
       )}
       {/* ZAP-208: Asset Attribution Analysis - pending asset attribution API endpoint */}
     </div>

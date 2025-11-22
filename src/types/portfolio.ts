@@ -33,6 +33,12 @@ export interface PortfolioMetrics {
   monthlyReturn?: number;
 }
 
+export interface PortfolioAllocationSplit {
+  stable: number;
+  crypto: number;
+  target?: number;
+}
+
 // Chart and Analytics types
 export interface PortfolioDataPoint {
   date: string;

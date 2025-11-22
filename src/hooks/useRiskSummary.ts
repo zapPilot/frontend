@@ -57,8 +57,10 @@ function validateResponse(
 
   const volatility = riskSummary["volatility"] as Record<string, unknown>;
   if (
-    typeof volatility["volatility_daily"] !== "number" ||
-    typeof volatility["volatility_annualized"] !== "number" ||
+    (typeof volatility["volatility_daily"] !== "number" &&
+      volatility["volatility_daily"] !== null) ||
+    (typeof volatility["volatility_annualized"] !== "number" &&
+      volatility["volatility_annualized"] !== null) ||
     typeof volatility["period_days"] !== "number"
   ) {
     return false;
@@ -71,9 +73,11 @@ function validateResponse(
 
   const drawdown = riskSummary["drawdown"] as Record<string, unknown>;
   if (
-    typeof drawdown["max_drawdown_percentage"] !== "number" ||
+    (typeof drawdown["max_drawdown_percentage"] !== "number" &&
+      drawdown["max_drawdown_percentage"] !== null) ||
     typeof drawdown["period_days"] !== "number" ||
-    typeof drawdown["recovery_needed_percentage"] !== "number"
+    (typeof drawdown["recovery_needed_percentage"] !== "number" &&
+      drawdown["recovery_needed_percentage"] !== null)
   ) {
     return false;
   }
@@ -82,12 +86,18 @@ function validateResponse(
   if (riskSummary["sharpe_ratio"]) {
     const sharpeRatio = riskSummary["sharpe_ratio"] as Record<string, unknown>;
     if (
-      typeof sharpeRatio["sharpe_ratio"] !== "number" ||
-      typeof sharpeRatio["portfolio_return_annual"] !== "number" ||
-      typeof sharpeRatio["risk_free_rate_annual"] !== "number" ||
-      typeof sharpeRatio["excess_return"] !== "number" ||
-      typeof sharpeRatio["volatility_annual"] !== "number" ||
-      typeof sharpeRatio["interpretation"] !== "string" ||
+      (typeof sharpeRatio["sharpe_ratio"] !== "number" &&
+        sharpeRatio["sharpe_ratio"] !== null) ||
+      (typeof sharpeRatio["portfolio_return_annual"] !== "number" &&
+        sharpeRatio["portfolio_return_annual"] !== null) ||
+      (typeof sharpeRatio["risk_free_rate_annual"] !== "number" &&
+        sharpeRatio["risk_free_rate_annual"] !== null) ||
+      (typeof sharpeRatio["excess_return"] !== "number" &&
+        sharpeRatio["excess_return"] !== null) ||
+      (typeof sharpeRatio["volatility_annual"] !== "number" &&
+        sharpeRatio["volatility_annual"] !== null) ||
+      (typeof sharpeRatio["interpretation"] !== "string" &&
+        sharpeRatio["interpretation"] !== null) ||
       typeof sharpeRatio["period_days"] !== "number" ||
       typeof sharpeRatio["data_points"] !== "number"
     ) {
@@ -102,10 +112,12 @@ function validateResponse(
 
   const summaryMetrics = obj["summary_metrics"] as Record<string, unknown>;
 
-  // Validate summary metrics
+  // Validate summary metrics (allow null for insufficient data)
   if (
-    typeof summaryMetrics["annualized_volatility_percentage"] !== "number" ||
-    typeof summaryMetrics["max_drawdown_percentage"] !== "number"
+    (typeof summaryMetrics["annualized_volatility_percentage"] !== "number" &&
+      summaryMetrics["annualized_volatility_percentage"] !== null) ||
+    (typeof summaryMetrics["max_drawdown_percentage"] !== "number" &&
+      summaryMetrics["max_drawdown_percentage"] !== null)
   ) {
     return false;
   }
@@ -113,7 +125,8 @@ function validateResponse(
   // Validate optional sharpe_ratio in summary metrics
   if (
     summaryMetrics["sharpe_ratio"] !== undefined &&
-    typeof summaryMetrics["sharpe_ratio"] !== "number"
+    typeof summaryMetrics["sharpe_ratio"] !== "number" &&
+    summaryMetrics["sharpe_ratio"] !== null
   ) {
     return false;
   }

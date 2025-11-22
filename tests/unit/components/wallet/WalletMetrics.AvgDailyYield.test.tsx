@@ -1031,9 +1031,10 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
       expect(screen.getByText(/Estimated Yearly ROI/)).toBeInTheDocument();
       expect(screen.getByText("Estimated Yearly PnL")).toBeInTheDocument();
       expect(screen.getByText("Avg Daily Yield")).toBeInTheDocument();
+      expect(screen.getByText("Market Sentiment")).toBeInTheDocument();
     });
 
-    it("maintains grid layout with 4 columns", () => {
+    it("maintains grid layout with 5 columns", () => {
       const portfolioState = createPortfolioState();
       const landingPageData = createLandingPageData(
         createYieldSummaryWithDays(30, 150.0)
@@ -1048,7 +1049,7 @@ describe("WalletMetrics - Average Daily Yield Display", () => {
       );
 
       const grid = container.querySelector(".grid");
-      expect(grid).toHaveClass("grid-cols-1", "md:grid-cols-4");
+      expect(grid).toHaveClass("grid-cols-1", "md:grid-cols-5");
     });
   });
 });
