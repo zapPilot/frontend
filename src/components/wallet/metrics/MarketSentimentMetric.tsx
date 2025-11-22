@@ -76,7 +76,7 @@ export function MarketSentimentMetric({
       {sentiment?.quote && (
         <div className="pt-3 border-t border-gray-800/50 w-full text-center max-w-[80%]">
           <p className="text-xs text-gray-400 italic line-clamp-2">
-            “{sentiment.quote.quote}”
+            &ldquo;{sentiment.quote.quote}&rdquo;
           </p>
         </div>
       )}
