@@ -1,15 +1,2 @@
-// Legacy variations
-export * from "./DashboardPerformancePanel";
-export * from "./HeroPerformanceCard";
-export * from "./HorizontalPerformanceBar";
-export * from "./MetricsCard";
-export * from "./MetricsOverlay";
-export * from "./MetricsSplit";
-
-// New compact variations (recommended)
-export * from "./AccordionCard";
-export * from "./InlineMetricsCard";
-export * from "./MiniCardsGrid";
-export * from "./StackedGridCard";
+// Export types for ConsolidatedMetricV1 and other consumers
 export * from "./types";
-
