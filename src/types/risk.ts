@@ -14,57 +14,61 @@ interface PeriodInfo {
 
 /**
  * Volatility analysis data structure
+ * Note: Numeric fields may be null when insufficient data exists for calculation
  */
 interface VolatilityData {
   user_id: string;
   period_days: number;
   data_points: number;
-  volatility_daily: number;
-  volatility_annualized: number;
-  average_daily_return: number;
+  volatility_daily: number | null;
+  volatility_annualized: number | null;
+  average_daily_return: number | null;
   period_info: PeriodInfo;
 }
 
 /**
  * Drawdown analysis data structure
+ * Note: Numeric fields may be null when insufficient data exists for calculation
  */
 interface DrawdownData {
   user_id: string;
   period_days: number;
   data_points: number;
-  max_drawdown: number;
-  max_drawdown_percentage: number;
-  max_drawdown_date: string;
-  peak_value: number;
-  trough_value: number;
-  recovery_needed_percentage: number;
-  current_drawdown: number;
-  current_drawdown_percentage: number;
+  max_drawdown: number | null;
+  max_drawdown_percentage: number | null;
+  max_drawdown_date: string | null;
+  peak_value: number | null;
+  trough_value: number | null;
+  recovery_needed_percentage: number | null;
+  current_drawdown: number | null;
+  current_drawdown_percentage: number | null;
   period_info: PeriodInfo;
 }
 
 /**
  * Summary metrics for portfolio risk
+ * Note: Metrics may be null when insufficient data exists for calculation
  */
 interface SummaryMetrics {
-  annualized_volatility_percentage: number;
-  max_drawdown_percentage: number;
-  sharpe_ratio?: number;
+  annualized_volatility_percentage: number | null;
+  max_drawdown_percentage: number | null;
+  sharpe_ratio?: number | null;
 }
 
 /**
  * Sharpe ratio analysis data structure
+ * Note: Numeric fields may be null when insufficient data exists for calculation
  */
 interface SharpeRatioData {
   user_id: string;
   period_days: number;
   data_points: number;
-  sharpe_ratio: number;
-  portfolio_return_annual: number;
-  risk_free_rate_annual: number;
-  excess_return: number;
-  volatility_annual: number;
-  interpretation: string;
+  sharpe_ratio: number | null;
+  portfolio_return_annual: number | null;
+  risk_free_rate_annual: number | null;
+  excess_return: number | null;
+  volatility_annual: number | null;
+  interpretation: string | null;
   period_info: PeriodInfo;
 }
 
