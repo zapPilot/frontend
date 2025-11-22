@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
 import * as Popover from "@radix-ui/react-popover";
-import { TrendingUp, DollarSign, Clock, Info, X } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
+import { Clock, DollarSign, Info, TrendingUp, X } from "lucide-react";
+import React from "react";
+
 import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import type { PerformanceMetricsProps } from "./types";
 
 /**

@@ -1,7 +1,9 @@
-import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
-import { sortProtocolsByTodayYield } from "@/lib/sortProtocolsByTodayYield";
 import { DollarSign, Info, Percent, TrendingUp } from "lucide-react";
 import React from "react";
+
+import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
+import { sortProtocolsByTodayYield } from "@/lib/sortProtocolsByTodayYield";
+
 import { ROITooltip, selectBestYieldWindow, useMetricsTooltip, YieldBreakdownTooltip } from "../../tooltips";
 import { MetricCard } from "../MetricCard";
 import type { PerformanceMetricsProps } from "../performance/types";
@@ -49,40 +51,40 @@ export function ConsolidatedMetricV1({
   return (
     <MetricCard icon={TrendingUp}>
       {/* Primary Metric: ROI% */}
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-3xl md:text-4xl font-bold ${roiColor} tracking-tight`}>
+      <div className="flex items-center gap-2 mb-0.5">
+        <span className={`text-2xl md:text-3xl font-bold ${roiColor} tracking-tight`}>
           {formatPercent(roiValue)}
         </span>
         <button
           ref={roiTooltip.triggerRef}
           onClick={roiTooltip.toggle}
-          className="text-gray-600 hover:text-gray-300 transition-colors mt-1"
+          className="text-gray-600 hover:text-gray-300 transition-colors"
           aria-label="ROI Info"
         >
           <Info className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="text-xs text-gray-500 uppercase tracking-wider mb-6 font-medium">
+      <div className="text-xs text-gray-500 uppercase tracking-wider mb-4 font-medium">
         Est. Yearly ROI
       </div>
 
       {/* Secondary Metrics Row */}
-      <div className="flex items-center gap-8 text-sm">
+      <div className="flex items-center gap-6 text-sm">
         {/* Yearly PnL */}
         <div className="flex flex-col items-center">
-          <div className="flex items-center gap-1.5 text-gray-300 font-medium text-lg">
+          <div className="flex items-center gap-1.5 text-gray-300 font-medium text-base">
             <DollarSign className="w-4 h-4 text-gray-500" />
             <span>{formatCurrency(roiAmount)}</span>
           </div>
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-1">Yearly PnL</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">Yearly PnL</span>
         </div>
 
-        <div className="w-px h-10 bg-gray-800" />
+        <div className="w-px h-8 bg-gray-800" />
 
         {/* Daily Yield */}
         <div className="flex flex-col items-center">
-          <div className="flex items-center gap-1.5 text-gray-300 font-medium text-lg">
+          <div className="flex items-center gap-1.5 text-gray-300 font-medium text-base">
             <Percent className="w-4 h-4 text-purple-400" />
             <span>{formatCurrency(yieldValue)}</span>
             <button
@@ -94,7 +96,7 @@ export function ConsolidatedMetricV1({
               <Info className="w-3 h-3" />
             </button>
           </div>
-          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-1">Daily Yield</span>
+          <span className="text-xs text-gray-500 uppercase tracking-wider font-medium mt-0.5">Daily Yield</span>
         </div>
       </div>
 

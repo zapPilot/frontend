@@ -1,5 +1,6 @@
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
-import { ConsolidatedMetric } from "./ConsolidatedMetric";
+
+import { ConsolidatedMetricV1 as ConsolidatedMetric } from "../consolidated/ConsolidatedMetricV1";
 import type { PerformanceMetricsProps } from "./types";
 
 export function MetricsOverlay({
@@ -47,8 +48,6 @@ export function MetricsOverlay({
             portfolioROI={portfolioROI}
             yieldSummaryData={yieldSummaryData}
             portfolioChangePercentage={portfolioChangePercentage}
-            variant="default"
-            showDetails={true}
           />
         </div>
       </div>

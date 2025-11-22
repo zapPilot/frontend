@@ -3,6 +3,7 @@ import { AlertCircle, Wallet } from "lucide-react";
 import { BalanceSkeleton } from "@/components/ui/LoadingSystem";
 import { useMetricState } from "@/hooks/useMetricState";
 import { formatCurrency } from "@/lib/formatters";
+
 import { MetricCard } from "./MetricCard";
 
 interface BalanceMetricProps {

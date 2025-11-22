@@ -1,11 +1,13 @@
 "use client";
 
+import { AnimatePresence,motion } from "framer-motion";
+import { ChevronDown,Clock, DollarSign, TrendingUp } from "lucide-react";
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, DollarSign, Clock, ChevronDown } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
+
 import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import type { PerformanceMetricsProps } from "./types";
 
 type ExpandedMetric = "roi" | "pnl" | "yield" | null;

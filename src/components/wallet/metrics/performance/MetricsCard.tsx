@@ -1,5 +1,6 @@
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
-import { ConsolidatedMetric } from "./ConsolidatedMetric";
+
+import { ConsolidatedMetricV1 as ConsolidatedMetric } from "../consolidated/ConsolidatedMetricV1";
 import type { PerformanceMetricsProps } from "./types";
 
 export function MetricsCard({
@@ -34,8 +35,6 @@ export function MetricsCard({
         portfolioROI={portfolioROI}
         yieldSummaryData={yieldSummaryData}
         portfolioChangePercentage={portfolioChangePercentage}
-        variant="large"
-        showDetails={true}
       />
 
       <div className="mt-6 pt-6 border-t border-gray-700/50">

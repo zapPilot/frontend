@@ -6,7 +6,9 @@
  */
 
 import React from "react";
+
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
+
 import type { CompactMetricProps } from "./types";
 
 export function CompactMetricDisplay({

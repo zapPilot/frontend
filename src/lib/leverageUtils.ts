@@ -89,7 +89,7 @@ export function calculateLeverageRatio(
 ): number {
   // Validate inputs
   if (totalAssets < 0 || totalDebt < 0) {
-    console.warn('Invalid input: negative values', { totalAssets, totalDebt });
+    // Invalid input: negative values
     return 1.0;
   }
 
@@ -103,7 +103,7 @@ export function calculateLeverageRatio(
 
   // Edge case: debt exceeds assets (underwater position)
   if (netEquity <= 0) {
-    console.warn('Critical: debt exceeds assets', { totalAssets, totalDebt });
+    // Critical: debt exceeds assets
     return Infinity;
   }
 

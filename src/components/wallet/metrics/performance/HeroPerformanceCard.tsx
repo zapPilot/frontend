@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, DollarSign, Clock } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
-import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { AnimatePresence,motion } from "framer-motion";
+import { Clock,DollarSign, TrendingUp } from "lucide-react";
+import React, { useEffect,useState } from "react";
+
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
+import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import type { HeroPerformanceCardProps, PerformanceMetricType } from "./types";
 
 /**
@@ -40,11 +42,6 @@ export function HeroPerformanceCard({
   const [activeMetric, setActiveMetric] = useState<PerformanceMetricType>(defaultMetric);
   const [direction, setDirection] = useState(0);
 
-  // Handle USER_NOT_FOUND error
-  if (errorMessage === "USER_NOT_FOUND") {
-    return null;
-  }
-
   // Load saved preference from localStorage
   useEffect(() => {
     const saved = localStorage.getItem("preferred_hero_metric");
@@ -52,6 +49,11 @@ export function HeroPerformanceCard({
       setActiveMetric(saved);
     }
   }, []);
+
+  // Handle USER_NOT_FOUND error
+  if (errorMessage === "USER_NOT_FOUND") {
+    return null;
+  }
 
   // Extract metric data
   const estimatedYearlyROI = portfolioROI?.recommended_yearly_roi

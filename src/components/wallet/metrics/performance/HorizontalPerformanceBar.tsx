@@ -1,10 +1,12 @@
 "use client";
 
+import { Clock,DollarSign, TrendingUp } from "lucide-react";
 import React from "react";
-import { TrendingUp, DollarSign, Clock } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
+
 import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import { CompactMetricDisplay } from "./CompactMetricDisplay";
 import type { PerformanceMetricsProps } from "./types";
 

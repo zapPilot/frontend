@@ -1,6 +1,7 @@
 import { AlertCircle, Brain } from "lucide-react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
+
 import { MetricCard } from "./MetricCard";
 
 interface MarketSentimentMetricProps {

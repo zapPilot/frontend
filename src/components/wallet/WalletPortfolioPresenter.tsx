@@ -99,9 +99,6 @@ export function WalletPortfolioPresenter({
             <WalletActions
               onZapInClick={vm.onZapInClick}
               onZapOutClick={vm.onZapOutClick}
-              onOptimizeClick={
-                optimizeHandler ? handleOptimizeClick : undefined
-              }
               disabled={vm.isVisitorMode}
             />
           </BaseCard>

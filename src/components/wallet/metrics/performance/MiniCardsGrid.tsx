@@ -1,11 +1,13 @@
 "use client";
 
-import React from "react";
 import * as Tooltip from "@radix-ui/react-tooltip";
-import { TrendingUp, DollarSign, Clock, Info } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
+import { Clock, DollarSign, Info,TrendingUp } from "lucide-react";
+import React from "react";
+
 import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import type { PerformanceMetricsProps } from "./types";
 
 /**
@@ -57,7 +59,7 @@ export function MiniCardsGrid({
   const outliersRemoved = selectedYieldWindow?.window.statistics.outliers_removed ?? 0;
 
   // Determine yield badge
-  const getYieldBadge = () => {
+  const getYieldBadge = (): string | undefined => {
     if (!yieldSummaryData || daysWithData === 0) return undefined;
     if (daysWithData < 7) return "preliminary";
     if (daysWithData < 14) return "improving";

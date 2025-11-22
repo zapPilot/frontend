@@ -7,14 +7,11 @@ import { GradientButton } from "../ui";
 interface WalletActionsProps {
   onZapInClick?: (() => void) | undefined;
   onZapOutClick?: (() => void) | undefined;
-  onOptimizeClick?: (() => void) | undefined;
   disabled?: boolean;
 }
 
 export const WalletActions = React.memo<WalletActionsProps>(
-  ({ onZapInClick, onZapOutClick, onOptimizeClick, disabled = false }) => {
-    const isOptimizeEnabled = !disabled && !!onOptimizeClick;
-
+  ({ onZapInClick, onZapOutClick, disabled = false }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <GradientButton

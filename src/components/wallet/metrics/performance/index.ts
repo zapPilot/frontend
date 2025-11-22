@@ -1,5 +1,4 @@
 // Legacy variations
-export * from "./ConsolidatedMetric";
 export * from "./DashboardPerformancePanel";
 export * from "./HeroPerformanceCard";
 export * from "./HorizontalPerformanceBar";
@@ -8,10 +7,9 @@ export * from "./MetricsOverlay";
 export * from "./MetricsSplit";
 
 // New compact variations (recommended)
-export * from "./InlineMetricsCard";
-export * from "./StackedGridCard";
 export * from "./AccordionCard";
+export * from "./InlineMetricsCard";
 export * from "./MiniCardsGrid";
-
+export * from "./StackedGridCard";
 export * from "./types";
 

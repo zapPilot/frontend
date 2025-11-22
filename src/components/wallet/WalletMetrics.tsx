@@ -13,23 +13,18 @@ import type {
 import { PortfolioState } from "../../types/portfolioState";
 import { BalanceMetric, PnLMetric, ROIMetric, YieldMetric } from "./metrics";
 import { ConsolidatedMetricV1 } from "./metrics/consolidated/ConsolidatedMetricV1";
-import { ConsolidatedMetricV2 } from "./metrics/consolidated/ConsolidatedMetricV2";
-import { ConsolidatedMetricV3 } from "./metrics/consolidated/ConsolidatedMetricV3";
-import { ConsolidatedMetricV4 } from "./metrics/consolidated/ConsolidatedMetricV4";
-import { ConsolidatedMetricV5 } from "./metrics/consolidated/ConsolidatedMetricV5";
-import { ConsolidatedMetricV6 } from "./metrics/consolidated/ConsolidatedMetricV6";
 import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
 import {
+  AccordionCard,
   DashboardPerformancePanel,
   HeroPerformanceCard,
   HorizontalPerformanceBar,
+  InlineMetricsCard,
   MetricsCard,
   MetricsOverlay,
   MetricsSplit,
-  InlineMetricsCard,
-  StackedGridCard,
-  AccordionCard,
   MiniCardsGrid,
+  StackedGridCard,
 } from "./metrics/performance";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
@@ -61,7 +56,7 @@ interface WalletMetricsProps {
  * @see PnLMetric - Estimated yearly profit/loss
  * @see YieldMetric - Average daily yield with confidence indicators
  */
-type MetricVariation = "original" | "horizontal" | "hero" | "dashboard" | "card" | "split" | "overlay" | "consolidated-v1" | "consolidated-v2" | "consolidated-v3" | "consolidated-v4" | "consolidated-v5" | "consolidated-v6" | "inline" | "stacked" | "accordion" | "minicards";
+type MetricVariation = "original" | "horizontal" | "hero" | "dashboard" | "card" | "split" | "overlay" | "consolidated-v1" | "inline" | "stacked" | "accordion" | "minicards";
 
 export const WalletMetrics = React.memo<WalletMetricsProps>(
   ({
@@ -85,7 +80,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
     // Load saved variation from localStorage
     useEffect(() => {
       const saved = localStorage.getItem("wallet_metrics_variation");
-      const validVariations: MetricVariation[] = ["original", "horizontal", "hero", "dashboard", "card", "split", "overlay", "consolidated-v1", "consolidated-v2", "consolidated-v3", "consolidated-v4", "consolidated-v5", "consolidated-v6", "inline", "stacked", "accordion", "minicards"];
+      const validVariations: MetricVariation[] = ["original", "horizontal", "hero", "dashboard", "card", "split", "overlay", "consolidated-v1", "inline", "stacked", "accordion", "minicards"];
       if (saved && validVariations.includes(saved as MetricVariation)) {
         setVariation(saved as MetricVariation);
       }
@@ -140,7 +135,7 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
               🔧 Development: Metric Variations
             </p>
             <div className="flex flex-wrap gap-2">
-              {(["original", "inline", "stacked", "accordion", "minicards", "horizontal", "hero", "dashboard", "card", "split", "overlay", "consolidated-v1", "consolidated-v2", "consolidated-v3", "consolidated-v4", "consolidated-v5", "consolidated-v6"] as const).map((v) => (
+              {(["original", "inline", "stacked", "accordion", "minicards", "horizontal", "hero", "dashboard", "card", "split", "overlay", "consolidated-v1"] as const).map((v) => (
                 <button
                   key={v}
                   onClick={() => handleVariationChange(v)}
@@ -162,11 +157,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
                   {v === "split" && "Split"}
                   {v === "overlay" && "Overlay"}
                   {v === "consolidated-v1" && "Consolidated V1"}
-                  {v === "consolidated-v2" && "Consolidated V2"}
-                  {v === "consolidated-v3" && "Consolidated V3"}
-                  {v === "consolidated-v4" && "⭐ V4: Gradient Hero"}
-                  {v === "consolidated-v5" && "⭐ V5: Card-in-Card"}
-                  {v === "consolidated-v6" && "⭐ V6: Split+Badges"}
                 </button>
               ))}
             </div>
@@ -374,141 +364,6 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
              </div>
              <div>
                 <ConsolidatedMetricV1 {...performanceProps} />
-             </div>
-             <div>
-                <MarketSentimentMetric
-                  sentiment={sentimentData ?? null}
-                  isLoading={isSentimentLoading}
-                  error={sentimentError}
-                />
-             </div>
-          </div>
-        )}
-
-        {variation === "consolidated-v2" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-             <div>
-                <BalanceMetric
-                  totalNetUsd={landingPageData?.total_net_usd ?? null}
-                  isLoading={isLandingLoading}
-                  shouldShowLoading={shouldShowLoading}
-                  balanceHidden={resolvedHidden}
-                  shouldShowError={shouldShowError}
-                  errorMessage={portfolioState.errorMessage ?? null}
-                  shouldShowNoDataMessage={shouldShowNoDataMessage}
-                  getDisplayTotalValue={getDisplayTotalValue}
-                />
-             </div>
-             <div>
-                <ConsolidatedMetricV2 {...performanceProps} />
-             </div>
-             <div>
-                <MarketSentimentMetric
-                  sentiment={sentimentData ?? null}
-                  isLoading={isSentimentLoading}
-                  error={sentimentError}
-                />
-             </div>
-          </div>
-        )}
-
-        {variation === "consolidated-v3" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-             <div>
-                <BalanceMetric
-                  totalNetUsd={landingPageData?.total_net_usd ?? null}
-                  isLoading={isLandingLoading}
-                  shouldShowLoading={shouldShowLoading}
-                  balanceHidden={resolvedHidden}
-                  shouldShowError={shouldShowError}
-                  errorMessage={portfolioState.errorMessage ?? null}
-                  shouldShowNoDataMessage={shouldShowNoDataMessage}
-                  getDisplayTotalValue={getDisplayTotalValue}
-                />
-             </div>
-             <div>
-                <ConsolidatedMetricV3 {...performanceProps} />
-             </div>
-             <div>
-                <MarketSentimentMetric
-                  sentiment={sentimentData ?? null}
-                  isLoading={isSentimentLoading}
-                  error={sentimentError}
-                />
-             </div>
-          </div>
-        )}
-
-        {variation === "consolidated-v4" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-             <div>
-                <BalanceMetric
-                  totalNetUsd={landingPageData?.total_net_usd ?? null}
-                  isLoading={isLandingLoading}
-                  shouldShowLoading={shouldShowLoading}
-                  balanceHidden={resolvedHidden}
-                  shouldShowError={shouldShowError}
-                  errorMessage={portfolioState.errorMessage ?? null}
-                  shouldShowNoDataMessage={shouldShowNoDataMessage}
-                  getDisplayTotalValue={getDisplayTotalValue}
-                />
-             </div>
-             <div>
-                <ConsolidatedMetricV4 {...performanceProps} />
-             </div>
-             <div>
-                <MarketSentimentMetric
-                  sentiment={sentimentData ?? null}
-                  isLoading={isSentimentLoading}
-                  error={sentimentError}
-                />
-             </div>
-          </div>
-        )}
-
-        {variation === "consolidated-v5" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-             <div>
-                <BalanceMetric
-                  totalNetUsd={landingPageData?.total_net_usd ?? null}
-                  isLoading={isLandingLoading}
-                  shouldShowLoading={shouldShowLoading}
-                  balanceHidden={resolvedHidden}
-                  shouldShowError={shouldShowError}
-                  errorMessage={portfolioState.errorMessage ?? null}
-                  shouldShowNoDataMessage={shouldShowNoDataMessage}
-                  getDisplayTotalValue={getDisplayTotalValue}
-                />
-             </div>
-             <div>
-                <ConsolidatedMetricV5 {...performanceProps} />
-             </div>
-             <div>
-                <MarketSentimentMetric
-                  sentiment={sentimentData ?? null}
-                  isLoading={isSentimentLoading}
-                  error={sentimentError}
-                />
-             </div>
-          </div>
-        )}
-
-        {variation === "consolidated-v6" && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-             <div>
-                <BalanceMetric
-                  totalNetUsd={landingPageData?.total_net_usd ?? null}
-                  isLoading={isLandingLoading}
-                  shouldShowLoading={shouldShowLoading}
-                  balanceHidden={resolvedHidden}
-                  shouldShowError={shouldShowError}
-                  errorMessage={portfolioState.errorMessage ?? null}
-                  shouldShowNoDataMessage={shouldShowNoDataMessage}
-                  getDisplayTotalValue={getDisplayTotalValue}
-                />
-             </div>
-             <div>
-                <ConsolidatedMetricV6 {...performanceProps} />
              </div>
              <div>
                 <MarketSentimentMetric

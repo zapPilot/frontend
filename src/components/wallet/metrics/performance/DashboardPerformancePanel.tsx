@@ -1,11 +1,13 @@
 "use client";
 
+import { Activity,Clock, DollarSign, TrendingUp } from "lucide-react";
 import React from "react";
-import { TrendingUp, DollarSign, Clock, Activity } from "lucide-react";
-import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import { getChangeColorClasses } from "@/lib/color-utils";
-import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+
 import { WalletMetricsSkeleton } from "@/components/ui/LoadingSystem";
+import { selectBestYieldWindow } from "@/components/wallet/tooltips";
+import { getChangeColorClasses } from "@/lib/color-utils";
+import { formatCurrency, formatPercentage } from "@/lib/formatters";
+
 import type { DashboardPerformancePanelProps } from "./types";
 
 /**
