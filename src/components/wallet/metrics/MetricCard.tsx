@@ -3,7 +3,7 @@ import React from "react";
 
 interface MetricCardProps {
   icon?: LucideIcon;
-  iconClassName?: string;
+  iconClassName?: string | undefined;
   children: React.ReactNode;
   className?: string;
   isLoading?: boolean;

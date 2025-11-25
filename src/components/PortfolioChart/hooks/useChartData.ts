@@ -470,13 +470,7 @@ export function useChartData(
     (overrides?.dailyYieldData?.length ?? 0) > 0;
 
   // UNIFIED DASHBOARD FETCH - Replaces 6 separate API calls
-  const dashboardQuery = usePortfolioDashboard(userId, {
-    trend_days: selectedDays,
-    risk_days: selectedDays,
-    drawdown_days: selectedDays,
-    allocation_days: selectedDays,
-    rolling_days: selectedDays,
-  });
+  const dashboardQuery = usePortfolioDashboard(userId);
 
   const { dashboard } = dashboardQuery;
   const isDashboardLoading = dashboardQuery.isLoading;

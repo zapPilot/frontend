@@ -49,29 +49,16 @@ vi.mock("../../src/components/wallet/WalletMetrics", () => ({
 }));
 
 vi.mock("../../src/components/wallet/WalletActions", () => ({
-  WalletActions: vi.fn(
-    ({ onZapInClick, onZapOutClick, onOptimizeClick, disabled }) => (
-      <div data-testid="wallet-actions">
-        <button data-testid="zap-in" onClick={onZapInClick} disabled={disabled}>
-          Zap In
-        </button>
-        <button
-          data-testid="zap-out"
-          onClick={onZapOutClick}
-          disabled={disabled}
-        >
-          Zap Out
-        </button>
-        <button
-          data-testid="optimize"
-          onClick={onOptimizeClick}
-          disabled={disabled}
-        >
-          Optimize
-        </button>
-      </div>
-    )
-  ),
+  WalletActions: vi.fn(({ onZapInClick, onZapOutClick, disabled }) => (
+    <div data-testid="wallet-actions">
+      <button data-testid="zap-in" onClick={onZapInClick} disabled={disabled}>
+        Zap In
+      </button>
+      <button data-testid="zap-out" onClick={onZapOutClick} disabled={disabled}>
+        Zap Out
+      </button>
+    </div>
+  )),
 }));
 
 vi.mock("../../src/components/PortfolioOverview", () => ({
@@ -148,7 +135,6 @@ const createViewModel = (
   toggleBalanceVisibility: vi.fn(),
   expandedCategory: null,
   toggleCategoryExpansion: vi.fn(),
-  onOptimizeClick: vi.fn(),
   onZapInClick: vi.fn(),
   onZapOutClick: vi.fn(),
   onCategoryClick: vi.fn(),
@@ -185,14 +171,12 @@ describe("WalletPortfolioPresenter", () => {
     fireEvent.click(screen.getByTestId("open-wallet-manager"));
     fireEvent.click(screen.getByTestId("zap-in"));
     fireEvent.click(screen.getByTestId("zap-out"));
-    fireEvent.click(screen.getByTestId("optimize"));
     fireEvent.click(screen.getByTestId("overview-retry"));
     fireEvent.click(screen.getByTestId("overview-category"));
 
     expect(viewModel.openWalletManager).toHaveBeenCalledTimes(1);
     expect(viewModel.onZapInClick).toHaveBeenCalledTimes(1);
     expect(viewModel.onZapOutClick).toHaveBeenCalledTimes(1);
-    expect(viewModel.onOptimizeClick).toHaveBeenCalledTimes(1);
     expect(viewModel.onRetry).toHaveBeenCalledTimes(1);
     expect(viewModel.toggleCategoryExpansion).toHaveBeenCalledWith("btc");
   });
@@ -214,6 +198,5 @@ describe("WalletPortfolioPresenter", () => {
 
     expect(screen.getByTestId("zap-in")).toBeDisabled();
     expect(screen.getByTestId("zap-out")).toBeDisabled();
-    expect(screen.getByTestId("optimize")).toBeDisabled();
   });
 });

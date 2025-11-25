@@ -65,8 +65,7 @@ export function getAnalyticsMetrics(
     undefined;
   const volatilityPct =
     riskData.summary_metrics?.annualized_volatility_percentage ?? undefined;
-  const drawdownPct =
-    riskData.summary_metrics?.max_drawdown_pct ?? undefined;
+  const drawdownPct = riskData.summary_metrics?.max_drawdown_pct ?? undefined;
   return [
     createPlaceholderMetric(
       "Total Return",
@@ -112,9 +111,7 @@ function createPlaceholderMetric(
 
 function buildRiskMetric(volatilityPct?: number | null): AnalyticsMetric {
   const normalized =
-    typeof volatilityPct === "number" && volatilityPct !== null
-      ? volatilityPct
-      : undefined;
+    typeof volatilityPct === "number" ? volatilityPct : undefined;
   const derivedTrend =
     normalized !== undefined ? (normalized > 50 ? "down" : "up") : "neutral";
   const derivedChange =
@@ -131,10 +128,7 @@ function buildRiskMetric(volatilityPct?: number | null): AnalyticsMetric {
 }
 
 function buildSharpeMetric(sharpeRatio?: number | null): AnalyticsMetric {
-  const normalized =
-    typeof sharpeRatio === "number" && sharpeRatio !== null
-      ? sharpeRatio
-      : undefined;
+  const normalized = typeof sharpeRatio === "number" ? sharpeRatio : undefined;
   const derivedTrend =
     normalized !== undefined ? (normalized > 1.5 ? "up" : "down") : "neutral";
   const derivedChange =
@@ -151,10 +145,7 @@ function buildSharpeMetric(sharpeRatio?: number | null): AnalyticsMetric {
 }
 
 function buildDrawdownMetric(drawdownPct?: number | null): AnalyticsMetric {
-  const normalized =
-    typeof drawdownPct === "number" && drawdownPct !== null
-      ? drawdownPct
-      : undefined;
+  const normalized = typeof drawdownPct === "number" ? drawdownPct : undefined;
   const formattedValue =
     normalized !== undefined ? formatDrawdown(normalized) : "N/A";
   const change = normalized !== undefined ? Math.abs(normalized) * 0.1 : 0;
@@ -171,9 +162,7 @@ function buildDrawdownMetric(drawdownPct?: number | null): AnalyticsMetric {
 
 function buildVolatilityMetric(volatilityPct?: number | null): AnalyticsMetric {
   const normalized =
-    typeof volatilityPct === "number" && volatilityPct !== null
-      ? volatilityPct
-      : undefined;
+    typeof volatilityPct === "number" ? volatilityPct : undefined;
   const trend =
     normalized !== undefined ? (normalized > 50 ? "down" : "up") : "neutral";
   const change =

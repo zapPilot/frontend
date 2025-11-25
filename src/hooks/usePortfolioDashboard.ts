@@ -19,7 +19,6 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import {
-  type DashboardParams,
   getPortfolioDashboard,
   type UnifiedDashboardResponse,
 } from "../services/analyticsService";
@@ -34,7 +33,6 @@ import {
  * - Graceful degradation for partial failures
  *
  * @param userId - User identifier (required)
- * @param params - Optional query parameters for customizing time windows
  * @returns React Query result with dashboard data, loading, and error states
  *
  * @example
@@ -43,13 +41,7 @@ import {
  * const { dashboard, isLoading, error } = usePortfolioDashboard(userId);
  *
  * // With custom time windows
- * const { dashboard } = usePortfolioDashboard(userId, {
- *   trend_days: 30,
- *   risk_days: 30,
- *   drawdown_days: 90,
- *   allocation_days: 40,
- *   rolling_days: 40
- * });
+ * const { dashboard } = usePortfolioDashboard(userId);
  *
  * // Extracting specific sections
  * if (dashboard) {
@@ -68,38 +60,15 @@ import {
  * ```
  */
 export function usePortfolioDashboard(
-  userId: string | undefined,
-  params: DashboardParams = {}
+  userId: string | undefined
 ): UseQueryResult<UnifiedDashboardResponse> & {
   dashboard: UnifiedDashboardResponse | undefined;
 } {
-  const {
-    trend_days = 30,
-    risk_days = 30,
-    drawdown_days = 90,
-    allocation_days = 40,
-    rolling_days = 40,
-  } = params;
-
   const queryResult = useQuery({
-    queryKey: [
-      "portfolio-dashboard",
-      userId,
-      trend_days,
-      risk_days,
-      drawdown_days,
-      allocation_days,
-      rolling_days,
-    ],
+    queryKey: ["portfolio-dashboard", userId],
     queryFn: () =>
       // Safe: enabled condition ensures userId is non-null
-      getPortfolioDashboard(userId!, {
-        trend_days,
-        risk_days,
-        drawdown_days,
-        allocation_days,
-        rolling_days,
-      }),
+      getPortfolioDashboard(userId!),
     enabled: !!userId,
     // Cache configuration matching backend cache strategy
     staleTime: 2 * 60 * 1000, // 2 minutes (matches backend HTTP cache)

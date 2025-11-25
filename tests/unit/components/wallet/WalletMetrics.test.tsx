@@ -20,6 +20,11 @@ vi.mock("lucide-react", () => ({
   )),
   Info: vi.fn(() => <span data-testid="info-icon">Info</span>),
   Clock: vi.fn(() => <span data-testid="clock-icon">Clock</span>),
+  Wallet: vi.fn(() => <span data-testid="wallet-icon">Wallet</span>),
+  DollarSign: vi.fn(() => (
+    <span data-testid="dollar-sign-icon">DollarSign</span>
+  )),
+  Percent: vi.fn(() => <span data-testid="percent-icon">Percent</span>),
 }));
 
 // Note: WalletMetrics uses BalanceLoading from UnifiedLoading; no spinner mock needed

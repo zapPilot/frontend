@@ -87,6 +87,18 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
       errorMessage: portfolioState.errorMessage,
     };
 
+    // Calculate pool details summary stats
+    const poolDetails = landingPageData?.pool_details ?? [];
+    const totalPositions = poolDetails.length;
+    const protocolsCount =
+      poolDetails.length > 0
+        ? new Set(poolDetails.map(p => p.protocol.toLowerCase())).size
+        : 0;
+    const chainsCount =
+      poolDetails.length > 0
+        ? new Set(poolDetails.map(p => p.chain.toLowerCase())).size
+        : 0;
+
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
@@ -99,6 +111,10 @@ export const WalletMetrics = React.memo<WalletMetricsProps>(
             errorMessage={portfolioState.errorMessage ?? null}
             shouldShowNoDataMessage={shouldShowNoDataMessage}
             getDisplayTotalValue={getDisplayTotalValue}
+            poolDetails={poolDetails}
+            totalPositions={totalPositions}
+            protocolsCount={protocolsCount}
+            chainsCount={chainsCount}
           />
         </div>
         <div>

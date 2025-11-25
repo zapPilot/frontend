@@ -76,7 +76,7 @@ export function useYieldSummaryData(userId: string | null | undefined) {
       queryKey: queryKeys.portfolio.yieldSummary(userId || ""),
       fetcher: async resolvedUserId => {
         try {
-          return await getYieldReturnsSummary(resolvedUserId, "7d,30d,90d");
+          return await getYieldReturnsSummary(resolvedUserId);
         } catch (error) {
           portfolioLogger.warn("Failed to fetch yield returns summary", {
             error: error instanceof Error ? error.message : String(error),

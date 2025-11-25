@@ -173,7 +173,7 @@ export interface LandingPageResponse {
 export const getLandingPagePortfolioData = async (
   userId: string
 ): Promise<LandingPageResponse> => {
-  const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
+  const endpoint = `/api/v2/portfolio/${userId}/landing`;
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
 };
 
@@ -199,7 +199,7 @@ export const getLandingPagePortfolioData = async (
 export const getPoolPerformance = async (
   userId: string
 ): Promise<PoolDetail[]> => {
-  const endpoint = `/api/v1/pools/performance/${userId}`;
+  const endpoint = `/api/v2/pools/${userId}/performance`;
   return await httpUtils.analyticsEngine.get<PoolDetail[]>(endpoint);
 };
 
@@ -210,23 +210,17 @@ export const getPoolPerformance = async (
  * providing more accurate average daily yield calculations for DeFi portfolios.
  *
  * @param userId - User wallet address
- * @param days - Number of days to analyze (default: 30)
  * @returns Yield summary with outlier-filtered averages and detection statistics
  *
  * @example
- * const summary = await getYieldReturnsSummary('0x123...', 30);
+ * const summary = await getYieldReturnsSummary('0x123...');
  * console.log(`Avg: $${summary.average_daily_yield_usd}`);
  * console.log(`Outliers removed: ${summary.statistics.outliers_removed}`);
  */
 export const getYieldReturnsSummary = async (
-  userId: string,
-  windows = "7d,30d,90d"
+  userId: string
 ): Promise<YieldReturnsSummaryResponse> => {
-  const params = new URLSearchParams({
-    windows,
-    outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
-  });
-  const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;
+  const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
   return await httpUtils.analyticsEngine.get<YieldReturnsSummaryResponse>(
     endpoint
   );
@@ -241,7 +235,7 @@ export const getYieldReturnsSummary = async (
 export const getRiskSummary = async (
   userId: string
 ): Promise<ActualRiskSummaryResponse> => {
-  const endpoint = `/api/v1/risk/summary/${userId}`;
+  const endpoint = `/api/v2/analytics/${userId}/risk/summary`;
   return await httpUtils.analyticsEngine.get<ActualRiskSummaryResponse>(
     endpoint
   );
@@ -576,27 +570,11 @@ export interface DashboardParams {
  * ```
  */
 export const getPortfolioDashboard = async (
-  userId: string,
-  params: DashboardParams = {}
+  userId: string
 ): Promise<UnifiedDashboardResponse> => {
-  const {
-    trend_days = 30,
-    risk_days = 30,
-    drawdown_days = 90,
-    allocation_days = 40,
-    rolling_days = 40,
-  } = params;
-
-  const queryParams = new URLSearchParams({
-    trend_days: trend_days.toString(),
-    risk_days: risk_days.toString(),
-    drawdown_days: drawdown_days.toString(),
-    allocation_days: allocation_days.toString(),
-    rolling_days: rolling_days.toString(),
-  });
-
+  const endpoint = `/api/v2/analytics/${userId}/dashboard`;
   return await httpUtils.analyticsEngine.get<UnifiedDashboardResponse>(
-    `/api/v1/dashboard/portfolio-analytics/${userId}?${queryParams}`
+    endpoint
   );
 };
 
@@ -668,7 +646,7 @@ export const getDailyYieldReturns = async (
   userId: string,
   days = 30
 ): Promise<DailyYieldReturnsResponse> => {
-  const endpoint = `/api/v1/yield/returns/daily/${userId}?days=${days}`;
+  const endpoint = `/api/v2/analytics/${userId}/yield/daily?days=${days}`;
   return await httpUtils.analyticsEngine.get<DailyYieldReturnsResponse>(
     endpoint
   );

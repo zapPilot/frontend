@@ -285,7 +285,7 @@ describe("analyticsService", () => {
         const result = await getLandingPagePortfolioData(testUserId);
 
         expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-          `/api/v1/landing-page/portfolio/${testUserId}`
+          `/api/v2/portfolio/${testUserId}/landing`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -559,11 +559,11 @@ describe("analyticsService", () => {
       ];
 
       analyticsEngineGetSpy.mockResolvedValue(mockPools);
-
-      const result = await getPoolPerformance("user-analytics");
+      const testUserId = "user-analytics";
+      const result = await getPoolPerformance(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        "/api/v1/pools/performance/user-analytics"
+        `/api/v2/pools/${testUserId}/performance`
       );
       expect(result).toEqual(mockPools);
       expect(result[0]?.protocol_name).toBe("Aave V3");
@@ -624,7 +624,7 @@ describe("analyticsService", () => {
         windows: {},
       });
 
-      await getYieldReturnsSummary(testUserId, "14d,60d");
+      await getYieldReturnsSummary(testUserId);
 
       const customCallArg = (analyticsEngineGetSpy.mock.calls[0] ?? [
         "",
@@ -740,7 +740,7 @@ describe("analyticsService", () => {
         const result = await getRiskSummary(testUserId);
 
         expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-          `/api/v1/risk/summary/${testUserId}`
+          `/api/v2/analytics/${testUserId}/risk/summary`
         );
         expect(result).toEqual(mockResponse);
       });
