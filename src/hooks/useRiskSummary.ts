@@ -113,12 +113,24 @@ function validateResponse(
   const summaryMetrics = obj["summary_metrics"] as Record<string, unknown>;
 
   // Validate summary metrics (allow null for insufficient data)
-  if (
-    (typeof summaryMetrics["annualized_volatility_percentage"] !== "number" &&
-      summaryMetrics["annualized_volatility_percentage"] !== null) ||
-    (typeof summaryMetrics["max_drawdown_pct"] !== "number" &&
-      summaryMetrics["max_drawdown_pct"] !== null)
-  ) {
+  const hasVolatilityField =
+    typeof summaryMetrics["annualized_volatility_percentage"] === "number" ||
+    summaryMetrics["annualized_volatility_percentage"] === null;
+
+  const hasDrawdownPct =
+    typeof summaryMetrics["max_drawdown_pct"] === "number" ||
+    summaryMetrics["max_drawdown_pct"] === null;
+
+  const hasDrawdownPercentageAlias =
+    typeof summaryMetrics["max_drawdown_percentage"] === "number" ||
+    summaryMetrics["max_drawdown_percentage"] === null;
+
+  if (!hasVolatilityField) {
+    return false;
+  }
+
+  // Accept either canonical max_drawdown_pct or alias max_drawdown_percentage
+  if (!hasDrawdownPct && !hasDrawdownPercentageAlias) {
     return false;
   }
 
@@ -132,6 +144,35 @@ function validateResponse(
   }
 
   return true;
+}
+
+/**
+ * Normalize backend response differences to a consistent shape for the UI.
+ */
+function normalizeRiskSummary(
+  response: ActualRiskSummaryResponse
+): ActualRiskSummaryResponse {
+  const drawdownFromSummary =
+    response.summary_metrics.max_drawdown_pct ??
+    response.summary_metrics.max_drawdown_percentage ??
+    null;
+
+  const drawdownData = response.risk_summary.drawdown;
+
+  // Some backends only send the alias; populate the canonical field for consumers.
+  const normalizedDrawdownPct =
+    drawdownFromSummary ??
+    drawdownData?.max_drawdown_pct ??
+    drawdownData?.max_drawdown_percentage ??
+    null;
+
+  return {
+    ...response,
+    summary_metrics: {
+      ...response.summary_metrics,
+      max_drawdown_pct: normalizedDrawdownPct,
+    },
+  };
 }
 
 export function useRiskSummary(userId: string): UseRiskSummaryResult {
@@ -161,9 +202,11 @@ export function useRiskSummary(userId: string): UseRiskSummaryResult {
           );
         }
 
+        const normalized = normalizeRiskSummary(response);
+
         // Only update state if request wasn't aborted
         if (!signal?.aborted) {
-          setData(response);
+          setData(normalized);
         }
       } catch (err) {
         // Only update error state if request wasn't aborted
