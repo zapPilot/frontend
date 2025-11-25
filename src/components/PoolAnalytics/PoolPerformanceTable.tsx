@@ -182,11 +182,6 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
     content: <span className="text-gray-300 font-medium">{snapshotCount}</span>,
   },
   {
-    key: "apr",
-    className: "py-4",
-    content: renderAprIndicator(pool),
-  },
-  {
     key: "value",
     className: "py-4 text-right",
     content: (
@@ -203,20 +198,7 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
         {formatPercentage(pool.contribution_to_portfolio, false, 1)}
       </span>
     ),
-  },
-  {
-    key: "status",
-    className: "py-4 text-center",
-    content: isUnderperforming(pool) ? (
-      <div className="flex items-center justify-center">
-        <AlertTriangle className="w-4 h-4 text-yellow-400" />
-      </div>
-    ) : (
-      <div className="flex items-center justify-center">
-        <div className="w-2 h-2 bg-green-400 rounded-full" />
-      </div>
-    ),
-  },
+  }
 ];
 
 const CARD_SECTIONS: {
@@ -650,17 +632,6 @@ const PoolPerformanceTableComponent = ({
                   </span>
                 </th>
                 <th
-                  className="text-left pb-3 cursor-pointer hover:text-purple-400 transition-colors"
-                  onClick={() => handleSort("apr")}
-                >
-                  <div className="flex items-center space-x-1">
-                    <span className="text-sm font-medium text-gray-300">
-                      APR
-                    </span>
-                    {getSortIcon("apr")}
-                  </div>
-                </th>
-                <th
                   className="text-right pb-3 cursor-pointer hover:text-purple-400 transition-colors"
                   onClick={() => handleSort("value")}
                 >
@@ -681,11 +652,6 @@ const PoolPerformanceTableComponent = ({
                     </span>
                     {getSortIcon("contribution")}
                   </div>
-                </th>
-                <th className="text-center pb-3">
-                  <span className="text-sm font-medium text-gray-300">
-                    Status
-                  </span>
                 </th>
               </tr>
             </thead>

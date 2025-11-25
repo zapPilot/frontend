@@ -19,7 +19,6 @@ import {
   getYieldReturnsSummary,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
-  type YieldReturnsSummaryResponse,
 } from "../../../src/services/analyticsService";
 import type { PeriodInfo } from "../../../src/types/portfolio";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
