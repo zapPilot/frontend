@@ -5,7 +5,7 @@
  * following DeFi industry standards.
  */
 
-export type LeverageHealthStatus = "safe" | "moderate" | "high" | "critical";
+type LeverageHealthStatus = "safe" | "moderate" | "high" | "critical";
 
 export interface LeverageMetrics {
   /** Leverage ratio (e.g., 1.5 means 1.5x leveraged) */

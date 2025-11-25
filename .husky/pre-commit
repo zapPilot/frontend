@@ -9,8 +9,8 @@ set -euo pipefail
 # - dup:all: Duplicate code detection (jscpd + jsinspect)
 # - test:safeall: Full test suite
 
-npx lint-staged
 npm run deadcode:check
+npx lint-staged
 npm run lint
 npm run type-check
 npm run dup:all

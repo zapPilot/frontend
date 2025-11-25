@@ -12,4 +12,3 @@ export { BalanceMetric } from "./BalanceMetric";
 export { MetricCardSkeleton } from "./MetricCardSkeleton";
 export { PnLMetric } from "./PnLMetric";
 export { ROIMetric } from "./ROIMetric";
-export { YieldMetric } from "./YieldMetric";

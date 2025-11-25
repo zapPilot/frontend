@@ -223,9 +223,8 @@ export const getYieldReturnsSummary = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
 
   // API returns single YieldWindowSummary, not wrapped in windows
-  const singleWindow = await httpUtils.analyticsEngine.get<YieldWindowSummary>(
-    endpoint
-  );
+  const singleWindow =
+    await httpUtils.analyticsEngine.get<YieldWindowSummary>(endpoint);
 
   // Transform to match expected format
   return {
@@ -532,17 +531,6 @@ export interface UnifiedDashboardResponse {
     success_rate: number;
     errors?: Record<string, string>;
   };
-}
-
-/**
- * Parameters for unified dashboard endpoint
- */
-export interface DashboardParams {
-  trend_days?: number;
-  risk_days?: number;
-  drawdown_days?: number;
-  allocation_days?: number;
-  rolling_days?: number;
 }
 
 /**

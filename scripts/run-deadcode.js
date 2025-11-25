@@ -41,9 +41,9 @@ const mode = MODES[modeKey];
 
 if (!mode) {
   console.error(
-    `[deadcode] Unknown mode "${modeKey}". Supported modes: ${Object.keys(MODES).join(
-      ", ",
-    )}`,
+    `[deadcode] Unknown mode "${modeKey}". Supported modes: ${Object.keys(
+      MODES
+    ).join(", ")}`
   );
   process.exit(1);
 }
@@ -68,7 +68,10 @@ const run = (command, args) => {
 };
 
 const knipStatus = run("knip", mode.knipArgs);
-const tsPruneStatus = run("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
+const tsPruneStatus = run("ts-prune", [
+  "-p",
+  "tsconfig.tsprune.json",
+  ...mode.tsPruneArgs,
+]);
 
 process.exit(knipStatus === 0 && tsPruneStatus === 0 ? 0 : 1);
-
