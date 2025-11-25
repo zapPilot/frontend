@@ -10,8 +10,8 @@ set -euo pipefail
 # - test:safeall: Full test suite
 
 npx lint-staged
+npm run deadcode:check
 npm run lint
 npm run type-check
-npm run deadcode:check
 npm run dup:all
 npm run test:safeall

@@ -221,9 +221,20 @@ export const getYieldReturnsSummary = async (
   userId: string
 ): Promise<YieldReturnsSummaryResponse> => {
   const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
-  return await httpUtils.analyticsEngine.get<YieldReturnsSummaryResponse>(
+
+  // API returns single YieldWindowSummary, not wrapped in windows
+  const singleWindow = await httpUtils.analyticsEngine.get<YieldWindowSummary>(
     endpoint
   );
+
+  // Transform to match expected format
+  return {
+    user_id: singleWindow.user_id,
+    windows: {
+      "30d": singleWindow, // Wrap single window response
+    },
+    recommended_period: "30d", // Since API returns 30-day window
+  };
 };
 
 /**

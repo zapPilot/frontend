@@ -16,9 +16,9 @@ import type { MetricsTooltipProps } from "./types";
 interface PoolDetailsTooltipProps extends MetricsTooltipProps {
   tooltipRef: React.RefObject<HTMLDivElement | null>;
   poolDetails: PoolDetail[];
-  totalPositions?: number;
-  protocolsCount?: number;
-  chainsCount?: number;
+  totalPositions?: number | undefined;
+  protocolsCount?: number | undefined;
+  chainsCount?: number | undefined;
 }
 
 /**

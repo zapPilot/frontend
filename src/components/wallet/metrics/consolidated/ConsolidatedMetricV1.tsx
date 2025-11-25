@@ -3,6 +3,7 @@ import React from "react";
 
 import { deriveRoiWindowSortScore, formatRoiWindowLabel } from "@/lib/roi";
 import { sortProtocolsByTodayYield } from "@/lib/sortProtocolsByTodayYield";
+import { createContextLogger } from "@/utils/logger";
 
 import {
   ROITooltip,
@@ -17,6 +18,10 @@ export function ConsolidatedMetricV1({
   portfolioROI,
   yieldSummaryData,
 }: PerformanceMetricsProps) {
+  const metricLogger = React.useMemo(
+    () => createContextLogger("ConsolidatedMetricV1"),
+    []
+  );
   const roiTooltip = useMetricsTooltip<HTMLButtonElement>();
   const yieldTooltip = useMetricsTooltip<HTMLButtonElement>();
 
@@ -43,7 +48,18 @@ export function ConsolidatedMetricV1({
   const selectedYieldWindow = yieldWindows
     ? selectBestYieldWindow(yieldWindows)
     : null;
-  const yieldValue = selectedYieldWindow?.window.average_daily_yield_usd ?? 0;
+  const yieldValue = selectedYieldWindow?.window.median_daily_yield_usd ?? 0;
+  const hasYieldData = selectedYieldWindow !== null;
+
+  // Debug logging for missing yield data
+  React.useEffect(() => {
+    if (!hasYieldData && yieldSummaryData !== undefined) {
+      metricLogger.debug("No valid yield window selected", {
+        windowsAvailable: yieldWindows ? Object.keys(yieldWindows) : [],
+        rawData: yieldSummaryData,
+      });
+    }
+  }, [hasYieldData, metricLogger, yieldSummaryData, yieldWindows]);
 
   // Yield Breakdown for Tooltip
   const sortedProtocolBreakdown = React.useMemo(() => {
@@ -96,7 +112,7 @@ export function ConsolidatedMetricV1({
         <div className="flex flex-col items-center">
           <div className="flex items-center gap-1.5 text-gray-300 font-medium text-base">
             <Percent className="w-4 h-4 text-purple-400" />
-            <span>{formatCurrency(yieldValue)}</span>
+            <span>{hasYieldData ? formatCurrency(yieldValue) : "N/A"}</span>
             <button
               ref={yieldTooltip.triggerRef}
               onClick={yieldTooltip.toggle}
@@ -144,7 +160,7 @@ export function ConsolidatedMetricV1({
           }
         />
       )}
-      {yieldTooltip.visible && selectedYieldWindow && (
+      {yieldTooltip.visible && (
         <YieldBreakdownTooltip
           tooltipRef={yieldTooltip.tooltipRef}
           position={yieldTooltip.position}
