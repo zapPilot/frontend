@@ -76,6 +76,9 @@ export function BalanceMetric({
   const labelClasses =
     "text-xs text-gray-500 uppercase tracking-wider font-medium";
 
+  const resolvedPoolDetails = poolDetails ?? [];
+  const hasPoolDetails = poolDetails !== undefined;
+
   // Loading state
   if (metricState.shouldRenderSkeleton) {
     return (
@@ -129,7 +132,7 @@ export function BalanceMetric({
       </div>
       <div className="flex items-center justify-center space-x-1.5">
         <p className={labelClasses}>Total Balance</p>
-        {poolDetails && poolDetails.length > 0 && (
+        {hasPoolDetails && (
           <div className="relative">
             <span
               ref={poolTooltip.triggerRef}
@@ -146,7 +149,7 @@ export function BalanceMetric({
               <PoolDetailsTooltip
                 tooltipRef={poolTooltip.tooltipRef}
                 position={poolTooltip.position}
-                poolDetails={poolDetails}
+                poolDetails={resolvedPoolDetails}
                 totalPositions={totalPositions}
                 protocolsCount={protocolsCount}
                 chainsCount={chainsCount}
