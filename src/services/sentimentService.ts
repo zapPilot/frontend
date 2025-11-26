@@ -128,7 +128,7 @@ function transformSentimentData(
 export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   return callSentimentApi(async () => {
     const response = await httpUtils.analyticsEngine.get<SentimentApiResponse>(
-      "/api/v1/market/sentiment"
+      "/api/v2/market/sentiment"
     );
 
     return transformSentimentData(response);

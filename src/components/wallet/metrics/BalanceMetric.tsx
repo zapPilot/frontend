@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/formatters";
 import type { PoolDetail } from "@/types/pool";
 
 import { PoolDetailsTooltip, useMetricsTooltip } from "../tooltips";
+import { NoDataMetricCard } from "./common/NoDataMetricCard";
 import { MetricCard } from "./MetricCard";
 
 interface BalanceMetricProps {
@@ -111,12 +112,12 @@ export function BalanceMetric({
   // Connected but no data
   if (shouldShowNoDataMessage) {
     return (
-      <MetricCard icon={Wallet} iconClassName="text-blue-400">
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="text-gray-400 text-lg">No data available</div>
-        </div>
-        <p className={labelClasses}>Total Balance</p>
-      </MetricCard>
+      <NoDataMetricCard
+        icon={Wallet}
+        iconClassName="text-blue-400"
+        label="Total Balance"
+        labelClassName={labelClasses}
+      />
     );
   }
 
