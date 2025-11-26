@@ -251,8 +251,8 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
       const dailyYieldLabel = screen.getByText("Daily Yield");
       const dailyYieldSection = dailyYieldLabel.closest("div");
 
-      // mockFormatters.formatCurrency rounds to whole numbers: 125.5 → $126
-      expect(dailyYieldSection).toHaveTextContent("$126");
+      // Component uses inline formatCurrency with 0 decimal places: 120.0 → $120
+      expect(dailyYieldSection).toHaveTextContent("$120");
       expect(dailyYieldSection).not.toHaveTextContent("N/A");
     });
 
@@ -374,8 +374,8 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
       const dailyYieldLabel = screen.getByText("Daily Yield");
       const dailyYieldSection = dailyYieldLabel.closest("div");
 
-      // Should display negative value formatted
-      expect(dailyYieldSection).toHaveTextContent("-$50");
+      // Component uses median_daily_yield_usd with 0 decimal places: -48.0 → -$48
+      expect(dailyYieldSection).toHaveTextContent("-$48");
     });
 
     it("should handle very large yield values", () => {

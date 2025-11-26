@@ -119,9 +119,49 @@ export function asPartialArray<T>(items: T[] | undefined): Partial<T>[] {
   return (items ?? []) as Partial<T>[];
 }
 
+/**
+ * Safely extracts property from object with fallback.
+ * Handles null, undefined objects and missing properties.
+ *
+ * @param obj - Object to extract from
+ * @param key - Property key to extract
+ * @param fallback - Default value if extraction fails
+ * @returns Property value or fallback
+ *
+ * @example
+ * getProp({ name: "John" }, "name", "") // "John"
+ * getProp({}, "missing", "default") // "default"
+ * getProp(null, "key", 0) // 0
+ */
+export function getProp<T>(obj: unknown, key: string, fallback: T): T {
+  if (obj !== null && typeof obj === "object" && !Array.isArray(obj)) {
+    const value = (obj as Record<string, unknown>)[key];
+    return value !== undefined ? (value as T) : fallback;
+  }
+  return fallback;
+}
+
 // =============================================================================
 // NUMERIC RANGE VALIDATORS
 // =============================================================================
+
+/**
+ * Clamps a number between minimum and maximum values.
+ * Ensures the result is always within the specified range.
+ *
+ * @param value - Value to clamp
+ * @param min - Minimum allowed value
+ * @param max - Maximum allowed value
+ * @returns Clamped value
+ *
+ * @example
+ * clampNumber(150, 0, 100) // 100
+ * clampNumber(-10, 0, 100) // 0
+ * clampNumber(50, 0, 100) // 50
+ */
+export function clampNumber(value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), max);
+}
 
 // =============================================================================
 // OPTIONAL TYPE CONVERTERS
@@ -214,6 +254,54 @@ export function safeHexishString(value: unknown): string | undefined {
 // =============================================================================
 
 /**
+ * Type guard: checks if value is a plain object (not array, null, or primitive).
+ *
+ * @param value - Value to check
+ * @returns True if value is a plain object
+ *
+ * @example
+ * isObject({}) // true
+ * isObject({ key: "value" }) // true
+ * isObject([]) // false
+ * isObject(null) // false
+ */
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Type guard: checks if value is a valid finite number.
+ *
+ * @param value - Value to check
+ * @returns True if value is a finite number
+ *
+ * @example
+ * isValidNumber(123) // true
+ * isValidNumber(NaN) // false
+ * isValidNumber(Infinity) // false
+ * isValidNumber("123") // false
+ */
+export function isValidNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+/**
+ * Type guard: checks if value is a non-empty string (after trimming).
+ *
+ * @param value - Value to check
+ * @returns True if value is a non-empty string
+ *
+ * @example
+ * isNonEmptyString("hello") // true
+ * isNonEmptyString("") // false
+ * isNonEmptyString("   ") // false
+ * isNonEmptyString(null) // false
+ */
+export function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+/**
  * Type guard: checks if value is an array.
  * Provides generic type parameter for element type narrowing.
  *
@@ -233,4 +321,20 @@ export function safeHexishString(value: unknown): string | undefined {
  */
 export function isArray<T>(value: unknown): value is T[] {
   return Array.isArray(value);
+}
+
+/**
+ * Type guard: checks if value is a valid Date object.
+ *
+ * @param value - Value to check
+ * @returns True if value is a valid Date
+ *
+ * @example
+ * isValidDate(new Date()) // true
+ * isValidDate(new Date("invalid")) // false
+ * isValidDate("2024-01-15") // false
+ * isValidDate(null) // false
+ */
+export function isValidDate(value: unknown): value is Date {
+  return value instanceof Date && !Number.isNaN(value.getTime());
 }
