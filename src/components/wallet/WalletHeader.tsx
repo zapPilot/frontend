@@ -1,13 +1,12 @@
 import {
-    Calendar,
-    Check,
-    Copy,
-    DollarSign,
-    Eye,
-    EyeOff,
-    Wallet,
+  Calendar,
+  Check,
+  DollarSign,
+  Eye,
+  EyeOff,
+  Wallet,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { GRADIENTS } from "../../constants/design-system";
 import { useBalanceVisibility } from "../../contexts/BalanceVisibilityContext";
@@ -37,12 +36,16 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
     const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
 
-    // Copy link functionality
-    const [copied, setCopied] = useState(false);
     const { showToast } = useToast();
 
     // Calendar connection functionality
-    const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+    const [isCalendarConnected, setIsCalendarConnected] = useState(() => {
+      // Check localStorage on mount
+      if (typeof window !== 'undefined') {
+        return localStorage.getItem("zap-pilot-calendar-connected") === "true";
+      }
+      return false;
+    });
     const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
     const [showCalendarModal, setShowCalendarModal] = useState(false);
 
@@ -53,6 +56,10 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
         setIsConnectingCalendar(false);
         setIsCalendarConnected(true);
         setShowCalendarModal(false);
+
+        // Persist connection state
+        localStorage.setItem("zap-pilot-calendar-connected", "true");
+
         showToast({
           title: "Calendar Connected",
           message: "Your Google Calendar has been successfully connected.",
@@ -61,26 +68,18 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
       }, 1500);
     };
 
-    const handleCopyLink = async () => {
-      if (!bundleUrl) return;
+    // Event listener for calendar modal open events from post-ZapIn prompt
+    useEffect(() => {
+      const handleOpenModal = () => {
+        if (!isCalendarConnected) {
+          setShowCalendarModal(true);
+        }
+      };
 
-      try {
-        await navigator.clipboard.writeText(bundleUrl);
-        setCopied(true);
-        showToast({
-          title: "Link copied!",
-          message: "Bundle link has been copied to clipboard",
-          type: "success",
-        });
-        setTimeout(() => setCopied(false), 2000);
-      } catch {
-        showToast({
-          title: "Copy failed",
-          message: "Could not copy link to clipboard",
-          type: "error",
-        });
-      }
-    };
+      window.addEventListener('open-calendar-modal', handleOpenModal);
+      return () => window.removeEventListener('open-calendar-modal', handleOpenModal);
+    }, [isCalendarConnected]);
+
     return (
       <>
         <CalendarConnectModal
@@ -118,40 +117,34 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
                   }
                 }}
                 disabled={isConnectingCalendar || isCalendarConnected}
-                className={`p-3 rounded-xl glass-morphism transition-all duration-300 cursor-pointer ${
+                className={`relative p-3 rounded-xl transition-all duration-300 cursor-pointer ${
                   isCalendarConnected
-                    ? "bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
-                    : "hover:bg-white/10"
+                    ? "bg-green-500/20 hover:bg-green-500/30 border border-green-500/50"
+                    : "bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-2 border-blue-500/50 shadow-lg shadow-blue-500/20 hover:scale-105 animate-pulse"
                 }`}
                 title={
                   isCalendarConnected
                     ? "Calendar Connected"
-                    : "Connect Google Calendar"
+                    : "Connect Google Calendar - Never miss opportunities!"
                 }
               >
+                {/* NEW badge - only when not connected */}
+                {!isCalendarConnected && !isConnectingCalendar && (
+                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full border border-white/20">
+                    NEW
+                  </span>
+                )}
+
                 {isConnectingCalendar ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : isCalendarConnected ? (
                   <Check className="w-5 h-5 text-green-400" />
                 ) : (
-                  <Calendar className="w-5 h-5 text-gray-300" />
+                  <Calendar className="w-5 h-5 text-blue-400" />
                 )}
               </button>
             )}
 
-            {bundleUrl && (
-              <button
-                onClick={() => void handleCopyLink()}
-                className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"
-                title="Copy bundle link"
-              >
-                {copied ? (
-                  <Check className="w-5 h-5 text-green-400" />
-                ) : (
-                  <Copy className="w-5 h-5 text-gray-300" />
-                )}
-              </button>
-            )}
             <button
               onClick={onWalletManagerClick}
               className="p-3 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-300 cursor-pointer"

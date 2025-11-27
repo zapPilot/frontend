@@ -3,7 +3,7 @@ import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/LoadingSystem";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-interface MarketSentimentMetricV3Props {
+interface MarketSentimentMetricModernProps {
   sentiment?: MarketSentimentData | null;
   isLoading?: boolean;
   error?: Error | null;
@@ -23,29 +23,36 @@ function getSentimentColor(status?: string | null): string {
 }
 
 /**
- * Variation 3: Creative Modern version with gradient accents (35-40% reduction).
+ * Modern market sentiment metric with gradient accents and styled quote container.
  *
- * Key changes from original:
- * - Modern padding: p-4 instead of p-6
- * - Moderate font reduction: text-xl/2xl for value
- * - LEFT gradient accent border
+ * Key features:
+ * - Compact padding: p-3 for reduced height
+ * - Moderate fonts: text-lg/xl for sentiment value
+ * - Left gradient accent border (color-coded by sentiment)
  * - Styled quote container with micro-background
  * - Badge-style sentiment label
+ * - Fixed height (h-[140px]) for consistent alignment
  *
  * @example
  * ```tsx
- * <MarketSentimentMetricV3 sentiment={sentimentData} />
+ * <MarketSentimentMetricModern sentiment={sentimentData} />
  * ```
  */
-export function MarketSentimentMetricV3({
+export function MarketSentimentMetricModern({
   sentiment,
   isLoading,
   error,
-}: MarketSentimentMetricV3Props) {
+}: MarketSentimentMetricModernProps) {
   const statusColor = getSentimentColor(sentiment?.status);
 
   // Modern card with left gradient accent
-  const ModernCard = ({ children, error: isError = false }: { children: React.ReactNode; error?: boolean }) => (
+  const ModernCard = ({
+    children,
+    error: isError = false,
+  }: {
+    children: React.ReactNode;
+    error?: boolean;
+  }) => (
     <div
       className={`relative ${
         isError
@@ -96,21 +103,29 @@ export function MarketSentimentMetricV3({
   return (
     <ModernCard>
       {/* Badge label */}
-      <div className={`px-2 py-0.5 rounded-full bg-${statusColor.replace('text-', '')}/10 border border-${statusColor.replace('text-', '')}/20 mb-0.5`}>
-        <span className={`text-[10px] ${statusColor} uppercase tracking-wider font-medium`}>
+      <div
+        className={`px-2 py-0.5 rounded-full bg-${statusColor.replace("text-", "")}/10 border border-${statusColor.replace("text-", "")}/20 mb-0.5`}
+      >
+        <span
+          className={`text-[10px] ${statusColor} uppercase tracking-wider font-medium`}
+        >
           Market Sentiment
         </span>
       </div>
 
       {/* Score and status */}
       <div className="flex items-end gap-1.5 mb-0.5">
-        <span className={`text-lg md:text-xl font-bold ${statusColor} tracking-tight`}>
+        <span
+          className={`text-lg md:text-xl font-bold ${statusColor} tracking-tight`}
+        >
           {sentiment?.value ?? "--"}
         </span>
         <span className="text-xs text-gray-400 mb-0.5">/100</span>
       </div>
 
-      <p className={`text-xs font-medium ${statusColor} mb-1.5 uppercase tracking-wide`}>
+      <p
+        className={`text-xs font-medium ${statusColor} mb-1.5 uppercase tracking-wide`}
+      >
         {sentiment?.status ?? "No data"}
       </p>
 

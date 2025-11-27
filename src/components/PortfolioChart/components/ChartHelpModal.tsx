@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useState } from "react";
 
+import { Z_INDEX } from "@/constants/design-system";
+
 import { ChartCloseIcon } from "./ChartCloseIcon";
 
 interface ChartHelpModalProps {
@@ -90,7 +92,7 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
           <>
             {/* Backdrop */}
             <motion.div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+              className={`fixed inset-0 bg-black/80 backdrop-blur-sm ${Z_INDEX.MODAL}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -99,7 +101,7 @@ export const ChartHelpModal = memo<ChartHelpModalProps>(({ chartType }) => {
 
             {/* Modal Panel */}
             <motion.div
-              className="fixed right-0 top-0 bottom-0 w-full sm:w-96 bg-gradient-to-b from-gray-900/95 to-gray-800/95 backdrop-blur-xl border-l border-gray-700/50 shadow-2xl z-50 overflow-y-auto"
+              className={`fixed right-0 top-0 bottom-0 w-full sm:w-96 bg-gradient-to-b from-gray-900/95 to-gray-800/95 backdrop-blur-xl border-l border-gray-700/50 shadow-2xl ${Z_INDEX.MODAL} overflow-y-auto`}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}

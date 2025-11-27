@@ -21,6 +21,12 @@ export interface Toast {
         url: string;
       }
     | undefined;
+  action?:
+    | {
+        label: string;
+        onClick: () => void;
+      }
+    | undefined;
   duration?: number;
 }
 
@@ -133,6 +139,19 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
                   <span className="break-all">{toast.link.text}</span>
                   <ExternalLink size={12} className="flex-shrink-0" />
                 </a>
+              )}
+              {/* Action button */}
+              {toast.action && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toast.action?.onClick();
+                    handleClose();
+                  }}
+                  className="mt-2 w-full px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition font-medium"
+                >
+                  {toast.action.label}
+                </button>
               )}
             </div>
           </div>

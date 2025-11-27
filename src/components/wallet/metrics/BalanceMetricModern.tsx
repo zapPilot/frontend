@@ -8,7 +8,7 @@ import type { PoolDetail } from "@/types/pool";
 import { PoolDetailsTooltip, useMetricsTooltip } from "../tooltips";
 import { NoDataMetricCard } from "./common/NoDataMetricCard";
 
-interface BalanceMetricV3Props {
+interface BalanceMetricModernProps {
   totalNetUsd?: number | null;
   isLoading?: boolean;
   shouldShowLoading?: boolean;
@@ -24,21 +24,22 @@ interface BalanceMetricV3Props {
 }
 
 /**
- * Variation 3: Creative Modern version with gradient accents (35-40% reduction).
+ * Modern balance metric with gradient accents and optimized vertical spacing.
  *
- * Key changes from original:
- * - Modern padding: p-4 instead of p-6
- * - Reduced fonts: text-xl/2xl instead of text-3xl/4xl
- * - LEFT gradient accent border (4px blue-to-purple)
+ * Key features:
+ * - Compact padding: p-3 for reduced height
+ * - Moderate fonts: text-lg/xl for readability
+ * - Left gradient accent border (blue-to-purple)
  * - Badge-style label at top
  * - Pill-style chips for pool stats
+ * - Fixed height (h-[140px]) for consistent alignment
  *
  * @example
  * ```tsx
- * <BalanceMetricV3 totalNetUsd={15000} />
+ * <BalanceMetricModern totalNetUsd={15000} />
  * ```
  */
-export function BalanceMetricV3({
+export function BalanceMetricModern({
   totalNetUsd,
   isLoading,
   shouldShowLoading,
@@ -51,7 +52,7 @@ export function BalanceMetricV3({
   totalPositions,
   protocolsCount,
   chainsCount,
-}: BalanceMetricV3Props) {
+}: BalanceMetricModernProps) {
   const metricState = useMetricState({
     isLoading,
     shouldShowLoading,
@@ -64,7 +65,13 @@ export function BalanceMetricV3({
   const hasPoolDetails = poolDetails !== undefined;
 
   // Modern card with left gradient accent
-  const ModernCard = ({ children, error = false }: { children: React.ReactNode; error?: boolean }) => (
+  const ModernCard = ({
+    children,
+    error = false,
+  }: {
+    children: React.ReactNode;
+    error?: boolean;
+  }) => (
     <div
       className={`relative ${
         error
@@ -98,7 +105,9 @@ export function BalanceMetricV3({
     return (
       <ModernCard>
         <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-2">
-          <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">Balance</span>
+          <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
+            Balance
+          </span>
         </div>
         <div className="h-8 flex items-center">
           <BalanceSkeleton size="default" />
@@ -112,7 +121,9 @@ export function BalanceMetricV3({
     return (
       <ModernCard error={true}>
         <div className="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 mb-2">
-          <span className="text-[10px] text-red-400 uppercase tracking-wider font-medium">Balance</span>
+          <span className="text-[10px] text-red-400 uppercase tracking-wider font-medium">
+            Balance
+          </span>
         </div>
         <div className="text-sm text-red-400 flex items-center space-x-1.5">
           <AlertCircle className="w-4 h-4" />
@@ -135,13 +146,17 @@ export function BalanceMetricV3({
   }
 
   // Modern display with badge label
-  const displayValue = getDisplayTotalValue ? getDisplayTotalValue() : totalNetUsd;
+  const displayValue = getDisplayTotalValue
+    ? getDisplayTotalValue()
+    : totalNetUsd;
 
   return (
     <ModernCard>
       {/* Badge label at top */}
       <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5 flex items-center gap-1">
-        <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">Balance</span>
+        <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
+          Balance
+        </span>
         {hasPoolDetails && (
           <div className="relative">
             <span
@@ -175,25 +190,28 @@ export function BalanceMetricV3({
       </div>
 
       {/* Pool stats as pill chips */}
-      {hasPoolDetails && ((totalPositions ?? 0) > 0 || (protocolsCount ?? 0) > 0 || (chainsCount ?? 0) > 0) && (
-        <div className="flex items-center gap-1 flex-wrap justify-center">
-          {(totalPositions ?? 0) > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-              {totalPositions} pos
-            </span>
-          )}
-          {(protocolsCount ?? 0) > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-              {protocolsCount} proto
-            </span>
-          )}
-          {(chainsCount ?? 0) > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-              {chainsCount} chains
-            </span>
-          )}
-        </div>
-      )}
+      {hasPoolDetails &&
+        ((totalPositions ?? 0) > 0 ||
+          (protocolsCount ?? 0) > 0 ||
+          (chainsCount ?? 0) > 0) && (
+          <div className="flex items-center gap-1 flex-wrap justify-center">
+            {(totalPositions ?? 0) > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
+                {totalPositions} pos
+              </span>
+            )}
+            {(protocolsCount ?? 0) > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
+                {protocolsCount} proto
+              </span>
+            )}
+            {(chainsCount ?? 0) > 0 && (
+              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
+                {chainsCount} chains
+              </span>
+            )}
+          </div>
+        )}
     </ModernCard>
   );
 }

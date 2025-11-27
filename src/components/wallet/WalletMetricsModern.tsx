@@ -11,12 +11,12 @@ import type {
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
+import { BalanceMetricModern } from "./metrics/BalanceMetricModern";
+import { ConsolidatedMetricModern } from "./metrics/consolidated/ConsolidatedMetricModern";
+import { MarketSentimentMetricModern } from "./metrics/MarketSentimentMetricModern";
 import { WelcomeNewUser } from "./WelcomeNewUser";
-import { BalanceMetricV3 } from "./metrics/BalanceMetricV3";
-import { ConsolidatedMetricV3Modern } from "./metrics/consolidated/ConsolidatedMetricV3Modern";
-import { MarketSentimentMetricV3 } from "./metrics/MarketSentimentMetricV3";
 
-interface WalletMetricsV3ModernProps {
+interface WalletMetricsModernProps {
   portfolioState: PortfolioState;
   balanceHidden?: boolean;
   portfolioChangePercentage: number;
@@ -54,7 +54,7 @@ interface WalletMetricsV3ModernProps {
  * />
  * ```
  */
-export const WalletMetricsV3Modern = React.memo<WalletMetricsV3ModernProps>(
+export const WalletMetricsModern = React.memo<WalletMetricsModernProps>(
   ({
     portfolioState,
     balanceHidden,
@@ -107,7 +107,7 @@ export const WalletMetricsV3Modern = React.memo<WalletMetricsV3ModernProps>(
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <BalanceMetricV3
+          <BalanceMetricModern
             totalNetUsd={landingPageData?.total_net_usd ?? null}
             isLoading={isLandingLoading}
             shouldShowLoading={shouldShowLoading}
@@ -123,10 +123,10 @@ export const WalletMetricsV3Modern = React.memo<WalletMetricsV3ModernProps>(
           />
         </div>
         <div>
-          <ConsolidatedMetricV3Modern {...performanceProps} />
+          <ConsolidatedMetricModern {...performanceProps} />
         </div>
         <div>
-          <MarketSentimentMetricV3
+          <MarketSentimentMetricModern
             sentiment={sentimentData ?? null}
             isLoading={isSentimentLoading}
             error={sentimentError}
@@ -137,4 +137,4 @@ export const WalletMetricsV3Modern = React.memo<WalletMetricsV3ModernProps>(
   }
 );
 
-WalletMetricsV3Modern.displayName = "WalletMetricsV3Modern";
+WalletMetricsModern.displayName = "WalletMetricsModern";
