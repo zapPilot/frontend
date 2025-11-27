@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
 
+import { MetricsSkeleton } from "@/components/ui/LoadingSystem";
+
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getAnalyticsMetrics } from "../../lib/portfolio-analytics";
 import { KeyMetricsGrid } from "./components";
@@ -37,11 +39,7 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
         </p>
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
-      {isLoading && (
-        <div className="text-center text-gray-400 py-8">
-          Loading analytics data...
-        </div>
-      )}
+      {isLoading && <MetricsSkeleton className="py-8" />}
       {error && (
         <div className="text-center py-8">
           <div className="text-red-400 font-semibold mb-2">

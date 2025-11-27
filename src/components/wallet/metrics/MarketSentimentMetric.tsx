@@ -1,5 +1,6 @@
 import { AlertCircle, Brain } from "lucide-react";
 
+import { Skeleton } from "@/components/ui/LoadingSystem";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import { MetricCard } from "./MetricCard";
@@ -34,8 +35,8 @@ export function MarketSentimentMetric({
   if (isLoading) {
     return (
       <MetricCard isLoading={true} icon={Brain}>
-        <div className="h-10 w-24 bg-gray-800 rounded mb-2" />
-        <div className="h-4 w-32 bg-gray-800 rounded" />
+        <Skeleton variant="text" width="96px" height="40px" className="mb-2" />
+        <Skeleton variant="text" width="128px" height="16px" />
       </MetricCard>
     );
   }

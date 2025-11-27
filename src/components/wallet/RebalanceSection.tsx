@@ -4,10 +4,13 @@ import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
 import type { PortfolioAllocationSplit } from "@/types/portfolio";
 
+import { RebalanceSectionSkeleton } from "./RebalanceSectionSkeleton";
+
 interface RebalanceSectionProps {
   allocation?: PortfolioAllocationSplit | null;
   onOptimizeClick?: (() => void) | undefined;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 const DEFAULT_TARGET = 50;
@@ -24,7 +27,13 @@ export function RebalanceSection({
   allocation,
   onOptimizeClick,
   disabled,
+  isLoading = false,
 }: RebalanceSectionProps) {
+  // Early return with skeleton during data fetch
+  if (isLoading) {
+    return <RebalanceSectionSkeleton />;
+  }
+
   const stableWidth = Math.min(Math.max(allocation?.stable ?? 0, 0), 100);
   const cryptoWidth = Math.min(Math.max(allocation?.crypto ?? 0, 0), 100);
   const target = allocation?.target ?? DEFAULT_TARGET;

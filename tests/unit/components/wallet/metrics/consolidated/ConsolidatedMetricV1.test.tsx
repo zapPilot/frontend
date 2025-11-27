@@ -95,7 +95,7 @@ vi.mock("../../../../../../src/components/wallet/tooltips", () => ({
   }),
 }));
 
-describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
+describe("ConsolidatedMetricV1", () => {
   const mockROIData = {
     user_id: "test-user",
     recommended_yearly_roi: 15.5,
@@ -150,6 +150,159 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
     vi.clearAllMocks();
   });
 
+  describe("Skeleton Loading States", () => {
+    it("should render skeleton when both data sources are undefined", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: undefined,
+        yieldSummaryData: undefined,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Should render skeleton components
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it("should render partial content when portfolioROI is undefined", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: undefined,
+        yieldSummaryData: mockYieldDataWithWindows,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Should show yield data
+      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
+      expect(screen.getByText("$120")).toBeInTheDocument();
+
+      // Should show skeleton for ROI section
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it("should render partial content when yieldSummaryData is undefined", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: mockROIData,
+        yieldSummaryData: undefined,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Should show ROI data
+      expect(screen.getByText("+15.50%")).toBeInTheDocument();
+      expect(screen.getByText("$1,500")).toBeInTheDocument();
+
+      // Should show skeleton for yield section
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it("should render content when both data sources are loaded", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: mockROIData,
+        yieldSummaryData: mockYieldDataWithWindows,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Should NOT render skeleton
+      expect(screen.queryByTestId("loading-skeleton")).not.toBeInTheDocument();
+      // Should render actual content
+      expect(screen.getByText(/Est. Yearly ROI/i)).toBeInTheDocument();
+    });
+
+    it("should render content when data is null (not loading, just no data)", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: null,
+        yieldSummaryData: null,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // null means data has loaded but is empty, not loading state
+      expect(screen.queryByTestId("loading-skeleton")).not.toBeInTheDocument();
+      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
+    });
+  });
+
+  describe("Progressive Loading States", () => {
+    it("should render full skeleton when both data sources are undefined", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: undefined,
+        yieldSummaryData: undefined,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+      expect(screen.queryByText("Est. Yearly ROI")).not.toBeInTheDocument();
+      expect(screen.queryByText("Yearly PnL")).not.toBeInTheDocument();
+      expect(screen.queryByText("Daily Yield")).not.toBeInTheDocument();
+    });
+
+    it("should show ROI/PnL with yield skeleton when only yield is loading", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: mockROIData,
+        yieldSummaryData: undefined,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // ROI and PnL should be visible
+      expect(screen.getByText("+15.50%")).toBeInTheDocument();
+      expect(screen.getByText("Est. Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("$1,500")).toBeInTheDocument();
+      expect(screen.getByText("Yearly PnL")).toBeInTheDocument();
+
+      // Yield section should show skeleton
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+
+    it("should show yield with ROI/PnL skeleton when only ROI is loading", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: undefined,
+        yieldSummaryData: mockYieldDataWithWindows,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Yield should be visible
+      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
+      expect(screen.getByText("$120")).toBeInTheDocument();
+
+      // ROI/PnL sections should show skeleton
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+
+      // ROI labels should not appear
+      expect(screen.queryByText("Est. Yearly ROI")).not.toBeInTheDocument();
+      expect(screen.queryByText("Yearly PnL")).not.toBeInTheDocument();
+    });
+
+    it("should render all content when both data sources are loaded", () => {
+      const props: PerformanceMetricsProps = {
+        portfolioROI: mockROIData,
+        yieldSummaryData: mockYieldDataWithWindows,
+      };
+
+      render(<ConsolidatedMetricV1 {...props} />);
+
+      // Should NOT render any skeleton
+      expect(screen.queryByTestId("loading-skeleton")).not.toBeInTheDocument();
+
+      // All metrics should be visible
+      expect(screen.getByText("+15.50%")).toBeInTheDocument();
+      expect(screen.getByText("Est. Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("$1,500")).toBeInTheDocument();
+      expect(screen.getByText("Yearly PnL")).toBeInTheDocument();
+      expect(screen.getByText("$120")).toBeInTheDocument();
+      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
+    });
+  });
+
   describe("Tooltip Always Clickable", () => {
     it("should render yield tooltip button without data", () => {
       const props: PerformanceMetricsProps = {
@@ -193,7 +346,7 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
   });
 
   describe("Display Shows N/A for Missing Data", () => {
-    it('should display "N/A" when yieldSummaryData is null', () => {
+    it('should display "N/A" when yieldSummaryData is null (loaded but no data)', () => {
       const props: PerformanceMetricsProps = {
         portfolioROI: mockROIData,
         yieldSummaryData: null,
@@ -209,7 +362,7 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
       expect(dailyYieldSection).not.toHaveTextContent("$0");
     });
 
-    it('should display "N/A" when yieldSummaryData is undefined', () => {
+    it("should show skeleton when yieldSummaryData is undefined (loading state)", () => {
       const props: PerformanceMetricsProps = {
         portfolioROI: mockROIData,
         yieldSummaryData: undefined,
@@ -217,10 +370,10 @@ describe("ConsolidatedMetricV1 - Daily Yield Fixes", () => {
 
       render(<ConsolidatedMetricV1 {...props} />);
 
-      const dailyYieldLabel = screen.getByText("Daily Yield");
-      const dailyYieldSection = dailyYieldLabel.closest("div");
-
-      expect(dailyYieldSection).toHaveTextContent("N/A");
+      // When data is undefined, component is loading and shows skeleton
+      const skeletons = screen.getAllByTestId("loading-skeleton");
+      expect(skeletons.length).toBeGreaterThan(0);
+      expect(screen.queryByText("Daily Yield")).not.toBeInTheDocument();
     });
 
     it('should display "N/A" when windows is empty object', () => {
