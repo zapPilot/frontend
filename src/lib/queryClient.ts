@@ -114,4 +114,10 @@ export const queryKeys = {
      */
     byChain: (chainId: number) => ["zapTokens", chainId] as const,
   },
+
+  // Market sentiment queries
+  sentiment: {
+    all: ["sentiment"] as const,
+    market: () => ["sentiment", "market"] as const,
+  },
 } as const;

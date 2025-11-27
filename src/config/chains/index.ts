@@ -78,14 +78,6 @@ export const isChainSupported = (chainId: number): boolean => {
 };
 
 /**
- * Get chain name by ID
- */
-export const getChainName = (chainId: number): string => {
-  const chain = getChainById(chainId);
-  return chain ? chain.name : `Chain ${chainId}`;
-};
-
-/**
  * Get chain symbol by ID
  */
 export const getChainSymbol = (chainId: number): string => {

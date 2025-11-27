@@ -57,8 +57,10 @@ function validateResponse(
 
   const volatility = riskSummary["volatility"] as Record<string, unknown>;
   if (
-    typeof volatility["volatility_daily"] !== "number" ||
-    typeof volatility["volatility_annualized"] !== "number" ||
+    (typeof volatility["volatility_daily"] !== "number" &&
+      volatility["volatility_daily"] !== null) ||
+    (typeof volatility["volatility_annualized"] !== "number" &&
+      volatility["volatility_annualized"] !== null) ||
     typeof volatility["period_days"] !== "number"
   ) {
     return false;
@@ -71,9 +73,11 @@ function validateResponse(
 
   const drawdown = riskSummary["drawdown"] as Record<string, unknown>;
   if (
-    typeof drawdown["max_drawdown_percentage"] !== "number" ||
+    (typeof drawdown["max_drawdown_pct"] !== "number" &&
+      drawdown["max_drawdown_pct"] !== null) ||
     typeof drawdown["period_days"] !== "number" ||
-    typeof drawdown["recovery_needed_percentage"] !== "number"
+    (typeof drawdown["recovery_needed_percentage"] !== "number" &&
+      drawdown["recovery_needed_percentage"] !== null)
   ) {
     return false;
   }
@@ -82,12 +86,18 @@ function validateResponse(
   if (riskSummary["sharpe_ratio"]) {
     const sharpeRatio = riskSummary["sharpe_ratio"] as Record<string, unknown>;
     if (
-      typeof sharpeRatio["sharpe_ratio"] !== "number" ||
-      typeof sharpeRatio["portfolio_return_annual"] !== "number" ||
-      typeof sharpeRatio["risk_free_rate_annual"] !== "number" ||
-      typeof sharpeRatio["excess_return"] !== "number" ||
-      typeof sharpeRatio["volatility_annual"] !== "number" ||
-      typeof sharpeRatio["interpretation"] !== "string" ||
+      (typeof sharpeRatio["sharpe_ratio"] !== "number" &&
+        sharpeRatio["sharpe_ratio"] !== null) ||
+      (typeof sharpeRatio["portfolio_return_annual"] !== "number" &&
+        sharpeRatio["portfolio_return_annual"] !== null) ||
+      (typeof sharpeRatio["risk_free_rate_annual"] !== "number" &&
+        sharpeRatio["risk_free_rate_annual"] !== null) ||
+      (typeof sharpeRatio["excess_return"] !== "number" &&
+        sharpeRatio["excess_return"] !== null) ||
+      (typeof sharpeRatio["volatility_annual"] !== "number" &&
+        sharpeRatio["volatility_annual"] !== null) ||
+      (typeof sharpeRatio["interpretation"] !== "string" &&
+        sharpeRatio["interpretation"] !== null) ||
       typeof sharpeRatio["period_days"] !== "number" ||
       typeof sharpeRatio["data_points"] !== "number"
     ) {
@@ -102,23 +112,67 @@ function validateResponse(
 
   const summaryMetrics = obj["summary_metrics"] as Record<string, unknown>;
 
-  // Validate summary metrics
-  if (
-    typeof summaryMetrics["annualized_volatility_percentage"] !== "number" ||
-    typeof summaryMetrics["max_drawdown_percentage"] !== "number"
-  ) {
+  // Validate summary metrics (allow null for insufficient data)
+  const hasVolatilityField =
+    typeof summaryMetrics["annualized_volatility_percentage"] === "number" ||
+    summaryMetrics["annualized_volatility_percentage"] === null;
+
+  const hasDrawdownPct =
+    typeof summaryMetrics["max_drawdown_pct"] === "number" ||
+    summaryMetrics["max_drawdown_pct"] === null;
+
+  const hasDrawdownPercentageAlias =
+    typeof summaryMetrics["max_drawdown_percentage"] === "number" ||
+    summaryMetrics["max_drawdown_percentage"] === null;
+
+  if (!hasVolatilityField) {
+    return false;
+  }
+
+  // Accept either canonical max_drawdown_pct or alias max_drawdown_percentage
+  if (!hasDrawdownPct && !hasDrawdownPercentageAlias) {
     return false;
   }
 
   // Validate optional sharpe_ratio in summary metrics
   if (
     summaryMetrics["sharpe_ratio"] !== undefined &&
-    typeof summaryMetrics["sharpe_ratio"] !== "number"
+    typeof summaryMetrics["sharpe_ratio"] !== "number" &&
+    summaryMetrics["sharpe_ratio"] !== null
   ) {
     return false;
   }
 
   return true;
+}
+
+/**
+ * Normalize backend response differences to a consistent shape for the UI.
+ */
+function normalizeRiskSummary(
+  response: ActualRiskSummaryResponse
+): ActualRiskSummaryResponse {
+  const drawdownFromSummary =
+    response.summary_metrics.max_drawdown_pct ??
+    response.summary_metrics.max_drawdown_percentage ??
+    null;
+
+  const drawdownData = response.risk_summary.drawdown;
+
+  // Some backends only send the alias; populate the canonical field for consumers.
+  const normalizedDrawdownPct =
+    drawdownFromSummary ??
+    drawdownData?.max_drawdown_pct ??
+    drawdownData?.max_drawdown_percentage ??
+    null;
+
+  return {
+    ...response,
+    summary_metrics: {
+      ...response.summary_metrics,
+      max_drawdown_pct: normalizedDrawdownPct,
+    },
+  };
 }
 
 export function useRiskSummary(userId: string): UseRiskSummaryResult {
@@ -148,9 +202,11 @@ export function useRiskSummary(userId: string): UseRiskSummaryResult {
           );
         }
 
+        const normalized = normalizeRiskSummary(response);
+
         // Only update state if request wasn't aborted
         if (!signal?.aborted) {
-          setData(response);
+          setData(normalized);
         }
       } catch (err) {
         // Only update error state if request wasn't aborted

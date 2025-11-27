@@ -162,7 +162,7 @@ describe("PoolPerformanceTable - Rendering", () => {
     const table = screen.getByRole("table");
     expect(table).toBeInTheDocument();
 
-    // Check table headers in thead
+    // Check table headers in thead (APR column removed in recent update)
     const thead = table.querySelector("thead");
     expect(thead).toBeInTheDocument();
     expect(
@@ -174,13 +174,9 @@ describe("PoolPerformanceTable - Rendering", () => {
     expect(
       within(thead as HTMLElement).getByText("Positions")
     ).toBeInTheDocument();
-    expect(within(thead as HTMLElement).getByText("APR")).toBeInTheDocument();
     expect(within(thead as HTMLElement).getByText("Value")).toBeInTheDocument();
     expect(
       within(thead as HTMLElement).getByText("Portfolio %")
-    ).toBeInTheDocument();
-    expect(
-      within(thead as HTMLElement).getByText("Status")
     ).toBeInTheDocument();
 
     // Check data rows
@@ -285,41 +281,41 @@ describe("PoolPerformanceTable - Sorting", () => {
     expect(within(rows[1]).getByText("Compound")).toBeInTheDocument();
   });
 
-  it("should sort by APR numerically (descending)", async () => {
+  it("should sort by Portfolio % numerically (descending)", async () => {
     const pools = [
-      createMockPool({ apr: 0.03, value: 1000 }),
-      createMockPool({ apr: 0.06, value: 1000 }),
+      createMockPool({ contribution: 0.15, value: 1000 }),
+      createMockPool({ contribution: 0.25, value: 1000 }),
     ];
 
     render(<PoolPerformanceTable pools={pools} />);
 
     const table = screen.getByRole("table");
-    const aprHeader = within(table).getByText("APR");
-    await userEvent.click(aprHeader);
+    const contributionHeader = within(table).getByText("Portfolio %");
+    await userEvent.click(contributionHeader);
 
     const rows = screen.getAllByRole("row");
-    // Higher APR should be first
-    expect(within(rows[1]).getByText("6.00%")).toBeInTheDocument();
+    // Higher contribution should be first
+    expect(within(rows[1]).getByText("0.3%")).toBeInTheDocument(); // 0.25 rounded to 0.3
   });
 
-  it("should sort by APR numerically (ascending)", async () => {
+  it("should sort by Portfolio % numerically (ascending)", async () => {
     const pools = [
-      createMockPool({ apr: 0.06, value: 1000 }),
-      createMockPool({ apr: 0.03, value: 1000 }),
+      createMockPool({ contribution: 0.25, value: 1000 }),
+      createMockPool({ contribution: 0.15, value: 1000 }),
     ];
 
     render(<PoolPerformanceTable pools={pools} />);
 
     const table = screen.getByRole("table");
-    const aprHeader = within(table).getByText("APR");
+    const contributionHeader = within(table).getByText("Portfolio %");
     // First click: desc
-    await userEvent.click(aprHeader);
+    await userEvent.click(contributionHeader);
     // Second click: asc
-    await userEvent.click(aprHeader);
+    await userEvent.click(contributionHeader);
 
     const rows = screen.getAllByRole("row");
-    // Lower APR should be first
-    expect(within(rows[1]).getByText("3.00%")).toBeInTheDocument();
+    // Lower contribution should be first (0.15 formatted with 1 decimal = 0.1%)
+    expect(within(rows[1]).getByText("0.1%")).toBeInTheDocument();
   });
 
   it("should sort by value numerically", async () => {
@@ -386,26 +382,26 @@ describe("PoolPerformanceTable - Sorting", () => {
 
   it("should reset to descending when changing columns", async () => {
     const pools = [
-      createMockPool({ protocol: "Aave", value: 1000, apr: 0.03 }),
-      createMockPool({ protocol: "Compound", value: 2000, apr: 0.06 }),
+      createMockPool({ protocol: "Aave", value: 1000, contribution: 0.15 }),
+      createMockPool({ protocol: "Compound", value: 2000, contribution: 0.25 }),
     ];
 
     render(<PoolPerformanceTable pools={pools} />);
 
     const table = screen.getByRole("table");
     const valueHeader = within(table).getByText("Value");
-    const aprHeader = within(table).getByText("APR");
+    const contributionHeader = within(table).getByText("Portfolio %");
 
     // Click value twice to get ascending
     await userEvent.click(valueHeader);
     await userEvent.click(valueHeader);
 
-    // Now click APR - should default to descending
-    await userEvent.click(aprHeader);
+    // Now click Portfolio % - should default to descending
+    await userEvent.click(contributionHeader);
 
     const rows = screen.getAllByRole("row");
-    // Higher APR should be first (descending)
-    expect(within(rows[1]).getByText("6.00%")).toBeInTheDocument();
+    // Higher contribution should be first (descending)
+    expect(within(rows[1]).getByText("0.3%")).toBeInTheDocument(); // 0.25 rounded to 0.3
   });
 
   it("should show correct chevron icon (up/down/gray)", () => {
@@ -562,18 +558,18 @@ describe("PoolPerformanceTable - Pagination", () => {
 
   it("should apply Top N after sorting", async () => {
     const pools = [
-      createMockPool({ id: "1", value: 1000, apr: 0.03 }),
-      createMockPool({ id: "2", value: 2000, apr: 0.06 }),
-      createMockPool({ id: "3", value: 3000, apr: 0.04 }),
+      createMockPool({ id: "1", value: 1000, contribution: 0.15 }),
+      createMockPool({ id: "2", value: 2000, contribution: 0.25 }),
+      createMockPool({ id: "3", value: 3000, contribution: 0.2 }),
     ];
 
     render(<PoolPerformanceTable pools={pools} defaultTopN={2} />);
 
     const table = screen.getByRole("table");
-    const aprHeader = within(table).getByText("APR");
-    await userEvent.click(aprHeader);
+    const contributionHeader = within(table).getByText("Portfolio %");
+    await userEvent.click(contributionHeader);
 
-    // Should show top 2 by APR (6%, 4%)
+    // Should show top 2 by contribution (0.25, 0.20)
     expect(screen.getByText(/Showing 2 of 3/)).toBeInTheDocument();
   });
 
@@ -765,21 +761,21 @@ describe("PoolPerformanceTable - Edge Cases", () => {
 
   it("should maintain sort state when changing category filter", async () => {
     const pools = [
-      createMockPool({ symbols: ["WBTC"], apr: 0.04, value: 1000 }),
-      createMockPool({ symbols: ["WBTC"], apr: 0.06, value: 2000 }),
+      createMockPool({ symbols: ["WBTC"], contribution: 0.2, value: 1000 }),
+      createMockPool({ symbols: ["WBTC"], contribution: 0.3, value: 2000 }),
     ];
 
     const { rerender } = render(<PoolPerformanceTable pools={pools} />);
 
     const table = screen.getByRole("table");
-    const aprHeader = within(table).getByText("APR");
-    await userEvent.click(aprHeader);
+    const contributionHeader = within(table).getByText("Portfolio %");
+    await userEvent.click(contributionHeader);
 
     // Now apply filter
     rerender(<PoolPerformanceTable pools={pools} categoryFilter="btc" />);
 
-    // Sort should still be applied (highest APR first) - appears in both desktop and mobile
-    expect(screen.getAllByText("6.00%").length).toBeGreaterThan(0);
+    // Sort should still be applied (highest contribution first) - appears in both desktop and mobile
+    expect(screen.getAllByText("0.3%").length).toBeGreaterThan(0);
   });
 
   it("should show '+N more' for token symbols overflow (3+ desktop, 2+ mobile)", () => {

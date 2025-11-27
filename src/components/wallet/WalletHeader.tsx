@@ -1,4 +1,12 @@
-import { Check, Copy, DollarSign, Eye, EyeOff, Wallet } from "lucide-react";
+import {
+  Calendar,
+  Check,
+  Copy,
+  DollarSign,
+  Eye,
+  EyeOff,
+  Wallet,
+} from "lucide-react";
 import React, { useState } from "react";
 
 import { GRADIENTS } from "../../constants/design-system";
@@ -31,6 +39,26 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
     // Copy link functionality
     const [copied, setCopied] = useState(false);
     const { showToast } = useToast();
+
+    // Calendar connection functionality (Mock)
+    const [isCalendarConnected, setIsCalendarConnected] = useState(false);
+    const [isConnectingCalendar, setIsConnectingCalendar] = useState(false);
+
+    const handleConnectCalendar = async () => {
+      if (isCalendarConnected) return;
+
+      setIsConnectingCalendar(true);
+      // Simulate API call
+      setTimeout(() => {
+        setIsConnectingCalendar(false);
+        setIsCalendarConnected(true);
+        showToast({
+          title: "Calendar Connected",
+          message: "Your Google Calendar has been successfully connected.",
+          type: "success",
+        });
+      }, 1500);
+    };
 
     const handleCopyLink = async () => {
       if (!bundleUrl) return;
@@ -73,6 +101,32 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
         </div>
 
         <div className="flex space-x-2">
+          {/* Calendar Connect Button */}
+          {isOwnBundle && (
+            <button
+              onClick={() => void handleConnectCalendar()}
+              disabled={isConnectingCalendar || isCalendarConnected}
+              className={`p-3 rounded-xl glass-morphism transition-all duration-300 cursor-pointer ${
+                isCalendarConnected
+                  ? "bg-green-500/20 hover:bg-green-500/30 border-green-500/50"
+                  : "hover:bg-white/10"
+              }`}
+              title={
+                isCalendarConnected
+                  ? "Calendar Connected"
+                  : "Connect Google Calendar"
+              }
+            >
+              {isConnectingCalendar ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : isCalendarConnected ? (
+                <Check className="w-5 h-5 text-green-400" />
+              ) : (
+                <Calendar className="w-5 h-5 text-gray-300" />
+              )}
+            </button>
+          )}
+
           {bundleUrl && (
             <button
               onClick={() => void handleCopyLink()}

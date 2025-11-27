@@ -173,7 +173,7 @@ export interface LandingPageResponse {
 export const getLandingPagePortfolioData = async (
   userId: string
 ): Promise<LandingPageResponse> => {
-  const endpoint = `/api/v1/landing-page/portfolio/${userId}`;
+  const endpoint = `/api/v2/portfolio/${userId}/landing`;
   return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
 };
 
@@ -199,7 +199,7 @@ export const getLandingPagePortfolioData = async (
 export const getPoolPerformance = async (
   userId: string
 ): Promise<PoolDetail[]> => {
-  const endpoint = `/api/v1/pools/performance/${userId}`;
+  const endpoint = `/api/v2/pools/${userId}/performance`;
   return await httpUtils.analyticsEngine.get<PoolDetail[]>(endpoint);
 };
 
@@ -210,26 +210,30 @@ export const getPoolPerformance = async (
  * providing more accurate average daily yield calculations for DeFi portfolios.
  *
  * @param userId - User wallet address
- * @param days - Number of days to analyze (default: 30)
  * @returns Yield summary with outlier-filtered averages and detection statistics
  *
  * @example
- * const summary = await getYieldReturnsSummary('0x123...', 30);
+ * const summary = await getYieldReturnsSummary('0x123...');
  * console.log(`Avg: $${summary.average_daily_yield_usd}`);
  * console.log(`Outliers removed: ${summary.statistics.outliers_removed}`);
  */
 export const getYieldReturnsSummary = async (
-  userId: string,
-  windows = "7d,30d,90d"
+  userId: string
 ): Promise<YieldReturnsSummaryResponse> => {
-  const params = new URLSearchParams({
-    windows,
-    outlier_strategy: "iqr", // Always use IQR for consistent outlier detection
-  });
-  const endpoint = `/api/v1/yield/returns/summary/${userId}?${params}`;
-  return await httpUtils.analyticsEngine.get<YieldReturnsSummaryResponse>(
-    endpoint
-  );
+  const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
+
+  // API returns single YieldWindowSummary, not wrapped in windows
+  const singleWindow =
+    await httpUtils.analyticsEngine.get<YieldWindowSummary>(endpoint);
+
+  // Transform to match expected format
+  return {
+    user_id: singleWindow.user_id,
+    windows: {
+      "30d": singleWindow, // Wrap single window response
+    },
+    recommended_period: "30d", // Since API returns 30-day window
+  };
 };
 
 /**
@@ -241,7 +245,7 @@ export const getYieldReturnsSummary = async (
 export const getRiskSummary = async (
   userId: string
 ): Promise<ActualRiskSummaryResponse> => {
-  const endpoint = `/api/v1/risk/summary/${userId}`;
+  const endpoint = `/api/v2/analytics/${userId}/risk/summary`;
   return await httpUtils.analyticsEngine.get<ActualRiskSummaryResponse>(
     endpoint
   );
@@ -294,12 +298,19 @@ export interface UnifiedDashboardResponse {
   // Historical trends (replaces getPortfolioTrends)
   trends: {
     user_id?: string;
+    period_days: number;
+    data_points: number;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    daily_totals: {
+    period_info?: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    daily_values: {
       date: string;
       total_value_usd: number;
       change_percentage: number;
@@ -436,12 +447,19 @@ export interface UnifiedDashboardResponse {
   // Portfolio allocation over time (replaces getAllocationTimeseries)
   allocation: {
     user_id?: string;
+    period_days: number;
+    data_points: number;
     period: {
       start_date: string;
       end_date: string;
       days: number;
     };
-    allocation_data: {
+    period_info?: {
+      start_date: string;
+      end_date: string;
+      days: number;
+    };
+    allocations: {
       date: string;
       category: string;
       category_value_usd: number;
@@ -453,6 +471,7 @@ export interface UnifiedDashboardResponse {
       unique_dates: number;
       unique_protocols: number;
       unique_chains: number;
+      categories?: string[];
     };
   };
 
@@ -515,17 +534,6 @@ export interface UnifiedDashboardResponse {
 }
 
 /**
- * Parameters for unified dashboard endpoint
- */
-export interface DashboardParams {
-  trend_days?: number;
-  risk_days?: number;
-  drawdown_days?: number;
-  allocation_days?: number;
-  rolling_days?: number;
-}
-
-/**
  * Get unified portfolio dashboard analytics (Performance Optimized)
  *
  * **NEW UNIFIED ENDPOINT** - Replaces 6 separate API calls with 1 optimized call:
@@ -561,27 +569,11 @@ export interface DashboardParams {
  * ```
  */
 export const getPortfolioDashboard = async (
-  userId: string,
-  params: DashboardParams = {}
+  userId: string
 ): Promise<UnifiedDashboardResponse> => {
-  const {
-    trend_days = 30,
-    risk_days = 30,
-    drawdown_days = 90,
-    allocation_days = 40,
-    rolling_days = 40,
-  } = params;
-
-  const queryParams = new URLSearchParams({
-    trend_days: trend_days.toString(),
-    risk_days: risk_days.toString(),
-    drawdown_days: drawdown_days.toString(),
-    allocation_days: allocation_days.toString(),
-    rolling_days: rolling_days.toString(),
-  });
-
+  const endpoint = `/api/v2/analytics/${userId}/dashboard`;
   return await httpUtils.analyticsEngine.get<UnifiedDashboardResponse>(
-    `/api/v1/dashboard/portfolio-analytics/${userId}?${queryParams}`
+    endpoint
   );
 };
 
@@ -653,7 +645,7 @@ export const getDailyYieldReturns = async (
   userId: string,
   days = 30
 ): Promise<DailyYieldReturnsResponse> => {
-  const endpoint = `/api/v1/yield/returns/daily/${userId}?days=${days}`;
+  const endpoint = `/api/v2/analytics/${userId}/yield/daily?days=${days}`;
   return await httpUtils.analyticsEngine.get<DailyYieldReturnsResponse>(
     endpoint
   );

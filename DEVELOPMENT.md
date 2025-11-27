@@ -46,10 +46,19 @@ npm run lint:fix        # Auto-fix ESLint issues
 npm run format          # Format all files with Prettier
 npm run format:check    # Check if files are formatted
 npm run type-check      # TypeScript type checking
+npm run deadcode        # Combined Knip + ts-prune sweep for unused files/exports
 
 # Testing
 npm test               # Run tests (configure as needed)
 ```
+
+### Dead Code Detection
+
+Run `npm run deadcode` to execute the original Knip scan **and** a TypeScript export sweep (ts-prune
+with `tsconfig.tsprune.json`). Knip still covers unused files/dependencies, while ts-prune flags
+orphaned exports hiding behind barrel re-exports (e.g.,
+`src/components/wallet/metrics/YieldMetric.tsx`). CI variants (`deadcode:ci`, `deadcode:check`,
+etc.) now include both passes, so failures will surface whenever either tool detects issues.
 
 ## 🔄 Workflow
 

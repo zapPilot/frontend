@@ -1,8 +1,13 @@
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info, Wallet } from "lucide-react";
 
 import { BalanceSkeleton } from "@/components/ui/LoadingSystem";
 import { useMetricState } from "@/hooks/useMetricState";
 import { formatCurrency } from "@/lib/formatters";
+import type { PoolDetail } from "@/types/pool";
+
+import { PoolDetailsTooltip, useMetricsTooltip } from "../tooltips";
+import { NoDataMetricCard } from "./common/NoDataMetricCard";
+import { MetricCard } from "./MetricCard";
 
 interface BalanceMetricProps {
   /** Total net USD balance */
@@ -21,6 +26,14 @@ interface BalanceMetricProps {
   shouldShowNoDataMessage?: boolean;
   /** Function to get display total value (from portfolio state helpers) */
   getDisplayTotalValue?: () => number | null;
+  /** Pool details for tooltip display */
+  poolDetails?: PoolDetail[];
+  /** Total number of pool positions */
+  totalPositions?: number;
+  /** Number of unique protocols */
+  protocolsCount?: number;
+  /** Number of unique chains */
+  chainsCount?: number;
 }
 
 /**
@@ -48,6 +61,10 @@ export function BalanceMetric({
   errorMessage,
   shouldShowNoDataMessage = false,
   getDisplayTotalValue,
+  poolDetails,
+  totalPositions,
+  protocolsCount,
+  chainsCount,
 }: BalanceMetricProps) {
   const metricState = useMetricState({
     isLoading,
@@ -55,26 +72,31 @@ export function BalanceMetric({
     value: totalNetUsd,
   });
 
+  const poolTooltip = useMetricsTooltip<HTMLSpanElement>();
+
+  const labelClasses =
+    "text-xs text-gray-500 uppercase tracking-wider font-medium";
+
+  const resolvedPoolDetails = poolDetails ?? [];
+  const hasPoolDetails = poolDetails !== undefined;
+
   // Loading state
   if (metricState.shouldRenderSkeleton) {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
-          <div className="flex items-center space-x-2">
-            <BalanceSkeleton size="default" />
-          </div>
+      <MetricCard icon={Wallet} iconClassName="text-blue-400">
+        <div className="h-10 flex items-center mb-2">
+          <BalanceSkeleton size="default" />
         </div>
-      </div>
+        <p className={labelClasses}>Total Balance</p>
+      </MetricCard>
     );
   }
 
   // Error state (but not USER_NOT_FOUND, which shows welcome elsewhere)
   if (shouldShowError && errorMessage && errorMessage !== "USER_NOT_FOUND") {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
+      <MetricCard icon={Wallet} iconClassName="text-blue-400">
+        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
           <div className="flex flex-col space-y-2">
             <div className="text-sm text-red-400 flex items-center space-x-2">
               <AlertCircle className="w-4 h-4" />
@@ -82,19 +104,20 @@ export function BalanceMetric({
             </div>
           </div>
         </div>
-      </div>
+        <p className={labelClasses}>Total Balance</p>
+      </MetricCard>
     );
   }
 
   // Connected but no data
   if (shouldShowNoDataMessage) {
     return (
-      <div>
-        <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-        <div className="text-3xl font-bold text-white h-10 flex items-center">
-          <div className="text-gray-400 text-lg">No data available</div>
-        </div>
-      </div>
+      <NoDataMetricCard
+        icon={Wallet}
+        iconClassName="text-blue-400"
+        label="Total Balance"
+        labelClassName={labelClasses}
+      />
     );
   }
 
@@ -104,11 +127,38 @@ export function BalanceMetric({
     : totalNetUsd;
 
   return (
-    <div>
-      <p className="text-sm text-gray-400 mb-1">Total Balance</p>
-      <div className="text-3xl font-bold text-white h-10 flex items-center">
+    <MetricCard icon={Wallet} iconClassName="text-blue-400">
+      <div className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 break-all sm:break-normal text-center">
         {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
       </div>
-    </div>
+      <div className="flex items-center justify-center space-x-1.5">
+        <p className={labelClasses}>Total Balance</p>
+        {hasPoolDetails && (
+          <div className="relative">
+            <span
+              ref={poolTooltip.triggerRef}
+              onClick={poolTooltip.toggle}
+              onKeyDown={e => e.key === "Enter" && poolTooltip.toggle()}
+              role="button"
+              tabIndex={0}
+              aria-label="Pool details breakdown"
+              className="inline-flex cursor-help"
+            >
+              <Info className="w-3 h-3 text-gray-500 hover:text-gray-400 transition-colors" />
+            </span>
+            {poolTooltip.visible && (
+              <PoolDetailsTooltip
+                tooltipRef={poolTooltip.tooltipRef}
+                position={poolTooltip.position}
+                poolDetails={resolvedPoolDetails}
+                totalPositions={totalPositions}
+                protocolsCount={protocolsCount}
+                chainsCount={chainsCount}
+              />
+            )}
+          </div>
+        )}
+      </div>
+    </MetricCard>
   );
 }

@@ -19,8 +19,8 @@ import {
   getYieldReturnsSummary,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
-  type YieldReturnsSummaryResponse,
 } from "../../../src/services/analyticsService";
+import type { PeriodInfo } from "../../../src/types/portfolio";
 import type { ActualRiskSummaryResponse } from "../../../src/types/risk";
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
@@ -40,7 +40,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
       end_date: "2025-01-30",
       days: 30,
     },
-    daily_totals: [],
+    daily_values: [],
     summary: {
       current_value_usd: 0,
       start_value_usd: 0,
@@ -137,7 +137,7 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
-    allocation_data: [],
+    allocations: [],
     summary: {
       unique_dates: 0,
       unique_protocols: 0,
@@ -285,7 +285,7 @@ describe("analyticsService", () => {
         const result = await getLandingPagePortfolioData(testUserId);
 
         expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-          `/api/v1/landing-page/portfolio/${testUserId}`
+          `/api/v2/portfolio/${testUserId}/landing`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -559,11 +559,11 @@ describe("analyticsService", () => {
       ];
 
       analyticsEngineGetSpy.mockResolvedValue(mockPools);
-
-      const result = await getPoolPerformance("user-analytics");
+      const testUserId = "user-analytics";
+      const result = await getPoolPerformance(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        "/api/v1/pools/performance/user-analytics"
+        `/api/v2/pools/${testUserId}/performance`
       );
       expect(result).toEqual(mockPools);
       expect(result[0]?.protocol_name).toBe("Aave V3");
@@ -573,66 +573,107 @@ describe("analyticsService", () => {
   describe("getYieldReturnsSummary", () => {
     const testUserId = "user-returns";
 
-    it("should default to multi-window summary with IQR filtering", async () => {
-      const mockSummary: YieldReturnsSummaryResponse = {
+    it("should transform single window response into windows Record", async () => {
+      // Mock API returns single YieldWindowSummary (not wrapped)
+      const mockSingleWindow: YieldWindowSummary = {
         user_id: testUserId,
-        windows: {
-          "7d": {
-            user_id: testUserId,
-            period: {
-              start_date: "2025-01-01",
-              end_date: "2025-01-07",
-              days: 7,
-            },
-            average_daily_yield_usd: 42,
-            median_daily_yield_usd: 40,
-            total_yield_usd: 294,
-            statistics: {
-              mean: 42,
-              median: 40,
-              std_dev: 5,
-              min_value: 12,
-              max_value: 70,
-              total_days: 7,
-              filtered_days: 6,
-              outliers_removed: 1,
-            },
-            outlier_strategy: "iqr",
-            outliers_detected: [],
-            protocol_breakdown: [],
-          },
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
         },
-        recommended_period: "7d",
-      } as YieldReturnsSummaryResponse;
+        average_daily_yield_usd: 42,
+        median_daily_yield_usd: 40,
+        total_yield_usd: 1260,
+        statistics: {
+          mean: 42,
+          median: 40,
+          std_dev: 5,
+          min_value: 12,
+          max_value: 70,
+          total_days: 30,
+          filtered_days: 29,
+          outliers_removed: 1,
+        },
+        outlier_strategy: "iqr",
+        outliers_detected: [],
+        protocol_breakdown: [],
+      };
 
-      analyticsEngineGetSpy.mockResolvedValue(mockSummary);
+      analyticsEngineGetSpy.mockResolvedValue(mockSingleWindow);
 
       const result = await getYieldReturnsSummary(testUserId);
 
-      const callArg = (analyticsEngineGetSpy.mock.calls[0] ?? [
-        "",
-      ])[0] as string;
-      expect(callArg).toContain(`/api/v1/yield/returns/summary/${testUserId}`);
-      expect(callArg).toContain("windows=7d%2C30d%2C90d");
-      expect(callArg).toContain("outlier_strategy=iqr");
-      expect(result.windows["7d"]?.statistics.outliers_removed).toBe(1);
-    });
+      // Verify API call uses v2 endpoint
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v2/analytics/${testUserId}/yield/summary`
+      );
 
-    it("should support custom window parameters", async () => {
-      analyticsEngineGetSpy.mockResolvedValue({
+      // Verify transformation wraps single window in "30d" key
+      expect(result).toEqual({
         user_id: testUserId,
-        windows: {},
+        windows: {
+          "30d": mockSingleWindow,
+        },
+        recommended_period: "30d",
       });
 
-      await getYieldReturnsSummary(testUserId, "14d,60d");
+      // Verify we can access window data through windows Record
+      expect(result.windows["30d"]?.statistics.outliers_removed).toBe(1);
+      expect(result.windows["30d"]?.average_daily_yield_usd).toBe(42);
+    });
 
-      const customCallArg = (analyticsEngineGetSpy.mock.calls[0] ?? [
-        "",
-      ])[0] as string;
-      expect(customCallArg).toContain(
-        `/api/v1/yield/returns/summary/${testUserId}`
+    it("should handle API response with protocol breakdown", async () => {
+      const mockSingleWindow: YieldWindowSummary = {
+        user_id: testUserId,
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        average_daily_yield_usd: 100,
+        median_daily_yield_usd: 95,
+        total_yield_usd: 3000,
+        statistics: {
+          mean: 100,
+          median: 95,
+          std_dev: 10,
+          min_value: 50,
+          max_value: 150,
+          total_days: 30,
+          filtered_days: 30,
+          outliers_removed: 0,
+        },
+        outlier_strategy: "iqr",
+        outliers_detected: [],
+        protocol_breakdown: [
+          {
+            protocol: "Aave",
+            chain: "Ethereum",
+            window: {
+              total_yield_usd: 1500,
+              average_daily_yield_usd: 50,
+              data_points: 30,
+              positive_days: 28,
+              negative_days: 2,
+            },
+            today: {
+              date: "2025-01-30",
+              yield_usd: 52,
+            },
+          },
+        ],
+      };
+
+      analyticsEngineGetSpy.mockResolvedValue(mockSingleWindow);
+
+      const result = await getYieldReturnsSummary(testUserId);
+
+      // Verify protocol breakdown is preserved in transformation
+      expect(result.windows["30d"]?.protocol_breakdown).toHaveLength(1);
+      expect(result.windows["30d"]?.protocol_breakdown[0]?.protocol).toBe(
+        "Aave"
       );
-      expect(customCallArg).toContain("windows=14d%2C60d");
     });
   });
 
@@ -671,7 +712,7 @@ describe("analyticsService", () => {
       const result = await getDailyYieldReturns(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        `/api/v1/yield/returns/daily/${testUserId}?days=30`
+        `/api/v2/analytics/${testUserId}/yield/daily?days=30`
       );
       expect(result.daily_returns[0]?.protocol_name).toBe("Lido");
     });
@@ -686,7 +727,7 @@ describe("analyticsService", () => {
       await getDailyYieldReturns(testUserId, 14);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        `/api/v1/yield/returns/daily/${testUserId}?days=14`
+        `/api/v2/analytics/${testUserId}/yield/daily?days=14`
       );
     });
   });
@@ -716,7 +757,7 @@ describe("analyticsService", () => {
               period_days: 30,
               data_points: 30,
               max_drawdown: -500,
-              max_drawdown_percentage: -0.05,
+              max_drawdown_pct: -0.05,
               max_drawdown_date: "2025-01-20",
               peak_value: 10000,
               trough_value: 9500,
@@ -731,7 +772,7 @@ describe("analyticsService", () => {
           },
           summary_metrics: {
             annualized_volatility_percentage: 47.5,
-            max_drawdown_percentage: -5,
+            max_drawdown_pct: -5,
           },
         };
 
@@ -740,7 +781,7 @@ describe("analyticsService", () => {
         const result = await getRiskSummary(testUserId);
 
         expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-          `/api/v1/risk/summary/${testUserId}`
+          `/api/v2/analytics/${testUserId}/risk/summary`
         );
         expect(result).toEqual(mockResponse);
       });
@@ -766,7 +807,7 @@ describe("analyticsService", () => {
               period_days: 30,
               data_points: 30,
               max_drawdown: -500,
-              max_drawdown_percentage: -0.05,
+              max_drawdown_pct: -0.05,
               max_drawdown_date: "2025-01-20",
               peak_value: 10000,
               trough_value: 9500,
@@ -791,12 +832,13 @@ describe("analyticsService", () => {
               period_info: {
                 start_date: "2025-01-08",
                 end_date: "2025-02-07",
-              },
+                days: 30,
+              } as PeriodInfo,
             },
           },
           summary_metrics: {
             annualized_volatility_percentage: 47.5,
-            max_drawdown_percentage: -5,
+            max_drawdown_pct: -5,
             sharpe_ratio: 1.5,
           },
         };
@@ -823,7 +865,7 @@ describe("analyticsService", () => {
       const result = await getPortfolioDashboard(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=30&risk_days=30&drawdown_days=90&allocation_days=40&rolling_days=40`
+        `/api/v2/analytics/${testUserId}/dashboard`
       );
       expect(result).toEqual(mockResponse);
     });
@@ -841,16 +883,10 @@ describe("analyticsService", () => {
 
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
-      const result = await getPortfolioDashboard(testUserId, {
-        trend_days: 45,
-        risk_days: 45,
-        drawdown_days: 120,
-        allocation_days: 60,
-        rolling_days: 60,
-      });
+      const result = await getPortfolioDashboard(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
-        `/api/v1/dashboard/portfolio-analytics/${testUserId}?trend_days=45&risk_days=45&drawdown_days=120&allocation_days=60&rolling_days=60`
+        `/api/v2/analytics/${testUserId}/dashboard`
       );
       expect(result).toEqual(mockResponse);
     });

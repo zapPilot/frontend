@@ -120,26 +120,25 @@ export function asPartialArray<T>(items: T[] | undefined): Partial<T>[] {
 }
 
 /**
- * Safely extracts property from object with type validation.
- * Provides type-safe property access for unknown objects.
+ * Safely extracts property from object with fallback.
+ * Handles null, undefined objects and missing properties.
  *
  * @param obj - Object to extract from
- * @param key - Property key
- * @param fallback - Default value if property doesn't exist or object is invalid
+ * @param key - Property key to extract
+ * @param fallback - Default value if extraction fails
  * @returns Property value or fallback
  *
  * @example
  * getProp({ name: "John" }, "name", "") // "John"
  * getProp({}, "missing", "default") // "default"
- * getProp(null, "key", 42) // 42
+ * getProp(null, "key", 0) // 0
  */
 export function getProp<T>(obj: unknown, key: string, fallback: T): T {
-  if (typeof obj !== "object" || obj === null) {
-    return fallback;
+  if (obj !== null && typeof obj === "object" && !Array.isArray(obj)) {
+    const value = (obj as Record<string, unknown>)[key];
+    return value !== undefined ? (value as T) : fallback;
   }
-
-  const value = (obj as Record<string, unknown>)[key];
-  return value !== undefined ? (value as T) : fallback;
+  return fallback;
 }
 
 // =============================================================================
@@ -147,10 +146,10 @@ export function getProp<T>(obj: unknown, key: string, fallback: T): T {
 // =============================================================================
 
 /**
- * Clamps number to min/max range.
- * Ensures value stays within specified bounds.
+ * Clamps a number between minimum and maximum values.
+ * Ensures the result is always within the specified range.
  *
- * @param value - Number to clamp
+ * @param value - Value to clamp
  * @param min - Minimum allowed value
  * @param max - Maximum allowed value
  * @returns Clamped value
@@ -255,33 +254,29 @@ export function safeHexishString(value: unknown): string | undefined {
 // =============================================================================
 
 /**
- * Type guard: checks if value is a non-null object.
- * Useful for validating API responses and unknown data structures.
+ * Type guard: checks if value is a plain object (not array, null, or primitive).
  *
  * @param value - Value to check
- * @returns True if value is a plain object (not array, not null)
+ * @returns True if value is a plain object
  *
  * @example
  * isObject({}) // true
  * isObject({ key: "value" }) // true
  * isObject([]) // false
  * isObject(null) // false
- * isObject("string") // false
  */
 export function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
+  return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 /**
- * Type guard: checks if value is a valid number (not NaN/Infinity).
- * Provides type narrowing for TypeScript and runtime validation.
+ * Type guard: checks if value is a valid finite number.
  *
  * @param value - Value to check
  * @returns True if value is a finite number
  *
  * @example
  * isValidNumber(123) // true
- * isValidNumber(0) // true
  * isValidNumber(NaN) // false
  * isValidNumber(Infinity) // false
  * isValidNumber("123") // false
@@ -291,18 +286,16 @@ export function isValidNumber(value: unknown): value is number {
 }
 
 /**
- * Type guard: checks if value is non-empty string.
- * Validates string presence and non-whitespace content.
+ * Type guard: checks if value is a non-empty string (after trimming).
  *
  * @param value - Value to check
- * @returns True if value is a non-empty, non-whitespace string
+ * @returns True if value is a non-empty string
  *
  * @example
  * isNonEmptyString("hello") // true
  * isNonEmptyString("") // false
  * isNonEmptyString("   ") // false
  * isNonEmptyString(null) // false
- * isNonEmptyString(123) // false
  */
 export function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
@@ -332,16 +325,15 @@ export function isArray<T>(value: unknown): value is T[] {
 
 /**
  * Type guard: checks if value is a valid Date object.
- * Validates Date instance and non-invalid date value.
  *
  * @param value - Value to check
  * @returns True if value is a valid Date
  *
  * @example
  * isValidDate(new Date()) // true
- * isValidDate(new Date("2024-01-15")) // true
  * isValidDate(new Date("invalid")) // false
  * isValidDate("2024-01-15") // false
+ * isValidDate(null) // false
  */
 export function isValidDate(value: unknown): value is Date {
   return value instanceof Date && !Number.isNaN(value.getTime());

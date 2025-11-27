@@ -162,7 +162,9 @@ describe("PortfolioChart Component", () => {
       });
 
       // Should show empty state or message
-      expect(container.textContent).toMatch(/no data|empty/i);
+      expect(container.textContent).toMatch(
+        /connect a wallet to view portfolio|no data|empty/i
+      );
     });
 
     it("should handle single data point", () => {

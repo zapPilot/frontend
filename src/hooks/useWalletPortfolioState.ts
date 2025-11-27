@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
 import {
@@ -13,6 +13,51 @@ import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "@/services/analyticsService";
+import {
+  type MarketSentimentData,
+  useSentimentData,
+} from "@/services/sentimentService";
+import type { PortfolioAllocationSplit } from "@/types/portfolio";
+
+const DEFAULT_TARGET_ALLOCATION = 50;
+
+function clampPercentage(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.min(Math.max(value, 0), 100);
+}
+
+/**
+ * Extract allocation percentages from portfolio data.
+ * Uses pre-calculated percentage_of_portfolio from backend.
+ */
+function calculateAllocation(
+  landingPageData: LandingPageResponse | undefined
+): PortfolioAllocationSplit | null {
+  if (!landingPageData) {
+    return null;
+  }
+
+  const allocation = landingPageData.portfolio_allocation;
+  if (!allocation) {
+    return null;
+  }
+
+  // Use pre-calculated percentages from backend
+  const stablePercentage = allocation.stablecoins.percentage_of_portfolio ?? 0;
+  const cryptoPercentage =
+    (allocation.btc.percentage_of_portfolio ?? 0) +
+    (allocation.eth.percentage_of_portfolio ?? 0) +
+    (allocation.others.percentage_of_portfolio ?? 0);
+
+  return {
+    stable: clampPercentage(stablePercentage),
+    crypto: clampPercentage(cryptoPercentage),
+    target: DEFAULT_TARGET_ALLOCATION,
+  };
+}
 
 interface UseWalletPortfolioStateParams {
   urlUserId?: string;
@@ -70,11 +115,18 @@ export interface WalletPortfolioViewModel {
   portfolioMetrics: ReturnType<
     typeof useWalletPortfolioTransform
   >["portfolioMetrics"];
+  leverageMetrics: ReturnType<
+    typeof useWalletPortfolioTransform
+  >["leverageMetrics"];
+  sentimentData: MarketSentimentData | null;
+  allocation: PortfolioAllocationSplit | null;
   // Aggregated portfolio state
   portfolioState: ReturnType<typeof usePortfolioState>;
   // Progressive loading states
   isLandingLoading: boolean;
   isYieldLoading: boolean;
+  isSentimentLoading: boolean;
+  sentimentError: Error | null;
   // Local portfolio view toggles
   balanceHidden: boolean;
   toggleBalanceVisibility: () => void;
@@ -131,14 +183,30 @@ export function useWalletPortfolioState(
   const yieldSummaryQuery = useYieldSummaryData(resolvedUserId);
   const yieldSummaryData = yieldSummaryQuery.data;
 
+  const sentimentQuery = useSentimentData();
+  const sentimentData = sentimentQuery.data ?? null;
+  // Show loading state when query is pending, even during retry attempts
+  // This prevents showing "No data" while the API is still being fetched
+  const isSentimentLoading =
+    sentimentQuery.isLoading ||
+    sentimentQuery.isFetching ||
+    sentimentQuery.isRefetching;
+  const sentimentError = sentimentQuery.error;
+
   // Derived portfolio data
   const {
     pieChartData,
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
+    leverageMetrics,
     hasZeroData,
   } = useWalletPortfolioTransform(landingPageData);
+
+  const allocation = useMemo(
+    () => calculateAllocation(landingPageData),
+    [landingPageData]
+  );
 
   // Aggregated UI state for portfolio
   const portfolioState = usePortfolioState({
@@ -177,9 +245,14 @@ export function useWalletPortfolioState(
     categorySummaries,
     debtCategorySummaries,
     portfolioMetrics,
+    leverageMetrics,
+    sentimentData,
+    allocation,
     portfolioState,
     isLandingLoading: landingPageQuery.isLoading,
     isYieldLoading: yieldSummaryQuery.isLoading,
+    isSentimentLoading,
+    sentimentError: sentimentError ?? null,
     balanceHidden,
     toggleBalanceVisibility,
     expandedCategory,

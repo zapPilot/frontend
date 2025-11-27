@@ -58,13 +58,14 @@ export const CHART_PERIODS: ChartPeriod[] = [
 export function getAnalyticsMetrics(
   riskData: ActualRiskSummaryResponse
 ): AnalyticsMetric[] {
-  // Extract risk metrics from real data
+  // Extract risk metrics from real data (handle null values from API)
   const sharpeRatio =
-    riskData.risk_summary?.sharpe_ratio?.sharpe_ratio ||
-    riskData.summary_metrics?.sharpe_ratio;
+    riskData.risk_summary?.sharpe_ratio?.sharpe_ratio ??
+    riskData.summary_metrics?.sharpe_ratio ??
+    undefined;
   const volatilityPct =
-    riskData.summary_metrics?.annualized_volatility_percentage;
-  const drawdownPct = riskData.summary_metrics?.max_drawdown_percentage;
+    riskData.summary_metrics?.annualized_volatility_percentage ?? undefined;
+  const drawdownPct = riskData.summary_metrics?.max_drawdown_pct ?? undefined;
   return [
     createPlaceholderMetric(
       "Total Return",
@@ -108,7 +109,7 @@ function createPlaceholderMetric(
   };
 }
 
-function buildRiskMetric(volatilityPct?: number): AnalyticsMetric {
+function buildRiskMetric(volatilityPct?: number | null): AnalyticsMetric {
   const normalized =
     typeof volatilityPct === "number" ? volatilityPct : undefined;
   const derivedTrend =
@@ -126,7 +127,7 @@ function buildRiskMetric(volatilityPct?: number): AnalyticsMetric {
   };
 }
 
-function buildSharpeMetric(sharpeRatio?: number): AnalyticsMetric {
+function buildSharpeMetric(sharpeRatio?: number | null): AnalyticsMetric {
   const normalized = typeof sharpeRatio === "number" ? sharpeRatio : undefined;
   const derivedTrend =
     normalized !== undefined ? (normalized > 1.5 ? "up" : "down") : "neutral";
@@ -143,7 +144,7 @@ function buildSharpeMetric(sharpeRatio?: number): AnalyticsMetric {
   };
 }
 
-function buildDrawdownMetric(drawdownPct?: number): AnalyticsMetric {
+function buildDrawdownMetric(drawdownPct?: number | null): AnalyticsMetric {
   const normalized = typeof drawdownPct === "number" ? drawdownPct : undefined;
   const formattedValue =
     normalized !== undefined ? formatDrawdown(normalized) : "N/A";
@@ -159,7 +160,7 @@ function buildDrawdownMetric(drawdownPct?: number): AnalyticsMetric {
   };
 }
 
-function buildVolatilityMetric(volatilityPct?: number): AnalyticsMetric {
+function buildVolatilityMetric(volatilityPct?: number | null): AnalyticsMetric {
   const normalized =
     typeof volatilityPct === "number" ? volatilityPct : undefined;
   const trend =

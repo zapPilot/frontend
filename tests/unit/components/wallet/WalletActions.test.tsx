@@ -7,18 +7,15 @@ import { WalletActions } from "../../../../src/components/wallet/WalletActions";
 vi.mock("lucide-react", () => ({
   ArrowUpRight: () => <div data-testid="arrow-up-right-icon" />,
   ArrowDownLeft: () => <div data-testid="arrow-down-left-icon" />,
-  Settings: () => <div data-testid="settings-icon" />,
 }));
 
 describe("WalletActions", () => {
   const mockOnZapIn = vi.fn();
   const mockOnZapOut = vi.fn();
-  const mockOnOptimize = vi.fn();
 
   const defaultProps = {
     onZapInClick: mockOnZapIn,
     onZapOutClick: mockOnZapOut,
-    onOptimizeClick: mockOnOptimize,
   };
 
   beforeEach(() => {
@@ -26,12 +23,11 @@ describe("WalletActions", () => {
   });
 
   describe("Component Rendering", () => {
-    it("renders all three action buttons", () => {
+    it("renders both action buttons", () => {
       render(<WalletActions {...defaultProps} />);
 
       expect(screen.getByText("Zap In")).toBeInTheDocument();
       expect(screen.getByText("Zap Out")).toBeInTheDocument();
-      expect(screen.getByText("Optimize")).toBeInTheDocument();
     });
 
     it("renders with correct icons", () => {
@@ -39,7 +35,6 @@ describe("WalletActions", () => {
 
       expect(screen.getByTestId("arrow-up-right-icon")).toBeInTheDocument();
       expect(screen.getByTestId("arrow-down-left-icon")).toBeInTheDocument();
-      expect(screen.getByTestId("settings-icon")).toBeInTheDocument();
     });
 
     it("renders buttons with proper gradient structure", () => {
@@ -47,12 +42,10 @@ describe("WalletActions", () => {
 
       const zapInButton = screen.getByText("Zap In").closest("button");
       const zapOutButton = screen.getByText("Zap Out").closest("button");
-      const optimizeButton = screen.getByText("Optimize").closest("button");
 
       // Test that buttons exist and have expected structure
       expect(zapInButton).toBeInTheDocument();
       expect(zapOutButton).toBeInTheDocument();
-      expect(optimizeButton).toBeInTheDocument();
     });
   });
 
@@ -65,7 +58,6 @@ describe("WalletActions", () => {
 
       expect(mockOnZapIn).toHaveBeenCalledTimes(1);
       expect(mockOnZapOut).not.toHaveBeenCalled();
-      expect(mockOnOptimize).not.toHaveBeenCalled();
     });
 
     it("calls onZapOut when Zap Out button is clicked", () => {
@@ -76,18 +68,6 @@ describe("WalletActions", () => {
 
       expect(mockOnZapOut).toHaveBeenCalledTimes(1);
       expect(mockOnZapIn).not.toHaveBeenCalled();
-      expect(mockOnOptimize).not.toHaveBeenCalled();
-    });
-
-    it("calls onOptimize when Optimize button is clicked", () => {
-      render(<WalletActions {...defaultProps} />);
-
-      const optimizeButton = screen.getByText("Optimize");
-      fireEvent.click(optimizeButton);
-
-      expect(mockOnOptimize).toHaveBeenCalledTimes(1);
-      expect(mockOnZapIn).not.toHaveBeenCalled();
-      expect(mockOnZapOut).not.toHaveBeenCalled();
     });
 
     it("handles multiple clicks correctly", () => {
@@ -103,11 +83,7 @@ describe("WalletActions", () => {
     it("handles rapid clicking without issues", () => {
       render(<WalletActions {...defaultProps} />);
 
-      const buttons = [
-        screen.getByText("Zap In"),
-        screen.getByText("Zap Out"),
-        screen.getByText("Optimize"),
-      ];
+      const buttons = [screen.getByText("Zap In"), screen.getByText("Zap Out")];
 
       // Simulate rapid clicking
       for (const button of buttons) {
@@ -118,7 +94,6 @@ describe("WalletActions", () => {
 
       expect(mockOnZapIn).toHaveBeenCalledTimes(3);
       expect(mockOnZapOut).toHaveBeenCalledTimes(3);
-      expect(mockOnOptimize).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -127,7 +102,7 @@ describe("WalletActions", () => {
       render(<WalletActions {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
-      expect(buttons).toHaveLength(3);
+      expect(buttons).toHaveLength(2);
     });
 
     it("supports keyboard navigation", () => {
@@ -143,10 +118,10 @@ describe("WalletActions", () => {
     it("supports space key activation", () => {
       render(<WalletActions {...defaultProps} />);
 
-      const optimizeButton = screen.getByText("Optimize").closest("button");
-      if (optimizeButton) {
-        optimizeButton.focus();
-        expect(optimizeButton).toHaveFocus();
+      const zapOutButton = screen.getByText("Zap Out").closest("button");
+      if (zapOutButton) {
+        zapOutButton.focus();
+        expect(zapOutButton).toHaveFocus();
       }
     });
 
@@ -165,7 +140,7 @@ describe("WalletActions", () => {
       render(<WalletActions {...defaultProps} />);
 
       const buttons = screen.getAllByRole("button");
-      expect(buttons).toHaveLength(3);
+      expect(buttons).toHaveLength(2);
 
       for (const button of buttons) {
         expect(button).toBeInTheDocument();
@@ -196,12 +171,6 @@ describe("WalletActions", () => {
       expect(zapOutButton).toContainElement(
         screen.getByTestId("arrow-down-left-icon")
       );
-
-      // Check Optimize button
-      const optimizeButton = screen.getByText("Optimize").closest("button");
-      expect(optimizeButton).toContainElement(
-        screen.getByTestId("settings-icon")
-      );
     });
 
     it("maintains consistent button structure", () => {
@@ -223,7 +192,6 @@ describe("WalletActions", () => {
       const propsWithUndefined = {
         onZapInClick: undefined as any,
         onZapOutClick: mockOnZapOut,
-        onOptimizeClick: mockOnOptimize,
       };
 
       expect(() => {
@@ -235,7 +203,6 @@ describe("WalletActions", () => {
       const propsWithNull = {
         onZapInClick: null as any,
         onZapOutClick: mockOnZapOut,
-        onOptimizeClick: mockOnOptimize,
       };
 
       expect(() => {
@@ -255,7 +222,6 @@ describe("WalletActions", () => {
 
       expect(screen.getByText("Zap In")).toBeInTheDocument();
       expect(screen.getByText("Zap Out")).toBeInTheDocument();
-      expect(screen.getByText("Optimize")).toBeInTheDocument();
     });
   });
 
@@ -283,6 +249,30 @@ describe("WalletActions", () => {
 
       expect(newMockOnZapIn).toHaveBeenCalledTimes(1);
       expect(mockOnZapIn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Disabled State", () => {
+    it("renders disabled buttons when disabled prop is true", () => {
+      render(<WalletActions {...defaultProps} disabled={true} />);
+
+      const buttons = screen.getAllByRole("button");
+      for (const button of buttons) {
+        expect(button).toBeDisabled();
+      }
+    });
+
+    it("does not call callbacks when buttons are disabled", () => {
+      render(<WalletActions {...defaultProps} disabled={true} />);
+
+      const zapInButton = screen.getByText("Zap In");
+      const zapOutButton = screen.getByText("Zap Out");
+
+      fireEvent.click(zapInButton);
+      fireEvent.click(zapOutButton);
+
+      expect(mockOnZapIn).not.toHaveBeenCalled();
+      expect(mockOnZapOut).not.toHaveBeenCalled();
     });
   });
 });

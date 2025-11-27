@@ -1,11 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ComponentType } from "react";
+import { ComponentType, useCallback, useState } from "react";
 
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
 import { BaseCard } from "@/components/ui";
+import { RebalanceSection } from "@/components/wallet/RebalanceSection";
 import { WalletActions } from "@/components/wallet/WalletActions";
 import { WalletHeader } from "@/components/wallet/WalletHeader";
 import { WalletMetrics } from "@/components/wallet/WalletMetrics";
@@ -31,6 +32,22 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   vm,
 }: WalletPortfolioPresenterProps) {
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const optimizeHandler = vm.onOptimizeClick;
+
+  const handleOptimizeClick = useCallback(async () => {
+    if (!optimizeHandler || isOptimizing) {
+      return;
+    }
+
+    try {
+      setIsOptimizing(true);
+      await Promise.resolve(optimizeHandler());
+    } finally {
+      setIsOptimizing(false);
+    }
+  }, [isOptimizing, optimizeHandler]);
+
   return (
     <BalanceVisibilityProvider
       value={{
@@ -64,12 +81,23 @@ export function WalletPortfolioPresenter({
               yieldSummaryData={vm.yieldSummaryData}
               isLandingLoading={vm.isLandingLoading}
               isYieldLoading={vm.isYieldLoading}
+              sentimentData={vm.sentimentData}
+              isSentimentLoading={vm.isSentimentLoading}
+              sentimentError={vm.sentimentError}
+            />
+
+            <RebalanceSection
+              allocation={vm.allocation}
+              onOptimizeClick={
+                optimizeHandler ? handleOptimizeClick : undefined
+              }
+              disabled={vm.isVisitorMode || isOptimizing || !optimizeHandler}
+              isLoading={vm.isLandingLoading}
             />
 
             <WalletActions
               onZapInClick={vm.onZapInClick}
               onZapOutClick={vm.onZapOutClick}
-              onOptimizeClick={vm.onOptimizeClick}
               disabled={vm.isVisitorMode}
             />
           </BaseCard>
@@ -81,6 +109,7 @@ export function WalletPortfolioPresenter({
             categorySummaries={vm.categorySummaries}
             debtCategorySummaries={vm.debtCategorySummaries}
             pieChartData={vm.pieChartData || []}
+            leverageMetrics={vm.leverageMetrics}
             title="Asset Distribution"
             onRetry={vm.onRetry}
             testId="wallet-portfolio-overview"

@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
 
+import { MetricsSkeleton } from "@/components/ui/LoadingSystem";
+
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getAnalyticsMetrics } from "../../lib/portfolio-analytics";
 import { KeyMetricsGrid } from "./components";
@@ -37,18 +39,25 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
         </p>
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
-      {isLoading && (
-        <div className="text-center text-gray-400 py-8">
-          Loading analytics data...
-        </div>
-      )}
+      {isLoading && <MetricsSkeleton className="py-8" />}
       {error && (
-        <div className="text-center text-red-400 py-8">
-          Failed to load analytics data. Please try again later.
+        <div className="text-center py-8">
+          <div className="text-red-400 font-semibold mb-2">
+            Failed to load analytics data
+          </div>
+          <p className="text-sm text-gray-400">
+            {error.message || "Please try again later"}
+          </p>
         </div>
       )}
-      {!isLoading && !error && riskData && (
+      {!isLoading && !error && riskData && portfolioMetrics.length > 0 && (
         <KeyMetricsGrid metrics={portfolioMetrics} />
+      )}
+      {!isLoading && !error && riskData && portfolioMetrics.length === 0 && (
+        <div className="text-center text-gray-400 py-8">
+          No metrics available. This may happen for new portfolios with
+          insufficient transaction history.
+        </div>
       )}
       {/* ZAP-208: Asset Attribution Analysis - pending asset attribution API endpoint */}
     </div>

@@ -13,7 +13,7 @@
     "**/out/**",
     "**/coverage/**"
   ],
-  "minLines": 8,
-  "minTokens": 40,
+  "minLines": 5,
+  "minTokens": 30,
   "output": ".jscpd"
 }
