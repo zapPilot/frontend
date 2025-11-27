@@ -198,7 +198,7 @@ const buildRowCells = ({ pool, snapshotCount }: PoolEntry): RowCell[] => [
         {formatPercentage(pool.contribution_to_portfolio, false, 1)}
       </span>
     ),
-  }
+  },
 ];
 
 const CARD_SECTIONS: {

@@ -189,15 +189,17 @@ src/services/
 
 ### Analytics Engine API Migration (January 2025)
 
-The analytics-engine backend underwent a major refactor (commit `1457bc5`) introducing **Pydantic response models** with improved type safety and consistent field naming. The frontend was migrated to the new schema on **2025-01-22**.
+The analytics-engine backend underwent a major refactor (commit `1457bc5`) introducing **Pydantic
+response models** with improved type safety and consistent field naming. The frontend was migrated
+to the new schema on **2025-01-22**.
 
 #### **Field Name Changes**
 
-| Old Field Name | New Field Name | Response Model | Migration Date |
-|---------------|----------------|----------------|----------------|
-| `daily_totals` | `daily_values` | `UnifiedDashboardResponse.trends` | 2025-01-22 |
-| `allocation_data` | `allocations` | `UnifiedDashboardResponse.allocation` | 2025-01-22 |
-| `max_drawdown_percentage` | `max_drawdown_pct` | `RiskSummaryResponse.drawdown` | 2025-01-22 |
+| Old Field Name            | New Field Name     | Response Model                        | Migration Date |
+| ------------------------- | ------------------ | ------------------------------------- | -------------- |
+| `daily_totals`            | `daily_values`     | `UnifiedDashboardResponse.trends`     | 2025-01-22     |
+| `allocation_data`         | `allocations`      | `UnifiedDashboardResponse.allocation` | 2025-01-22     |
+| `max_drawdown_percentage` | `max_drawdown_pct` | `RiskSummaryResponse.drawdown`        | 2025-01-22     |
 
 #### **Structural Changes**
 
@@ -220,6 +222,7 @@ The analytics-engine backend underwent a major refactor (commit `1457bc5`) intro
 #### **Migration Impact**
 
 **Files Modified**:
+
 - `src/types/risk.ts` - Type definitions updated
 - `src/services/analyticsService.ts` - Response interfaces updated
 - `src/hooks/useRiskSummary.ts` - Validation logic updated
@@ -228,10 +231,13 @@ The analytics-engine backend underwent a major refactor (commit `1457bc5`) intro
 - All test files - Mock data updated
 
 **Adapter Pattern**:
-- `useChartData.ts` maintains backward compatibility by transforming new API format to legacy format for existing components
+
+- `useChartData.ts` maintains backward compatibility by transforming new API format to legacy format
+  for existing components
 - Components continue to consume `allocation_data` while the hook fetches `allocations` from API
 
 **Verification**:
+
 - TypeScript compilation: ✅ No new type errors introduced
 - Test suite: All tests updated with new schema
 - Global search: No legacy API field references except in adapter layer

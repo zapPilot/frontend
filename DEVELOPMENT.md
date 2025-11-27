@@ -54,7 +54,11 @@ npm test               # Run tests (configure as needed)
 
 ### Dead Code Detection
 
-Run `npm run deadcode` to execute the original Knip scan **and** a TypeScript export sweep (ts-prune with `tsconfig.tsprune.json`). Knip still covers unused files/dependencies, while ts-prune flags orphaned exports hiding behind barrel re-exports (e.g., `src/components/wallet/metrics/YieldMetric.tsx`). CI variants (`deadcode:ci`, `deadcode:check`, etc.) now include both passes, so failures will surface whenever either tool detects issues.
+Run `npm run deadcode` to execute the original Knip scan **and** a TypeScript export sweep (ts-prune
+with `tsconfig.tsprune.json`). Knip still covers unused files/dependencies, while ts-prune flags
+orphaned exports hiding behind barrel re-exports (e.g.,
+`src/components/wallet/metrics/YieldMetric.tsx`). CI variants (`deadcode:ci`, `deadcode:check`,
+etc.) now include both passes, so failures will surface whenever either tool detects issues.
 
 ## 🔄 Workflow
 
