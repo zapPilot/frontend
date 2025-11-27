@@ -73,14 +73,14 @@ export function ConsolidatedMetricV3Modern({
   // Modern card with left gradient accent
   const ModernCard = ({ children, isLoading = false }: { children: React.ReactNode; isLoading?: boolean }) => (
     <div
-      className={`relative bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors ${
+      className={`relative bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition-colors h-[140px] ${
         isLoading ? "animate-pulse" : ""
       }`}
     >
       {/* Left gradient accent */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-500 to-emerald-500" />
 
-      <div className="p-4 h-full flex flex-col items-center justify-center">
+      <div className="p-3 h-full flex flex-col items-center justify-center">
         {children}
       </div>
     </div>
@@ -112,12 +112,12 @@ export function ConsolidatedMetricV3Modern({
         <ROISectionSkeleton />
       ) : (
         <>
-          <div className="px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 mb-1">
+          <div className="px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20 mb-0.5">
             <span className="text-[10px] text-green-400 uppercase tracking-wider font-medium">Yearly ROI</span>
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
-            <span className={`text-xl md:text-2xl font-bold ${roiColor} tracking-tight`}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className={`text-lg md:text-xl font-bold ${roiColor} tracking-tight`}>
               {formatPercent(roiValue)}
             </span>
             <button
@@ -133,14 +133,14 @@ export function ConsolidatedMetricV3Modern({
       )}
 
       {/* Grid layout for PnL and Yield */}
-      <div className="grid grid-cols-2 gap-3 w-full">
+      <div className="grid grid-cols-2 gap-2 w-full">
         {/* PnL Card */}
         {isROILoading ? (
           <YearlyPnLSkeleton />
         ) : (
-          <div className="bg-gray-800/30 rounded-lg p-2 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-sm mb-0.5">
-              <DollarSign className="w-3 h-3 text-gray-500" />
+          <div className="bg-gray-800/30 rounded-lg p-1.5 text-center">
+            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-xs mb-0.5">
+              <DollarSign className="w-2.5 h-2.5 text-gray-500" />
               <span>{formatCurrency(roiAmount)}</span>
             </div>
             <span className="text-[9px] text-gray-500 uppercase tracking-wider">PnL</span>
@@ -151,9 +151,9 @@ export function ConsolidatedMetricV3Modern({
         {isYieldDataLoading ? (
           <YieldSectionSkeleton />
         ) : (
-          <div className="bg-purple-500/10 rounded-lg p-2 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-sm mb-0.5">
-              <Percent className="w-3 h-3 text-purple-400" />
+          <div className="bg-purple-500/10 rounded-lg p-1.5 text-center">
+            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-xs mb-0.5">
+              <Percent className="w-2.5 h-2.5 text-purple-400" />
               <span>{hasYieldData ? formatCurrency(yieldValue) : "N/A"}</span>
               <button
                 ref={yieldTooltip.triggerRef}

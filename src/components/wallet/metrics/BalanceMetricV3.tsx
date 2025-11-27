@@ -70,14 +70,14 @@ export function BalanceMetricV3({
         error
           ? "bg-gray-900/50 border border-red-900/30 hover:border-red-800/50"
           : "bg-gray-900/50 border border-gray-800 hover:border-gray-700"
-      } rounded-xl overflow-hidden transition-colors`}
+      } rounded-xl overflow-hidden transition-colors h-[140px]`}
     >
       {/* Left gradient accent */}
       {!error && (
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500" />
       )}
 
-      <div className="p-4 h-full flex flex-col items-center justify-center relative">
+      <div className="p-3 h-full flex flex-col items-center justify-center relative">
         {/* Decorative icon */}
         <div
           className="absolute -right-6 -top-6 p-2 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none select-none"
@@ -140,7 +140,7 @@ export function BalanceMetricV3({
   return (
     <ModernCard>
       {/* Badge label at top */}
-      <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-2 flex items-center gap-1">
+      <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5 flex items-center gap-1">
         <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">Balance</span>
         {hasPoolDetails && (
           <div className="relative">
@@ -170,13 +170,13 @@ export function BalanceMetricV3({
       </div>
 
       {/* Main value */}
-      <div className="text-xl md:text-2xl font-bold text-white tracking-tight mb-2 text-center">
+      <div className="text-lg md:text-xl font-bold text-white tracking-tight mb-1.5 text-center">
         {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
       </div>
 
       {/* Pool stats as pill chips */}
       {hasPoolDetails && ((totalPositions ?? 0) > 0 || (protocolsCount ?? 0) > 0 || (chainsCount ?? 0) > 0) && (
-        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+        <div className="flex items-center gap-1 flex-wrap justify-center">
           {(totalPositions ?? 0) > 0 && (
             <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
               {totalPositions} pos

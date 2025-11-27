@@ -51,7 +51,7 @@ export function MarketSentimentMetricV3({
         isError
           ? "bg-gray-900/50 border border-red-900/30 hover:border-red-800/50"
           : "bg-gray-900/50 border border-gray-800 hover:border-gray-700"
-      } rounded-xl overflow-hidden transition-colors`}
+      } rounded-xl overflow-hidden transition-colors h-[140px]`}
     >
       {/* Left gradient accent - color matches sentiment */}
       {!isError && !isLoading && (
@@ -64,7 +64,7 @@ export function MarketSentimentMetricV3({
         />
       )}
 
-      <div className="p-4 h-full flex flex-col items-center justify-center">
+      <div className="p-3 h-full flex flex-col items-center justify-center">
         {children}
       </div>
     </div>
@@ -96,29 +96,29 @@ export function MarketSentimentMetricV3({
   return (
     <ModernCard>
       {/* Badge label */}
-      <div className={`px-2 py-0.5 rounded-full bg-${statusColor.replace('text-', '')}/10 border border-${statusColor.replace('text-', '')}/20 mb-1`}>
+      <div className={`px-2 py-0.5 rounded-full bg-${statusColor.replace('text-', '')}/10 border border-${statusColor.replace('text-', '')}/20 mb-0.5`}>
         <span className={`text-[10px] ${statusColor} uppercase tracking-wider font-medium`}>
           Market Sentiment
         </span>
       </div>
 
       {/* Score and status */}
-      <div className="flex items-end gap-1.5 mb-1">
-        <span className={`text-xl md:text-2xl font-bold ${statusColor} tracking-tight`}>
+      <div className="flex items-end gap-1.5 mb-0.5">
+        <span className={`text-lg md:text-xl font-bold ${statusColor} tracking-tight`}>
           {sentiment?.value ?? "--"}
         </span>
         <span className="text-xs text-gray-400 mb-0.5">/100</span>
       </div>
 
-      <p className={`text-xs font-medium ${statusColor} mb-2 uppercase tracking-wide`}>
+      <p className={`text-xs font-medium ${statusColor} mb-1.5 uppercase tracking-wide`}>
         {sentiment?.status ?? "No data"}
       </p>
 
       {/* Styled quote container with micro-background */}
       {sentiment?.quote && (
-        <div className="w-full mt-1">
-          <div className="bg-gray-800/20 border border-gray-800/40 rounded-lg p-2 text-center">
-            <p className="text-[10px] leading-snug text-gray-400 italic line-clamp-2">
+        <div className="w-full mt-0.5">
+          <div className="bg-gray-800/20 border border-gray-800/40 rounded-lg p-1.5 text-center">
+            <p className="text-[9px] leading-tight text-gray-400 italic line-clamp-2">
               &ldquo;{sentiment.quote.quote}&rdquo;
             </p>
           </div>

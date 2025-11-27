@@ -31,7 +31,7 @@ import { WelcomeNewUser } from "./WelcomeNewUser";
  * After choosing your favorite, delete the unwanted variation files
  * and update this component to use the chosen variation directly.
  */
-const LAYOUT_VARIANT = 3; // 👈 Change this to switch layouts
+const LAYOUT_VARIANT: number = 3; // 👈 Change this to switch layouts
 
 interface WalletMetricsProps {
   portfolioState: PortfolioState;
