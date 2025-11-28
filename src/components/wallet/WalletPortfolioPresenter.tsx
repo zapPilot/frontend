@@ -6,6 +6,7 @@ import { ComponentType, useCallback, useState } from "react";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { PortfolioOverview } from "@/components/PortfolioOverview";
 import { BaseCard } from "@/components/ui";
+import { CalendarOnboardingBanner } from "@/components/wallet/CalendarOnboardingBanner";
 import { RebalanceSection } from "@/components/wallet/RebalanceSection";
 import { WalletActions } from "@/components/wallet/WalletActions";
 import { WalletHeader } from "@/components/wallet/WalletHeader";
@@ -56,6 +57,16 @@ export function WalletPortfolioPresenter({
       }}
     >
       <div className="space-y-6">
+        {/* Calendar Onboarding Banner */}
+        <CalendarOnboardingBanner
+          isOwnBundle={vm.isOwnBundle ?? true}
+          isCalendarConnected={false} // Will be checked via localStorage in component
+          onConnect={() => {
+            // Trigger the calendar modal via event
+            window.dispatchEvent(new CustomEvent("open-calendar-modal"));
+          }}
+        />
+
         <ErrorBoundary
           resetKeys={[
             vm.resolvedUserId || "no-user",

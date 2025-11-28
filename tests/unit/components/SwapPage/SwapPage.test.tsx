@@ -30,6 +30,11 @@ vi.mock("../../../../src/hooks/useChain", () => ({
   })),
 }));
 
+// Mock toast hook
+vi.mock("../../../../src/hooks/useToast", () => ({
+  useToast: () => ({ showToast: vi.fn() }),
+}));
+
 // Mock child components
 vi.mock("../../../../src/components/SwapPage/SwapPageHeader", () => ({
   SwapPageHeader: vi.fn(({ strategy, onBack }: SwapPageHeaderProps) => (

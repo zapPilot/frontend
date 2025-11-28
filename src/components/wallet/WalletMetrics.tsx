@@ -4,17 +4,12 @@ import React from "react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
-import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
 import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { BalanceMetric } from "./metrics";
-import { ConsolidatedMetricV1 } from "./metrics/consolidated/ConsolidatedMetricV1";
-import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
-import { WelcomeNewUser } from "./WelcomeNewUser";
+import { WalletMetricsModern } from "./WalletMetricsModern";
 
 interface WalletMetricsProps {
   portfolioState: PortfolioState;
@@ -36,100 +31,13 @@ interface WalletMetricsProps {
  * Orchestrates wallet metrics display with progressive loading.
  * Each metric renders independently based on its own data availability.
  *
- * Displays portfolio metrics using a consolidated layout with:
- * - BalanceMetric for total portfolio balance
- * - ConsolidatedMetricV1 for ROI, PnL, and Yield in a single card
- * - MarketSentimentMetric for market sentiment indicators
+ * Uses the modern layout with gradient accents and optimized vertical spacing:
+ * - BalanceMetricModern for total portfolio balance
+ * - ConsolidatedMetricModern for ROI, PnL, and Yield in a single card
+ * - MarketSentimentMetricModern for market sentiment indicators
  */
-
-export const WalletMetrics = React.memo<WalletMetricsProps>(
-  ({
-    portfolioState,
-    balanceHidden,
-    portfolioChangePercentage,
-    landingPageData,
-    yieldSummaryData,
-    isLandingLoading = false,
-    isYieldLoading = false,
-    sentimentData,
-    isSentimentLoading = false,
-    sentimentError = null,
-  }) => {
-    const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
-
-    // Use portfolio state helpers for consistent logic
-    const {
-      shouldShowLoading,
-      shouldShowNoDataMessage,
-      shouldShowError,
-      getDisplayTotalValue,
-    } = usePortfolioStateHelpers(portfolioState);
-
-    // Show welcome message for new users
-    if (portfolioState.errorMessage === "USER_NOT_FOUND") {
-      return <WelcomeNewUser />;
-    }
-
-    // Some older flows still inject yield_summary via landingPageData.
-    // Fall back to that structure when the dedicated yield query hasn't resolved yet
-    // so legacy screens/tests keep working while progressive loading is rolled out.
-    const resolvedYieldSummary =
-      yieldSummaryData ?? landingPageData?.yield_summary ?? null;
-
-    // Performance metrics props (shared across variations)
-    const performanceProps = {
-      portfolioROI: landingPageData?.portfolio_roi,
-      yieldSummaryData: resolvedYieldSummary,
-      isLandingLoading,
-      isYieldLoading,
-      shouldShowLoading,
-      portfolioChangePercentage,
-      errorMessage: portfolioState.errorMessage,
-    };
-
-    // Calculate pool details summary stats
-    const poolDetails = landingPageData?.pool_details ?? [];
-    const totalPositions = poolDetails.length;
-    const protocolsCount =
-      poolDetails.length > 0
-        ? new Set(poolDetails.map(p => p.protocol.toLowerCase())).size
-        : 0;
-    const chainsCount =
-      poolDetails.length > 0
-        ? new Set(poolDetails.map(p => p.chain.toLowerCase())).size
-        : 0;
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <BalanceMetric
-            totalNetUsd={landingPageData?.total_net_usd ?? null}
-            isLoading={isLandingLoading}
-            shouldShowLoading={shouldShowLoading}
-            balanceHidden={resolvedHidden}
-            shouldShowError={shouldShowError}
-            errorMessage={portfolioState.errorMessage ?? null}
-            shouldShowNoDataMessage={shouldShowNoDataMessage}
-            getDisplayTotalValue={getDisplayTotalValue}
-            poolDetails={poolDetails}
-            totalPositions={totalPositions}
-            protocolsCount={protocolsCount}
-            chainsCount={chainsCount}
-          />
-        </div>
-        <div>
-          <ConsolidatedMetricV1 {...performanceProps} />
-        </div>
-        <div>
-          <MarketSentimentMetric
-            sentiment={sentimentData ?? null}
-            isLoading={isSentimentLoading}
-            error={sentimentError}
-          />
-        </div>
-      </div>
-    );
-  }
-);
+export const WalletMetrics = React.memo<WalletMetricsProps>(props => {
+  return <WalletMetricsModern {...props} />;
+});
 
 WalletMetrics.displayName = "WalletMetrics";

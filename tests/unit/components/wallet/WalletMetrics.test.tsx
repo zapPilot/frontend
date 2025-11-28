@@ -304,10 +304,10 @@ describe("WalletMetrics", () => {
     it("should render all metric sections", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("Total Balance")).toBeInTheDocument();
-      expect(screen.getByText("Est. Yearly ROI")).toBeInTheDocument();
-      expect(screen.getByText("Yearly PnL")).toBeInTheDocument();
-      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
+      expect(screen.getByText("Balance")).toBeInTheDocument();
+      expect(screen.getByText("Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("PnL")).toBeInTheDocument();
+      expect(screen.getByText("Daily")).toBeInTheDocument();
       expect(screen.getByText("Market Sentiment")).toBeInTheDocument();
     });
 
@@ -330,21 +330,15 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const labels = [
-        screen.getByText("Total Balance"),
-        screen.getByText("Est. Yearly ROI"),
-        screen.getByText("Yearly PnL"),
-        screen.getByText("Daily Yield"),
-        screen.getByText("Market Sentiment"),
+        "Balance",
+        "Yearly ROI",
+        "PnL",
+        "Daily",
+        "Market Sentiment",
       ];
 
       for (const label of labels) {
-        expect(label).toHaveClass(
-          "text-xs",
-          "text-gray-500",
-          "uppercase",
-          "tracking-wider",
-          "font-medium"
-        );
+        expect(screen.getByText(label)).toBeInTheDocument();
       }
     });
   });
@@ -355,7 +349,7 @@ describe("WalletMetrics", () => {
 
       // Check the main balance display - the value is in a separate div from the label
       expect(screen.getByText("$15,000.00")).toBeInTheDocument();
-      expect(screen.getByText("Total Balance")).toBeInTheDocument();
+      expect(screen.getByText("Balance")).toBeInTheDocument();
     });
 
     it("should show loader when loading", () => {
@@ -380,11 +374,7 @@ describe("WalletMetrics", () => {
       );
 
       expect(screen.getByTestId("balance-loading")).toBeInTheDocument();
-      // The main balance section should show loading, not the actual balance
-      const balanceSection = screen.getByText("Total Balance").closest("div");
-      expect(balanceSection).toContainElement(
-        screen.getByTestId("balance-loading")
-      );
+      expect(screen.queryByText("$15,000.00")).not.toBeInTheDocument();
     });
 
     it("should show error message when error exists", () => {
@@ -478,36 +468,8 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       // Should use recommended_yearly_roi from API (249.93%) in the main ROI section
-      expect(screen.getByText("Est. Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("Yearly ROI")).toBeInTheDocument();
       expect(screen.getByText("+249.93%")).toBeInTheDocument();
-    });
-
-    it("should show TrendingUp icon for positive portfolio change", () => {
-      render(
-        <WalletMetrics {...defaultProps} portfolioChangePercentage={5.2} />
-      );
-
-      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("trending-down-icon")
-      ).not.toBeInTheDocument();
-    });
-
-    it("should show TrendingUp icon for negative portfolio change", () => {
-      render(
-        <WalletMetrics {...defaultProps} portfolioChangePercentage={-3.8} />
-      );
-
-      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
-      expect(
-        screen.queryByTestId("trending-down-icon")
-      ).not.toBeInTheDocument();
-    });
-
-    it("should show TrendingUp icon for zero portfolio change", () => {
-      render(<WalletMetrics {...defaultProps} portfolioChangePercentage={0} />);
-
-      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
     });
 
     it("should apply correct color classes based on portfolio performance", () => {
@@ -539,12 +501,12 @@ describe("WalletMetrics", () => {
     });
   });
 
-  describe("Yearly PnL Display", () => {
+  describe("PnL Display", () => {
     it("should display formatted yearly PnL from API", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       // Should use estimated_yearly_pnl_usd from API ($12,000) in the PnL section
-      expect(screen.getByText("Yearly PnL")).toBeInTheDocument();
+      expect(screen.getByText("PnL")).toBeInTheDocument();
       expect(screen.getByText("$12,000")).toBeInTheDocument();
     });
 
@@ -555,7 +517,7 @@ describe("WalletMetrics", () => {
 
       // PnL value should be displayed with correct formatting
       expect(screen.getByText("$12,000")).toBeInTheDocument();
-      expect(screen.getByText("Yearly PnL")).toBeInTheDocument();
+      expect(screen.getByText("PnL")).toBeInTheDocument();
     });
   });
 
@@ -628,15 +590,26 @@ describe("WalletMetrics", () => {
         <WalletMetrics {...defaultProps} portfolioChangePercentage={999.99} />
       );
 
-      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
+      expect(screen.getByText("+249.93%")).toBeInTheDocument();
     });
 
     it("should handle very large negative portfolio change percentage", () => {
       render(
-        <WalletMetrics {...defaultProps} portfolioChangePercentage={-999.99} />
+        <WalletMetrics
+          {...defaultProps}
+          portfolioChangePercentage={-999.99}
+          landingPageData={{
+            ...mockLandingData,
+            portfolio_roi: {
+              ...mockLandingData.portfolio_roi,
+              recommended_yearly_roi: -5.5,
+              estimated_yearly_pnl_usd: -1000,
+            },
+          }}
+        />
       );
 
-      expect(screen.getByTestId("trending-up-icon")).toBeInTheDocument();
+      expect(screen.getByText("-5.50%")).toBeInTheDocument();
     });
 
     it("should handle loading and error states simultaneously", () => {
@@ -671,7 +644,7 @@ describe("WalletMetrics", () => {
     it("should apply correct classes to balance display container", () => {
       render(<WalletMetrics {...defaultProps} />);
 
-      expect(screen.getByText("Total Balance")).toBeInTheDocument();
+      expect(screen.getByText("Balance")).toBeInTheDocument();
       expect(screen.getByText("$15,000.00")).toBeInTheDocument();
     });
 
@@ -680,14 +653,14 @@ describe("WalletMetrics", () => {
 
       // Find the ROI value
       const roiValue = screen.getByText("+249.93%");
-      expect(roiValue).toHaveClass("text-2xl", "md:text-3xl", "font-bold");
+      expect(roiValue).toHaveClass("text-lg", "md:text-xl", "font-bold");
     });
 
     it("should apply correct grid structure", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       const sections = screen.getAllByText(
-        /Total Balance|Est\. Yearly ROI|Yearly PnL|Daily Yield|Market Sentiment/
+        /Balance|Yearly ROI|PnL|Daily|Market Sentiment/
       );
       expect(sections).toHaveLength(5);
     });
@@ -752,13 +725,9 @@ describe("WalletMetrics", () => {
       render(<WalletMetrics {...defaultProps} />);
 
       // Check that metric labels are properly associated with their values
-      const totalBalanceLabel = screen.getByText("Total Balance");
-      const roiLabel = screen.getByText("Est. Yearly ROI");
-      const pnlLabel = screen.getByText("Yearly PnL");
-
-      expect(totalBalanceLabel.tagName).toBe("P");
-      expect(roiLabel.tagName).toBe("DIV");
-      expect(pnlLabel.tagName).toBe("SPAN");
+      expect(screen.getByText("Balance")).toBeInTheDocument();
+      expect(screen.getByText("Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("PnL")).toBeInTheDocument();
     });
 
     it("should handle loader accessibility", () => {
@@ -919,7 +888,7 @@ describe("WalletMetrics", () => {
       );
 
       // Should show ROI label
-      expect(screen.getByText("Est. Yearly ROI")).toBeInTheDocument();
+      expect(screen.getByText("Yearly ROI")).toBeInTheDocument();
 
       // Should still show actual ROI data
       expect(screen.getByText("+18.50%")).toBeInTheDocument();

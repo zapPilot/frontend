@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
 import { useChain } from "@/hooks/useChain";
+import { useToast } from "@/hooks/useToast";
 
 import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
@@ -52,6 +53,9 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
   // Get current chain for token operations
   const { chain } = useChain();
+
+  // Toast notifications
+  const { showToast } = useToast();
 
   // Fetch strategies data with real portfolio data from API
   const { strategies, isError, error, isInitialLoading, refetch } =
@@ -239,6 +243,27 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
     setZapExecution(prev => (prev ? { ...prev, isExecuting: false } : null));
 
+    // Check if calendar is connected
+    const calendarConnected = localStorage.getItem(
+      "zap-pilot-calendar-connected"
+    );
+
+    // Show calendar prompt if not connected
+    if (!calendarConnected) {
+      showToast({
+        title: "🎉 ZapIn Successful!",
+        message: "Want calendar reminders for market opportunities?",
+        type: "success",
+        duration: 10000,
+        action: {
+          label: "Connect Calendar",
+          onClick: () => {
+            window.dispatchEvent(new CustomEvent("open-calendar-modal"));
+          },
+        },
+      });
+    }
+
     // Optionally refresh strategies data to reflect new positions
     try {
       await refetch();
@@ -248,7 +273,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
         refetchError
       );
     }
-  }, [refetch]);
+  }, [refetch, showToast]);
 
   // Handle execution error
   const handleExecutionError = useCallback((error: string) => {
