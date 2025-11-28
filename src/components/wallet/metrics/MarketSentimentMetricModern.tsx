@@ -17,9 +17,50 @@ const SENTIMENT_COLOR_MAP: Record<string, string> = {
   "Extreme Greed": "text-rose-400",
 };
 
+const SENTIMENT_BORDER_COLOR_MAP: Record<string, string> = {
+  "Extreme Fear": "bg-emerald-400/10 border-emerald-400/20",
+  Fear: "bg-lime-400/10 border-lime-400/20",
+  Neutral: "bg-amber-300/10 border-amber-300/20",
+  Greed: "bg-orange-400/10 border-orange-400/20",
+  "Extreme Greed": "bg-rose-400/10 border-rose-400/20",
+};
+
+const SENTIMENT_HINT_MAP: Record<string, string> = {
+  "Extreme Fear": "buy",
+  Fear: "watch",
+  Neutral: "hold",
+  Greed: "trim",
+  "Extreme Greed": "sell",
+};
+
+const SENTIMENT_HINT_COLOR_MAP: Record<string, string> = {
+  "Extreme Fear": "text-emerald-500/80",
+  Fear: "text-lime-500/80",
+  Neutral: "text-amber-500/80",
+  Greed: "text-orange-500/80",
+  "Extreme Greed": "text-rose-500/80",
+};
+
 function getSentimentColor(status?: string | null): string {
   if (!status) return "text-gray-300";
   return SENTIMENT_COLOR_MAP[status] ?? "text-gray-200";
+}
+
+function getSentimentBorderColor(status?: string | null): string {
+  if (!status) return "bg-gray-300/10 border-gray-300/20";
+  return (
+    SENTIMENT_BORDER_COLOR_MAP[status] ?? "bg-gray-300/10 border-gray-300/20"
+  );
+}
+
+function getSentimentHint(status?: string | null): string | null {
+  if (!status) return null;
+  return SENTIMENT_HINT_MAP[status] ?? null;
+}
+
+function getSentimentHintColor(status?: string | null): string {
+  if (!status) return "text-gray-500";
+  return SENTIMENT_HINT_COLOR_MAP[status] ?? "text-gray-500";
 }
 
 /**
@@ -44,6 +85,9 @@ export function MarketSentimentMetricModern({
   error,
 }: MarketSentimentMetricModernProps) {
   const statusColor = getSentimentColor(sentiment?.status);
+  const borderColor = getSentimentBorderColor(sentiment?.status);
+  const hint = getSentimentHint(sentiment?.status);
+  const hintColor = getSentimentHintColor(sentiment?.status);
 
   // Modern card with left gradient accent
   const ModernCard = ({
@@ -71,7 +115,7 @@ export function MarketSentimentMetricModern({
         />
       )}
 
-      <div className="p-3 h-full flex flex-col items-center justify-center">
+      <div className="p-3 h-full flex flex-col items-center justify-start pt-2">
         {children}
       </div>
     </div>
@@ -103,9 +147,7 @@ export function MarketSentimentMetricModern({
   return (
     <ModernCard>
       {/* Badge label */}
-      <div
-        className={`px-2 py-0.5 rounded-full bg-${statusColor.replace("text-", "")}/10 border border-${statusColor.replace("text-", "")}/20 mb-0.5`}
-      >
+      <div className={`px-2 py-0.5 rounded-full ${borderColor} mb-0.5`}>
         <span
           className={`text-[10px] ${statusColor} uppercase tracking-wider font-medium`}
         >
@@ -127,6 +169,13 @@ export function MarketSentimentMetricModern({
         className={`text-xs font-medium ${statusColor} mb-1.5 uppercase tracking-wide`}
       >
         {sentiment?.status ?? "No data"}
+        {hint && (
+          <span
+            className={`text-[10px] ${hintColor} font-normal ml-1.5 lowercase`}
+          >
+            {hint}
+          </span>
+        )}
       </p>
 
       {/* Styled quote container with micro-background */}

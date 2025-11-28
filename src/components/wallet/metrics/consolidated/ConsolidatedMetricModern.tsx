@@ -92,7 +92,7 @@ export function ConsolidatedMetricModern({
       {/* Left gradient accent */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-green-500 to-emerald-500" />
 
-      <div className="p-3 h-full flex flex-col items-center justify-center">
+      <div className="p-3 h-full flex flex-col items-center justify-start pt-2">
         {children}
       </div>
     </div>
@@ -156,19 +156,19 @@ export function ConsolidatedMetricModern({
       )}
 
       {/* Grid layout for PnL and Yield */}
-      <div className="grid grid-cols-2 gap-2 w-full">
+      <div className="grid grid-cols-2 gap-2 w-full mt-1">
         {/* PnL Card */}
         {isROILoading ? (
           <YearlyPnLSkeleton />
         ) : (
-          <div className="bg-gray-800/30 rounded-lg p-1.5 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-xs mb-0.5">
-              <DollarSign className="w-2.5 h-2.5 text-gray-500" />
-              <span>{formatCurrency(roiAmount)}</span>
-            </div>
-            <span className="text-[9px] text-gray-500 uppercase tracking-wider">
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
               PnL
             </span>
+            <div className="flex items-center gap-1 text-gray-300 font-medium text-xs">
+              <DollarSign className="w-3 h-3 text-gray-500" />
+              <span>{formatCurrency(roiAmount)}</span>
+            </div>
           </div>
         )}
 
@@ -176,22 +176,22 @@ export function ConsolidatedMetricModern({
         {isYieldDataLoading ? (
           <YieldSectionSkeleton />
         ) : (
-          <div className="bg-purple-500/10 rounded-lg p-1.5 text-center">
-            <div className="flex items-center justify-center gap-1 text-gray-300 font-medium text-xs mb-0.5">
-              <Percent className="w-2.5 h-2.5 text-purple-400" />
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20">
+            <span className="text-[9px] text-purple-400 uppercase tracking-wider font-medium mb-0.5">
+              Daily Yield
+            </span>
+            <div className="flex items-center gap-1 text-gray-300 font-medium text-xs">
+              <Percent className="w-3 h-3 text-purple-400" />
               <span>{hasYieldData ? formatCurrency(yieldValue) : "N/A"}</span>
               <button
                 ref={yieldTooltip.triggerRef}
                 onClick={yieldTooltip.toggle}
-                className="text-gray-600 hover:text-gray-300"
+                className="text-gray-500 hover:text-gray-300 transition-colors ml-0.5"
                 aria-label="Yield"
               >
-                <Info className="w-2.5 h-2.5" />
+                <Info className="w-3 h-3" />
               </button>
             </div>
-            <span className="text-[9px] text-purple-400 uppercase tracking-wider">
-              Daily
-            </span>
           </div>
         )}
       </div>

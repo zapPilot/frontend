@@ -84,18 +84,8 @@ export function BalanceMetricModern({
         <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500" />
       )}
 
-      <div className="p-3 h-full flex flex-col items-center justify-center relative">
-        {/* Decorative icon */}
-        <div
-          className="absolute -right-6 -top-6 p-2 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none select-none"
-          aria-hidden="true"
-        >
-          <Wallet className="w-20 h-20 md:w-24 md:h-24 text-blue-400" />
-        </div>
-
-        <div className="relative z-10 w-full flex flex-col items-center">
-          {children}
-        </div>
+      <div className="p-3 h-full flex flex-col items-center justify-start pt-2">
+        {children}
       </div>
     </div>
   );
@@ -104,7 +94,7 @@ export function BalanceMetricModern({
   if (metricState.shouldRenderSkeleton) {
     return (
       <ModernCard>
-        <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-2">
+        <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5">
           <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
             Balance
           </span>
@@ -120,7 +110,7 @@ export function BalanceMetricModern({
   if (shouldShowError && errorMessage && errorMessage !== "USER_NOT_FOUND") {
     return (
       <ModernCard error={true}>
-        <div className="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 mb-2">
+        <div className="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 mb-0.5">
           <span className="text-[10px] text-red-400 uppercase tracking-wider font-medium">
             Balance
           </span>
@@ -153,12 +143,19 @@ export function BalanceMetricModern({
   return (
     <ModernCard>
       {/* Badge label at top */}
-      <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5 flex items-center gap-1">
+      <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5">
         <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
           Balance
         </span>
+      </div>
+
+      {/* Main value */}
+      <div className="flex items-center justify-center gap-2 mb-1.5">
+        <div className="text-lg md:text-xl font-bold text-white tracking-tight">
+          {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
+        </div>
         {hasPoolDetails && (
-          <div className="relative">
+          <div className="relative flex items-center">
             <span
               ref={poolTooltip.triggerRef}
               onClick={poolTooltip.toggle}
@@ -166,9 +163,9 @@ export function BalanceMetricModern({
               role="button"
               tabIndex={0}
               aria-label="Pool details"
-              className="inline-flex cursor-help"
+              className="inline-flex cursor-help text-gray-500 hover:text-blue-400 transition-colors"
             >
-              <Info className="w-2.5 h-2.5 text-blue-400/70 hover:text-blue-400" />
+              <Info className="w-4 h-4" />
             </span>
             {poolTooltip.visible && (
               <PoolDetailsTooltip
@@ -182,11 +179,6 @@ export function BalanceMetricModern({
             )}
           </div>
         )}
-      </div>
-
-      {/* Main value */}
-      <div className="text-lg md:text-xl font-bold text-white tracking-tight mb-1.5 text-center">
-        {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
       </div>
 
       {/* Pool stats as pill chips */}
