@@ -307,7 +307,7 @@ describe("WalletMetrics", () => {
       expect(screen.getByText("Balance")).toBeInTheDocument();
       expect(screen.getByText("Yearly ROI")).toBeInTheDocument();
       expect(screen.getByText("PnL")).toBeInTheDocument();
-      expect(screen.getByText("Daily")).toBeInTheDocument();
+      expect(screen.getByText("Daily Yield")).toBeInTheDocument();
       expect(screen.getByText("Market Sentiment")).toBeInTheDocument();
     });
 
@@ -333,7 +333,7 @@ describe("WalletMetrics", () => {
         "Balance",
         "Yearly ROI",
         "PnL",
-        "Daily",
+        "Daily Yield",
         "Market Sentiment",
       ];
 
