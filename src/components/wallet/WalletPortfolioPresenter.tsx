@@ -63,7 +63,7 @@ export function WalletPortfolioPresenter({
           isCalendarConnected={false} // Will be checked via localStorage in component
           onConnect={() => {
             // Trigger the calendar modal via event
-            window.dispatchEvent(new CustomEvent('open-calendar-modal'));
+            window.dispatchEvent(new CustomEvent("open-calendar-modal"));
           }}
         />
 

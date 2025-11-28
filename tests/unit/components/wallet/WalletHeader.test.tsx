@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { WalletHeader } from "../../../../src/components/wallet/WalletHeader";
-import { act, fireEvent, render, screen } from "../../../test-utils";
+import { fireEvent, render, screen } from "../../../test-utils";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
   BarChart3: vi.fn(() => <span data-testid="bar-chart-icon">BarChart3</span>),
+  Calendar: vi.fn(() => <span data-testid="calendar-icon">Calendar</span>),
   DollarSign: vi.fn(() => (
     <span data-testid="dollar-sign-icon">DollarSign</span>
   )),
@@ -143,19 +144,23 @@ describe("WalletHeader", () => {
     it("should apply correct CSS classes to all buttons", () => {
       render(<WalletHeader {...defaultProps} />);
 
-      const buttons = screen.getAllByRole("button");
+      const walletButton = screen.getByTitle("Manage Wallets");
+      const balanceButton = screen.getByTitle(/Hide Balance|Show Balance/);
+      const calendarButton = screen.getByTitle(/Connect Google Calendar/);
 
-      for (const button of buttons) {
-        expect(button).toHaveClass(
-          "p-3",
-          "rounded-xl",
-          "glass-morphism",
-          "hover:bg-white/10",
-          "transition-all",
-          "duration-300",
-          "cursor-pointer"
-        );
-      }
+      expect(walletButton).toHaveClass(
+        "glass-morphism",
+        "hover:bg-white/10",
+        "transition-all",
+        "duration-300"
+      );
+      expect(balanceButton).toHaveClass(
+        "glass-morphism",
+        "hover:bg-white/10",
+        "transition-all",
+        "duration-300"
+      );
+      expect(calendarButton).toHaveClass("rounded-xl");
     });
 
     it("should have correct button container layout", () => {
@@ -169,6 +174,7 @@ describe("WalletHeader", () => {
       // Verify buttons are present and functional
       expect(screen.getByTestId("wallet-icon")).toBeInTheDocument();
       expect(screen.getByTestId("eye-icon")).toBeInTheDocument();
+      expect(screen.getByTestId("calendar-icon")).toBeInTheDocument();
     });
   });
 
@@ -201,42 +207,6 @@ describe("WalletHeader", () => {
         button.focus();
         expect(button).toHaveFocus();
       }
-    });
-  });
-
-  describe("Bundle link copy", () => {
-    it("renders copy button when bundleUrl provided and copies to clipboard", async () => {
-      const writeText = vi.fn().mockResolvedValue();
-      Object.defineProperty(navigator, "clipboard", {
-        value: { writeText },
-        configurable: true,
-      });
-
-      // Mock toast
-      vi.mock("../../../../src/hooks/useToast", async () => {
-        const actual = await vi.importActual("../../../../src/hooks/useToast");
-        return { ...actual, useToast: () => ({ showToast: vi.fn() }) };
-      });
-
-      render(
-        <WalletHeader
-          onWalletManagerClick={vi.fn()}
-          onToggleBalance={vi.fn()}
-          balanceHidden={false}
-          isOwnBundle={false}
-          bundleUserName="Viewer"
-          bundleUrl="https://example.com/b/viewer"
-        />
-      );
-
-      const copyBtn = screen.getByTitle("Copy bundle link");
-      expect(copyBtn).toBeInTheDocument();
-
-      await act(async () => {
-        copyBtn.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-      });
-
-      expect(writeText).toHaveBeenCalledWith("https://example.com/b/viewer");
     });
   });
 

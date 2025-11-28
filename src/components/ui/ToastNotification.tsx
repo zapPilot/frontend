@@ -143,7 +143,7 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
               {/* Action button */}
               {toast.action && (
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     toast.action?.onClick();
                     handleClose();

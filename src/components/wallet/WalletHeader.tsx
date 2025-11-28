@@ -1,11 +1,4 @@
-import {
-  Calendar,
-  Check,
-  DollarSign,
-  Eye,
-  EyeOff,
-  Wallet,
-} from "lucide-react";
+import { Calendar, Check, DollarSign, Eye, EyeOff, Wallet } from "lucide-react";
 import React, { useEffect, useState } from "react";
 
 import { GRADIENTS } from "../../constants/design-system";
@@ -30,8 +23,9 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
     balanceHidden,
     isOwnBundle = true,
     bundleUserName,
-    bundleUrl,
+    bundleUrl: _bundleUrl,
   }) => {
+    void _bundleUrl;
     const { toggleBalanceVisibility } = useBalanceVisibility();
     const resolvedHidden = useResolvedBalanceVisibility(balanceHidden);
     const handleToggle = onToggleBalance ?? toggleBalanceVisibility;
@@ -41,7 +35,7 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
     // Calendar connection functionality
     const [isCalendarConnected, setIsCalendarConnected] = useState(() => {
       // Check localStorage on mount
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         return localStorage.getItem("zap-pilot-calendar-connected") === "true";
       }
       return false;
@@ -76,8 +70,9 @@ export const WalletHeader = React.memo<WalletHeaderProps>(
         }
       };
 
-      window.addEventListener('open-calendar-modal', handleOpenModal);
-      return () => window.removeEventListener('open-calendar-modal', handleOpenModal);
+      window.addEventListener("open-calendar-modal", handleOpenModal);
+      return () =>
+        window.removeEventListener("open-calendar-modal", handleOpenModal);
     }, [isCalendarConnected]);
 
     return (

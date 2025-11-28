@@ -1,4 +1,5 @@
 import { Calendar, Shield, TrendingUp, X } from "lucide-react";
+import Image from "next/image";
 import React from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
@@ -21,7 +22,10 @@ export const CalendarConnectModal: React.FC<CalendarConnectModalProps> = ({
 
   return (
     <ModalBackdrop onDismiss={onClose} innerClassName="w-full max-w-lg">
-      <BaseCard variant="glass" className="p-0 overflow-hidden border-gray-700/50">
+      <BaseCard
+        variant="glass"
+        className="p-0 overflow-hidden border-gray-700/50"
+      >
         {/* Header with gradient background */}
         <div className="relative bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-6 border-b border-white/10">
           <div className="flex items-center justify-between mb-4">
@@ -57,8 +61,10 @@ export const CalendarConnectModal: React.FC<CalendarConnectModalProps> = ({
                   Market Timing Made Easy
                 </h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  We&apos;ll automatically add a reminder to your calendar when the
-                  Fear & Greed Index hits <span className="text-green-400">Extreme Fear</span> (Buy) or <span className="text-red-400">Extreme Greed</span> (Sell).
+                  We&apos;ll automatically add a reminder to your calendar when
+                  the Fear & Greed Index hits{" "}
+                  <span className="text-green-400">Extreme Fear</span> (Buy) or{" "}
+                  <span className="text-red-400">Extreme Greed</span> (Sell).
                 </p>
               </div>
             </div>
@@ -74,7 +80,9 @@ export const CalendarConnectModal: React.FC<CalendarConnectModalProps> = ({
                   Private & Secure
                 </h3>
                 <p className="text-sm text-gray-400 leading-relaxed">
-                  We only request permission to <strong>write events</strong>. We cannot read your personal schedule or see your other appointments.
+                  We only request permission to <strong>write events</strong>.
+                  We cannot read your personal schedule or see your other
+                  appointments.
                 </p>
               </div>
             </div>
@@ -95,9 +103,11 @@ export const CalendarConnectModal: React.FC<CalendarConnectModalProps> = ({
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <img
+                    <Image
                       src="https://www.google.com/favicon.ico"
                       alt="Google"
+                      width={16}
+                      height={16}
                       className="w-4 h-4"
                     />
                     <span>Connect Google Calendar</span>
@@ -113,7 +123,8 @@ export const CalendarConnectModal: React.FC<CalendarConnectModalProps> = ({
               </button>
             </div>
             <p className="text-xs text-center text-gray-500 mt-4">
-              By connecting, you agree to receive automated calendar events based on market conditions.
+              By connecting, you agree to receive automated calendar events
+              based on market conditions.
             </p>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { Calendar } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { StickyBannerShell } from "../shared/StickyBannerShell";
 
@@ -48,7 +48,8 @@ export function CalendarOnboardingBanner({
             </span>
           </div>
           <p className="text-xs text-gray-300">
-            Get automatic calendar reminders when Fear & Greed Index hits Extreme Fear or Extreme Greed
+            Get automatic calendar reminders when Fear & Greed Index hits
+            Extreme Fear or Extreme Greed
           </p>
         </div>
       </div>

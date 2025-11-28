@@ -102,7 +102,7 @@ describe("useBundlePage", () => {
     });
     await waitFor(() => expect(mockReplace).toHaveBeenCalled());
     const arg = mockReplace.mock.calls[0]?.[0];
-    expect(arg).toMatch(/^\/(\?foo=bar)?$/);
+    expect(arg).toMatch(/^\/(\?userId=[^&]+)?$/);
   });
 
   it("shows email banner only when connected, own bundle, no email and not dismissed", async () => {
