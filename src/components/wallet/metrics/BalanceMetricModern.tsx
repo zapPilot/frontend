@@ -31,7 +31,7 @@ interface BalanceMetricModernProps {
  * - Moderate fonts: text-lg/xl for readability
  * - Left gradient accent border (blue-to-purple)
  * - Badge-style label at top
- * - Pill-style chips for pool stats
+ * - Grid layout for pool stats (3-column cards)
  * - Fixed height (h-[140px]) for consistent alignment
  *
  * @example
@@ -181,29 +181,40 @@ export function BalanceMetricModern({
         )}
       </div>
 
-      {/* Pool stats as pill chips */}
-      {hasPoolDetails &&
-        ((totalPositions ?? 0) > 0 ||
-          (protocolsCount ?? 0) > 0 ||
-          (chainsCount ?? 0) > 0) && (
-          <div className="flex items-center gap-1 flex-wrap justify-center">
-            {(totalPositions ?? 0) > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-                {totalPositions} pos
-              </span>
-            )}
-            {(protocolsCount ?? 0) > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-                {protocolsCount} proto
-              </span>
-            )}
-            {(chainsCount ?? 0) > 0 && (
-              <span className="px-1.5 py-0.5 rounded-full bg-gray-800/50 text-[9px] text-gray-400">
-                {chainsCount} chains
-              </span>
-            )}
+      {/* Pool stats as grid cards */}
+      {hasPoolDetails && (
+        <div className="grid grid-cols-3 gap-2 w-full mt-1">
+          {/* Positions Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Positions
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {totalPositions ?? 0}
+            </span>
           </div>
-        )}
+
+          {/* Protocols Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Protocols
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {protocolsCount ?? 0}
+            </span>
+          </div>
+
+          {/* Chains Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Chains
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {chainsCount ?? 0}
+            </span>
+          </div>
+        </div>
+      )}
     </ModernCard>
   );
 }
