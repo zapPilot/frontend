@@ -68,10 +68,10 @@ const run = (command, args) => {
 };
 
 const knipStatus = run("knip", mode.knipArgs);
-const tsPruneStatus = run("ts-prune", [
-  "-p",
-  "tsconfig.tsprune.json",
-  ...mode.tsPruneArgs,
-]);
 
-process.exit(knipStatus === 0 && tsPruneStatus === 0 ? 0 : 1);
+// Run ts-prune for informational purposes only (many false positives from Next.js/internal modules)
+// Only fail the build based on knip's more accurate analysis
+run("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
+
+// Exit based only on knip status (ts-prune has too many false positives)
+process.exit(knipStatus);

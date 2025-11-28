@@ -8,7 +8,5 @@
  * @module components/wallet/metrics
  */
 
-export { BalanceMetric } from "./BalanceMetric";
 export { MetricCardSkeleton } from "./MetricCardSkeleton";
 export { PnLMetric } from "./PnLMetric";
-export { ROIMetric } from "./ROIMetric";

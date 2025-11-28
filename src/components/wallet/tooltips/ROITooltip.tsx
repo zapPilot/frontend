@@ -16,7 +16,8 @@ interface ROIWindowItem {
   dataPoints: number;
 }
 
-export interface ProtocolROIItem {
+// Removed export - unused outside this module (deadcode analysis)
+interface ProtocolROIItem {
   protocol: string;
   chain: string;
   netYieldUsd: number;

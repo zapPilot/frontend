@@ -8,7 +8,7 @@
  * @module lib/base-error
  */
 
-import { getBackendErrorMessage, getIntentErrorMessage } from "./errorMessages";
+import { getIntentErrorMessage } from "./errorMessages";
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -300,32 +300,7 @@ function resolveErrorMessage(fallback: string, ...sources: unknown[]): string {
 // SERVICE-SPECIFIC ERROR CLASSES
 // =============================================================================
 
-/**
- * Backend Service Error
- * Handles errors from backend operations like notifications and reports
- */
-export class BackendServiceError extends BaseServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: ErrorDetails
-  ) {
-    const context: ErrorContext = {
-      source: "backend-service",
-      status,
-    };
-    if (code !== undefined) context.code = code;
-    if (details !== undefined) context.details = details;
-
-    super(message, context);
-    this.name = "BackendServiceError";
-  }
-
-  override getUserMessage(): string {
-    return getBackendErrorMessage(this.status, this.message);
-  }
-}
+// BackendServiceError removed - unused export detected by deadcode analysis
 
 /**
  * Intent Service Error

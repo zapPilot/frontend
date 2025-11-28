@@ -7,49 +7,36 @@ import type { PoolDetail } from "@/types/pool";
 
 import { PoolDetailsTooltip, useMetricsTooltip } from "../tooltips";
 import { NoDataMetricCard } from "./common/NoDataMetricCard";
-import { MetricCard } from "./MetricCard";
 
 interface BalanceMetricProps {
-  /** Total net USD balance */
   totalNetUsd?: number | null;
-  /** Is the landing page data loading? */
   isLoading?: boolean;
-  /** Should show loading state? (from portfolio state helpers) */
   shouldShowLoading?: boolean;
-  /** Is balance hidden? */
   balanceHidden?: boolean;
-  /** Should show error state? */
   shouldShowError?: boolean;
-  /** Error message to display */
   errorMessage?: string | null;
-  /** Should show no data message? */
   shouldShowNoDataMessage?: boolean;
-  /** Function to get display total value (from portfolio state helpers) */
   getDisplayTotalValue?: () => number | null;
-  /** Pool details for tooltip display */
   poolDetails?: PoolDetail[];
-  /** Total number of pool positions */
   totalPositions?: number;
-  /** Number of unique protocols */
   protocolsCount?: number;
-  /** Number of unique chains */
   chainsCount?: number;
 }
 
 /**
- * Displays user's total net balance with loading, error, and hidden states.
+ * Modern balance metric with gradient accents and optimized vertical spacing.
  *
- * Extracted from WalletMetrics (lines 129-164) to create a focused,
- * single-responsibility component for balance display.
+ * Key features:
+ * - Compact padding: p-3 for reduced height
+ * - Moderate fonts: text-lg/xl for readability
+ * - Left gradient accent border (blue-to-purple)
+ * - Badge-style label at top
+ * - Grid layout for pool stats (3-column cards)
+ * - Fixed height (h-[140px]) for consistent alignment
  *
  * @example
  * ```tsx
- * <BalanceMetric
- *   totalNetUsd={15000}
- *   balanceHidden={false}
- *   isLoading={false}
- *   shouldShowLoading={false}
- * />
+ * <BalanceMetric totalNetUsd={15000} />
  * ```
  */
 export function BalanceMetric({
@@ -74,77 +61,111 @@ export function BalanceMetric({
 
   const poolTooltip = useMetricsTooltip<HTMLSpanElement>();
 
-  const labelClasses =
-    "text-xs text-gray-500 uppercase tracking-wider font-medium";
-
   const resolvedPoolDetails = poolDetails ?? [];
   const hasPoolDetails = poolDetails !== undefined;
+
+  // Modern card with left gradient accent
+  const ModernCard = ({
+    children,
+    error = false,
+  }: {
+    children: React.ReactNode;
+    error?: boolean;
+  }) => (
+    <div
+      className={`relative ${
+        error
+          ? "bg-gray-900/50 border border-red-900/30 hover:border-red-800/50"
+          : "bg-gray-900/50 border border-gray-800 hover:border-gray-700"
+      } rounded-xl overflow-hidden transition-colors h-[140px]`}
+    >
+      {/* Left gradient accent */}
+      {!error && (
+        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500" />
+      )}
+
+      <div className="p-3 h-full flex flex-col items-center justify-start pt-2">
+        {children}
+      </div>
+    </div>
+  );
 
   // Loading state
   if (metricState.shouldRenderSkeleton) {
     return (
-      <MetricCard icon={Wallet} iconClassName="text-blue-400">
-        <div className="h-10 flex items-center mb-2">
+      <ModernCard>
+        <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5">
+          <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
+            Balance
+          </span>
+        </div>
+        <div className="h-8 flex items-center">
           <BalanceSkeleton size="default" />
         </div>
-        <p className={labelClasses}>Total Balance</p>
-      </MetricCard>
+      </ModernCard>
     );
   }
 
-  // Error state (but not USER_NOT_FOUND, which shows welcome elsewhere)
+  // Error state
   if (shouldShowError && errorMessage && errorMessage !== "USER_NOT_FOUND") {
     return (
-      <MetricCard icon={Wallet} iconClassName="text-blue-400">
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="flex flex-col space-y-2">
-            <div className="text-sm text-red-400 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{errorMessage}</span>
-            </div>
-          </div>
+      <ModernCard error={true}>
+        <div className="px-2 py-0.5 rounded-full bg-red-500/10 border border-red-500/20 mb-0.5">
+          <span className="text-[10px] text-red-400 uppercase tracking-wider font-medium">
+            Balance
+          </span>
         </div>
-        <p className={labelClasses}>Total Balance</p>
-      </MetricCard>
+        <div className="text-sm text-red-400 flex items-center space-x-1.5">
+          <AlertCircle className="w-4 h-4" />
+          <span className="text-xs">{errorMessage}</span>
+        </div>
+      </ModernCard>
     );
   }
 
-  // Connected but no data
+  // No data
   if (shouldShowNoDataMessage) {
     return (
       <NoDataMetricCard
         icon={Wallet}
         iconClassName="text-blue-400"
-        label="Total Balance"
-        labelClassName={labelClasses}
+        label="Balance"
+        labelClassName="text-xs text-gray-500 uppercase tracking-wider font-medium"
       />
     );
   }
 
-  // Normal portfolio display
+  // Modern display with badge label
   const displayValue = getDisplayTotalValue
     ? getDisplayTotalValue()
     : totalNetUsd;
 
   return (
-    <MetricCard icon={Wallet} iconClassName="text-blue-400">
-      <div className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-2 break-all sm:break-normal text-center">
-        {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
+    <ModernCard>
+      {/* Badge label at top */}
+      <div className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 mb-0.5">
+        <span className="text-[10px] text-blue-400 uppercase tracking-wider font-medium">
+          Balance
+        </span>
       </div>
-      <div className="flex items-center justify-center space-x-1.5">
-        <p className={labelClasses}>Total Balance</p>
+
+      {/* Main value */}
+      <div className="flex items-center justify-center gap-2 mb-1.5">
+        <div className="text-lg md:text-xl font-bold text-white tracking-tight">
+          {formatCurrency(displayValue ?? 0, { isHidden: balanceHidden })}
+        </div>
         {hasPoolDetails && (
-          <div className="relative">
+          <div className="relative flex items-center">
             <span
               ref={poolTooltip.triggerRef}
               onClick={poolTooltip.toggle}
               onKeyDown={e => e.key === "Enter" && poolTooltip.toggle()}
               role="button"
               tabIndex={0}
-              aria-label="Pool details breakdown"
-              className="inline-flex cursor-help"
+              aria-label="Pool details"
+              className="inline-flex cursor-help text-gray-500 hover:text-blue-400 transition-colors"
             >
-              <Info className="w-3 h-3 text-gray-500 hover:text-gray-400 transition-colors" />
+              <Info className="w-4 h-4" />
             </span>
             {poolTooltip.visible && (
               <PoolDetailsTooltip
@@ -159,6 +180,41 @@ export function BalanceMetric({
           </div>
         )}
       </div>
-    </MetricCard>
+
+      {/* Pool stats as grid cards */}
+      {hasPoolDetails && (
+        <div className="grid grid-cols-3 gap-2 w-full mt-1">
+          {/* Positions Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Positions
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {totalPositions ?? 0}
+            </span>
+          </div>
+
+          {/* Protocols Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Protocols
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {protocolsCount ?? 0}
+            </span>
+          </div>
+
+          {/* Chains Card */}
+          <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/30 border border-gray-800/50">
+            <span className="text-[9px] text-gray-500 uppercase tracking-wider font-medium mb-0.5">
+              Chains
+            </span>
+            <span className="text-gray-300 font-medium text-xs">
+              {chainsCount ?? 0}
+            </span>
+          </div>
+        </div>
+      )}
+    </ModernCard>
   );
 }

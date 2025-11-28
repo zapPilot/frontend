@@ -4,7 +4,7 @@
  * Export consolidated metric component and partial skeleton components
  */
 
-export { ConsolidatedMetricModern } from "./ConsolidatedMetricModern";
+export { ConsolidatedMetric } from "./ConsolidatedMetric";
 export { ConsolidatedMetricSkeleton } from "./ConsolidatedMetricSkeleton";
 export {
   ROISectionSkeleton,

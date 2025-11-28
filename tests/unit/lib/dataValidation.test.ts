@@ -7,8 +7,6 @@ import { describe, expect, it } from "vitest";
 
 import {
   asPartialArray,
-  clampNumber,
-  getProp,
   isArray,
   isNonEmptyString,
   isObject,
@@ -169,66 +167,7 @@ describe("dataValidation", () => {
     });
   });
 
-  describe("getProp", () => {
-    it("should extract existing property", () => {
-      expect(getProp({ name: "John" }, "name", "")).toBe("John");
-      expect(getProp({ age: 30 }, "age", 0)).toBe(30);
-    });
-
-    it("should return fallback for missing property", () => {
-      expect(getProp({}, "missing", "default")).toBe("default");
-      expect(getProp({ foo: "bar" }, "baz", 42)).toBe(42);
-    });
-
-    it("should return fallback for null object", () => {
-      expect(getProp(null, "key", "fallback")).toBe("fallback");
-    });
-
-    it("should return fallback for undefined object", () => {
-      expect(getProp(undefined, "key", 123)).toBe(123);
-    });
-
-    it("should return fallback for non-object", () => {
-      expect(getProp("string", "key", "default")).toBe("default");
-      expect(getProp(123, "key", 0)).toBe(0);
-    });
-
-    it("should handle undefined property value", () => {
-      expect(getProp({ key: undefined }, "key", "fallback")).toBe("fallback");
-    });
-
-    it("should preserve null property value", () => {
-      expect(getProp({ key: null }, "key", "fallback")).toBe(null);
-    });
-  });
-
-  // =============================================================================
-  // NUMERIC RANGE VALIDATORS
-  // =============================================================================
-
-  describe("clampNumber", () => {
-    it("should clamp value above max", () => {
-      expect(clampNumber(150, 0, 100)).toBe(100);
-    });
-
-    it("should clamp value below min", () => {
-      expect(clampNumber(-10, 0, 100)).toBe(0);
-    });
-
-    it("should preserve value within range", () => {
-      expect(clampNumber(50, 0, 100)).toBe(50);
-    });
-
-    it("should handle negative ranges", () => {
-      expect(clampNumber(-50, -100, 0)).toBe(-50);
-      expect(clampNumber(-150, -100, 0)).toBe(-100);
-      expect(clampNumber(10, -100, 0)).toBe(0);
-    });
-
-    it("should handle equal min/max", () => {
-      expect(clampNumber(50, 100, 100)).toBe(100);
-    });
-  });
+  // Removed getProp and clampNumber tests - functions were unused and removed (deadcode cleanup)
 
   // =============================================================================
   // SPECIALIZED CONVERTERS

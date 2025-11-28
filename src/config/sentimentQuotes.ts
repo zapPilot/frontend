@@ -173,4 +173,4 @@ export function getQuoteForSentiment(value: number): SentimentQuoteResult {
   };
 }
 
-export const sentimentQuotesConfig = SENTIMENT_QUOTE_CONFIG;
+// Removed unused export: sentimentQuotesConfig (deadcode analysis)

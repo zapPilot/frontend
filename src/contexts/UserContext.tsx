@@ -65,4 +65,4 @@ export function useUser(): UserContextType {
   return context;
 }
 
-export default UserContext;
+// Removed unused default export (deadcode analysis)

@@ -4,7 +4,7 @@
 
 export { MetricsTooltipContainer } from "./MetricsTooltipContainer";
 export { PoolDetailsTooltip } from "./PoolDetailsTooltip";
-export type { ProtocolROIItem } from "./ROITooltip";
+// Removed ProtocolROIItem type export - unused (deadcode analysis)
 export { ROITooltip } from "./ROITooltip";
 export { useMetricsTooltip } from "./useMetricsTooltip";
 export {

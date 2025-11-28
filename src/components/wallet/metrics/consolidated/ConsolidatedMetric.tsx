@@ -32,10 +32,10 @@ import {
  *
  * @example
  * ```tsx
- * <ConsolidatedMetricModern portfolioROI={roiData} />
+ * <ConsolidatedMetric portfolioROI={roiData} />
  * ```
  */
-export function ConsolidatedMetricModern({
+export function ConsolidatedMetric({
   portfolioROI,
   yieldSummaryData,
   shouldShowLoading = true,
@@ -43,7 +43,7 @@ export function ConsolidatedMetricModern({
   isYieldLoading = false,
 }: PerformanceMetricsProps) {
   const metricLogger = React.useMemo(
-    () => createContextLogger("ConsolidatedMetricModern"),
+    () => createContextLogger("ConsolidatedMetric"),
     []
   );
   const roiTooltip = useMetricsTooltip<HTMLButtonElement>();

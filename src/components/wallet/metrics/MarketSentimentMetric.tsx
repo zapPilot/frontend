@@ -3,7 +3,7 @@ import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/LoadingSystem";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-interface MarketSentimentMetricModernProps {
+interface MarketSentimentMetricProps {
   sentiment?: MarketSentimentData | null;
   isLoading?: boolean;
   error?: Error | null;
@@ -76,14 +76,14 @@ function getSentimentHintColor(status?: string | null): string {
  *
  * @example
  * ```tsx
- * <MarketSentimentMetricModern sentiment={sentimentData} />
+ * <MarketSentimentMetric sentiment={sentimentData} />
  * ```
  */
-export function MarketSentimentMetricModern({
+export function MarketSentimentMetric({
   sentiment,
   isLoading,
   error,
-}: MarketSentimentMetricModernProps) {
+}: MarketSentimentMetricProps) {
   const statusColor = getSentimentColor(sentiment?.status);
   const borderColor = getSentimentBorderColor(sentiment?.status);
   const hint = getSentimentHint(sentiment?.status);

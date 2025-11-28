@@ -38,5 +38,3 @@ export const CACHE_WINDOW = {
    */
   headerValue: `public, max-age=${DEFAULT_MAX_AGE_SECONDS}, stale-while-revalidate=${DEFAULT_STALE_WHILE_REVALIDATE_SECONDS}`,
 } as const;
-
-export const DEV_NO_CACHE_HEADER = "no-store";

@@ -11,9 +11,9 @@ import type {
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
 import { PortfolioState } from "../../types/portfolioState";
-import { BalanceMetricModern } from "./metrics/BalanceMetricModern";
-import { ConsolidatedMetricModern } from "./metrics/consolidated/ConsolidatedMetricModern";
-import { MarketSentimentMetricModern } from "./metrics/MarketSentimentMetricModern";
+import { BalanceMetric } from "./metrics/BalanceMetric";
+import { ConsolidatedMetric } from "./metrics/consolidated/ConsolidatedMetric";
+import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
 import { WelcomeNewUser } from "./WelcomeNewUser";
 
 interface WalletMetricsModernProps {
@@ -107,7 +107,7 @@ export const WalletMetricsModern = React.memo<WalletMetricsModernProps>(
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <BalanceMetricModern
+          <BalanceMetric
             totalNetUsd={landingPageData?.total_net_usd ?? null}
             isLoading={isLandingLoading}
             shouldShowLoading={shouldShowLoading}
@@ -123,10 +123,10 @@ export const WalletMetricsModern = React.memo<WalletMetricsModernProps>(
           />
         </div>
         <div>
-          <ConsolidatedMetricModern {...performanceProps} />
+          <ConsolidatedMetric {...performanceProps} />
         </div>
         <div>
-          <MarketSentimentMetricModern
+          <MarketSentimentMetric
             sentiment={sentimentData ?? null}
             isLoading={isSentimentLoading}
             error={sentimentError}

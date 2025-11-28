@@ -119,49 +119,13 @@ export function asPartialArray<T>(items: T[] | undefined): Partial<T>[] {
   return (items ?? []) as Partial<T>[];
 }
 
-/**
- * Safely extracts property from object with fallback.
- * Handles null, undefined objects and missing properties.
- *
- * @param obj - Object to extract from
- * @param key - Property key to extract
- * @param fallback - Default value if extraction fails
- * @returns Property value or fallback
- *
- * @example
- * getProp({ name: "John" }, "name", "") // "John"
- * getProp({}, "missing", "default") // "default"
- * getProp(null, "key", 0) // 0
- */
-export function getProp<T>(obj: unknown, key: string, fallback: T): T {
-  if (obj !== null && typeof obj === "object" && !Array.isArray(obj)) {
-    const value = (obj as Record<string, unknown>)[key];
-    return value !== undefined ? (value as T) : fallback;
-  }
-  return fallback;
-}
+// getProp function removed - unused export detected by deadcode analysis
 
 // =============================================================================
 // NUMERIC RANGE VALIDATORS
 // =============================================================================
 
-/**
- * Clamps a number between minimum and maximum values.
- * Ensures the result is always within the specified range.
- *
- * @param value - Value to clamp
- * @param min - Minimum allowed value
- * @param max - Maximum allowed value
- * @returns Clamped value
- *
- * @example
- * clampNumber(150, 0, 100) // 100
- * clampNumber(-10, 0, 100) // 0
- * clampNumber(50, 0, 100) // 50
- */
-export function clampNumber(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
+// clampNumber function removed - unused export detected by deadcode analysis
 
 // =============================================================================
 // OPTIONAL TYPE CONVERTERS
