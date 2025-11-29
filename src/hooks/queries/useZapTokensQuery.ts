@@ -5,7 +5,7 @@ import { queryKeys } from "../../lib/queryClient";
 import { dedupeStrings } from "../../lib/stringUtils";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
-import type { SwapToken } from "../../types/swap";
+import type { SwapToken } from '@/types/ui/swap';
 import { createQueryConfig } from "./queryDefaults";
 import {
   type UseTokenBalancesParams,

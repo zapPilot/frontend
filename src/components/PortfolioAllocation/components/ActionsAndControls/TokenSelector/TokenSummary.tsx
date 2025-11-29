@@ -3,7 +3,7 @@
 import { TokenImage } from "@/components/shared/TokenImage";
 import { FLEX_PATTERNS } from "@/constants/design-system";
 import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
-import type { SwapToken } from "@/types/swap";
+import type { SwapToken } from "@/types/ui/swap";
 
 interface TokenSummaryProps {
   token: SwapToken;

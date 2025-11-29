@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 
 import type { LandingPageResponse } from "../services/analyticsService";
-import { PortfolioState, PortfolioStateType } from "../types/portfolioState";
+import { PortfolioState, PortfolioStateType } from '@/types/ui/portfolioState';
 
 /**
  * Centralized portfolio state management hook

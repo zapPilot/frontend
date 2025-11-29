@@ -28,7 +28,7 @@ import {
 import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
-} from "../../../types/portfolio";
+} from '@/types/domain/portfolio';
 import { DRAWDOWN_CONSTANTS } from "../chartConstants";
 import type {
   AllocationTimeseriesInputPoint,

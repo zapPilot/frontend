@@ -15,7 +15,7 @@ import {
   ASSET_CATEGORIES,
 } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
-import type { PieChartData } from "@/types/portfolio";
+import type { PieChartData } from "@/types/domain/portfolio";
 
 export interface CategorySummary {
   id: string;

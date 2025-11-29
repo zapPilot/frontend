@@ -13,7 +13,7 @@ import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 import {
   InvestmentOpportunity,
   type NavigationContext,
-} from "@/types/investment";
+} from "@/types/domain/investment";
 
 // Factory function for dynamic loading components
 const createLoadingComponent = (message: string) => {

@@ -15,7 +15,7 @@ import {
   executeUnifiedZap,
   type UnifiedZapRequest,
 } from "../../services/intentService";
-import { InvestmentOpportunity } from "../../types/investment";
+import { InvestmentOpportunity } from '@/types/domain/investment';
 import { swapLogger } from "../../utils/logger";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {

@@ -8,7 +8,7 @@ import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
-import { PortfolioState } from "../../types/portfolioState";
+import { PortfolioState } from '@/types/ui/portfolioState';
 import { WalletMetricsModern } from "./WalletMetricsModern";
 
 interface WalletMetricsProps {

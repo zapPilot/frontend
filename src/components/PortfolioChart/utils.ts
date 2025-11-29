@@ -3,7 +3,7 @@ import { ensureNonNegative } from "../../lib/mathUtils";
 import {
   AssetAllocationPoint,
   PortfolioDataPoint,
-} from "../../types/portfolio";
+} from '@/types/domain/portfolio';
 import type {
   AllocationTimeseriesInputPoint,
   PortfolioStackedDataPoint,

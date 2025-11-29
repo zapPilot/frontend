@@ -4,7 +4,7 @@ import { useActiveAccount } from "thirdweb/react";
 import { queryKeys } from "../../lib/queryClient";
 // Use account service directly for wallet connection and profile data
 import { connectWallet, getUserProfile } from "../../services/accountService";
-import type { UserProfileResponse } from "../../types/user.types";
+import type { UserProfileResponse } from '@/types/domain/user.types';
 import { createQueryConfig } from "./queryDefaults";
 
 // Removed ApiBundleResponse in favor of account API wallets

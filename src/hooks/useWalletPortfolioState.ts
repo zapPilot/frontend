@@ -17,7 +17,7 @@ import {
   type MarketSentimentData,
   useSentimentData,
 } from "@/services/sentimentService";
-import type { PortfolioAllocationSplit } from "@/types/portfolio";
+import type { PortfolioAllocationSplit } from "@/types/domain/portfolio";
 
 const DEFAULT_TARGET_ALLOCATION = 50;
 

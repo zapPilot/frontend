@@ -2,7 +2,7 @@ import React from "react";
 
 import { getAssetUrl } from "../../config/assets";
 import { normalizeProtocolName } from "../../lib/stringUtils";
-import { BaseComponentProps } from "../../types/ui.types";
+import { BaseComponentProps } from '@/types/ui/ui.types';
 import { ImageWithFallback } from "./ImageWithFallback";
 
 interface ProtocolImageProps extends BaseComponentProps {

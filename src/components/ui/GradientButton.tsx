@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
 import { memo, ReactNode } from "react";
 
-import { InteractiveComponentProps } from "../../types/ui.types";
+import { InteractiveComponentProps } from '@/types/ui/ui.types';
 
 interface GradientButtonProps extends InteractiveComponentProps {
   children: ReactNode;

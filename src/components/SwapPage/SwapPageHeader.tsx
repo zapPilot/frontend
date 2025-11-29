@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 
-import { InvestmentOpportunity } from "../../types/investment";
+import { InvestmentOpportunity } from '@/types/domain/investment';
 
 export interface SwapPageHeaderProps {
   strategy: InvestmentOpportunity;

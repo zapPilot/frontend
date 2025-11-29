@@ -11,7 +11,7 @@ import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 
 import { getChangeColorClasses } from "../../../lib/color-utils";
-import type { AnalyticsMetric } from "../../../types/portfolio";
+import type { AnalyticsMetric } from '@/types/domain/portfolio';
 
 export type KeyMetricCardData = AnalyticsMetric;
 

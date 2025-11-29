@@ -69,3 +69,4 @@ dev.log
 .claude/hooks/node_modules/
 .claude/hooks/package-lock.json
 zen_generated.code
+jscpd-report/

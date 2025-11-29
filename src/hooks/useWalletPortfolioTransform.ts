@@ -7,7 +7,7 @@ import { transformToPieChartData } from "@/lib/chartUtils";
 import { getLeverageMetrics, type LeverageMetrics } from "@/lib/leverageUtils";
 
 import type { LandingPageResponse } from "../services/analyticsService";
-import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
+import type { PieChartData, PortfolioMetrics } from '@/types/domain/portfolio';
 import {
   type CategorySummary,
   createCategoriesFromApiData,

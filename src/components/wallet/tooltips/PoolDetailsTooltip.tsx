@@ -8,7 +8,7 @@
 import React from "react";
 
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
-import type { PoolDetail } from "@/types/pool";
+import type { PoolDetail } from "@/types/domain/pool";
 
 import { MetricsTooltipContainer } from "./MetricsTooltipContainer";
 import type { MetricsTooltipProps } from "./types";

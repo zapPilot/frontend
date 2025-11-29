@@ -7,7 +7,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { GRADIENTS } from "@/constants/design-system";
 import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
 import { clamp } from "@/lib/mathUtils";
-import type { SwapToken } from "@/types/swap";
+import type { SwapToken } from "@/types/ui/swap";
 
 import type { OperationMode } from "../../../types";
 import { formatCryptoAmount, parseInputValue } from "./utils";

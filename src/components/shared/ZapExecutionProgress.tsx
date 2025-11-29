@@ -35,7 +35,7 @@ import { formatAddress, formatCurrency } from "../../lib/formatters";
 import {
   type BaseModalProps,
   type ZapExecutionResult,
-} from "../../types/modal.types";
+} from '@/types/ui/modal.types';
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
 interface ZapExecutionProgressProps

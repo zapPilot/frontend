@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { getRiskSummary } from "../services/analyticsService";
-import { ActualRiskSummaryResponse } from "../types/risk";
+import { ActualRiskSummaryResponse } from '@/types/domain/risk';
 
 interface UseRiskSummaryResult {
   data: ActualRiskSummaryResponse | null;

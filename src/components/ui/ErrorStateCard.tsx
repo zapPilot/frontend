@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import React from "react";
 
-import { BaseComponentProps } from "../../types/ui.types";
+import { BaseComponentProps } from '@/types/ui/ui.types';
 import { EmptyStateCard } from "./EmptyStateCard";
 import { GradientButton } from "./GradientButton";
 

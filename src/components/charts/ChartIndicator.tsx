@@ -18,7 +18,7 @@ import {
   isPerformanceHover,
   isSharpeHover,
   isVolatilityHover,
-} from "@/types/chartHover";
+} from "@/types/ui/chartHover";
 
 const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
 const INDICATOR_COLOR_MAP: Record<string, string> = {

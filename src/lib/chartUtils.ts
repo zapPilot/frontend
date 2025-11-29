@@ -3,7 +3,7 @@ import {
   type ApiCategoryKey,
   ASSET_CATEGORIES,
 } from "../constants/portfolio";
-import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
+import { PieChartData, PortfolioDataPoint } from '@/types/domain/portfolio';
 import { formatLargeNumber, formatPercentage } from "./formatters";
 
 /**

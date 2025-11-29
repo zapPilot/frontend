@@ -4,8 +4,8 @@
  */
 
 import { httpUtils } from "../lib/http-utils";
-import type { PoolDetail } from "../types/pool";
-import { ActualRiskSummaryResponse } from "../types/risk";
+import type { PoolDetail } from '@/types/domain/pool';
+import { ActualRiskSummaryResponse } from '@/types/domain/risk';
 
 /**
  * Yield returns summary with IQR outlier detection
@@ -75,7 +75,7 @@ export interface YieldReturnsSummaryResponse {
 }
 
 // Re-export PoolDetail for components that import from this service
-export type { PoolDetail } from "../types/pool";
+export type { PoolDetail } from '@/types/domain/pool';
 
 // Unified Landing Page Response Type
 export interface LandingPageResponse {

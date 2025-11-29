@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { transformToPieChartData } from "@/lib/chartUtils";
 
-import { PieChartData } from "../../../types/portfolio";
+import { PieChartData } from '@/types/domain/portfolio';
 import { ChartDataPoint } from "../types";
 
 /**

@@ -16,7 +16,7 @@ import {
 } from "react";
 
 import { clamp, clampMin } from "../lib/mathUtils";
-import type { ChartHoverState } from "../types/chartHover";
+import type { ChartHoverState } from '@/types/ui/chartHover';
 import { logger } from "../utils/logger";
 
 /**

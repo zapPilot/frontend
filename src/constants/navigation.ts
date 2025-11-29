@@ -1,6 +1,6 @@
 import { BarChart3, Gift, Settings, Users, Wallet } from "lucide-react";
 
-import { NavItem } from "../types/navigation";
+import { NavItem } from '@/types/ui/navigation';
 
 export const NAVIGATION_ITEMS: NavItem[] = [
   {

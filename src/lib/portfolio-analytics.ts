@@ -22,8 +22,8 @@ import type {
   AnalyticsMetric,
   ChartPeriod,
   PortfolioDataPoint,
-} from "../types/portfolio";
-import type { ActualRiskSummaryResponse } from "../types/risk";
+} from '@/types/domain/portfolio';
+import type { ActualRiskSummaryResponse } from '@/types/domain/risk';
 import { getVolatilityLevel } from "../utils/risk";
 import {
   formatDrawdown,

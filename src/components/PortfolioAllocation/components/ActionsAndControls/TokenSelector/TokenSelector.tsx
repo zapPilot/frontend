@@ -11,7 +11,7 @@ import {
   useZapTokensWithStates,
   type UseZapTokensWithStatesOptions,
 } from "@/hooks/queries/useZapTokensQuery";
-import type { SwapToken } from "@/types/swap";
+import type { SwapToken } from "@/types/ui/swap";
 import { logger } from "@/utils/logger";
 
 import { TokenSummary } from "./TokenSummary";

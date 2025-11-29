@@ -8,7 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import * as analyticsService from "../../services/analyticsService";
-import type { PoolDetail } from "../../types/pool";
+import type { PoolDetail } from '@/types/domain/pool';
 
 /**
  * Fetch pool performance data for a user

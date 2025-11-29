@@ -16,7 +16,7 @@ import type {
   LandingPageResponse,
   ProtocolYieldBreakdown,
 } from "../../../services/analyticsService";
-import type { PortfolioState } from "../../../types/portfolioState";
+import type { PortfolioState } from '@/types/ui/portfolioState';
 import { WalletMetrics } from "../WalletMetrics";
 
 // ==================== MOCK DATA FACTORIES ====================

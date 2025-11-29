@@ -10,7 +10,7 @@ import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
-import { PortfolioState } from "../../types/portfolioState";
+import { PortfolioState } from '@/types/ui/portfolioState';
 import { BalanceMetric } from "./metrics/BalanceMetric";
 import { ConsolidatedMetric } from "./metrics/consolidated/ConsolidatedMetric";
 import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";

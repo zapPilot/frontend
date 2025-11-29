@@ -13,7 +13,7 @@ import type {
   UpdateEmailResponse,
   UserCryptoWallet,
   UserProfileResponse,
-} from "../types/user.types";
+} from '@/types/domain/user.types';
 
 /**
  * Account Service Error Details

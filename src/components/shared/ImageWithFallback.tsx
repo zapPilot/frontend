@@ -3,7 +3,7 @@ import Image from "next/image";
 import React, { useState } from "react";
 
 import { normalizeForComparison } from "../../lib/stringUtils";
-import { BaseComponentProps } from "../../types/ui.types";
+import { BaseComponentProps } from '@/types/ui/ui.types';
 
 interface ImageWithFallbackProps extends BaseComponentProps {
   src: string;
