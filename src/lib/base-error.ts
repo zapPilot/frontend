@@ -9,6 +9,7 @@
  */
 
 // Re-export everything from the new modular structure
+export { BaseServiceError } from "./errors/BaseServiceError";
 export type {
   ErrorContext,
   ErrorDetails,
@@ -16,13 +17,10 @@ export type {
   ErrorSeverity,
   UnknownErrorInput,
 } from "./errors/errorContext";
-
-export { BaseServiceError } from "./errors/BaseServiceError";
-export { IntentServiceError, createIntentServiceError } from "./errors/IntentServiceError";
-
 export {
-  resolveErrorMessage,
-  extractStatusCode,
   extractErrorCode,
   extractErrorDetails,
+  extractStatusCode,
+  resolveErrorMessage,
 } from "./errors/errorFactory";
+export { createIntentServiceError,IntentServiceError } from "./errors/IntentServiceError";

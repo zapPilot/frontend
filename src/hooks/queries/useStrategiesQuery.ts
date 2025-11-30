@@ -1,14 +1,15 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
-import { AssetCategory } from "../../components/PortfolioAllocation/types";
-import { queryKeys } from "../../lib/queryClient";
-import { getStrategies } from "../../services/intentService";
 import type { PoolDetail } from '@/types/domain/pool';
 import {
   StrategiesApiError,
   StrategiesFetchConfig,
   transformStrategiesResponse,
 } from '@/types/domain/strategies';
+
+import { AssetCategory } from "../../components/PortfolioAllocation/types";
+import { queryKeys } from "../../lib/queryClient";
+import { getStrategies } from "../../services/intentService";
 import { createQueryConfig } from "./queryDefaults";
 
 // Updated retry config to match global HTTP utils (maxRetries: 1)

@@ -3,9 +3,10 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import { httpUtils } from "../lib/http-utils";
 import type { PoolDetail } from '@/types/domain/pool';
 import { ActualRiskSummaryResponse } from '@/types/domain/risk';
+
+import { httpUtils } from "../lib/http-utils";
 
 /**
  * Yield returns summary with IQR outlier detection

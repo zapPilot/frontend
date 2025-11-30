@@ -9,9 +9,9 @@ import { motion } from "framer-motion";
 import { ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 import { scaleIn, SMOOTH_TRANSITION } from "@/lib/animationVariants";
+import type { AnalyticsMetric } from '@/types/domain/portfolio';
 
 import { getChangeColorClasses } from "../../../lib/color-utils";
-import type { AnalyticsMetric } from '@/types/domain/portfolio';
 
 export type KeyMetricCardData = AnalyticsMetric;
 

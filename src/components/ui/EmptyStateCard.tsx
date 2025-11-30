@@ -3,6 +3,7 @@
 import React from "react";
 
 import { BaseComponentProps } from '@/types/ui/ui.types';
+
 import { BaseCard } from "./BaseCard";
 
 interface EmptyStateCardProps extends BaseComponentProps {

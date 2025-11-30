@@ -5,10 +5,10 @@
  * @module types/domain
  */
 
+export * from "./investment";
+export * from "./pool";
 export * from "./portfolio";
 export * from "./risk";
-export * from "./pool";
-export * from "./wallet";
-export * from "./user.types";
-export * from "./investment";
 export * from "./strategies";
+export * from "./user.types";
+export * from "./wallet";

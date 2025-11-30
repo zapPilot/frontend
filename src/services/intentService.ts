@@ -4,10 +4,11 @@
  * Replaces IntentEngineClient with simpler service function approach
  */
 
+import { StrategiesApiResponse } from '@/types/domain/strategies';
+
 import { createIntentServiceError } from "../lib/base-error";
 import { createServiceCaller } from "../lib/createServiceCaller";
 import { httpUtils } from "../lib/http-utils";
-import { StrategiesApiResponse } from '@/types/domain/strategies';
 
 /**
  * Intent Engine interfaces

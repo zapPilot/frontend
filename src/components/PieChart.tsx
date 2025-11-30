@@ -3,10 +3,11 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { memo, useMemo } from "react";
 
+import { PieChartData } from '@/types/domain/portfolio';
+
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
 import { formatCurrency } from "../lib/formatters";
-import { PieChartData } from '@/types/domain/portfolio';
 
 interface PieChartProps {
   data: PieChartData[];

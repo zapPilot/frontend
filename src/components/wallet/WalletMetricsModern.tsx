@@ -3,6 +3,7 @@
 import React from "react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
+import { PortfolioState } from '@/types/ui/portfolioState';
 
 import { usePortfolioStateHelpers } from "../../hooks/usePortfolioState";
 import { useResolvedBalanceVisibility } from "../../hooks/useResolvedBalanceVisibility";
@@ -10,7 +11,6 @@ import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
-import { PortfolioState } from '@/types/ui/portfolioState';
 import { BalanceMetric } from "./metrics/BalanceMetric";
 import { ConsolidatedMetric } from "./metrics/consolidated/ConsolidatedMetric";
 import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";

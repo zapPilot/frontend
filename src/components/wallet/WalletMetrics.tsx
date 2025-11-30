@@ -3,12 +3,12 @@
 import React from "react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
+import { PortfolioState } from '@/types/ui/portfolioState';
 
 import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
-import { PortfolioState } from '@/types/ui/portfolioState';
 import { WalletMetricsModern } from "./WalletMetricsModern";
 
 interface WalletMetricsProps {

@@ -1,7 +1,8 @@
 import React from "react";
 
-import { getAssetUrl } from "../../config/assets";
 import { BaseComponentProps } from '@/types/ui/ui.types';
+
+import { getAssetUrl } from "../../config/assets";
 import { ImageWithFallback } from "./ImageWithFallback";
 
 interface TokenImageProps extends BaseComponentProps {

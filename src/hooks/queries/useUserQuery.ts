@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 
+import type { UserProfileResponse } from '@/types/domain/user.types';
+
 import { queryKeys } from "../../lib/queryClient";
 // Use account service directly for wallet connection and profile data
 import { connectWallet, getUserProfile } from "../../services/accountService";
-import type { UserProfileResponse } from '@/types/domain/user.types';
 import { createQueryConfig } from "./queryDefaults";
 
 // Removed ApiBundleResponse in favor of account API wallets

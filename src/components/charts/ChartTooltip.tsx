@@ -19,7 +19,6 @@ import {
   getVolatilityRiskLevel,
 } from "@/lib/chartHoverUtils";
 import { formatters } from "@/lib/formatters";
-
 import type {
   AllocationHoverData,
   ChartHoverState,

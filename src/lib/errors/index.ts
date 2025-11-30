@@ -18,12 +18,12 @@ export type {
 export { BaseServiceError } from "./BaseServiceError";
 
 // Export service-specific error classes
-export { IntentServiceError, createIntentServiceError } from "./IntentServiceError";
+export { createIntentServiceError,IntentServiceError } from "./IntentServiceError";
 
 // Export factory utilities
 export {
-  resolveErrorMessage,
-  extractStatusCode,
   extractErrorCode,
   extractErrorDetails,
+  extractStatusCode,
+  resolveErrorMessage,
 } from "./errorFactory";

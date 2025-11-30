@@ -19,6 +19,11 @@ import { prepareTransaction } from "thirdweb";
 import { useSendAndConfirmCalls } from "thirdweb/react";
 
 import {
+  type BaseModalProps,
+  type ZapExecutionResult,
+} from '@/types/ui/modal.types';
+
+import {
   getChainBlockExplorer,
   getChainById,
   isChainSupported,
@@ -32,10 +37,6 @@ import {
   useUnifiedZapStream,
 } from "../../hooks/useUnifiedZapStream";
 import { formatAddress, formatCurrency } from "../../lib/formatters";
-import {
-  type BaseModalProps,
-  type ZapExecutionResult,
-} from '@/types/ui/modal.types';
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
 interface ZapExecutionProgressProps
