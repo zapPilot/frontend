@@ -9,11 +9,10 @@ import { renderHook } from "@testing-library/react";
 import { describe, expect,it } from "vitest";
 
 import type { AllocationTimeseriesInputPoint } from "@/components/PortfolioChart/types";
-import {
-  useAllocationData,
-  type UseAllocationDataParams,
-} from "@/hooks/charts/useAllocationData";
+import { useAllocationData } from "@/hooks/charts/useAllocationData";
 import type { AssetAllocationPoint } from "@/types/domain/portfolio";
+
+type UseAllocationDataParams = Parameters<typeof useAllocationData>[0];
 
 describe("useAllocationData", () => {
   describe("Empty State Handling", () => {

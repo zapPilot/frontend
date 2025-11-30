@@ -42,7 +42,7 @@ const VOLATILITY_THRESHOLDS = {
 /**
  * Sharpe ratio interpretation labels
  */
-export type SharpeInterpretation =
+type SharpeInterpretation =
   | "Excellent"
   | "Good"
   | "Fair"
@@ -52,12 +52,12 @@ export type SharpeInterpretation =
 /**
  * Volatility risk level labels
  */
-export type VolatilityRiskLevel = "Low" | "Moderate" | "High" | "Very High";
+type VolatilityRiskLevel = "Low" | "Moderate" | "High" | "Very High";
 
 /**
  * Single data point in the Sharpe ratio timeseries
  */
-export interface SharpeDataPoint {
+interface SharpeDataPoint {
   /** Date of the data point */
   date: string;
   /** Sharpe ratio value (typically -3 to 5 range) */
@@ -69,7 +69,7 @@ export interface SharpeDataPoint {
 /**
  * Single data point in the volatility timeseries
  */
-export interface VolatilityDataPoint {
+interface VolatilityDataPoint {
   /** Date of the data point */
   date: string;
   /** Annualized volatility percentage (0-100+) */
@@ -81,7 +81,7 @@ export interface VolatilityDataPoint {
 /**
  * Single data point in the daily yield timeseries
  */
-export interface DailyYieldDataPoint {
+interface DailyYieldDataPoint {
   /** Date of the data point */
   date: string;
   /** Total daily yield in USD */
@@ -110,7 +110,7 @@ export interface DailyYieldApiData {
 /**
  * Input parameters for useRollingAnalytics hook
  */
-export interface UseRollingAnalyticsParams {
+interface UseRollingAnalyticsParams {
   /**
    * Raw Sharpe ratio history data from API
    * Array of data points with rolling Sharpe ratio values
@@ -150,7 +150,7 @@ export interface UseRollingAnalyticsParams {
 /**
  * Return value for useRollingAnalytics hook
  */
-export interface UseRollingAnalyticsResult {
+interface UseRollingAnalyticsResult {
   /**
    * Sharpe ratio data points with interpretation labels
    * Enhanced with risk-adjusted return categorization

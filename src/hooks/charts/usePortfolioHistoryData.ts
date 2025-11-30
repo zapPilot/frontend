@@ -22,7 +22,7 @@ import type { PortfolioDataPoint } from "@/types/domain/portfolio";
 /**
  * Input parameters for usePortfolioHistoryData hook
  */
-export interface UsePortfolioHistoryDataParams {
+interface UsePortfolioHistoryDataParams {
   /**
    * Raw portfolio history data from API
    * Array of portfolio snapshots with value, date, and protocol/category breakdowns
@@ -43,7 +43,7 @@ export interface UsePortfolioHistoryDataParams {
 /**
  * Return value for usePortfolioHistoryData hook
  */
-export interface UsePortfolioHistoryDataResult {
+interface UsePortfolioHistoryDataResult {
   /**
    * Portfolio performance data points for line/area chart rendering
    * Contains date/value pairs suitable for Recharts or similar libraries

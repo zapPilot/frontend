@@ -22,7 +22,7 @@ import type { AssetAllocationPoint } from "@/types/domain/portfolio";
 /**
  * Pie chart data point for allocation visualization
  */
-export interface AllocationPieChartDataPoint {
+interface AllocationPieChartDataPoint {
   /** Category identifier (btc, eth, stablecoin, altcoin) */
   id: string;
   /** Absolute percentage value */
@@ -34,7 +34,7 @@ export interface AllocationPieChartDataPoint {
 /**
  * Current allocation state for the latest data point
  */
-export interface CurrentAllocation {
+interface CurrentAllocation {
   /** Bitcoin allocation percentage */
   btc: number;
   /** Ethereum allocation percentage */
@@ -48,7 +48,7 @@ export interface CurrentAllocation {
 /**
  * Input parameters for useAllocationData hook
  */
-export interface UseAllocationDataParams {
+interface UseAllocationDataParams {
   /**
    * Raw allocation history data from API
    * Can be pre-aggregated AssetAllocationPoint[] or raw AllocationTimeseriesInputPoint[]
@@ -72,7 +72,7 @@ export interface UseAllocationDataParams {
 /**
  * Return value for useAllocationData hook
  */
-export interface UseAllocationDataResult {
+interface UseAllocationDataResult {
   /**
    * Asset allocation data points for multi-line/area chart rendering
    * Each point contains date and allocation percentages for BTC/ETH/Stablecoin/Altcoin

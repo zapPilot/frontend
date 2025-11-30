@@ -5,15 +5,6 @@
  * @module lib/errors
  */
 
-// Export type definitions
-export type {
-  ErrorContext,
-  ErrorDetails,
-  ErrorJSON,
-  ErrorSeverity,
-  UnknownErrorInput,
-} from "./errorContext";
-
 // Export base error class
 export { BaseServiceError } from "./BaseServiceError";
 

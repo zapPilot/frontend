@@ -10,13 +10,6 @@
 
 // Re-export everything from the new modular structure
 export { BaseServiceError } from "./errors/BaseServiceError";
-export type {
-  ErrorContext,
-  ErrorDetails,
-  ErrorJSON,
-  ErrorSeverity,
-  UnknownErrorInput,
-} from "./errors/errorContext";
 export {
   extractErrorCode,
   extractErrorDetails,

@@ -8,7 +8,7 @@ import * as walletService from "../../../src/components/WalletManager/services/W
 import { handleWalletError } from "../../../src/lib/walletUtils";
 import { WalletProvider } from "../../../src/providers/WalletProvider";
 // Account service is not used by WalletManager for email updates; keep import removed.
-import { WalletProviderInterface } from "../../../src/types/wallet";
+import type { WalletProviderInterface } from "@/types/domain/wallet";
 import { render } from "../../test-utils";
 
 // Mock animation frame for better control of async operations

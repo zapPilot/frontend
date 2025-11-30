@@ -45,7 +45,7 @@ const DEFAULT_DRAWDOWN_SUMMARY: DrawdownRecoverySummary = {
 /**
  * Input parameters for useDrawdownAnalysis hook
  */
-export interface UseDrawdownAnalysisParams {
+interface UseDrawdownAnalysisParams {
   /**
    * Raw portfolio history data from API
    * Used to calculate drawdown from peak values
@@ -66,7 +66,7 @@ export interface UseDrawdownAnalysisParams {
 /**
  * Single data point in the drawdown timeseries
  */
-export interface DrawdownDataPoint {
+interface DrawdownDataPoint {
   /** Date of the data point */
   date: string;
   /** Drawdown percentage (0 to -100) */
@@ -80,7 +80,7 @@ export interface DrawdownDataPoint {
 /**
  * Comprehensive drawdown metrics calculated from the timeseries
  */
-export interface DrawdownMetrics {
+interface DrawdownMetrics {
   /** Most severe drawdown percentage (most negative value) */
   maxDrawdown: number;
   /** Current drawdown percentage */
@@ -102,7 +102,7 @@ export interface DrawdownMetrics {
 /**
  * Return value for useDrawdownAnalysis hook
  */
-export interface UseDrawdownAnalysisResult {
+interface UseDrawdownAnalysisResult {
   /**
    * Drawdown data points with recovery annotations
    * Enhanced with recovery point markers and peak tracking
