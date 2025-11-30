@@ -27,7 +27,7 @@ import type {
   PerformanceHoverData,
   SharpeHoverData,
   VolatilityHoverData,
-} from '@/types/ui/chartHover';
+} from "@/types/ui/chartHover";
 
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",

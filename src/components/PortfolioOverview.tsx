@@ -6,9 +6,9 @@ import React, { useCallback, useMemo, useState } from "react";
 
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 import type { LeverageMetrics } from "@/lib/leverageUtils";
-import { PieChartData } from '@/types/domain/portfolio';
-import { PortfolioState } from '@/types/ui/portfolioState';
-import { BaseComponentProps } from '@/types/ui/ui.types';
+import { PieChartData } from "@/types/domain/portfolio";
+import { PortfolioState } from "@/types/ui/portfolioState";
+import { BaseComponentProps } from "@/types/ui/ui.types";
 
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";

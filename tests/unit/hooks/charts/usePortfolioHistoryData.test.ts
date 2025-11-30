@@ -6,7 +6,7 @@
  */
 
 import { renderHook } from "@testing-library/react";
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { usePortfolioHistoryData } from "@/hooks/charts/usePortfolioHistoryData";
 import type { PortfolioDataPoint } from "@/types/domain/portfolio";

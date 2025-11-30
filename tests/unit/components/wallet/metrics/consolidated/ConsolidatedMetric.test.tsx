@@ -7,17 +7,17 @@ import type { YieldSummaryData } from "@/services/yieldService";
 
 // Mock dependencies
 vi.mock("@/components/wallet/tooltips", () => ({
-  ROITooltip: ({ recommendedPeriodLabel }: { recommendedPeriodLabel: string | null }) => (
-    <div data-testid="roi-tooltip">
-      Recommended: {recommendedPeriodLabel}
-    </div>
+  ROITooltip: ({
+    recommendedPeriodLabel,
+  }: {
+    recommendedPeriodLabel: string | null;
+  }) => (
+    <div data-testid="roi-tooltip">Recommended: {recommendedPeriodLabel}</div>
   ),
   YieldBreakdownTooltip: ({ outliersRemoved }: { outliersRemoved: number }) => (
-    <div data-testid="yield-tooltip">
-      Outliers: {outliersRemoved}
-    </div>
+    <div data-testid="yield-tooltip">Outliers: {outliersRemoved}</div>
   ),
-  selectBestYieldWindow: vi.fn((windows) => {
+  selectBestYieldWindow: vi.fn(windows => {
     const windowKeys = Object.keys(windows || {});
     if (windowKeys.length === 0) return null;
     const firstKey = windowKeys[0];
@@ -37,7 +37,7 @@ vi.mock("@/components/wallet/tooltips", () => ({
 }));
 
 vi.mock("@/lib/sortProtocolsByTodayYield", () => ({
-  sortProtocolsByTodayYield: vi.fn((breakdown) => breakdown),
+  sortProtocolsByTodayYield: vi.fn(breakdown => breakdown),
 }));
 
 const mockPortfolioROI: PortfolioROI = {

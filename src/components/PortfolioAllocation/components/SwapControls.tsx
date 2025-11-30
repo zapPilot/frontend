@@ -12,7 +12,7 @@ import React, {
   useState,
 } from "react";
 
-import type { SwapToken } from '@/types/ui/swap';
+import type { SwapToken } from "@/types/ui/swap";
 
 import { useUser } from "../../../contexts/UserContext";
 import { SlippageComponent } from "../../shared/SlippageComponent";

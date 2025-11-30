@@ -415,7 +415,8 @@ export function useChartData(
   // 1. Portfolio Performance Data
   const performanceResult = usePortfolioHistoryData({
     portfolioHistory,
-    isLoading: Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
+    isLoading:
+      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
     error: normalizedError ?? dashboardError?.message ?? null,
   });
 
@@ -424,7 +425,8 @@ export function useChartData(
     allocationHistory: overrides?.allocationData?.length
       ? overrides.allocationData
       : allocationTimeseriesData,
-    isLoading: Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
+    isLoading:
+      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
     error: normalizedError ?? dashboardError?.message ?? null,
   });
 
@@ -436,7 +438,8 @@ export function useChartData(
 
   const drawdownResult = useDrawdownAnalysis({
     portfolioHistory: shouldCalculateDrawdown ? portfolioHistory : [],
-    isLoading: Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
+    isLoading:
+      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
     error: normalizedError ?? dashboardError?.message ?? null,
   });
 
@@ -507,7 +510,8 @@ export function useChartData(
             ...(drawdownResult.metrics.latestPeakDate && {
               latestPeakDate: drawdownResult.metrics.latestPeakDate,
             }),
-            ...(drawdownResult.metrics.latestRecoveryDurationDays !== undefined && {
+            ...(drawdownResult.metrics.latestRecoveryDurationDays !==
+              undefined && {
               latestRecoveryDurationDays:
                 drawdownResult.metrics.latestRecoveryDurationDays,
             }),
@@ -542,12 +546,14 @@ export function useChartData(
       ? overrides.volatilityData.map(point => ({
           date: point.date,
           annualized_volatility_pct: point.annualized_volatility_pct ?? null,
-          rolling_volatility_daily_pct: point.rolling_volatility_daily_pct ?? null,
+          rolling_volatility_daily_pct:
+            point.rolling_volatility_daily_pct ?? null,
         }))
       : rollingVolatilityData.map(point => ({
           date: point.date,
           annualized_volatility_pct: point.annualized_volatility_pct ?? null,
-          rolling_volatility_daily_pct: point.rolling_volatility_daily_pct ?? null,
+          rolling_volatility_daily_pct:
+            point.rolling_volatility_daily_pct ?? null,
         })),
     dailyYieldHistory: processedDailyYieldData.map(point => {
       const apiPoint: {
@@ -576,7 +582,8 @@ export function useChartData(
 
       return apiPoint;
     }),
-    isLoading: Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
+    isLoading:
+      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
     error: normalizedError ?? dashboardError?.message ?? null,
   });
 

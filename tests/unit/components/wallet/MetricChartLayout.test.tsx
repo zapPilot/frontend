@@ -10,7 +10,11 @@ vi.mock("@/components/PortfolioChart/charts/ChartGrid", () => ({
 }));
 
 vi.mock("@/components/charts", () => ({
-  ChartIndicator: ({ hoveredPoint }: { hoveredPoint: ChartHoverState | null }) => (
+  ChartIndicator: ({
+    hoveredPoint,
+  }: {
+    hoveredPoint: ChartHoverState | null;
+  }) => (
     <g data-testid="chart-indicator">
       {hoveredPoint && <circle data-testid="indicator-point" />}
     </g>
@@ -153,7 +157,10 @@ describe("MetricChartLayout", () => {
       ];
 
       const { container } = render(
-        <MetricChartLayout {...defaultProps} gradientStops={multiStopGradient} />
+        <MetricChartLayout
+          {...defaultProps}
+          gradientStops={multiStopGradient}
+        />
       );
 
       const stops = container.querySelectorAll("stop");
@@ -432,8 +439,20 @@ describe("MetricChartLayout", () => {
     it("should render multiple extra svg elements", () => {
       const extraContent = (
         <>
-          <line data-testid="reference-line-1" x1="0" y1="100" x2="800" y2="100" />
-          <line data-testid="reference-line-2" x1="0" y1="200" x2="800" y2="200" />
+          <line
+            data-testid="reference-line-1"
+            x1="0"
+            y1="100"
+            x2="800"
+            y2="100"
+          />
+          <line
+            data-testid="reference-line-2"
+            x1="0"
+            y1="200"
+            x2="800"
+            y2="200"
+          />
         </>
       );
 

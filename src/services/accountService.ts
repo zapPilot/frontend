@@ -11,7 +11,7 @@ import type {
   UpdateEmailResponse,
   UserCryptoWallet,
   UserProfileResponse,
-} from '@/types/domain/user.types';
+} from "@/types/domain/user.types";
 
 import { createServiceCaller } from "../lib/createServiceCaller";
 

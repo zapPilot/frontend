@@ -16,4 +16,7 @@ export {
   extractStatusCode,
   resolveErrorMessage,
 } from "./errors/errorFactory";
-export { createIntentServiceError,IntentServiceError } from "./errors/IntentServiceError";
+export {
+  createIntentServiceError,
+  IntentServiceError,
+} from "./errors/IntentServiceError";

@@ -40,7 +40,9 @@ vi.mock("@/components/PortfolioChart/charts/MetricChartLayout", () => ({
       <div data-testid="y-axis-labels">{yAxisLabels.join(",")}</div>
       <div data-testid="legend">{legend}</div>
       <div data-testid="description">{description}</div>
-      <div data-testid="extra-svg">{extraSvgContent ? "has-extra" : "no-extra"}</div>
+      <div data-testid="extra-svg">
+        {extraSvgContent ? "has-extra" : "no-extra"}
+      </div>
     </div>
   ),
 }));
@@ -83,7 +85,9 @@ describe("SharpeChart", () => {
     it("should render with default dimensions", () => {
       const { container } = render(<SharpeChart data={mockSharpeData} />);
 
-      expect(container.querySelector('[data-chart-type="sharpe"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-chart-type="sharpe"]')
+      ).toBeInTheDocument();
     });
 
     it("should apply custom width", () => {
@@ -364,7 +368,7 @@ describe("SharpeChart", () => {
   describe("Performance", () => {
     it("should handle large datasets efficiently", () => {
       const largeData = Array.from({ length: 365 }, (_, i) => ({
-        date: `2024-01-${String(i % 30 + 1).padStart(2, "0")}`,
+        date: `2024-01-${String((i % 30) + 1).padStart(2, "0")}`,
         sharpe: 0.5 + Math.random() * 2.5,
       }));
 

@@ -118,8 +118,9 @@ describe("MarketSentimentMetric", () => {
       expect(screen.getByText("35")).toBeInTheDocument();
       // Query by class to get the sentiment status element specifically
       const allFears = screen.getAllByText(/Fear/i);
-      const statusElement = allFears.find(el =>
-        el.className.includes("text-xs") && el.className.includes("uppercase")
+      const statusElement = allFears.find(
+        el =>
+          el.className.includes("text-xs") && el.className.includes("uppercase")
       );
       expect(statusElement).toBeInTheDocument();
       expect(screen.getByText("watch")).toBeInTheDocument();

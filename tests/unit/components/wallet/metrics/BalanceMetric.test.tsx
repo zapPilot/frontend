@@ -57,7 +57,8 @@ describe("BalanceMetric", () => {
 
       expect(screen.getByText("Balance")).toBeInTheDocument();
       // BalanceSkeleton is rendered inside a div with h-8 class
-      const skeletonContainer = screen.getByText("Balance").parentElement?.nextElementSibling;
+      const skeletonContainer =
+        screen.getByText("Balance").parentElement?.nextElementSibling;
       expect(skeletonContainer).toHaveClass("h-8");
     });
 
@@ -65,7 +66,8 @@ describe("BalanceMetric", () => {
       render(<BalanceMetric shouldShowLoading={true} totalNetUsd={1000} />);
 
       expect(screen.getByText("Balance")).toBeInTheDocument();
-      const skeletonContainer = screen.getByText("Balance").parentElement?.nextElementSibling;
+      const skeletonContainer =
+        screen.getByText("Balance").parentElement?.nextElementSibling;
       expect(skeletonContainer).toHaveClass("h-8");
     });
   });
@@ -85,10 +87,7 @@ describe("BalanceMetric", () => {
 
     it("should use red styling for error state", () => {
       const { container } = render(
-        <BalanceMetric
-          shouldShowError={true}
-          errorMessage="Network error"
-        />
+        <BalanceMetric shouldShowError={true} errorMessage="Network error" />
       );
 
       // Check for red badge

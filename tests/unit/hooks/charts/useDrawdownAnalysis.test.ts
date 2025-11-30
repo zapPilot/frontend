@@ -11,7 +11,7 @@
  */
 
 import { renderHook } from "@testing-library/react";
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { useDrawdownAnalysis } from "@/hooks/charts/useDrawdownAnalysis";
 import type { PortfolioDataPoint } from "@/types/domain/portfolio";
@@ -225,7 +225,9 @@ describe("useDrawdownAnalysis", () => {
 
     it("should track recovery duration correctly", () => {
       // 5-day underwater period
-      const portfolioData = createPortfolioData([1000, 900, 850, 900, 950, 1000]);
+      const portfolioData = createPortfolioData([
+        1000, 900, 850, 900, 950, 1000,
+      ]);
 
       const { result } = renderHook(() =>
         useDrawdownAnalysis({
@@ -243,8 +245,11 @@ describe("useDrawdownAnalysis", () => {
     it("should count multiple recoveries", () => {
       // Two complete drawdown/recovery cycles
       const portfolioData = createPortfolioData([
-        1000, 800, 1000, // First cycle
-        900, 1100, // Second cycle
+        1000,
+        800,
+        1000, // First cycle
+        900,
+        1100, // Second cycle
       ]);
 
       const { result } = renderHook(() =>
@@ -327,8 +332,11 @@ describe("useDrawdownAnalysis", () => {
 
     it("should count recoveries correctly", () => {
       const portfolioData = createPortfolioData([
-        1000, 800, 1000, // Recovery 1
-        900, 1100, // Recovery 2
+        1000,
+        800,
+        1000, // Recovery 1
+        900,
+        1100, // Recovery 2
       ]);
 
       const { result } = renderHook(() =>
@@ -341,7 +349,10 @@ describe("useDrawdownAnalysis", () => {
     });
 
     it("should track latestPeakDate", () => {
-      const portfolioData = createPortfolioData([1000, 1100, 900], "2024-01-01");
+      const portfolioData = createPortfolioData(
+        [1000, 1100, 900],
+        "2024-01-01"
+      );
 
       const { result } = renderHook(() =>
         useDrawdownAnalysis({
@@ -409,9 +420,9 @@ describe("useDrawdownAnalysis", () => {
       );
 
       expect(result.current.drawdownData).toHaveLength(2);
-      expect(Math.abs(result.current.drawdownData[1]?.drawdown || 0)).toBeLessThan(
-        0.1
-      );
+      expect(
+        Math.abs(result.current.drawdownData[1]?.drawdown || 0)
+      ).toBeLessThan(0.1);
     });
 
     it("should handle large datasets efficiently", () => {
@@ -485,9 +496,7 @@ describe("useDrawdownAnalysis", () => {
         })
       );
 
-      expect(result.current.drawdownData).toHaveLength(
-        portfolioData.length
-      );
+      expect(result.current.drawdownData).toHaveLength(portfolioData.length);
     });
 
     it("should include peakDate for all points", () => {

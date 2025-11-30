@@ -73,9 +73,13 @@ describe("VolatilityChart", () => {
     });
 
     it("should render with default dimensions", () => {
-      const { container } = render(<VolatilityChart data={mockVolatilityData} />);
+      const { container } = render(
+        <VolatilityChart data={mockVolatilityData} />
+      );
 
-      expect(container.querySelector('[data-chart-type="volatility"]')).toBeInTheDocument();
+      expect(
+        container.querySelector('[data-chart-type="volatility"]')
+      ).toBeInTheDocument();
     });
 
     it("should apply custom width", () => {
@@ -190,7 +194,9 @@ describe("VolatilityChart", () => {
     });
 
     it("should include legend visual indicator", () => {
-      const { container } = render(<VolatilityChart data={mockVolatilityData} />);
+      const { container } = render(
+        <VolatilityChart data={mockVolatilityData} />
+      );
 
       // Legend should contain the line indicator element
       expect(screen.getByTestId("legend")).toBeInTheDocument();
@@ -305,7 +311,7 @@ describe("VolatilityChart", () => {
   describe("Performance", () => {
     it("should handle large datasets efficiently", () => {
       const largeData = Array.from({ length: 365 }, (_, i) => ({
-        date: `2024-01-${String(i % 30 + 1).padStart(2, "0")}`,
+        date: `2024-01-${String((i % 30) + 1).padStart(2, "0")}`,
         volatility: 15 + Math.random() * 30,
       }));
 
@@ -315,7 +321,9 @@ describe("VolatilityChart", () => {
     });
 
     it("should memoize chart paths", () => {
-      const { rerender } = render(<VolatilityChart data={mockVolatilityData} />);
+      const { rerender } = render(
+        <VolatilityChart data={mockVolatilityData} />
+      );
 
       const initialLinePath = screen.getByTestId("line-path").textContent;
 
@@ -326,7 +334,9 @@ describe("VolatilityChart", () => {
     });
 
     it("should update paths when data changes", () => {
-      const { rerender } = render(<VolatilityChart data={mockVolatilityData} />);
+      const { rerender } = render(
+        <VolatilityChart data={mockVolatilityData} />
+      );
 
       const initialLinePath = screen.getByTestId("line-path").textContent;
 

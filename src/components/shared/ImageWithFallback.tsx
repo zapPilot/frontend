@@ -2,7 +2,7 @@ import { HelpCircle } from "lucide-react";
 import Image from "next/image";
 import React, { useState } from "react";
 
-import { BaseComponentProps } from '@/types/ui/ui.types';
+import { BaseComponentProps } from "@/types/ui/ui.types";
 
 import { normalizeForComparison } from "../../lib/stringUtils";
 

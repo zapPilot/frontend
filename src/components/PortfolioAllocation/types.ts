@@ -1,6 +1,6 @@
 // src/components/PortfolioAllocation/types.ts
 
-import { SwapToken } from '@/types/ui/swap';
+import { SwapToken } from "@/types/ui/swap";
 
 export interface Protocol {
   id: string;

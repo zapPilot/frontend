@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import type { SwapToken } from '@/types/ui/swap';
+import type { SwapToken } from "@/types/ui/swap";
 
 import { queryKeys } from "../../lib/queryClient";
 import { dedupeStrings } from "../../lib/stringUtils";

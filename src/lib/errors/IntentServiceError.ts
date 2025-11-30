@@ -7,7 +7,11 @@
 
 import { getIntentErrorMessage } from "../errorMessages";
 import { BaseServiceError } from "./BaseServiceError";
-import type { ErrorContext, ErrorDetails, UnknownErrorInput } from "./errorContext";
+import type {
+  ErrorContext,
+  ErrorDetails,
+  UnknownErrorInput,
+} from "./errorContext";
 import { resolveErrorMessage } from "./errorFactory";
 
 /**
@@ -40,9 +44,7 @@ export class IntentServiceError extends BaseServiceError {
 /**
  * Enhanced error messages for common intent engine errors
  */
-export function createIntentServiceError(
-  error: unknown
-): IntentServiceError {
+export function createIntentServiceError(error: unknown): IntentServiceError {
   const errorObj = error as UnknownErrorInput;
   const status = errorObj.status || errorObj.response?.status || 500;
   let message = resolveErrorMessage(

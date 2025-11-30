@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 
-import { PortfolioState, PortfolioStateType } from '@/types/ui/portfolioState';
+import { PortfolioState, PortfolioStateType } from "@/types/ui/portfolioState";
 
 import type { LandingPageResponse } from "../services/analyticsService";
 

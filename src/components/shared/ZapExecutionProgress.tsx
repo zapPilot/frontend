@@ -21,7 +21,7 @@ import { useSendAndConfirmCalls } from "thirdweb/react";
 import {
   type BaseModalProps,
   type ZapExecutionResult,
-} from '@/types/ui/modal.types';
+} from "@/types/ui/modal.types";
 
 import {
   getChainBlockExplorer,

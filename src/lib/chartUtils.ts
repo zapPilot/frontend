@@ -1,4 +1,4 @@
-import { PieChartData, PortfolioDataPoint } from '@/types/domain/portfolio';
+import { PieChartData, PortfolioDataPoint } from "@/types/domain/portfolio";
 
 import {
   API_CATEGORY_KEY_MAP,

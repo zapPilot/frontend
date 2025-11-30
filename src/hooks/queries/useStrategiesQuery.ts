@@ -1,11 +1,11 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 
-import type { PoolDetail } from '@/types/domain/pool';
+import type { PoolDetail } from "@/types/domain/pool";
 import {
   StrategiesApiError,
   StrategiesFetchConfig,
   transformStrategiesResponse,
-} from '@/types/domain/strategies';
+} from "@/types/domain/strategies";
 
 import { AssetCategory } from "../../components/PortfolioAllocation/types";
 import { queryKeys } from "../../lib/queryClient";

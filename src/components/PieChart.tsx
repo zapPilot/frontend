@@ -3,7 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { memo, useMemo } from "react";
 
-import { PieChartData } from '@/types/domain/portfolio';
+import { PieChartData } from "@/types/domain/portfolio";
 
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";

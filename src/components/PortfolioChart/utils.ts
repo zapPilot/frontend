@@ -1,7 +1,7 @@
 import {
   AssetAllocationPoint,
   PortfolioDataPoint,
-} from '@/types/domain/portfolio';
+} from "@/types/domain/portfolio";
 
 import { useChartHover } from "../../hooks/useChartHover";
 import { ensureNonNegative } from "../../lib/mathUtils";

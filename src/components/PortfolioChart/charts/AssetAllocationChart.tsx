@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { memo } from "react";
 
-import type { AssetAllocationPoint } from '@/types/domain/portfolio';
+import type { AssetAllocationPoint } from "@/types/domain/portfolio";
 
 import { ASSET_CATEGORIES, CHART_COLORS } from "../../../constants/portfolio";
 import { useChartHover } from "../../../hooks/useChartHover";

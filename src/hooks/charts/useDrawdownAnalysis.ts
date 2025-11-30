@@ -632,7 +632,8 @@ export function useDrawdownAnalysis(
     }
 
     if (summary.latestRecoveryDurationDays !== undefined) {
-      baseMetrics.latestRecoveryDurationDays = summary.latestRecoveryDurationDays;
+      baseMetrics.latestRecoveryDurationDays =
+        summary.latestRecoveryDurationDays;
     }
 
     return baseMetrics;

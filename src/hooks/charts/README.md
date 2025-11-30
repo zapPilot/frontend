@@ -1,6 +1,8 @@
 # Charts Hooks Module
 
-This directory contains extracted chart data processing hooks from the massive `useChartData` hook (985 lines). Each hook is focused on a specific chart type for better maintainability, testability, and reusability.
+This directory contains extracted chart data processing hooks from the massive `useChartData` hook
+(985 lines). Each hook is focused on a specific chart type for better maintainability, testability,
+and reusability.
 
 ## Week 2 Refactoring Progress
 
@@ -13,6 +15,7 @@ This directory contains extracted chart data processing hooks from the massive `
 **Purpose**: Processes portfolio performance chart data with DeFi/Wallet breakdown
 
 **Key Features**:
+
 - Portfolio value over time transformation
 - Performance metrics calculation (current value, total return, etc.)
 - Stacked data generation for DeFi/Wallet visualization
@@ -92,6 +95,7 @@ function StackedPerformanceChart({ portfolioHistory }) {
 ```
 
 **Tests**: 13 unit tests with 100% coverage
+
 - Data transformation
 - Metric calculations
 - Edge cases (empty data, single point, zero values)
@@ -107,6 +111,7 @@ function StackedPerformanceChart({ portfolioHistory }) {
 **Purpose**: Processes asset allocation chart data with BTC/ETH/Stablecoin/Altcoin breakdown
 
 **Key Features**:
+
 - Asset allocation timeseries data transformation
 - Category aggregation (BTC, ETH, Stablecoin, Altcoin)
 - Current allocation state extraction
@@ -204,6 +209,7 @@ function AllocationPieChart({ allocationHistory }) {
 ```
 
 **Tests**: 23 unit tests with 100% coverage
+
 - Data transformation (timeseries → aggregated)
 - Type detection (pre-aggregated vs raw data)
 - Current allocation extraction
@@ -222,6 +228,7 @@ function AllocationPieChart({ allocationHistory }) {
 **Purpose**: Calculates drawdown and recovery cycle analysis
 
 **Key Features**:
+
 - Drawdown calculation from portfolio history
 - Recovery cycle detection and annotation
 - Drawdown summary metrics (max drawdown, recovery times)
@@ -299,6 +306,7 @@ function DrawdownChart({ drawdownHistory, portfolioHistory, isLoading, error }) 
 ```
 
 **Tests**: 30+ unit tests with 100% coverage
+
 - Drawdown calculation from portfolio history
 - Recovery cycle detection
 - Summary metrics calculation
@@ -316,6 +324,7 @@ function DrawdownChart({ drawdownHistory, portfolioHistory, isLoading, error }) 
 **Purpose**: Processes rolling analytics (Sharpe ratio, volatility, daily yield)
 
 **Key Features**:
+
 - Sharpe ratio transformation with interpretation labels (Excellent, Good, Fair, Poor, Very Poor)
 - Volatility transformation with risk level categorization (Low, Moderate, High, Very High)
 - Daily yield aggregation with cumulative tracking
@@ -400,6 +409,7 @@ function AnalyticsCharts({ dashboardData, dailyYieldData, isLoading, error }) {
 ```
 
 **Sharpe Interpretation Thresholds**:
+
 - Excellent: > 2.0 (exceptional risk-adjusted returns)
 - Good: > 1.0 to 2.0 (strong performance)
 - Fair: > 0.0 to 1.0 (acceptable returns)
@@ -407,6 +417,7 @@ function AnalyticsCharts({ dashboardData, dailyYieldData, isLoading, error }) {
 - Very Poor: ≤ -1.0 (significant underperformance)
 
 **Volatility Risk Levels**:
+
 - Low: < 10% (stable portfolio)
 - Moderate: 10% to < 25% (typical DeFi volatility)
 - High: 25% to < 50% (elevated risk)
@@ -416,29 +427,33 @@ function AnalyticsCharts({ dashboardData, dailyYieldData, isLoading, error }) {
 
 ```typescript
 {
-  sharpeData: Array<{                 // Sharpe ratio with interpretations
+  sharpeData: Array<{
+    // Sharpe ratio with interpretations
     date: string;
     sharpe: number;
     interpretation: SharpeInterpretation;
   }>;
-  volatilityData: Array<{             // Volatility with risk levels
+  volatilityData: Array<{
+    // Volatility with risk levels
     date: string;
     volatility: number;
     riskLevel: VolatilityRiskLevel;
   }>;
-  dailyYieldData: Array<{             // Daily yield with cumulative tracking
+  dailyYieldData: Array<{
+    // Daily yield with cumulative tracking
     date: string;
     totalYield: number;
     cumulativeYield: number;
     protocolCount?: number;
   }>;
-  isLoading: boolean;                 // Loading state
-  error: string | null;               // Error message
-  hasData: boolean;                   // Whether any analytics data is available
+  isLoading: boolean; // Loading state
+  error: string | null; // Error message
+  hasData: boolean; // Whether any analytics data is available
 }
 ```
 
 **Tests**: 24 unit tests with 100% coverage
+
 - Sharpe ratio interpretation thresholds
 - Volatility risk level categorization
 - Daily yield aggregation
@@ -525,10 +540,7 @@ import { usePortfolioHistoryData } from "@/hooks/charts";
 **Type Imports**:
 
 ```typescript
-import type {
-  UsePortfolioHistoryDataParams,
-  UsePortfolioHistoryDataResult,
-} from "@/hooks/charts";
+import type { UsePortfolioHistoryDataParams, UsePortfolioHistoryDataResult } from "@/hooks/charts";
 ```
 
 ---
@@ -542,20 +554,21 @@ If you're currently using `useChartData` and only need portfolio performance dat
 **Before**:
 
 ```typescript
-const { portfolioHistory, currentValue, totalReturn, isLoading, error } =
-  useChartData(userId, selectedPeriod);
+const { portfolioHistory, currentValue, totalReturn, isLoading, error } = useChartData(
+  userId,
+  selectedPeriod
+);
 ```
 
 **After**:
 
 ```typescript
 const dashboardQuery = usePortfolioDashboard(userId);
-const { performanceData, currentValue, totalReturn, isLoading, error } =
-  usePortfolioHistoryData({
-    portfolioHistory: dashboardQuery.portfolioHistory,
-    isLoading: dashboardQuery.isLoading,
-    error: dashboardQuery.error?.message,
-  });
+const { performanceData, currentValue, totalReturn, isLoading, error } = usePortfolioHistoryData({
+  portfolioHistory: dashboardQuery.portfolioHistory,
+  isLoading: dashboardQuery.isLoading,
+  error: dashboardQuery.error?.message,
+});
 ```
 
 **Benefits**:
@@ -579,12 +592,11 @@ const { allocationHistory, isLoading, error } = useChartData(userId, selectedPer
 
 ```typescript
 const dashboardQuery = usePortfolioDashboard(userId);
-const { allocationData, currentAllocation, pieChartData, isLoading, error } =
-  useAllocationData({
-    allocationHistory: dashboardQuery.allocationHistory,
-    isLoading: dashboardQuery.isLoading,
-    error: dashboardQuery.error?.message,
-  });
+const { allocationData, currentAllocation, pieChartData, isLoading, error } = useAllocationData({
+  allocationHistory: dashboardQuery.allocationHistory,
+  isLoading: dashboardQuery.isLoading,
+  error: dashboardQuery.error?.message,
+});
 ```
 
 **Benefits**:

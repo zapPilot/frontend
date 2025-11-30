@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 
 import { useChain } from "@/hooks/useChain";
 import { useToast } from "@/hooks/useToast";
-import { InvestmentOpportunity } from '@/types/domain/investment';
+import { InvestmentOpportunity } from "@/types/domain/investment";
 
 import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";

@@ -3,8 +3,8 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import type { PoolDetail } from '@/types/domain/pool';
-import { ActualRiskSummaryResponse } from '@/types/domain/risk';
+import type { PoolDetail } from "@/types/domain/pool";
+import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 
 import { httpUtils } from "../lib/http-utils";
 
@@ -76,7 +76,7 @@ export interface YieldReturnsSummaryResponse {
 }
 
 // Re-export PoolDetail for components that import from this service
-export type { PoolDetail } from '@/types/domain/pool';
+export type { PoolDetail } from "@/types/domain/pool";
 
 // Unified Landing Page Response Type
 export interface LandingPageResponse {

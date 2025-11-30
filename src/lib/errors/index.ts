@@ -9,7 +9,10 @@
 export { BaseServiceError } from "./BaseServiceError";
 
 // Export service-specific error classes
-export { createIntentServiceError,IntentServiceError } from "./IntentServiceError";
+export {
+  createIntentServiceError,
+  IntentServiceError,
+} from "./IntentServiceError";
 
 // Export factory utilities
 export {

@@ -178,7 +178,8 @@ export function usePortfolioHistoryData(
       };
     }
 
-    const currentValue = performanceData[performanceData.length - 1]?.value ?? 0;
+    const currentValue =
+      performanceData[performanceData.length - 1]?.value ?? 0;
     const firstValue = performanceData[0]?.value ?? 0;
     const totalReturn =
       firstValue > 0 ? ((currentValue - firstValue) / firstValue) * 100 : 0;

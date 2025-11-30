@@ -38,10 +38,7 @@ import type {
   PortfolioDataPoint,
 } from "@/types/domain/portfolio";
 
-import {
-  createMockArray,
-  generateDateSeries,
-} from "../helpers/mock-factories";
+import { createMockArray, generateDateSeries } from "../helpers/mock-factories";
 import { MOCK_BASE_DATE } from "../helpers/test-constants";
 import { createQueryWrapper, setupMockCleanup } from "../helpers/test-setup";
 
@@ -92,7 +89,7 @@ const createWrapper = () => createQueryWrapper().QueryWrapper;
 const createMockPortfolioData = (days = 30): PortfolioDataPoint[] => {
   const dateSeries = generateDateSeries(MOCK_BASE_DATE, days);
 
-  return createMockArray(days, (index) => {
+  return createMockArray(days, index => {
     const baseValue = 10_000 + index * 150;
     const defiValue = baseValue * 0.6;
     const walletValue = baseValue * 0.4;
@@ -170,7 +167,8 @@ const createMockAllocationData = (
     });
 
     // Altcoin allocation (remaining)
-    const remaining = 100 - (30 + (index % 5)) - (25 + (index % 5)) - (20 + (index % 5));
+    const remaining =
+      100 - (30 + (index % 5)) - (25 + (index % 5)) - (20 + (index % 5));
     result.push({
       date,
       category: "others",
@@ -201,7 +199,9 @@ const createMockDrawdownData = (days = 30) => {
     return {
       date,
       portfolio_value_usd: 10_000 + index * 150 + drawdown * 10,
-      running_peak_usd: Math.max(...dateSeries.slice(0, index + 1).map((_, i) => 10_000 + i * 150)),
+      running_peak_usd: Math.max(
+        ...dateSeries.slice(0, index + 1).map((_, i) => 10_000 + i * 150)
+      ),
       drawdown_pct: drawdown,
     };
   });
@@ -262,9 +262,21 @@ const createMockDailyYieldData = (days = 30): DailyYieldOverridePoint[] => {
       cumulative_yield_usd: cumulative,
       protocol_count: 3,
       protocols: [
-        { protocol_name: "aave", chain: "ethereum", yield_return_usd: dailyYield * 0.5 },
-        { protocol_name: "compound", chain: "ethereum", yield_return_usd: dailyYield * 0.3 },
-        { protocol_name: "yearn", chain: "ethereum", yield_return_usd: dailyYield * 0.2 },
+        {
+          protocol_name: "aave",
+          chain: "ethereum",
+          yield_return_usd: dailyYield * 0.5,
+        },
+        {
+          protocol_name: "compound",
+          chain: "ethereum",
+          yield_return_usd: dailyYield * 0.3,
+        },
+        {
+          protocol_name: "yearn",
+          chain: "ethereum",
+          yield_return_usd: dailyYield * 0.2,
+        },
       ],
     };
   });
@@ -486,27 +498,32 @@ describe("useChartData - Full Data Flow Integration", () => {
     const portfolioData = createMockPortfolioData(30);
 
     // Populate all sections of the dashboard
-    dashboard.trends.daily_values = portfolioData.map((point) => ({
+    dashboard.trends.daily_values = portfolioData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: point.change ?? 0,
-      categories: point.categories?.map((cat) => ({
-        category: cat.category ?? "unknown",
-        value_usd: cat.value ?? 0,
-        pnl_usd: cat.pnl ?? 0,
-      })) ?? [],
-      protocols: point.protocols?.map((proto) => ({
-        protocol: proto.protocol ?? "unknown",
-        chain: proto.chain ?? "unknown",
-        value_usd: proto.value ?? 0,
-        pnl_usd: proto.pnl ?? 0,
-      })) ?? [],
+      categories:
+        point.categories?.map(cat => ({
+          category: cat.category ?? "unknown",
+          value_usd: cat.value ?? 0,
+          pnl_usd: cat.pnl ?? 0,
+        })) ?? [],
+      protocols:
+        point.protocols?.map(proto => ({
+          protocol: proto.protocol ?? "unknown",
+          chain: proto.chain ?? "unknown",
+          value_usd: proto.value ?? 0,
+          pnl_usd: proto.pnl ?? 0,
+        })) ?? [],
     }));
 
     dashboard.allocation.allocations = createMockAllocationData(30);
-    dashboard.drawdown_analysis.enhanced.drawdown_data = createMockDrawdownData(30);
-    dashboard.rolling_analytics.sharpe.rolling_sharpe_data = createMockSharpeData(30);
-    dashboard.rolling_analytics.volatility.rolling_volatility_data = createMockVolatilityData(30);
+    dashboard.drawdown_analysis.enhanced.drawdown_data =
+      createMockDrawdownData(30);
+    dashboard.rolling_analytics.sharpe.rolling_sharpe_data =
+      createMockSharpeData(30);
+    dashboard.rolling_analytics.volatility.rolling_volatility_data =
+      createMockVolatilityData(30);
 
     setDashboardResponse(dashboard);
 
@@ -540,7 +557,7 @@ describe("useChartData - Full Data Flow Integration", () => {
     const dashboard = createMockDashboard();
     const portfolioData = createMockPortfolioData(10);
 
-    dashboard.trends.daily_values = portfolioData.map((point) => ({
+    dashboard.trends.daily_values = portfolioData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -568,7 +585,7 @@ describe("useChartData - Full Data Flow Integration", () => {
     const dashboard = createMockDashboard();
 
     // Only provide portfolio and allocation data (no drawdown, sharpe, volatility)
-    dashboard.trends.daily_values = createMockPortfolioData(15).map((point) => ({
+    dashboard.trends.daily_values = createMockPortfolioData(15).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -609,16 +626,17 @@ describe("useChartData - Chart-Specific Tests", () => {
       const dashboard = createMockDashboard();
       const portfolioData = createMockPortfolioData(20);
 
-      dashboard.trends.daily_values = portfolioData.map((point) => ({
+      dashboard.trends.daily_values = portfolioData.map(point => ({
         date: point.date,
         total_value_usd: point.value ?? 0,
         change_percentage: point.change ?? 0,
-        categories: point.categories?.map((cat) => ({
-          category: cat.category ?? "unknown",
-          value_usd: cat.value ?? 0,
-          pnl_usd: cat.pnl ?? 0,
-          source_type: cat.category === "wallet" ? "wallet" : "defi",
-        })) ?? [],
+        categories:
+          point.categories?.map(cat => ({
+            category: cat.category ?? "unknown",
+            value_usd: cat.value ?? 0,
+            pnl_usd: cat.pnl ?? 0,
+            source_type: cat.category === "wallet" ? "wallet" : "defi",
+          })) ?? [],
         protocols: [],
       }));
 
@@ -650,7 +668,7 @@ describe("useChartData - Chart-Specific Tests", () => {
       const dashboard = createMockDashboard();
       const portfolioData = createMockPortfolioData(5);
 
-      dashboard.trends.daily_values = portfolioData.map((point) => ({
+      dashboard.trends.daily_values = portfolioData.map(point => ({
         date: point.date,
         total_value_usd: point.value ?? 0,
         change_percentage: 0,
@@ -666,7 +684,9 @@ describe("useChartData - Chart-Specific Tests", () => {
 
       // Verify ascending values
       for (let i = 1; i < result.current.portfolioHistory.length; i++) {
-        expect(result.current.portfolioHistory[i]?.value ?? 0).toBeGreaterThanOrEqual(
+        expect(
+          result.current.portfolioHistory[i]?.value ?? 0
+        ).toBeGreaterThanOrEqual(
           result.current.portfolioHistory[i - 1]?.value ?? 0
         );
       }
@@ -716,7 +736,8 @@ describe("useChartData - Chart-Specific Tests", () => {
   describe("Drawdown Chart (Drawdown Percentages & Recovery)", () => {
     it("provides correct data structure for drawdown chart", () => {
       const dashboard = createMockDashboard();
-      dashboard.drawdown_analysis.enhanced.drawdown_data = createMockDrawdownData(20);
+      dashboard.drawdown_analysis.enhanced.drawdown_data =
+        createMockDrawdownData(20);
 
       setDashboardResponse(dashboard);
 
@@ -736,7 +757,8 @@ describe("useChartData - Chart-Specific Tests", () => {
 
     it("identifies recovery points correctly", () => {
       const dashboard = createMockDashboard();
-      dashboard.drawdown_analysis.enhanced.drawdown_data = createMockDrawdownData(30);
+      dashboard.drawdown_analysis.enhanced.drawdown_data =
+        createMockDrawdownData(30);
 
       setDashboardResponse(dashboard);
 
@@ -745,7 +767,7 @@ describe("useChartData - Chart-Specific Tests", () => {
       });
 
       const recoveryPoints = result.current.drawdownRecoveryData.filter(
-        (point) => point.isRecoveryPoint
+        point => point.isRecoveryPoint
       );
 
       // Should have at least one recovery point in the mock data
@@ -763,10 +785,30 @@ describe("useChartData - Chart-Specific Tests", () => {
     it("calculates max drawdown correctly", () => {
       const dashboard = createMockDashboard();
       dashboard.drawdown_analysis.enhanced.drawdown_data = [
-        { date: "2025-01-01", drawdown_pct: 0, portfolio_value_usd: 10000, running_peak_usd: 10000 },
-        { date: "2025-01-02", drawdown_pct: -5.0, portfolio_value_usd: 9500, running_peak_usd: 10000 },
-        { date: "2025-01-03", drawdown_pct: -10.0, portfolio_value_usd: 9000, running_peak_usd: 10000 },
-        { date: "2025-01-04", drawdown_pct: -3.0, portfolio_value_usd: 9700, running_peak_usd: 10000 },
+        {
+          date: "2025-01-01",
+          drawdown_pct: 0,
+          portfolio_value_usd: 10000,
+          running_peak_usd: 10000,
+        },
+        {
+          date: "2025-01-02",
+          drawdown_pct: -5.0,
+          portfolio_value_usd: 9500,
+          running_peak_usd: 10000,
+        },
+        {
+          date: "2025-01-03",
+          drawdown_pct: -10.0,
+          portfolio_value_usd: 9000,
+          running_peak_usd: 10000,
+        },
+        {
+          date: "2025-01-04",
+          drawdown_pct: -3.0,
+          portfolio_value_usd: 9700,
+          running_peak_usd: 10000,
+        },
       ];
 
       setDashboardResponse(dashboard);
@@ -775,14 +817,17 @@ describe("useChartData - Chart-Specific Tests", () => {
         wrapper: createWrapper(),
       });
 
-      expect(result.current.drawdownRecoverySummary.maxDrawdown).toBeLessThanOrEqual(-10.0);
+      expect(
+        result.current.drawdownRecoverySummary.maxDrawdown
+      ).toBeLessThanOrEqual(-10.0);
     });
   });
 
   describe("Sharpe Chart (Risk-Adjusted Returns)", () => {
     it("provides correct data structure for sharpe chart", () => {
       const dashboard = createMockDashboard();
-      dashboard.rolling_analytics.sharpe.rolling_sharpe_data = createMockSharpeData(15);
+      dashboard.rolling_analytics.sharpe.rolling_sharpe_data =
+        createMockSharpeData(15);
 
       setDashboardResponse(dashboard);
 
@@ -802,9 +847,21 @@ describe("useChartData - Chart-Specific Tests", () => {
     it("includes sharpe ratio interpretations from sub-hook", () => {
       const dashboard = createMockDashboard();
       dashboard.rolling_analytics.sharpe.rolling_sharpe_data = [
-        { date: "2025-01-01", rolling_sharpe_ratio: 2.5, is_statistically_reliable: true },
-        { date: "2025-01-02", rolling_sharpe_ratio: 1.5, is_statistically_reliable: true },
-        { date: "2025-01-03", rolling_sharpe_ratio: 0.5, is_statistically_reliable: true },
+        {
+          date: "2025-01-01",
+          rolling_sharpe_ratio: 2.5,
+          is_statistically_reliable: true,
+        },
+        {
+          date: "2025-01-02",
+          rolling_sharpe_ratio: 1.5,
+          is_statistically_reliable: true,
+        },
+        {
+          date: "2025-01-03",
+          rolling_sharpe_ratio: 0.5,
+          is_statistically_reliable: true,
+        },
       ];
 
       setDashboardResponse(dashboard);
@@ -822,7 +879,8 @@ describe("useChartData - Chart-Specific Tests", () => {
   describe("Volatility Chart (Rolling Volatility)", () => {
     it("provides correct data structure for volatility chart", () => {
       const dashboard = createMockDashboard();
-      dashboard.rolling_analytics.volatility.rolling_volatility_data = createMockVolatilityData(12);
+      dashboard.rolling_analytics.volatility.rolling_volatility_data =
+        createMockVolatilityData(12);
 
       setDashboardResponse(dashboard);
 
@@ -842,9 +900,21 @@ describe("useChartData - Chart-Specific Tests", () => {
     it("includes risk level categorizations from sub-hook", () => {
       const dashboard = createMockDashboard();
       dashboard.rolling_analytics.volatility.rolling_volatility_data = [
-        { date: "2025-01-01", annualized_volatility_pct: 8.0, rolling_volatility_daily_pct: 0.5 },
-        { date: "2025-01-02", annualized_volatility_pct: 15.0, rolling_volatility_daily_pct: 0.94 },
-        { date: "2025-01-03", annualized_volatility_pct: 30.0, rolling_volatility_daily_pct: 1.89 },
+        {
+          date: "2025-01-01",
+          annualized_volatility_pct: 8.0,
+          rolling_volatility_daily_pct: 0.5,
+        },
+        {
+          date: "2025-01-02",
+          annualized_volatility_pct: 15.0,
+          rolling_volatility_daily_pct: 0.94,
+        },
+        {
+          date: "2025-01-03",
+          annualized_volatility_pct: 30.0,
+          rolling_volatility_daily_pct: 1.89,
+        },
       ];
 
       setDashboardResponse(dashboard);
@@ -878,7 +948,7 @@ describe("useChartData - Loading State Coordination", () => {
 
   it("returns loaded when all sub-hooks complete", async () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(5).map((point) => ({
+    dashboard.trends.daily_values = createMockPortfolioData(5).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -908,7 +978,13 @@ describe("useChartData - Loading State Coordination", () => {
 
   it("does not show loading when preloaded data is provided", () => {
     const overrideData: PortfolioDataPoint[] = [
-      { date: "2025-01-01", value: 10000, change: 0, protocols: [], categories: [] },
+      {
+        date: "2025-01-01",
+        value: 10000,
+        change: 0,
+        protocols: [],
+        categories: [],
+      },
     ];
 
     setDashboardResponse(undefined, { isLoading: true });
@@ -1008,7 +1084,7 @@ describe("useChartData - Empty/Null Data Handling", () => {
     const dashboard = createMockDashboard();
 
     // Only provide portfolio data
-    dashboard.trends.daily_values = createMockPortfolioData(10).map((point) => ({
+    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -1074,8 +1150,20 @@ describe("useChartData - Empty/Null Data Handling", () => {
     ];
 
     const mockPortfolioData: PortfolioDataPoint[] = [
-      { date: "2025-01-01", value: 10000, change: 0, protocols: [], categories: [] },
-      { date: "2025-01-04", value: 11000, change: 10, protocols: [], categories: [] },
+      {
+        date: "2025-01-01",
+        value: 10000,
+        change: 0,
+        protocols: [],
+        categories: [],
+      },
+      {
+        date: "2025-01-04",
+        value: 11000,
+        change: 10,
+        protocols: [],
+        categories: [],
+      },
     ];
 
     const { result } = renderHook(
@@ -1103,27 +1191,32 @@ describe("useChartData - Real-World Scenarios", () => {
     const dashboard = createMockDashboard();
     const portfolioData = createMockPortfolioData(90); // 3 months of data
 
-    dashboard.trends.daily_values = portfolioData.map((point) => ({
+    dashboard.trends.daily_values = portfolioData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: point.change ?? 0,
-      categories: point.categories?.map((cat) => ({
-        category: cat.category ?? "unknown",
-        value_usd: cat.value ?? 0,
-        pnl_usd: cat.pnl ?? 0,
-      })) ?? [],
-      protocols: point.protocols?.map((proto) => ({
-        protocol: proto.protocol ?? "unknown",
-        chain: proto.chain ?? "unknown",
-        value_usd: proto.value ?? 0,
-        pnl_usd: proto.pnl ?? 0,
-      })) ?? [],
+      categories:
+        point.categories?.map(cat => ({
+          category: cat.category ?? "unknown",
+          value_usd: cat.value ?? 0,
+          pnl_usd: cat.pnl ?? 0,
+        })) ?? [],
+      protocols:
+        point.protocols?.map(proto => ({
+          protocol: proto.protocol ?? "unknown",
+          chain: proto.chain ?? "unknown",
+          value_usd: proto.value ?? 0,
+          pnl_usd: proto.pnl ?? 0,
+        })) ?? [],
     }));
 
     dashboard.allocation.allocations = createMockAllocationData(90);
-    dashboard.drawdown_analysis.enhanced.drawdown_data = createMockDrawdownData(90);
-    dashboard.rolling_analytics.sharpe.rolling_sharpe_data = createMockSharpeData(90);
-    dashboard.rolling_analytics.volatility.rolling_volatility_data = createMockVolatilityData(90);
+    dashboard.drawdown_analysis.enhanced.drawdown_data =
+      createMockDrawdownData(90);
+    dashboard.rolling_analytics.sharpe.rolling_sharpe_data =
+      createMockSharpeData(90);
+    dashboard.rolling_analytics.volatility.rolling_volatility_data =
+      createMockVolatilityData(90);
 
     setDashboardResponse(dashboard);
 
@@ -1139,7 +1232,9 @@ describe("useChartData - Real-World Scenarios", () => {
     expect(result.current.volatilityData).toHaveLength(90);
 
     // Verify data quality
-    expect(result.current.currentValue).toBeGreaterThan(result.current.firstValue);
+    expect(result.current.currentValue).toBeGreaterThan(
+      result.current.firstValue
+    );
     expect(result.current.totalReturn).toBeGreaterThan(0);
     expect(result.current.isPositive).toBe(true);
   });
@@ -1148,7 +1243,7 @@ describe("useChartData - Real-World Scenarios", () => {
     const dashboard = createMockDashboard();
     const portfolioData = createMockPortfolioData(30);
 
-    dashboard.trends.daily_values = portfolioData.map((point) => ({
+    dashboard.trends.daily_values = portfolioData.map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -1169,15 +1264,20 @@ describe("useChartData - Real-World Scenarios", () => {
     }
 
     // Verify drawdown reference data matches portfolio history
-    for (const [index, point] of result.current.drawdownReferenceData.entries()) {
+    for (const [
+      index,
+      point,
+    ] of result.current.drawdownReferenceData.entries()) {
       expect(point.date).toBe(result.current.portfolioHistory[index]?.date);
-      expect(point.portfolio_value).toBe(result.current.portfolioHistory[index]?.value);
+      expect(point.portfolio_value).toBe(
+        result.current.portfolioHistory[index]?.value
+      );
     }
   });
 
   it("verifies backward compatibility with existing chart components", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(20).map((point) => ({
+    dashboard.trends.daily_values = createMockPortfolioData(20).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -1186,7 +1286,8 @@ describe("useChartData - Real-World Scenarios", () => {
     }));
 
     dashboard.allocation.allocations = createMockAllocationData(20);
-    dashboard.drawdown_analysis.enhanced.drawdown_data = createMockDrawdownData(20);
+    dashboard.drawdown_analysis.enhanced.drawdown_data =
+      createMockDrawdownData(20);
 
     setDashboardResponse(dashboard);
 
@@ -1222,8 +1323,20 @@ describe("useChartData - Real-World Scenarios", () => {
 describe("useChartData - Data Overrides", () => {
   it("accepts portfolio data override", () => {
     const overrideData: PortfolioDataPoint[] = [
-      { date: "2025-01-01", value: 5000, change: 0, protocols: [], categories: [] },
-      { date: "2025-01-02", value: 5500, change: 10, protocols: [], categories: [] },
+      {
+        date: "2025-01-01",
+        value: 5000,
+        change: 0,
+        protocols: [],
+        categories: [],
+      },
+      {
+        date: "2025-01-02",
+        value: 5500,
+        change: 10,
+        protocols: [],
+        categories: [],
+      },
     ];
 
     const { result } = renderHook(
@@ -1241,7 +1354,8 @@ describe("useChartData - Data Overrides", () => {
     ];
 
     const { result } = renderHook(
-      () => useChartData("test-user", "1M", { allocationData: overrideAllocation }),
+      () =>
+        useChartData("test-user", "1M", { allocationData: overrideAllocation }),
       { wrapper: createWrapper() }
     );
 
@@ -1262,9 +1376,27 @@ describe("useChartData - Data Overrides", () => {
     ];
 
     const mockPortfolioData: PortfolioDataPoint[] = [
-      { date: "2025-01-01", value: 10000, change: 0, protocols: [], categories: [] },
-      { date: "2025-01-02", value: 9450, change: -5.5, protocols: [], categories: [] },
-      { date: "2025-01-03", value: 9800, change: 3.7, protocols: [], categories: [] },
+      {
+        date: "2025-01-01",
+        value: 10000,
+        change: 0,
+        protocols: [],
+        categories: [],
+      },
+      {
+        date: "2025-01-02",
+        value: 9450,
+        change: -5.5,
+        protocols: [],
+        categories: [],
+      },
+      {
+        date: "2025-01-03",
+        value: 9800,
+        change: 3.7,
+        protocols: [],
+        categories: [],
+      },
     ];
 
     const { result } = renderHook(
@@ -1302,7 +1434,8 @@ describe("useChartData - Data Overrides", () => {
     ];
 
     const { result } = renderHook(
-      () => useChartData("test-user", "1M", { volatilityData: volatilityOverride }),
+      () =>
+        useChartData("test-user", "1M", { volatilityData: volatilityOverride }),
       { wrapper: createWrapper() }
     );
 
@@ -1311,7 +1444,8 @@ describe("useChartData - Data Overrides", () => {
   });
 
   it("accepts daily yield data override", () => {
-    const yieldOverride: DailyYieldOverridePoint[] = createMockDailyYieldData(5);
+    const yieldOverride: DailyYieldOverridePoint[] =
+      createMockDailyYieldData(5);
 
     const { result } = renderHook(
       () => useChartData("test-user", "1M", { dailyYieldData: yieldOverride }),
@@ -1319,12 +1453,20 @@ describe("useChartData - Data Overrides", () => {
     );
 
     expect(result.current.dailyYieldData).toHaveLength(5);
-    expect(result.current.dailyYieldData[0]?.total_yield_usd).toBeGreaterThan(0);
+    expect(result.current.dailyYieldData[0]?.total_yield_usd).toBeGreaterThan(
+      0
+    );
   });
 
   it("accepts multiple overrides simultaneously", () => {
     const overridePortfolio: PortfolioDataPoint[] = [
-      { date: "2025-01-01", value: 10000, change: 0, protocols: [], categories: [] },
+      {
+        date: "2025-01-01",
+        value: 10000,
+        change: 0,
+        protocols: [],
+        categories: [],
+      },
     ];
 
     const overrideSharpe: SharpeOverridePoint[] = [
@@ -1358,7 +1500,7 @@ describe("useChartData - Data Overrides", () => {
 describe("useChartData - Memoization", () => {
   it("memoizes data transformations when dashboard unchanged", () => {
     const dashboard = createMockDashboard();
-    dashboard.trends.daily_values = createMockPortfolioData(10).map((point) => ({
+    dashboard.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -1368,9 +1510,12 @@ describe("useChartData - Memoization", () => {
 
     setDashboardResponse(dashboard);
 
-    const { result, rerender } = renderHook(() => useChartData("test-user", "1M"), {
-      wrapper: createWrapper(),
-    });
+    const { result, rerender } = renderHook(
+      () => useChartData("test-user", "1M"),
+      {
+        wrapper: createWrapper(),
+      }
+    );
 
     const firstStackedData = result.current.stackedPortfolioData;
     const firstAllocationData = result.current.allocationHistory;
@@ -1384,7 +1529,7 @@ describe("useChartData - Memoization", () => {
 
   it("recalculates when dashboard data changes", () => {
     const dashboard1 = createMockDashboard();
-    dashboard1.trends.daily_values = createMockPortfolioData(5).map((point) => ({
+    dashboard1.trends.daily_values = createMockPortfolioData(5).map(point => ({
       date: point.date,
       total_value_usd: point.value ?? 0,
       change_percentage: 0,
@@ -1394,15 +1539,18 @@ describe("useChartData - Memoization", () => {
 
     setDashboardResponse(dashboard1);
 
-    const { result, rerender } = renderHook(() => useChartData("test-user", "1M"), {
-      wrapper: createWrapper(),
-    });
+    const { result, rerender } = renderHook(
+      () => useChartData("test-user", "1M"),
+      {
+        wrapper: createWrapper(),
+      }
+    );
 
     const firstValue = result.current.currentValue;
 
     // Update dashboard with new data
     const dashboard2 = createMockDashboard();
-    dashboard2.trends.daily_values = createMockPortfolioData(10).map((point) => ({
+    dashboard2.trends.daily_values = createMockPortfolioData(10).map(point => ({
       date: point.date,
       total_value_usd: (point.value ?? 0) * 1.5,
       change_percentage: 0,

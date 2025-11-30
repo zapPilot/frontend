@@ -7,7 +7,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-import type { PoolDetail } from '@/types/domain/pool';
+import type { PoolDetail } from "@/types/domain/pool";
 
 import * as analyticsService from "../../services/analyticsService";
 

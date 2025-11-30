@@ -1,6 +1,6 @@
 import React from "react";
 
-import { BaseComponentProps } from '@/types/ui/ui.types';
+import { BaseComponentProps } from "@/types/ui/ui.types";
 
 import { getAssetUrl } from "../../config/assets";
 import { normalizeProtocolName } from "../../lib/stringUtils";

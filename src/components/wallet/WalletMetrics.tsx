@@ -3,7 +3,7 @@
 import React from "react";
 
 import type { MarketSentimentData } from "@/services/sentimentService";
-import { PortfolioState } from '@/types/ui/portfolioState';
+import { PortfolioState } from "@/types/ui/portfolioState";
 
 import type {
   LandingPageResponse,

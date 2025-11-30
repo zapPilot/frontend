@@ -6,7 +6,7 @@
  */
 
 import { renderHook } from "@testing-library/react";
-import { describe, expect,it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type { AllocationTimeseriesInputPoint } from "@/components/PortfolioChart/types";
 import { useAllocationData } from "@/hooks/charts/useAllocationData";
@@ -525,7 +525,8 @@ describe("useAllocationData", () => {
       ];
 
       const { result, rerender } = renderHook(
-        ({ data }: { data: UseAllocationDataParams }) => useAllocationData(data),
+        ({ data }: { data: UseAllocationDataParams }) =>
+          useAllocationData(data),
         {
           initialProps: { data: { allocationHistory: aggregatedData } },
         }
@@ -562,7 +563,8 @@ describe("useAllocationData", () => {
       ];
 
       const { result, rerender } = renderHook(
-        ({ data }: { data: UseAllocationDataParams }) => useAllocationData(data),
+        ({ data }: { data: UseAllocationDataParams }) =>
+          useAllocationData(data),
         {
           initialProps: { data: { allocationHistory: data1 } },
         }

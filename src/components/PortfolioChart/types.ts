@@ -1,7 +1,7 @@
 import {
   AssetAllocationPoint,
   PortfolioDataPoint,
-} from '@/types/domain/portfolio';
+} from "@/types/domain/portfolio";
 
 export interface AllocationTimeseriesInputPoint {
   date: string;
