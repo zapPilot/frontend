@@ -1,3 +1,7 @@
+import {
+  type ServiceResult,
+  wrapServiceCallVoid,
+} from "../../../lib/errorHandling";
 import { transformWalletData, type WalletData } from "../../../lib/walletUtils";
 import {
   addWalletToBundle,
@@ -28,13 +32,10 @@ export async function addWallet(
   userId: string,
   address: string,
   label: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
+): Promise<ServiceResult> {
+  return wrapServiceCallVoid(async () => {
     await addWalletToBundle(userId, address, label);
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
+  });
 }
 
 /**
@@ -43,13 +44,10 @@ export async function addWallet(
 export async function removeWallet(
   userId: string,
   walletId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
+): Promise<ServiceResult> {
+  return wrapServiceCallVoid(async () => {
     await removeWalletFromBundle(userId, walletId);
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
+  });
 }
 
 /**
@@ -59,13 +57,10 @@ export async function updateWalletLabel(
   userId: string,
   walletAddress: string,
   newLabel: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
+): Promise<ServiceResult> {
+  return wrapServiceCallVoid(async () => {
     await updateWalletLabelRequest(userId, walletAddress, newLabel);
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
+  });
 }
 
 /**

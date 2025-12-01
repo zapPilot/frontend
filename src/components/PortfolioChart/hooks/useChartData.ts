@@ -33,6 +33,7 @@ import {
 import { usePortfolioHistoryData } from "../../../hooks/charts/usePortfolioHistoryData";
 import { useRollingAnalytics } from "../../../hooks/charts/useRollingAnalytics";
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
+import { transformVolatilityPoint } from "../../../lib/chartDataUtils";
 import {
   asPartialArray,
   toDateString,
@@ -543,18 +544,8 @@ export function useChartData(
           rolling_sharpe_ratio: point.rolling_sharpe_ratio ?? null,
         })),
     volatilityHistory: overrides?.volatilityData?.length
-      ? overrides.volatilityData.map(point => ({
-          date: point.date,
-          annualized_volatility_pct: point.annualized_volatility_pct ?? null,
-          rolling_volatility_daily_pct:
-            point.rolling_volatility_daily_pct ?? null,
-        }))
-      : rollingVolatilityData.map(point => ({
-          date: point.date,
-          annualized_volatility_pct: point.annualized_volatility_pct ?? null,
-          rolling_volatility_daily_pct:
-            point.rolling_volatility_daily_pct ?? null,
-        })),
+      ? overrides.volatilityData.map(transformVolatilityPoint)
+      : rollingVolatilityData.map(transformVolatilityPoint),
     dailyYieldHistory: processedDailyYieldData.map(point => {
       const apiPoint: {
         date: string;

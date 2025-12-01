@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { invalidateAndRefetch } from "@/hooks/useQueryInvalidation";
 import { useToast } from "@/hooks/useToast";
 import { useWallet } from "@/hooks/useWallet";
 import { formatAddress } from "@/lib/formatters";
@@ -129,24 +130,12 @@ export const useWalletOperations = ({
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          try {
-            await queryClient.invalidateQueries({
-              queryKey: queryKeys.user.wallets(realUserId),
-            });
-          } catch (invalidateError) {
-            walletLogger.error(
-              "Failed to invalidate wallet queries after removal",
-              invalidateError
-            );
-          }
-          try {
-            await refetch();
-          } catch (refetchError) {
-            walletLogger.error(
-              "Failed to refetch user data after wallet removal",
-              refetchError
-            );
-          }
+          await invalidateAndRefetch({
+            queryClient,
+            queryKey: queryKeys.user.wallets(realUserId),
+            refetch,
+            operationName: "wallet removal",
+          });
 
           setOperations(prev => ({
             ...prev,
@@ -300,24 +289,12 @@ export const useWalletOperations = ({
         await loadWallets();
 
         // Invalidate and refetch user data
-        try {
-          await queryClient.invalidateQueries({
-            queryKey: queryKeys.user.wallets(realUserId),
-          });
-        } catch (invalidateError) {
-          walletLogger.error(
-            "Failed to invalidate wallet queries after adding a wallet",
-            invalidateError
-          );
-        }
-        try {
-          await refetch();
-        } catch (refetchError) {
-          walletLogger.error(
-            "Failed to refetch user data after adding a wallet",
-            refetchError
-          );
-        }
+        await invalidateAndRefetch({
+          queryClient,
+          queryKey: queryKeys.user.wallets(realUserId),
+          refetch,
+          operationName: "adding wallet",
+        });
 
         setOperations(prev => ({
           ...prev,
