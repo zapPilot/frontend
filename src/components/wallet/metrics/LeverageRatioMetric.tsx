@@ -26,6 +26,31 @@ interface LeverageRatioMetricProps {
   shouldShowNoDataMessage?: boolean;
 }
 
+/** Internal wrapper component for consistent MetricCard structure */
+interface LeverageMetricWrapperProps {
+  iconClassName: string;
+  children: React.ReactNode;
+  error?: boolean;
+}
+
+const LeverageMetricWrapper = ({
+  iconClassName,
+  children,
+  error = false,
+}: LeverageMetricWrapperProps) => {
+  const labelClasses =
+    "text-xs text-gray-500 uppercase tracking-wider font-medium";
+
+  return (
+    <MetricCard icon={Shield} iconClassName={iconClassName} error={error}>
+      <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
+        {children}
+      </div>
+      <p className={labelClasses}>Leverage Ratio</p>
+    </MetricCard>
+  );
+};
+
 /**
  * Displays portfolio leverage ratio with health status indicator.
  *
@@ -82,29 +107,23 @@ export function LeverageRatioMetric({
   // Error state
   if (shouldShowError && errorMessage) {
     return (
-      <MetricCard icon={Shield} iconClassName="text-purple-400" error>
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="flex flex-col space-y-2">
-            <div className="text-sm text-red-400 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{errorMessage}</span>
-            </div>
+      <LeverageMetricWrapper iconClassName="text-purple-400" error>
+        <div className="flex flex-col space-y-2">
+          <div className="text-sm text-red-400 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4" />
+            <span>{errorMessage}</span>
           </div>
         </div>
-        <p className={labelClasses}>Leverage Ratio</p>
-      </MetricCard>
+      </LeverageMetricWrapper>
     );
   }
 
   // No data state
   if (shouldShowNoDataMessage || !leverageMetrics) {
     return (
-      <MetricCard icon={Shield} iconClassName="text-purple-400">
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="text-gray-400 text-lg">No data</div>
-        </div>
-        <p className={labelClasses}>Leverage Ratio</p>
-      </MetricCard>
+      <LeverageMetricWrapper iconClassName="text-purple-400">
+        <div className="text-gray-400 text-lg">No data</div>
+      </LeverageMetricWrapper>
     );
   }
 

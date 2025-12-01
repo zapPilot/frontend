@@ -111,6 +111,13 @@ export interface PortfolioSwapAction {
   rebalanceData?: RebalanceData;
 }
 
+// Shared interface for components that display category with rebalance data
+export interface CategoryWithRebalance {
+  category: ProcessedAssetCategory;
+  rebalanceShift?: CategoryShift;
+  rebalanceTarget?: ProcessedAssetCategory;
+}
+
 export interface PortfolioAllocationContainerProps {
   variationType?: PortfolioVariationType;
   assetCategories: AssetCategory[];

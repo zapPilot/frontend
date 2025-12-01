@@ -10,14 +10,11 @@ import {
 } from "@/constants/portfolio-allocation";
 import { formatCurrency, formatPercentage } from "@/lib/formatters";
 
-import { CategoryShift, ProcessedAssetCategory } from "../../types";
+import { CategoryWithRebalance } from "../../types";
 
-interface CategoryAllocationSummaryProps {
-  category: ProcessedAssetCategory;
+interface CategoryAllocationSummaryProps extends CategoryWithRebalance {
   excluded: boolean;
   showRebalanceInfo: boolean;
-  rebalanceShift?: CategoryShift;
-  rebalanceTarget?: ProcessedAssetCategory;
   allocation?: number | undefined;
   onAllocationChange?: ((value: number) => void) | undefined;
 }
