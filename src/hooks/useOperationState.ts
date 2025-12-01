@@ -7,27 +7,13 @@ import { type Dispatch, type SetStateAction, useCallback } from "react";
  * Reduces duplication in mutation handlers.
  */
 
-export interface OperationState {
+/**
+ * Operation state interface
+ * Internal type - not part of public API (consumers should define their own or use wallet.types)
+ */
+interface OperationState {
   isLoading: boolean;
   error: string | null;
-}
-
-/**
- * Creates a standardized error handler for operation state setters
- */
-export function createOperationStateHandler(
-  setState: Dispatch<SetStateAction<OperationState>>
-) {
-  return {
-    /** Set loading state */
-    setLoading: () => setState({ isLoading: true, error: null }),
-
-    /** Set success state */
-    setSuccess: () => setState({ isLoading: false, error: null }),
-
-    /** Set error state */
-    setError: (error: string) => setState({ isLoading: false, error }),
-  };
 }
 
 /**

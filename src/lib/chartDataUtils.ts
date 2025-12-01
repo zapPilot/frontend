@@ -27,8 +27,9 @@ export function createErrorState(
 
 /**
  * Point transformation type for volatility data
+ * Internal type - not part of public API
  */
-export interface VolatilityPoint {
+interface VolatilityPoint {
   date: string;
   annualized_volatility_pct: number | null;
   rolling_volatility_daily_pct: number | null;
@@ -44,15 +45,22 @@ export function transformVolatilityPoint(point: {
 }): VolatilityPoint {
   return {
     date: point.date,
-    annualized_volatility_pct: point.annualized_volatility_pct !== undefined ? point.annualized_volatility_pct : null,
-    rolling_volatility_daily_pct: point.rolling_volatility_daily_pct !== undefined ? point.rolling_volatility_daily_pct : null,
+    annualized_volatility_pct:
+      point.annualized_volatility_pct !== undefined
+        ? point.annualized_volatility_pct
+        : null,
+    rolling_volatility_daily_pct:
+      point.rolling_volatility_daily_pct !== undefined
+        ? point.rolling_volatility_daily_pct
+        : null,
   };
 }
 
 /**
  * Point transformation type for drawdown data
+ * Internal type - not part of public API
  */
-export interface DrawdownPoint {
+interface DrawdownPoint {
   date: string;
   drawdown: number;
 }
