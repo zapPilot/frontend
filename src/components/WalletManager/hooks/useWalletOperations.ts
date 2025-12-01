@@ -68,6 +68,23 @@ export const useWalletOperations = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  const setWalletOperationState = useCallback(
+    (
+      key: "removing" | "editing",
+      walletId: string,
+      state: { isLoading: boolean; error: string | null }
+    ) => {
+      setOperations(prev => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [walletId]: state,
+        },
+      }));
+    },
+    []
+  );
+
   // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
@@ -115,13 +132,10 @@ export const useWalletOperations = ({
       if (!realUserId) return;
 
       // Set loading state for this specific wallet
-      setOperations(prev => ({
-        ...prev,
-        removing: {
-          ...prev.removing,
-          [walletId]: { isLoading: true, error: null },
-        },
-      }));
+      setWalletOperationState("removing", walletId, {
+        isLoading: true,
+        error: null,
+      });
 
       try {
         const response = await removeWalletFromBundle(realUserId, walletId);
@@ -137,37 +151,25 @@ export const useWalletOperations = ({
             operationName: "wallet removal",
           });
 
-          setOperations(prev => ({
-            ...prev,
-            removing: {
-              ...prev.removing,
-              [walletId]: { isLoading: false, error: null },
-            },
-          }));
+          setWalletOperationState("removing", walletId, {
+            isLoading: false,
+            error: null,
+          });
         } else {
-          setOperations(prev => ({
-            ...prev,
-            removing: {
-              ...prev.removing,
-              [walletId]: {
-                isLoading: false,
-                error: response.error ?? "Failed to remove wallet",
-              },
-            },
-          }));
+          setWalletOperationState("removing", walletId, {
+            isLoading: false,
+            error: response.error ?? "Failed to remove wallet",
+          });
         }
       } catch (error) {
         const errorMessage = handleWalletError(error);
-        setOperations(prev => ({
-          ...prev,
-          removing: {
-            ...prev.removing,
-            [walletId]: { isLoading: false, error: errorMessage },
-          },
-        }));
+        setWalletOperationState("removing", walletId, {
+          isLoading: false,
+          error: errorMessage,
+        });
       }
     },
-    [realUserId, queryClient, refetch]
+    [realUserId, queryClient, refetch, setWalletOperationState]
   );
 
   // Handle editing label
@@ -186,13 +188,10 @@ export const useWalletOperations = ({
       }
 
       // Set loading state for this specific wallet edit
-      setOperations(prev => ({
-        ...prev,
-        editing: {
-          ...prev.editing,
-          [walletId]: { isLoading: true, error: null },
-        },
-      }));
+      setWalletOperationState("editing", walletId, {
+        isLoading: true,
+        error: null,
+      });
 
       try {
         // Update local state immediately (optimistic update)
@@ -217,26 +216,17 @@ export const useWalletOperations = ({
             )
           );
 
-          setOperations(prev => ({
-            ...prev,
-            editing: {
-              ...prev.editing,
-              [walletId]: {
-                isLoading: false,
-                error: response.error ?? "Failed to update wallet label",
-              },
-            },
-          }));
+          setWalletOperationState("editing", walletId, {
+            isLoading: false,
+            error: response.error ?? "Failed to update wallet label",
+          });
           return;
         }
 
-        setOperations(prev => ({
-          ...prev,
-          editing: {
-            ...prev.editing,
-            [walletId]: { isLoading: false, error: null },
-          },
-        }));
+        setWalletOperationState("editing", walletId, {
+          isLoading: false,
+          error: null,
+        });
       } catch (error) {
         // Revert optimistic update on error
         setWallets(prev =>
@@ -244,16 +234,13 @@ export const useWalletOperations = ({
         );
 
         const errorMessage = handleWalletError(error);
-        setOperations(prev => ({
-          ...prev,
-          editing: {
-            ...prev.editing,
-            [walletId]: { isLoading: false, error: errorMessage },
-          },
-        }));
+        setWalletOperationState("editing", walletId, {
+          isLoading: false,
+          error: errorMessage,
+        });
       }
     },
-    [realUserId, wallets]
+    [realUserId, wallets, setWalletOperationState]
   );
 
   // Handle adding new wallet

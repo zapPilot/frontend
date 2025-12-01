@@ -278,6 +278,12 @@ interface AnalyticsEducationalLink {
   url: string;
 }
 
+interface PeriodWindow {
+  start_date: string;
+  end_date: string;
+  days: number;
+}
+
 interface AnalyticsEducationalContext {
   title?: string;
   summary?: string;
@@ -301,16 +307,8 @@ export interface UnifiedDashboardResponse {
     user_id?: string;
     period_days: number;
     data_points: number;
-    period: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
-    period_info?: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
+    period: PeriodWindow;
+    period_info?: PeriodWindow;
     daily_values: {
       date: string;
       total_value_usd: number;
@@ -450,16 +448,8 @@ export interface UnifiedDashboardResponse {
     user_id?: string;
     period_days: number;
     data_points: number;
-    period: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
-    period_info?: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
+    period: PeriodWindow;
+    period_info?: PeriodWindow;
     allocations: {
       date: string;
       category: string;

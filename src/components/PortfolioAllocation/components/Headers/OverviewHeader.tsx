@@ -3,6 +3,7 @@
 import { memo } from "react";
 
 import { RebalanceMode } from "../../types";
+import { getChangesCount } from "../../utils/rebalance";
 
 interface OverviewHeaderProps {
   rebalanceMode?: RebalanceMode | undefined;
@@ -12,9 +13,7 @@ interface OverviewHeaderProps {
 
 export const OverviewHeader = memo<OverviewHeaderProps>(
   ({ rebalanceMode, totalCategories, includedCategories }) => {
-    const changesCount =
-      rebalanceMode?.data?.shifts.filter(s => s.action !== "maintain").length ||
-      0;
+    const changesCount = getChangesCount(rebalanceMode);
 
     return (
       <div

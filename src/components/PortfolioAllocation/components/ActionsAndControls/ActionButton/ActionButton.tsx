@@ -10,6 +10,7 @@ import type {
   ProcessedAssetCategory,
   RebalanceMode,
 } from "../../../types";
+import { getChangesCount } from "../../../utils/rebalance";
 import { getActionButtonText } from "./utils";
 
 interface ActionButtonProps {
@@ -30,9 +31,7 @@ export const ActionButton = memo<ActionButtonProps>(
     isEnabled = true,
     disabledReason,
   }) => {
-    const changesCount =
-      rebalanceMode?.data?.shifts.filter(s => s.action !== "maintain").length ||
-      0;
+    const changesCount = getChangesCount(rebalanceMode);
     const buttonText = getActionButtonText(
       operationMode,
       includedCategories.length,

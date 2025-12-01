@@ -1,4 +1,5 @@
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { safeNumber } from "../lib/dataValidation";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
@@ -113,21 +114,6 @@ function parseDecimals(record: Record<string, unknown>): number | null {
   return null;
 }
 
-function parseMaybeNumber(value: unknown): number | undefined {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (!Number.isNaN(parsed)) {
-      return parsed;
-    }
-  }
-
-  return undefined;
-}
-
 function parseRawBalance(value: unknown): string | undefined {
   if (typeof value === "string") {
     return value;
@@ -206,7 +192,7 @@ function buildMetadata(
 
 function extractUsdValue(record: Record<string, unknown>): number | undefined {
   for (const key of USD_VALUE_KEYS) {
-    const parsed = parseMaybeNumber(record[key]);
+    const parsed = safeNumber(record[key]);
     if (parsed !== undefined) {
       return parsed;
     }
@@ -220,7 +206,7 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
 
   const address = resolveTokenAddress(record);
   const decimals = parseDecimals(record);
-  const formattedBalance = parseMaybeNumber(record["balanceFormatted"]);
+  const formattedBalance = safeNumber(record["balanceFormatted"]);
   const rawBalance = parseRawBalance(record["balance"]);
   const balance = computeBalanceValue(formattedBalance, rawBalance, decimals);
 
