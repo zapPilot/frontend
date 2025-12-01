@@ -62,51 +62,36 @@ export function AirdropTab() {
           </div>
 
           {/* Main content */}
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center relative`}
-          >
-            <Gift className="w-10 h-10 text-white" />
-            <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
-          </motion.div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-3xl font-bold text-white mb-4"
-          >
-            Coming Soon!
-          </motion.h2>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="text-gray-400 text-lg mb-8 max-w-2xl mx-auto"
-          >
-            Get ready for exclusive ZAP token airdrops, governance tokens, and
-            special rewards for early supporters of the Zap Pilot ecosystem.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
-            <GradientButton
-              gradient="from-purple-600 to-pink-600"
-              shadowColor="purple-500"
-              icon={Bell}
-              className="px-8 py-3"
+          <div className="space-y-6">
+            <div
+              className={`w-20 h-20 mx-auto rounded-2xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center relative`}
             >
-              Notify Me When Available
-            </GradientButton>
-          </motion.div>
+              <Gift className="w-10 h-10 text-white" />
+              <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-pink-500 to-red-500 rounded-full flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-white" />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <h2 className="text-3xl font-bold text-white">Coming Soon!</h2>
+              <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+                Get ready for exclusive ZAP token airdrops, governance tokens,
+                and special rewards for early supporters of the Zap Pilot
+                ecosystem.
+              </p>
+            </div>
+
+            <FadeInSection delay={0.25}>
+              <GradientButton
+                gradient="from-purple-600 to-pink-600"
+                shadowColor="purple-500"
+                icon={Bell}
+                className="px-8 py-3"
+              >
+                Notify Me When Available
+              </GradientButton>
+            </FadeInSection>
+          </div>
         </BaseCard>
       </motion.div>
 

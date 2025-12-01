@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Bell, FileText, HelpCircle, Settings, Shield } from "lucide-react";
 
 import { MenuSection, VersionInfo } from "./SettingsTab/index";
+import { PageSectionHeader } from "./shared/PageSectionHeader";
 
 export function SettingsTab() {
   const menuSections = [
@@ -65,12 +66,12 @@ export function SettingsTab() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center"
       >
-        <h1 className="text-3xl font-bold gradient-text mb-2">Settings</h1>
-        <p className="text-gray-400">
-          Manage your account preferences and get help
-        </p>
+        <PageSectionHeader
+          title="Settings"
+          subtitle="Manage your account preferences and get help"
+          level="h1"
+        />
       </motion.div>
 
       {/* Menu Sections */}

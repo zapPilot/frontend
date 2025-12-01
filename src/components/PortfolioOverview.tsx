@@ -124,6 +124,22 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
       getDisplayTotalValue,
     } = usePortfolioStateHelpers(portfolioState);
 
+    const renderPieChart = (size: number, strokeWidth: number) =>
+      shouldShowLoading ? (
+        <PieChartSkeleton
+          size={size}
+          className={`h-[${size}px] w-[${size}px]`}
+        />
+      ) : (
+        <PieChart
+          data={pieChartData}
+          size={size}
+          strokeWidth={strokeWidth}
+          totalValue={getDisplayTotalValue() || 0}
+          {...(renderBalanceDisplay ? { renderBalanceDisplay } : {})}
+        />
+      );
+
     // Get actual counts for tab badges
     const assetCount = useMemo(
       () => categorySummaries.length,
@@ -296,20 +312,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
                 className="flex justify-center items-start pt-8"
                 data-testid="pie-chart-container"
               >
-                {shouldShowLoading ? (
-                  <PieChartSkeleton
-                    size={250}
-                    className="h-[250px] w-[250px]"
-                  />
-                ) : (
-                  <PieChart
-                    data={pieChartData}
-                    size={250}
-                    strokeWidth={10}
-                    totalValue={getDisplayTotalValue() || 0}
-                    {...(renderBalanceDisplay ? { renderBalanceDisplay } : {})}
-                  />
-                )}
+                {renderPieChart(250, 10)}
               </div>
             </div>
 
@@ -332,17 +335,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
               className="flex justify-center items-center"
               data-testid="pie-chart-container-mobile"
             >
-              {shouldShowLoading ? (
-                <PieChartSkeleton size={200} className="h-[200px] w-[200px]" />
-              ) : (
-                <PieChart
-                  data={pieChartData}
-                  size={200}
-                  strokeWidth={8}
-                  totalValue={getDisplayTotalValue() || 0}
-                  {...(renderBalanceDisplay ? { renderBalanceDisplay } : {})}
-                />
-              )}
+              {renderPieChart(200, 8)}
             </div>
             <div data-testid="allocation-list-mobile">
               {allocationDetailContent}
