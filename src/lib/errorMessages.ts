@@ -230,31 +230,28 @@ export function getErrorMessage(context: ErrorMessageContext): string {
 }
 
 /**
- * Get error message for backend service
- * Convenience wrapper for getErrorMessage with source set
+ * Factory function to create service-specific error message getters
+ * @param source - The service source identifier
+ * @returns A function that gets error messages for the specified source
  */
-export function getBackendErrorMessage(
-  status: number,
-  message?: string
-): string {
-  return getErrorMessage({
-    status,
-    ...(message !== undefined && { message }),
-    source: "backend-service",
-  });
+function createSourceErrorMessage(source: ErrorSource) {
+  return (status: number, message?: string): string =>
+    getErrorMessage({
+      status,
+      ...(message !== undefined && { message }),
+      source,
+    });
 }
 
 /**
- * Get error message for intent service
- * Convenience wrapper for getErrorMessage with source set
+ * Get error message for backend service
+ * Convenience wrapper for getErrorMessage with source set to "backend-service"
  */
-export function getIntentErrorMessage(
-  status: number,
-  message?: string
-): string {
-  return getErrorMessage({
-    status,
-    ...(message !== undefined && { message }),
-    source: "intent-service",
-  });
-}
+export const getBackendErrorMessage =
+  createSourceErrorMessage("backend-service");
+
+/**
+ * Get error message for intent service
+ * Convenience wrapper for getErrorMessage with source set to "intent-service"
+ */
+export const getIntentErrorMessage = createSourceErrorMessage("intent-service");
