@@ -1,0 +1,370 @@
+
+> zap-pilot@0.1.0 deadcode
+> node scripts/run-deadcode.js default
+
+[deadcode] Running knip --exports --dependencies
+Unused exported types (3)
+OperationState   interface  src/hooks/useOperationState.ts:10:18
+VolatilityPoint  interface  src/lib/chartDataUtils.ts:31:18     
+DrawdownPoint    interface  src/lib/chartDataUtils.ts:55:18     
+[deadcode] Running ts-prune -p tsconfig.tsprune.json
+src/app/layout.tsx:71 - default
+src/app/layout.tsx:25 - metadata
+src/app/layout.tsx:63 - viewport
+src/app/page.tsx:9 - default
+src/config/assets.ts:11 - ASSET_WORKER_CONFIG (used in module)
+src/constants/assetSymbols.ts:1 - ASSET_SYMBOL_MAP (used in module)
+src/hooks/index.ts:9 - useDropdown
+src/hooks/useBundlePage.ts:43 - computeIsDifferentUser (used in module)
+src/hooks/useBundlePage.ts:53 - computeShowQuickSwitch (used in module)
+src/hooks/useBundlePage.ts:61 - computeShowEmailBanner (used in module)
+src/hooks/useBundlePage.ts:70 - getDismissedStorageKey (used in module)
+src/hooks/useBundlePage.ts:74 - readSwitchDismissed (used in module)
+src/hooks/useBundlePage.ts:78 - computeRedirectUrl (used in module)
+src/hooks/useOperationState.ts:18 - createOperationStateHandler
+src/hooks/useOperationState.ts:10 - OperationState (used in module)
+src/hooks/useUnifiedZapStream.ts:32 - UNIFIED_ZAP_PHASES (used in module)
+src/hooks/useWallet.ts:94 - useWalletConnection
+src/hooks/useWallet.ts:97 - SUPPORTED_CHAINS (used in module)
+src/hooks/useWalletPortfolioState.ts:74 - usePortfolioViewToggles (used in module)
+src/lib/animationVariants.ts:179 - default
+src/lib/base-error.ts:12 - BaseServiceError
+src/lib/base-error.ts:14 - extractErrorCode
+src/lib/base-error.ts:15 - extractErrorDetails
+src/lib/base-error.ts:16 - extractStatusCode
+src/lib/base-error.ts:17 - resolveErrorMessage
+src/lib/base-error.ts:20 - createIntentServiceError
+src/lib/base-error.ts:21 - IntentServiceError
+src/lib/chartDataUtils.ts:10 - createLoadingState
+src/lib/chartDataUtils.ts:21 - createErrorState
+src/lib/chartDataUtils.ts:63 - transformDrawdownPoint
+src/lib/chartDataUtils.ts:31 - VolatilityPoint (used in module)
+src/lib/chartDataUtils.ts:55 - DrawdownPoint (used in module)
+src/lib/color-utils.ts:37 - getValueColorClasses (used in module)
+src/lib/dataValidation.ts:232 - isObject
+src/lib/dataValidation.ts:248 - isValidNumber
+src/lib/dataValidation.ts:264 - isNonEmptyString
+src/lib/dataValidation.ts:286 - isArray (used in module)
+src/lib/dataValidation.ts:302 - isValidDate
+src/lib/errorHandling.ts:32 - wrapServiceCall
+src/lib/errorHandling.ts:81 - extractErrorMessage
+src/lib/errorHandling.ts:97 - createErrorResult
+src/lib/errorHandling.ts:110 - createSuccessResult (used in module)
+src/lib/errorMessages.ts:205 - getErrorMessage (used in module)
+src/lib/errorMessages.ts:236 - getBackendErrorMessage
+src/lib/formatters.ts:323 - formatChartDate (used in module)
+src/lib/http-utils.ts:316 - httpRequest (used in module)
+src/lib/http-utils.ts:411 - httpGet (used in module)
+src/lib/http-utils.ts:422 - httpPost (used in module)
+src/lib/http-utils.ts:434 - httpPut (used in module)
+src/lib/http-utils.ts:446 - httpPatch (used in module)
+src/lib/http-utils.ts:458 - httpDelete (used in module)
+src/lib/http-utils.ts:26 - HTTP_CONFIG (used in module)
+src/lib/http-utils.ts:144 - NetworkError (used in module)
+src/lib/http-utils.ts:151 - TimeoutError (used in module)
+src/lib/leverageUtils.ts:86 - calculateLeverageRatio (used in module)
+src/lib/leverageUtils.ts:122 - getLeverageHealthStatus (used in module)
+src/lib/leverageUtils.ts:143 - getLeverageHealthLabel (used in module)
+src/lib/leverageUtils.ts:165 - calculateHealthFactor (used in module)
+src/lib/leverageUtils.ts:32 - LEVERAGE_THRESHOLDS (used in module)
+src/lib/portfolio-analytics.ts:192 - calculateDrawdownData
+src/lib/stringUtils.ts:69 - normalizeStrings (used in module)
+src/lib/stringUtils.ts:260 - isValidString (used in module)
+src/schemas/sseEventSchemas.ts:507 - validateNormalizedEvent
+src/schemas/sseEventSchemas.ts:516 - validateTransactions
+src/schemas/sseEventSchemas.ts:525 - validateChainBreakdown
+src/schemas/sseEventSchemas.ts:536 - isProgressEvent
+src/schemas/sseEventSchemas.ts:545 - isCompleteEvent
+src/schemas/sseEventSchemas.ts:554 - isErrorEvent
+src/schemas/sseEventSchemas.ts:561 - isTransactionEvent
+src/schemas/sseEventSchemas.ts:17 - UNIFIED_ZAP_PHASES (used in module)
+src/schemas/sseEventSchemas.ts:162 - UnifiedZapStreamTransactionSchema (used in module)
+src/schemas/sseEventSchemas.ts:208 - UnifiedZapRawEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:360 - NormalizedZapEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:415 - ProgressEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:426 - CompleteEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:438 - ErrorEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:449 - TransactionEventSchema (used in module)
+src/schemas/sseEventSchemas.ts:464 - SSEEventSchema
+src/schemas/sseEventSchemas.ts:478 - TransactionArraySchema (used in module)
+src/schemas/sseEventSchemas.ts:485 - ChainBreakdownArraySchema (used in module)
+src/services/index.ts:1 - accountService
+src/services/index.ts:2 - analyticsService
+src/services/index.ts:3 - balanceService
+src/services/index.ts:4 - bundleService
+src/services/index.ts:5 - intentService
+src/services/index.ts:6 - priceService
+src/services/index.ts:7 - tokenService
+src/services/sentimentService.ts:128 - fetchMarketSentiment (used in module)
+src/services/sentimentService.ts:50 - SentimentServiceError (used in module)
+src/utils/logger.ts:265 - ContextLogger (used in module)
+src/utils/logger.ts:265 - Logger (used in module)
+src/utils/portfolio.utils.ts:51 - transformPortfolioCategories (used in module)
+src/app/bundle/page.tsx:5 - default
+src/components/bundle/index.ts:1 - QuickSwitchFAB
+src/components/charts/index.ts:7 - ChartIndicator
+src/components/charts/index.ts:8 - ChartTooltip
+src/components/errors/ErrorBoundary.tsx:269 - withErrorBoundary
+src/components/errors/ErrorBoundary.tsx:287 - useErrorHandler
+src/components/PoolAnalytics/index.ts:1 - PoolPerformanceTable
+src/components/PortfolioAllocation/index.ts:1 - PortfolioAllocationContainer
+src/components/PortfolioChart/index.ts:2 - PortfolioChart
+src/components/PortfolioChart/index.ts:5 - PortfolioChartSkeleton
+src/components/PortfolioChart/index.ts:11 - useChartData
+src/components/PortfolioChart/index.ts:15 - buildAllocationHistory
+src/components/PortfolioChart/index.ts:21 - PortfolioChartProps
+src/components/PortfolioChart/index.ts:7 - calculateXPosition
+src/components/PortfolioChart/index.ts:22 - calculateDrawdownY
+src/components/PortfolioChart/index.ts:49 - calculateDrawdownScaleDenominator
+src/components/PortfolioChart/index.ts:58 - calculateDrawdownMinValue
+src/components/PortfolioChart/index.ts:77 - calculateChartY
+src/components/PortfolioChart/index.ts:97 - generateLineChartPath
+src/components/PortfolioChart/index.ts:114 - generateAreaChartPath
+src/components/PortfolioChart/index.ts:5 - CHART_DIMENSIONS
+src/components/PortfolioChart/index.ts:15 - DRAWDOWN_CONSTANTS
+src/components/PortfolioChart/index.ts:48 - SHARPE_CONSTANTS
+src/components/PortfolioChart/index.ts:59 - VOLATILITY_CONSTANTS
+src/components/PortfolioChart/index.ts:68 - ALLOCATION_CONSTANTS
+src/components/PortfolioChart/index.ts:77 - CHART_ANIMATION
+src/components/PortfolioChart/index.ts:87 - CHART_STYLING
+src/components/PortfolioChart/utils.ts:13 - DEFAULT_STACKED_FALLBACK_RATIO (used in module)
+src/components/shared/MetricSkeleton.tsx:20 - MetricValueSkeleton (used in module)
+src/components/shared/MetricSkeleton.tsx:45 - MetricLabelSkeleton (used in module)
+src/components/shared/MetricSkeleton.tsx:67 - MetricColumnSkeleton (used in module)
+src/components/SwapPage/index.ts:1 - SwapPage
+src/components/SwapPage/index.ts:2 - SwapPageHeader
+src/components/SwapPage/index.ts:3 - TabNavigation
+src/components/SwapPage/SwapPageHeader.tsx:8 - SwapPageHeaderProps (used in module)
+src/components/SwapPage/TabNavigation.tsx:10 - TabNavigationProps (used in module)
+src/components/ui/index.ts:2 - BaseCard
+src/components/ui/index.ts:3 - BundleNotFound
+src/components/ui/index.ts:4 - GradientButton
+src/components/ui/index.ts:8 - AssetCategorySkeleton
+src/components/ui/index.ts:9 - BalanceSkeleton
+src/components/ui/index.ts:10 - ButtonSkeleton (used in module)
+src/components/ui/index.ts:11 - CardSkeleton
+src/components/ui/index.ts:12 - LoadingState
+src/components/ui/index.ts:13 - LoadingWrapper
+src/components/ui/index.ts:14 - PieChartSkeleton
+src/components/ui/index.ts:15 - Skeleton (used in module)
+src/components/ui/index.ts:16 - Spinner (used in module)
+src/components/ui/index.ts:17 - TokenListSkeleton
+src/components/ui/index.ts:18 - WalletMetricsSkeleton
+src/components/ui/index.ts:21 - LoadingButton
+src/components/ui/index.ts:22 - LoadingSkeleton
+src/components/ui/index.ts:23 - LoadingSpinner
+src/components/ui/LoadingSystem.tsx:312 - LoadingCard (used in module)
+src/components/ui/LoadingSystem.tsx:641 - withLoadingState
+src/components/ui/LoadingSystem.tsx:658 - useLoadingComponent
+src/components/ui/LoadingSystem.tsx:449 - ChartSkeleton (used in module)
+src/components/WalletManager/index.ts:2 - WalletManager
+src/components/WalletManager/index.ts:5 - WalletManagerProps
+src/components/WalletManager/index.ts:8 - AddWalletForm
+src/components/WalletManager/index.ts:9 - EditWalletModal
+src/components/WalletManager/index.ts:10 - EmailSubscription
+src/components/WalletManager/index.ts:11 - WalletActionMenu
+src/components/WalletManager/index.ts:12 - WalletCard
+src/components/WalletManager/index.ts:13 - WalletList
+src/components/WalletManager/index.ts:16 - useDropdownMenu
+src/components/WalletManager/index.ts:17 - useEmailSubscription
+src/components/WalletManager/index.ts:18 - useWalletOperations
+src/components/WalletManager/index.ts:22 - addWallet
+src/components/WalletManager/index.ts:23 - loadWallets
+src/components/WalletManager/index.ts:24 - removeWallet
+src/components/WalletManager/index.ts:25 - unsubscribeUserEmail
+src/components/WalletManager/index.ts:26 - updateUserEmailSubscription
+src/components/WalletManager/index.ts:27 - updateWalletLabel
+src/components/WalletManager/index.ts:32 - validateAddress
+src/components/WalletManager/index.ts:33 - validateEmail
+src/components/WalletManager/index.ts:34 - validateLabel
+src/components/WalletManager/index.ts:35 - validateNewWallet
+src/config/chains/index.ts:29 - CHAIN_CONFIG
+src/config/chains/index.ts:30 - CHAIN_IDS
+src/config/chains/index.ts:31 - CHAIN_NAMES
+src/config/chains/index.ts:32 - CHAIN_REGISTRY (used in module)
+src/config/chains/index.ts:33 - MAINNET_CHAINS
+src/config/chains/index.ts:34 - SUPPORTED_CHAINS (used in module)
+src/config/chains/index.ts:39 - createChainSelector
+src/config/chains/index.ts:40 - getMainnetChains (used in module)
+src/config/chains/index.ts:41 - getSupportedChains
+src/config/chains/index.ts:42 - toThirdWebChain
+src/config/chains/index.ts:43 - toThirdWebChains (used in module)
+src/config/chains/index.ts:53 - getThirdWebChains
+src/config/chains/index.ts:58 - getSupportedMainnetChains
+src/config/chains/index.ts:68 - getChainById (used in module)
+src/config/chains/index.ts:75 - isChainSupported
+src/config/chains/index.ts:83 - getChainSymbol
+src/config/chains/index.ts:91 - getChainIcon
+src/config/chains/index.ts:99 - formatChainForDisplay
+src/config/chains/index.ts:115 - getChainRpcUrl
+src/config/chains/index.ts:123 - getChainBlockExplorer
+src/hooks/charts/index.ts:10 - useAllocationData
+src/hooks/charts/index.ts:11 - useDrawdownAnalysis
+src/hooks/charts/index.ts:12 - usePortfolioHistoryData
+src/hooks/charts/index.ts:13 - useRollingAnalytics
+src/hooks/charts/useRollingAnalytics.ts:98 - DailyYieldApiData (used in module)
+src/hooks/queries/queryDefaults.ts:54 - QUERY_TIMINGS (used in module)
+src/hooks/queries/queryDefaults.ts:71 - isClientError (used in module)
+src/hooks/queries/queryDefaults.ts:163 - QUERY_PRESETS
+src/hooks/queries/usePortfolioQuery.ts:93 - useRefreshPortfolio
+src/hooks/queries/useStrategiesQuery.ts:56 - useStrategiesQuery
+src/hooks/queries/useStrategiesQuery.ts:82 - useStrategiesWithPortfolioQuery (used in module)
+src/hooks/queries/useTokenPricesQuery.ts:288 - useTokenPricesWithStates
+src/hooks/queries/useUserQuery.ts:28 - useUserByWallet (used in module)
+src/hooks/queries/useUserQuery.ts:92 - useRefreshUser
+src/hooks/queries/useZapTokensQuery.ts:21 - useZapTokensQuery (used in module)
+src/lib/errors/index.ts:9 - BaseServiceError
+src/lib/errors/index.ts:13 - createIntentServiceError
+src/lib/errors/index.ts:14 - IntentServiceError
+src/lib/errors/index.ts:19 - extractErrorCode
+src/lib/errors/index.ts:20 - extractErrorDetails
+src/lib/errors/index.ts:21 - extractStatusCode
+src/lib/errors/index.ts:22 - resolveErrorMessage
+src/types/domain/index.ts:9 - NavigationContext
+src/types/domain/index.ts:11 - InvestmentOpportunity
+src/types/domain/index.ts:1 - PoolDetail
+src/types/domain/index.ts:1 - PieChartData
+src/types/domain/index.ts:8 - PortfolioMetrics
+src/types/domain/index.ts:16 - PortfolioAllocationSplit
+src/types/domain/index.ts:23 - PortfolioDataPoint
+src/types/domain/index.ts:45 - AssetAllocationPoint
+src/types/domain/index.ts:53 - ChartPeriod
+src/types/domain/index.ts:59 - AnalyticsMetric
+src/types/domain/index.ts:5 - RiskLevel
+src/types/domain/index.ts:111 - ActualRiskSummaryResponse
+src/types/domain/index.ts:42 - StrategiesApiResponse
+src/types/domain/index.ts:54 - transformPoolsToProtocols
+src/types/domain/index.ts:95 - transformStrategyProtocols
+src/types/domain/index.ts:150 - transformCategory
+src/types/domain/index.ts:173 - transformStrategiesResponse
+src/types/domain/index.ts:190 - getDefaultCategoryColor
+src/types/domain/index.ts:221 - StrategiesApiError
+src/types/domain/index.ts:240 - StrategiesFetchConfig
+src/types/domain/index.ts:11 - UserCryptoWallet
+src/types/domain/index.ts:37 - ConnectWalletResponse
+src/types/domain/index.ts:42 - AddWalletResponse
+src/types/domain/index.ts:47 - UpdateEmailResponse
+src/types/domain/index.ts:52 - UserProfileResponse
+src/types/domain/index.ts:21 - WalletProviderInterface
+src/types/ui/index.ts:147 - isPerformanceHover
+src/types/ui/index.ts:153 - isAllocationHover
+src/types/ui/index.ts:159 - isDrawdownHover
+src/types/ui/index.ts:165 - isSharpeHover
+src/types/ui/index.ts:171 - isVolatilityHover
+src/types/ui/index.ts:177 - isDailyYieldHover
+src/types/ui/index.ts:34 - PerformanceHoverData
+src/types/ui/index.ts:50 - AllocationHoverData
+src/types/ui/index.ts:66 - DrawdownHoverData
+src/types/ui/index.ts:86 - SharpeHoverData
+src/types/ui/index.ts:98 - VolatilityHoverData
+src/types/ui/index.ts:110 - DailyYieldHoverData
+src/types/ui/index.ts:136 - ChartHoverState
+src/types/ui/index.ts:18 - BaseModalProps
+src/types/ui/index.ts:65 - ZapExecutionResult
+src/types/ui/index.ts:1 - NavItem
+src/types/ui/index.ts:8 - PortfolioStateType
+src/types/ui/index.ts:15 - PortfolioState
+src/types/ui/index.ts:44 - PortfolioStateGuards
+src/types/ui/index.ts:1 - SwapToken
+src/types/ui/index.ts:219 - isComponentSize
+src/types/ui/index.ts:237 - isButtonVariant
+src/types/ui/index.ts:255 - isLoadingVariant
+src/types/ui/index.ts:36 - ComponentSize
+src/types/ui/index.ts:50 - StandardSize
+src/types/ui/index.ts:76 - ButtonVariant
+src/types/ui/index.ts:96 - LoadingVariant
+src/types/ui/index.ts:114 - SpinnerVariant
+src/types/ui/index.ts:135 - SkeletonVariant
+src/types/ui/index.ts:156 - BaseComponentProps
+src/types/ui/index.ts:189 - InteractiveComponentProps
+src/types/ui/index.ts:270 - DEFAULT_SIZES
+src/types/ui/index.ts:282 - DEFAULT_VARIANTS
+src/types/ui/index.ts:298 - SIZE_ORDER
+src/utils/risk/index.ts:8 - VOLATILITY_THRESHOLDS
+src/utils/risk/index.ts:15 - DRAWDOWN_THRESHOLDS
+src/utils/risk/index.ts:22 - RiskLevel
+src/utils/risk/index.ts:23 - DrawdownLevel
+src/utils/risk/index.ts:26 - RISK_COLORS
+src/utils/risk/index.ts:61 - DRAWDOWN_COLORS
+src/utils/risk/index.ts:69 - RISK_LABELS
+src/utils/risk/index.ts:76 - DRAWDOWN_LABELS
+src/utils/risk/index.ts:84 - ANIMATION_DELAYS
+src/utils/risk/index.ts:32 - getVolatilityLevel
+src/utils/risk/index.ts:58 - getDrawdownLevel
+src/utils/risk/index.ts:83 - getVolatilityDescription
+src/utils/risk/index.ts:137 - generateKeyTakeaway
+src/utils/risk/index.ts:173 - isInDrawdown
+src/utils/risk/index.ts:209 - getRiskRecommendations
+src/components/MoreTab/components/index.ts:5 - KeyMetricCard
+src/components/MoreTab/components/index.ts:6 - KeyMetricsGrid
+src/components/PortfolioAllocation/components/index.ts:2 - EnhancedOverview
+src/components/PortfolioAllocation/components/index.ts:3 - SwapControls
+src/components/PortfolioAllocation/components/index.ts:7 - ActionButton
+src/components/PortfolioAllocation/components/index.ts:8 - AmountInput
+src/components/PortfolioAllocation/components/index.ts:9 - TokenSelector
+src/components/PortfolioAllocation/components/index.ts:10 - ValidationMessages
+src/components/PortfolioAllocation/components/index.ts:14 - AssetCategoryRow
+src/components/PortfolioAllocation/components/index.ts:14 - CategoryListSection
+src/components/PortfolioAllocation/components/index.ts:15 - PortfolioCharts
+src/components/PortfolioAllocation/components/index.ts:16 - OverviewHeader
+src/components/PortfolioAllocation/components/index.ts:17 - ExcludedCategoriesChips
+src/components/PortfolioAllocation/components/index.ts:17 - RebalanceSummary
+src/components/PortfolioAllocation/hooks/index.ts:9 - useCategoryFilters
+src/components/PortfolioAllocation/hooks/index.ts:12 - useChartDataTransforms
+src/components/PortfolioAllocation/hooks/index.ts:29 - usePortfolioAllocationViewModel
+src/components/PortfolioAllocation/hooks/index.ts:11 - usePortfolioData
+src/components/PortfolioAllocation/hooks/index.ts:6 - useRebalanceData
+src/components/PortfolioAllocation/hooks/index.ts:7 - SlippagePreset
+src/components/PortfolioAllocation/hooks/index.ts:69 - useSlippage
+src/components/PortfolioAllocation/hooks/index.ts:9 - useTargetChartData
+src/components/PortfolioAllocation/utils/index.ts:19 - generateTargetAllocation
+src/components/PortfolioAllocation/utils/index.ts:68 - calculateCategoryShifts
+src/components/PortfolioAllocation/utils/index.ts:115 - generateRebalanceData
+src/components/PortfolioAllocation/utils/index.ts:141 - processAssetCategories
+src/components/PortfolioChart/charts/index.ts:8 - AssetAllocationChart
+src/components/PortfolioChart/charts/index.ts:9 - DailyYieldChart
+src/components/PortfolioChart/charts/index.ts:10 - DrawdownRecoveryChart
+src/components/PortfolioChart/charts/index.ts:11 - PerformanceChart
+src/components/PortfolioChart/charts/index.ts:12 - SharpeChart
+src/components/PortfolioChart/charts/index.ts:13 - VolatilityChart
+src/components/PortfolioChart/components/index.ts:1 - ChartHelpModal
+src/components/PortfolioChart/components/index.ts:2 - ChartInsightCard
+src/components/PortfolioChart/components/index.ts:3 - TimeWindowSelector
+src/components/PortfolioChart/hooks/index.ts:1 - useChartData
+src/components/wallet/metrics/index.ts:11 - MetricCardSkeleton
+src/components/wallet/metrics/index.ts:12 - PnLMetric
+src/components/wallet/metrics/LeverageRatioMetric.tsx:48 - LeverageRatioMetric
+src/components/wallet/tooltips/index.ts:5 - MetricsTooltipContainer
+src/components/wallet/tooltips/index.ts:6 - PoolDetailsTooltip
+src/components/wallet/tooltips/index.ts:8 - ROITooltip
+src/components/wallet/tooltips/index.ts:9 - useMetricsTooltip
+src/components/wallet/tooltips/index.ts:11 - formatSignedCurrency
+src/components/wallet/tooltips/index.ts:12 - formatWindowSummary
+src/components/wallet/tooltips/index.ts:13 - formatYieldWindowLabel
+src/components/wallet/tooltips/index.ts:14 - getValueColor
+src/components/wallet/tooltips/index.ts:15 - selectBestYieldWindow
+src/components/wallet/tooltips/index.ts:17 - YieldBreakdownTooltip
+src/components/PortfolioAllocation/components/ActionsAndControls/index.ts:2 - ActionButton
+src/components/PortfolioAllocation/components/ActionsAndControls/index.ts:3 - AmountInput
+src/components/PortfolioAllocation/components/ActionsAndControls/index.ts:4 - TokenSelector
+src/components/PortfolioAllocation/components/ActionsAndControls/index.ts:4 - TokenSummary
+src/components/PortfolioAllocation/components/ActionsAndControls/index.ts:5 - ValidationMessages
+src/components/PortfolioAllocation/components/Categories/index.ts:1 - CategoryListSection
+src/components/PortfolioAllocation/components/Categories/index.ts:2 - AssetCategoryRow
+src/components/PortfolioAllocation/components/Charts/index.ts:1 - PerformanceTrendChart
+src/components/PortfolioAllocation/components/Charts/index.ts:2 - PortfolioCharts
+src/components/PortfolioAllocation/components/Headers/index.ts:1 - OverviewHeader
+src/components/PortfolioAllocation/components/Summary/index.ts:1 - ExcludedCategoriesChips
+src/components/PortfolioAllocation/components/Summary/index.ts:2 - RebalanceSummary
+src/components/wallet/metrics/common/NoDataMetricCard.tsx:38 - MetricErrorCard
+src/components/wallet/metrics/consolidated/index.ts:7 - ConsolidatedMetric
+src/components/wallet/metrics/consolidated/index.ts:8 - ConsolidatedMetricSkeleton
+src/components/wallet/metrics/consolidated/index.ts:10 - ROISectionSkeleton
+src/components/wallet/metrics/consolidated/index.ts:11 - YearlyPnLSkeleton
+src/components/wallet/metrics/consolidated/index.ts:12 - YieldSectionSkeleton
+src/components/wallet/metrics/performance/index.ts:16 - PerformanceMetricsProps
+src/components/PortfolioAllocation/components/ActionsAndControls/ActionButton/index.ts:1 - ActionButton
+src/components/PortfolioAllocation/components/ActionsAndControls/AmountInput/index.ts:1 - AmountInput
+src/components/PortfolioAllocation/components/ActionsAndControls/TokenSelector/index.ts:1 - TokenSelector
+src/components/PortfolioAllocation/components/ActionsAndControls/TokenSelector/index.ts:2 - TokenSummary
+src/components/PortfolioAllocation/components/ActionsAndControls/ValidationMessages/index.ts:1 - ValidationMessages
