@@ -1,15 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
 
-  "entry": [
-    "src/app/**/page.tsx",
-    "src/app/**/layout.tsx",
-    "src/app/**/template.tsx",
-    "src/app/**/error.tsx",
-    "src/app/**/loading.tsx",
-    "src/app/**/not-found.tsx",
-    "scripts/**/*.{js,ts}"
-  ],
+  "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx", "scripts/**/*.{js,ts}"],
 
   "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{js,ts}"],
 
@@ -42,11 +34,7 @@
   "includeEntryExports": true,
 
   "next": {
-    "entry": [
-      "src/app/**",
-      "!src/app/**/*.test.{ts,tsx}",
-      "!src/app/**/*.spec.{ts,tsx}"
-    ]
+    "entry": ["src/app/**", "!src/app/**/*.test.{ts,tsx}", "!src/app/**/*.spec.{ts,tsx}"]
   },
 
   "vitest": {
