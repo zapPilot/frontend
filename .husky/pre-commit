@@ -15,7 +15,7 @@ npm run deadcode:check       # ~5s  - Unused exports (now fails properly)
 echo "\n🎨 Phase 2: Code Quality"
 npx lint-staged             # ~2s  - Format & lint staged files
 npm run lint                # ~8s  - Full lint (complexity thresholds)
-npm run dup:all            # ~3s  - Duplicate code detection
+npm run dup:all            # ~3s  - Duplicate code detection (fails if >2.5%)
 
 # Phase 3: Comprehensive testing (60s+)
 echo "\n🧪 Phase 3: Testing"

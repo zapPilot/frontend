@@ -122,7 +122,7 @@ jobs:
 
       - name: Check for code duplication
         run: npm run dup:check
-        continue-on-error: true
+        # Now blocking - duplications >2.5% will fail CI
 
       - name: Upload duplication report
         if: always()
