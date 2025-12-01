@@ -70,3 +70,5 @@ dev.log
 .claude/hooks/package-lock.json
 zen_generated.code
 jscpd-report/
+jscpd-analysis/
+jscpd-report.json

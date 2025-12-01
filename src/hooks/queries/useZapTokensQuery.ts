@@ -100,6 +100,14 @@ const resolveNativeAddressSentinel = (
   return [];
 };
 
+/**
+ * Filter to keep only valid token addresses (hex addresses or native sentinel)
+ */
+const isValidTokenAddress = (address: unknown): address is string =>
+  typeof address === "string" &&
+  address.length > 0 &&
+  (isHexAddress(address) || address === NATIVE_SENTINEL);
+
 const normalizeBalanceLookupKeys = (token: {
   address?: string | null;
   type?: string | null;
@@ -152,11 +160,7 @@ export const useZapTokensWithStates = (
         .flatMap(address =>
           isNativeAddress(address) ? [NATIVE_SENTINEL, address] : [address]
         )
-        .filter(
-          (address): address is string =>
-            Boolean(address) &&
-            (isHexAddress(address) || address === NATIVE_SENTINEL)
-        );
+        .filter(isValidTokenAddress);
 
       return dedupeStrings(normalizedOverride);
     }
@@ -174,11 +178,7 @@ export const useZapTokensWithStates = (
       return addresses;
     });
 
-    const filtered = candidateAddresses.filter(
-      (address): address is string =>
-        Boolean(address) &&
-        (isHexAddress(address) || address === NATIVE_SENTINEL)
-    );
+    const filtered = candidateAddresses.filter(isValidTokenAddress);
 
     return dedupeStrings(filtered);
   }, [tokenAddressesOverride, tokens]);

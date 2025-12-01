@@ -11,7 +11,9 @@
     "**/dist/**",
     "**/.next/**",
     "**/out/**",
-    "**/coverage/**"
+    "**/coverage/**",
+    ".jscpd/**",
+    "jscpd-report/**"
   ],
   "minLines": 5,
   "minTokens": 30,

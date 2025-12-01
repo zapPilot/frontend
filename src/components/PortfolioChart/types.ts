@@ -16,11 +16,11 @@ export interface AllocationTimeseriesInputPoint {
   total_portfolio_value_usd?: number;
 }
 
-export interface DrawdownOverridePoint {
-  date: string;
-  drawdown_pct?: number;
-  drawdown?: number;
-  portfolio_value?: number;
+/**
+ * Base interface for drawdown recovery metadata
+ * Shared fields between DrawdownOverridePoint and DrawdownRecoveryData
+ */
+interface DrawdownRecoveryMetadata {
   isRecoveryPoint?: boolean;
   daysFromPeak?: number;
   peakDate?: string;
@@ -29,15 +29,16 @@ export interface DrawdownOverridePoint {
   isHistoricalPeriod?: boolean;
 }
 
-export interface DrawdownRecoveryData {
+export interface DrawdownOverridePoint extends DrawdownRecoveryMetadata {
+  date: string;
+  drawdown_pct?: number;
+  drawdown?: number;
+  portfolio_value?: number;
+}
+
+export interface DrawdownRecoveryData extends DrawdownRecoveryMetadata {
   date: string;
   drawdown: number;
-  isRecoveryPoint?: boolean;
-  daysFromPeak?: number;
-  peakDate?: string;
-  recoveryDurationDays?: number;
-  recoveryDepth?: number;
-  isHistoricalPeriod?: boolean;
 }
 
 export interface DrawdownRecoverySummary {

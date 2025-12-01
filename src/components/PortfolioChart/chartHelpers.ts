@@ -91,6 +91,19 @@ export function calculateChartY(
 }
 
 /**
+ * Internal helper to generate SVG path commands from data points
+ * Shared between line and area chart path generation
+ */
+function generatePathCommands(dataPoints: { x: number; y: number }[]): string {
+  return dataPoints
+    .map((point, index) => {
+      const command = index === 0 ? "M" : "L";
+      return `${command} ${point.x} ${point.y}`;
+    })
+    .join(" ");
+}
+
+/**
  * Generate SVG path for a line chart
  * Consolidates the common pattern of mapping data points to SVG path commands
  */
@@ -99,12 +112,7 @@ export function generateLineChartPath(
 ): string {
   if (dataPoints.length === 0) return "";
 
-  return dataPoints
-    .map((point, index) => {
-      const command = index === 0 ? "M" : "L";
-      return `${command} ${point.x} ${point.y}`;
-    })
-    .join(" ");
+  return generatePathCommands(dataPoints);
 }
 
 /**
@@ -118,12 +126,7 @@ export function generateAreaChartPath(
 ): string {
   if (dataPoints.length === 0) return "";
 
-  const linePath = dataPoints
-    .map((point, index) => {
-      const command = index === 0 ? "M" : "L";
-      return `${command} ${point.x} ${point.y}`;
-    })
-    .join(" ");
+  const linePath = generatePathCommands(dataPoints);
 
   return `M 0 ${baselineY} ${linePath} L ${chartWidth} ${baselineY} Z`;
 }
