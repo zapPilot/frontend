@@ -1,6 +1,6 @@
 import {
   type ServiceResult,
-  wrapServiceCallVoid,
+  wrapServiceCall,
 } from "../../../lib/errorHandling";
 import { transformWalletData, type WalletData } from "../../../lib/walletUtils";
 import {
@@ -33,7 +33,7 @@ export async function addWallet(
   address: string,
   label: string
 ): Promise<ServiceResult> {
-  return wrapServiceCallVoid(async () => {
+  return wrapServiceCall(async () => {
     await addWalletToBundle(userId, address, label);
   });
 }
@@ -45,7 +45,7 @@ export async function removeWallet(
   userId: string,
   walletId: string
 ): Promise<ServiceResult> {
-  return wrapServiceCallVoid(async () => {
+  return wrapServiceCall(async () => {
     await removeWalletFromBundle(userId, walletId);
   });
 }
@@ -58,7 +58,7 @@ export async function updateWalletLabel(
   walletAddress: string,
   newLabel: string
 ): Promise<ServiceResult> {
-  return wrapServiceCallVoid(async () => {
+  return wrapServiceCall(async () => {
     await updateWalletLabelRequest(userId, walletAddress, newLabel);
   });
 }

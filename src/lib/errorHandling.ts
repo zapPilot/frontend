@@ -22,9 +22,17 @@ export interface ServiceResult<T = void> {
  *
  * @example
  * ```ts
- * export async function addWallet(userId: string, address: string) {
+ * // With return value
+ * export async function getUser(userId: string) {
  *   return wrapServiceCall(async () => {
- *     await addWalletToBundle(userId, address);
+ *     return await fetchUser(userId);
+ *   });
+ * }
+ *
+ * // Without return value (void)
+ * export async function removeWallet(userId: string, walletId: string) {
+ *   return wrapServiceCall(async () => {
+ *     await removeWalletFromBundle(userId, walletId);
  *   });
  * }
  * ```
@@ -44,32 +52,17 @@ export async function wrapServiceCall<T = void>(
 }
 
 /**
+ * @deprecated Use `wrapServiceCall` instead. This function is kept for backward compatibility.
+ *
  * Wraps an async operation that doesn't return data
  *
  * @param operation - Async function to execute
  * @returns ServiceResult with success flag and optional error message
- *
- * @example
- * ```ts
- * export async function removeWallet(userId: string, walletId: string) {
- *   return wrapServiceCallVoid(async () => {
- *     await removeWalletFromBundle(userId, walletId);
- *   });
- * }
- * ```
  */
 export async function wrapServiceCallVoid(
   operation: () => Promise<void>
 ): Promise<ServiceResult> {
-  try {
-    await operation();
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+  return wrapServiceCall(operation);
 }
 
 /**
