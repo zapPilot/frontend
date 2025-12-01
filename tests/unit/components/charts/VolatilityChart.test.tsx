@@ -194,7 +194,7 @@ describe("VolatilityChart", () => {
     });
 
     it("should include legend visual indicator", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <VolatilityChart data={mockVolatilityData} />
       );
 

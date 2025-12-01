@@ -214,7 +214,9 @@ describe("SharpeChart", () => {
     });
 
     it("should include both legend items", () => {
-      const { container } = render(<SharpeChart data={mockSharpeData} />);
+      const { container: _container } = render(
+        <SharpeChart data={mockSharpeData} />
+      );
 
       const legend = screen.getByTestId("legend");
       expect(legend).toHaveTextContent("Rolling Sharpe Ratio");

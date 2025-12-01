@@ -6,8 +6,8 @@
 import { httpUtils } from "@/lib/http-utils";
 import { SwapToken } from "@/types/ui/swap";
 
-import { createIntentServiceError } from "../lib/base-error";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { createIntentServiceError } from "../lib/errors";
 
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;

@@ -3,12 +3,13 @@ import userEvent from "@testing-library/user-event";
 import { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+// Account service is not used by WalletManager for email updates; keep import removed.
+import type { WalletProviderInterface } from "@/types/domain/wallet";
+
 import { WalletManager } from "../../../src/components/WalletManager";
 import * as walletService from "../../../src/components/WalletManager/services/WalletService";
 import { handleWalletError } from "../../../src/lib/walletUtils";
 import { WalletProvider } from "../../../src/providers/WalletProvider";
-// Account service is not used by WalletManager for email updates; keep import removed.
-import type { WalletProviderInterface } from "@/types/domain/wallet";
 import { render } from "../../test-utils";
 
 // Mock animation frame for better control of async operations

@@ -160,7 +160,7 @@ describe("MarketSentimentMetric", () => {
 
   describe("Color Mapping", () => {
     it("should use emerald color for Extreme Fear", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MarketSentimentMetric sentiment={mockSentimentExtremeFear} />
       );
 
@@ -169,7 +169,7 @@ describe("MarketSentimentMetric", () => {
     });
 
     it("should use lime color for Fear", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MarketSentimentMetric sentiment={mockSentimentFear} />
       );
 
@@ -178,7 +178,7 @@ describe("MarketSentimentMetric", () => {
     });
 
     it("should use amber color for Neutral", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MarketSentimentMetric sentiment={mockSentimentNeutral} />
       );
 
@@ -187,7 +187,7 @@ describe("MarketSentimentMetric", () => {
     });
 
     it("should use orange color for Greed", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MarketSentimentMetric sentiment={mockSentimentGreed} />
       );
 
@@ -196,7 +196,7 @@ describe("MarketSentimentMetric", () => {
     });
 
     it("should use rose color for Extreme Greed", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MarketSentimentMetric sentiment={mockSentimentExtremeGreed} />
       );
 

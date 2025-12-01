@@ -32,7 +32,7 @@
  */
 
 import { CACHE_WINDOW } from "@/config/cacheWindow";
-import { BaseServiceError } from "@/lib/base-error";
+import { BaseServiceError } from "@/lib/errors";
 
 /**
  * Data freshness profiles for different query types

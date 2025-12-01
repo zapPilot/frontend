@@ -428,7 +428,7 @@ describe("MetricChartLayout", () => {
     });
 
     it("should not render extra content when undefined", () => {
-      const { container } = render(
+      const { container: _container } = render(
         <MetricChartLayout {...defaultProps} extraSvgContent={undefined} />
       );
 

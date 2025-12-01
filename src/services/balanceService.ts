@@ -1,5 +1,5 @@
-import { createIntentServiceError } from "../lib/base-error";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
 

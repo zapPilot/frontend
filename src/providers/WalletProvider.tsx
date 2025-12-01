@@ -25,10 +25,10 @@ import {
   useWalletBalance,
 } from "thirdweb/react";
 
+import type { WalletProviderInterface } from "@/types/domain/wallet";
 import { walletLogger } from "@/utils/logger";
 // Chain types are handled internally
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
-import type { WalletProviderInterface } from "@/types/domain/wallet";
 
 // Essential types for simplified wallet
 interface SimplifiedWalletAccount {

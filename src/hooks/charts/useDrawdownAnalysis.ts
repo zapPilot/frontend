@@ -64,20 +64,6 @@ interface UseDrawdownAnalysisParams {
 }
 
 /**
- * Single data point in the drawdown timeseries
- */
-interface DrawdownDataPoint {
-  /** Date of the data point */
-  date: string;
-  /** Drawdown percentage (0 to -100) */
-  drawdown: number;
-  /** True when portfolio reaches new peak */
-  isRecoveryPoint: boolean;
-  /** Current peak value */
-  peak: number;
-}
-
-/**
  * Comprehensive drawdown metrics calculated from the timeseries
  */
 interface DrawdownMetrics {
