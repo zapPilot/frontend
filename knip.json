@@ -1,7 +1,18 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "entry": ["src/app/**/*.{ts,tsx}", "scripts/**/*.{js,ts}", "src/**/index.{ts,tsx}"],
+
+  "entry": [
+    "src/app/**/page.tsx",
+    "src/app/**/layout.tsx",
+    "src/app/**/template.tsx",
+    "src/app/**/error.tsx",
+    "src/app/**/loading.tsx",
+    "src/app/**/not-found.tsx",
+    "scripts/**/*.{js,ts}"
+  ],
+
   "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{js,ts}"],
+
   "ignore": [
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
@@ -9,8 +20,11 @@
     "playwright.config.ts",
     "vitest.config.ts",
     "eslint.config.mjs",
-    "postcss.config.mjs"
+    "postcss.config.mjs",
+    "**/index.ts",
+    "**/index.tsx"
   ],
+
   "ignoreDependencies": [
     "@types/*",
     "eslint-config-next",
@@ -19,18 +33,27 @@
     "eslint-plugin-react-hooks",
     "pino-pretty"
   ],
+
   "ignoreExportsUsedInFile": {
     "interface": false,
     "type": false
   },
+
   "includeEntryExports": true,
+
   "next": {
-    "entry": ["src/app/**"]
+    "entry": [
+      "src/app/**",
+      "!src/app/**/*.test.{ts,tsx}",
+      "!src/app/**/*.spec.{ts,tsx}"
+    ]
   },
+
   "vitest": {
     "config": ["vitest.config.ts"],
     "entry": ["tests/**/*.{test,spec}.{ts,tsx}"]
   },
+
   "playwright": {
     "config": ["playwright.config.ts"]
   }
