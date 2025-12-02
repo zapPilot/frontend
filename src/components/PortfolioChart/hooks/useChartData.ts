@@ -76,6 +76,24 @@ type DashboardAllocationEntry =
   UnifiedDashboardResponse["allocation"]["allocations"][number];
 
 /**
+ * Helper to create consistent loading/error state across all chart data hooks
+ * Deduplicates the repeated pattern of combining external loading with dashboard loading
+ */
+function createChartHookState(
+  externalLoading: boolean | undefined,
+  hasPreloadedData: boolean,
+  isDashboardLoading: boolean,
+  normalizedError: string | null,
+  dashboardError: Error | null | undefined
+) {
+  return {
+    isLoading:
+      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
+    error: normalizedError ?? dashboardError?.message ?? null,
+  };
+}
+
+/**
  * Interface for override data that can be passed to useChartData
  */
 interface ChartDataOverrides {
@@ -413,12 +431,19 @@ export function useChartData(
 
   // ORCHESTRATION: Delegate to the 4 extracted hooks
 
+  // Create consistent state for all chart hooks
+  const chartState = createChartHookState(
+    externalLoading,
+    hasPreloadedData,
+    isDashboardLoading,
+    normalizedError,
+    dashboardError
+  );
+
   // 1. Portfolio Performance Data
   const performanceResult = usePortfolioHistoryData({
     portfolioHistory,
-    isLoading:
-      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
-    error: normalizedError ?? dashboardError?.message ?? null,
+    ...chartState,
   });
 
   // 2. Allocation Data
@@ -426,9 +451,7 @@ export function useChartData(
     allocationHistory: overrides?.allocationData?.length
       ? overrides.allocationData
       : allocationTimeseriesData,
-    isLoading:
-      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
-    error: normalizedError ?? dashboardError?.message ?? null,
+    ...chartState,
   });
 
   // 3. Drawdown Analysis
@@ -439,9 +462,7 @@ export function useChartData(
 
   const drawdownResult = useDrawdownAnalysis({
     portfolioHistory: shouldCalculateDrawdown ? portfolioHistory : [],
-    isLoading:
-      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
-    error: normalizedError ?? dashboardError?.message ?? null,
+    ...chartState,
   });
 
   // When we have enhanced/override drawdown data, process it using the same recovery logic
@@ -573,9 +594,7 @@ export function useChartData(
 
       return apiPoint;
     }),
-    isLoading:
-      Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading),
-    error: normalizedError ?? dashboardError?.message ?? null,
+    ...chartState,
   });
 
   // Aggregate error state (prioritize explicit errors)
