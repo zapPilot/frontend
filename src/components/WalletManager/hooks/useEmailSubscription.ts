@@ -90,7 +90,15 @@ export const useEmailSubscription = ({
       const errorMessage = handleWalletError(error);
       setError(errorMessage);
     }
-  }, [realUserId, email, onEmailSubscribed, showToast, setLoading, setSuccess, setError]);
+  }, [
+    realUserId,
+    email,
+    onEmailSubscribed,
+    showToast,
+    setLoading,
+    setSuccess,
+    setError,
+  ]);
 
   // Unsubscribe (clear email)
   const handleUnsubscribe = useCallback(async () => {

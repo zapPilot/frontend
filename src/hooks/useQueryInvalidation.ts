@@ -42,6 +42,9 @@ export async function invalidateAndRefetch({
   try {
     await refetch();
   } catch (refetchError) {
-    walletLogger.error(`Failed to refetch data after ${operationName}`, refetchError);
+    walletLogger.error(
+      `Failed to refetch data after ${operationName}`,
+      refetchError
+    );
   }
 }

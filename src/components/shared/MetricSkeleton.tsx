@@ -48,7 +48,12 @@ export function MetricLabelSkeleton({
   className = "mb-4",
 }: MetricLabelSkeletonProps) {
   return (
-    <Skeleton variant="text" width={width} height={height} className={className} />
+    <Skeleton
+      variant="text"
+      width={width}
+      height={height}
+      className={className}
+    />
   );
 }
 
@@ -98,7 +103,12 @@ export function MetricColumnSkeleton({
 export function ROISectionSkeleton() {
   return (
     <>
-      <MetricValueSkeleton width="140px" height="32px" withIcon iconSize="16px" />
+      <MetricValueSkeleton
+        width="140px"
+        height="32px"
+        withIcon
+        iconSize="16px"
+      />
       <MetricLabelSkeleton width="120px" height="14px" className="mb-4" />
     </>
   );

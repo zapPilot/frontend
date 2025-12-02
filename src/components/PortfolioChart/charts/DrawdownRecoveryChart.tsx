@@ -3,6 +3,7 @@
 import { memo, useCallback, useMemo } from "react";
 
 import { useChartHover } from "@/hooks/useChartHover";
+import { formatChartDate } from "@/lib/chartFormatters";
 import type { DrawdownHoverData } from "@/types/ui/chartHover";
 
 import { ChartIndicator, ChartTooltip } from "../../charts";
@@ -138,23 +139,12 @@ export const DrawdownRecoveryChart = memo<DrawdownRecoveryChartProps>(
           chartType: DRAWDOWN_CHART_TYPE,
           x: point.x,
           y: point.y,
-          date: new Date(point.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
+          date: formatChartDate(point.date),
           drawdown: point.drawdown,
         };
 
         if (point.peakDate) {
-          hoverData.peakDate = new Date(point.peakDate).toLocaleDateString(
-            "en-US",
-            {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            }
-          );
+          hoverData.peakDate = formatChartDate(point.peakDate);
         }
 
         if (point.daysFromPeak !== undefined) {

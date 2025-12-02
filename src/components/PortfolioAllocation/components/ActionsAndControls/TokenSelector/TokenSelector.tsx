@@ -11,6 +11,7 @@ import {
   useZapTokensWithStates,
   type UseZapTokensWithStatesOptions,
 } from "@/hooks/queries/useZapTokensQuery";
+import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
 import type { SwapToken } from "@/types/ui/swap";
 import { logger } from "@/utils/logger";
 
@@ -60,11 +61,20 @@ export const TokenSelector = memo<TokenSelectorProps>(
       isError,
       error,
       refetch,
-      isRefetching,
       isBalanceLoading,
       isBalanceFetching,
       balanceError,
     } = useZapTokensWithStates(zapTokensOptions);
+
+    // Async retry button for error state
+    const { handleRetry, isRetrying } = useAsyncRetryButton({
+      onRetry: async () => {
+        await refetch();
+      },
+      errorContext: "refetch tokens after load failure",
+      logger,
+    });
+
     return (
       <div className="relative">
         <label className="block text-xs font-medium text-gray-400 mb-2">
@@ -104,25 +114,14 @@ export const TokenSelector = memo<TokenSelectorProps>(
                     {error?.message || "Unknown error"}
                   </div>
                   <button
-                    onClick={() => {
-                      void (async () => {
-                        try {
-                          await refetch();
-                        } catch (refetchError) {
-                          logger.error(
-                            "Failed to refetch tokens after load failure",
-                            refetchError
-                          );
-                        }
-                      })();
-                    }}
-                    disabled={isRefetching}
+                    onClick={handleRetry}
+                    disabled={isRetrying}
                     className="inline-flex items-center space-x-2 px-3 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-400 hover:bg-red-500/30 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw
-                      className={`w-3 h-3 ${isRefetching ? "animate-spin" : ""}`}
+                      className={`w-3 h-3 ${isRetrying ? "animate-spin" : ""}`}
                     />
-                    <span>{isRefetching ? "Retrying..." : "Retry"}</span>
+                    <span>{isRetrying ? "Retrying..." : "Retry"}</span>
                   </button>
                 </div>
               )}

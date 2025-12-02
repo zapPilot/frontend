@@ -8,6 +8,7 @@ import { BaseCard } from "@/components/ui";
 import { Skeleton } from "@/components/ui/LoadingSystem";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
+import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
 import { logger } from "@/utils/logger";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
@@ -49,6 +50,15 @@ const WalletManagerComponent = ({
   });
 
   const dropdownMenu = useDropdownMenu();
+
+  // Async retry button for error state
+  const { handleRetry, isRetrying } = useAsyncRetryButton({
+    onRetry: async () => {
+      await refetch();
+    },
+    errorContext: "refetch user data in WalletManager",
+    logger,
+  });
 
   // Handle wallet operations
   const handleWalletChange = useCallback(
@@ -147,21 +157,11 @@ const WalletManagerComponent = ({
               <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
               <p className="text-red-400 text-sm mb-3">{error}</p>
               <button
-                onClick={() => {
-                  void (async () => {
-                    try {
-                      await refetch();
-                    } catch (refetchError) {
-                      logger.error(
-                        "Failed to refetch user data in WalletManager",
-                        refetchError
-                      );
-                    }
-                  })();
-                }}
-                className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors"
+                onClick={handleRetry}
+                disabled={isRetrying}
+                className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Retry
+                {isRetrying ? "Retrying..." : "Retry"}
               </button>
             </div>
           )}

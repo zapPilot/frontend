@@ -196,70 +196,70 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
 
   return (
     <TooltipContentWrapper date={data.date}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-red-300">Drawdown</span>
+        <span className="text-sm font-semibold text-white">
+          {formatters.percent(data.drawdown, 2)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-400">Severity</span>
+        <span
+          className={`text-xs font-semibold px-2 py-0.5 rounded ${severityColors.bgColor} ${severityColors.color}`}
+        >
+          {severityLabel}
+        </span>
+      </div>
+      {data.peakDate && (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-red-300">Drawdown</span>
-          <span className="text-sm font-semibold text-white">
-            {formatters.percent(data.drawdown, 2)}
+          <span className="text-xs text-gray-400">Peak Date</span>
+          <span className="text-xs text-gray-300">{data.peakDate}</span>
+        </div>
+      )}
+      {data.distanceFromPeak != null && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-gray-400">Days from Peak</span>
+          <span className="text-sm font-semibold text-blue-400">
+            {data.distanceFromPeak}
           </span>
         </div>
+      )}
+      {data.recoveryDurationDays != null && (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Severity</span>
-          <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded ${severityColors.bgColor} ${severityColors.color}`}
+          <span className="text-xs text-gray-400">Recovery Time</span>
+          <span className="text-sm font-semibold text-emerald-400">
+            {data.recoveryDurationDays} days
+          </span>
+        </div>
+      )}
+      {data.recoveryDepth != null && (
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-xs text-gray-400">Cycle Depth</span>
+          <span className="text-sm font-semibold text-gray-200">
+            {formatters.percent(data.recoveryDepth, 1)}
+          </span>
+        </div>
+      )}
+      {data.isRecoveryPoint && (
+        <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-gray-700">
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 12 12"
+            className="text-emerald-400"
           >
-            {severityLabel}
+            <path
+              d="M2 10 L2 2 L10 6 Z"
+              fill="currentColor"
+              stroke="white"
+              strokeWidth="0.5"
+            />
+          </svg>
+          <span className="text-xs text-emerald-400 font-semibold">
+            New Peak
           </span>
         </div>
-        {data.peakDate && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-400">Peak Date</span>
-            <span className="text-xs text-gray-300">{data.peakDate}</span>
-          </div>
-        )}
-        {data.distanceFromPeak != null && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-400">Days from Peak</span>
-            <span className="text-sm font-semibold text-blue-400">
-              {data.distanceFromPeak}
-            </span>
-          </div>
-        )}
-        {data.recoveryDurationDays != null && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-400">Recovery Time</span>
-            <span className="text-sm font-semibold text-emerald-400">
-              {data.recoveryDurationDays} days
-            </span>
-          </div>
-        )}
-        {data.recoveryDepth != null && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-gray-400">Cycle Depth</span>
-            <span className="text-sm font-semibold text-gray-200">
-              {formatters.percent(data.recoveryDepth, 1)}
-            </span>
-          </div>
-        )}
-        {data.isRecoveryPoint && (
-          <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-gray-700">
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              className="text-emerald-400"
-            >
-              <path
-                d="M2 10 L2 2 L10 6 Z"
-                fill="currentColor"
-                stroke="white"
-                strokeWidth="0.5"
-              />
-            </svg>
-            <span className="text-xs text-emerald-400 font-semibold">
-              New Peak
-            </span>
-          </div>
-        )}
+      )}
     </TooltipContentWrapper>
   );
 }
@@ -276,24 +276,24 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
 
   return (
     <TooltipContentWrapper date={data.date}>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: indicatorColor }}
-            />
-            <span className="text-xs text-gray-300">Sharpe Ratio</span>
-          </div>
-          <span className="text-sm font-semibold text-white">
-            {data.sharpe.toFixed(2)}
-          </span>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: indicatorColor }}
+          />
+          <span className="text-xs text-gray-300">Sharpe Ratio</span>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Rating</span>
-          <span className={`text-sm font-semibold ${textColorClass}`}>
-            {interpretation}
-          </span>
-        </div>
+        <span className="text-sm font-semibold text-white">
+          {data.sharpe.toFixed(2)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-400">Rating</span>
+        <span className={`text-sm font-semibold ${textColorClass}`}>
+          {interpretation}
+        </span>
+      </div>
     </TooltipContentWrapper>
   );
 }
@@ -309,36 +309,36 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
 
   return (
     <TooltipContentWrapper date={data.date}>
-        <div className="text-sm font-semibold text-white">
-          Volatility overview
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-amber-300">Annualized Vol</span>
-          <span className="text-sm font-semibold text-white">
-            {formatters.percent(data.volatility)}
+      <div className="text-sm font-semibold text-white">
+        Volatility overview
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-amber-300">Annualized Vol</span>
+        <span className="text-sm font-semibold text-white">
+          {formatters.percent(data.volatility)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-400">Daily Vol</span>
+        <span className="text-sm font-semibold text-gray-300">
+          {formatters.percent(dailyVol, 2)}
+        </span>
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-400">Risk Level</span>
+        <span
+          className={`text-xs font-semibold px-2 py-0.5 rounded ${riskColors.bgColor} ${riskColors.color}`}
+        >
+          {riskLevel}
+        </span>
+      </div>
+      {isHighRisk && (
+        <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-gray-700">
+          <span className="text-xs text-red-400">
+            ⚠ High volatility warning
           </span>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Daily Vol</span>
-          <span className="text-sm font-semibold text-gray-300">
-            {formatters.percent(dailyVol, 2)}
-          </span>
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Risk Level</span>
-          <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded ${riskColors.bgColor} ${riskColors.color}`}
-          >
-            {riskLevel}
-          </span>
-        </div>
-        {isHighRisk && (
-          <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-gray-700">
-            <span className="text-xs text-red-400">
-              ⚠ High volatility warning
-            </span>
-          </div>
-        )}
+      )}
     </TooltipContentWrapper>
   );
 }
@@ -360,57 +360,55 @@ function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
 
   return (
     <TooltipContentWrapper date={data.date}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs text-gray-300">Daily Yield</span>
+        <span className={`text-sm font-semibold ${colorClass}`}>
+          {isPositive ? "+" : ""}
+          {formatters.currency(data.totalYield)}
+        </span>
+      </div>
+      {data.cumulativeYield !== undefined && (
         <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-300">Daily Yield</span>
-          <span className={`text-sm font-semibold ${colorClass}`}>
-            {isPositive ? "+" : ""}
-            {formatters.currency(data.totalYield)}
+          <span className="text-xs text-purple-300">Cumulative</span>
+          <span className="text-sm font-semibold text-white">
+            {formatters.currency(data.cumulativeYield)}
           </span>
         </div>
-        {data.cumulativeYield !== undefined && (
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-xs text-purple-300">Cumulative</span>
-            <span className="text-sm font-semibold text-white">
-              {formatters.currency(data.cumulativeYield)}
-            </span>
-          </div>
-        )}
-        {sortedProtocols.length > 0 && (
-          <>
-            <div className="border-t border-gray-700 pt-1.5 mt-1.5">
-              <div className="text-xs text-gray-400 mb-1">
-                By Protocol ({data.protocolCount})
-              </div>
-              <div className="space-y-1 max-h-32 overflow-y-auto">
-                {sortedProtocols.map((protocol, idx) => {
-                  const protocolPositive = protocol.yield_return_usd >= 0;
-                  const protocolColor = protocolPositive
-                    ? "text-emerald-300"
-                    : "text-red-300";
-                  return (
-                    <div
-                      key={`${protocol.protocol_name}-${protocol.chain}-${idx}`}
-                      className="flex items-center justify-between gap-2"
-                    >
-                      <span className="text-xs text-gray-300 truncate">
-                        {protocol.protocol_name}
-                        <span className="text-gray-500 ml-1">
-                          ({protocol.chain})
-                        </span>
-                      </span>
-                      <span
-                        className={`text-xs font-semibold ${protocolColor}`}
-                      >
-                        {protocolPositive ? "+" : ""}
-                        {formatters.currency(protocol.yield_return_usd)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
+      )}
+      {sortedProtocols.length > 0 && (
+        <>
+          <div className="border-t border-gray-700 pt-1.5 mt-1.5">
+            <div className="text-xs text-gray-400 mb-1">
+              By Protocol ({data.protocolCount})
             </div>
-          </>
-        )}
+            <div className="space-y-1 max-h-32 overflow-y-auto">
+              {sortedProtocols.map((protocol, idx) => {
+                const protocolPositive = protocol.yield_return_usd >= 0;
+                const protocolColor = protocolPositive
+                  ? "text-emerald-300"
+                  : "text-red-300";
+                return (
+                  <div
+                    key={`${protocol.protocol_name}-${protocol.chain}-${idx}`}
+                    className="flex items-center justify-between gap-2"
+                  >
+                    <span className="text-xs text-gray-300 truncate">
+                      {protocol.protocol_name}
+                      <span className="text-gray-500 ml-1">
+                        ({protocol.chain})
+                      </span>
+                    </span>
+                    <span className={`text-xs font-semibold ${protocolColor}`}>
+                      {protocolPositive ? "+" : ""}
+                      {formatters.currency(protocol.yield_return_usd)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
     </TooltipContentWrapper>
   );
 }

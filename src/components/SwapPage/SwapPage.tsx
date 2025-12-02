@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
+import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
 import { useChain } from "@/hooks/useChain";
 import { useToast } from "@/hooks/useToast";
 import { InvestmentOpportunity } from "@/types/domain/investment";
@@ -86,6 +87,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   // Fetch strategies data with real portfolio data from API
   const { strategies, isError, error, isInitialLoading, refetch } =
     useStrategiesWithPortfolioData(userInfo?.userId);
+
+  // Async retry button for error state
+  const { handleRetry, isRetrying } = useAsyncRetryButton({
+    onRetry: async () => {
+      await refetch();
+    },
+    errorContext: "refetch strategies after load failure",
+    logger: swapLogger,
+  });
 
   // Initialize operation mode based on navigation context
   const getInitialOperationMode = (): OperationMode => {
@@ -346,21 +356,11 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
             {error?.message || "Unable to fetch portfolio strategies"}
           </p>
           <button
-            onClick={() => {
-              void (async () => {
-                try {
-                  await refetch();
-                } catch (refetchError) {
-                  swapLogger.error(
-                    "Failed to refetch strategies after load failure",
-                    refetchError
-                  );
-                }
-              })();
-            }}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Try Again
+            {isRetrying ? "Retrying..." : "Try Again"}
           </button>
         </StateRenderer>
       );
