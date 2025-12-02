@@ -149,6 +149,17 @@ const deriveErrorMessage = (error: unknown): string => {
   return "Failed to dispatch transaction bundle.";
 };
 
+/**
+ * Creates an unsupported chain error message with list of supported chains
+ * Consolidates the duplicate error message pattern
+ */
+const createUnsupportedChainMessage = (chainId: number): string => {
+  const supportedChainNames = SUPPORTED_CHAINS.map(
+    c => `${c.name} (${c.id})`
+  ).join(", ");
+  return `Chain ${chainId} is not supported. Supported chains: ${supportedChainNames}`;
+};
+
 const ZapExecutionProgressComponent = ({
   isOpen,
   onClose,
@@ -276,11 +287,7 @@ const ZapExecutionProgressComponent = ({
       if (resolvedChainId === undefined) {
         const fallbackChainId =
           typeof eventChainId === "number" ? eventChainId : chainId;
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
-
-        const message = `Chain ${fallbackChainId} is not supported. Supported chains: ${supportedChainNames}`;
+        const message = createUnsupportedChainMessage(fallbackChainId);
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;
@@ -289,11 +296,7 @@ const ZapExecutionProgressComponent = ({
       const baseChain = getChainById(resolvedChainId);
 
       if (!baseChain) {
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
-
-        const message = `Chain ${resolvedChainId} is not supported. Supported chains: ${supportedChainNames}`;
+        const message = createUnsupportedChainMessage(resolvedChainId);
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;
