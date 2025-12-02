@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 
+import { fadeInDown } from "@/lib/animationVariants";
 import { InvestmentOpportunity } from "@/types/domain/investment";
 
 export interface SwapPageHeaderProps {
@@ -13,8 +14,9 @@ export interface SwapPageHeaderProps {
 export function SwapPageHeader({ strategy, onBack }: SwapPageHeaderProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={fadeInDown}
+      initial="initial"
+      animate="animate"
       className="flex items-center justify-between"
     >
       <div className="flex items-center space-x-4">

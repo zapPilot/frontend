@@ -12,10 +12,9 @@ interface CategoryListSectionProps {
   rebalanceShiftMap?: Map<string, CategoryShift>;
   rebalanceTargetMap?: Map<string, ProcessedAssetCategory>;
   isRebalanceEnabled?: boolean;
-  allocations?: Record<string, number> | undefined;
-  onAllocationChange?:
-    | ((categoryId: string, value: number) => void)
-    | undefined;
+  allocations?: Record<string, number>;
+  onAllocationChange?: (categoryId: string, value: number) => void;
+  isLoading?: boolean;
   testId?: string;
 }
 

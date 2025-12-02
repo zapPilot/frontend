@@ -8,9 +8,13 @@ import { useChain } from "@/hooks/useChain";
 import { useToast } from "@/hooks/useToast";
 import { InvestmentOpportunity } from "@/types/domain/investment";
 
-import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
+import { isChainSupported } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
+import {
+  createUnsupportedChainMessage,
+  formatSupportedChainsList,
+} from "../../lib/chain-utils";
 import { formatCurrency } from "../../lib/formatters";
 import {
   executeUnifiedZap,
@@ -186,9 +190,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
       // Validate chain is supported before proceeding
       if (!isChainSupported(chain.id)) {
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
+        const errorMessage = createUnsupportedChainMessage(chain.id);
+        const supportedChainNames = formatSupportedChainsList();
 
         swapLogger.error(
           `Unsupported chain ${chain.id}. Supported: ${supportedChainNames}`
@@ -201,7 +204,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           totalValue,
           strategyCount,
           chainId: chain.id,
-          error: `Chain ${chain.id} is not supported. Please switch to: ${supportedChainNames}`,
+          error: errorMessage,
         });
         return; // Fail fast - don't call API
       }

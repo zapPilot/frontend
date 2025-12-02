@@ -1,7 +1,10 @@
 // Core UI components - only exports that are actively imported through this index
+export { AssetBadge } from "./AssetBadge";
+export { AsyncActionButton } from "./AsyncActionButton";
 export { BaseCard } from "./BaseCard";
 export { BundleNotFound } from "./BundleNotFound";
 export { GradientButton } from "./GradientButton";
+export { TableHeaderCell } from "./TableHeaderCell";
 
 // Loading system - comprehensive re-exports
 export {

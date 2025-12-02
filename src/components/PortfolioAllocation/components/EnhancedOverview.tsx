@@ -27,12 +27,11 @@ interface EnhancedOverviewProps {
   operationMode?: OperationMode;
   excludedCategoryIds: string[];
   onToggleCategoryExclusion: (categoryId: string) => void;
-  allocations?: Record<string, number> | undefined;
-  onAllocationChange?:
-    | ((categoryId: string, value: number) => void)
-    | undefined;
   actionEnabled?: boolean;
   actionDisabledReason?: string;
+  allocations?: Record<string, number>;
+  onAllocationChange?: (categoryId: string, value: number) => void;
+  isLoading?: boolean;
 }
 
 export function EnhancedOverview({
@@ -147,8 +146,8 @@ export function EnhancedOverview({
         excludedCategoryIdsSet={excludedCategoryIdsSet}
         onToggleCategoryExclusion={onToggleCategoryExclusion}
         isRebalanceEnabled={isRebalanceEnabled}
-        allocations={allocations}
-        onAllocationChange={onAllocationChange}
+        {...(allocations ? { allocations } : {})}
+        {...(onAllocationChange ? { onAllocationChange } : {})}
         {...(rebalanceShiftMap ? { rebalanceShiftMap } : {})}
         {...(rebalanceTargetMap ? { rebalanceTargetMap } : {})}
       />

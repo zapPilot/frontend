@@ -27,7 +27,6 @@ import {
   getChainBlockExplorer,
   getChainById,
   isChainSupported,
-  SUPPORTED_CHAINS,
   toThirdWebChain,
 } from "../../config/chains";
 import { Z_INDEX } from "../../constants/design-system";
@@ -36,6 +35,7 @@ import {
   type UnifiedZapStreamTransaction,
   useUnifiedZapStream,
 } from "../../hooks/useUnifiedZapStream";
+import { createUnsupportedChainMessage } from "../../lib/chain-utils";
 import { formatAddress, formatCurrency } from "../../lib/formatters";
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
@@ -147,17 +147,6 @@ const deriveErrorMessage = (error: unknown): string => {
   }
 
   return "Failed to dispatch transaction bundle.";
-};
-
-/**
- * Creates an unsupported chain error message with list of supported chains
- * Consolidates the duplicate error message pattern
- */
-const createUnsupportedChainMessage = (chainId: number): string => {
-  const supportedChainNames = SUPPORTED_CHAINS.map(
-    c => `${c.name} (${c.id})`
-  ).join(", ");
-  return `Chain ${chainId} is not supported. Supported chains: ${supportedChainNames}`;
 };
 
 const ZapExecutionProgressComponent = ({

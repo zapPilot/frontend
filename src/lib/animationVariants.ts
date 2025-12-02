@@ -94,6 +94,30 @@ export const fadeInUp: Variants = {
 };
 
 /**
+ * Fade in from above animation
+ * Similar to fadeInUp but moves down from negative Y
+ *
+ * Use for:
+ * - Dropdown content
+ * - Header elements
+ * - Notification banners
+ */
+export const fadeInDown: Variants = {
+  initial: {
+    opacity: 0,
+    y: -10,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+  },
+};
+
+/**
  * Slide in from left
  *
  * Use for:
