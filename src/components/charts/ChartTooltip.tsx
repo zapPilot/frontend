@@ -169,6 +169,25 @@ function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
 }
 
 /**
+ * Wrapper component for tooltip content with consistent date header and spacing
+ * Deduplicates the repeated tooltip structure across all chart types
+ */
+function TooltipContentWrapper({
+  date,
+  children,
+}: {
+  date: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="text-xs text-gray-300 mb-2">{date}</div>
+      <div className="space-y-1.5">{children}</div>
+    </>
+  );
+}
+
+/**
  * Render Drawdown chart tooltip content with severity badge
  */
 function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
@@ -176,9 +195,7 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
   const severityColors = getDrawdownSeverityColor(severityLabel);
 
   return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1.5">
+    <TooltipContentWrapper date={data.date}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-red-300">Drawdown</span>
           <span className="text-sm font-semibold text-white">
@@ -243,8 +260,7 @@ function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
             </span>
           </div>
         )}
-      </div>
-    </>
+    </TooltipContentWrapper>
   );
 }
 
@@ -259,9 +275,7 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
   const textColorClass = SHARPE_INTERPRETATION_COLOR[interpretation];
 
   return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1.5">
+    <TooltipContentWrapper date={data.date}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div
@@ -280,8 +294,7 @@ function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
             {interpretation}
           </span>
         </div>
-      </div>
-    </>
+    </TooltipContentWrapper>
   );
 }
 
@@ -295,9 +308,7 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
   const isHighRisk = data.volatility >= 25;
 
   return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1.5">
+    <TooltipContentWrapper date={data.date}>
         <div className="text-sm font-semibold text-white">
           Volatility overview
         </div>
@@ -328,8 +339,7 @@ function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
             </span>
           </div>
         )}
-      </div>
-    </>
+    </TooltipContentWrapper>
   );
 }
 
@@ -349,9 +359,7 @@ function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
       ) ?? [];
 
   return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1.5">
+    <TooltipContentWrapper date={data.date}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-xs text-gray-300">Daily Yield</span>
           <span className={`text-sm font-semibold ${colorClass}`}>
@@ -403,8 +411,7 @@ function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
             </div>
           </>
         )}
-      </div>
-    </>
+    </TooltipContentWrapper>
   );
 }
 
