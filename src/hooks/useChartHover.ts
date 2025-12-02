@@ -155,9 +155,6 @@ export function useChartHover<T>(
   const testAutoHideTimerRef = useRef<number | null>(null);
   const isAutoHoverActiveRef = useRef(false);
 
-  // Calculate value range for Y positioning
-  const valueRange = clampMin(maxValue - minValue, 1);
-
   /**
    * Mouse move handler with RAF optimization
    * Calculates hover position and builds chart-specific hover state
@@ -285,7 +282,7 @@ export function useChartHover<T>(
       chartHeight,
       chartPadding,
       minValue,
-      valueRange,
+      maxValue,
       getYValue,
       buildHoverData,
       testAutoPopulate,
@@ -412,8 +409,8 @@ export function useChartHover<T>(
     getYValue,
     hoveredPoint,
     minValue,
+    maxValue,
     testAutoPopulate,
-    valueRange,
   ]);
 
   useEffect(() => {

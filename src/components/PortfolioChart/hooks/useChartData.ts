@@ -31,7 +31,10 @@ import {
 } from "../../../hooks/charts/useDrawdownAnalysis";
 // Import the 4 extracted hooks
 import { usePortfolioHistoryData } from "../../../hooks/charts/usePortfolioHistoryData";
-import { useRollingAnalytics } from "../../../hooks/charts/useRollingAnalytics";
+import {
+  type DailyYieldApiData,
+  useRollingAnalytics,
+} from "../../../hooks/charts/useRollingAnalytics";
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
 import { transformVolatilityPoint } from "../../../lib/chartDataUtils";
 import {
@@ -568,17 +571,7 @@ export function useChartData(
       ? overrides.volatilityData.map(transformVolatilityPoint)
       : rollingVolatilityData.map(transformVolatilityPoint),
     dailyYieldHistory: processedDailyYieldData.map(point => {
-      const apiPoint: {
-        date: string;
-        total_yield_usd: number;
-        cumulative_yield_usd: number;
-        protocol_count?: number;
-        protocols?: {
-          protocol_name: string;
-          chain: string;
-          yield_return_usd: number;
-        }[];
-      } = {
+      const apiPoint: DailyYieldApiData = {
         date: point.date,
         total_yield_usd: point.total_yield_usd,
         cumulative_yield_usd: point.cumulative_yield_usd ?? 0,

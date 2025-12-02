@@ -13,7 +13,7 @@ import {
 } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { createServiceCaller } from "@/lib/createServiceCaller";
-import { httpUtils } from "@/lib/http-utils";
+import { APIError, httpUtils } from "@/lib/http-utils";
 import { queryKeys } from "@/lib/queryClient";
 import { logger } from "@/utils/logger";
 
@@ -45,25 +45,10 @@ export interface MarketSentimentData {
 }
 
 /**
- * Sentiment Service Error with enhanced error details
- */
-export class SentimentServiceError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public code?: string,
-    public details?: Record<string, unknown>
-  ) {
-    super(message);
-    this.name = "SentimentServiceError";
-  }
-}
-
-/**
  * Error mapper for sentiment service
- * Transforms API errors into user-friendly SentimentServiceError instances
+ * Transforms API errors into user-friendly error instances
  */
-const createSentimentServiceError = (error: unknown): SentimentServiceError => {
+const createSentimentServiceError = (error: unknown): APIError => {
   const apiError =
     error && typeof error === "object"
       ? (error as {
@@ -93,12 +78,7 @@ const createSentimentServiceError = (error: unknown): SentimentServiceError => {
       break;
   }
 
-  return new SentimentServiceError(
-    message,
-    status,
-    apiError.code,
-    apiError.details
-  );
+  return new APIError(message, status, apiError.code, apiError.details);
 };
 
 const callSentimentApi = createServiceCaller(createSentimentServiceError);
@@ -153,8 +133,7 @@ export function useSentimentData() {
       } catch (error) {
         logger.error("Failed to fetch market sentiment", {
           error: error instanceof Error ? error.message : String(error),
-          status:
-            error instanceof SentimentServiceError ? error.status : undefined,
+          status: error instanceof APIError ? error.status : undefined,
         });
         throw error;
       }
