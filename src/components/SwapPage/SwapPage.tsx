@@ -42,6 +42,28 @@ const ZapExecutionProgress = dynamic(
   }
 );
 
+/**
+ * Reusable state renderer for loading, error, and empty states
+ * Provides consistent centered layout with optional action button
+ */
+interface StateRendererProps {
+  minHeight?: string;
+  children: React.ReactNode;
+}
+
+function StateRenderer({
+  minHeight = "min-h-[400px]",
+  children,
+}: StateRendererProps) {
+  return (
+    <div className="space-y-6">
+      <div className={`flex items-center justify-center ${minHeight}`}>
+        <div className="text-center">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
@@ -302,50 +324,42 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     // Show loading state
     if (isInitialLoading) {
       return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading strategies...</p>
-            </div>
-          </div>
-        </div>
+        <StateRenderer>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading strategies...</p>
+        </StateRenderer>
       );
     }
 
     // Show error state
     if (isError) {
       return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Failed to Load Strategies
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {error?.message || "Unable to fetch portfolio strategies"}
-              </p>
-              <button
-                onClick={() => {
-                  void (async () => {
-                    try {
-                      await refetch();
-                    } catch (refetchError) {
-                      swapLogger.error(
-                        "Failed to refetch strategies after load failure",
-                        refetchError
-                      );
-                    }
-                  })();
-                }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        </div>
+        <StateRenderer>
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Failed to Load Strategies
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {error?.message || "Unable to fetch portfolio strategies"}
+          </p>
+          <button
+            onClick={() => {
+              void (async () => {
+                try {
+                  await refetch();
+                } catch (refetchError) {
+                  swapLogger.error(
+                    "Failed to refetch strategies after load failure",
+                    refetchError
+                  );
+                }
+              })();
+            }}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Try Again
+          </button>
+        </StateRenderer>
       );
     }
 
@@ -418,18 +432,14 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
         {/* Execution Loading State */}
         {zapExecution?.isExecuting && !zapExecution.intentId && (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">
-                Initiating UnifiedZap execution...
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                {formatCurrency(zapExecution.totalValue)} •{" "}
-                {zapExecution.strategyCount} strategies
-              </p>
-            </div>
-          </div>
+          <StateRenderer minHeight="min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Initiating UnifiedZap execution...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {formatCurrency(zapExecution.totalValue)} •{" "}
+              {zapExecution.strategyCount} strategies
+            </p>
+          </StateRenderer>
         )}
       </div>
     );
