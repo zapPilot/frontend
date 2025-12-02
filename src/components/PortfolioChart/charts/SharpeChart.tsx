@@ -6,6 +6,7 @@ import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
 import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import { getChartInteractionProps } from "../utils";
+import { ChartReferenceLine } from "./ChartReferenceLine";
 import { MetricChartLayout } from "./MetricChartLayout";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
@@ -116,18 +117,7 @@ export const SharpeChart = memo<SharpeChartProps>(
           </div>
         }
         description="Rolling Sharpe ratio trend for the portfolio"
-        extraSvgContent={
-          <line
-            x1="0"
-            y1={referenceLineY}
-            x2={width}
-            y2={referenceLineY}
-            stroke="#6b7280"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.5"
-          />
-        }
+        extraSvgContent={<ChartReferenceLine y={referenceLineY} x2={width} />}
       />
     );
   }

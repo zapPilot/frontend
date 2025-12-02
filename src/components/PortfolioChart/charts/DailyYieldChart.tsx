@@ -9,6 +9,7 @@ import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import type { DailyYieldOverridePoint } from "../types";
 import { CHART_LABELS, getChartInteractionProps } from "../utils";
 import { ChartGrid } from "./ChartGrid";
+import { ChartReferenceLine } from "./ChartReferenceLine";
 import { buildLinePath } from "./pathBuilders";
 
 interface DailyYieldChartProps {
@@ -200,16 +201,7 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
           </defs>
 
           {/* Zero baseline */}
-          <line
-            x1={padding}
-            y1={zeroY}
-            x2={width - padding}
-            y2={zeroY}
-            stroke="#6b7280"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.5"
-          />
+          <ChartReferenceLine y={zeroY} x1={padding} x2={width - padding} />
 
           {/* Positive area (green gradient) */}
           {positiveAreaPath && (
