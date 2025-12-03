@@ -4,6 +4,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { memo, useState } from "react";
 
+import { fadeInDown } from "@/lib/animationVariants";
+
 import { ChartCloseIcon } from "./ChartCloseIcon";
 
 type SeverityType = "info" | "warning" | "success" | "critical";
@@ -119,8 +121,9 @@ export const ChartInsightCard = memo<ChartInsightCardProps>(
       <AnimatePresence>
         {!dismissed && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
+            variants={fadeInDown}
+            initial="initial"
+            animate="animate"
             exit={{ opacity: 0, y: -10, height: 0, marginBottom: 0 }}
             transition={{ duration: 0.2 }}
             className={`

@@ -480,63 +480,44 @@ function withBaseURL<Config extends Record<string, unknown> | undefined>(
 }
 
 function createServiceHttpClient(baseURL: string) {
+  // Helper to wrap config with baseURL
+  const withBase = <C extends Record<string, unknown> | undefined>(
+    config?: C
+  ) => withBaseURL(baseURL, config) as C;
+
   return {
     get: <T = unknown>(
       endpoint: string,
       config?: GetConfig,
       transformer?: ResponseTransformer<T>
-    ) =>
-      httpGet(endpoint, withBaseURL(baseURL, config) as GetConfig, transformer),
+    ) => httpGet(endpoint, withBase(config), transformer),
 
     post: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: MutateConfig,
       transformer?: ResponseTransformer<T>
-    ) =>
-      httpPost(
-        endpoint,
-        body,
-        withBaseURL(baseURL, config) as MutateConfig,
-        transformer
-      ),
+    ) => httpPost(endpoint, body, withBase(config), transformer),
 
     put: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: MutateConfig,
       transformer?: ResponseTransformer<T>
-    ) =>
-      httpPut(
-        endpoint,
-        body,
-        withBaseURL(baseURL, config) as MutateConfig,
-        transformer
-      ),
+    ) => httpPut(endpoint, body, withBase(config), transformer),
 
     patch: <T = unknown>(
       endpoint: string,
       body?: unknown,
       config?: MutateConfig,
       transformer?: ResponseTransformer<T>
-    ) =>
-      httpPatch(
-        endpoint,
-        body,
-        withBaseURL(baseURL, config) as MutateConfig,
-        transformer
-      ),
+    ) => httpPatch(endpoint, body, withBase(config), transformer),
 
     delete: <T = unknown>(
       endpoint: string,
       config?: GetConfig,
       transformer?: ResponseTransformer<T>
-    ) =>
-      httpDelete(
-        endpoint,
-        withBaseURL(baseURL, config) as GetConfig,
-        transformer
-      ),
+    ) => httpDelete(endpoint, withBase(config), transformer),
   } as const;
 }
 

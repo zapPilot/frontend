@@ -14,7 +14,7 @@ import { AnimatedDropdown } from "@/components/ui/AnimatedDropdown";
 import { getThirdWebChains } from "@/config/chains";
 import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks/useDropdown";
-import type { ButtonVariant } from "@/types/ui.types";
+import type { ButtonVariant } from "@/types/ui/ui.types";
 import { chainLogger } from "@/utils/logger";
 
 const SUPPORTED_CHAINS = getThirdWebChains();

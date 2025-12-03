@@ -2,17 +2,14 @@
 
 import { memo, useCallback, useMemo } from "react";
 
-import { useChartHover } from "../../../hooks/useChartHover";
 import { formatCurrency } from "../../../lib/formatters";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS } from "../chartConstants";
+import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import type { DailyYieldOverridePoint } from "../types";
-import {
-  CHART_LABELS,
-  ENABLE_TEST_AUTO_HOVER,
-  getChartInteractionProps,
-} from "../utils";
+import { CHART_LABELS, getChartInteractionProps } from "../utils";
 import { ChartGrid } from "./ChartGrid";
+import { ChartReferenceLine } from "./ChartReferenceLine";
 import { buildLinePath } from "./pathBuilders";
 
 interface DailyYieldChartProps {
@@ -138,7 +135,7 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
     );
 
     // Daily yield hover with protocol breakdown
-    const yieldHover = useChartHover(data, {
+    const yieldHover = useStandardChartHover(data, {
       chartType: "daily-yield",
       chartWidth: width,
       chartHeight: height,
@@ -146,22 +143,13 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
       minValue,
       maxValue,
       getYValue: point => point.total_yield_usd,
-      buildHoverData: (point, x, y) => ({
-        chartType: "daily-yield" as const,
-        x,
-        y,
-        date: new Date(point.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
+      buildChartSpecificData: point => ({
         totalYield: point.total_yield_usd,
         cumulativeYield: point.cumulative_yield_usd ?? 0,
         isPositive: point.total_yield_usd >= 0,
         protocolCount: point.protocol_count ?? 0,
         protocols: point.protocols ?? [],
       }),
-      testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
     });
 
     return (
@@ -213,16 +201,7 @@ export const DailyYieldChart = memo<DailyYieldChartProps>(
           </defs>
 
           {/* Zero baseline */}
-          <line
-            x1={padding}
-            y1={zeroY}
-            x2={width - padding}
-            y2={zeroY}
-            stroke="#6b7280"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.5"
-          />
+          <ChartReferenceLine y={zeroY} x1={padding} x2={width - padding} />
 
           {/* Positive area (green gradient) */}
           {positiveAreaPath && (

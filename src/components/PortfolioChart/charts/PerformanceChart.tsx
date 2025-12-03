@@ -2,7 +2,6 @@
 
 import { memo, useMemo } from "react";
 
-import { useChartHover } from "../../../hooks/useChartHover";
 import {
   formatAxisLabel,
   generateSVGPath,
@@ -10,10 +9,10 @@ import {
 } from "../../../lib/chartUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS } from "../chartConstants";
+import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import type { PortfolioStackedDataPoint } from "../types";
 import {
   CHART_LABELS,
-  ENABLE_TEST_AUTO_HOVER,
   getChartInteractionProps,
   getStackedTotalValue,
 } from "../utils";
@@ -77,7 +76,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
     }, [data, width, height, padding]);
 
     // Performance chart hover
-    const performanceHover = useChartHover(data, {
+    const performanceHover = useStandardChartHover(data, {
       chartType: "performance",
       chartWidth: width,
       chartHeight: height,
@@ -85,21 +84,12 @@ export const PerformanceChart = memo<PerformanceChartProps>(
       minValue,
       maxValue,
       getYValue: point => getStackedTotalValue(point),
-      buildHoverData: (point, x, y) => ({
-        chartType: "performance" as const,
-        x,
-        y,
-        date: new Date(point.date).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-        }),
+      buildChartSpecificData: point => ({
         value: getStackedTotalValue(point),
         benchmark: point.benchmark || 0,
         defiValue: point.defiValue,
         walletValue: point.walletValue,
       }),
-      testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
     });
 
     return (

@@ -4,8 +4,7 @@ import { motion } from "framer-motion";
 import { ReactNode } from "react";
 
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
-
-import { BaseComponentProps } from "../../types/ui.types";
+import { BaseComponentProps } from "@/types/ui/ui.types";
 
 type AriaLive = "off" | "polite" | "assertive";
 

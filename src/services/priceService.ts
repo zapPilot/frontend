@@ -8,8 +8,8 @@
  * @module services/priceService
  */
 
-import { createIntentServiceError } from "../lib/base-error";
 import { createServiceCaller } from "../lib/createServiceCaller";
+import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeSymbol, normalizeSymbols } from "../lib/stringUtils";
 

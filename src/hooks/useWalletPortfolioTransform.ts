@@ -5,9 +5,9 @@ import { useMemo } from "react";
 import type { ApiCategoryKey } from "@/constants/portfolio";
 import { transformToPieChartData } from "@/lib/chartUtils";
 import { getLeverageMetrics, type LeverageMetrics } from "@/lib/leverageUtils";
+import type { PieChartData, PortfolioMetrics } from "@/types/domain/portfolio";
 
 import type { LandingPageResponse } from "../services/analyticsService";
-import type { PieChartData, PortfolioMetrics } from "../types/portfolio";
 import {
   type CategorySummary,
   createCategoriesFromApiData,

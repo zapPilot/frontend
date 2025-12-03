@@ -5,18 +5,15 @@ import { memo } from "react";
 
 import { useDropdown } from "@/hooks/useDropdown";
 
-import { CategoryShift, ProcessedAssetCategory } from "../../types";
+import { CategoryWithRebalance } from "../../types";
 import { CategoryAllocationSummary } from "./CategoryAllocationSummary";
 import { CategoryProtocolList } from "./CategoryProtocolList";
 import { CategoryRowHeader } from "./CategoryRowHeader";
 
-interface AssetCategoryRowProps {
-  category: ProcessedAssetCategory;
+interface AssetCategoryRowProps extends CategoryWithRebalance {
   isExcluded: boolean;
   onToggleCategoryExclusion: (categoryId: string) => void;
   isRebalanceEnabled?: boolean;
-  rebalanceShift?: CategoryShift;
-  rebalanceTarget?: ProcessedAssetCategory;
   allocation?: number | undefined;
   onAllocationChange?: ((value: number) => void) | undefined;
 }

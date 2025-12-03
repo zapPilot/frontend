@@ -1,6 +1,6 @@
 // src/components/PortfolioAllocation/types.ts
 
-import { SwapToken } from "../../types/swap";
+import { SwapToken } from "@/types/ui/swap";
 
 export interface Protocol {
   id: string;
@@ -109,6 +109,13 @@ export interface PortfolioSwapAction {
   includedCategories: ProcessedAssetCategory[];
   swapSettings: SwapSettings;
   rebalanceData?: RebalanceData;
+}
+
+// Shared interface for components that display category with rebalance data
+export interface CategoryWithRebalance {
+  category: ProcessedAssetCategory;
+  rebalanceShift?: CategoryShift;
+  rebalanceTarget?: ProcessedAssetCategory;
 }
 
 export interface PortfolioAllocationContainerProps {

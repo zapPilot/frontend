@@ -79,6 +79,33 @@ The project uses Husky and lint-staged to run quality checks before commits:
 
 These hooks run automatically when you commit. If they fail, fix the issues before committing.
 
+### Handling Code Duplication Failures
+
+If your commit is blocked by code duplication:
+
+1. **Review the JSCPD report**: The pre-commit output shows which files have duplicated code
+2. **Check the HTML report**: Open `.jscpd/html/index.html` for detailed visualization
+3. **Refactor duplications**:
+   - Extract common logic into shared utilities (`src/lib/`)
+   - Create reusable components (`src/components/shared/`)
+   - Use custom hooks for shared logic (`src/hooks/`)
+4. **Threshold**: Maximum allowed duplication is 2.5%
+
+Example refactoring:
+
+```typescript
+// Before: Duplicated code
+function validateEmailA(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+function validateEmailB(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// After: Shared utility
+import { validateEmail } from "@/lib/validation";
+```
+
 ## Coding Standards
 
 ### File Structure
@@ -217,6 +244,7 @@ npm run test:coverage
    npm run format
    npm run lint
    npm run type-check
+   npm run dup:check
    npm test
    ```
 

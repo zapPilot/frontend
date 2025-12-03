@@ -6,10 +6,10 @@
 import {
   AssetCategory,
   Protocol,
-} from "../components/PortfolioAllocation/types";
-import { ASSET_CATEGORIES } from "../constants/portfolio";
-import { PoolDetail } from "../services/analyticsService";
-import { categorizePool } from "../utils/portfolio.utils";
+} from "../../components/PortfolioAllocation/types";
+import { ASSET_CATEGORIES } from "../../constants/portfolio";
+import { PoolDetail } from "../../services/analyticsService";
+import { categorizePool } from "../../utils/portfolio.utils";
 
 /**
  * Actual API Strategy Response from /api/v1/strategies

@@ -7,6 +7,7 @@ import { MetricsSkeleton } from "@/components/ui/LoadingSystem";
 
 import { useRiskSummary } from "../../hooks/useRiskSummary";
 import { getAnalyticsMetrics } from "../../lib/portfolio-analytics";
+import { PageSectionHeader } from "../shared/PageSectionHeader";
 import { KeyMetricsGrid } from "./components";
 
 interface AnalyticsDashboardProps {
@@ -29,14 +30,12 @@ const AnalyticsDashboardComponent = ({ userId }: AnalyticsDashboardProps) => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center"
       >
-        <h2 className="text-2xl font-bold gradient-text mb-2">
-          Portfolio Analytics
-        </h2>
-        <p className="text-gray-400">
-          Advanced metrics and performance insights
-        </p>
+        <PageSectionHeader
+          title="Portfolio Analytics"
+          subtitle="Advanced metrics and performance insights"
+          level="h2"
+        />
       </motion.div>
       {/* Key Metrics Grid - Now with real risk data */}
       {isLoading && <MetricsSkeleton className="py-8" />}

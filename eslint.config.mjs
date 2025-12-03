@@ -21,6 +21,8 @@ const eslintConfig = [
   {
     ignores: [
       ".jscpd/**/*",
+      "jscpd-report/**/*",
+      "**/*.md",
       ".next/**/*",
       "coverage/**/*",
       "out/**/*",

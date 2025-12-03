@@ -19,10 +19,14 @@ import { prepareTransaction } from "thirdweb";
 import { useSendAndConfirmCalls } from "thirdweb/react";
 
 import {
+  type BaseModalProps,
+  type ZapExecutionResult,
+} from "@/types/ui/modal.types";
+
+import {
   getChainBlockExplorer,
   getChainById,
   isChainSupported,
-  SUPPORTED_CHAINS,
   toThirdWebChain,
 } from "../../config/chains";
 import { Z_INDEX } from "../../constants/design-system";
@@ -31,11 +35,8 @@ import {
   type UnifiedZapStreamTransaction,
   useUnifiedZapStream,
 } from "../../hooks/useUnifiedZapStream";
+import { createUnsupportedChainMessage } from "../../lib/chain-utils";
 import { formatAddress, formatCurrency } from "../../lib/formatters";
-import {
-  type BaseModalProps,
-  type ZapExecutionResult,
-} from "../../types/modal.types";
 import THIRDWEB_CLIENT from "../../utils/thirdweb";
 
 interface ZapExecutionProgressProps
@@ -275,11 +276,7 @@ const ZapExecutionProgressComponent = ({
       if (resolvedChainId === undefined) {
         const fallbackChainId =
           typeof eventChainId === "number" ? eventChainId : chainId;
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
-
-        const message = `Chain ${fallbackChainId} is not supported. Supported chains: ${supportedChainNames}`;
+        const message = createUnsupportedChainMessage(fallbackChainId);
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;
@@ -288,11 +285,7 @@ const ZapExecutionProgressComponent = ({
       const baseChain = getChainById(resolvedChainId);
 
       if (!baseChain) {
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
-
-        const message = `Chain ${resolvedChainId} is not supported. Supported chains: ${supportedChainNames}`;
+        const message = createUnsupportedChainMessage(resolvedChainId);
         setTransactionStatus("error");
         showToast({ type: "error", title: "Unsupported chain", message });
         return;

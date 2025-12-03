@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 
 import { CommunityStats, PodcastSection, SocialLinks } from "./MoreTab/index";
+import { PageSectionHeader } from "./shared/PageSectionHeader";
 
 export function CommunityTab() {
   return (
@@ -11,14 +12,12 @@ export function CommunityTab() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center"
       >
-        <h1 className="text-3xl font-bold gradient-text mb-2">
-          Zap Pilot Community
-        </h1>
-        <p className="text-gray-400">
-          Connect with fellow DeFi enthusiasts and stay updated
-        </p>
+        <PageSectionHeader
+          title="Zap Pilot Community"
+          subtitle="Connect with fellow DeFi enthusiasts and stay updated"
+          level="h1"
+        />
       </motion.div>
 
       {/* Community Stats */}

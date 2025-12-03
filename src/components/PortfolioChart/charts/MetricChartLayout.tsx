@@ -2,7 +2,7 @@
 
 import type { ReactNode, SVGProps } from "react";
 
-import type { ChartHoverState } from "@/types/chartHover";
+import type { ChartHoverState } from "@/types/ui/chartHover";
 
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { ChartHelpModal } from "../components";

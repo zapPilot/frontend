@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { useOperationStateHandlers } from "@/hooks/useOperationState";
 import { useToast } from "@/hooks/useToast";
 import { handleWalletError } from "@/lib/walletUtils";
 
@@ -36,6 +37,11 @@ export const useEmailSubscription = ({
       error: null,
     });
 
+  // Operation state handlers
+  const { setLoading, setSuccess, setError } = useOperationStateHandlers(
+    setSubscriptionOperation
+  );
+
   // Initialize subscription email from UserContext to avoid duplicate API calls
   useEffect(() => {
     if (!isOpen) return;
@@ -52,29 +58,23 @@ export const useEmailSubscription = ({
   // Handle email subscription
   const handleSubscribe = useCallback(async () => {
     if (!realUserId) {
-      setSubscriptionOperation({
-        isLoading: false,
-        error: "User not authenticated",
-      });
+      setError("User not authenticated");
       return;
     }
 
     // Validate email
     const validation = validateEmail(email);
     if (!validation.isValid) {
-      setSubscriptionOperation({
-        isLoading: false,
-        error: validation.error || "Invalid email address",
-      });
+      setError(validation.error || "Invalid email address");
       return;
     }
 
-    setSubscriptionOperation({ isLoading: true, error: null });
+    setLoading();
 
     try {
       await updateUserEmailSubscription(realUserId, email);
 
-      setSubscriptionOperation({ isLoading: false, error: null });
+      setSuccess();
       setSubscribedEmail(email);
       setIsEditingSubscription(false);
 
@@ -88,27 +88,32 @@ export const useEmailSubscription = ({
       });
     } catch (error) {
       const errorMessage = handleWalletError(error);
-      setSubscriptionOperation({ isLoading: false, error: errorMessage });
+      setError(errorMessage);
     }
-  }, [realUserId, email, onEmailSubscribed, showToast]);
+  }, [
+    realUserId,
+    email,
+    onEmailSubscribed,
+    showToast,
+    setLoading,
+    setSuccess,
+    setError,
+  ]);
 
   // Unsubscribe (clear email)
   const handleUnsubscribe = useCallback(async () => {
     if (!realUserId) {
-      setSubscriptionOperation({
-        isLoading: false,
-        error: "User not authenticated",
-      });
+      setError("User not authenticated");
       return;
     }
 
-    setSubscriptionOperation({ isLoading: true, error: null });
+    setLoading();
 
     try {
       // Use dedicated endpoint to remove email
       await unsubscribeUserEmail(realUserId);
 
-      setSubscriptionOperation({ isLoading: false, error: null });
+      setSuccess();
       setSubscribedEmail(null);
       setEmail("");
       setIsEditingSubscription(false);
@@ -120,9 +125,9 @@ export const useEmailSubscription = ({
       });
     } catch (error) {
       const errorMessage = handleWalletError(error);
-      setSubscriptionOperation({ isLoading: false, error: errorMessage });
+      setError(errorMessage);
     }
-  }, [realUserId, showToast]);
+  }, [realUserId, showToast, setLoading, setSuccess, setError]);
 
   // Start editing subscription
   const startEditingSubscription = useCallback(() => {

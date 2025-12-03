@@ -25,6 +25,7 @@ import {
   SharpeChart,
   VolatilityChart,
 } from "./charts";
+import { StatisticCard } from "./components/StatisticCard";
 import { useChartData } from "./hooks";
 import { PortfolioChartSkeleton } from "./PortfolioChartSkeleton";
 import type { PortfolioChartProps } from "./types";
@@ -302,52 +303,29 @@ const PortfolioChartComponent = ({
           {selectedChart === "drawdown" &&
             chartData.drawdownRecoveryData.length > 0 && (
               <>
-                <BaseCard
-                  variant="glass"
-                  padding="sm"
-                  borderRadius="md"
-                  className="border-white/10"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Max Drawdown
-                  </div>
-                  <div className="mt-2 text-xl font-bold text-red-400">
-                    {formatPercentage(
-                      chartData.drawdownRecoverySummary.maxDrawdown,
-                      true,
-                      1
-                    )}
-                  </div>
-                </BaseCard>
-                <BaseCard
-                  variant="glass"
-                  padding="sm"
-                  borderRadius="md"
-                  className="border-white/10"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Recoveries
-                  </div>
-                  <div className="mt-2 text-xl font-bold text-gray-200">
-                    {chartData.drawdownRecoverySummary.totalRecoveries}
-                  </div>
-                </BaseCard>
-                <BaseCard
-                  variant="glass"
-                  padding="sm"
-                  borderRadius="md"
-                  className="border-white/10"
-                >
-                  <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Avg Recovery
-                  </div>
-                  <div className="mt-2 text-xl font-bold text-gray-300">
-                    {chartData.drawdownRecoverySummary.averageRecoveryDays !=
+                <StatisticCard
+                  label="Max Drawdown"
+                  value={formatPercentage(
+                    chartData.drawdownRecoverySummary.maxDrawdown,
+                    true,
+                    1
+                  )}
+                  valueClassName="text-red-400"
+                />
+                <StatisticCard
+                  label="Recoveries"
+                  value={chartData.drawdownRecoverySummary.totalRecoveries}
+                />
+                <StatisticCard
+                  label="Avg Recovery"
+                  value={
+                    chartData.drawdownRecoverySummary.averageRecoveryDays !=
                     null
                       ? `${chartData.drawdownRecoverySummary.averageRecoveryDays} days`
-                      : "—"}
-                  </div>
-                </BaseCard>
+                      : "—"
+                  }
+                  valueClassName="text-gray-300"
+                />
                 <BaseCard
                   variant="glass"
                   padding="sm"

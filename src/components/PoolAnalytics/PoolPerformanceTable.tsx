@@ -16,7 +16,7 @@ import { createContextLogger } from "../../utils/logger";
 import { categorizePool } from "../../utils/portfolio.utils";
 import { ProtocolImage } from "../shared/ProtocolImage";
 import { TokenImage } from "../shared/TokenImage";
-import { BaseCard } from "../ui";
+import { AssetBadge, BaseCard } from "../ui";
 import { Skeleton } from "../ui/LoadingSystem";
 
 // Create logger for pool analytics debugging
@@ -242,12 +242,7 @@ const CARD_SECTIONS: {
     render: ({ pool }) => (
       <div className="flex flex-wrap gap-1">
         {pool.pool_symbols.slice(0, 2).map((symbol: string) => (
-          <span
-            key={symbol}
-            className="px-1.5 py-0.5 bg-gray-700/50 text-gray-300 text-xs rounded"
-          >
-            {symbol.toUpperCase()}
-          </span>
+          <AssetBadge key={symbol} symbol={symbol} />
         ))}
         {pool.pool_symbols.length > 2 && (
           <span className="text-gray-400 text-xs">

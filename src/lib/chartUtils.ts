@@ -1,9 +1,10 @@
+import { PieChartData, PortfolioDataPoint } from "@/types/domain/portfolio";
+
 import {
   API_CATEGORY_KEY_MAP,
   type ApiCategoryKey,
   ASSET_CATEGORIES,
 } from "../constants/portfolio";
-import { PieChartData, PortfolioDataPoint } from "../types/portfolio";
 import { formatLargeNumber, formatPercentage } from "./formatters";
 
 /**

@@ -7,7 +7,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { GRADIENTS } from "@/constants/design-system";
 import { formatCurrency, formatTokenAmount } from "@/lib/formatters";
 import { clamp } from "@/lib/mathUtils";
-import type { SwapToken } from "@/types/swap";
+import type { SwapToken } from "@/types/ui/swap";
 
 import type { OperationMode } from "../../../types";
 import { formatCryptoAmount, parseInputValue } from "./utils";
@@ -117,37 +117,32 @@ export const AmountInput = memo<AmountInputProps>(
       [onAmountChange, minAmount, maxAmount]
     );
 
+    const updateAmount = useCallback(
+      (rawValue: number) => {
+        const constrained = clamp(rawValue, minAmount, maxAmount);
+        const formatted = formatCryptoAmount(constrained);
+        setInputValue(formatted);
+        onAmountChange(formatted);
+        return constrained;
+      },
+      [minAmount, maxAmount, onAmountChange]
+    );
+
     // Handle blur - cleanup partial inputs
     const handleBlur = useCallback(() => {
-      const numValue = parseInputValue(inputValue);
-      const constrained = clamp(numValue, minAmount, maxAmount);
-      const formatted = formatCryptoAmount(constrained);
+      updateAmount(parseInputValue(inputValue));
+    }, [inputValue, updateAmount]);
 
-      setInputValue(formatted);
-      onAmountChange(formatted);
-    }, [inputValue, minAmount, maxAmount, onAmountChange]);
-
-    // Increment handler
+    // Increment / decrement handlers
     const handleIncrement = useCallback(() => {
       const current = parseInputValue(inputValue);
-      const incremented = current + step;
-      const constrained = clamp(incremented, minAmount, maxAmount);
-      const formatted = formatCryptoAmount(constrained);
+      updateAmount(current + step);
+    }, [inputValue, step, updateAmount]);
 
-      setInputValue(formatted);
-      onAmountChange(formatted);
-    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
-
-    // Decrement handler
     const handleDecrement = useCallback(() => {
       const current = parseInputValue(inputValue);
-      const decremented = current - step;
-      const constrained = clamp(decremented, minAmount, maxAmount);
-      const formatted = formatCryptoAmount(constrained);
-
-      setInputValue(formatted);
-      onAmountChange(formatted);
-    }, [inputValue, step, minAmount, maxAmount, onAmountChange]);
+      updateAmount(current - step);
+    }, [inputValue, step, updateAmount]);
 
     // Max button handler - use exact amount to avoid precision loss
     const handleMax = useCallback(() => {

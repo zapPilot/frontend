@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { invalidateAndRefetch } from "@/hooks/useQueryInvalidation";
 import { useToast } from "@/hooks/useToast";
 import { useWallet } from "@/hooks/useWallet";
 import { formatAddress } from "@/lib/formatters";
@@ -67,6 +68,23 @@ export const useWalletOperations = ({
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
+  const setWalletOperationState = useCallback(
+    (
+      key: "removing" | "editing",
+      walletId: string,
+      state: { isLoading: boolean; error: string | null }
+    ) => {
+      setOperations(prev => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [walletId]: state,
+        },
+      }));
+    },
+    []
+  );
+
   // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
@@ -114,13 +132,10 @@ export const useWalletOperations = ({
       if (!realUserId) return;
 
       // Set loading state for this specific wallet
-      setOperations(prev => ({
-        ...prev,
-        removing: {
-          ...prev.removing,
-          [walletId]: { isLoading: true, error: null },
-        },
-      }));
+      setWalletOperationState("removing", walletId, {
+        isLoading: true,
+        error: null,
+      });
 
       try {
         const response = await removeWalletFromBundle(realUserId, walletId);
@@ -129,56 +144,32 @@ export const useWalletOperations = ({
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
           // Invalidate and refetch user data
-          try {
-            await queryClient.invalidateQueries({
-              queryKey: queryKeys.user.wallets(realUserId),
-            });
-          } catch (invalidateError) {
-            walletLogger.error(
-              "Failed to invalidate wallet queries after removal",
-              invalidateError
-            );
-          }
-          try {
-            await refetch();
-          } catch (refetchError) {
-            walletLogger.error(
-              "Failed to refetch user data after wallet removal",
-              refetchError
-            );
-          }
+          await invalidateAndRefetch({
+            queryClient,
+            queryKey: queryKeys.user.wallets(realUserId),
+            refetch,
+            operationName: "wallet removal",
+          });
 
-          setOperations(prev => ({
-            ...prev,
-            removing: {
-              ...prev.removing,
-              [walletId]: { isLoading: false, error: null },
-            },
-          }));
+          setWalletOperationState("removing", walletId, {
+            isLoading: false,
+            error: null,
+          });
         } else {
-          setOperations(prev => ({
-            ...prev,
-            removing: {
-              ...prev.removing,
-              [walletId]: {
-                isLoading: false,
-                error: response.error ?? "Failed to remove wallet",
-              },
-            },
-          }));
+          setWalletOperationState("removing", walletId, {
+            isLoading: false,
+            error: response.error ?? "Failed to remove wallet",
+          });
         }
       } catch (error) {
         const errorMessage = handleWalletError(error);
-        setOperations(prev => ({
-          ...prev,
-          removing: {
-            ...prev.removing,
-            [walletId]: { isLoading: false, error: errorMessage },
-          },
-        }));
+        setWalletOperationState("removing", walletId, {
+          isLoading: false,
+          error: errorMessage,
+        });
       }
     },
-    [realUserId, queryClient, refetch]
+    [realUserId, queryClient, refetch, setWalletOperationState]
   );
 
   // Handle editing label
@@ -197,13 +188,10 @@ export const useWalletOperations = ({
       }
 
       // Set loading state for this specific wallet edit
-      setOperations(prev => ({
-        ...prev,
-        editing: {
-          ...prev.editing,
-          [walletId]: { isLoading: true, error: null },
-        },
-      }));
+      setWalletOperationState("editing", walletId, {
+        isLoading: true,
+        error: null,
+      });
 
       try {
         // Update local state immediately (optimistic update)
@@ -228,26 +216,17 @@ export const useWalletOperations = ({
             )
           );
 
-          setOperations(prev => ({
-            ...prev,
-            editing: {
-              ...prev.editing,
-              [walletId]: {
-                isLoading: false,
-                error: response.error ?? "Failed to update wallet label",
-              },
-            },
-          }));
+          setWalletOperationState("editing", walletId, {
+            isLoading: false,
+            error: response.error ?? "Failed to update wallet label",
+          });
           return;
         }
 
-        setOperations(prev => ({
-          ...prev,
-          editing: {
-            ...prev.editing,
-            [walletId]: { isLoading: false, error: null },
-          },
-        }));
+        setWalletOperationState("editing", walletId, {
+          isLoading: false,
+          error: null,
+        });
       } catch (error) {
         // Revert optimistic update on error
         setWallets(prev =>
@@ -255,16 +234,13 @@ export const useWalletOperations = ({
         );
 
         const errorMessage = handleWalletError(error);
-        setOperations(prev => ({
-          ...prev,
-          editing: {
-            ...prev.editing,
-            [walletId]: { isLoading: false, error: errorMessage },
-          },
-        }));
+        setWalletOperationState("editing", walletId, {
+          isLoading: false,
+          error: errorMessage,
+        });
       }
     },
-    [realUserId, wallets]
+    [realUserId, wallets, setWalletOperationState]
   );
 
   // Handle adding new wallet
@@ -300,24 +276,12 @@ export const useWalletOperations = ({
         await loadWallets();
 
         // Invalidate and refetch user data
-        try {
-          await queryClient.invalidateQueries({
-            queryKey: queryKeys.user.wallets(realUserId),
-          });
-        } catch (invalidateError) {
-          walletLogger.error(
-            "Failed to invalidate wallet queries after adding a wallet",
-            invalidateError
-          );
-        }
-        try {
-          await refetch();
-        } catch (refetchError) {
-          walletLogger.error(
-            "Failed to refetch user data after adding a wallet",
-            refetchError
-          );
-        }
+        await invalidateAndRefetch({
+          queryClient,
+          queryKey: queryKeys.user.wallets(realUserId),
+          refetch,
+          operationName: "adding wallet",
+        });
 
         setOperations(prev => ({
           ...prev,

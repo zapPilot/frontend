@@ -5,15 +5,15 @@
  */
 
 import { httpUtils } from "@/lib/http-utils";
-
-import { createServiceCaller } from "../lib/createServiceCaller";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
   UpdateEmailResponse,
   UserCryptoWallet,
   UserProfileResponse,
-} from "../types/user.types";
+} from "@/types/domain/user.types";
+
+import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Account Service Error Details

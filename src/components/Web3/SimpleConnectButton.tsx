@@ -7,7 +7,7 @@ import { createWallet, Wallet } from "thirdweb/wallets";
 // Import from unified chain configuration
 import { getThirdWebChains } from "@/config/chains";
 import { formatAddress } from "@/lib/formatters";
-import type { StandardSize } from "@/types/ui.types";
+import type { StandardSize } from "@/types/ui/ui.types";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 const WALLETS = [

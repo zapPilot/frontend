@@ -12,11 +12,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import type { PortfolioState } from "@/types/ui/portfolioState";
+
 import type {
   LandingPageResponse,
   ProtocolYieldBreakdown,
 } from "../../../services/analyticsService";
-import type { PortfolioState } from "../../../types/portfolioState";
 import { WalletMetrics } from "../WalletMetrics";
 
 // ==================== MOCK DATA FACTORIES ====================

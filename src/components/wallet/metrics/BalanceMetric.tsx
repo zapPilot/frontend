@@ -3,7 +3,7 @@ import { AlertCircle, Info, Wallet } from "lucide-react";
 import { BalanceSkeleton } from "@/components/ui/LoadingSystem";
 import { useMetricState } from "@/hooks/useMetricState";
 import { formatCurrency } from "@/lib/formatters";
-import type { PoolDetail } from "@/types/pool";
+import type { PoolDetail } from "@/types/domain/pool";
 
 import { PoolDetailsTooltip, useMetricsTooltip } from "../tooltips";
 import { NoDataMetricCard } from "./common/NoDataMetricCard";

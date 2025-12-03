@@ -6,7 +6,7 @@ import type {
   LoadingVariant,
   SkeletonVariant,
   SpinnerVariant,
-} from "@/types/ui.types";
+} from "@/types/ui/ui.types";
 
 // =============================================================================
 // TYPES & INTERFACES

@@ -15,6 +15,19 @@ interface NavigationProps {
 }
 
 const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
+  const LogoWordmark = () => (
+    <div className="flex items-center space-x-3">
+      <Image
+        src="/logo.svg"
+        alt="Logo"
+        width={32}
+        height={32}
+        className="w-6 h-6"
+      />
+      <span className="text-xl font-bold gradient-text">Zap Pilot</span>
+    </div>
+  );
+
   const handleTabChange = useCallback(
     (tab: string) => {
       onTabChange(tab);
@@ -30,18 +43,8 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
       >
         <div className="flex grow flex-col gap-y-5 overflow-y-auto glass-morphism border-r border-gray-800 px-6 pb-4">
           <div className="flex h-16 shrink-0 items-center">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="flex items-center space-x-3"
-            >
-              <Image
-                src="/logo.svg"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="w-6 h-6"
-              />
-              <span className="text-xl font-bold gradient-text">Zap Pilot</span>
+            <motion.div whileHover={{ scale: 1.05 }}>
+              <LogoWordmark />
             </motion.div>
           </div>
 
@@ -114,16 +117,7 @@ const NavigationComponent = ({ activeTab, onTabChange }: NavigationProps) => {
           className={`fixed top-0 left-0 right-0 ${Z_INDEX.HEADER_MOBILE} glass-morphism border-b border-gray-800`}
         >
           <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center space-x-3">
-              <Image
-                src="/logo.svg"
-                alt="Logo"
-                width={32}
-                height={32}
-                className="w-6 h-6"
-              />
-              <span className="text-xl font-bold gradient-text">Zap Pilot</span>
-            </div>
+            <LogoWordmark />
 
             <div className="flex items-center space-x-2">
               {/* Mobile Wallet Indicator - Visible on XS screens */}

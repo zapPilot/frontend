@@ -3,9 +3,10 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
+import type { PoolDetail } from "@/types/domain/pool";
+import { ActualRiskSummaryResponse } from "@/types/domain/risk";
+
 import { httpUtils } from "../lib/http-utils";
-import type { PoolDetail } from "../types/pool";
-import { ActualRiskSummaryResponse } from "../types/risk";
 
 /**
  * Yield returns summary with IQR outlier detection
@@ -75,7 +76,7 @@ export interface YieldReturnsSummaryResponse {
 }
 
 // Re-export PoolDetail for components that import from this service
-export type { PoolDetail } from "../types/pool";
+export type { PoolDetail } from "@/types/domain/pool";
 
 // Unified Landing Page Response Type
 export interface LandingPageResponse {
@@ -277,6 +278,12 @@ interface AnalyticsEducationalLink {
   url: string;
 }
 
+interface PeriodWindow {
+  start_date: string;
+  end_date: string;
+  days: number;
+}
+
 interface AnalyticsEducationalContext {
   title?: string;
   summary?: string;
@@ -300,16 +307,8 @@ export interface UnifiedDashboardResponse {
     user_id?: string;
     period_days: number;
     data_points: number;
-    period: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
-    period_info?: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
+    period: PeriodWindow;
+    period_info?: PeriodWindow;
     daily_values: {
       date: string;
       total_value_usd: number;
@@ -449,16 +448,8 @@ export interface UnifiedDashboardResponse {
     user_id?: string;
     period_days: number;
     data_points: number;
-    period: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
-    period_info?: {
-      start_date: string;
-      end_date: string;
-      days: number;
-    };
+    period: PeriodWindow;
+    period_info?: PeriodWindow;
     allocations: {
       date: string;
       category: string;

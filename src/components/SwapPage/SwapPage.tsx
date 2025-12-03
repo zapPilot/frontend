@@ -4,18 +4,23 @@ import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 
+import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
 import { useChain } from "@/hooks/useChain";
 import { useToast } from "@/hooks/useToast";
+import { InvestmentOpportunity } from "@/types/domain/investment";
 
-import { isChainSupported, SUPPORTED_CHAINS } from "../../config/chains";
+import { isChainSupported } from "../../config/chains";
 import { useUser } from "../../contexts/UserContext";
 import { useStrategiesWithPortfolioData } from "../../hooks/queries/useStrategiesQuery";
+import {
+  createUnsupportedChainMessage,
+  formatSupportedChainsList,
+} from "../../lib/chain-utils";
 import { formatCurrency } from "../../lib/formatters";
 import {
   executeUnifiedZap,
   type UnifiedZapRequest,
 } from "../../services/intentService";
-import { InvestmentOpportunity } from "../../types/investment";
 import { swapLogger } from "../../utils/logger";
 import { PortfolioAllocationContainer } from "../PortfolioAllocation";
 import type {
@@ -42,6 +47,28 @@ const ZapExecutionProgress = dynamic(
   }
 );
 
+/**
+ * Reusable state renderer for loading, error, and empty states
+ * Provides consistent centered layout with optional action button
+ */
+interface StateRendererProps {
+  minHeight?: string;
+  children: React.ReactNode;
+}
+
+function StateRenderer({
+  minHeight = "min-h-[400px]",
+  children,
+}: StateRendererProps) {
+  return (
+    <div className="space-y-6">
+      <div className={`flex items-center justify-center ${minHeight}`}>
+        <div className="text-center">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export interface SwapPageProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
@@ -60,6 +87,15 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
   // Fetch strategies data with real portfolio data from API
   const { strategies, isError, error, isInitialLoading, refetch } =
     useStrategiesWithPortfolioData(userInfo?.userId);
+
+  // Async retry button for error state
+  const { handleRetry, isRetrying } = useAsyncRetryButton({
+    onRetry: async () => {
+      await refetch();
+    },
+    errorContext: "refetch strategies after load failure",
+    logger: swapLogger,
+  });
 
   // Initialize operation mode based on navigation context
   const getInitialOperationMode = (): OperationMode => {
@@ -164,9 +200,8 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
       // Validate chain is supported before proceeding
       if (!isChainSupported(chain.id)) {
-        const supportedChainNames = SUPPORTED_CHAINS.map(
-          c => `${c.name} (${c.id})`
-        ).join(", ");
+        const errorMessage = createUnsupportedChainMessage(chain.id);
+        const supportedChainNames = formatSupportedChainsList();
 
         swapLogger.error(
           `Unsupported chain ${chain.id}. Supported: ${supportedChainNames}`
@@ -179,7 +214,7 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
           totalValue,
           strategyCount,
           chainId: chain.id,
-          error: `Chain ${chain.id} is not supported. Please switch to: ${supportedChainNames}`,
+          error: errorMessage,
         });
         return; // Fail fast - don't call API
       }
@@ -302,50 +337,32 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
     // Show loading state
     if (isInitialLoading) {
       return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading strategies...</p>
-            </div>
-          </div>
-        </div>
+        <StateRenderer>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading strategies...</p>
+        </StateRenderer>
       );
     }
 
     // Show error state
     if (isError) {
       return (
-        <div className="space-y-6">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Failed to Load Strategies
-              </h3>
-              <p className="text-gray-600 mb-4">
-                {error?.message || "Unable to fetch portfolio strategies"}
-              </p>
-              <button
-                onClick={() => {
-                  void (async () => {
-                    try {
-                      await refetch();
-                    } catch (refetchError) {
-                      swapLogger.error(
-                        "Failed to refetch strategies after load failure",
-                        refetchError
-                      );
-                    }
-                  })();
-                }}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        </div>
+        <StateRenderer>
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            Failed to Load Strategies
+          </h3>
+          <p className="text-gray-600 mb-4">
+            {error?.message || "Unable to fetch portfolio strategies"}
+          </p>
+          <button
+            onClick={handleRetry}
+            disabled={isRetrying}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isRetrying ? "Retrying..." : "Try Again"}
+          </button>
+        </StateRenderer>
       );
     }
 
@@ -418,18 +435,14 @@ export function SwapPage({ strategy, onBack }: SwapPageProps) {
 
         {/* Execution Loading State */}
         {zapExecution?.isExecuting && !zapExecution.intentId && (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">
-                Initiating UnifiedZap execution...
-              </p>
-              <p className="text-sm text-gray-500 mt-2">
-                {formatCurrency(zapExecution.totalValue)} •{" "}
-                {zapExecution.strategyCount} strategies
-              </p>
-            </div>
-          </div>
+          <StateRenderer minHeight="min-h-[200px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Initiating UnifiedZap execution...</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {formatCurrency(zapExecution.totalValue)} •{" "}
+              {zapExecution.strategyCount} strategies
+            </p>
+          </StateRenderer>
         )}
       </div>
     );

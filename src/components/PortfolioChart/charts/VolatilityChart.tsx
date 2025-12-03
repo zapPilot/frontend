@@ -2,10 +2,10 @@
 
 import { memo, useMemo } from "react";
 
-import { useChartHover } from "../../../hooks/useChartHover";
 import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
 import { CHART_DIMENSIONS, VOLATILITY_CONSTANTS } from "../chartConstants";
-import { ENABLE_TEST_AUTO_HOVER, getChartInteractionProps } from "../utils";
+import { useStandardChartHover } from "../hooks/useStandardChartHover";
+import { getChartInteractionProps } from "../utils";
 import { MetricChartLayout } from "./MetricChartLayout";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
@@ -36,7 +36,7 @@ export const VolatilityChart = memo<VolatilityChartProps>(
     padding = CHART_DIMENSIONS.PADDING,
   }) => {
     // Volatility chart hover with risk levels
-    const volatilityHover = useChartHover(data, {
+    const volatilityHover = useStandardChartHover(data, {
       chartType: "volatility",
       chartWidth: width,
       chartHeight: height,
@@ -44,23 +44,10 @@ export const VolatilityChart = memo<VolatilityChartProps>(
       minValue: VOLATILITY_CONSTANTS.MIN_VALUE,
       maxValue: VOLATILITY_CONSTANTS.MAX_VALUE,
       getYValue: point => point.volatility,
-      buildHoverData: (point, x, y) => {
-        const vol = point.volatility ?? 0;
-
-        return {
-          chartType: "volatility" as const,
-          x,
-          y,
-          date: new Date(point.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          volatility: vol,
-          riskLevel: getVolatilityRiskLevel(vol),
-        };
-      },
-      testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
+      buildChartSpecificData: point => ({
+        volatility: point.volatility ?? 0,
+        riskLevel: getVolatilityRiskLevel(point.volatility ?? 0),
+      }),
     });
 
     const toVolatilityY = (value: number) =>

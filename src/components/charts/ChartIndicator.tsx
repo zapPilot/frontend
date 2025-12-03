@@ -18,7 +18,7 @@ import {
   isPerformanceHover,
   isSharpeHover,
   isVolatilityHover,
-} from "@/types/chartHover";
+} from "@/types/ui/chartHover";
 
 const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
 const INDICATOR_COLOR_MAP: Record<string, string> = {
@@ -163,17 +163,23 @@ function IndicatorCircle({
 }
 
 /**
+ * Base props shared by all indicator variant components
+ * Consolidates the duplicated prop definitions
+ */
+interface BaseIndicatorProps {
+  hoveredPoint: ChartHoverState;
+  radius: number;
+  strokeWidth: number;
+}
+
+/**
  * Single circle indicator for most chart types with special effects
  */
 function SingleCircleIndicator({
   hoveredPoint,
   radius = 6,
   strokeWidth = 2,
-}: {
-  hoveredPoint: ChartHoverState;
-  radius: number;
-  strokeWidth: number;
-}) {
+}: BaseIndicatorProps) {
   let color = getIndicatorColor(hoveredPoint.chartType);
 
   // Dynamic color for Sharpe ratio
@@ -226,11 +232,7 @@ function MultiCircleIndicator({
   hoveredPoint,
   radius = 6,
   strokeWidth = 2,
-}: {
-  hoveredPoint: ChartHoverState;
-  radius: number;
-  strokeWidth: number;
-}) {
+}: BaseIndicatorProps) {
   if (hoveredPoint.chartType !== "asset-allocation") {
     return (
       <SingleCircleIndicator
@@ -292,11 +294,7 @@ function FlaggedCircleIndicator({
   hoveredPoint,
   radius = 6,
   strokeWidth = 2,
-}: {
-  hoveredPoint: ChartHoverState;
-  radius: number;
-  strokeWidth: number;
-}) {
+}: BaseIndicatorProps) {
   const color = getIndicatorColor(hoveredPoint.chartType);
   const isRecoveryPoint =
     hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&

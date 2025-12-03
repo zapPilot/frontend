@@ -1,9 +1,10 @@
-import { useChartHover } from "../../hooks/useChartHover";
-import { ensureNonNegative } from "../../lib/mathUtils";
 import {
   AssetAllocationPoint,
   PortfolioDataPoint,
-} from "../../types/portfolio";
+} from "@/types/domain/portfolio";
+
+import { useChartHover } from "../../hooks/useChartHover";
+import { ensureNonNegative } from "../../lib/mathUtils";
 import type {
   AllocationTimeseriesInputPoint,
   PortfolioStackedDataPoint,

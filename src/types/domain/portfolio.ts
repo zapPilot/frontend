@@ -1,23 +1,3 @@
-interface AssetDetail {
-  name: string;
-  symbol: string;
-  protocol: string;
-  amount: number;
-  value: number;
-  apr: number;
-  type: string; // e.g., "Staking", "Lending", "Liquidity Pool"
-}
-
-export interface AssetCategory {
-  id: string;
-  name: string;
-  color: string;
-  totalValue: number;
-  percentage: number;
-  change24h: number;
-  assets: AssetDetail[];
-}
-
 export interface PieChartData {
   label: string;
   value: number;

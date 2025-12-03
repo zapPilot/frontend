@@ -4,7 +4,7 @@
  */
 
 import { APIError, handleHTTPError } from "@/lib/http-utils";
-import type { UserCryptoWallet } from "@/types/user.types";
+import type { UserCryptoWallet } from "@/types/domain/user.types";
 
 /**
  * Validate wallet address format

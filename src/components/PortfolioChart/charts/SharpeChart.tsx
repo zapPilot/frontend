@@ -2,10 +2,11 @@
 
 import { memo, useMemo } from "react";
 
-import { useChartHover } from "../../../hooks/useChartHover";
 import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
-import { ENABLE_TEST_AUTO_HOVER, getChartInteractionProps } from "../utils";
+import { useStandardChartHover } from "../hooks/useStandardChartHover";
+import { getChartInteractionProps } from "../utils";
+import { ChartReferenceLine } from "./ChartReferenceLine";
 import { MetricChartLayout } from "./MetricChartLayout";
 import { buildAreaPath, buildLinePath } from "./pathBuilders";
 
@@ -36,7 +37,7 @@ export const SharpeChart = memo<SharpeChartProps>(
     padding = CHART_DIMENSIONS.PADDING,
   }) => {
     // Sharpe chart hover (5-level system)
-    const sharpeHover = useChartHover(data, {
+    const sharpeHover = useStandardChartHover(data, {
       chartType: "sharpe",
       chartWidth: width,
       chartHeight: height,
@@ -44,23 +45,10 @@ export const SharpeChart = memo<SharpeChartProps>(
       minValue: SHARPE_CONSTANTS.MIN_VALUE,
       maxValue: SHARPE_CONSTANTS.MAX_VALUE,
       getYValue: point => point.sharpe,
-      buildHoverData: (point, x, y) => {
-        const sharpe = point.sharpe ?? 0;
-
-        return {
-          chartType: "sharpe" as const,
-          x,
-          y,
-          date: new Date(point.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
-          sharpe,
-          interpretation: getSharpeInterpretation(sharpe),
-        };
-      },
-      testAutoPopulate: ENABLE_TEST_AUTO_HOVER,
+      buildChartSpecificData: point => ({
+        sharpe: point.sharpe ?? 0,
+        interpretation: getSharpeInterpretation(point.sharpe ?? 0),
+      }),
     });
 
     const toSharpeY = (value: number) =>
@@ -129,18 +117,7 @@ export const SharpeChart = memo<SharpeChartProps>(
           </div>
         }
         description="Rolling Sharpe ratio trend for the portfolio"
-        extraSvgContent={
-          <line
-            x1="0"
-            y1={referenceLineY}
-            x2={width}
-            y2={referenceLineY}
-            stroke="#6b7280"
-            strokeWidth="1"
-            strokeDasharray="3,3"
-            opacity="0.5"
-          />
-        }
+        extraSvgContent={<ChartReferenceLine y={referenceLineY} x2={width} />}
       />
     );
   }

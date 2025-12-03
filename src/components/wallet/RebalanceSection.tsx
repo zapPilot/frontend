@@ -2,7 +2,7 @@ import { Settings } from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
-import type { PortfolioAllocationSplit } from "@/types/portfolio";
+import type { PortfolioAllocationSplit } from "@/types/domain/portfolio";
 
 import { RebalanceSectionSkeleton } from "./RebalanceSectionSkeleton";
 

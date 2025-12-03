@@ -26,6 +26,68 @@ interface LeverageRatioMetricProps {
   shouldShowNoDataMessage?: boolean;
 }
 
+/** Internal wrapper component for consistent MetricCard structure */
+interface LeverageMetricWrapperProps {
+  iconClassName: string;
+  children: React.ReactNode;
+  error?: boolean;
+}
+
+const LeverageMetricWrapper = ({
+  iconClassName,
+  children,
+  error = false,
+}: LeverageMetricWrapperProps) => {
+  const labelClasses =
+    "text-xs text-gray-500 uppercase tracking-wider font-medium";
+
+  return (
+    <MetricCard icon={Shield} iconClassName={iconClassName} error={error}>
+      <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
+        {children}
+      </div>
+      <p className={labelClasses}>Leverage Ratio</p>
+    </MetricCard>
+  );
+};
+
+/** Component for displaying leverage ratio with status badge */
+interface LeverageDisplayProps {
+  ratio: string;
+  statusLabel: string;
+  colorScheme: {
+    text: string;
+    bg: string;
+    border: string;
+  };
+  additionalContent?: React.ReactNode;
+}
+
+const LeverageDisplay = ({
+  ratio,
+  statusLabel,
+  colorScheme,
+  additionalContent,
+}: LeverageDisplayProps) => (
+  <div className="flex flex-col items-center gap-2 mb-2 w-full">
+    <div
+      className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}
+    >
+      {ratio}
+    </div>
+    <div className="flex items-center gap-2 flex-wrap justify-center">
+      <div
+        className={`px-3 py-1 rounded-full ${colorScheme.bg} ${colorScheme.border} border text-xs font-medium ${colorScheme.text}`}
+        role="status"
+        aria-label={`Status: ${statusLabel}`}
+      >
+        {statusLabel}
+      </div>
+      {additionalContent}
+    </div>
+  </div>
+);
+
 /**
  * Displays portfolio leverage ratio with health status indicator.
  *
@@ -82,29 +144,23 @@ export function LeverageRatioMetric({
   // Error state
   if (shouldShowError && errorMessage) {
     return (
-      <MetricCard icon={Shield} iconClassName="text-purple-400" error>
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="flex flex-col space-y-2">
-            <div className="text-sm text-red-400 flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4" />
-              <span>{errorMessage}</span>
-            </div>
+      <LeverageMetricWrapper iconClassName="text-purple-400" error>
+        <div className="flex flex-col space-y-2">
+          <div className="text-sm text-red-400 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4" />
+            <span>{errorMessage}</span>
           </div>
         </div>
-        <p className={labelClasses}>Leverage Ratio</p>
-      </MetricCard>
+      </LeverageMetricWrapper>
     );
   }
 
   // No data state
   if (shouldShowNoDataMessage || !leverageMetrics) {
     return (
-      <MetricCard icon={Shield} iconClassName="text-purple-400">
-        <div className="text-3xl font-bold text-white h-10 flex items-center mb-2">
-          <div className="text-gray-400 text-lg">No data</div>
-        </div>
-        <p className={labelClasses}>Leverage Ratio</p>
-      </MetricCard>
+      <LeverageMetricWrapper iconClassName="text-purple-400">
+        <div className="text-gray-400 text-lg">No data</div>
+      </LeverageMetricWrapper>
     );
   }
 
@@ -112,18 +168,11 @@ export function LeverageRatioMetric({
   if (!leverageMetrics.hasDebt) {
     return (
       <MetricCard icon={Shield} iconClassName="text-emerald-400">
-        <div className="flex flex-col items-center gap-2 mb-2">
-          <div
-            className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}
-          >
-            {formatLeverageRatio(leverageMetrics.ratio)}
-          </div>
-          <div
-            className={`px-3 py-1 rounded-full ${colorScheme.bg} ${colorScheme.border} border text-xs font-medium ${colorScheme.text}`}
-          >
-            Unleveraged
-          </div>
-        </div>
+        <LeverageDisplay
+          ratio={formatLeverageRatio(leverageMetrics.ratio)}
+          statusLabel="Unleveraged"
+          colorScheme={colorScheme}
+        />
         <p className={labelClasses}>Leverage Ratio</p>
       </MetricCard>
     );
@@ -142,25 +191,12 @@ export function LeverageRatioMetric({
           : "text-purple-400"
       }
     >
-      <div className="flex flex-col items-center gap-2 mb-2 w-full">
-        {/* Main leverage ratio */}
-        <div
-          className={`text-3xl md:text-4xl font-bold ${colorScheme.text} tracking-tight`}
-        >
-          {formatLeverageRatio(leverageMetrics.ratio)}
-        </div>
-
-        {/* Health status badge and health factor */}
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <div
-            className={`px-3 py-1 rounded-full ${colorScheme.bg} ${colorScheme.border} border text-xs font-medium ${colorScheme.text}`}
-            role="status"
-            aria-label={`Health status: ${leverageMetrics.healthLabel}`}
-          >
-            {leverageMetrics.healthLabel}
-          </div>
-
-          {isFiniteHealthFactor && (
+      <LeverageDisplay
+        ratio={formatLeverageRatio(leverageMetrics.ratio)}
+        statusLabel={leverageMetrics.healthLabel}
+        colorScheme={colorScheme}
+        additionalContent={
+          isFiniteHealthFactor ? (
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <span>HF:</span>
               <span className="font-medium text-gray-300">
@@ -175,16 +211,16 @@ export function LeverageRatioMetric({
                 <Info className="w-3 h-3" />
               </button>
             </div>
-          )}
-        </div>
+          ) : undefined
+        }
+      />
 
-        {/* Debt percentage (optional detail) */}
-        {leverageMetrics.debtPercentage > 0 && (
-          <div className="text-xs text-gray-500 mt-1">
-            {leverageMetrics.debtPercentage.toFixed(1)}% debt
-          </div>
-        )}
-      </div>
+      {/* Debt percentage (optional detail) */}
+      {leverageMetrics.debtPercentage > 0 && (
+        <div className="text-xs text-gray-500 mt-1 text-center">
+          {leverageMetrics.debtPercentage.toFixed(1)}% debt
+        </div>
+      )}
 
       <p className={labelClasses}>Leverage Ratio</p>
     </MetricCard>

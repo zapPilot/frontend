@@ -3,7 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import React from "react";
 
-import { InteractiveComponentProps } from "../../types/ui.types";
+import { InteractiveComponentProps } from "@/types/ui/ui.types";
 
 interface TabButtonProps extends InteractiveComponentProps {
   id: string;

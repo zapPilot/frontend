@@ -3,9 +3,11 @@
 import { motion } from "framer-motion";
 import { memo } from "react";
 
+import { formatChartDate } from "@/lib/chartFormatters";
+import type { AssetAllocationPoint } from "@/types/domain/portfolio";
+
 import { ASSET_CATEGORIES, CHART_COLORS } from "../../../constants/portfolio";
 import { useChartHover } from "../../../hooks/useChartHover";
-import type { AssetAllocationPoint } from "../../../types/portfolio";
 import { ChartTooltip } from "../../charts";
 import { ALLOCATION_CONSTANTS, CHART_DIMENSIONS } from "../chartConstants";
 import {
@@ -55,11 +57,7 @@ export const AssetAllocationChart = memo<AssetAllocationChartProps>(
           chartType: "asset-allocation" as const,
           x,
           y,
-          date: new Date(point.date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          }),
+          date: formatChartDate(point.date),
           btc: total > 0 ? (point.btc / total) * 100 : 0,
           eth: total > 0 ? (point.eth / total) * 100 : 0,
           stablecoin: total > 0 ? (point.stablecoin / total) * 100 : 0,

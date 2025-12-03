@@ -15,9 +15,29 @@ import {
   useState,
 } from "react";
 
+import type { ChartHoverState } from "@/types/ui/chartHover";
+
 import { clamp, clampMin } from "../lib/mathUtils";
-import type { ChartHoverState } from "../types/chartHover";
 import { logger } from "../utils/logger";
+
+/**
+ * Calculate Y position in SVG coordinates based on value and chart dimensions
+ * Consolidates the duplicate Y calculation logic
+ */
+function calculateYPosition(
+  yValue: number,
+  minValue: number,
+  maxValue: number,
+  chartHeight: number,
+  chartPadding: number
+): number {
+  const valueRange = maxValue - minValue;
+  return (
+    chartHeight -
+    chartPadding -
+    ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding)
+  );
+}
 
 /**
  * Configuration options for chart hover behavior
@@ -135,9 +155,6 @@ export function useChartHover<T>(
   const testAutoHideTimerRef = useRef<number | null>(null);
   const isAutoHoverActiveRef = useRef(false);
 
-  // Calculate value range for Y positioning
-  const valueRange = clampMin(maxValue - minValue, 1);
-
   /**
    * Mouse move handler with RAF optimization
    * Calculates hover position and builds chart-specific hover state
@@ -211,10 +228,13 @@ export function useChartHover<T>(
 
         // Calculate Y position in SVG coordinates based on value
         const yValue = getYValue(point);
-        const y =
-          chartHeight -
-          chartPadding -
-          ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding);
+        const y = calculateYPosition(
+          yValue,
+          minValue,
+          maxValue,
+          chartHeight,
+          chartPadding
+        );
 
         // Build chart-specific hover data
         const scaleX = chartWidth > 0 ? svgWidth / chartWidth : 1;
@@ -262,7 +282,7 @@ export function useChartHover<T>(
       chartHeight,
       chartPadding,
       minValue,
-      valueRange,
+      maxValue,
       getYValue,
       buildHoverData,
       testAutoPopulate,
@@ -367,10 +387,13 @@ export function useChartHover<T>(
         data.length <= 1 ? 0.5 : index / clampMin(data.length - 1, 1);
       const x = normalizedX * chartWidth;
       const yValue = getYValue(point);
-      const y =
-        chartHeight -
-        chartPadding -
-        ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding);
+      const y = calculateYPosition(
+        yValue,
+        minValue,
+        maxValue,
+        chartHeight,
+        chartPadding
+      );
 
       setHoveredPoint(buildHoverData(point, x, y, index));
       hasTestAutoPopulatedRef.current = true;
@@ -386,8 +409,8 @@ export function useChartHover<T>(
     getYValue,
     hoveredPoint,
     minValue,
+    maxValue,
     testAutoPopulate,
-    valueRange,
   ]);
 
   useEffect(() => {

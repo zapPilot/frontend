@@ -37,6 +37,24 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
     onCategoryClick,
     isNavigating = false,
   }) => {
+    const renderCategoryItems = (
+      categories: CategorySummary[],
+      variant: "assets" | "borrowing",
+      emptyContent: React.ReactNode
+    ) => {
+      if (categories.length === 0) return emptyContent;
+
+      return categories.map(category => (
+        <CategoryItem
+          key={category.id}
+          category={category}
+          {...(onCategoryClick ? { onCategoryClick } : {})}
+          isNavigating={isNavigating}
+          variant={variant}
+        />
+      ));
+    };
+
     return (
       <BaseCard
         variant="glass"
@@ -85,17 +103,9 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                 id="assets-tabpanel"
                 aria-labelledby="assets-tab assets-tab-mobile"
               >
-                {categorySummaries.length > 0 ? (
-                  categorySummaries.map(category => (
-                    <CategoryItem
-                      key={category.id}
-                      category={category}
-                      {...(onCategoryClick ? { onCategoryClick } : {})}
-                      isNavigating={isNavigating}
-                      variant="assets"
-                    />
-                  ))
-                ) : (
+                {renderCategoryItems(
+                  categorySummaries,
+                  "assets",
                   <div className="text-center py-8 text-gray-400">
                     No assets found in your portfolio.
                   </div>
@@ -110,17 +120,9 @@ export const AssetCategoriesDetail = React.memo<AssetCategoriesDetailProps>(
                 id="borrowing-tabpanel"
                 aria-labelledby="borrowing-tab borrowing-tab-mobile"
               >
-                {debtCategorySummaries.length > 0 ? (
-                  debtCategorySummaries.map(category => (
-                    <CategoryItem
-                      key={category.id}
-                      category={category}
-                      {...(onCategoryClick ? { onCategoryClick } : {})}
-                      isNavigating={isNavigating}
-                      variant="borrowing"
-                    />
-                  ))
-                ) : (
+                {renderCategoryItems(
+                  debtCategorySummaries,
+                  "borrowing",
                   <div className="text-center py-8 space-y-4">
                     <div className="w-16 h-16 mx-auto bg-green-600/10 border border-green-500/20 rounded-full flex items-center justify-center">
                       <TrendingUp className="w-8 h-8 text-green-400" />

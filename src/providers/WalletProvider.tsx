@@ -25,6 +25,7 @@ import {
   useWalletBalance,
 } from "thirdweb/react";
 
+import type { WalletProviderInterface } from "@/types/domain/wallet";
 import { walletLogger } from "@/utils/logger";
 // Chain types are handled internally
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
@@ -47,29 +48,7 @@ interface WalletError {
   code?: string;
 }
 
-// Context interface
-interface WalletContextValue {
-  // Account
-  account: SimplifiedWalletAccount | null;
-
-  // Chain
-  chain: SimplifiedChain | null;
-  switchChain: (chainId: number) => Promise<void>;
-
-  // Connection
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  isConnecting: boolean;
-  isDisconnecting: boolean;
-
-  // Status
-  isConnected: boolean;
-  error: WalletError | null;
-  clearError: () => void;
-
-  // Signing
-  signMessage: (message: string) => Promise<string>;
-}
+type WalletContextValue = WalletProviderInterface;
 
 // Context
 const WalletContext = createContext<WalletContextValue | null>(null);
