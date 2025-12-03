@@ -87,6 +87,15 @@ vi.mock("@/components/ui", () => ({
       { "data-testid": "base-card", "data-variant": variant },
       children
     ),
+  AssetBadge: ({ symbol }: any) =>
+    createElement(
+      "span",
+      {
+        "data-testid": "asset-badge",
+        "data-symbol": symbol,
+      },
+      symbol
+    ),
 }));
 
 vi.mock("@/components/ui/LoadingSystem", () => ({
