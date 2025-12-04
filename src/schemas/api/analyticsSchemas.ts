@@ -163,9 +163,20 @@ const aprCoverageSchema = z.object({
 });
 
 /**
- * Schema for pool detail (simplified - full schema in poolSchemas.ts)
+ * Schema for pool detail - matches /api/v2/pools/{id}/performance response
  */
-const poolDetailSchema = z.object({}).passthrough();
+const poolDetailSchema = z.object({
+  wallet: z.string(),
+  protocol_id: z.string(),
+  protocol: z.string(),
+  protocol_name: z.string(),
+  chain: z.string(),
+  asset_usd_value: z.number(),
+  pool_symbols: z.array(z.string()),
+  contribution_to_portfolio: z.number(),
+  snapshot_id: z.string(),
+  snapshot_ids: z.array(z.string()).nullable().optional(),
+});
 
 /**
  * Schema for landing page response
@@ -294,8 +305,8 @@ const riskMetricsSchema = z
     sharpe_ratio: z.record(z.any()).optional(),
     max_drawdown: z.record(z.any()).optional(),
   })
-  .passthrough()
-  .optional();
+  .passthrough();
+// .optional() is not exported as unused variable
 
 // Drawdown analysis
 const drawdownAnalysisSchema = z
@@ -305,7 +316,7 @@ const drawdownAnalysisSchema = z
         user_id: z.string().optional(),
         period: periodWindowSchema.optional(),
         period_info: analyticsPeriodInfoSchema.optional(),
-        drawdown_data: z.array(z.record(z.any())).optional().default([]),
+        drawdown_data: z.array(z.record(z.any())).default([]).optional(),
         summary: z.record(z.any()).optional(),
         data_points: z.number().optional(),
         message: z.string().optional(),
@@ -317,7 +328,7 @@ const drawdownAnalysisSchema = z
         user_id: z.string().optional(),
         period: periodWindowSchema.optional(),
         period_info: analyticsPeriodInfoSchema.optional(),
-        underwater_data: z.array(z.record(z.any())).optional().default([]),
+        underwater_data: z.array(z.record(z.any())).default([]).optional(),
         summary: z.record(z.any()).optional(),
         data_points: z.number().optional(),
         message: z.string().optional(),
@@ -325,8 +336,8 @@ const drawdownAnalysisSchema = z
       .passthrough()
       .optional(),
   })
-  .passthrough()
-  .optional();
+  .passthrough();
+// .optional() is not exported as unused variable
 
 // Allocation data
 const allocationSchema = z
@@ -348,13 +359,13 @@ const allocationSchema = z
           })
           .passthrough()
       )
-      .optional()
-      .default([]),
+      .default([])
+      .optional(),
     summary: z.record(z.any()).optional(),
     message: z.string().optional(),
   })
-  .passthrough()
-  .optional();
+  .passthrough();
+// .optional() is not exported as unused variable
 
 // Rolling analytics
 const rollingAnalyticsSchema = z
@@ -374,8 +385,8 @@ const rollingAnalyticsSchema = z
               })
               .passthrough()
           )
-          .optional()
-          .default([]),
+          .default([])
+          .optional(),
         summary: z.record(z.any()).optional(),
         data_points: z.number().optional(),
         educational_context: analyticsEducationalContextSchema.optional(),
@@ -399,8 +410,8 @@ const rollingAnalyticsSchema = z
               })
               .passthrough()
           )
-          .optional()
-          .default([]),
+          .default([])
+          .optional(),
         summary: z.record(z.any()).optional(),
         data_points: z.number().optional(),
         educational_context: analyticsEducationalContextSchema.optional(),
@@ -409,8 +420,8 @@ const rollingAnalyticsSchema = z
       .passthrough()
       .optional(),
   })
-  .passthrough()
-  .optional();
+  .passthrough();
+// .optional() is not exported as unused variable
 
 // Unified dashboard response
 // Unified dashboard validation is intentionally permissive because backend
@@ -461,6 +472,16 @@ export const dailyYieldReturnsResponseSchema = z.object({
   period: dailyYieldPeriodSchema,
   daily_returns: z.array(dailyYieldReturnSchema),
 });
+
+// ============================================================================
+// POOL PERFORMANCE SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for pool performance response
+ * Validates array of pool details from /api/v2/pools/{id}/performance
+ */
+export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
 
 // ============================================================================
 // TYPE EXPORTS
@@ -550,6 +571,10 @@ export interface UnifiedDashboardResponse {
 export type DailyYieldReturnsResponse = z.infer<
   typeof dailyYieldReturnsResponseSchema
 >;
+export type PoolPerformanceResponse = z.infer<
+  typeof poolPerformanceResponseSchema
+>;
+export type PoolDetail = z.infer<typeof poolDetailSchema>;
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS
@@ -601,4 +626,14 @@ export function validateDailyYieldReturnsResponse(
  */
 export function safeValidateUnifiedDashboardResponse(data: unknown) {
   return unifiedDashboardResponseSchema.safeParse(data);
+}
+
+/**
+ * Validates pool performance response data from API
+ * Returns validated data or throws ZodError with detailed error messages
+ */
+export function validatePoolPerformanceResponse(
+  data: unknown
+): PoolPerformanceResponse {
+  return poolPerformanceResponseSchema.parse(data);
 }

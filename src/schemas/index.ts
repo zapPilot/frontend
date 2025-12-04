@@ -31,10 +31,12 @@ export {
   landingPageResponseSchema,
   unifiedDashboardResponseSchema,
   dailyYieldReturnsResponseSchema,
+  poolPerformanceResponseSchema,
   validateYieldReturnsSummaryResponse,
   validateLandingPageResponse,
   validateUnifiedDashboardResponse,
   validateDailyYieldReturnsResponse,
+  validatePoolPerformanceResponse,
   safeValidateUnifiedDashboardResponse,
   type ProtocolYieldWindow,
   type ProtocolYieldToday,
@@ -44,7 +46,17 @@ export {
   type LandingPageResponse,
   type UnifiedDashboardResponse,
   type DailyYieldReturnsResponse,
+  type PoolPerformanceResponse,
+  type PoolDetail,
 } from "./api/analyticsSchemas";
+
+// Sentiment Service Schemas
+export {
+  sentimentApiResponseSchema,
+  validateSentimentApiResponse,
+  safeValidateSentimentApiResponse,
+  type SentimentApiResponse,
+} from "./api/sentimentSchemas";
 
 // Account Service Schemas
 export {

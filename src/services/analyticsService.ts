@@ -3,18 +3,20 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import type { PoolDetail } from "@/types/domain/pool";
 import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 import {
   validateLandingPageResponse,
   validateYieldReturnsSummaryResponse,
   validateUnifiedDashboardResponse,
   validateDailyYieldReturnsResponse,
+  validatePoolPerformanceResponse,
   type LandingPageResponse,
   type YieldReturnsSummaryResponse,
   type YieldWindowSummary,
   type UnifiedDashboardResponse,
   type DailyYieldReturnsResponse,
+  type PoolPerformanceResponse,
+  type PoolDetail,
 } from "@/schemas/api/analyticsSchemas";
 
 import { httpUtils } from "../lib/http-utils";
@@ -22,13 +24,14 @@ import { httpUtils } from "../lib/http-utils";
 // Note: Types are imported and re-exported above at line 36
 
 // Re-export types for external use
-export type { PoolDetail } from "@/types/domain/pool";
 export type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
   YieldWindowSummary,
   UnifiedDashboardResponse,
   DailyYieldReturnsResponse,
+  PoolPerformanceResponse,
+  PoolDetail,
   ProtocolYieldWindow,
   ProtocolYieldToday,
   ProtocolYieldBreakdown,
@@ -157,9 +160,10 @@ export const getLandingPagePortfolioData = async (
  */
 export const getPoolPerformance = async (
   userId: string
-): Promise<PoolDetail[]> => {
+): Promise<PoolPerformanceResponse> => {
   const endpoint = `/api/v2/pools/${userId}/performance`;
-  return await httpUtils.analyticsEngine.get<PoolDetail[]>(endpoint);
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validatePoolPerformanceResponse(response);
 };
 
 /**

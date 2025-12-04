@@ -556,19 +556,18 @@ describe("analyticsService", () => {
     it("should fetch pool performance data for the user", async () => {
       const mockPools = [
         {
-          protocol_id: "aave-v3",
-          protocol_name: "Aave V3",
-          chain: "Ethereum",
-          final_apr: 0.045,
-          total_value_usd: 5000,
-          wallet_tokens_value: 3000,
-          other_sources_value: 2000,
-          pool_tokens: [
-            {
-              symbol: "USDC",
-              amount: 2500,
-              value_usd: 2500,
-            },
+          wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+          protocol_id: "aster",
+          protocol: "aster",
+          protocol_name: "aster",
+          chain: "arb",
+          asset_usd_value: 27546.75,
+          pool_symbols: ["DAI", "USDC", "WBTC"],
+          contribution_to_portfolio: 21.35,
+          snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          snapshot_ids: [
+            "1356713c-1177-48a8-a4e6-180f546d7984",
+            "9d5ea6f5-32d4-401a-8650-34a55667ecbe",
           ],
         },
       ];
@@ -581,7 +580,33 @@ describe("analyticsService", () => {
         `/api/v2/pools/${testUserId}/performance`
       );
       expect(result).toEqual(mockPools);
-      expect(result[0]?.protocol_name).toBe("Aave V3");
+      expect(result[0]?.protocol_name).toBe("aster");
+      expect(result[0]?.wallet).toBe("0x66C42B20551d449Bce40b3dC8Fc62207A27D579F");
+    });
+
+    it("should validate pool performance response with Zod schema", async () => {
+      const mockPools = [
+        {
+          wallet: "0x2eCBC6f229feD06044CDb0dD772437a30190CD50",
+          protocol_id: "camelot v3",
+          protocol: "camelot v3",
+          protocol_name: "camelot v3",
+          chain: "arb",
+          asset_usd_value: 13893.18,
+          pool_symbols: ["PENDLE", "WETH"],
+          contribution_to_portfolio: 10.77,
+          snapshot_id: "c1fb06a0-9a6e-4ffd-9e76-81435723340a",
+        },
+      ];
+
+      analyticsEngineGetSpy.mockResolvedValue(mockPools);
+      const testUserId = "user-validation";
+      const result = await getPoolPerformance(testUserId);
+
+      expect(result).toBeDefined();
+      expect(Array.isArray(result)).toBe(true);
+      expect(result[0]).toHaveProperty("wallet");
+      expect(result[0]).toHaveProperty("protocol_id");
     });
   });
 
