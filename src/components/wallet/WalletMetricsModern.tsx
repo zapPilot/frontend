@@ -11,6 +11,7 @@ import type {
   LandingPageResponse,
   YieldReturnsSummaryResponse,
 } from "../../services/analyticsService";
+import type { PoolDetail } from "../../types/domain/pool";
 import { BalanceMetric } from "./metrics/BalanceMetric";
 import { ConsolidatedMetric } from "./metrics/consolidated/ConsolidatedMetric";
 import { MarketSentimentMetric } from "./metrics/MarketSentimentMetric";
@@ -93,7 +94,7 @@ export const WalletMetricsModern = React.memo<WalletMetricsModernProps>(
       errorMessage: portfolioState.errorMessage,
     };
 
-    const poolDetails = landingPageData?.pool_details ?? [];
+    const poolDetails: PoolDetail[] = landingPageData?.pool_details ?? [];
     const totalPositions = poolDetails.length;
     const protocolsCount =
       poolDetails.length > 0

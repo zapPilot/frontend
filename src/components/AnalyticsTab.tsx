@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 
 import { LoadingSpinner } from "@/components/ui";
 import { useCategoryFilter } from "@/contexts/CategoryFilterContext";
+import type { PoolDetail } from "@/types/domain/pool";
 import { createContextLogger } from "@/utils/logger";
 
 import { useUser } from "../contexts/UserContext";
@@ -52,7 +53,7 @@ export function AnalyticsTab({
 
   // Fetch pool performance data from dedicated endpoint
   const poolQuery = usePoolPerformance(resolvedUserId);
-  const poolDetails = poolQuery.data || [];
+  const poolDetails: PoolDetail[] = poolQuery.data ?? [];
   const poolLoading = poolQuery.isLoading;
   const poolError = (poolQuery.error as Error | null)?.message || null;
   const poolRefetch = poolQuery.refetch;

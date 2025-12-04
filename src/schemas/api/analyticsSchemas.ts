@@ -285,7 +285,7 @@ const trendDailyValueSchema = z
   })
   .passthrough();
 
-const trendsSchema = z
+export const trendsSchema = z
   .object({
     user_id: z.string().optional(),
     period_days: z.number().optional(),
@@ -293,31 +293,31 @@ const trendsSchema = z
     period: periodWindowSchema.optional(),
     period_info: periodWindowSchema.optional(),
     daily_values: z.array(trendDailyValueSchema).optional().default([]),
-    summary: z.record(z.any()).optional(),
+    summary: z.record(z.string(), z.any()).optional(),
     message: z.string().optional(),
   })
   .passthrough();
 
 // Risk metrics (loosely validated)
-const riskMetricsSchema = z
+export const riskMetricsSchema = z
   .object({
-    volatility: z.record(z.any()).optional(),
-    sharpe_ratio: z.record(z.any()).optional(),
-    max_drawdown: z.record(z.any()).optional(),
+    volatility: z.record(z.string(), z.any()).optional(),
+    sharpe_ratio: z.record(z.string(), z.any()).optional(),
+    max_drawdown: z.record(z.string(), z.any()).optional(),
   })
   .passthrough();
 // .optional() is not exported as unused variable
 
 // Drawdown analysis
-const drawdownAnalysisSchema = z
+export const drawdownAnalysisSchema = z
   .object({
     enhanced: z
       .object({
         user_id: z.string().optional(),
         period: periodWindowSchema.optional(),
         period_info: analyticsPeriodInfoSchema.optional(),
-        drawdown_data: z.array(z.record(z.any())).default([]).optional(),
-        summary: z.record(z.any()).optional(),
+        drawdown_data: z.array(z.record(z.string(), z.any())).default([]).optional(),
+        summary: z.record(z.string(), z.any()).optional(),
         data_points: z.number().optional(),
         message: z.string().optional(),
       })
@@ -328,8 +328,8 @@ const drawdownAnalysisSchema = z
         user_id: z.string().optional(),
         period: periodWindowSchema.optional(),
         period_info: analyticsPeriodInfoSchema.optional(),
-        underwater_data: z.array(z.record(z.any())).default([]).optional(),
-        summary: z.record(z.any()).optional(),
+        underwater_data: z.array(z.record(z.string(), z.any())).default([]).optional(),
+        summary: z.record(z.string(), z.any()).optional(),
         data_points: z.number().optional(),
         message: z.string().optional(),
       })
@@ -340,7 +340,7 @@ const drawdownAnalysisSchema = z
 // .optional() is not exported as unused variable
 
 // Allocation data
-const allocationSchema = z
+export const allocationSchema = z
   .object({
     user_id: z.string().optional(),
     period_days: z.number().optional(),
@@ -361,14 +361,14 @@ const allocationSchema = z
       )
       .default([])
       .optional(),
-    summary: z.record(z.any()).optional(),
+    summary: z.record(z.string(), z.any()).optional(),
     message: z.string().optional(),
   })
   .passthrough();
 // .optional() is not exported as unused variable
 
 // Rolling analytics
-const rollingAnalyticsSchema = z
+export const rollingAnalyticsSchema = z
   .object({
     sharpe: z
       .object({
@@ -387,7 +387,7 @@ const rollingAnalyticsSchema = z
           )
           .default([])
           .optional(),
-        summary: z.record(z.any()).optional(),
+        summary: z.record(z.string(), z.any()).optional(),
         data_points: z.number().optional(),
         educational_context: analyticsEducationalContextSchema.optional(),
         message: z.string().optional(),
@@ -412,7 +412,7 @@ const rollingAnalyticsSchema = z
           )
           .default([])
           .optional(),
-        summary: z.record(z.any()).optional(),
+        summary: z.record(z.string(), z.any()).optional(),
         data_points: z.number().optional(),
         educational_context: analyticsEducationalContextSchema.optional(),
         message: z.string().optional(),
