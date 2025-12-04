@@ -16,8 +16,8 @@ import { createServiceCaller } from "@/lib/createServiceCaller";
 import { APIError, httpUtils } from "@/lib/http-utils";
 import { queryKeys } from "@/lib/queryClient";
 import {
-  validateSentimentApiResponse,
   type SentimentApiResponse,
+  validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
 import { logger } from "@/utils/logger";
 

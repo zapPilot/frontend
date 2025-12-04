@@ -1,22 +1,22 @@
-import { describe, it, expect } from "vitest";
-import {
-  protocolYieldWindowSchema,
-  protocolYieldTodaySchema,
-  protocolYieldBreakdownSchema,
-  yieldWindowSummarySchema,
-  yieldReturnsSummaryResponseSchema,
-  landingPageResponseSchema,
-  unifiedDashboardResponseSchema,
-  dailyYieldReturnsResponseSchema,
-  poolPerformanceResponseSchema,
-  validateYieldReturnsSummaryResponse,
-  validateLandingPageResponse,
-  validateUnifiedDashboardResponse,
-  validateDailyYieldReturnsResponse,
-  validatePoolPerformanceResponse,
-  safeValidateUnifiedDashboardResponse,
-} from "@/schemas/api/analyticsSchemas";
+import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
+
+import {
+  dailyYieldReturnsResponseSchema,
+  landingPageResponseSchema,
+  poolPerformanceResponseSchema,
+  protocolYieldBreakdownSchema,
+  protocolYieldTodaySchema,
+  protocolYieldWindowSchema,
+  safeValidateUnifiedDashboardResponse,
+  unifiedDashboardResponseSchema,
+  validateLandingPageResponse,
+  validatePoolPerformanceResponse,
+  validateUnifiedDashboardResponse,
+  validateYieldReturnsSummaryResponse,
+  yieldReturnsSummaryResponseSchema,
+  yieldWindowSummarySchema,
+} from "@/schemas/api/analyticsSchemas";
 
 describe("analyticsSchemas", () => {
   describe("protocolYieldWindowSchema", () => {
@@ -164,7 +164,7 @@ describe("analyticsSchemas", () => {
     it("validates outlier_strategy enum", () => {
       const strategies = ["iqr", "none", "zscore", "percentile"];
 
-      strategies.forEach(strategy => {
+      for (const strategy of strategies) {
         const validData = {
           user_id: "0x123",
           period: {
@@ -191,7 +191,7 @@ describe("analyticsSchemas", () => {
         };
 
         expect(() => yieldWindowSummarySchema.parse(validData)).not.toThrow();
-      });
+      }
     });
 
     it("rejects invalid outlier_strategy", () => {
@@ -1106,7 +1106,9 @@ describe("analyticsSchemas", () => {
           user_id: "0x123",
         };
 
-        expect(() => validateUnifiedDashboardResponse(minimalData)).not.toThrow();
+        expect(() =>
+          validateUnifiedDashboardResponse(minimalData)
+        ).not.toThrow();
       });
     });
 

@@ -67,18 +67,18 @@ type PortfolioCategoryPoint = NonNullable<
   PortfolioDataPoint["categories"]
 >[number];
 
-type DashboardDailyTotal =
-  NonNullable<NonNullable<UnifiedDashboardResponse["trends"]>["daily_values"]>[number];
+type DashboardDailyTotal = NonNullable<
+  NonNullable<UnifiedDashboardResponse["trends"]>["daily_values"]
+>[number];
 type DashboardProtocolEntry = NonNullable<
   DashboardDailyTotal["protocols"]
 >[number];
 type DashboardCategoryEntry = NonNullable<
   DashboardDailyTotal["categories"]
 >[number];
-type DashboardAllocationEntry =
-  NonNullable<
-    NonNullable<UnifiedDashboardResponse["allocation"]>["allocations"]
-  >[number];
+type DashboardAllocationEntry = NonNullable<
+  NonNullable<UnifiedDashboardResponse["allocation"]>["allocations"]
+>[number];
 
 /**
  * Helper to create consistent loading/error state across all chart data hooks
@@ -419,7 +419,7 @@ export function useChartData(
   // Extract enhanced drawdown data from dashboard if available
   const enhancedDrawdownData = useMemo(() => {
     const enhancedSection = dashboard?.drawdown_analysis?.["enhanced"] as
-      | { drawdown_data?: Array<Record<string, unknown>> }
+      | { drawdown_data?: Record<string, unknown>[] }
       | undefined;
     if (!enhancedSection) {
       return null;

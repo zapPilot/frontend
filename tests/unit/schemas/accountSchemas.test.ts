@@ -1,27 +1,28 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
+
 import {
-  userSchema,
-  userCryptoWalletSchema,
-  planSchema,
-  userSubscriptionSchema,
-  connectWalletResponseSchema,
-  addWalletResponseSchema,
-  updateEmailResponseSchema,
-  userProfileResponseSchema,
   accountTokenSchema,
+  addWalletResponseSchema,
+  connectWalletResponseSchema,
   healthCheckResponseSchema,
   messageResponseSchema,
-  validateConnectWalletResponse,
-  validateAddWalletResponse,
-  validateUpdateEmailResponse,
-  validateUserProfileResponse,
+  planSchema,
+  safeValidateUserProfile,
+  updateEmailResponseSchema,
+  userCryptoWalletSchema,
+  userProfileResponseSchema,
+  userSchema,
+  userSubscriptionSchema,
   validateAccountTokens,
-  validateUserWallets,
+  validateAddWalletResponse,
+  validateConnectWalletResponse,
   validateHealthCheckResponse,
   validateMessageResponse,
-  safeValidateUserProfile,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateUserWallets,
 } from "@/schemas/api/accountSchemas";
-import { ZodError } from "zod";
 
 describe("accountSchemas", () => {
   describe("userSchema", () => {

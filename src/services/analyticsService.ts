@@ -3,20 +3,20 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 import {
-  validateLandingPageResponse,
-  validateYieldReturnsSummaryResponse,
-  validateUnifiedDashboardResponse,
-  validateDailyYieldReturnsResponse,
-  validatePoolPerformanceResponse,
+  type DailyYieldReturnsResponse,
   type LandingPageResponse,
+  type PoolPerformanceResponse,
+  type UnifiedDashboardResponse,
+  validateDailyYieldReturnsResponse,
+  validateLandingPageResponse,
+  validatePoolPerformanceResponse,
+  validateUnifiedDashboardResponse,
+  validateYieldReturnsSummaryResponse,
   type YieldReturnsSummaryResponse,
   type YieldWindowSummary,
-  type UnifiedDashboardResponse,
-  type DailyYieldReturnsResponse,
-  type PoolPerformanceResponse,
 } from "@/schemas/api/analyticsSchemas";
+import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 
 import { httpUtils } from "../lib/http-utils";
 
@@ -24,15 +24,15 @@ import { httpUtils } from "../lib/http-utils";
 
 // Re-export types for external use
 export type {
+  /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
+  /** @public */ PoolPerformanceResponse,
+  ProtocolYieldBreakdown,
+  /** @public */ ProtocolYieldToday,
+  ProtocolYieldWindow,
+  UnifiedDashboardResponse,
   YieldReturnsSummaryResponse,
   YieldWindowSummary,
-  UnifiedDashboardResponse,
-  /** @public */ DailyYieldReturnsResponse,
-  /** @public */ PoolPerformanceResponse,
-  ProtocolYieldWindow,
-  /** @public */ ProtocolYieldToday,
-  ProtocolYieldBreakdown,
 } from "@/schemas/api/analyticsSchemas";
 
 // Direct re-export to avoid unused imports while keeping public API stable
@@ -96,9 +96,8 @@ export const getYieldReturnsSummary = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
 
   // API returns single YieldWindowSummary, not wrapped in windows
-  const singleWindow = await httpUtils.analyticsEngine.get<YieldWindowSummary>(
-    endpoint
-  );
+  const singleWindow =
+    await httpUtils.analyticsEngine.get<YieldWindowSummary>(endpoint);
 
   // Transform to match expected format
   const transformedResponse = {

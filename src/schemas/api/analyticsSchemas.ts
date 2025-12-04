@@ -181,32 +181,34 @@ const poolDetailSchema = z.object({
 /**
  * Schema for landing page response
  */
-export const landingPageResponseSchema = z.object({
-  total_assets_usd: z.number(),
-  total_debt_usd: z.number(),
-  total_net_usd: z.number(),
-  net_portfolio_value: z.number().nullable().optional().default(0),
-  weighted_apr: z.number().nullable().optional().default(0),
-  estimated_monthly_income: z.number().nullable().optional().default(0),
-  portfolio_roi: portfolioROISchema,
-  portfolio_allocation: portfolioAllocationSchema,
-  wallet_token_summary: walletTokenSummarySchema,
-  category_summary_debt: categorySummaryDebtSchema,
-  pool_details: z.array(poolDetailSchema).optional().default([]),
-  total_positions: z.number().optional().default(0),
-  protocols_count: z.number().optional().default(0),
-  chains_count: z.number().optional().default(0),
-  wallet_count: z.number().int().nonnegative().optional().default(0),
-  last_updated: z.string().nullable(),
-  apr_coverage: aprCoverageSchema.optional().default({
-    matched_pools: 0,
-    total_pools: 0,
-    coverage_percentage: 0,
-    matched_asset_value_usd: 0,
-  }),
-  message: z.string().optional(),
-  yield_summary: yieldReturnsSummaryResponseSchema.optional(),
-}).passthrough();
+export const landingPageResponseSchema = z
+  .object({
+    total_assets_usd: z.number(),
+    total_debt_usd: z.number(),
+    total_net_usd: z.number(),
+    net_portfolio_value: z.number().nullable().optional().default(0),
+    weighted_apr: z.number().nullable().optional().default(0),
+    estimated_monthly_income: z.number().nullable().optional().default(0),
+    portfolio_roi: portfolioROISchema,
+    portfolio_allocation: portfolioAllocationSchema,
+    wallet_token_summary: walletTokenSummarySchema,
+    category_summary_debt: categorySummaryDebtSchema,
+    pool_details: z.array(poolDetailSchema).optional().default([]),
+    total_positions: z.number().optional().default(0),
+    protocols_count: z.number().optional().default(0),
+    chains_count: z.number().optional().default(0),
+    wallet_count: z.number().int().nonnegative().optional().default(0),
+    last_updated: z.string().nullable(),
+    apr_coverage: aprCoverageSchema.optional().default({
+      matched_pools: 0,
+      total_pools: 0,
+      coverage_percentage: 0,
+      matched_asset_value_usd: 0,
+    }),
+    message: z.string().optional(),
+    yield_summary: yieldReturnsSummaryResponseSchema.optional(),
+  })
+  .catchall(z.unknown());
 
 // ============================================================================
 // UNIFIED DASHBOARD SCHEMAS
@@ -270,7 +272,7 @@ const trendBaseValueSchema = z
     value_usd: z.number(),
     pnl_usd: z.number().optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
 const trendCategorySchema = trendBaseValueSchema.extend({
   category: z.string(),
@@ -293,14 +295,14 @@ const trendDailyValueSchema = z
     protocols: z.array(trendProtocolSchema).optional(),
     chains_count: z.number().optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
 export const trendsSchema = z
   .object({
     ...periodSummaryBase,
     daily_values: z.array(trendDailyValueSchema).optional().default([]),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
 // Risk metrics (loosely validated)
 export const riskMetricsSchema = z
@@ -309,7 +311,7 @@ export const riskMetricsSchema = z
     sharpe_ratio: z.record(z.string(), z.any()).optional(),
     max_drawdown: z.record(z.string(), z.any()).optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 // .optional() is not exported as unused variable
 
 const buildAnalyticsSection = (
@@ -327,7 +329,7 @@ const buildAnalyticsSection = (
       message: z.string().optional(),
       ...extras,
     })
-    .passthrough();
+    .catchall(z.unknown());
 
 const buildDrawdownSection = (dataKey: "drawdown_data" | "underwater_data") =>
   buildAnalyticsSection({
@@ -348,7 +350,7 @@ export const drawdownAnalysisSchema = z
     enhanced: buildDrawdownSection("drawdown_data").optional(),
     underwater_recovery: buildDrawdownSection("underwater_data").optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 // .optional() is not exported as unused variable
 
 // Allocation data
@@ -365,12 +367,12 @@ export const allocationSchema = z
             total_portfolio_value_usd: z.number(),
             allocation_percentage: z.number(),
           })
-          .passthrough()
+          .catchall(z.unknown())
       )
       .default([])
       .optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 // .optional() is not exported as unused variable
 
 // Rolling analytics
@@ -385,7 +387,7 @@ export const rollingAnalyticsSchema = z
             rolling_sharpe_ratio: z.number(),
             is_statistically_reliable: z.boolean().optional(),
           })
-          .passthrough()
+          .catchall(z.unknown())
       )
     ).optional(),
     volatility: buildRollingSection(
@@ -398,11 +400,11 @@ export const rollingAnalyticsSchema = z
             annualized_volatility_pct: z.number().optional(),
             rolling_volatility_daily_pct: z.number().optional(),
           })
-          .passthrough()
+          .catchall(z.unknown())
       )
     ).optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 // .optional() is not exported as unused variable
 
 // Unified dashboard response
@@ -470,7 +472,9 @@ export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
  * These types are automatically generated from the Zod schemas
  */
 export type ProtocolYieldWindow = z.infer<typeof protocolYieldWindowSchema>;
-/** @public */ export type ProtocolYieldToday = z.infer<typeof protocolYieldTodaySchema>;
+/** @public */ export type ProtocolYieldToday = z.infer<
+  typeof protocolYieldTodaySchema
+>;
 export type ProtocolYieldBreakdown = z.infer<
   typeof protocolYieldBreakdownSchema
 >;

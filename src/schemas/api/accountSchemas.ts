@@ -16,6 +16,7 @@ import { z } from "zod";
  */
 export const userSchema = z.object({
   id: z.string(),
+  // eslint-disable-next-line sonarjs/deprecation
   email: z.string().email().optional(),
   is_active: z.boolean(),
   is_subscribed_to_reports: z.boolean(),
@@ -138,16 +139,32 @@ export const messageResponseSchema = z.object({
  * These types are automatically generated from the Zod schemas
  */
 /** @public */ export type User = z.infer<typeof userSchema>;
-/** @public */ export type UserCryptoWallet = z.infer<typeof userCryptoWalletSchema>;
+/** @public */ export type UserCryptoWallet = z.infer<
+  typeof userCryptoWalletSchema
+>;
 /** @public */ export type Plan = z.infer<typeof planSchema>;
-/** @public */ export type UserSubscription = z.infer<typeof userSubscriptionSchema>;
-/** @public */ export type ConnectWalletResponse = z.infer<typeof connectWalletResponseSchema>;
-/** @public */ export type AddWalletResponse = z.infer<typeof addWalletResponseSchema>;
-/** @public */ export type UpdateEmailResponse = z.infer<typeof updateEmailResponseSchema>;
-/** @public */ export type UserProfileResponse = z.infer<typeof userProfileResponseSchema>;
+/** @public */ export type UserSubscription = z.infer<
+  typeof userSubscriptionSchema
+>;
+/** @public */ export type ConnectWalletResponse = z.infer<
+  typeof connectWalletResponseSchema
+>;
+/** @public */ export type AddWalletResponse = z.infer<
+  typeof addWalletResponseSchema
+>;
+/** @public */ export type UpdateEmailResponse = z.infer<
+  typeof updateEmailResponseSchema
+>;
+/** @public */ export type UserProfileResponse = z.infer<
+  typeof userProfileResponseSchema
+>;
 /** @public */ export type AccountToken = z.infer<typeof accountTokenSchema>;
-/** @public */ export type HealthCheckResponse = z.infer<typeof healthCheckResponseSchema>;
-/** @public */ export type MessageResponse = z.infer<typeof messageResponseSchema>;
+/** @public */ export type HealthCheckResponse = z.infer<
+  typeof healthCheckResponseSchema
+>;
+/** @public */ export type MessageResponse = z.infer<
+  typeof messageResponseSchema
+>;
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS

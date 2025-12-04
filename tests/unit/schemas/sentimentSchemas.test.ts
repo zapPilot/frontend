@@ -1,10 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
+
 import {
+  safeValidateSentimentApiResponse,
   sentimentApiResponseSchema,
   validateSentimentApiResponse,
-  safeValidateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
-import { ZodError } from "zod";
 
 describe("sentimentSchemas", () => {
   describe("sentimentApiResponseSchema", () => {
