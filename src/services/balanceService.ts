@@ -3,6 +3,7 @@ import { safeNumber } from "../lib/dataValidation";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
+import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
 
 const MAX_TOKEN_ADDRESSES = 50;
 const MORALIS_API_KEY =
@@ -248,55 +249,61 @@ const normalizeWalletResponse = (
   response: unknown,
   fallback: { chainId: number; walletAddress: string }
 ): WalletTokenBalances => {
-  const record = (response ?? {}) as Record<string, unknown>;
+  // Validate the response with Zod before processing
+  // This catches malformed API responses early with detailed error messages
+  const validatedResponse = validateWalletResponseData(response);
 
   // Parse tokens from the correct data structure
   let tokensSource: unknown[] = [];
 
-  // Check if we have the data object with balances
-  const data = record["data"] as Record<string, unknown> | undefined;
+  // Check if we have the data field
+  const data = validatedResponse.data;
   if (data) {
-    // Check for balances array (token metadata)
-    if (Array.isArray(data["balances"])) {
-      tokensSource = data["balances"] as unknown[];
+    // Case 1: data is an array (legacy format)
+    if (Array.isArray(data)) {
+      tokensSource = data;
     }
-    // Also check for nativeBalance (single object, not array)
-    if (data["nativeBalance"] && typeof data["nativeBalance"] === "object") {
-      tokensSource.push(data["nativeBalance"]);
+    // Case 2: data is an object with balances (new format)
+    else if (typeof data === "object") {
+      // Check for balances array (token metadata)
+      if ("balances" in data && Array.isArray(data.balances)) {
+        tokensSource = data.balances;
+      }
+      // Also check for nativeBalance (single object, not array)
+      if ("nativeBalance" in data && typeof data.nativeBalance === "object" && data.nativeBalance !== null) {
+        tokensSource.push(data.nativeBalance);
+      }
     }
   }
 
   // Fallback to old structure for backward compatibility
   if (tokensSource.length === 0) {
-    tokensSource = Array.isArray(record["tokens"])
-      ? (record["tokens"] as unknown[])
-      : Array.isArray(record["data"])
-        ? (record["data"] as unknown[])
-        : [];
+    tokensSource = validatedResponse.tokens ?? [];
   }
 
   const tokens = tokensSource.map(normalizeTokenBalance);
   const fromCacheFlag =
-    Boolean(record["fromCache"]) ||
-    Boolean(record["cacheHit"]) ||
-    Boolean(record["isCached"]);
+    Boolean(validatedResponse.fromCache) ||
+    Boolean(validatedResponse.cacheHit) ||
+    Boolean(validatedResponse.isCached);
 
-  const fetchedAtCandidate =
-    record["fetchedAt"] ?? record["updatedAt"] ?? record["timestamp"];
   const fetchedAt =
-    typeof fetchedAtCandidate === "string" ? fetchedAtCandidate : undefined;
+    validatedResponse.fetchedAt ??
+    validatedResponse.updatedAt ??
+    validatedResponse.timestamp;
 
-  const chainIdCandidate = record["chainId"];
+  // Parse chainId from response or use fallback
+  const chainIdFromResponse = validatedResponse.chainId;
   const chainId =
-    typeof chainIdCandidate === "number"
-      ? chainIdCandidate
-      : typeof chainIdCandidate === "string"
-        ? Number(chainIdCandidate)
+    typeof chainIdFromResponse === "number"
+      ? chainIdFromResponse
+      : typeof chainIdFromResponse === "string"
+        ? Number(chainIdFromResponse)
         : fallback.chainId;
 
   const addressCandidate =
-    (record["address"] as string | undefined) ??
-    (record["walletAddress"] as string | undefined) ??
+    validatedResponse.address ??
+    validatedResponse.walletAddress ??
     fallback.walletAddress;
 
   const normalized: WalletTokenBalances = {

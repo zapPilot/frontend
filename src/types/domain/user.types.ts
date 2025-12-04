@@ -1,8 +1,9 @@
 // Types matching account-engine API responses
+// Note: These types are also defined in @/schemas/api/accountSchemas.ts with Zod validation
 
 interface User {
   id: string;
-  email?: string;
+  email?: string | undefined;
   is_active: boolean;
   is_subscribed_to_reports: boolean;
   created_at: string;
@@ -12,7 +13,7 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  label?: string;
+  label?: string | undefined;
   created_at: string;
 }
 
@@ -27,10 +28,10 @@ interface UserSubscription {
   user_id: string;
   plan_code: string;
   starts_at: string;
-  ends_at?: string;
+  ends_at?: string | undefined;
   is_canceled: boolean;
   created_at: string;
-  plan?: Plan;
+  plan?: Plan | undefined;
 }
 
 // API Response Interfaces
@@ -52,5 +53,5 @@ export interface UpdateEmailResponse {
 export interface UserProfileResponse {
   user: User;
   wallets: UserCryptoWallet[];
-  subscription?: UserSubscription;
+  subscription?: UserSubscription | undefined;
 }

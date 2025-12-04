@@ -12,6 +12,16 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "@/types/domain/user.types";
+import {
+  validateConnectWalletResponse,
+  validateUserProfileResponse,
+  validateUpdateEmailResponse,
+  validateAddWalletResponse,
+  validateUserWallets,
+  validateAccountTokens,
+  validateMessageResponse,
+  validateHealthCheckResponse,
+} from "@/schemas/api/accountSchemas";
 
 import { createServiceCaller } from "../lib/createServiceCaller";
 
@@ -153,100 +163,124 @@ const callAccountApi = createServiceCaller(createAccountServiceError);
 /**
  * Connect wallet and create/retrieve user
  */
-export const connectWallet = (
+export const connectWallet = async (
   walletAddress: string
-): Promise<ConnectWalletResponse> =>
-  callAccountApi(() =>
+): Promise<ConnectWalletResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.post<ConnectWalletResponse>("/users/connect-wallet", {
       wallet: walletAddress,
     })
   );
+  return validateConnectWalletResponse(response);
+};
 
 /**
  * Get complete user profile
  */
-export const getUserProfile = (userId: string): Promise<UserProfileResponse> =>
-  callAccountApi(() =>
+export const getUserProfile = async (
+  userId: string
+): Promise<UserProfileResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.get<UserProfileResponse>(`/users/${userId}`)
   );
+  return validateUserProfileResponse(response);
+};
 
 /**
  * Update user email
  */
-export const updateUserEmail = (
+export const updateUserEmail = async (
   userId: string,
   email: string
-): Promise<UpdateEmailResponse> =>
-  callAccountApi(() =>
+): Promise<UpdateEmailResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.put<UpdateEmailResponse>(`/users/${userId}/email`, {
       email,
     })
   );
+  return validateUpdateEmailResponse(response);
+};
 
 /**
  * Remove user email (unsubscribe from email-based reports)
  */
-export const removeUserEmail = (userId: string): Promise<UpdateEmailResponse> =>
-  callAccountApi(() =>
+export const removeUserEmail = async (
+  userId: string
+): Promise<UpdateEmailResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}/email`)
   );
+  return validateUpdateEmailResponse(response);
+};
 
 /**
  * Delete user account
  * Cannot delete users with active subscriptions
  */
-export const deleteUser = (userId: string): Promise<UpdateEmailResponse> =>
-  callAccountApi(() =>
+export const deleteUser = async (
+  userId: string
+): Promise<UpdateEmailResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}`)
   );
+  return validateUpdateEmailResponse(response);
+};
 
 // Wallet Management Operations
 
 /**
  * Get all user wallets
  */
-export const getUserWallets = (userId: string): Promise<UserCryptoWallet[]> =>
-  callAccountApi(() =>
+export const getUserWallets = async (
+  userId: string
+): Promise<UserCryptoWallet[]> => {
+  const response = await callAccountApi(() =>
     accountApiClient.get<UserCryptoWallet[]>(`/users/${userId}/wallets`)
   );
+  return validateUserWallets(response);
+};
 
 /**
  * Add wallet to user bundle
  */
-export const addWalletToBundle = (
+export const addWalletToBundle = async (
   userId: string,
   walletAddress: string,
   label?: string
-): Promise<AddWalletResponse> =>
-  callAccountApi(() =>
+): Promise<AddWalletResponse> => {
+  const response = await callAccountApi(() =>
     accountApiClient.post<AddWalletResponse>(`/users/${userId}/wallets`, {
       wallet: walletAddress,
       label,
     })
   );
+  return validateAddWalletResponse(response);
+};
 
 /**
  * Remove wallet from user bundle
  */
-export const removeWalletFromBundle = (
+export const removeWalletFromBundle = async (
   userId: string,
   walletId: string
-): Promise<{ message: string }> =>
-  callAccountApi(() =>
+): Promise<{ message: string }> => {
+  const response = await callAccountApi(() =>
     accountApiClient.delete<{ message: string }>(
       `/users/${userId}/wallets/${walletId}`
     )
   );
+  return validateMessageResponse(response);
+};
 
 /**
  * Update wallet label
  */
-export const updateWalletLabel = (
+export const updateWalletLabel = async (
   userId: string,
   walletAddress: string,
   label: string
-): Promise<{ message: string }> =>
-  callAccountApi(() =>
+): Promise<{ message: string }> => {
+  const response = await callAccountApi(() =>
     accountApiClient.put<{ message: string }>(
       `/users/${userId}/wallets/${walletAddress}/label`,
       {
@@ -254,32 +288,38 @@ export const updateWalletLabel = (
       }
     )
   );
+  return validateMessageResponse(response);
+};
 
 // Utility Functions
 
 /**
  * Health check for account service
  */
-export const checkAccountServiceHealth = (): Promise<{
+export const checkAccountServiceHealth = async (): Promise<{
   status: string;
   timestamp: string;
-}> =>
-  callAccountApi(() =>
+}> => {
+  const response = await callAccountApi(() =>
     accountApiClient.get<{
       status: string;
       timestamp: string;
     }>("/health")
   );
+  return validateHealthCheckResponse(response);
+};
 
 /**
  * Get user tokens for a specific chain
  */
-export const getUserTokens = (
+export const getUserTokens = async (
   accountAddress: string,
   chainName: string
-): Promise<AccountToken[]> =>
-  callAccountApi(() =>
+): Promise<AccountToken[]> => {
+  const response = await callAccountApi(() =>
     backendApiClient.get<AccountToken[]>(
       `/user/${accountAddress}/${chainName}/tokens`
     )
   );
+  return validateAccountTokens(response);
+};

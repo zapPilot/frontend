@@ -1,0 +1,543 @@
+import { describe, it, expect } from "vitest";
+import {
+  userSchema,
+  userCryptoWalletSchema,
+  planSchema,
+  userSubscriptionSchema,
+  connectWalletResponseSchema,
+  addWalletResponseSchema,
+  updateEmailResponseSchema,
+  userProfileResponseSchema,
+  accountTokenSchema,
+  healthCheckResponseSchema,
+  messageResponseSchema,
+  validateConnectWalletResponse,
+  validateAddWalletResponse,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateAccountTokens,
+  validateUserWallets,
+  validateHealthCheckResponse,
+  validateMessageResponse,
+  safeValidateUserProfile,
+} from "@/schemas/api/accountSchemas";
+import { ZodError } from "zod";
+
+describe("accountSchemas", () => {
+  describe("userSchema", () => {
+    it("validates correct user data", () => {
+      const validData = {
+        id: "user123",
+        email: "user@example.com",
+        is_active: true,
+        is_subscribed_to_reports: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts user without email", () => {
+      const validData = {
+        id: "user123",
+        is_active: true,
+        is_subscribed_to_reports: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSchema.parse(validData)).not.toThrow();
+    });
+
+    it("rejects invalid email", () => {
+      const invalidData = {
+        id: "user123",
+        email: "not-an-email",
+        is_active: true,
+        is_subscribed_to_reports: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSchema.parse(invalidData)).toThrow(ZodError);
+    });
+
+    it("rejects missing required fields", () => {
+      const invalidData = {
+        id: "user123",
+        email: "user@example.com",
+      };
+
+      expect(() => userSchema.parse(invalidData)).toThrow(ZodError);
+    });
+  });
+
+  describe("userCryptoWalletSchema", () => {
+    it("validates correct wallet data", () => {
+      const validData = {
+        id: "wallet123",
+        user_id: "user123",
+        wallet: "0x1234567890123456789012345678901234567890",
+        label: "My Main Wallet",
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userCryptoWalletSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts wallet without label", () => {
+      const validData = {
+        id: "wallet123",
+        user_id: "user123",
+        wallet: "0x1234567890123456789012345678901234567890",
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userCryptoWalletSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("planSchema", () => {
+    it("validates correct plan data", () => {
+      const validData = {
+        code: "premium",
+        name: "Premium Plan",
+        tier: 2,
+      };
+
+      expect(() => planSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("userSubscriptionSchema", () => {
+    it("validates correct subscription data with plan", () => {
+      const validData = {
+        id: "sub123",
+        user_id: "user123",
+        plan_code: "premium",
+        starts_at: "2025-01-01T00:00:00Z",
+        ends_at: "2026-01-01T00:00:00Z",
+        is_canceled: false,
+        created_at: "2025-01-17T00:00:00Z",
+        plan: {
+          code: "premium",
+          name: "Premium Plan",
+          tier: 2,
+        },
+      };
+
+      expect(() => userSubscriptionSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts subscription without end date", () => {
+      const validData = {
+        id: "sub123",
+        user_id: "user123",
+        plan_code: "premium",
+        starts_at: "2025-01-01T00:00:00Z",
+        is_canceled: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSubscriptionSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts subscription without plan details", () => {
+      const validData = {
+        id: "sub123",
+        user_id: "user123",
+        plan_code: "premium",
+        starts_at: "2025-01-01T00:00:00Z",
+        is_canceled: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSubscriptionSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("connectWalletResponseSchema", () => {
+    it("validates correct connect wallet response", () => {
+      const validData = {
+        user_id: "user123",
+        is_new_user: true,
+      };
+
+      expect(() => connectWalletResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts existing user response", () => {
+      const validData = {
+        user_id: "user123",
+        is_new_user: false,
+      };
+
+      expect(() => connectWalletResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("addWalletResponseSchema", () => {
+    it("validates correct add wallet response", () => {
+      const validData = {
+        wallet_id: "wallet123",
+        message: "Wallet added successfully",
+      };
+
+      expect(() => addWalletResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("updateEmailResponseSchema", () => {
+    it("validates correct update email response", () => {
+      const validData = {
+        success: true,
+        message: "Email updated successfully",
+      };
+
+      expect(() => updateEmailResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts failure response", () => {
+      const validData = {
+        success: false,
+        message: "Email update failed",
+      };
+
+      expect(() => updateEmailResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("userProfileResponseSchema", () => {
+    it("validates correct user profile response", () => {
+      const validData = {
+        user: {
+          id: "user123",
+          email: "user@example.com",
+          is_active: true,
+          is_subscribed_to_reports: false,
+          created_at: "2025-01-17T00:00:00Z",
+        },
+        wallets: [
+          {
+            id: "wallet123",
+            user_id: "user123",
+            wallet: "0x1234567890123456789012345678901234567890",
+            label: "Main Wallet",
+            created_at: "2025-01-17T00:00:00Z",
+          },
+        ],
+        subscription: {
+          id: "sub123",
+          user_id: "user123",
+          plan_code: "premium",
+          starts_at: "2025-01-01T00:00:00Z",
+          is_canceled: false,
+          created_at: "2025-01-17T00:00:00Z",
+          plan: {
+            code: "premium",
+            name: "Premium Plan",
+            tier: 2,
+          },
+        },
+      };
+
+      expect(() => userProfileResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts profile without subscription", () => {
+      const validData = {
+        user: {
+          id: "user123",
+          email: "user@example.com",
+          is_active: true,
+          is_subscribed_to_reports: false,
+          created_at: "2025-01-17T00:00:00Z",
+        },
+        wallets: [],
+      };
+
+      expect(() => userProfileResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts profile with empty wallets array", () => {
+      const validData = {
+        user: {
+          id: "user123",
+          is_active: true,
+          is_subscribed_to_reports: false,
+          created_at: "2025-01-17T00:00:00Z",
+        },
+        wallets: [],
+      };
+
+      expect(() => userProfileResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("accountTokenSchema", () => {
+    it("validates correct account token data", () => {
+      const validData = {
+        id: "token123",
+        chain: "ethereum",
+        name: "USD Coin",
+        symbol: "USDC",
+        display_symbol: "USDC",
+        optimized_symbol: "USDC",
+        decimals: 6,
+        logo_url: "https://example.com/usdc.png",
+        protocol_id: "protocol123",
+        price: 1.0,
+        is_verified: true,
+        is_core: true,
+        is_wallet: false,
+        time_at: 1705449600,
+        amount: 1000.5,
+      };
+
+      expect(() => accountTokenSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("healthCheckResponseSchema", () => {
+    it("validates correct health check response", () => {
+      const validData = {
+        status: "healthy",
+        timestamp: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => healthCheckResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("messageResponseSchema", () => {
+    it("validates correct message response", () => {
+      const validData = {
+        message: "Operation completed successfully",
+      };
+
+      expect(() => messageResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  describe("validation helper functions", () => {
+    describe("validateConnectWalletResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          user_id: "user123",
+          is_new_user: true,
+        };
+
+        const result = validateConnectWalletResponse(validData);
+        expect(result).toEqual(validData);
+      });
+
+      it("throws ZodError for invalid input", () => {
+        const invalidData = {
+          user_id: "user123",
+        };
+
+        expect(() => validateConnectWalletResponse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+    });
+
+    describe("validateAddWalletResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          wallet_id: "wallet123",
+          message: "Wallet added successfully",
+        };
+
+        const result = validateAddWalletResponse(validData);
+        expect(result.wallet_id).toBe("wallet123");
+      });
+
+      it("throws ZodError for invalid input", () => {
+        const invalidData = {
+          wallet_id: 123,
+          message: "Wallet added successfully",
+        };
+
+        expect(() => validateAddWalletResponse(invalidData)).toThrow(ZodError);
+      });
+    });
+
+    describe("validateUpdateEmailResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          success: true,
+          message: "Email updated successfully",
+        };
+
+        const result = validateUpdateEmailResponse(validData);
+        expect(result.success).toBe(true);
+      });
+
+      it("throws ZodError for invalid input", () => {
+        const invalidData = {
+          success: "true",
+          message: "Email updated successfully",
+        };
+
+        expect(() => validateUpdateEmailResponse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+    });
+
+    describe("validateUserProfileResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          user: {
+            id: "user123",
+            is_active: true,
+            is_subscribed_to_reports: false,
+            created_at: "2025-01-17T00:00:00Z",
+          },
+          wallets: [],
+        };
+
+        const result = validateUserProfileResponse(validData);
+        expect(result.user.id).toBe("user123");
+      });
+
+      it("throws ZodError for missing required fields", () => {
+        const invalidData = {
+          user: {
+            id: "user123",
+          },
+          wallets: [],
+        };
+
+        expect(() => validateUserProfileResponse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+    });
+
+    describe("validateAccountTokens", () => {
+      it("validates array of account tokens", () => {
+        const validData = [
+          {
+            id: "token123",
+            chain: "ethereum",
+            name: "USD Coin",
+            symbol: "USDC",
+            display_symbol: "USDC",
+            optimized_symbol: "USDC",
+            decimals: 6,
+            logo_url: "https://example.com/usdc.png",
+            protocol_id: "protocol123",
+            price: 1.0,
+            is_verified: true,
+            is_core: true,
+            is_wallet: false,
+            time_at: 1705449600,
+            amount: 1000.5,
+          },
+        ];
+
+        const result = validateAccountTokens(validData);
+        expect(result).toHaveLength(1);
+      });
+
+      it("accepts empty array", () => {
+        const validData: unknown[] = [];
+
+        const result = validateAccountTokens(validData);
+        expect(result).toHaveLength(0);
+      });
+
+      it("throws ZodError for invalid token in array", () => {
+        const invalidData = [
+          {
+            id: "token123",
+            chain: "ethereum",
+            // missing required fields
+          },
+        ];
+
+        expect(() => validateAccountTokens(invalidData)).toThrow(ZodError);
+      });
+    });
+
+    describe("validateUserWallets", () => {
+      it("validates array of user wallets", () => {
+        const validData = [
+          {
+            id: "wallet123",
+            user_id: "user123",
+            wallet: "0x1234567890123456789012345678901234567890",
+            created_at: "2025-01-17T00:00:00Z",
+          },
+        ];
+
+        const result = validateUserWallets(validData);
+        expect(result).toHaveLength(1);
+      });
+
+      it("accepts empty array", () => {
+        const validData: unknown[] = [];
+
+        const result = validateUserWallets(validData);
+        expect(result).toHaveLength(0);
+      });
+    });
+
+    describe("validateHealthCheckResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          status: "healthy",
+          timestamp: "2025-01-17T00:00:00Z",
+        };
+
+        const result = validateHealthCheckResponse(validData);
+        expect(result.status).toBe("healthy");
+      });
+    });
+
+    describe("validateMessageResponse", () => {
+      it("returns validated data for valid input", () => {
+        const validData = {
+          message: "Operation completed successfully",
+        };
+
+        const result = validateMessageResponse(validData);
+        expect(result.message).toBe("Operation completed successfully");
+      });
+    });
+
+    describe("safeValidateUserProfile", () => {
+      it("returns success result for valid input", () => {
+        const validData = {
+          user: {
+            id: "user123",
+            is_active: true,
+            is_subscribed_to_reports: false,
+            created_at: "2025-01-17T00:00:00Z",
+          },
+          wallets: [],
+        };
+
+        const result = safeValidateUserProfile(validData);
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.data.user.id).toBe("user123");
+        }
+      });
+
+      it("returns error result for invalid input", () => {
+        const invalidData = {
+          user: {
+            id: "user123",
+          },
+        };
+
+        const result = safeValidateUserProfile(invalidData);
+        expect(result.success).toBe(false);
+        if (!result.success) {
+          expect(result.error).toBeInstanceOf(ZodError);
+        }
+      });
+    });
+  });
+});

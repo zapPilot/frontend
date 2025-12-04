@@ -1394,20 +1394,21 @@ describe("balanceService", () => {
         ).rejects.toThrow("Network error");
       });
 
-      it("should handle malformed response data", async () => {
+      it("should throw error on malformed response data (Zod validation)", async () => {
         mockIntentEngineGet.mockResolvedValue({
           data: {
-            balances: "not-an-array",
+            balances: "not-an-array", // Invalid: should be array
           },
         });
 
-        const result = await getTokenBalances({
-          chainId: 1,
-          walletAddress: "0x123",
-        });
-
-        // Should handle gracefully and return empty tokens
-        expect(result.tokens).toHaveLength(0);
+        // With Zod validation, malformed data throws an error
+        // This is better than silently returning empty results
+        await expect(
+          getTokenBalances({
+            chainId: 1,
+            walletAddress: "0x123",
+          })
+        ).rejects.toThrow();
       });
     });
   });

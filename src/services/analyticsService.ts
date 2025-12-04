@@ -5,81 +5,38 @@
 
 import type { PoolDetail } from "@/types/domain/pool";
 import { ActualRiskSummaryResponse } from "@/types/domain/risk";
+import {
+  validateLandingPageResponse,
+  validateYieldReturnsSummaryResponse,
+  validateUnifiedDashboardResponse,
+  validateDailyYieldReturnsResponse,
+  type LandingPageResponse,
+  type YieldReturnsSummaryResponse,
+  type YieldWindowSummary,
+  type UnifiedDashboardResponse,
+  type DailyYieldReturnsResponse,
+} from "@/schemas/api/analyticsSchemas";
 
 import { httpUtils } from "../lib/http-utils";
 
-/**
- * Yield returns summary with IQR outlier detection
- *
- * Uses Interquartile Range (IQR) method to remove outliers from daily yield data,
- * providing more accurate average daily yield calculations for DeFi portfolios.
- */
-export interface ProtocolYieldWindow {
-  total_yield_usd: number;
-  average_daily_yield_usd: number;
-  data_points: number;
-  positive_days: number;
-  negative_days: number;
-}
+// Note: Types are imported and re-exported above at line 36
 
-/**
- * Represents yield data for a specific day
- * @public - Used in ProtocolYieldBreakdown.today
- */
-export interface ProtocolYieldToday {
-  date: string;
-  yield_usd: number;
-}
-
-export interface ProtocolYieldBreakdown {
-  protocol: string;
-  chain?: string | null;
-  window: ProtocolYieldWindow;
-  today?: ProtocolYieldToday | null;
-}
-
-export interface YieldWindowSummary {
-  user_id: string;
-  period: {
-    start_date: string;
-    end_date: string;
-    days: number;
-  };
-  average_daily_yield_usd: number;
-  median_daily_yield_usd: number;
-  total_yield_usd: number;
-  statistics: {
-    mean: number;
-    median: number;
-    std_dev: number;
-    min_value: number;
-    max_value: number;
-    total_days: number;
-    filtered_days: number;
-    outliers_removed: number;
-  };
-  outlier_strategy: "iqr" | "none" | "zscore" | "percentile";
-  outliers_detected: {
-    date: string;
-    value: number;
-    reason: string;
-    z_score: number | null;
-  }[];
-  protocol_breakdown: ProtocolYieldBreakdown[];
-}
-
-export interface YieldReturnsSummaryResponse {
-  user_id: string;
-  windows: Record<string, YieldWindowSummary>;
-  // Optional backend recommendation for which window to display
-  recommended_period?: string;
-}
-
-// Re-export PoolDetail for components that import from this service
+// Re-export types for external use
 export type { PoolDetail } from "@/types/domain/pool";
+export type {
+  LandingPageResponse,
+  YieldReturnsSummaryResponse,
+  YieldWindowSummary,
+  UnifiedDashboardResponse,
+  DailyYieldReturnsResponse,
+  ProtocolYieldWindow,
+  ProtocolYieldToday,
+  ProtocolYieldBreakdown,
+} from "@/schemas/api/analyticsSchemas";
 
-// Unified Landing Page Response Type
-export interface LandingPageResponse {
+// Legacy interface definition (unused but kept for reference)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _LegacyLandingPageResponse {
   total_assets_usd: number;
   total_debt_usd: number;
   total_net_usd: number;
@@ -175,7 +132,8 @@ export const getLandingPagePortfolioData = async (
   userId: string
 ): Promise<LandingPageResponse> => {
   const endpoint = `/api/v2/portfolio/${userId}/landing`;
-  return await httpUtils.analyticsEngine.get<LandingPageResponse>(endpoint);
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validateLandingPageResponse(response);
 };
 
 /**
@@ -224,17 +182,20 @@ export const getYieldReturnsSummary = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
 
   // API returns single YieldWindowSummary, not wrapped in windows
-  const singleWindow =
-    await httpUtils.analyticsEngine.get<YieldWindowSummary>(endpoint);
+  const singleWindow = await httpUtils.analyticsEngine.get<YieldWindowSummary>(
+    endpoint
+  );
 
   // Transform to match expected format
-  return {
+  const transformedResponse = {
     user_id: singleWindow.user_id,
     windows: {
       "30d": singleWindow, // Wrap single window response
     },
     recommended_period: "30d", // Since API returns 30-day window
   };
+
+  return validateYieldReturnsSummaryResponse(transformedResponse);
 };
 
 /**
@@ -292,7 +253,9 @@ interface AnalyticsEducationalContext {
   links?: AnalyticsEducationalLink[];
 }
 
-export interface UnifiedDashboardResponse {
+// This interface is now re-exported from schemas - see line 38
+// Keeping this internal copy commented out to show the structure
+interface _LegacyUnifiedDashboardResponse {
   user_id: string;
   parameters: {
     trend_days: number;
@@ -563,9 +526,8 @@ export const getPortfolioDashboard = async (
   userId: string
 ): Promise<UnifiedDashboardResponse> => {
   const endpoint = `/api/v2/analytics/${userId}/dashboard`;
-  return await httpUtils.analyticsEngine.get<UnifiedDashboardResponse>(
-    endpoint
-  );
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validateUnifiedDashboardResponse(response);
 };
 
 // ============================================================================
@@ -605,8 +567,10 @@ interface DailyYieldPeriod {
 
 /**
  * Response structure for daily yield returns endpoint
+ * (Type is imported from schemas - see line 17)
  */
-interface DailyYieldReturnsResponse {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _LegacyDailyYieldReturnsResponse {
   user_id: string;
   period: DailyYieldPeriod;
   daily_returns: DailyYieldReturn[];
@@ -637,7 +601,6 @@ export const getDailyYieldReturns = async (
   days = 30
 ): Promise<DailyYieldReturnsResponse> => {
   const endpoint = `/api/v2/analytics/${userId}/yield/daily?days=${days}`;
-  return await httpUtils.analyticsEngine.get<DailyYieldReturnsResponse>(
-    endpoint
-  );
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validateDailyYieldReturnsResponse(response);
 };

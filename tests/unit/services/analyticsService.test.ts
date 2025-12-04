@@ -35,6 +35,8 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
     rolling_days: 40,
   },
   trends: {
+    period_days: 30,
+    data_points: 0,
     period: {
       start_date: "2025-01-01",
       end_date: "2025-01-30",
@@ -137,6 +139,13 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
     },
   },
   allocation: {
+    period_days: 40,
+    data_points: 0,
+    period: {
+      start_date: "2024-12-12",
+      end_date: "2025-01-21",
+      days: 40,
+    },
     allocations: [],
     summary: {
       unique_dates: 0,
