@@ -28,10 +28,10 @@ export type {
   YieldReturnsSummaryResponse,
   YieldWindowSummary,
   UnifiedDashboardResponse,
-  DailyYieldReturnsResponse,
-  PoolPerformanceResponse,
+  /** @public */ DailyYieldReturnsResponse,
+  /** @public */ PoolPerformanceResponse,
   ProtocolYieldWindow,
-  ProtocolYieldToday,
+  /** @public */ ProtocolYieldToday,
   ProtocolYieldBreakdown,
 } from "@/schemas/api/analyticsSchemas";
 

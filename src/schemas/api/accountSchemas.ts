@@ -137,17 +137,17 @@ export const messageResponseSchema = z.object({
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-export type User = z.infer<typeof userSchema>;
-export type UserCryptoWallet = z.infer<typeof userCryptoWalletSchema>;
-export type Plan = z.infer<typeof planSchema>;
-export type UserSubscription = z.infer<typeof userSubscriptionSchema>;
-export type ConnectWalletResponse = z.infer<typeof connectWalletResponseSchema>;
-export type AddWalletResponse = z.infer<typeof addWalletResponseSchema>;
-export type UpdateEmailResponse = z.infer<typeof updateEmailResponseSchema>;
-export type UserProfileResponse = z.infer<typeof userProfileResponseSchema>;
-export type AccountToken = z.infer<typeof accountTokenSchema>;
-export type HealthCheckResponse = z.infer<typeof healthCheckResponseSchema>;
-export type MessageResponse = z.infer<typeof messageResponseSchema>;
+/** @public */ export type User = z.infer<typeof userSchema>;
+/** @public */ export type UserCryptoWallet = z.infer<typeof userCryptoWalletSchema>;
+/** @public */ export type Plan = z.infer<typeof planSchema>;
+/** @public */ export type UserSubscription = z.infer<typeof userSubscriptionSchema>;
+/** @public */ export type ConnectWalletResponse = z.infer<typeof connectWalletResponseSchema>;
+/** @public */ export type AddWalletResponse = z.infer<typeof addWalletResponseSchema>;
+/** @public */ export type UpdateEmailResponse = z.infer<typeof updateEmailResponseSchema>;
+/** @public */ export type UserProfileResponse = z.infer<typeof userProfileResponseSchema>;
+/** @public */ export type AccountToken = z.infer<typeof accountTokenSchema>;
+/** @public */ export type HealthCheckResponse = z.infer<typeof healthCheckResponseSchema>;
+/** @public */ export type MessageResponse = z.infer<typeof messageResponseSchema>;
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS

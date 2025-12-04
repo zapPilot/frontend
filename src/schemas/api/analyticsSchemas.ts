@@ -251,26 +251,36 @@ const analyticsEducationalContextSchema = z.object({
   links: z.array(analyticsEducationalLinkSchema).optional(),
 });
 
+// Shared helpers to reduce duplication in analytics sections
+const summaryRecord = z.record(z.string(), z.any()).optional();
+const periodSummaryBase = {
+  user_id: z.string().optional(),
+  period_days: z.number().optional(),
+  data_points: z.number().optional(),
+  period: periodWindowSchema.optional(),
+  period_info: periodWindowSchema.optional(),
+  summary: summaryRecord,
+  message: z.string().optional(),
+};
+
 // Trend data schemas
-const trendCategorySchema = z
+const trendBaseValueSchema = z
   .object({
-    category: z.string(),
     source_type: z.string().optional(),
     value_usd: z.number(),
     pnl_usd: z.number().optional(),
   })
   .passthrough();
 
-const trendProtocolSchema = z
-  .object({
-    protocol: z.string(),
-    chain: z.string(),
-    source_type: z.string().optional(),
-    category: z.string().optional(),
-    value_usd: z.number(),
-    pnl_usd: z.number().optional(),
-  })
-  .passthrough();
+const trendCategorySchema = trendBaseValueSchema.extend({
+  category: z.string(),
+});
+
+const trendProtocolSchema = trendBaseValueSchema.extend({
+  protocol: z.string(),
+  chain: z.string(),
+  category: z.string().optional(),
+});
 
 const trendDailyValueSchema = z
   .object({
@@ -287,14 +297,8 @@ const trendDailyValueSchema = z
 
 export const trendsSchema = z
   .object({
-    user_id: z.string().optional(),
-    period_days: z.number().optional(),
-    data_points: z.number().optional(),
-    period: periodWindowSchema.optional(),
-    period_info: periodWindowSchema.optional(),
+    ...periodSummaryBase,
     daily_values: z.array(trendDailyValueSchema).optional().default([]),
-    summary: z.record(z.string(), z.any()).optional(),
-    message: z.string().optional(),
   })
   .passthrough();
 
@@ -308,33 +312,41 @@ export const riskMetricsSchema = z
   .passthrough();
 // .optional() is not exported as unused variable
 
+const buildAnalyticsSection = (
+  dataShape: Record<string, z.ZodTypeAny>,
+  extras: Record<string, z.ZodTypeAny> = {}
+) =>
+  z
+    .object({
+      user_id: z.string().optional(),
+      period: periodWindowSchema.optional(),
+      period_info: analyticsPeriodInfoSchema.optional(),
+      ...dataShape,
+      summary: summaryRecord,
+      data_points: z.number().optional(),
+      message: z.string().optional(),
+      ...extras,
+    })
+    .passthrough();
+
+const buildDrawdownSection = (dataKey: "drawdown_data" | "underwater_data") =>
+  buildAnalyticsSection({
+    [dataKey]: z.array(z.record(z.string(), z.any())).default([]).optional(),
+  });
+
+const buildRollingSection = (dataKey: string, dataSchema: z.ZodTypeAny) =>
+  buildAnalyticsSection(
+    {
+      [dataKey]: dataSchema.default([]).optional(),
+    },
+    { educational_context: analyticsEducationalContextSchema.optional() }
+  );
+
 // Drawdown analysis
 export const drawdownAnalysisSchema = z
   .object({
-    enhanced: z
-      .object({
-        user_id: z.string().optional(),
-        period: periodWindowSchema.optional(),
-        period_info: analyticsPeriodInfoSchema.optional(),
-        drawdown_data: z.array(z.record(z.string(), z.any())).default([]).optional(),
-        summary: z.record(z.string(), z.any()).optional(),
-        data_points: z.number().optional(),
-        message: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-    underwater_recovery: z
-      .object({
-        user_id: z.string().optional(),
-        period: periodWindowSchema.optional(),
-        period_info: analyticsPeriodInfoSchema.optional(),
-        underwater_data: z.array(z.record(z.string(), z.any())).default([]).optional(),
-        summary: z.record(z.string(), z.any()).optional(),
-        data_points: z.number().optional(),
-        message: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
+    enhanced: buildDrawdownSection("drawdown_data").optional(),
+    underwater_recovery: buildDrawdownSection("underwater_data").optional(),
   })
   .passthrough();
 // .optional() is not exported as unused variable
@@ -342,11 +354,7 @@ export const drawdownAnalysisSchema = z
 // Allocation data
 export const allocationSchema = z
   .object({
-    user_id: z.string().optional(),
-    period_days: z.number().optional(),
-    data_points: z.number().optional(),
-    period: periodWindowSchema.optional(),
-    period_info: periodWindowSchema.optional(),
+    ...periodSummaryBase,
     allocations: z
       .array(
         z
@@ -361,8 +369,6 @@ export const allocationSchema = z
       )
       .default([])
       .optional(),
-    summary: z.record(z.string(), z.any()).optional(),
-    message: z.string().optional(),
   })
   .passthrough();
 // .optional() is not exported as unused variable
@@ -370,55 +376,31 @@ export const allocationSchema = z
 // Rolling analytics
 export const rollingAnalyticsSchema = z
   .object({
-    sharpe: z
-      .object({
-        user_id: z.string().optional(),
-        period: periodWindowSchema.optional(),
-        period_info: periodWindowSchema.optional(),
-        rolling_sharpe_data: z
-          .array(
-            z
-              .object({
-                date: z.string(),
-                rolling_sharpe_ratio: z.number(),
-                is_statistically_reliable: z.boolean().optional(),
-              })
-              .passthrough()
-          )
-          .default([])
-          .optional(),
-        summary: z.record(z.string(), z.any()).optional(),
-        data_points: z.number().optional(),
-        educational_context: analyticsEducationalContextSchema.optional(),
-        message: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-    volatility: z
-      .object({
-        user_id: z.string().optional(),
-        period: periodWindowSchema.optional(),
-        period_info: periodWindowSchema.optional(),
-        rolling_volatility_data: z
-          .array(
-            z
-              .object({
-                date: z.string(),
-                rolling_volatility_pct: z.number().optional(),
-                annualized_volatility_pct: z.number().optional(),
-                rolling_volatility_daily_pct: z.number().optional(),
-              })
-              .passthrough()
-          )
-          .default([])
-          .optional(),
-        summary: z.record(z.string(), z.any()).optional(),
-        data_points: z.number().optional(),
-        educational_context: analyticsEducationalContextSchema.optional(),
-        message: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
+    sharpe: buildRollingSection(
+      "rolling_sharpe_data",
+      z.array(
+        z
+          .object({
+            date: z.string(),
+            rolling_sharpe_ratio: z.number(),
+            is_statistically_reliable: z.boolean().optional(),
+          })
+          .passthrough()
+      )
+    ).optional(),
+    volatility: buildRollingSection(
+      "rolling_volatility_data",
+      z.array(
+        z
+          .object({
+            date: z.string(),
+            rolling_volatility_pct: z.number().optional(),
+            annualized_volatility_pct: z.number().optional(),
+            rolling_volatility_daily_pct: z.number().optional(),
+          })
+          .passthrough()
+      )
+    ).optional(),
   })
   .passthrough();
 // .optional() is not exported as unused variable
@@ -458,11 +440,7 @@ const dailyYieldReturnSchema = z.object({
 /**
  * Schema for daily yield period
  */
-const dailyYieldPeriodSchema = z.object({
-  start_date: z.string(),
-  end_date: z.string(),
-  days: z.number(),
-});
+const dailyYieldPeriodSchema = periodWindowSchema;
 
 /**
  * Schema for daily yield returns response
@@ -492,7 +470,7 @@ export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
  * These types are automatically generated from the Zod schemas
  */
 export type ProtocolYieldWindow = z.infer<typeof protocolYieldWindowSchema>;
-export type ProtocolYieldToday = z.infer<typeof protocolYieldTodaySchema>;
+/** @public */ export type ProtocolYieldToday = z.infer<typeof protocolYieldTodaySchema>;
 export type ProtocolYieldBreakdown = z.infer<
   typeof protocolYieldBreakdownSchema
 >;

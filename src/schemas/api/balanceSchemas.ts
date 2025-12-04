@@ -115,10 +115,10 @@ export const walletTokenBalancesSchema = z.object({
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-export type TokenBalanceRaw = z.infer<typeof tokenBalanceRawSchema>;
-export type NormalizedTokenBalance = z.infer<typeof normalizedTokenBalanceSchema>;
-export type WalletResponseData = z.infer<typeof walletResponseDataSchema>;
-export type WalletTokenBalances = z.infer<typeof walletTokenBalancesSchema>;
+/** @public */ export type TokenBalanceRaw = z.infer<typeof tokenBalanceRawSchema>;
+/** @public */ export type NormalizedTokenBalance = z.infer<typeof normalizedTokenBalanceSchema>;
+/** @public */ export type WalletResponseData = z.infer<typeof walletResponseDataSchema>;
+/** @public */ export type WalletTokenBalances = z.infer<typeof walletTokenBalancesSchema>;
 
 /**
  * Validation helper functions
