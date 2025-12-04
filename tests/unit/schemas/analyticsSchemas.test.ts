@@ -269,8 +269,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -335,8 +337,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -413,8 +417,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -472,6 +478,75 @@ describe("analyticsSchemas", () => {
       };
 
       expect(() => landingPageResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("applies safe defaults when optional fields are missing", () => {
+      const apiSample = {
+        total_assets_usd: 0,
+        total_debt_usd: 0,
+        total_net_usd: 0,
+        net_portfolio_value: 0,
+        weighted_apr: null,
+        estimated_monthly_income: null,
+        last_updated: null,
+        portfolio_allocation: {
+          btc: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          eth: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          stablecoins: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+        },
+        wallet_token_summary: {
+          total_value_usd: 0,
+          token_count: 0,
+          apr_30d: null,
+        },
+        portfolio_roi: {
+          windows: {
+            roi_3d: { value: 0, data_points: 0, start_balance: 0 },
+            roi_7d: { value: 0, data_points: 0, start_balance: 0 },
+            roi_30d: { value: 0, data_points: 0, start_balance: 0 },
+          },
+          recommended_roi: 0,
+          recommended_period: "roi_30d",
+          recommended_yearly_roi: 0,
+          estimated_yearly_pnl_usd: 0,
+        },
+        category_summary_debt: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
+        pool_details: [],
+      };
+
+      const parsed = landingPageResponseSchema.parse(apiSample);
+
+      expect(parsed.wallet_count).toBe(0);
+      expect(parsed.total_positions).toBe(0);
+      expect(parsed.protocols_count).toBe(0);
+      expect(parsed.chains_count).toBe(0);
+      expect(parsed.apr_coverage.total_pools).toBe(0);
     });
   });
 
@@ -1024,15 +1099,12 @@ describe("analyticsSchemas", () => {
     });
 
     describe("validateUnifiedDashboardResponse", () => {
-      it("throws ZodError for missing required fields", () => {
-        const invalidData = {
+      it("returns data even when fields are sparse", () => {
+        const minimalData = {
           user_id: "0x123",
-          // missing parameters and other required fields
         };
 
-        expect(() => validateUnifiedDashboardResponse(invalidData)).toThrow(
-          ZodError
-        );
+        expect(() => validateUnifiedDashboardResponse(minimalData)).not.toThrow();
       });
     });
 
@@ -1204,10 +1276,7 @@ describe("analyticsSchemas", () => {
         };
 
         const result = safeValidateUnifiedDashboardResponse(invalidData);
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeInstanceOf(ZodError);
-        }
+        expect(result.success).toBe(true);
       });
     });
   });

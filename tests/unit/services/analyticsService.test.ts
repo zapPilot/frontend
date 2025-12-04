@@ -231,8 +231,10 @@ describe("analyticsService", () => {
           total_assets_usd: 10000,
           total_debt_usd: 2000,
           total_net_usd: 8000,
+          net_portfolio_value: 8000,
           weighted_apr: 5.5,
           estimated_monthly_income: 36.67,
+          wallet_count: 2,
           portfolio_roi: {
             recommended_roi: 0.055,
             recommended_period: "30d",
@@ -304,8 +306,10 @@ describe("analyticsService", () => {
           total_assets_usd: 0,
           total_debt_usd: 0,
           total_net_usd: 0,
+          net_portfolio_value: 0,
           weighted_apr: 0,
           estimated_monthly_income: 0,
+          wallet_count: 0,
           portfolio_roi: {
             recommended_roi: 0,
             recommended_period: "7d",
@@ -375,8 +379,10 @@ describe("analyticsService", () => {
           total_assets_usd: 5000,
           total_debt_usd: 1000,
           total_net_usd: 4000,
+          net_portfolio_value: 4000,
           weighted_apr: 4.2,
           estimated_monthly_income: 14,
+          wallet_count: 1,
           portfolio_roi: {
             recommended_roi: 0.042,
             recommended_period: "7d",
