@@ -30,7 +30,8 @@ export const userCryptoWalletSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   wallet: z.string(),
-  label: z.string().optional(),
+  // Backend sometimes returns null for label; accept nullable to avoid hard failures
+  label: z.string().nullable().optional(),
   created_at: z.string(),
 });
 
@@ -51,7 +52,8 @@ export const userSubscriptionSchema = z.object({
   user_id: z.string(),
   plan_code: z.string(),
   starts_at: z.string(),
-  ends_at: z.string().optional(),
+  // Backend may return null for open-ended subscriptions
+  ends_at: z.string().nullable().optional(),
   is_canceled: z.boolean(),
   created_at: z.string(),
   plan: planSchema.optional(),

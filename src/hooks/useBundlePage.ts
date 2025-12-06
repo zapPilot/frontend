@@ -40,6 +40,17 @@ interface UseBundlePageResult {
 }
 
 // Pure helpers extracted for clarity and testability
+
+/**
+ * Determines if the connected user is viewing a different user's bundle.
+ * Returns false if currentUserId is undefined (e.g., during loading).
+ * Callers should combine with loading state check to avoid showing banner prematurely.
+ *
+ * @param isConnected - Whether a wallet is connected
+ * @param currentUserId - The connected user's ID (may be undefined during loading)
+ * @param viewedUserId - The bundle owner's user ID from the URL
+ * @returns True if user is connected AND has loaded data AND viewing different user's bundle
+ */
 export function computeIsDifferentUser(
   isConnected: boolean,
   currentUserId: string | undefined,
@@ -67,40 +78,38 @@ export function computeShowEmailBanner(
   return Boolean(isConnected && isOwnBundle && !email && !emailBannerDismissed);
 }
 
-export function getDismissedStorageKey(userId: string) {
-  return `dismissed-switch-${userId}`;
-}
-
-export function readSwitchDismissed(storage: Storage, userId: string): boolean {
-  return storage.getItem(getDismissedStorageKey(userId)) === "true";
-}
-
 export function computeRedirectUrl(search: string): string {
   const s = search || "";
   return `/${s ? (s.startsWith("?") ? s : `?${s}`) : ""}`;
 }
 
+/**
+ * Hook for managing bundle page state and visibility logic.
+ *
+ * @param userId - The bundle owner's user ID from URL
+ * @returns Bundle page state including banner visibility
+ *
+ * Note: Banner visibility depends on:
+ * - User data must be loaded (not in loading state)
+ * - User must be connected
+ * - Connected user must be different from bundle owner
+ */
 export function useBundlePage(userId: string): UseBundlePageResult {
   const router = useRouter();
-  const { userInfo, isConnected } = useUser();
-  const initialDismissed =
-    typeof window !== "undefined" && userId
-      ? readSwitchDismissed(localStorage, userId)
-      : false;
-  const [dismissedSwitchPrompt, setDismissedSwitchPrompt] =
-    useState<boolean>(initialDismissed);
+  const { userInfo, isConnected, connectedWallet, loading } = useUser();
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
-  const isDifferentUser = computeIsDifferentUser(
-    isConnected,
-    userInfo?.userId,
-    userId
+
+  // Compute if viewing different user's bundle (no dismissal state)
+  const isDifferentUser = useMemo(
+    () => computeIsDifferentUser(isConnected, userInfo?.userId, userId),
+    [isConnected, userInfo?.userId, userId]
   );
-  const [showSwitchPrompt, setShowSwitchPrompt] = useState<boolean>(
-    isDifferentUser && !initialDismissed
-  );
+
+  // Only show banner when NOT loading AND viewing different user's bundle
+  const showSwitchPrompt = !loading && isDifferentUser;
 
   const isOwnBundle = useMemo(
     () => isBundleOwned(userId, userInfo?.userId),
@@ -147,21 +156,18 @@ export function useBundlePage(userId: string): UseBundlePageResult {
     void loadBundleUser();
   }, [userId]);
 
-  // Redirect when disconnected from own bundle + switch prompt visibility
+  // Redirect when disconnected from own bundle
   useEffect(() => {
     const ownsBundle = userInfo?.userId === userId;
     if (!isConnected && ownsBundle) {
       const newUrl = computeRedirectUrl(window.location.search);
       router.replace(newUrl);
     }
-
-    setShowSwitchPrompt(isDifferentUser && !dismissedSwitchPrompt);
   }, [
     isConnected,
     userInfo?.userId,
     userId,
-    dismissedSwitchPrompt,
-    isDifferentUser,
+    connectedWallet, // Track wallet changes for reactivity
     router,
   ]);
 
@@ -174,12 +180,9 @@ export function useBundlePage(userId: string): UseBundlePageResult {
   }, [router, userInfo?.userId]);
 
   const handleStayHere = useCallback(() => {
-    setDismissedSwitchPrompt(true);
-    setShowSwitchPrompt(false);
-    if (typeof window !== "undefined" && userId) {
-      localStorage.setItem(getDismissedStorageKey(userId), "true");
-    }
-  }, [userId]);
+    // No-op: Banner will persist, user can close temporarily but it will reappear on refresh
+    // This keeps UX consistent but removes permanent dismissal
+  }, []);
 
   const handleEmailSubscribe = useCallback(() => {
     setIsWalletManagerOpen(true);
