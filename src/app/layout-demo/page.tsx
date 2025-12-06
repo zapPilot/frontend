@@ -9,8 +9,8 @@
 
 "use client";
 
+import { ArrowRight, Circle } from "lucide-react";
 import Link from "next/link";
-import { ArrowRight, CheckCircle, Circle, Star } from "lucide-react";
 
 export default function LayoutDemoIndexPage() {
   return (
@@ -158,6 +158,64 @@ export default function LayoutDemoIndexPage() {
             ]}
             isNew
           />
+
+          {/* V16 */}
+          <VariationCard
+            number={16}
+            title="Zen / Minimalist"
+            href="/layout-demo/v16"
+            description="Clean, distraction-free interface with transparent top navigation and minimal footer."
+            implementation="⭐⭐⭐ Layout"
+            mobile="⭐⭐⭐⭐⭐ Clean"
+            familiarity="⭐⭐⭐⭐⭐ Simple"
+            conversion="⭐⭐⭐ Trust"
+            highlights={[
+              "Minimalist top nav",
+              "Centered layout",
+              "Negative space",
+              "Focus on balance"
+            ]}
+            isNew
+          />
+
+          {/* V17 */}
+          <VariationCard
+            number={17}
+            title="Modern Dashboard"
+            href="/layout-demo/v17"
+            description="Classic SaaS dashboard layout with collapsible left sidebar and integrated footer."
+            implementation="⭐⭐⭐⭐ Layout"
+            mobile="⭐⭐⭐⭐ Responsive"
+            familiarity="⭐⭐⭐⭐⭐ Standard"
+            conversion="⭐⭐⭐⭐ Utility"
+            highlights={[
+              "Sidebar navigation",
+              "Search integrated",
+              "User profile menu",
+              "Familiar SaaS feel"
+            ]}
+            isNew
+          />
+
+          {/* V18 */}
+          <VariationCard
+            number={18}
+            title="Command Center"
+            href="/layout-demo/v18"
+            description="Information-dense trading terminal with ticker, quick stats, and detailed footer."
+            implementation="⭐⭐⭐⭐⭐ Complex"
+            mobile="⭐⭐⭐ Dense"
+            familiarity="⭐⭐⭐ Pro Tool"
+            conversion="⭐⭐⭐⭐ Power User"
+            highlights={[
+              "Market ticker",
+              "Dense data header",
+              "Fat footer",
+              "System status"
+            ]}
+            isNew
+          />
+
         </div>
 
         {/* Footer Note */}

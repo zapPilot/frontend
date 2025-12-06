@@ -1,14 +1,14 @@
 "use client";
 
-import { AnimatePresence,motion } from "framer-motion";
-import { ArrowRight, Info, Settings, Shield, Target, TrendingUp, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Info, Settings, Shield, Target, Zap } from "lucide-react";
 import { useState } from "react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
 
-import { getRegimeById, RegimeId,regimes } from "../regime/regimeData";
-import { ALLOCATION_GRADIENTS,AllocationProgressBar } from "../regime/RegimeUtils";
+import { getRegimeById, RegimeId, regimes } from "../regime/regimeData";
+import { ALLOCATION_GRADIENTS, AllocationProgressBar } from "../regime/RegimeUtils";
 import { MOCK_DATA } from "./mockPortfolioData";
 
 export function WalletPortfolioPresenterV5() {

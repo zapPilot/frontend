@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
+
 import { WalletPortfolioPresenterV15 } from "@/components/wallet/variations/WalletPortfolioPresenterV15";
 
 export default function LayoutV15Page() {

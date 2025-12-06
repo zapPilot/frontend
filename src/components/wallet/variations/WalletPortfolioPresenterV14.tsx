@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Settings, Zap, CornerDownRight } from "lucide-react";
+import { CornerDownRight,Settings, Zap } from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
+
 import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
 
