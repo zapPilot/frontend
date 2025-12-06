@@ -216,6 +216,63 @@ export default function LayoutDemoIndexPage() {
             isNew
           />
 
+          {/* V19 */}
+          <VariationCard
+            number={19}
+            title="Comparative Alignment"
+            href="/layout-demo/v19"
+            description="Direct visual comparison of 'Target vs Actual' allocation. Removes redundant top-nav balance."
+            implementation="⭐⭐⭐ Layout"
+            mobile="⭐⭐⭐⭐ Stacked"
+            familiarity="⭐⭐⭐⭐ Logical"
+            conversion="⭐⭐⭐⭐ Clarity"
+            highlights={[
+              "Target vs Actual bars",
+              "Drift visualization",
+              "Simplified top nav",
+              "Comparative focus"
+            ]}
+            isNew
+          />
+
+          {/* V20 */}
+          <VariationCard
+            number={20}
+            title="Regime Map"
+            href="/layout-demo/v20"
+            description="Visualizes the 5 market regimes (Fear/Greed) to show cycle position."
+            implementation="⭐⭐⭐ Component"
+            mobile="⭐⭐⭐⭐ Compact"
+            familiarity="⭐⭐⭐ Educational"
+            conversion="⭐⭐⭐⭐ Context"
+            highlights={[
+              "5-Regime Spectrum",
+              "Cycle position",
+              "Educational context",
+              "Strategy alignment"
+            ]}
+            isNew
+          />
+
+          {/* V21 */}
+          <VariationCard
+            number={21}
+            title="Unified Flow"
+            href="/layout-demo/v21"
+            description="Single-column flow with 'Ghost Bar' target visualization overlay."
+            implementation="⭐⭐⭐⭐ Overlay"
+            mobile="⭐⭐⭐⭐⭐ Native"
+            familiarity="⭐⭐⭐⭐ Modern"
+            conversion="⭐⭐⭐⭐ Actionable"
+            highlights={[
+              "Ghost Bar targets",
+              "Single column flow",
+              "Combined hero metrics",
+              "Mobile-first feel"
+            ]}
+            isNew
+          />
+
         </div>
 
         {/* Footer Note */}
