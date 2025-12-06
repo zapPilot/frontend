@@ -1,15 +1,16 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
+
 import {
-  tokenBalanceRawSchema,
   normalizedTokenBalanceSchema,
-  walletResponseDataSchema,
-  walletTokenBalancesSchema,
+  safeValidateWalletResponse,
+  tokenBalanceRawSchema,
   validateTokenBalanceRaw,
   validateWalletResponseData,
   validateWalletTokenBalances,
-  safeValidateWalletResponse,
+  walletResponseDataSchema,
+  walletTokenBalancesSchema,
 } from "@/schemas/api/balanceSchemas";
-import { ZodError } from "zod";
 
 describe("balanceSchemas", () => {
   describe("tokenBalanceRawSchema", () => {
@@ -110,7 +111,9 @@ describe("balanceSchemas", () => {
         balance: 0,
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(minimalData)).not.toThrow();
+      expect(() =>
+        normalizedTokenBalanceSchema.parse(minimalData)
+      ).not.toThrow();
     });
 
     it("validates normalized token with metadata", () => {
@@ -124,7 +127,9 @@ describe("balanceSchemas", () => {
         },
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(dataWithMetadata)).not.toThrow();
+      expect(() =>
+        normalizedTokenBalanceSchema.parse(dataWithMetadata)
+      ).not.toThrow();
     });
 
     it("rejects normalized token without required fields", () => {
@@ -133,7 +138,9 @@ describe("balanceSchemas", () => {
         // missing address, decimals, balance
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
 
     it("rejects normalized token with wrong type for balance", () => {
@@ -143,7 +150,9 @@ describe("balanceSchemas", () => {
         balance: "not-a-number", // should be number
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
 
     it("rejects normalized token with invalid decimals type", () => {
@@ -153,7 +162,9 @@ describe("balanceSchemas", () => {
         balance: 1.0,
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
   });
 
@@ -274,7 +285,9 @@ describe("balanceSchemas", () => {
         tokens: [],
       };
 
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
 
     it("rejects wallet balances without required fields", () => {
@@ -283,7 +296,9 @@ describe("balanceSchemas", () => {
         // missing address, fromCache, tokens
       };
 
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
 
     it("rejects wallet balances with invalid tokens array", () => {
@@ -299,7 +314,9 @@ describe("balanceSchemas", () => {
         ],
       };
 
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(ZodError);
+      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
+        ZodError
+      );
     });
   });
 
@@ -360,7 +377,9 @@ describe("balanceSchemas", () => {
           // missing required fields
         };
 
-        expect(() => validateWalletTokenBalances(invalidData)).toThrow(ZodError);
+        expect(() => validateWalletTokenBalances(invalidData)).toThrow(
+          ZodError
+        );
       });
     });
 
@@ -420,7 +439,9 @@ describe("balanceSchemas", () => {
         if (error instanceof ZodError) {
           expect(error.issues).toBeDefined();
           expect(error.issues.length).toBeGreaterThan(0);
-          const addressError = error.issues.find(e => e.path.includes("address"));
+          const addressError = error.issues.find(e =>
+            e.path.includes("address")
+          );
           expect(addressError).toBeDefined();
         }
       }
@@ -441,7 +462,9 @@ describe("balanceSchemas", () => {
         if (error instanceof ZodError) {
           expect(error.issues).toBeDefined();
           expect(error.issues.length).toBeGreaterThan(0);
-          const balanceError = error.issues.find(e => e.path.includes("balance"));
+          const balanceError = error.issues.find(e =>
+            e.path.includes("balance")
+          );
           expect(balanceError).toBeDefined();
           expect(balanceError?.code).toBe("invalid_type");
         }
@@ -457,7 +480,9 @@ describe("balanceSchemas", () => {
         balance: 0,
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(dataWithNull)).not.toThrow();
+      expect(() =>
+        normalizedTokenBalanceSchema.parse(dataWithNull)
+      ).not.toThrow();
     });
 
     it("handles zero values correctly", () => {
@@ -469,7 +494,9 @@ describe("balanceSchemas", () => {
         usdValue: 0,
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(dataWithZeros)).not.toThrow();
+      expect(() =>
+        normalizedTokenBalanceSchema.parse(dataWithZeros)
+      ).not.toThrow();
     });
 
     it("handles very large numbers", () => {
@@ -480,7 +507,9 @@ describe("balanceSchemas", () => {
         usdValue: 999999999999,
       };
 
-      expect(() => normalizedTokenBalanceSchema.parse(dataWithLargeNumbers)).not.toThrow();
+      expect(() =>
+        normalizedTokenBalanceSchema.parse(dataWithLargeNumbers)
+      ).not.toThrow();
     });
 
     it("handles empty strings where allowed", () => {
@@ -491,7 +520,9 @@ describe("balanceSchemas", () => {
         balance: "0",
       };
 
-      expect(() => tokenBalanceRawSchema.parse(dataWithEmptyStrings)).not.toThrow();
+      expect(() =>
+        tokenBalanceRawSchema.parse(dataWithEmptyStrings)
+      ).not.toThrow();
     });
   });
 });

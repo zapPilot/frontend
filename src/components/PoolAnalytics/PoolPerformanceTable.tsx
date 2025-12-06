@@ -1,13 +1,5 @@
 import { motion } from "framer-motion";
-import {
-  AlertTriangle,
-  ChevronDown,
-  ChevronUp,
-  Filter,
-  TrendingDown,
-  TrendingUp,
-  X,
-} from "lucide-react";
+import { AlertTriangle, ChevronDown, ChevronUp, Filter, X } from "lucide-react";
 import React, { useMemo, useState } from "react";
 
 import { formatCurrency, formatPercentage } from "../../lib/formatters";
@@ -33,7 +25,7 @@ interface PoolPerformanceTableProps {
   topNOptions?: number[];
 }
 
-type SortField = "apr" | "value" | "contribution" | "protocol";
+type SortField = "value" | "contribution" | "protocol";
 type SortDirection = "asc" | "desc";
 
 interface SortState {
@@ -57,54 +49,6 @@ const getChainStyle = (chain: string): string => {
     CHAIN_COLORS[lowerChain] ||
     CHAIN_COLORS["default"] ||
     "bg-gray-500/20 text-gray-400 border-gray-500/30"
-  );
-};
-
-const isUnderperforming = (pool: PoolDetail): boolean => {
-  return pool.final_apr <= 0.025 || !pool.protocol_matched;
-};
-
-const formatAPR = (apr: number): string => {
-  return formatPercentage(apr * 100, false, 2);
-};
-
-const APR_HIGH_THRESHOLD = 0.05;
-const APR_LOW_THRESHOLD = 0.01;
-
-const getAprTrendIcon = (apr: number) => {
-  if (apr > APR_HIGH_THRESHOLD) {
-    return <TrendingUp className="w-4 h-4 text-green-400" />;
-  }
-
-  if (apr <= APR_LOW_THRESHOLD) {
-    return <TrendingDown className="w-4 h-4 text-red-400" />;
-  }
-
-  return null;
-};
-
-const getAprTextClass = (pool: PoolDetail) => {
-  if (isUnderperforming(pool)) {
-    return "text-yellow-400";
-  }
-
-  if (pool.final_apr > APR_HIGH_THRESHOLD) {
-    return "text-green-400";
-  }
-
-  return "text-white";
-};
-
-const renderAprIndicator = (pool: PoolDetail) => {
-  const trendIcon = getAprTrendIcon(pool.final_apr);
-
-  return (
-    <div className="flex items-center space-x-2">
-      {trendIcon}
-      <span className={`font-medium ${getAprTextClass(pool)}`}>
-        {formatAPR(pool.final_apr)}
-      </span>
-    </div>
   );
 };
 
@@ -207,11 +151,6 @@ const CARD_SECTIONS: {
   render: (entry: PoolEntry) => React.ReactNode;
 }[] = [
   {
-    key: "apr",
-    label: "APR",
-    render: ({ pool }) => renderAprIndicator(pool),
-  },
-  {
     key: "value",
     label: "Value",
     render: ({ pool }) => (
@@ -278,11 +217,7 @@ const PoolMobileCard = ({ entry }: { entry: PoolEntry }) => (
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay: entry.index * 0.05 }}
-    className={`p-4 rounded-lg border ${
-      isUnderperforming(entry.pool)
-        ? "bg-yellow-900/20 border-yellow-600/30"
-        : "bg-white/5 border-gray-700/50"
-    }`}
+    className="p-4 rounded-lg border bg-white/5 border-gray-700/50"
   >
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-3">
@@ -298,9 +233,7 @@ const PoolMobileCard = ({ entry }: { entry: PoolEntry }) => (
           chainClassName="mt-1"
         />
       </div>
-      {isUnderperforming(entry.pool) && (
-        <AlertTriangle className="w-5 h-5 text-yellow-400 flex-shrink-0" />
-      )}
+      <div className="w-5 h-5" />
     </div>
     <div className="grid grid-cols-2 gap-4 text-sm">
       {CARD_SECTIONS.map(section => (
@@ -398,10 +331,6 @@ const PoolPerformanceTableComponent = ({
       let valueB: number | string;
 
       switch (sortState.field) {
-        case "apr":
-          valueA = a.final_apr;
-          valueB = b.final_apr;
-          break;
         case "value":
           valueA = a.asset_usd_value;
           valueB = b.asset_usd_value;
@@ -563,20 +492,9 @@ const PoolPerformanceTableComponent = ({
           </div>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             <div className="text-sm text-gray-400">
-              {topN && displayedPools.length < filteredPools.length ? (
-                <>
-                  Showing {displayedPools.length} of {filteredPools.length}{" "}
-                  pools •{" "}
-                  {displayedPools.filter(p => !isUnderperforming(p)).length}{" "}
-                  performing well
-                </>
-              ) : (
-                <>
-                  {filteredPools.length} pools •{" "}
-                  {filteredPools.filter(p => !isUnderperforming(p)).length}{" "}
-                  performing well
-                </>
-              )}
+              {topN && displayedPools.length < filteredPools.length
+                ? `Showing ${displayedPools.length} of ${filteredPools.length} pools`
+                : `${filteredPools.length} pools`}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-400">Show:</span>
@@ -669,24 +587,31 @@ const PoolPerformanceTableComponent = ({
         <div className="mt-6 p-4 bg-white/5 rounded-lg border border-gray-700/50">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="text-center">
-              <p className="text-gray-400 mb-1">Underperforming</p>
-              <p className="text-yellow-400 font-medium">
-                {displayedPools.filter(p => isUnderperforming(p)).length}
-              </p>
+              <p className="text-gray-400 mb-1">Pools</p>
+              <p className="text-white font-medium">{displayedPools.length}</p>
             </div>
             <div className="text-center">
-              <p className="text-gray-400 mb-1">Performing Well</p>
-              <p className="text-green-400 font-medium">
-                {displayedPools.filter(p => !isUnderperforming(p)).length}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-400 mb-1">Avg APR</p>
+              <p className="text-gray-400 mb-1">Total Value</p>
               <p className="text-white font-medium">
-                {displayedPools.length > 0
-                  ? formatAPR(
-                      displayedPools.reduce((sum, p) => sum + p.final_apr, 0) /
-                        displayedPools.length
+                {formatCurrency(
+                  displayedPools.reduce(
+                    (sum, p) => sum + p.asset_usd_value,
+                    0
+                  )
+                )}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-gray-400 mb-1">Avg Contribution %</p>
+              <p className="text-white font-medium">
+                {displayedPools.length
+                  ? formatPercentage(
+                      displayedPools.reduce(
+                        (sum, p) => sum + p.contribution_to_portfolio,
+                        0
+                      ) / displayedPools.length,
+                      false,
+                      2
                     )
                   : "0.00%"}
               </p>

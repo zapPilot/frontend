@@ -1,27 +1,28 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
+import { ZodError } from "zod";
+
 import {
-  userSchema,
-  userCryptoWalletSchema,
-  planSchema,
-  userSubscriptionSchema,
-  connectWalletResponseSchema,
-  addWalletResponseSchema,
-  updateEmailResponseSchema,
-  userProfileResponseSchema,
   accountTokenSchema,
+  addWalletResponseSchema,
+  connectWalletResponseSchema,
   healthCheckResponseSchema,
   messageResponseSchema,
-  validateConnectWalletResponse,
-  validateAddWalletResponse,
-  validateUpdateEmailResponse,
-  validateUserProfileResponse,
+  planSchema,
+  safeValidateUserProfile,
+  updateEmailResponseSchema,
+  userCryptoWalletSchema,
+  userProfileResponseSchema,
+  userSchema,
+  userSubscriptionSchema,
   validateAccountTokens,
-  validateUserWallets,
+  validateAddWalletResponse,
+  validateConnectWalletResponse,
   validateHealthCheckResponse,
   validateMessageResponse,
-  safeValidateUserProfile,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateUserWallets,
 } from "@/schemas/api/accountSchemas";
-import { ZodError } from "zod";
 
 describe("accountSchemas", () => {
   describe("userSchema", () => {
@@ -93,6 +94,18 @@ describe("accountSchemas", () => {
 
       expect(() => userCryptoWalletSchema.parse(validData)).not.toThrow();
     });
+
+    it("accepts wallet with null label (backend occasionally returns null)", () => {
+      const validData = {
+        id: "wallet123",
+        user_id: "user123",
+        wallet: "0x1234567890123456789012345678901234567890",
+        label: null,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userCryptoWalletSchema.parse(validData)).not.toThrow();
+    });
   });
 
   describe("planSchema", () => {
@@ -146,6 +159,20 @@ describe("accountSchemas", () => {
         user_id: "user123",
         plan_code: "premium",
         starts_at: "2025-01-01T00:00:00Z",
+        is_canceled: false,
+        created_at: "2025-01-17T00:00:00Z",
+      };
+
+      expect(() => userSubscriptionSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts subscription with null ends_at", () => {
+      const validData = {
+        id: "sub123",
+        user_id: "user123",
+        plan_code: "premium",
+        starts_at: "2025-01-01T00:00:00Z",
+        ends_at: null,
         is_canceled: false,
         created_at: "2025-01-17T00:00:00Z",
       };
@@ -266,6 +293,37 @@ describe("accountSchemas", () => {
           created_at: "2025-01-17T00:00:00Z",
         },
         wallets: [],
+      };
+
+      expect(() => userProfileResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("accepts profile when wallet labels and subscription end dates are null", () => {
+      const validData = {
+        user: {
+          id: "user123",
+          is_active: true,
+          is_subscribed_to_reports: false,
+          created_at: "2025-01-17T00:00:00Z",
+        },
+        wallets: [
+          {
+            id: "wallet123",
+            user_id: "user123",
+            wallet: "0x1234567890123456789012345678901234567890",
+            label: null,
+            created_at: "2025-01-17T00:00:00Z",
+          },
+        ],
+        subscription: {
+          id: "sub123",
+          user_id: "user123",
+          plan_code: "premium",
+          starts_at: "2025-01-01T00:00:00Z",
+          ends_at: null,
+          is_canceled: false,
+          created_at: "2025-01-17T00:00:00Z",
+        },
       };
 
       expect(() => userProfileResponseSchema.parse(validData)).not.toThrow();

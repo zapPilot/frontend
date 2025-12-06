@@ -167,8 +167,6 @@ vi.mock("@/components/ui", () => ({
 
 // Mock WalletManager
 let mockIsWalletManagerOpen = false;
-// FIX: Track banner dismissal state to properly test persistence
-let mockBannerDismissed = false;
 
 vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({
@@ -219,9 +217,8 @@ vi.mock("@/components/WalletManager", () => ({
 vi.mock("@/hooks/useBundlePage", () => ({
   useBundlePage: (userId: string) => {
     const isOwnBundle = mockIsConnected && mockUserInfo?.userId === userId;
-    // FIX: Include banner dismissal state in showSwitchPrompt calculation
-    const showSwitchPrompt =
-      mockIsConnected && !isOwnBundle && userId !== "" && !mockBannerDismissed;
+    // Banner always shows when viewing different user's bundle (no dismissal)
+    const showSwitchPrompt = mockIsConnected && !isOwnBundle && userId !== "";
 
     return {
       isOwnBundle,
@@ -237,8 +234,7 @@ vi.mock("@/hooks/useBundlePage", () => ({
       switchPrompt: {
         show: showSwitchPrompt,
         onStay: () => {
-          // FIX: Actually update dismissal state when banner is dismissed
-          mockBannerDismissed = true;
+          // No-op: Banner will persist (user can close temporarily)
         },
         onSwitch: () => {
           if (mockUserInfo?.userId) {
@@ -257,7 +253,7 @@ vi.mock("@/hooks/useBundlePage", () => ({
       },
       overlays: {
         showQuickSwitch: showSwitchPrompt,
-        // FIX: Use getter to always return current value instead of captured value
+        // Use getter to always return current value
         get isWalletManagerOpen() {
           return mockIsWalletManagerOpen;
         },
@@ -282,8 +278,6 @@ describe("Bundle Sharing Flow Integration Tests", () => {
     mockIsConnected = false;
     mockConnectedWallet = null;
     mockIsWalletManagerOpen = false;
-    // FIX: Reset banner dismissal state before each test
-    mockBannerDismissed = false;
     mockReplace.mockClear();
     mockPush.mockClear();
   });
@@ -794,6 +788,160 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
         "own"
       );
+    });
+  });
+
+  describe("Wallet Switching Behavior - Always Show Banner", () => {
+    it("should show banner when switching to different wallet while viewing bundle", async () => {
+      // Start with wallet A viewing bundle B
+      mockIsConnected = true;
+      mockUserInfo = { userId: "0xWalletA" };
+      mockConnectedWallet = "0xWalletA";
+
+      const { rerender } = await act(async () => {
+        return render(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      // Banner should show
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+
+      // Switch to wallet C (still viewing bundle B)
+      mockUserInfo = { userId: "0xWalletC" };
+      mockConnectedWallet = "0xWalletC";
+
+      await act(async () => {
+        rerender(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      // Banner should still be visible
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+      expect(screen.getByTestId("quick-switch-fab")).toBeInTheDocument();
+    });
+
+    it("should hide banner when switching from someone else's bundle to own", async () => {
+      // Start with wallet A viewing bundle B
+      mockIsConnected = true;
+      mockUserInfo = { userId: "0xWalletA" };
+      mockConnectedWallet = "0xWalletA";
+
+      const { rerender } = await act(async () => {
+        return render(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+
+      // Switch to wallet B (now viewing own bundle)
+      mockUserInfo = { userId: "0xBundleB" };
+      mockConnectedWallet = "0xBundleB";
+
+      await act(async () => {
+        rerender(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      // Banner should disappear (viewing own bundle)
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("switch-prompt-banner")
+        ).not.toBeInTheDocument();
+      });
+      expect(screen.queryByTestId("quick-switch-fab")).not.toBeInTheDocument();
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "own"
+      );
+    });
+
+    it("should show banner when switching from own bundle to someone else's", async () => {
+      // Start with wallet A viewing bundle A (own)
+      mockIsConnected = true;
+      mockUserInfo = { userId: "0xWalletA" };
+      mockConnectedWallet = "0xWalletA";
+
+      const { rerender } = await act(async () => {
+        return render(<BundlePageClient userId="0xWalletA" />);
+      });
+
+      // No banner (viewing own bundle)
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId("switch-prompt-banner")
+        ).not.toBeInTheDocument();
+      });
+
+      // Switch to wallet B (still viewing bundle A)
+      mockUserInfo = { userId: "0xWalletB" };
+      mockConnectedWallet = "0xWalletB";
+
+      await act(async () => {
+        rerender(<BundlePageClient userId="0xWalletA" />);
+      });
+
+      // Banner should now appear
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+      expect(screen.getByTestId("quick-switch-fab")).toBeInTheDocument();
+      expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
+        "visitor"
+      );
+    });
+
+    it("should handle rapid wallet switches", async () => {
+      mockIsConnected = true;
+      const bundleId = "0xBundleOwner";
+
+      const { rerender } = await act(async () => {
+        mockUserInfo = { userId: "0xWallet1" };
+        mockConnectedWallet = "0xWallet1";
+        return render(<BundlePageClient userId={bundleId} />);
+      });
+
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+
+      // Rapid switch to wallet 2
+      mockUserInfo = { userId: "0xWallet2" };
+      mockConnectedWallet = "0xWallet2";
+      await act(async () => {
+        rerender(<BundlePageClient userId={bundleId} />);
+      });
+
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+
+      // Rapid switch to wallet 3
+      mockUserInfo = { userId: "0xWallet3" };
+      mockConnectedWallet = "0xWallet3";
+      await act(async () => {
+        rerender(<BundlePageClient userId={bundleId} />);
+      });
+
+      // Banner should persist
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+      expect(screen.getByTestId("quick-switch-fab")).toBeInTheDocument();
+    });
+
+    it("should always show banner for non-owner, no matter how many times closed", async () => {
+      const user = userEvent.setup();
+
+      mockIsConnected = true;
+      mockUserInfo = { userId: "0xWalletA" };
+      mockConnectedWallet = "0xWalletA";
+
+      const { rerender } = await act(async () => {
+        return render(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
+
+      // Click "Stay" to close banner (no-op in new implementation)
+      const stayButton = screen.getByTestId("stay-on-bundle");
+      await act(async () => {
+        await user.click(stayButton);
+      });
+
+      // Re-render (simulating page refresh or state update)
+      await act(async () => {
+        rerender(<BundlePageClient userId="0xBundleB" />);
+      });
+
+      // Banner should still show (no persistence)
+      expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
     });
   });
 });

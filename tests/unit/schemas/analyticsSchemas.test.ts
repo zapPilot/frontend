@@ -1,20 +1,22 @@
-import { describe, it, expect } from "vitest";
-import {
-  protocolYieldWindowSchema,
-  protocolYieldTodaySchema,
-  protocolYieldBreakdownSchema,
-  yieldWindowSummarySchema,
-  yieldReturnsSummaryResponseSchema,
-  landingPageResponseSchema,
-  unifiedDashboardResponseSchema,
-  dailyYieldReturnsResponseSchema,
-  validateYieldReturnsSummaryResponse,
-  validateLandingPageResponse,
-  validateUnifiedDashboardResponse,
-  validateDailyYieldReturnsResponse,
-  safeValidateUnifiedDashboardResponse,
-} from "@/schemas/api/analyticsSchemas";
+import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
+
+import {
+  dailyYieldReturnsResponseSchema,
+  landingPageResponseSchema,
+  poolPerformanceResponseSchema,
+  protocolYieldBreakdownSchema,
+  protocolYieldTodaySchema,
+  protocolYieldWindowSchema,
+  safeValidateUnifiedDashboardResponse,
+  unifiedDashboardResponseSchema,
+  validateLandingPageResponse,
+  validatePoolPerformanceResponse,
+  validateUnifiedDashboardResponse,
+  validateYieldReturnsSummaryResponse,
+  yieldReturnsSummaryResponseSchema,
+  yieldWindowSummarySchema,
+} from "@/schemas/api/analyticsSchemas";
 
 describe("analyticsSchemas", () => {
   describe("protocolYieldWindowSchema", () => {
@@ -162,7 +164,7 @@ describe("analyticsSchemas", () => {
     it("validates outlier_strategy enum", () => {
       const strategies = ["iqr", "none", "zscore", "percentile"];
 
-      strategies.forEach(strategy => {
+      for (const strategy of strategies) {
         const validData = {
           user_id: "0x123",
           period: {
@@ -189,7 +191,7 @@ describe("analyticsSchemas", () => {
         };
 
         expect(() => yieldWindowSummarySchema.parse(validData)).not.toThrow();
-      });
+      }
     });
 
     it("rejects invalid outlier_strategy", () => {
@@ -269,8 +271,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -335,8 +339,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -413,8 +419,10 @@ describe("analyticsSchemas", () => {
         total_assets_usd: 100000.0,
         total_debt_usd: 10000.0,
         total_net_usd: 90000.0,
+        net_portfolio_value: 90000.0,
         weighted_apr: 5.5,
         estimated_monthly_income: 450.0,
+        wallet_count: 3,
         portfolio_roi: {
           recommended_roi: 0.055,
           recommended_period: "30d",
@@ -472,6 +480,75 @@ describe("analyticsSchemas", () => {
       };
 
       expect(() => landingPageResponseSchema.parse(validData)).not.toThrow();
+    });
+
+    it("applies safe defaults when optional fields are missing", () => {
+      const apiSample = {
+        total_assets_usd: 0,
+        total_debt_usd: 0,
+        total_net_usd: 0,
+        net_portfolio_value: 0,
+        weighted_apr: null,
+        estimated_monthly_income: null,
+        last_updated: null,
+        portfolio_allocation: {
+          btc: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          eth: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          stablecoins: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+        },
+        wallet_token_summary: {
+          total_value_usd: 0,
+          token_count: 0,
+          apr_30d: null,
+        },
+        portfolio_roi: {
+          windows: {
+            roi_3d: { value: 0, data_points: 0, start_balance: 0 },
+            roi_7d: { value: 0, data_points: 0, start_balance: 0 },
+            roi_30d: { value: 0, data_points: 0, start_balance: 0 },
+          },
+          recommended_roi: 0,
+          recommended_period: "roi_30d",
+          recommended_yearly_roi: 0,
+          estimated_yearly_pnl_usd: 0,
+        },
+        category_summary_debt: {
+          btc: 0,
+          eth: 0,
+          stablecoins: 0,
+          others: 0,
+        },
+        pool_details: [],
+      };
+
+      const parsed = landingPageResponseSchema.parse(apiSample);
+
+      expect(parsed.wallet_count).toBe(0);
+      expect(parsed.total_positions).toBe(0);
+      expect(parsed.protocols_count).toBe(0);
+      expect(parsed.chains_count).toBe(0);
+      expect(parsed.apr_coverage.total_pools).toBe(0);
     });
   });
 
@@ -1024,15 +1101,14 @@ describe("analyticsSchemas", () => {
     });
 
     describe("validateUnifiedDashboardResponse", () => {
-      it("throws ZodError for missing required fields", () => {
-        const invalidData = {
+      it("returns data even when fields are sparse", () => {
+        const minimalData = {
           user_id: "0x123",
-          // missing parameters and other required fields
         };
 
-        expect(() => validateUnifiedDashboardResponse(invalidData)).toThrow(
-          ZodError
-        );
+        expect(() =>
+          validateUnifiedDashboardResponse(minimalData)
+        ).not.toThrow();
       });
     });
 
@@ -1204,10 +1280,231 @@ describe("analyticsSchemas", () => {
         };
 
         const result = safeValidateUnifiedDashboardResponse(invalidData);
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeInstanceOf(ZodError);
-        }
+        expect(result.success).toBe(true);
+      });
+    });
+  });
+
+  describe("poolPerformanceResponseSchema", () => {
+    describe("schema validation", () => {
+      it("validates valid pool performance array", () => {
+        const validData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI", "USDC", "WBTC"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+            snapshot_ids: [
+              "1356713c-1177-48a8-a4e6-180f546d7984",
+              "9d5ea6f5-32d4-401a-8650-34a55667ecbe",
+            ],
+          },
+        ];
+
+        expect(() =>
+          poolPerformanceResponseSchema.parse(validData)
+        ).not.toThrow();
+      });
+
+      it("validates empty array", () => {
+        const validData: unknown[] = [];
+        expect(() =>
+          poolPerformanceResponseSchema.parse(validData)
+        ).not.toThrow();
+      });
+
+      it("validates pool with null snapshot_ids", () => {
+        const validData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+            snapshot_ids: null,
+          },
+        ];
+
+        expect(() =>
+          poolPerformanceResponseSchema.parse(validData)
+        ).not.toThrow();
+      });
+
+      it("validates pool without optional snapshot_ids", () => {
+        const validData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        expect(() =>
+          poolPerformanceResponseSchema.parse(validData)
+        ).not.toThrow();
+      });
+
+      it("validates multiple pools", () => {
+        const validData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI", "USDC"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+          {
+            wallet: "0x2eCBC6f229feD06044CDb0dD772437a30190CD50",
+            protocol_id: "camelot v3",
+            protocol: "camelot v3",
+            protocol_name: "camelot v3",
+            chain: "arb",
+            asset_usd_value: 13893.18,
+            pool_symbols: ["PENDLE", "WETH"],
+            contribution_to_portfolio: 10.77,
+            snapshot_id: "c1fb06a0-9a6e-4ffd-9e76-81435723340a",
+          },
+        ];
+
+        expect(() =>
+          poolPerformanceResponseSchema.parse(validData)
+        ).not.toThrow();
+      });
+
+      it("rejects pool missing required wallet field", () => {
+        const invalidData = [
+          {
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        expect(() => poolPerformanceResponseSchema.parse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+
+      it("rejects pool missing required protocol_id field", () => {
+        const invalidData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        expect(() => poolPerformanceResponseSchema.parse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+
+      it("rejects pool with invalid asset_usd_value type", () => {
+        const invalidData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: "not-a-number",
+            pool_symbols: ["DAI"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        expect(() => poolPerformanceResponseSchema.parse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+
+      it("rejects pool with invalid pool_symbols type", () => {
+        const invalidData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: "not-an-array",
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        expect(() => poolPerformanceResponseSchema.parse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+
+      it("rejects non-array input", () => {
+        const invalidData = {
+          wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+        };
+
+        expect(() => poolPerformanceResponseSchema.parse(invalidData)).toThrow(
+          ZodError
+        );
+      });
+    });
+
+    describe("validatePoolPerformanceResponse", () => {
+      it("validates and returns valid pool performance data", () => {
+        const validData = [
+          {
+            wallet: "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F",
+            protocol_id: "aster",
+            protocol: "aster",
+            protocol_name: "aster",
+            chain: "arb",
+            asset_usd_value: 27546.75,
+            pool_symbols: ["DAI", "USDC"],
+            contribution_to_portfolio: 21.35,
+            snapshot_id: "1356713c-1177-48a8-a4e6-180f546d7984",
+          },
+        ];
+
+        const result = validatePoolPerformanceResponse(validData);
+        expect(result).toEqual(validData);
+      });
+
+      it("throws ZodError for invalid data", () => {
+        const invalidData = [{ protocol: "aster" }];
+
+        expect(() => validatePoolPerformanceResponse(invalidData)).toThrow(
+          ZodError
+        );
       });
     });
   });

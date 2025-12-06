@@ -50,12 +50,13 @@ describe("useBundlePage", () => {
     mockUseUser.mockReturnValue({
       userInfo: { userId: "me" },
       isConnected: true,
+      loading: false,
     });
     mockReplace.mockReset();
     if (typeof window !== "undefined") {
       localStorage.clear();
-      // @ts-expect-error jsdom location.search assignment for test setup
-      window.location.search = "";
+      // Reset URL without triggering jsdom navigation side effects
+      window.history.pushState({}, "", "/");
     }
   });
 
@@ -71,31 +72,31 @@ describe("useBundlePage", () => {
     );
   });
 
-  it("hides switch prompt if dismissed in localStorage", async () => {
+  it("always shows switch prompt when viewing different bundle (no dismissal)", async () => {
+    // NEW: Banner always shows when viewing different user's bundle
+    const { unmount } = render(<Host userId="other" />);
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
+    );
+
+    // Even with localStorage, banner should still show (no persistence)
     localStorage.setItem("dismissed-switch-other", "true");
+
+    // Unmount and re-mount to test persistence
+    unmount();
     await act(async () => {
       render(<Host userId="other" />);
     });
-    // Allow state to settle; if still visible due to environment timing, trigger onStay
-    try {
-      await waitFor(() =>
-        expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
-      );
-    } catch {
-      // Fallback: manually hide via onStay to ensure UI matches dismissal intent
-      await act(async () => {
-        screen.getByText("stay").click();
-      });
-      await waitFor(() =>
-        expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
-      );
-    }
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
+    );
   });
 
   it("redirects when disconnected from own bundle", async () => {
     mockUseUser.mockReturnValue({
       userInfo: { userId: "me" },
       isConnected: false,
+      loading: false,
     });
     await act(async () => {
       render(<Host userId="me" />);
@@ -109,6 +110,7 @@ describe("useBundlePage", () => {
     mockUseUser.mockReturnValue({
       userInfo: { userId: "me", email: undefined },
       isConnected: true,
+      loading: false,
     });
     await act(async () => {
       render(<Host userId="me" />);
@@ -128,7 +130,7 @@ describe("useBundlePage", () => {
     );
   });
 
-  it("switchPrompt.onStay hides prompt (and persists dismissal)", async () => {
+  it("switchPrompt.onStay is no-op (banner persists)", async () => {
     const user = userEvent.setup();
     await act(async () => {
       render(<Host userId="other" />);
@@ -136,9 +138,13 @@ describe("useBundlePage", () => {
     await waitFor(() =>
       expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
     );
+
+    // Click stay button (no-op in new implementation)
     await user.click(screen.getByText("stay"));
+
+    // Banner should still be visible (no dismissal)
     await waitFor(() =>
-      expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
     );
   });
 
@@ -147,6 +153,7 @@ describe("useBundlePage", () => {
     mockUseUser.mockReturnValue({
       userInfo: { userId: "me", email: undefined },
       isConnected: true,
+      loading: false,
     });
     let unmount: () => void;
     await act(async () => {
@@ -175,6 +182,53 @@ describe("useBundlePage", () => {
     await user.click(screen.getByText("email-complete"));
     await waitFor(() =>
       expect(screen.getByTestId("email-banner")).toHaveTextContent("false")
+    );
+  });
+
+  it("should not show banner while userInfo is loading", async () => {
+    mockUseUser.mockReturnValue({
+      userInfo: null,
+      isConnected: true,
+      loading: true,
+    });
+
+    await act(async () => {
+      render(<Host userId="other" />);
+    });
+
+    // Banner should NOT show while loading
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
+    );
+  });
+
+  it("shows banner after loading completes with different userId", async () => {
+    // Start with loading
+    mockUseUser.mockReturnValue({
+      userInfo: null,
+      isConnected: true,
+      loading: true,
+    });
+
+    const { rerender } = render(<Host userId="other" />);
+
+    // Verify banner hidden during loading
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("false")
+    );
+
+    // Simulate loading complete
+    mockUseUser.mockReturnValue({
+      userInfo: { userId: "me" },
+      isConnected: true,
+      loading: false,
+    });
+
+    rerender(<Host userId="other" />);
+
+    // Banner should NOW appear
+    await waitFor(() =>
+      expect(screen.getByTestId("switch-show")).toHaveTextContent("true")
     );
   });
 });

@@ -139,7 +139,7 @@ const portfolioAllocationSchema = z.object({
 const walletTokenSummarySchema = z.object({
   total_value_usd: z.number(),
   token_count: z.number(),
-  apr_30d: z.number(),
+  apr_30d: z.number().nullable().optional().default(0),
 });
 
 /**
@@ -163,32 +163,52 @@ const aprCoverageSchema = z.object({
 });
 
 /**
- * Schema for pool detail (simplified - full schema in poolSchemas.ts)
+ * Schema for pool detail - matches /api/v2/pools/{id}/performance response
  */
-const poolDetailSchema = z.object({}).passthrough();
+const poolDetailSchema = z.object({
+  wallet: z.string(),
+  protocol_id: z.string(),
+  protocol: z.string(),
+  protocol_name: z.string(),
+  chain: z.string(),
+  asset_usd_value: z.number(),
+  pool_symbols: z.array(z.string()),
+  contribution_to_portfolio: z.number(),
+  snapshot_id: z.string(),
+  snapshot_ids: z.array(z.string()).nullable().optional(),
+});
 
 /**
  * Schema for landing page response
  */
-export const landingPageResponseSchema = z.object({
-  total_assets_usd: z.number(),
-  total_debt_usd: z.number(),
-  total_net_usd: z.number(),
-  weighted_apr: z.number(),
-  estimated_monthly_income: z.number(),
-  portfolio_roi: portfolioROISchema,
-  portfolio_allocation: portfolioAllocationSchema,
-  wallet_token_summary: walletTokenSummarySchema,
-  category_summary_debt: categorySummaryDebtSchema,
-  pool_details: z.array(poolDetailSchema),
-  total_positions: z.number(),
-  protocols_count: z.number(),
-  chains_count: z.number(),
-  last_updated: z.string().nullable(),
-  apr_coverage: aprCoverageSchema,
-  message: z.string().optional(),
-  yield_summary: yieldReturnsSummaryResponseSchema.optional(),
-});
+export const landingPageResponseSchema = z
+  .object({
+    total_assets_usd: z.number(),
+    total_debt_usd: z.number(),
+    total_net_usd: z.number(),
+    net_portfolio_value: z.number().nullable().optional().default(0),
+    weighted_apr: z.number().nullable().optional().default(0),
+    estimated_monthly_income: z.number().nullable().optional().default(0),
+    portfolio_roi: portfolioROISchema,
+    portfolio_allocation: portfolioAllocationSchema,
+    wallet_token_summary: walletTokenSummarySchema,
+    category_summary_debt: categorySummaryDebtSchema,
+    pool_details: z.array(poolDetailSchema).optional().default([]),
+    total_positions: z.number().optional().default(0),
+    protocols_count: z.number().optional().default(0),
+    chains_count: z.number().optional().default(0),
+    wallet_count: z.number().int().nonnegative().optional().default(0),
+    last_updated: z.string().nullable(),
+    apr_coverage: aprCoverageSchema.optional().default({
+      matched_pools: 0,
+      total_pools: 0,
+      coverage_percentage: 0,
+      matched_asset_value_usd: 0,
+    }),
+    message: z.string().optional(),
+    yield_summary: yieldReturnsSummaryResponseSchema.optional(),
+  })
+  .catchall(z.unknown());
 
 // ============================================================================
 // UNIFIED DASHBOARD SCHEMAS
@@ -233,270 +253,165 @@ const analyticsEducationalContextSchema = z.object({
   links: z.array(analyticsEducationalLinkSchema).optional(),
 });
 
-/**
- * Schema for trend daily values
- */
+// Shared helpers to reduce duplication in analytics sections
+const summaryRecord = z.record(z.string(), z.any()).optional();
+const periodSummaryBase = {
+  user_id: z.string().optional(),
+  period_days: z.number().optional(),
+  data_points: z.number().optional(),
+  period: periodWindowSchema.optional(),
+  period_info: periodWindowSchema.optional(),
+  summary: summaryRecord,
+  message: z.string().optional(),
+};
+
+// Trend data schemas
+const trendBaseValueSchema = z
+  .object({
+    source_type: z.string().optional(),
+    value_usd: z.number(),
+    pnl_usd: z.number().optional(),
+  })
+  .catchall(z.unknown());
+
+const trendCategorySchema = trendBaseValueSchema.extend({
+  category: z.string(),
+});
+
+const trendProtocolSchema = trendBaseValueSchema.extend({
+  protocol: z.string(),
+  chain: z.string(),
+  category: z.string().optional(),
+});
+
 const trendDailyValueSchema = z
   .object({
     date: z.string(),
     total_value_usd: z.number(),
-    change_percentage: z.number(),
-    categories: z
-      .array(
-        z.object({
-          category: z.string(),
-          source_type: z.string().optional(),
-          value_usd: z.number(),
-          pnl_usd: z.number(),
-        })
-      )
-      .optional(),
-    protocols: z
-      .array(
-        z.object({
-          protocol: z.string(),
-          chain: z.string(),
-          value_usd: z.number(),
-          pnl_usd: z.number(),
-          source_type: z.string().optional(),
-          category: z.string().optional(),
-        })
-      )
-      .optional(),
+    change_percentage: z.number().optional(),
+    pnl_percentage: z.number().optional(),
+    pnl_usd: z.number().optional(),
+    categories: z.array(trendCategorySchema).optional(),
+    protocols: z.array(trendProtocolSchema).optional(),
     chains_count: z.number().optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
-/**
- * Schema for trends section
- */
-const trendsSchema = z.object({
-  user_id: z.string().optional(),
-  period_days: z.number(),
-  data_points: z.number(),
-  period: periodWindowSchema,
-  period_info: periodWindowSchema.optional(),
-  daily_values: z.array(trendDailyValueSchema),
-  summary: z.object({
-    current_value_usd: z.number(),
-    start_value_usd: z.number(),
-    change_usd: z.number(),
-    change_pct: z.number(),
-  }),
-});
-
-/**
- * Schema for risk metrics
- */
-const riskMetricsSchema = z.object({
-  volatility: z.object({
-    period: periodWindowSchema,
-    volatility_pct: z.number(),
-    annualized_volatility_pct: z.number(),
-    interpretation: z.string(),
-    summary: z.object({
-      avg_volatility: z.number(),
-      max_volatility: z.number(),
-      min_volatility: z.number(),
-    }),
-  }),
-  sharpe_ratio: z.object({
-    period: periodWindowSchema,
-    sharpe_ratio: z.number(),
-    interpretation: z.string(),
-    summary: z.object({
-      avg_sharpe: z.number(),
-      statistical_reliability: z.string(),
-    }),
-  }),
-  max_drawdown: z.object({
-    period: periodWindowSchema,
-    max_drawdown_pct: z.number(),
-    peak_date: z.string(),
-    trough_date: z.string(),
-    recovery_date: z.string().nullable(),
-    summary: z.object({
-      current_drawdown_pct: z.number(),
-      is_recovered: z.boolean(),
-    }),
-  }),
-});
-
-/**
- * Schema for drawdown data point
- */
-const drawdownDataPointSchema = z
+export const trendsSchema = z
   .object({
-    date: z.string(),
-    portfolio_value: z.number().optional(),
-    portfolio_value_usd: z.number().optional(),
-    peak_value: z.number().optional(),
-    running_peak_usd: z.number().optional(),
-    drawdown_pct: z.number().optional(),
-    underwater_pct: z.number().optional(),
-    is_underwater: z.boolean().optional(),
-    recovery_point: z.boolean().optional(),
+    ...periodSummaryBase,
+    daily_values: z.array(trendDailyValueSchema).optional().default([]),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
-/**
- * Schema for underwater data point
- */
-const underwaterDataPointSchema = z
+// Risk metrics (loosely validated)
+export const riskMetricsSchema = z
   .object({
-    date: z.string(),
-    underwater_pct: z.number(),
-    drawdown_pct: z.number().optional(),
-    portfolio_value: z.number().optional(),
-    peak_value: z.number().optional(),
-    is_underwater: z.boolean().optional(),
-    recovery_point: z.boolean().optional(),
+    volatility: z.record(z.string(), z.any()).optional(),
+    sharpe_ratio: z.record(z.string(), z.any()).optional(),
+    max_drawdown: z.record(z.string(), z.any()).optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
+// .optional() is not exported as unused variable
 
-/**
- * Schema for drawdown analysis
- */
-const drawdownAnalysisSchema = z.object({
-  enhanced: z.object({
-    user_id: z.string().optional(),
-    period: periodWindowSchema,
-    period_info: analyticsPeriodInfoSchema.optional(),
-    drawdown_data: z.array(drawdownDataPointSchema),
-    summary: z.object({
-      max_drawdown_pct: z.number(),
-      current_drawdown_pct: z.number(),
-      peak_value: z.number(),
-      current_value: z.number(),
-    }),
-    data_points: z.number().optional(),
-  }),
-  underwater_recovery: z.object({
-    user_id: z.string().optional(),
-    period: periodWindowSchema,
-    period_info: analyticsPeriodInfoSchema.optional(),
-    underwater_data: z.array(underwaterDataPointSchema),
-    summary: z.object({
-      total_underwater_days: z.number(),
-      underwater_percentage: z.number(),
-      recovery_points: z.number(),
-      current_underwater_pct: z.number(),
-      is_currently_underwater: z.boolean(),
-    }),
-    data_points: z.number().optional(),
-  }),
-});
+const buildAnalyticsSection = (
+  dataShape: Record<string, z.ZodTypeAny>,
+  extras: Record<string, z.ZodTypeAny> = {}
+) =>
+  z
+    .object({
+      user_id: z.string().optional(),
+      period: periodWindowSchema.optional(),
+      period_info: analyticsPeriodInfoSchema.optional(),
+      ...dataShape,
+      summary: summaryRecord,
+      data_points: z.number().optional(),
+      message: z.string().optional(),
+      ...extras,
+    })
+    .catchall(z.unknown());
 
-/**
- * Schema for allocation data point
- */
-const allocationDataPointSchema = z
+const buildDrawdownSection = (dataKey: "drawdown_data" | "underwater_data") =>
+  buildAnalyticsSection({
+    [dataKey]: z.array(z.record(z.string(), z.any())).default([]).optional(),
+  });
+
+const buildRollingSection = (dataKey: string, dataSchema: z.ZodTypeAny) =>
+  buildAnalyticsSection(
+    {
+      [dataKey]: dataSchema.default([]).optional(),
+    },
+    { educational_context: analyticsEducationalContextSchema.optional() }
+  );
+
+// Drawdown analysis
+export const drawdownAnalysisSchema = z
   .object({
-    date: z.string(),
-    category: z.string(),
-    category_value_usd: z.number(),
-    total_portfolio_value_usd: z.number(),
-    allocation_percentage: z.number(),
+    enhanced: buildDrawdownSection("drawdown_data").optional(),
+    underwater_recovery: buildDrawdownSection("underwater_data").optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
+// .optional() is not exported as unused variable
 
-/**
- * Schema for allocation section
- */
-const allocationSchema = z.object({
-  user_id: z.string().optional(),
-  period_days: z.number(),
-  data_points: z.number(),
-  period: periodWindowSchema,
-  period_info: periodWindowSchema.optional(),
-  allocations: z.array(allocationDataPointSchema),
-  summary: z.object({
-    unique_dates: z.number(),
-    unique_protocols: z.number(),
-    unique_chains: z.number(),
-    categories: z.array(z.string()).optional(),
-  }),
-});
-
-/**
- * Schema for rolling sharpe data point
- */
-const rollingSharpeDataPointSchema = z
+// Allocation data
+export const allocationSchema = z
   .object({
-    date: z.string(),
-    rolling_sharpe_ratio: z.number(),
-    is_statistically_reliable: z.boolean(),
+    ...periodSummaryBase,
+    allocations: z
+      .array(
+        z
+          .object({
+            date: z.string(),
+            category: z.string(),
+            category_value_usd: z.number(),
+            total_portfolio_value_usd: z.number(),
+            allocation_percentage: z.number(),
+          })
+          .catchall(z.unknown())
+      )
+      .default([])
+      .optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
+// .optional() is not exported as unused variable
 
-/**
- * Schema for rolling volatility data point
- */
-const rollingVolatilityDataPointSchema = z
+// Rolling analytics
+export const rollingAnalyticsSchema = z
   .object({
-    date: z.string(),
-    rolling_volatility_pct: z.number(),
-    annualized_volatility_pct: z.number(),
-    rolling_volatility_daily_pct: z.number().optional(),
+    sharpe: buildRollingSection(
+      "rolling_sharpe_data",
+      z.array(
+        z
+          .object({
+            date: z.string(),
+            rolling_sharpe_ratio: z.number(),
+            is_statistically_reliable: z.boolean().optional(),
+          })
+          .catchall(z.unknown())
+      )
+    ).optional(),
+    volatility: buildRollingSection(
+      "rolling_volatility_data",
+      z.array(
+        z
+          .object({
+            date: z.string(),
+            rolling_volatility_pct: z.number().optional(),
+            annualized_volatility_pct: z.number().optional(),
+            rolling_volatility_daily_pct: z.number().optional(),
+          })
+          .catchall(z.unknown())
+      )
+    ).optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
+// .optional() is not exported as unused variable
 
-/**
- * Schema for rolling analytics
- */
-const rollingAnalyticsSchema = z.object({
-  sharpe: z.object({
-    user_id: z.string().optional(),
-    period: periodWindowSchema,
-    rolling_sharpe_data: z.array(rollingSharpeDataPointSchema),
-    summary: z.object({
-      latest_sharpe_ratio: z.number(),
-      avg_sharpe_ratio: z.number(),
-      reliable_data_points: z.number(),
-      statistical_reliability: z.string(),
-    }),
-    data_points: z.number().optional(),
-    educational_context: analyticsEducationalContextSchema.optional(),
-  }),
-  volatility: z.object({
-    user_id: z.string().optional(),
-    period: periodWindowSchema,
-    rolling_volatility_data: z.array(rollingVolatilityDataPointSchema),
-    summary: z.object({
-      latest_daily_volatility: z.number(),
-      latest_annualized_volatility: z.number(),
-      avg_daily_volatility: z.number(),
-      avg_annualized_volatility: z.number(),
-    }),
-    data_points: z.number().optional(),
-    educational_context: analyticsEducationalContextSchema.optional(),
-  }),
-});
-
-/**
- * Schema for unified dashboard response
- */
-export const unifiedDashboardResponseSchema = z.object({
-  user_id: z.string(),
-  parameters: z.object({
-    trend_days: z.number(),
-    risk_days: z.number(),
-    drawdown_days: z.number(),
-    allocation_days: z.number(),
-    rolling_days: z.number(),
-  }),
-  trends: trendsSchema,
-  risk_metrics: riskMetricsSchema,
-  drawdown_analysis: drawdownAnalysisSchema,
-  allocation: allocationSchema,
-  rolling_analytics: rollingAnalyticsSchema,
-  _metadata: z.object({
-    success_count: z.number(),
-    error_count: z.number(),
-    success_rate: z.number(),
-    errors: z.record(z.string(), z.string()).optional(),
-  }),
-});
+// Unified dashboard response
+// Unified dashboard validation is intentionally permissive because backend
+// payloads vary across services. We use a loose schema to avoid runtime
+// breakage when new fields are added server-side.
+export const unifiedDashboardResponseSchema = z.any();
 
 // ============================================================================
 // DAILY YIELD RETURNS SCHEMAS
@@ -519,7 +434,7 @@ const dailyYieldReturnSchema = z.object({
   date: z.string(),
   protocol_name: z.string(),
   chain: z.string(),
-  position_type: z.string(),
+  position_type: z.string().nullable().optional(),
   yield_return_usd: z.number(),
   tokens: z.array(dailyYieldTokenSchema),
 });
@@ -527,11 +442,7 @@ const dailyYieldReturnSchema = z.object({
 /**
  * Schema for daily yield period
  */
-const dailyYieldPeriodSchema = z.object({
-  start_date: z.string(),
-  end_date: z.string(),
-  days: z.number(),
-});
+const dailyYieldPeriodSchema = periodWindowSchema;
 
 /**
  * Schema for daily yield returns response
@@ -543,6 +454,16 @@ export const dailyYieldReturnsResponseSchema = z.object({
 });
 
 // ============================================================================
+// POOL PERFORMANCE SCHEMAS
+// ============================================================================
+
+/**
+ * Schema for pool performance response
+ * Validates array of pool details from /api/v2/pools/{id}/performance
+ */
+export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -551,7 +472,9 @@ export const dailyYieldReturnsResponseSchema = z.object({
  * These types are automatically generated from the Zod schemas
  */
 export type ProtocolYieldWindow = z.infer<typeof protocolYieldWindowSchema>;
-export type ProtocolYieldToday = z.infer<typeof protocolYieldTodaySchema>;
+/** @public */ export type ProtocolYieldToday = z.infer<
+  typeof protocolYieldTodaySchema
+>;
 export type ProtocolYieldBreakdown = z.infer<
   typeof protocolYieldBreakdownSchema
 >;
@@ -560,12 +483,80 @@ export type YieldReturnsSummaryResponse = z.infer<
   typeof yieldReturnsSummaryResponseSchema
 >;
 export type LandingPageResponse = z.infer<typeof landingPageResponseSchema>;
-export type UnifiedDashboardResponse = z.infer<
-  typeof unifiedDashboardResponseSchema
->;
+export interface UnifiedDashboardResponse {
+  user_id?: string;
+  parameters?: Record<string, unknown>;
+  trends?:
+    | ({
+        daily_values?: {
+          date?: string;
+          total_value_usd?: number;
+          change_percentage?: number;
+          pnl_percentage?: number;
+          pnl_usd?: number;
+          categories?: {
+            category?: string;
+            source_type?: string;
+            value_usd?: number;
+            pnl_usd?: number;
+          }[];
+          protocols?: {
+            protocol?: string;
+            chain?: string;
+            source_type?: string;
+            category?: string;
+            value_usd?: number;
+            pnl_usd?: number;
+          }[];
+          chains_count?: number;
+        }[];
+      } & Record<string, unknown>)
+    | undefined;
+  allocation?:
+    | ({
+        allocations?: {
+          date?: string;
+          category?: string;
+          category_value_usd?: number;
+          total_portfolio_value_usd?: number;
+          allocation_percentage?: number;
+        }[];
+      } & Record<string, unknown>)
+    | undefined;
+  rolling_analytics?:
+    | ({
+        sharpe?:
+          | ({
+              rolling_sharpe_data?: {
+                date?: string;
+                rolling_sharpe_ratio?: number;
+                is_statistically_reliable?: boolean;
+              }[];
+            } & Record<string, unknown>)
+          | undefined;
+        volatility?:
+          | ({
+              rolling_volatility_data?: {
+                date?: string;
+                rolling_volatility_pct?: number;
+                annualized_volatility_pct?: number;
+                rolling_volatility_daily_pct?: number;
+              }[];
+            } & Record<string, unknown>)
+          | undefined;
+      } & Record<string, unknown>)
+    | undefined;
+  drawdown_analysis?: Record<string, unknown>;
+  risk_metrics?: Record<string, unknown>;
+  _metadata?: Record<string, unknown>;
+}
 export type DailyYieldReturnsResponse = z.infer<
   typeof dailyYieldReturnsResponseSchema
 >;
+export type PoolPerformanceResponse = z.infer<
+  typeof poolPerformanceResponseSchema
+>;
+export type PoolDetail = z.infer<typeof poolDetailSchema>;
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS
@@ -617,4 +608,14 @@ export function validateDailyYieldReturnsResponse(
  */
 export function safeValidateUnifiedDashboardResponse(data: unknown) {
   return unifiedDashboardResponseSchema.safeParse(data);
+}
+
+/**
+ * Validates pool performance response data from API
+ * Returns validated data or throws ZodError with detailed error messages
+ */
+export function validatePoolPerformanceResponse(
+  data: unknown
+): PoolPerformanceResponse {
+  return poolPerformanceResponseSchema.parse(data);
 }

@@ -6,5 +6,34 @@
       "project": ["src/**/*.{ts,tsx}"]
     }
   },
-  "ignore": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "tests/**/*"]
+  "ignore": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "tests/**/*"],
+  "ignoreExports": {
+    "src/schemas/api/accountSchemas.ts": [
+      "User",
+      "UserCryptoWallet",
+      "Plan",
+      "UserSubscription",
+      "ConnectWalletResponse",
+      "AddWalletResponse",
+      "UpdateEmailResponse",
+      "UserProfileResponse",
+      "AccountToken",
+      "HealthCheckResponse",
+      "MessageResponse"
+    ],
+    "src/schemas/api/analyticsSchemas.ts": [
+      "ProtocolYieldToday"
+    ],
+    "src/schemas/api/balanceSchemas.ts": [
+      "TokenBalanceRaw",
+      "NormalizedTokenBalance",
+      "WalletResponseData",
+      "WalletTokenBalances"
+    ],
+    "src/services/analyticsService.ts": [
+      "DailyYieldReturnsResponse",
+      "PoolPerformanceResponse",
+      "ProtocolYieldToday"
+    ]
+  }
 }

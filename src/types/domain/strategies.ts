@@ -64,28 +64,14 @@ export const transformPoolsToProtocols = (
       chain: capitalizeChain(pool.chain),
       protocol: pool.protocol, // Map protocol field from PoolDetail
       tvl: pool.asset_usd_value,
-      apy: pool.final_apr,
-      riskScore: pool.protocol_matched ? 1 : 3, // Lower risk for verified APR
+      apy: 0,
+      riskScore: 2, // neutral risk without APR metadata
       // Enhanced pool data
       poolSymbols: pool.pool_symbols,
-      aprConfidence: getAPRConfidence(pool),
-      aprBreakdown: (() => {
-        const breakdown: {
-          total: number;
-          base?: number;
-          reward?: number;
-          updatedAt?: string;
-        } = {
-          total: pool.final_apr,
-        };
-        if (pool.apr_data.apr_base != null)
-          breakdown.base = pool.apr_data.apr_base as number;
-        if (pool.apr_data.apr_reward != null)
-          breakdown.reward = pool.apr_data.apr_reward as number;
-        if (pool.apr_data.apr_updated_at != null)
-          breakdown.updatedAt = pool.apr_data.apr_updated_at as string;
-        return breakdown;
-      })(),
+      aprConfidence: "low",
+      aprBreakdown: {
+        total: 0,
+      },
     }));
 };
 
@@ -127,16 +113,6 @@ const formatProtocolName = (pool: PoolDetail): string => {
 /**
  * Get APR confidence level based on protocol match and APR data
  */
-const getAPRConfidence = (pool: PoolDetail): "high" | "medium" | "low" => {
-  if (pool.protocol_matched && pool.apr_data.apr !== null) {
-    return "high";
-  }
-  if (pool.final_apr > 0) {
-    return "medium";
-  }
-  return "low";
-};
-
 /**
  * Capitalize chain name consistently
  */

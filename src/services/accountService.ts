@@ -5,6 +5,16 @@
  */
 
 import { httpUtils } from "@/lib/http-utils";
+import {
+  validateAccountTokens,
+  validateAddWalletResponse,
+  validateConnectWalletResponse,
+  validateHealthCheckResponse,
+  validateMessageResponse,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateUserWallets,
+} from "@/schemas/api/accountSchemas";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
@@ -12,16 +22,6 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "@/types/domain/user.types";
-import {
-  validateConnectWalletResponse,
-  validateUserProfileResponse,
-  validateUpdateEmailResponse,
-  validateAddWalletResponse,
-  validateUserWallets,
-  validateAccountTokens,
-  validateMessageResponse,
-  validateHealthCheckResponse,
-} from "@/schemas/api/accountSchemas";
 
 import { createServiceCaller } from "../lib/createServiceCaller";
 

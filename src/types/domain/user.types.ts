@@ -13,7 +13,7 @@ export interface UserCryptoWallet {
   id: string;
   user_id: string;
   wallet: string;
-  label?: string | undefined;
+  label?: string | null | undefined;
   created_at: string;
 }
 
@@ -28,7 +28,7 @@ interface UserSubscription {
   user_id: string;
   plan_code: string;
   starts_at: string;
-  ends_at?: string | undefined;
+  ends_at?: string | null | undefined;
   is_canceled: boolean;
   created_at: string;
   plan?: Plan | undefined;
