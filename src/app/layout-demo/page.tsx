@@ -273,6 +273,63 @@ export default function LayoutDemoIndexPage() {
             isNew
           />
 
+          {/* V22 */}
+          <VariationCard
+            number={22}
+            title="Expandable Card"
+            href="/layout-demo/v22"
+            description="Progressive Disclosure: Click the strategy card to expand and reveal the Regime Spectrum inline."
+            implementation="⭐⭐⭐ Animation"
+            mobile="⭐⭐⭐⭐⭐ Native"
+            familiarity="⭐⭐⭐⭐ Accordion"
+            conversion="⭐⭐⭐⭐ Context"
+            highlights={[
+              "Expandable Strategy",
+              "Inline Context",
+              "Clean Default State",
+              "Regime Spectrum"
+            ]}
+            isNew
+          />
+
+          {/* V23 */}
+          <VariationCard
+            number={23}
+            title="Flip Card"
+            href="/layout-demo/v23"
+            description="Progressive Disclosure: 3D Flip animation to reveal the 'Why' behind the strategy on the back."
+            implementation="⭐⭐⭐⭐ 3D Transform"
+            mobile="⭐⭐⭐⭐ Interactive"
+            familiarity="⭐⭐⭐ Gamified"
+            conversion="⭐⭐⭐⭐ Engagement"
+            highlights={[
+              "3D Flip Interaction",
+              "Back-of-card Context",
+              "Regime Arc",
+              "Playful Discovery"
+            ]}
+            isNew
+          />
+
+          {/* V24 */}
+          <VariationCard
+            number={24}
+            title="Slide-Over Panel"
+            href="/layout-demo/v24"
+            description="Progressive Disclosure: Clicking details opens a rich side panel with full educational content."
+            implementation="⭐⭐⭐⭐ Overlay"
+            mobile="⭐⭐⭐⭐⭐ Sheet"
+            familiarity="⭐⭐⭐⭐⭐ Standard"
+            conversion="⭐⭐⭐⭐⭐ Education"
+            highlights={[
+              "Rich Side Panel",
+              "Full Context",
+              "Educational Content",
+              "Deep Dive"
+            ]}
+            isNew
+          />
+
         </div>
 
         {/* Footer Note */}
