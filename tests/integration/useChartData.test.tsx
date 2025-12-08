@@ -826,17 +826,29 @@ describe("useChartData - Memoization", () => {
       }
     );
 
-    // Hook only accepts userId parameter (no time window parameters)
+    // Hook accepts userId and time window parameters (1M = 30 days)
     expect(
       usePortfolioDashboard.usePortfolioDashboard
-    ).toHaveBeenLastCalledWith("test-user");
+    ).toHaveBeenLastCalledWith("test-user", {
+      trend_days: 30,
+      risk_days: 30,
+      drawdown_days: 30,
+      allocation_days: 30,
+      rolling_days: 30,
+    });
 
     rerender({ period: "3M" });
 
-    // Hook still only accepts userId parameter
+    // Hook recalculates with new time window (3M = 90 days)
     expect(
       usePortfolioDashboard.usePortfolioDashboard
-    ).toHaveBeenLastCalledWith("test-user");
+    ).toHaveBeenLastCalledWith("test-user", {
+      trend_days: 90,
+      risk_days: 90,
+      drawdown_days: 90,
+      allocation_days: 90,
+      rolling_days: 90,
+    });
   });
 });
 

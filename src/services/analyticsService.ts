@@ -39,6 +39,21 @@ export type {
 export type { PoolDetail } from "@/schemas/api/analyticsSchemas";
 
 /**
+ * Query parameters for the unified dashboard endpoint.
+ *
+ * All fields are optional and map directly to analytics-engine query params.
+ * Values are coerced to strings when building the request URL.
+ */
+export interface DashboardWindowParams {
+  trend_days?: number;
+  risk_days?: number;
+  drawdown_days?: number;
+  allocation_days?: number;
+  rolling_days?: number;
+  metrics?: string[];
+}
+
+/**
  * Get unified landing page portfolio data
  *
  * Combines portfolio summary, APR calculations, and pre-formatted data
@@ -175,9 +190,35 @@ export const getRiskSummary = async (
  * ```
  */
 export const getPortfolioDashboard = async (
-  userId: string
+  userId: string,
+  params: DashboardWindowParams = {}
 ): Promise<UnifiedDashboardResponse> => {
-  const endpoint = `/api/v2/analytics/${userId}/dashboard`;
+  const buildQueryString = () => {
+    const query = new URLSearchParams();
+
+    const numericParams: [keyof DashboardWindowParams, number | undefined][] = [
+      ["trend_days", params.trend_days],
+      ["risk_days", params.risk_days],
+      ["drawdown_days", params.drawdown_days],
+      ["allocation_days", params.allocation_days],
+      ["rolling_days", params.rolling_days],
+    ];
+
+    for (const [key, value] of numericParams) {
+      if (value !== undefined) {
+        query.set(key, String(value));
+      }
+    }
+
+    if (params.metrics?.length) {
+      query.set("metrics", params.metrics.join(","));
+    }
+
+    const queryString = query.toString();
+    return queryString ? `?${queryString}` : "";
+  };
+
+  const endpoint = `/api/v2/analytics/${userId}/dashboard${buildQueryString()}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateUnifiedDashboardResponse(response);
 };
