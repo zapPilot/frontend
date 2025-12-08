@@ -19,6 +19,7 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import {
+  type DashboardWindowParams,
   getPortfolioDashboard,
   type UnifiedDashboardResponse,
 } from "../services/analyticsService";
@@ -38,10 +39,13 @@ import {
  * @example
  * ```typescript
  * // Basic usage
- * const { dashboard, isLoading, error } = usePortfolioDashboard(userId);
+ * const { dashboard, isLoading, error } = usePortfolioDashboard(userId, {
+ *   trend_days: 30,
+ *   rolling_days: 30,
+ * });
  *
  * // With custom time windows
- * const { dashboard } = usePortfolioDashboard(userId);
+ * const { dashboard } = usePortfolioDashboard(userId, { trend_days: 180 });
  *
  * // Extracting specific sections
  * if (dashboard) {
@@ -60,15 +64,25 @@ import {
  * ```
  */
 export function usePortfolioDashboard(
-  userId: string | undefined
+  userId: string | undefined,
+  params: DashboardWindowParams = {}
 ): UseQueryResult<UnifiedDashboardResponse> & {
   dashboard: UnifiedDashboardResponse | undefined;
 } {
   const queryResult = useQuery({
-    queryKey: ["portfolio-dashboard", userId],
+    queryKey: [
+      "portfolio-dashboard",
+      userId,
+      params.trend_days,
+      params.risk_days,
+      params.drawdown_days,
+      params.allocation_days,
+      params.rolling_days,
+      params.metrics,
+    ],
     queryFn: () =>
       // Safe: enabled condition ensures userId is non-null
-      getPortfolioDashboard(userId!),
+      getPortfolioDashboard(userId!, params),
     enabled: !!userId,
     // Cache configuration matching backend cache strategy
     staleTime: 2 * 60 * 1000, // 2 minutes (matches backend HTTP cache)

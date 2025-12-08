@@ -7,7 +7,7 @@
 
 export type RegimeId = "ef" | "f" | "n" | "g" | "eg";
 
-export interface Regime {
+interface Regime {
   id: RegimeId;
   label: string;
   fillColor: string;
@@ -124,7 +124,6 @@ export function getRegimeById(regimeId: RegimeId): Regime {
 
   if (!regime) {
     // Fallback to neutral regime if not found
-    console.warn(`Regime ${regimeId} not found, falling back to neutral`);
     const neutralRegime = regimes.find(r => r.id === "n");
     if (!neutralRegime) {
       throw new Error("Critical: Neutral regime not found in regimes array");

@@ -11,7 +11,6 @@ import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
 
 export function WalletPortfolioPresenterV22() {
-  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null);
   const currentRegime = getRegimeById(MOCK_DATA.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
@@ -108,7 +107,7 @@ export function WalletPortfolioPresenterV22() {
                         <Info className="w-3 h-3" />
                       </div>
                       <div className="text-2xl font-bold text-white mb-1">{currentRegime.label}</div>
-                      <div className="text-sm text-gray-400 italic">"{currentRegime.philosophy}"</div>
+                      <div className="text-sm text-gray-400 italic">&ldquo;{currentRegime.philosophy}&rdquo;</div>
                     </div>
                  </div>
                  
@@ -234,13 +233,11 @@ export function WalletPortfolioPresenterV22() {
                        <motion.div
                          key={asset.symbol}
                          className="h-full rounded-lg relative group overflow-hidden cursor-pointer"
-                         style={{ 
-                           flex: asset.value, 
-                           backgroundColor: `${asset.color}20`, 
+                         style={{
+                           flex: asset.value,
+                           backgroundColor: `${asset.color}20`,
                            border: `1px solid ${asset.color}50`
                          }}
-                         onHoverStart={() => setHoveredSegment(asset.symbol)}
-                         onHoverEnd={() => setHoveredSegment(null)}
                          whileHover={{ scale: 1.02, y: -2 }}
                        >
                           <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -257,8 +254,6 @@ export function WalletPortfolioPresenterV22() {
                   <motion.div
                     className="h-full rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative group"
                     style={{ width: `${MOCK_DATA.currentAllocation.stable}%` }}
-                    onHoverStart={() => setHoveredSegment('STABLES')}
-                    onHoverEnd={() => setHoveredSegment(null)}
                     whileHover={{ scale: 1.02, y: -2 }}
                   >
                      <div className="text-center">
