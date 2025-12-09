@@ -20,6 +20,8 @@ import { useState } from "react";
 
 import { Footer } from "@/components/Footer/Footer";
 import { GradientButton } from "@/components/ui";
+import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView";
+import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 
@@ -422,37 +424,11 @@ export function WalletPortfolioPresenterV22() {
             </>
           )}
 
-          {activeTab === "analytics" && (
-            <div className="flex flex-col items-center justify-center h-full p-12 text-center bg-gray-900/40 border border-gray-800 rounded-2xl">
-              <LineChart className="w-16 h-16 text-gray-600 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">
-                Portfolio Analytics
-              </h3>
-              <p className="text-gray-400 max-w-md mb-6">
-                Deep dive into your portfolio performance, regime history, and
-                PnL breakdown.
-              </p>
-              <div className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-xs font-mono border border-purple-500/20">
-                COMING SOON
-              </div>
-            </div>
-          )}
+          {/* Analytics View */}
+          {activeTab === "analytics" && <AnalyticsView />}
 
-          {activeTab === "backtesting" && (
-            <div className="flex flex-col items-center justify-center h-full p-12 text-center bg-gray-900/40 border border-gray-800 rounded-2xl">
-              <History className="w-16 h-16 text-gray-600 mb-4" />
-              <h3 className="text-xl font-bold text-white mb-2">
-                Strategy Simulator
-              </h3>
-              <p className="text-gray-400 max-w-md mb-6">
-                Simulate how Zap Pilot would perform in different market
-                conditions and past cycles.
-              </p>
-              <div className="px-3 py-1 bg-purple-500/10 text-purple-400 rounded-full text-xs font-mono border border-purple-500/20">
-                COMING SOON
-              </div>
-            </div>
-          )}
+          {/* Backtesting View */}
+          {activeTab === "backtesting" && <BacktestingView />}
         </div>
       </main>
 
