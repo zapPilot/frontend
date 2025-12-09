@@ -2,7 +2,7 @@
  * Regime Data Configuration
  *
  * Defines market sentiment regimes with corresponding allocation strategies.
- * Based on All-Weather Portfolio principles adapted for crypto markets.
+ * Based on Zap Pilot principles adapted for crypto markets.
  */
 
 export type RegimeId = "ef" | "f" | "n" | "g" | "eg";

@@ -73,12 +73,15 @@ interface FooterProps {
   className?: string;
 }
 
-export function Footer({ className = "" }: FooterProps) {
+export function Footer({
+  className = "",
+  containerClassName = "max-w-7xl",
+}: FooterProps & { containerClassName?: string }) {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className={`border-t border-gray-800 bg-gray-900 ${className}`}>
-      <div className="max-w-7xl mx-auto px-4 py-6 lg:px-8">
+      <div className={`${containerClassName} mx-auto px-4 py-6 lg:px-8`}>
         {/* Mobile: stacked layout */}
         <div className="flex flex-col items-center gap-4 md:hidden">
           <SocialLinksSection />
