@@ -20,6 +20,14 @@ import { useState } from "react";
 
 import { Footer } from "@/components/Footer/Footer";
 import { GradientButton } from "@/components/ui";
+import {
+  Modal,
+  ModalButtonGroup,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalInput,
+} from "@/components/ui/modal";
 import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
@@ -445,189 +453,118 @@ export function WalletPortfolioPresenterV22() {
       />
 
       {/* Deposit Modal */}
-      <AnimatePresence>
-        {isDepositOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsDepositOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl"
-            >
-              <h3 className="text-xl font-bold text-white mb-4">
-                Deposit to Pilot
-              </h3>
-              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50 mb-6">
-                <div className="text-xs text-gray-400 mb-1">
-                  Based on Current Regime:{" "}
-                  <span className="text-green-400 font-bold">Greed</span>
-                </div>
-                <div className="flex gap-2 text-sm font-mono">
-                  <span className="text-white">40% Crypto</span>
-                  <span className="text-gray-600">/</span>
-                  <span className="text-emerald-400">60% Stable</span>
-                </div>
-              </div>
-
-              <div className="mb-6">
-                <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
-                  Amount (USDC)
-                </label>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-2xl font-bold text-white focus:border-purple-500 outline-none transition-colors"
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setIsDepositOpen(false)}
-                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setIsDepositOpen(false)}
-                  className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold rounded-xl shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 transition-all"
-                >
-                  Confirm Deposit
-                </button>
-              </div>
-            </motion.div>
+      <Modal
+        isOpen={isDepositOpen}
+        onClose={() => setIsDepositOpen(false)}
+        maxWidth="md"
+      >
+        <ModalHeader
+          title="Deposit to Pilot"
+          onClose={() => setIsDepositOpen(false)}
+        />
+        <ModalContent>
+          <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+            <div className="text-xs text-gray-400 mb-1">
+              Based on Current Regime:{" "}
+              <span className="text-green-400 font-bold">Greed</span>
+            </div>
+            <div className="flex gap-2 text-sm font-mono">
+              <span className="text-white">40% Crypto</span>
+              <span className="text-gray-600">/</span>
+              <span className="text-emerald-400">60% Stable</span>
+            </div>
           </div>
-        )}
-      </AnimatePresence>
+          <ModalInput label="Amount (USDC)" type="number" placeholder="0.00" />
+        </ModalContent>
+        <ModalFooter>
+          <ModalButtonGroup
+            onCancel={() => setIsDepositOpen(false)}
+            onConfirm={() => setIsDepositOpen(false)}
+            confirmLabel="Confirm Deposit"
+            confirmVariant="primary"
+          />
+        </ModalFooter>
+      </Modal>
 
       {/* Withdraw Modal */}
-      <AnimatePresence>
-        {isWithdrawOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsWithdrawOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-8 shadow-2xl"
-            >
-              <h3 className="text-xl font-bold text-white mb-4">
-                Withdraw Funds
-              </h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Divesting will convert your active positions back to USDC.
-              </p>
-
-              <div className="mb-6">
-                <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
-                  Amount to Withdraw
-                </label>
-                <div className="grid grid-cols-4 gap-2 mb-4">
-                  {["25%", "50%", "75%", "Max"].map(pct => (
-                    <button
-                      key={pct}
-                      className="py-1 bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg transition-colors border border-gray-700"
-                    >
-                      {pct}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="number"
-                  placeholder="0.00"
-                  className="w-full bg-gray-950 border border-gray-800 rounded-xl p-4 text-2xl font-bold text-white focus:border-red-500 outline-none transition-colors"
-                />
-              </div>
-
-              <div className="flex gap-3">
+      <Modal
+        isOpen={isWithdrawOpen}
+        onClose={() => setIsWithdrawOpen(false)}
+        maxWidth="md"
+      >
+        <ModalHeader
+          title="Withdraw Funds"
+          subtitle="Divesting will convert your active positions back to USDC."
+          onClose={() => setIsWithdrawOpen(false)}
+        />
+        <ModalContent>
+          <div>
+            <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
+              Amount to Withdraw
+            </label>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {["25%", "50%", "75%", "Max"].map(pct => (
                 <button
-                  onClick={() => setIsWithdrawOpen(false)}
-                  className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bold rounded-xl transition-colors"
+                  key={pct}
+                  className="py-1 bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg transition-colors border border-gray-700"
                 >
-                  Cancel
+                  {pct}
                 </button>
-                <button
-                  onClick={() => setIsWithdrawOpen(false)}
-                  className="flex-1 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/50 font-bold rounded-xl transition-all"
-                >
-                  Withdraw
-                </button>
-              </div>
-            </motion.div>
+              ))}
+            </div>
+            <ModalInput type="number" placeholder="0.00" />
           </div>
-        )}
-      </AnimatePresence>
+        </ModalContent>
+        <ModalFooter>
+          <ModalButtonGroup
+            onCancel={() => setIsWithdrawOpen(false)}
+            onConfirm={() => setIsWithdrawOpen(false)}
+            confirmLabel="Withdraw"
+            confirmVariant="danger"
+          />
+        </ModalFooter>
+      </Modal>
 
       {/* Core Settings Modal */}
-      <AnimatePresence>
-        {isSettingsOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsSettingsOpen(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="relative w-full max-w-md bg-gray-900 border border-gray-800 rounded-2xl p-6 shadow-2xl"
-            >
-              <h3 className="text-xl font-bold text-white mb-2">
-                Core Settings
-              </h3>
-              <p className="text-gray-400 text-sm mb-6">
-                Connect services to enable automated rebalancing reminders
-                tailored to your personal regime.
-              </p>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-                      <Calendar className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-white text-sm">
-                        Google Calendar
-                      </div>
-                      <div className="text-xs text-gray-400">
-                        Remind me to rebalance
-                      </div>
-                    </div>
-                  </div>
-                  <button className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors">
-                    Connect
-                  </button>
+      <Modal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        maxWidth="md"
+      >
+        <ModalHeader
+          title="Core Settings"
+          subtitle="Connect services to enable automated rebalancing reminders tailored to your personal regime."
+          onClose={() => setIsSettingsOpen(false)}
+        />
+        <ModalContent>
+          <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                <Calendar className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-white text-sm">
+                  Google Calendar
+                </div>
+                <div className="text-xs text-gray-400">
+                  Remind me to rebalance
                 </div>
               </div>
-
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
-                >
-                  Close
-                </button>
-              </div>
-            </motion.div>
+            </div>
+            <button className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors">
+              Connect
+            </button>
           </div>
-        )}
-      </AnimatePresence>
+        </ModalContent>
+        <ModalFooter className="justify-end">
+          <button
+            onClick={() => setIsSettingsOpen(false)}
+            className="px-4 py-2 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+          >
+            Close
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

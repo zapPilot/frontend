@@ -6,6 +6,16 @@ export { BundleNotFound } from "./BundleNotFound";
 export { GradientButton } from "./GradientButton";
 export { TableHeaderCell } from "./TableHeaderCell";
 
+// Modal system
+export {
+  Modal,
+  ModalButtonGroup,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalInput,
+} from "./modal";
+
 // Loading system - comprehensive re-exports
 export {
   AssetCategorySkeleton,
