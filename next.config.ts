@@ -15,6 +15,10 @@ const CACHE_STALE_WHILE_REVALIDATE_SECONDS = toSeconds(
 const PROD_CACHE_CONTROL_HEADER = `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`;
 
 const nextConfig: NextConfig = {
+  // Turbopack is the default bundler in Next.js 16+
+  // An empty config here tells Next.js this is intentional
+  // The webpack config below will apply when using --webpack flag
+  turbopack: {},
   compiler: {
     // Remove console.log in production builds, but keep console.warn and console.error
     removeConsole: process.env.NODE_ENV === 'production' ? {
