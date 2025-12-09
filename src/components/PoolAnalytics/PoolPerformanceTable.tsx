@@ -594,10 +594,7 @@ const PoolPerformanceTableComponent = ({
               <p className="text-gray-400 mb-1">Total Value</p>
               <p className="text-white font-medium">
                 {formatCurrency(
-                  displayedPools.reduce(
-                    (sum, p) => sum + p.asset_usd_value,
-                    0
-                  )
+                  displayedPools.reduce((sum, p) => sum + p.asset_usd_value, 0)
                 )}
               </p>
             </div>

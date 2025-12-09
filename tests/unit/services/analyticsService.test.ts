@@ -581,7 +581,9 @@ describe("analyticsService", () => {
       );
       expect(result).toEqual(mockPools);
       expect(result[0]?.protocol_name).toBe("aster");
-      expect(result[0]?.wallet).toBe("0x66C42B20551d449Bce40b3dC8Fc62207A27D579F");
+      expect(result[0]?.wallet).toBe(
+        "0x66C42B20551d449Bce40b3dC8Fc62207A27D579F"
+      );
     });
 
     it("should validate pool performance response with Zod schema", async () => {

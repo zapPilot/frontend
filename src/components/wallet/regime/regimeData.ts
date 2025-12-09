@@ -26,13 +26,15 @@ export const regimes: Regime[] = [
     id: "ef",
     label: "Extreme Fear",
     fillColor: "#10b981", // emerald-400
-    philosophy: "Buy when others are fearful. Maintain conservative position sizing.",
-    whyThisWorks: "Market panic creates opportunities for disciplined investors. Lower allocations protect capital while maintaining exposure to potential recovery.",
+    philosophy:
+      "Buy when others are fearful. Maintain conservative position sizing.",
+    whyThisWorks:
+      "Market panic creates opportunities for disciplined investors. Lower allocations protect capital while maintaining exposure to potential recovery.",
     actions: [
       "Gradually increase crypto exposure",
       "Focus on blue-chip assets",
       "Set strict stop-losses",
-      "Monitor for capitulation signals"
+      "Monitor for capitulation signals",
     ],
     range: "0-25",
     allocation: {
@@ -45,12 +47,13 @@ export const regimes: Regime[] = [
     label: "Fear",
     fillColor: "#84cc16", // lime-400
     philosophy: "Cautiously increase exposure as sentiment improves.",
-    whyThisWorks: "Fear phases often precede recoveries. Moderate allocations balance opportunity with risk management.",
+    whyThisWorks:
+      "Fear phases often precede recoveries. Moderate allocations balance opportunity with risk management.",
     actions: [
       "Build positions incrementally",
       "Diversify across quality assets",
       "Maintain liquidity reserves",
-      "Watch for trend reversals"
+      "Watch for trend reversals",
     ],
     range: "26-45",
     allocation: {
@@ -63,12 +66,13 @@ export const regimes: Regime[] = [
     label: "Neutral",
     fillColor: "#fcd34d", // amber-300
     philosophy: "Balanced allocation across assets. Monitor for regime shifts.",
-    whyThisWorks: "Neutral markets require flexibility. Equal weighting prepares for movement in either direction.",
+    whyThisWorks:
+      "Neutral markets require flexibility. Equal weighting prepares for movement in either direction.",
     actions: [
       "Maintain balanced portfolio",
       "Rebalance regularly",
       "Monitor sentiment indicators",
-      "Prepare for volatility"
+      "Prepare for volatility",
     ],
     range: "46-54",
     allocation: {
@@ -80,13 +84,15 @@ export const regimes: Regime[] = [
     id: "g",
     label: "Greed",
     fillColor: "#fb923c", // orange-400
-    philosophy: "Take profits opportunistically. Reduce exposure to overheated markets.",
-    whyThisWorks: "Greed phases often precede corrections. Higher allocations capture upside while preparing for pullbacks.",
+    philosophy:
+      "Take profits opportunistically. Reduce exposure to overheated markets.",
+    whyThisWorks:
+      "Greed phases often precede corrections. Higher allocations capture upside while preparing for pullbacks.",
     actions: [
       "Scale out of winning positions",
       "Lock in profits systematically",
       "Increase stable allocation",
-      "Watch for exhaustion signals"
+      "Watch for exhaustion signals",
     ],
     range: "55-75",
     allocation: {
@@ -99,12 +105,13 @@ export const regimes: Regime[] = [
     label: "Extreme Greed",
     fillColor: "#fb7185", // rose-400
     philosophy: "Sell into strength. Preserve capital for the next cycle.",
-    whyThisWorks: "Extreme euphoria signals market tops. Maximum crypto exposure captures final gains before inevitable corrections.",
+    whyThisWorks:
+      "Extreme euphoria signals market tops. Maximum crypto exposure captures final gains before inevitable corrections.",
     actions: [
       "Aggressively take profits",
       "Reduce risk exposure",
       "Build cash reserves",
-      "Prepare for regime shift"
+      "Prepare for regime shift",
     ],
     range: "76-100",
     allocation: {

@@ -21,19 +21,13 @@
       "HealthCheckResponse",
       "MessageResponse"
     ],
-    "src/schemas/api/analyticsSchemas.ts": [
-      "ProtocolYieldToday"
-    ],
+    "src/schemas/api/analyticsSchemas.ts": ["ProtocolYieldToday"],
     "src/schemas/api/balanceSchemas.ts": [
       "TokenBalanceRaw",
       "NormalizedTokenBalance",
       "WalletResponseData",
       "WalletTokenBalances"
     ],
-    "src/services/analyticsService.ts": [
-      "DailyYieldReturnsResponse",
-      "PoolPerformanceResponse",
-      "ProtocolYieldToday"
-    ]
+    "src/services/analyticsService.ts": ["DailyYieldReturnsResponse", "PoolPerformanceResponse", "ProtocolYieldToday"]
   }
 }

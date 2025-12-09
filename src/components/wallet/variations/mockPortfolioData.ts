@@ -9,7 +9,7 @@ import type { RegimeId } from "../regime/regimeData";
 
 export const MOCK_DATA = {
   // Portfolio metrics
-  balance: 45230.50,
+  balance: 45230.5,
   roi: 12.4,
   roiChange7d: 8.2,
   roiChange30d: 12.4,
@@ -17,7 +17,8 @@ export const MOCK_DATA = {
   // Market sentiment
   sentimentValue: 68,
   sentimentStatus: "Greed" as const,
-  sentimentQuote: "Market conditions favor aggressive positioning with higher allocation to growth assets. Technical indicators show sustained momentum.",
+  sentimentQuote:
+    "Market conditions favor aggressive positioning with higher allocation to growth assets. Technical indicators show sustained momentum.",
 
   // Regime data
   currentRegime: "g" as RegimeId, // Greed
@@ -29,26 +30,62 @@ export const MOCK_DATA = {
     // Detailed breakdown for advanced visualizations
     constituents: {
       crypto: [
-        { asset: 'BTC', symbol: 'BTC', name: 'Bitcoin', value: 40, color: '#F7931A' },
-        { asset: 'ETH', symbol: 'ETH', name: 'Ethereum', value: 35, color: '#627EEA' },
-        { asset: 'SOL', symbol: 'SOL', name: 'Solana', value: 15, color: '#14F195' },
-        { asset: 'Others', symbol: 'ALT', name: 'Altcoins', value: 10, color: '#8C8C8C' }
+        {
+          asset: "BTC",
+          symbol: "BTC",
+          name: "Bitcoin",
+          value: 40,
+          color: "#F7931A",
+        },
+        {
+          asset: "ETH",
+          symbol: "ETH",
+          name: "Ethereum",
+          value: 35,
+          color: "#627EEA",
+        },
+        {
+          asset: "SOL",
+          symbol: "SOL",
+          name: "Solana",
+          value: 15,
+          color: "#14F195",
+        },
+        {
+          asset: "Others",
+          symbol: "ALT",
+          name: "Altcoins",
+          value: 10,
+          color: "#8C8C8C",
+        },
       ],
       stable: [
-        { asset: 'USDC', symbol: 'USDC', name: 'USD Coin', value: 60, color: '#2775CA' },
-        { asset: 'USDT', symbol: 'USDT', name: 'Tether', value: 40, color: '#26A17B' }
-      ]
+        {
+          asset: "USDC",
+          symbol: "USDC",
+          name: "USD Coin",
+          value: 60,
+          color: "#2775CA",
+        },
+        {
+          asset: "USDT",
+          symbol: "USDT",
+          name: "Tether",
+          value: 40,
+          color: "#26A17B",
+        },
+      ],
     },
     // Simplified breakdown for V13-V15
     simplifiedCrypto: [
-      { symbol: 'BTC', name: 'Bitcoin', value: 40, color: '#F7931A' },
-      { symbol: 'ETH', name: 'Ethereum', value: 35, color: '#627EEA' },
-      { symbol: 'ALT', name: 'Altcoins', value: 25, color: '#8C8C8C' } // SOL + Others
-    ]
+      { symbol: "BTC", name: "Bitcoin", value: 40, color: "#F7931A" },
+      { symbol: "ETH", name: "Ethereum", value: 35, color: "#627EEA" },
+      { symbol: "ALT", name: "Altcoins", value: 25, color: "#8C8C8C" }, // SOL + Others
+    ],
   },
   targetAllocation: {
     crypto: 80,
-    stable: 20
+    stable: 20,
   },
   delta: 15, // crypto allocation gap
 

@@ -199,13 +199,17 @@ test.describe("Bundle Wallet Switching - E2E", () => {
       await expect(banner).toBeVisible();
     });
 
-    test("should hide banner when viewing own bundle", async ({ page: _page }) => {
+    test("should hide banner when viewing own bundle", async ({
+      page: _page,
+    }) => {
       // Connect wallet first
       // Navigate to own bundle
       // Verify banner is not visible
     });
 
-    test("should handle wallet switch during bundle view", async ({ page: _page }) => {
+    test("should handle wallet switch during bundle view", async ({
+      page: _page,
+    }) => {
       // Connect wallet A
       // View bundle B
       // Switch to wallet C

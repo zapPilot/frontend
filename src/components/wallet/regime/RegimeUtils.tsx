@@ -56,7 +56,9 @@ export function AllocationProgressBar({
     <div className="w-full">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-gray-300">{label}</span>
-        <span className="text-sm font-bold text-white">{clampedPercentage}%</span>
+        <span className="text-sm font-bold text-white">
+          {clampedPercentage}%
+        </span>
       </div>
       <div
         className="w-full h-2 bg-gray-800 rounded-full overflow-hidden"
