@@ -3,123 +3,54 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import type { PoolDetail } from "@/types/domain/pool";
-import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 import {
-  validateLandingPageResponse,
-  validateYieldReturnsSummaryResponse,
-  validateUnifiedDashboardResponse,
-  validateDailyYieldReturnsResponse,
+  type DailyYieldReturnsResponse,
   type LandingPageResponse,
+  type PoolPerformanceResponse,
+  type UnifiedDashboardResponse,
+  validateDailyYieldReturnsResponse,
+  validateLandingPageResponse,
+  validatePoolPerformanceResponse,
+  validateUnifiedDashboardResponse,
+  validateYieldReturnsSummaryResponse,
   type YieldReturnsSummaryResponse,
   type YieldWindowSummary,
-  type UnifiedDashboardResponse,
-  type DailyYieldReturnsResponse,
 } from "@/schemas/api/analyticsSchemas";
+import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 
 import { httpUtils } from "../lib/http-utils";
 
 // Note: Types are imported and re-exported above at line 36
 
 // Re-export types for external use
-export type { PoolDetail } from "@/types/domain/pool";
 export type {
+  /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
+  /** @public */ PoolPerformanceResponse,
+  ProtocolYieldBreakdown,
+  /** @public */ ProtocolYieldToday,
+  ProtocolYieldWindow,
+  UnifiedDashboardResponse,
   YieldReturnsSummaryResponse,
   YieldWindowSummary,
-  UnifiedDashboardResponse,
-  DailyYieldReturnsResponse,
-  ProtocolYieldWindow,
-  ProtocolYieldToday,
-  ProtocolYieldBreakdown,
 } from "@/schemas/api/analyticsSchemas";
 
-// Legacy interface definition (unused but kept for reference)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface _LegacyLandingPageResponse {
-  total_assets_usd: number;
-  total_debt_usd: number;
-  total_net_usd: number;
-  weighted_apr: number;
-  estimated_monthly_income: number;
-  portfolio_roi: {
-    recommended_roi: number;
-    recommended_period: string;
-    recommended_yearly_roi: number;
-    estimated_yearly_pnl_usd: number;
-    windows?: Record<
-      string,
-      {
-        value: number;
-        data_points: number;
-        start_balance?: number;
-      }
-    >;
-    // Legacy fields for backward compatibility
-    roi_7d?: {
-      value: number;
-      data_points: number;
-    };
-    roi_30d?: {
-      value: number;
-      data_points: number;
-    };
-    roi_365d?: {
-      value: number;
-      data_points: number;
-    };
-    roi_windows?: Record<string, number>;
-  };
-  portfolio_allocation: {
-    btc: {
-      total_value: number;
-      percentage_of_portfolio: number;
-      wallet_tokens_value: number;
-      other_sources_value: number;
-    };
-    eth: {
-      total_value: number;
-      percentage_of_portfolio: number;
-      wallet_tokens_value: number;
-      other_sources_value: number;
-    };
-    stablecoins: {
-      total_value: number;
-      percentage_of_portfolio: number;
-      wallet_tokens_value: number;
-      other_sources_value: number;
-    };
-    others: {
-      total_value: number;
-      percentage_of_portfolio: number;
-      wallet_tokens_value: number;
-      other_sources_value: number;
-    };
-  };
-  wallet_token_summary: {
-    total_value_usd: number;
-    token_count: number;
-    apr_30d: number;
-  };
-  category_summary_debt: {
-    btc: number;
-    eth: number;
-    stablecoins: number;
-    others: number;
-  };
-  pool_details: PoolDetail[];
-  total_positions: number;
-  protocols_count: number;
-  chains_count: number;
-  last_updated: string | null;
-  apr_coverage: {
-    matched_pools: number;
-    total_pools: number;
-    coverage_percentage: number;
-    matched_asset_value_usd: number;
-  };
-  message?: string;
-  yield_summary?: YieldReturnsSummaryResponse;
+// Direct re-export to avoid unused imports while keeping public API stable
+export type { PoolDetail } from "@/schemas/api/analyticsSchemas";
+
+/**
+ * Query parameters for the unified dashboard endpoint.
+ *
+ * All fields are optional and map directly to analytics-engine query params.
+ * Values are coerced to strings when building the request URL.
+ */
+export interface DashboardWindowParams {
+  trend_days?: number;
+  risk_days?: number;
+  drawdown_days?: number;
+  allocation_days?: number;
+  rolling_days?: number;
+  metrics?: string[];
 }
 
 /**
@@ -151,15 +82,13 @@ export const getLandingPagePortfolioData = async (
  *
  * @example
  * const pools = await getPoolPerformance('0x123...');
- * pools.forEach(pool => {
- *   console.log(`${pool.protocol_name}: ${pool.final_apr * 100}% APR`);
- * });
  */
 export const getPoolPerformance = async (
   userId: string
-): Promise<PoolDetail[]> => {
+): Promise<PoolPerformanceResponse> => {
   const endpoint = `/api/v2/pools/${userId}/performance`;
-  return await httpUtils.analyticsEngine.get<PoolDetail[]>(endpoint);
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validatePoolPerformanceResponse(response);
 };
 
 /**
@@ -182,9 +111,8 @@ export const getYieldReturnsSummary = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/summary`;
 
   // API returns single YieldWindowSummary, not wrapped in windows
-  const singleWindow = await httpUtils.analyticsEngine.get<YieldWindowSummary>(
-    endpoint
-  );
+  const singleWindow =
+    await httpUtils.analyticsEngine.get<YieldWindowSummary>(endpoint);
 
   // Transform to match expected format
   const transformedResponse = {
@@ -226,267 +154,6 @@ export const getRiskSummary = async (
  * - 12-hour server-side cache
  * - Graceful degradation with partial failure support
  */
-interface AnalyticsPeriodInfo {
-  start_date: string;
-  end_date: string;
-  timezone?: string;
-  label?: string;
-  notes?: string;
-}
-
-interface AnalyticsEducationalLink {
-  label: string;
-  url: string;
-}
-
-interface PeriodWindow {
-  start_date: string;
-  end_date: string;
-  days: number;
-}
-
-interface AnalyticsEducationalContext {
-  title?: string;
-  summary?: string;
-  description?: string;
-  highlights?: string[];
-  links?: AnalyticsEducationalLink[];
-}
-
-// This interface is now re-exported from schemas - see line 38
-// Keeping this internal copy commented out to show the structure
-interface _LegacyUnifiedDashboardResponse {
-  user_id: string;
-  parameters: {
-    trend_days: number;
-    risk_days: number;
-    drawdown_days: number;
-    allocation_days: number;
-    rolling_days: number;
-  };
-
-  // Historical trends (replaces getPortfolioTrends)
-  trends: {
-    user_id?: string;
-    period_days: number;
-    data_points: number;
-    period: PeriodWindow;
-    period_info?: PeriodWindow;
-    daily_values: {
-      date: string;
-      total_value_usd: number;
-      change_percentage: number;
-      categories?: {
-        category: string;
-        source_type?: string;
-        value_usd: number;
-        pnl_usd: number;
-      }[];
-      protocols?: {
-        protocol: string;
-        chain: string;
-        value_usd: number;
-        pnl_usd: number;
-        source_type?: string;
-        category?: string;
-      }[];
-      chains_count?: number;
-    }[];
-    summary: {
-      current_value_usd: number;
-      start_value_usd: number;
-      change_usd: number;
-      change_pct: number;
-    };
-  };
-
-  // Risk metrics (replaces individual risk endpoints)
-  risk_metrics: {
-    volatility: {
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      volatility_pct: number;
-      annualized_volatility_pct: number;
-      interpretation: string;
-      summary: {
-        avg_volatility: number;
-        max_volatility: number;
-        min_volatility: number;
-      };
-    };
-    sharpe_ratio: {
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      sharpe_ratio: number;
-      interpretation: string;
-      summary: {
-        avg_sharpe: number;
-        statistical_reliability: string;
-      };
-    };
-    max_drawdown: {
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      max_drawdown_pct: number;
-      peak_date: string;
-      trough_date: string;
-      recovery_date: string | null;
-      summary: {
-        current_drawdown_pct: number;
-        is_recovered: boolean;
-      };
-    };
-  };
-
-  // Drawdown analysis (replaces getEnhancedDrawdown + getUnderwaterRecovery)
-  drawdown_analysis: {
-    enhanced: {
-      user_id?: string;
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      period_info?: AnalyticsPeriodInfo;
-      drawdown_data: {
-        date: string;
-        portfolio_value?: number;
-        portfolio_value_usd?: number;
-        peak_value?: number;
-        running_peak_usd?: number;
-        drawdown_pct?: number;
-        underwater_pct?: number;
-        is_underwater?: boolean;
-        recovery_point?: boolean;
-        [key: string]: unknown;
-      }[];
-      summary: {
-        max_drawdown_pct: number;
-        current_drawdown_pct: number;
-        peak_value: number;
-        current_value: number;
-      };
-      data_points?: number;
-    };
-    underwater_recovery: {
-      user_id?: string;
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      period_info?: AnalyticsPeriodInfo;
-      underwater_data: {
-        date: string;
-        underwater_pct: number;
-        drawdown_pct?: number;
-        portfolio_value?: number;
-        peak_value?: number;
-        is_underwater?: boolean;
-        recovery_point?: boolean;
-        [key: string]: unknown;
-      }[];
-      summary: {
-        total_underwater_days: number;
-        underwater_percentage: number;
-        recovery_points: number;
-        current_underwater_pct: number;
-        is_currently_underwater: boolean;
-      };
-      data_points?: number;
-    };
-  };
-
-  // Portfolio allocation over time (replaces getAllocationTimeseries)
-  allocation: {
-    user_id?: string;
-    period_days: number;
-    data_points: number;
-    period: PeriodWindow;
-    period_info?: PeriodWindow;
-    allocations: {
-      date: string;
-      category: string;
-      category_value_usd: number;
-      total_portfolio_value_usd: number;
-      allocation_percentage: number;
-      [key: string]: unknown;
-    }[];
-    summary: {
-      unique_dates: number;
-      unique_protocols: number;
-      unique_chains: number;
-      categories?: string[];
-    };
-  };
-
-  // Rolling window analytics (replaces getRollingSharpe + getRollingVolatility)
-  rolling_analytics: {
-    sharpe: {
-      user_id?: string;
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      rolling_sharpe_data: {
-        date: string;
-        rolling_sharpe_ratio: number;
-        is_statistically_reliable: boolean;
-        [key: string]: unknown;
-      }[];
-      summary: {
-        latest_sharpe_ratio: number;
-        avg_sharpe_ratio: number;
-        reliable_data_points: number;
-        statistical_reliability: string;
-      };
-      data_points?: number;
-      educational_context?: AnalyticsEducationalContext;
-    };
-    volatility: {
-      user_id?: string;
-      period: {
-        start_date: string;
-        end_date: string;
-        days: number;
-      };
-      rolling_volatility_data: {
-        date: string;
-        rolling_volatility_pct: number;
-        annualized_volatility_pct: number;
-        rolling_volatility_daily_pct?: number;
-        [key: string]: unknown;
-      }[];
-      summary: {
-        latest_daily_volatility: number;
-        latest_annualized_volatility: number;
-        avg_daily_volatility: number;
-        avg_annualized_volatility: number;
-      };
-      data_points?: number;
-      educational_context?: AnalyticsEducationalContext;
-    };
-  };
-
-  // Metadata for error tracking and graceful degradation
-  _metadata: {
-    success_count: number;
-    error_count: number;
-    success_rate: number;
-    errors?: Record<string, string>;
-  };
-}
-
 /**
  * Get unified portfolio dashboard analytics (Performance Optimized)
  *
@@ -523,9 +190,35 @@ interface _LegacyUnifiedDashboardResponse {
  * ```
  */
 export const getPortfolioDashboard = async (
-  userId: string
+  userId: string,
+  params: DashboardWindowParams = {}
 ): Promise<UnifiedDashboardResponse> => {
-  const endpoint = `/api/v2/analytics/${userId}/dashboard`;
+  const buildQueryString = () => {
+    const query = new URLSearchParams();
+
+    const numericParams: [keyof DashboardWindowParams, number | undefined][] = [
+      ["trend_days", params.trend_days],
+      ["risk_days", params.risk_days],
+      ["drawdown_days", params.drawdown_days],
+      ["allocation_days", params.allocation_days],
+      ["rolling_days", params.rolling_days],
+    ];
+
+    for (const [key, value] of numericParams) {
+      if (value !== undefined) {
+        query.set(key, String(value));
+      }
+    }
+
+    if (params.metrics?.length) {
+      query.set("metrics", params.metrics.join(","));
+    }
+
+    const queryString = query.toString();
+    return queryString ? `?${queryString}` : "";
+  };
+
+  const endpoint = `/api/v2/analytics/${userId}/dashboard${buildQueryString()}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateUnifiedDashboardResponse(response);
 };
@@ -537,45 +230,10 @@ export const getPortfolioDashboard = async (
 /**
  * Token details for daily yield returns
  */
-interface DailyYieldToken {
-  symbol: string;
-  amount_change: number;
-  current_price: number;
-  yield_return_usd: number;
-}
-
-/**
- * Individual daily yield return entry (per protocol/position)
- */
-interface DailyYieldReturn {
-  date: string;
-  protocol_name: string;
-  chain: string;
-  position_type: string;
-  yield_return_usd: number;
-  tokens: DailyYieldToken[];
-}
-
-/**
- * Period metadata for daily yield returns
- */
-interface DailyYieldPeriod {
-  start_date: string;
-  end_date: string;
-  days: number;
-}
-
 /**
  * Response structure for daily yield returns endpoint
  * (Type is imported from schemas - see line 17)
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface _LegacyDailyYieldReturnsResponse {
-  user_id: string;
-  period: DailyYieldPeriod;
-  daily_returns: DailyYieldReturn[];
-}
-
 /**
  * Get daily yield returns for a user
  *

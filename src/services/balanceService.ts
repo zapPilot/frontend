@@ -1,9 +1,10 @@
+import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
+
 import { createServiceCaller } from "../lib/createServiceCaller";
 import { safeNumber } from "../lib/dataValidation";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
-import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
 
 const MAX_TOKEN_ADDRESSES = 50;
 const MORALIS_API_KEY =
@@ -270,7 +271,7 @@ const normalizeWalletResponse = (
         tokensSource = data.balances;
       }
       // Also check for nativeBalance (single object, not array)
-      if ("nativeBalance" in data && typeof data.nativeBalance === "object" && data.nativeBalance !== null) {
+      if ("nativeBalance" in data && typeof data.nativeBalance === "object") {
         tokensSource.push(data.nativeBalance);
       }
     }

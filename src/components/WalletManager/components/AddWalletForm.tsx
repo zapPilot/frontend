@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 
 import { GradientButton, LoadingSpinner } from "@/components/ui";
-import { GRADIENTS } from "@/constants/design-system";
+import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 
 import type { NewWallet, WalletOperations } from "../types/wallet.types";
 
@@ -38,8 +38,7 @@ export const AddWalletForm = ({
   if (isAdding) {
     return (
       <motion.div
-        initial={{ opacity: 0, height: 0 }}
-        animate={{ opacity: 1, height: "auto" }}
+        {...ANIMATIONS.EXPAND_COLLAPSE}
         className="p-4 glass-morphism rounded-xl mb-4"
       >
         <div className="space-y-3">

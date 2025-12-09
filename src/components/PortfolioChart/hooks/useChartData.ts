@@ -67,16 +67,18 @@ type PortfolioCategoryPoint = NonNullable<
   PortfolioDataPoint["categories"]
 >[number];
 
-type DashboardDailyTotal =
-  UnifiedDashboardResponse["trends"]["daily_values"][number];
+type DashboardDailyTotal = NonNullable<
+  NonNullable<UnifiedDashboardResponse["trends"]>["daily_values"]
+>[number];
 type DashboardProtocolEntry = NonNullable<
   DashboardDailyTotal["protocols"]
 >[number];
 type DashboardCategoryEntry = NonNullable<
   DashboardDailyTotal["categories"]
 >[number];
-type DashboardAllocationEntry =
-  UnifiedDashboardResponse["allocation"]["allocations"][number];
+type DashboardAllocationEntry = NonNullable<
+  NonNullable<UnifiedDashboardResponse["allocation"]>["allocations"]
+>[number];
 
 /**
  * Helper to create consistent loading/error state across all chart data hooks
@@ -173,7 +175,16 @@ export function useChartData(
     (overrides?.dailyYieldData?.length ?? 0) > 0;
 
   // UNIFIED DASHBOARD FETCH - Replaces 6 separate API calls
-  const dashboardQuery = usePortfolioDashboard(userId);
+  // Clamp dashboard windows to API max (365) while respecting user selection
+  const dashboardWindow = Math.min(selectedDays, 365);
+
+  const dashboardQuery = usePortfolioDashboard(userId, {
+    trend_days: dashboardWindow,
+    risk_days: dashboardWindow,
+    drawdown_days: dashboardWindow,
+    allocation_days: dashboardWindow,
+    rolling_days: dashboardWindow,
+  });
 
   const { dashboard } = dashboardQuery;
   const isDashboardLoading = dashboardQuery.isLoading;
@@ -206,7 +217,7 @@ export function useChartData(
   // Transform trends data to PortfolioDataPoint[] format
   const apiPortfolioHistory: PortfolioDataPoint[] = useMemo(() => {
     const dailyTotals = asPartialArray<DashboardDailyTotal>(
-      dashboard?.trends.daily_values
+      dashboard?.trends?.daily_values
     );
     if (dailyTotals.length === 0) {
       return [];
@@ -286,13 +297,13 @@ export function useChartData(
     }
 
     const allocationSeries = asPartialArray<DashboardAllocationEntry>(
-      dashboard.allocation.allocations
+      dashboard?.allocation?.allocations
     );
     if (allocationSeries.length === 0) {
       return [];
     }
 
-    return allocationSeries.map(entry => {
+    const series = allocationSeries.map(entry => {
       const allocation = entry as Partial<DashboardAllocationEntry>;
       return {
         date: toDateString(allocation.date),
@@ -304,24 +315,28 @@ export function useChartData(
         allocation_percentage: toNumber(allocation.allocation_percentage),
       };
     });
-  }, [dashboard?.allocation]);
+
+    return series.slice(-selectedDays);
+  }, [dashboard?.allocation, selectedDays]);
 
   // Extract rolling analytics data for Sharpe and Volatility
   const rollingSharpeData = useMemo(() => {
-    const sharpeSection = dashboard?.rolling_analytics.sharpe;
+    const sharpeSection = dashboard?.rolling_analytics?.sharpe;
     if (!sharpeSection) {
       return [];
     }
 
     const sharpeSeries = asPartialArray(sharpeSection.rolling_sharpe_data);
-    return sharpeSeries.map(point => ({
-      date: toDateString(point.date),
-      rolling_sharpe_ratio: point.rolling_sharpe_ratio,
-    }));
-  }, [dashboard?.rolling_analytics.sharpe]);
+    return sharpeSeries
+      .map(point => ({
+        date: toDateString(point.date),
+        rolling_sharpe_ratio: point.rolling_sharpe_ratio,
+      }))
+      .slice(-selectedDays);
+  }, [dashboard?.rolling_analytics?.sharpe, selectedDays]);
 
   const rollingVolatilityData = useMemo(() => {
-    const volatilitySection = dashboard?.rolling_analytics.volatility;
+    const volatilitySection = dashboard?.rolling_analytics?.volatility;
     if (!volatilitySection) {
       return [];
     }
@@ -329,12 +344,14 @@ export function useChartData(
     const volatilitySeries = asPartialArray(
       volatilitySection.rolling_volatility_data
     );
-    return volatilitySeries.map(point => ({
-      date: toDateString(point.date),
-      annualized_volatility_pct: point.annualized_volatility_pct,
-      rolling_volatility_daily_pct: point.rolling_volatility_daily_pct,
-    }));
-  }, [dashboard?.rolling_analytics.volatility]);
+    return volatilitySeries
+      .map(point => ({
+        date: toDateString(point.date),
+        annualized_volatility_pct: point.annualized_volatility_pct,
+        rolling_volatility_daily_pct: point.rolling_volatility_daily_pct,
+      }))
+      .slice(-selectedDays);
+  }, [dashboard?.rolling_analytics?.volatility, selectedDays]);
 
   // Process daily yield data
   const processedDailyYieldData: DailyYieldOverridePoint[] = useMemo(() => {
@@ -397,14 +414,14 @@ export function useChartData(
 
     // Calculate cumulative yield
     let cumulative = 0;
-    return aggregated.map(point => {
+    return aggregated.slice(-selectedDays).map(point => {
       cumulative += point.total_yield_usd;
       return {
         ...point,
         cumulative_yield_usd: cumulative,
       };
     });
-  }, [dailyYieldQuery.data, overrides?.dailyYieldData]);
+  }, [dailyYieldQuery.data, overrides?.dailyYieldData, selectedDays]);
 
   // Portfolio history with fallback logic
   const portfolioHistory: PortfolioDataPoint[] = useMemo(() => {
@@ -414,14 +431,25 @@ export function useChartData(
     return apiPortfolioHistory;
   }, [apiPortfolioHistory, overrides?.portfolioData]);
 
+  // Safety net: even if the backend returns a wider window, trim to the user-selected period
+  const windowedPortfolioHistory = useMemo(() => {
+    if (!portfolioHistory?.length) return [];
+    return portfolioHistory.slice(-selectedDays);
+  }, [portfolioHistory, selectedDays]);
+
   // Extract enhanced drawdown data from dashboard if available
   const enhancedDrawdownData = useMemo(() => {
-    const enhancedSection = dashboard?.drawdown_analysis.enhanced;
+    const enhancedSection = dashboard?.drawdown_analysis?.["enhanced"] as
+      | { drawdown_data?: Record<string, unknown>[] }
+      | undefined;
     if (!enhancedSection) {
       return null;
     }
 
-    const drawdownPoints = asPartialArray(enhancedSection.drawdown_data);
+    const drawdownPoints = asPartialArray<{
+      date?: string;
+      drawdown_pct?: number;
+    }>(enhancedSection?.drawdown_data);
     if (drawdownPoints.length === 0) {
       return null;
     }
@@ -430,7 +458,7 @@ export function useChartData(
       date: toDateString(point.date),
       drawdown_pct: toNumber(point.drawdown_pct),
     }));
-  }, [dashboard?.drawdown_analysis.enhanced]);
+  }, [dashboard?.drawdown_analysis]);
 
   // ORCHESTRATION: Delegate to the 4 extracted hooks
 
@@ -445,7 +473,7 @@ export function useChartData(
 
   // 1. Portfolio Performance Data
   const performanceResult = usePortfolioHistoryData({
-    portfolioHistory,
+    portfolioHistory: windowedPortfolioHistory,
     ...chartState,
   });
 
@@ -464,7 +492,7 @@ export function useChartData(
     !overrides?.drawdownData?.length && !enhancedDrawdownData?.length;
 
   const drawdownResult = useDrawdownAnalysis({
-    portfolioHistory: shouldCalculateDrawdown ? portfolioHistory : [],
+    portfolioHistory: shouldCalculateDrawdown ? windowedPortfolioHistory : [],
     ...chartState,
   });
 

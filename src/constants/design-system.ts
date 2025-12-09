@@ -75,3 +75,13 @@ export const HEADER = {
   HEIGHT: "h-16",
   TOP_OFFSET: "top-16",
 } as const;
+
+// Framer Motion Animation Variants
+export const ANIMATIONS = {
+  /** Expand/collapse animation for progressive disclosure UI patterns */
+  EXPAND_COLLAPSE: {
+    initial: { opacity: 0, height: 0 },
+    animate: { opacity: 1, height: "auto" },
+    exit: { opacity: 0, height: 0 },
+  },
+} as const;

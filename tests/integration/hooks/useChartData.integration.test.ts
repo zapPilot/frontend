@@ -20,6 +20,7 @@
  * 10. Memoization and performance optimization
  */
 
+import { useQuery } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -78,6 +79,8 @@ vi.mock("@tanstack/react-query", async () => {
 setupMockCleanup();
 
 const createWrapper = () => createQueryWrapper().QueryWrapper;
+
+const mockedUseQuery = useQuery as unknown as vi.Mock;
 
 // ============================================================================
 // Mock Data Factory Functions
@@ -485,6 +488,15 @@ const setDashboardResponse = (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockedUseQuery.mockReset();
+  mockedUseQuery.mockImplementation((options: any) => {
+    // Default: no data, no loading
+    return {
+      data: options?.initialData ?? null,
+      isLoading: false,
+      error: null,
+    } as any;
+  });
   setDashboardResponse();
 });
 
@@ -613,6 +625,118 @@ describe("useChartData - Full Data Flow Integration", () => {
     // Rolling analytics should be empty (no API data)
     expect(result.current.sharpeData).toHaveLength(0);
     expect(result.current.volatilityData).toHaveLength(0);
+  });
+});
+
+// ============================================================================
+// Test Suite 2: Period Windowing & Cache-Safety Regressions
+// ============================================================================
+
+describe("useChartData - windowing by selectedPeriod", () => {
+  it("trims all chart series to the selected period and recomputes daily yield cumulative", async () => {
+    const totalDays = 120;
+    const selectedPeriod = "1M"; // 30 days
+    const selectedDays = 30;
+
+    const dateSeries = generateDateSeries(MOCK_BASE_DATE, totalDays);
+
+    // Build a wide dashboard payload (120 days) so we can verify client-side trimming
+    const dashboard: UnifiedDashboardResponse = {
+      ...createMockDashboard(),
+      trends: {
+        daily_values: dateSeries.map((date, idx) => ({
+          date,
+          total_value_usd: 10_000 + idx * 100,
+          change_percentage: 0,
+          protocols: [],
+          categories: [],
+          chains_count: 1,
+        })),
+      },
+      allocation: {
+        allocations: dateSeries.map((date, idx) => ({
+          date,
+          category: "eth",
+          category_value_usd: 1_000 + idx,
+          total_portfolio_value_usd: 10_000 + idx,
+          allocation_percentage: 10,
+        })),
+      },
+      rolling_analytics: {
+        sharpe: {
+          rolling_sharpe_data: dateSeries.map((date, idx) => ({
+            date,
+            rolling_sharpe_ratio: idx / 10,
+          })),
+        },
+        volatility: {
+          rolling_volatility_data: dateSeries.map((date, idx) => ({
+            date,
+            annualized_volatility_pct: idx,
+            rolling_volatility_daily_pct: idx / 2,
+          })),
+        },
+      },
+      drawdown_analysis: {},
+    } as UnifiedDashboardResponse;
+
+    setDashboardResponse(dashboard);
+
+    // Daily yield mock: one entry per day with increasing value
+    mockedUseQuery.mockImplementation((options: any) => {
+      if (options?.queryKey?.[0] === "daily-yield") {
+        const daily_returns = dateSeries.map((date, idx) => ({
+          date,
+          protocol_name: "test",
+          chain: "eth",
+          position_type: "yield",
+          yield_return_usd: idx + 1,
+          tokens: [],
+        }));
+        return {
+          data: { daily_returns },
+          isLoading: false,
+          error: null,
+        } as any;
+      }
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+      } as any;
+    });
+
+    const wrapper = createWrapper();
+    const { result } = renderHook(
+      () => useChartData("user-1", selectedPeriod),
+      { wrapper }
+    );
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    // Portfolio & performance windowing
+    expect(result.current.portfolioHistory).toHaveLength(selectedDays);
+    expect(result.current.stackedPortfolioData).toHaveLength(selectedDays);
+
+    // Allocation windowing (after slice)
+    expect(result.current.allocationHistory).toHaveLength(selectedDays);
+
+    // Rolling analytics windowing
+    expect(result.current.sharpeData).toHaveLength(selectedDays);
+    expect(result.current.volatilityData).toHaveLength(selectedDays);
+
+    // Daily yield windowing & cumulative recomputation
+    expect(result.current.dailyYieldData).toHaveLength(selectedDays);
+    const lastCumulative =
+      result.current.dailyYieldData[result.current.dailyYieldData.length - 1]
+        ?.cumulative_yield_usd;
+    const expectedCumulative = dateSeries
+      .slice(-selectedDays)
+      .reduce(
+        (sum, _date, idx) => sum + (totalDays - selectedDays + idx + 1),
+        0
+      );
+    expect(lastCumulative).toBeCloseTo(expectedCumulative, 6);
   });
 });
 

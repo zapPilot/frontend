@@ -15,6 +15,10 @@ const CACHE_STALE_WHILE_REVALIDATE_SECONDS = toSeconds(
 const PROD_CACHE_CONTROL_HEADER = `public, max-age=${CACHE_MAX_AGE_SECONDS}, stale-while-revalidate=${CACHE_STALE_WHILE_REVALIDATE_SECONDS}`;
 
 const nextConfig: NextConfig = {
+  // Turbopack is the default bundler in Next.js 16+
+  // An empty config here tells Next.js this is intentional
+  // The webpack config below will apply when using --webpack flag
+  turbopack: {},
   compiler: {
     // Remove console.log in production builds, but keep console.warn and console.error
     removeConsole: process.env.NODE_ENV === 'production' ? {
@@ -39,25 +43,46 @@ const nextConfig: NextConfig = {
     ],
   },
   output: 'export',
-  // Narrow webpack dev watcher scope to reduce memory/CPU (webpack-only)
-  webpackDevMiddleware(config: any) {
-    config.watchOptions = {
-      ...(config.watchOptions || {}),
-      ignored: [
-        "**/.git/**",
-        "**/.next/**",
-        "**/node_modules/**",
-        "**/coverage/**",
-        "**/.turbo/**",
-        "**/.cache/**",
-        "**/playwright-report/**",
-        "**/test-results/**",
-        "**/out/**",
-        "**/uploads/**",
-      ],
-    } as any;
+
+  /**
+   * Webpack configuration override
+   * Optimizes file watching to reduce memory/CPU usage in development
+   *
+   * Note: This configuration only applies when using Webpack bundler.
+   * When using Turbopack (default), this configuration is ignored.
+   *
+   * @see https://nextjs.org/docs/app/api-reference/next-config-js/webpack
+   */
+  webpack: (config, { dev, isServer }) => {
+    // Only apply watch optimizations in development mode
+    // Skip on server builds to avoid conflicts
+    if (dev && !isServer) {
+      // In Next.js 15, watchOptions has read-only property descriptors
+      // We need to use Object.defineProperty to properly override it
+      // Source: https://github.com/vercel/next.js/issues/77520
+      Object.defineProperty(config, "watchOptions", {
+        ...Object.getOwnPropertyDescriptor(config, "watchOptions"),
+        value: {
+          ...config.watchOptions,
+          ignored: [
+            "**/node_modules/**",
+            "**/.git/**",
+            "**/.next/**",
+            "**/coverage/**",
+            "**/.turbo/**",
+            "**/.cache/**",
+            "**/playwright-report/**",
+            "**/test-results/**",
+            "**/out/**",
+            "**/uploads/**",
+          ],
+        },
+      });
+    }
+
     return config;
   },
+
   async headers() {
     const isDev = process.env.NODE_ENV === "development";
     const cacheControlValue = isDev ? "no-store" : PROD_CACHE_CONTROL_HEADER;

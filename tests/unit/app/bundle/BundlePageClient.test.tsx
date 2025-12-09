@@ -52,7 +52,7 @@ describe("BundlePageClient switch prompt", () => {
     window.history.pushState({}, "", "/bundle?userId=OWNER123&foo=bar");
   });
 
-  it("allows staying on the current bundle (hides prompt)", async () => {
+  it("allows staying on the current bundle (banner persists)", async () => {
     mockIsConnected = true;
     mockUserId = "ME456"; // different user
     mockConnectedWallet = "0xME456";
@@ -64,13 +64,13 @@ describe("BundlePageClient switch prompt", () => {
     const switchBtn = await screen.findByTestId("switch-to-my-bundle");
     expect(switchBtn).toBeInTheDocument();
 
-    // Click Stay
+    // Click Stay (should be no-op, banner persists)
     await act(async () => {
       await userEvent.click(screen.getByText(/stay/i));
     });
 
-    // Prompt should disappear and no navigation
-    expect(screen.queryByTestId("switch-to-my-bundle")).not.toBeInTheDocument();
+    // Banner should still be visible (no permanent dismissal)
+    expect(screen.queryByTestId("switch-to-my-bundle")).toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 

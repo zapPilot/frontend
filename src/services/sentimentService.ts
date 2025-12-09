@@ -15,20 +15,13 @@ import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { createServiceCaller } from "@/lib/createServiceCaller";
 import { APIError, httpUtils } from "@/lib/http-utils";
 import { queryKeys } from "@/lib/queryClient";
+import {
+  type SentimentApiResponse,
+  validateSentimentApiResponse,
+} from "@/schemas/api/sentimentSchemas";
 import { logger } from "@/utils/logger";
 
 const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes
-
-/**
- * Backend API Response Format (from proxy endpoint)
- */
-interface SentimentApiResponse {
-  value: number;
-  status: SentimentLabel | string;
-  timestamp: string;
-  source: string;
-  cached?: boolean;
-}
 
 /**
  * Frontend Data Model with quote integration
@@ -102,16 +95,17 @@ function transformSentimentData(
 /**
  * Fetch market sentiment from backend proxy endpoint
  *
- * Calls `/api/v1/market/sentiment` which proxies the Fear & Greed Index API
+ * Calls `/api/v2/market/sentiment` which proxies the Fear & Greed Index API
  * to avoid CORS issues. Backend handles caching and error handling.
  */
 export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   return callSentimentApi(async () => {
-    const response = await httpUtils.analyticsEngine.get<SentimentApiResponse>(
+    const response = await httpUtils.analyticsEngine.get(
       "/api/v2/market/sentiment"
     );
 
-    return transformSentimentData(response);
+    const validatedResponse = validateSentimentApiResponse(response);
+    return transformSentimentData(validatedResponse);
   });
 }
 

@@ -129,20 +129,7 @@ export function PoolDetailsTooltip({
                   </div>
                 </div>
 
-                {/* APR Row (if available) */}
-                {pool.final_apr > 0 && (
-                  <div className="flex justify-between text-xs text-gray-400 mt-1.5 pt-1.5 border-t border-gray-700/50">
-                    <span>APR</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-emerald-300 font-medium">
-                        {formatPercentage(pool.final_apr * 100, false, 2)}
-                      </span>
-                      {pool.protocol_matched && (
-                        <span className="text-gray-500 text-[10px]">✓</span>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {/* APR Row removed because pool performance endpoint no longer provides APR data */}
               </div>
             ))}
           </div>
