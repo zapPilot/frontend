@@ -97,6 +97,75 @@ const MOCK_ANALYTICS = {
 };
 
 // ============================================================================
+// REUSABLE CHART HELPERS
+// ============================================================================
+
+/** Reusable grid lines for charts */
+const ChartGridLines = ({ positions }: { positions: number[] }) => (
+  <div className="absolute inset-0">
+    {positions.map(y => (
+      <div
+        key={y}
+        className="absolute w-full h-px bg-gray-800/40"
+        style={{ top: `${y}%` }}
+      />
+    ))}
+  </div>
+);
+
+/** Reusable SVG wrapper for charts with common styling */
+const ChartSvgWrapper = ({ children }: { children: React.ReactNode }) => (
+  <svg
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+    className="absolute inset-0 w-full h-full"
+  >
+    {children}
+  </svg>
+);
+
+/** Reusable Y-axis labels for drawdown-style charts */
+const YAxisLabels = ({
+  labels,
+  alignment = "right",
+}: {
+  labels: string[];
+  alignment?: "left" | "right";
+}) => (
+  <div
+    className={`absolute ${alignment === "right" ? "right-2" : "left-2"} top-0 h-full flex flex-col justify-between py-1 text-[10px] text-gray-600 font-mono text-${alignment}`}
+  >
+    {labels.map((label, idx) => (
+      <span key={idx}>{label}</span>
+    ))}
+  </div>
+);
+
+/** Reusable metric card for analytics metrics */
+const AnalyticsMetricCard = ({
+  icon: Icon,
+  label,
+  value,
+  subValue,
+  valueColor = "text-white",
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+  subValue: string;
+  valueColor?: string;
+}) => (
+  <BaseCard variant="glass" className="p-4">
+    <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+      <Icon className="w-3.5 h-3.5" />
+      {label}
+    </div>
+    <div className={`text-lg font-mono ${valueColor}`}>{value}</div>
+    <div className="text-[10px] text-gray-500">{subValue}</div>
+  </BaseCard>
+);
+
+// ============================================================================
 // CHART COMPONENTS
 // ============================================================================
 
@@ -111,22 +180,10 @@ const PerformanceChart = () => {
   return (
     <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800">
       {/* Grid Lines */}
-      <div className="absolute inset-0">
-        {[0, 25, 50, 75, 100].map(y => (
-          <div
-            key={y}
-            className="absolute w-full h-px bg-gray-800/40"
-            style={{ top: `${y}%` }}
-          />
-        ))}
-      </div>
+      <ChartGridLines positions={[0, 25, 50, 75, 100]} />
 
       {/* Chart */}
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="absolute inset-0 w-full h-full"
-      >
+      <ChartSvgWrapper>
         <defs>
           <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
@@ -159,7 +216,7 @@ const PerformanceChart = () => {
           vectorEffect="non-scaling-stroke"
           opacity="0.6"
         />
-      </svg>
+      </ChartSvgWrapper>
 
       {/* Regime Overlay */}
       <div className="absolute inset-0 flex pointer-events-none opacity-5">
@@ -204,25 +261,13 @@ const DrawdownChart = () => {
   return (
     <div className="relative w-full h-40 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800">
       {/* Grid Lines */}
-      <div className="absolute inset-0">
-        {[0, 33, 66, 100].map(y => (
-          <div
-            key={y}
-            className="absolute w-full h-px bg-gray-800/40"
-            style={{ top: `${y}%` }}
-          />
-        ))}
-      </div>
+      <ChartGridLines positions={[0, 33, 66, 100]} />
 
       {/* Zero Line (at top) */}
       <div className="absolute top-0 w-full h-px bg-gray-600" />
 
       {/* Chart */}
-      <svg
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        className="absolute inset-0 w-full h-full"
-      >
+      <ChartSvgWrapper>
         <defs>
           <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
@@ -241,15 +286,10 @@ const DrawdownChart = () => {
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"
         />
-      </svg>
+      </ChartSvgWrapper>
 
       {/* Y-Axis Labels */}
-      <div className="absolute right-2 top-0 h-full flex flex-col justify-between py-1 text-[10px] text-gray-600 font-mono text-right">
-        <span>0%</span>
-        <span>-5%</span>
-        <span>-10%</span>
-        <span>-15%</span>
-      </div>
+      <YAxisLabels labels={["0%", "-5%", "-10%", "-15%"]} />
 
       {/* Max Drawdown Annotation */}
       <div className="absolute left-[56%] top-[85%] transform -translate-x-1/2">
@@ -376,38 +416,31 @@ export const AnalyticsView = () => {
 
       {/* Additional Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <BaseCard variant="glass" className="p-4">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <Activity className="w-3.5 h-3.5" />
-            Sortino Ratio
-          </div>
-          <div className="text-lg font-mono text-white">3.12</div>
-          <div className="text-[10px] text-gray-500">vs 1.2 Benchmark</div>
-        </BaseCard>
-        <BaseCard variant="glass" className="p-4">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <Activity className="w-3.5 h-3.5" />
-            Beta (vs BTC)
-          </div>
-          <div className="text-lg font-mono text-white">0.35</div>
-          <div className="text-[10px] text-blue-400">Low Correlation</div>
-        </BaseCard>
-        <BaseCard variant="glass" className="p-4">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <Activity className="w-3.5 h-3.5" />
-            Volatility
-          </div>
-          <div className="text-lg font-mono text-white">18.2%</div>
-          <div className="text-[10px] text-gray-500">Annualized</div>
-        </BaseCard>
-        <BaseCard variant="glass" className="p-4">
-          <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-            <Activity className="w-3.5 h-3.5" />
-            Alpha
-          </div>
-          <div className="text-lg font-mono text-green-400">+4.2%</div>
-          <div className="text-[10px] text-gray-500">Excess Return</div>
-        </BaseCard>
+        <AnalyticsMetricCard
+          icon={Activity}
+          label="Sortino Ratio"
+          value="3.12"
+          subValue="vs 1.2 Benchmark"
+        />
+        <AnalyticsMetricCard
+          icon={Activity}
+          label="Beta (vs BTC)"
+          value="0.35"
+          subValue="Low Correlation"
+        />
+        <AnalyticsMetricCard
+          icon={Activity}
+          label="Volatility"
+          value="18.2%"
+          subValue="Annualized"
+        />
+        <AnalyticsMetricCard
+          icon={Activity}
+          label="Alpha"
+          value="+4.2%"
+          subValue="Excess Return"
+          valueColor="text-green-400"
+        />
       </div>
 
       {/* PnL Heatmap */}

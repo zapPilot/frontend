@@ -52,8 +52,10 @@ export function WalletPortfolioPresenterV22() {
     { id: "extreme-greed", label: "Extreme Greed", color: "#22c55e" },
   ];
 
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  // Modal state - consolidated to avoid duplication
+  const [activeModal, setActiveModal] = useState<"deposit" | "withdraw" | null>(
+    null
+  );
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30">
@@ -136,13 +138,13 @@ export function WalletPortfolioPresenterV22() {
                   {/* Quick Actions - Moved to top for visibility on mobile */}
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => setIsDepositOpen(true)}
+                      onClick={() => setActiveModal("deposit")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-bold rounded-lg transition-colors border border-green-500/20"
                     >
                       <ArrowDownCircle className="w-4 h-4" /> Deposit
                     </button>
                     <button
-                      onClick={() => setIsWithdrawOpen(true)}
+                      onClick={() => setActiveModal("withdraw")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-lg transition-colors border border-red-500/20"
                     >
                       <ArrowUpCircle className="w-4 h-4" /> Withdraw
@@ -452,75 +454,69 @@ export function WalletPortfolioPresenterV22() {
         onClose={() => setIsWalletManagerOpen(false)}
       />
 
-      {/* Deposit Modal */}
+      {/* Transaction Modal - Consolidated Deposit/Withdraw */}
       <Modal
-        isOpen={isDepositOpen}
-        onClose={() => setIsDepositOpen(false)}
+        isOpen={activeModal === "deposit" || activeModal === "withdraw"}
+        onClose={() => setActiveModal(null)}
         maxWidth="md"
       >
         <ModalHeader
-          title="Deposit to Pilot"
-          onClose={() => setIsDepositOpen(false)}
+          title={
+            activeModal === "deposit" ? "Deposit to Pilot" : "Withdraw Funds"
+          }
+          {...(activeModal === "withdraw" && {
+            subtitle:
+              "Divesting will convert your active positions back to USDC.",
+          })}
+          onClose={() => setActiveModal(null)}
         />
         <ModalContent>
-          <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-            <div className="text-xs text-gray-400 mb-1">
-              Based on Current Regime:{" "}
-              <span className="text-green-400 font-bold">Greed</span>
+          {activeModal === "deposit" ? (
+            <>
+              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
+                <div className="text-xs text-gray-400 mb-1">
+                  Based on Current Regime:{" "}
+                  <span className="text-green-400 font-bold">Greed</span>
+                </div>
+                <div className="flex gap-2 text-sm font-mono">
+                  <span className="text-white">40% Crypto</span>
+                  <span className="text-gray-600">/</span>
+                  <span className="text-emerald-400">60% Stable</span>
+                </div>
+              </div>
+              <ModalInput
+                label="Amount (USDC)"
+                type="number"
+                placeholder="0.00"
+              />
+            </>
+          ) : (
+            <div>
+              <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
+                Amount to Withdraw
+              </label>
+              <div className="grid grid-cols-4 gap-2 mb-4">
+                {["25%", "50%", "75%", "Max"].map(pct => (
+                  <button
+                    key={pct}
+                    className="py-1 bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg transition-colors border border-gray-700"
+                  >
+                    {pct}
+                  </button>
+                ))}
+              </div>
+              <ModalInput type="number" placeholder="0.00" />
             </div>
-            <div className="flex gap-2 text-sm font-mono">
-              <span className="text-white">40% Crypto</span>
-              <span className="text-gray-600">/</span>
-              <span className="text-emerald-400">60% Stable</span>
-            </div>
-          </div>
-          <ModalInput label="Amount (USDC)" type="number" placeholder="0.00" />
+          )}
         </ModalContent>
         <ModalFooter>
           <ModalButtonGroup
-            onCancel={() => setIsDepositOpen(false)}
-            onConfirm={() => setIsDepositOpen(false)}
-            confirmLabel="Confirm Deposit"
-            confirmVariant="primary"
-          />
-        </ModalFooter>
-      </Modal>
-
-      {/* Withdraw Modal */}
-      <Modal
-        isOpen={isWithdrawOpen}
-        onClose={() => setIsWithdrawOpen(false)}
-        maxWidth="md"
-      >
-        <ModalHeader
-          title="Withdraw Funds"
-          subtitle="Divesting will convert your active positions back to USDC."
-          onClose={() => setIsWithdrawOpen(false)}
-        />
-        <ModalContent>
-          <div>
-            <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
-              Amount to Withdraw
-            </label>
-            <div className="grid grid-cols-4 gap-2 mb-4">
-              {["25%", "50%", "75%", "Max"].map(pct => (
-                <button
-                  key={pct}
-                  className="py-1 bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg transition-colors border border-gray-700"
-                >
-                  {pct}
-                </button>
-              ))}
-            </div>
-            <ModalInput type="number" placeholder="0.00" />
-          </div>
-        </ModalContent>
-        <ModalFooter>
-          <ModalButtonGroup
-            onCancel={() => setIsWithdrawOpen(false)}
-            onConfirm={() => setIsWithdrawOpen(false)}
-            confirmLabel="Withdraw"
-            confirmVariant="danger"
+            onCancel={() => setActiveModal(null)}
+            onConfirm={() => setActiveModal(null)}
+            confirmLabel={
+              activeModal === "deposit" ? "Confirm Deposit" : "Withdraw"
+            }
+            confirmVariant={activeModal === "deposit" ? "primary" : "danger"}
           />
         </ModalFooter>
       </Modal>
