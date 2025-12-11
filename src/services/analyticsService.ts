@@ -3,6 +3,7 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
+import { buildAnalyticsQueryString } from "@/lib/queryStringUtils";
 import {
   type DailyYieldReturnsResponse,
   type LandingPageResponse,
@@ -193,32 +194,7 @@ export const getPortfolioDashboard = async (
   userId: string,
   params: DashboardWindowParams = {}
 ): Promise<UnifiedDashboardResponse> => {
-  const buildQueryString = () => {
-    const query = new URLSearchParams();
-
-    const numericParams: [keyof DashboardWindowParams, number | undefined][] = [
-      ["trend_days", params.trend_days],
-      ["risk_days", params.risk_days],
-      ["drawdown_days", params.drawdown_days],
-      ["allocation_days", params.allocation_days],
-      ["rolling_days", params.rolling_days],
-    ];
-
-    for (const [key, value] of numericParams) {
-      if (value !== undefined) {
-        query.set(key, String(value));
-      }
-    }
-
-    if (params.metrics?.length) {
-      query.set("metrics", params.metrics.join(","));
-    }
-
-    const queryString = query.toString();
-    return queryString ? `?${queryString}` : "";
-  };
-
-  const endpoint = `/api/v2/analytics/${userId}/dashboard${buildQueryString()}`;
+  const endpoint = `/api/v2/analytics/${userId}/dashboard${buildAnalyticsQueryString(params)}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateUnifiedDashboardResponse(response);
 };

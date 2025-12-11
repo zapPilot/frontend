@@ -29,6 +29,7 @@ import type { RegimeId } from "@/components/wallet/regime/regimeData";
 export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
   // Validate input
   if (isNaN(sentimentValue) || !isFinite(sentimentValue)) {
+    // eslint-disable-next-line no-console
     console.warn(
       `[regimeMapper] Invalid sentiment value: ${sentimentValue}. Defaulting to neutral regime.`
     );
@@ -37,6 +38,7 @@ export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
 
   // Handle out-of-range values
   if (sentimentValue < 0 || sentimentValue > 100) {
+    // eslint-disable-next-line no-console
     console.warn(
       `[regimeMapper] Sentiment value ${sentimentValue} is out of range (0-100). Defaulting to neutral regime.`
     );

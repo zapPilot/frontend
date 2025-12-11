@@ -20,15 +20,13 @@ test.describe("V22 Layout Migration", () => {
       await page.goto("/bundle?userId=0x1234567890abcdef");
 
       // V1 layout has WalletMetrics component
-      await expect(
-        page.getByTestId("wallet-metrics-container")
-      ).toBeVisible();
+      await expect(page.getByTestId("wallet-metrics-container")).toBeVisible();
 
       // V22-specific elements should NOT be present
       await expect(page.getByText("Current Strategy")).not.toBeVisible();
     });
 
-    test("should show V22 layout when flag is ON", async ({ page, context }) => {
+    test("should show V22 layout when flag is ON", async ({ page }) => {
       // Note: In real deployment, this would be controlled via env variable
       // For E2E testing, we might need a test route or mock
       await page.goto("/layout-demo/v22");
@@ -61,8 +59,8 @@ test.describe("V22 Layout Migration", () => {
       await expect(roiBadge).toBeVisible();
 
       // Should have color indicator (green for positive, red for negative)
-      const hasColorClass = await roiBadge.evaluate(el =>
-        el.className.includes("green") || el.className.includes("red")
+      const hasColorClass = await roiBadge.evaluate(
+        el => el.className.includes("green") || el.className.includes("red")
       );
       expect(hasColorClass).toBe(true);
     });
@@ -78,13 +76,11 @@ test.describe("V22 Layout Migration", () => {
 
     test("should display portfolio composition bar", async ({ page }) => {
       // Composition bar container
-      await expect(
-        page.getByText("Portfolio Composition")
-      ).toBeVisible();
+      await expect(page.getByText("Portfolio Composition")).toBeVisible();
 
       // Should have crypto and stable sections
-      const cryptoSection = page.locator('text=BTC').first();
-      const stableSection = page.locator('text=STABLES').first();
+      const cryptoSection = page.locator("text=BTC").first();
+      const stableSection = page.locator("text=STABLES").first();
 
       await expect(cryptoSection).toBeVisible();
       await expect(stableSection).toBeVisible();
@@ -92,19 +88,17 @@ test.describe("V22 Layout Migration", () => {
 
     test("should show allocation drift percentage", async ({ page }) => {
       // Drift indicator
-      const driftElement = page.locator('text=/Drift:.*%/');
+      const driftElement = page.locator("text=/Drift:.*%/");
       await expect(driftElement).toBeVisible();
     });
 
-    test("should display portfolio metadata (positions, protocols, chains)", async ({ page }) => {
+    test("should display portfolio metadata (positions, protocols, chains)", async ({
+      page,
+    }) => {
       // These metrics should be visible somewhere in the dashboard
-      const hasPositions = await page
-        .locator('text=/\\d+ Position/i')
-        .count();
-      const hasProtocols = await page
-        .locator('text=/\\d+ Protocol/i')
-        .count();
-      const hasChains = await page.locator('text=/\\d+ Chain/i').count();
+      const hasPositions = await page.locator("text=/\\d+ Position/i").count();
+      const hasProtocols = await page.locator("text=/\\d+ Protocol/i").count();
+      const hasChains = await page.locator("text=/\\d+ Chain/i").count();
 
       expect(hasPositions + hasProtocols + hasChains).toBeGreaterThan(0);
     });
@@ -116,7 +110,7 @@ test.describe("V22 Layout Migration", () => {
     });
 
     test("should expand strategy card on click", async ({ page }) => {
-      const strategyCard = page.locator('text=Current Strategy').locator("..");
+      const strategyCard = page.locator("text=Current Strategy").locator("..");
       await strategyCard.click();
 
       // Regime spectrum should be visible after expansion
@@ -125,7 +119,7 @@ test.describe("V22 Layout Migration", () => {
 
     test("should show target allocation in strategy card", async ({ page }) => {
       // Target allocation format: XX% Crypto / XX% Stable
-      const targetAllocation = page.locator('text=/\\d+% Crypto/');
+      const targetAllocation = page.locator("text=/\\d+% Crypto/");
       await expect(targetAllocation).toBeVisible();
     });
   });
@@ -171,14 +165,14 @@ test.describe("V22 Layout Migration", () => {
     });
 
     test("should navigate to Analytics tab", async ({ page }) => {
-      await page.click('text=Analytics');
+      await page.click("text=Analytics");
 
       // Analytics-specific content
       await expect(page.getByText("Performance Overview")).toBeVisible();
     });
 
     test("should navigate to Backtesting tab", async ({ page }) => {
-      await page.click('text=Backtesting');
+      await page.click("text=Backtesting");
 
       // Backtesting-specific content
       await expect(page.getByText("Strategy Simulator")).toBeVisible();
@@ -186,11 +180,11 @@ test.describe("V22 Layout Migration", () => {
 
     test("should navigate back to Dashboard tab", async ({ page }) => {
       // Go to Analytics
-      await page.click('text=Analytics');
+      await page.click("text=Analytics");
       await expect(page.getByText("Performance Overview")).toBeVisible();
 
       // Go back to Dashboard
-      await page.click('text=Dashboard');
+      await page.click("text=Dashboard");
       await expect(page.getByText("Portfolio Composition")).toBeVisible();
     });
   });
@@ -198,22 +192,24 @@ test.describe("V22 Layout Migration", () => {
   test.describe("Analytics Tab (Mock Data)", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/layout-demo/v22");
-      await page.click('text=Analytics');
+      await page.click("text=Analytics");
     });
 
     test("should display performance charts", async ({ page }) => {
       await expect(page.getByText("Performance Overview")).toBeVisible();
 
       // Charts should render (canvas or svg elements)
-      const charts = await page.locator('canvas, svg[class*="recharts"]').count();
+      const charts = await page
+        .locator('canvas, svg[class*="recharts"]')
+        .count();
       expect(charts).toBeGreaterThan(0);
     });
 
     test("should show risk metrics", async ({ page }) => {
       // Risk metrics: Sharpe, Sortino, Beta, etc.
       const hasRiskMetrics =
-        (await page.locator('text=/Sharpe/i').count()) +
-        (await page.locator('text=/Volatility/i').count());
+        (await page.locator("text=/Sharpe/i").count()) +
+        (await page.locator("text=/Volatility/i").count());
       expect(hasRiskMetrics).toBeGreaterThan(0);
     });
   });
@@ -221,7 +217,7 @@ test.describe("V22 Layout Migration", () => {
   test.describe("Backtesting Tab (Mock Data)", () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("/layout-demo/v22");
-      await page.click('text=Backtesting');
+      await page.click("text=Backtesting");
     });
 
     test("should display strategy simulator", async ({ page }) => {
@@ -231,16 +227,16 @@ test.describe("V22 Layout Migration", () => {
     test("should have profile selector", async ({ page }) => {
       // Conservative/Aggressive toggle
       const hasProfileOptions =
-        (await page.locator('text=/Conservative/i').count()) +
-        (await page.locator('text=/Aggressive/i').count());
+        (await page.locator("text=/Conservative/i").count()) +
+        (await page.locator("text=/Aggressive/i").count());
       expect(hasProfileOptions).toBeGreaterThan(0);
     });
 
     test("should display simulation results", async ({ page }) => {
       // Portfolio growth chart or results
       const hasSimulationOutput =
-        (await page.locator('text=/Growth/i').count()) +
-        (await page.locator('canvas, svg').count());
+        (await page.locator("text=/Growth/i").count()) +
+        (await page.locator("canvas, svg").count());
       expect(hasSimulationOutput).toBeGreaterThan(0);
     });
   });
@@ -263,11 +259,13 @@ test.describe("V22 Layout Migration", () => {
       await expect(balance).toBeVisible();
     });
 
-    test("should have accessible tab navigation on mobile", async ({ page }) => {
+    test("should have accessible tab navigation on mobile", async ({
+      page,
+    }) => {
       await page.goto("/layout-demo/v22");
 
       // Mobile bottom nav or top tabs
-      await page.click('text=Analytics');
+      await page.click("text=Analytics");
       await expect(page.getByText("Performance Overview")).toBeVisible();
     });
   });
@@ -287,9 +285,7 @@ test.describe("V22 Layout Migration", () => {
   test.describe("Error Handling", () => {
     test("should handle sentiment API failure gracefully", async ({ page }) => {
       // Block sentiment API endpoint
-      await page.route("**/api/v2/market/sentiment", route =>
-        route.abort()
-      );
+      await page.route("**/api/v2/market/sentiment", route => route.abort());
 
       await page.goto("/layout-demo/v22");
 

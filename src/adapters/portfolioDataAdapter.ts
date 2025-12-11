@@ -10,6 +10,11 @@ import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
+import {
+  createV22ErrorState,
+  createV22LoadingState,
+} from "./walletPortfolioV22Adapter";
+
 /**
  * Asset color mapping for consistent visualization
  */
@@ -100,7 +105,10 @@ export function transformToV22Data(
   const currentAllocation = calculateAllocation(landingData);
 
   // Calculate drift (delta) between current and target allocation
-  const delta = calculateDelta(currentAllocation.crypto, targetAllocation.crypto);
+  const delta = calculateDelta(
+    currentAllocation.crypto,
+    targetAllocation.crypto
+  );
 
   // Extract ROI changes
   const roiChanges = extractROIChanges(landingData);
@@ -115,7 +123,8 @@ export function transformToV22Data(
     // Market sentiment
     sentimentValue,
     sentimentStatus: sentimentData?.status ?? "Neutral",
-    sentimentQuote: sentimentData?.quote?.quote ?? getDefaultQuoteForRegime(currentRegime),
+    sentimentQuote:
+      sentimentData?.quote?.quote ?? getDefaultQuoteForRegime(currentRegime),
 
     // Regime
     currentRegime,
@@ -253,7 +262,7 @@ function calculateAllocation(
       value: othersValue > 0 ? (othersValue / totalCrypto) * 100 : 0,
       color: ASSET_COLORS.ALT,
     },
-  ].filter((c) => c.value > 0);
+  ].filter(c => c.value > 0);
 
   return {
     crypto: cryptoPercent,
@@ -272,7 +281,7 @@ function calculateAllocation(
 function getTargetAllocation(
   regimeId: RegimeId
 ): V22PortfolioData["targetAllocation"] {
-  const regime = regimes.find((r) => r.id === regimeId);
+  const regime = regimes.find(r => r.id === regimeId);
 
   if (!regime) {
     // Fallback to neutral (50/50)
@@ -295,9 +304,10 @@ function calculateDelta(currentCrypto: number, targetCrypto: number): number {
 /**
  * Extracts ROI changes from landing page data
  */
-function extractROIChanges(
-  landingData: LandingPageResponse
-): { change7d: number; change30d: number } {
+function extractROIChanges(landingData: LandingPageResponse): {
+  change7d: number;
+  change30d: number;
+} {
   const roiData = landingData.portfolio_roi;
 
   // Try to get from windows first
@@ -322,9 +332,7 @@ function extractROIChanges(
 function countUniqueProtocols(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueProtocols = new Set(
-    poolDetails.map((pool) => pool.protocol_id)
-  );
+  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
   return uniqueProtocols.size;
 }
 
@@ -334,7 +342,7 @@ function countUniqueProtocols(
 function countUniqueChains(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueChains = new Set(poolDetails.map((pool) => pool.chain));
+  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
   return uniqueChains.size;
 }
 
@@ -356,39 +364,8 @@ function getDefaultQuoteForRegime(regimeId: RegimeId): string {
 /**
  * Creates a loading state placeholder
  */
-export function createLoadingState(): V22PortfolioData {
-  return {
-    balance: 0,
-    roi: 0,
-    roiChange7d: 0,
-    roiChange30d: 0,
-    sentimentValue: 50,
-    sentimentStatus: "Neutral",
-    sentimentQuote: "",
-    currentRegime: "n",
-    currentAllocation: {
-      crypto: 0,
-      stable: 0,
-      constituents: { crypto: [], stable: [] },
-      simplifiedCrypto: [],
-    },
-    targetAllocation: { crypto: 50, stable: 50 },
-    delta: 0,
-    positions: 0,
-    protocols: 0,
-    chains: 0,
-    isLoading: true,
-    hasError: false,
-  };
-}
+// Deprecated in favor of walletPortfolioV22Adapter helpers
+export const createLoadingState = createV22LoadingState;
 
-/**
- * Creates an error state placeholder
- */
-export function createErrorState(): V22PortfolioData {
-  return {
-    ...createLoadingState(),
-    isLoading: false,
-    hasError: true,
-  };
-}
+// Deprecated in favor of walletPortfolioV22Adapter helpers
+export const createErrorState = createV22ErrorState;

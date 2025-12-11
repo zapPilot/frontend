@@ -34,8 +34,7 @@ export const FEATURE_FLAGS = {
    *
    * @default false
    */
-  USE_V22_LAYOUT:
-    process.env["NEXT_PUBLIC_USE_V22_LAYOUT"] === "true",
+  USE_V22_LAYOUT: process.env["NEXT_PUBLIC_USE_V22_LAYOUT"] === "true",
 };
 
 /**
@@ -89,15 +88,22 @@ export function logFeatureFlags(): void {
     const enabled = getEnabledFeatures();
     const enabledCount = Object.keys(enabled).length;
 
+    // eslint-disable-next-line no-console
     console.group("🚩 Feature Flags");
-    console.log(`Enabled: ${enabledCount}/${Object.keys(FEATURE_FLAGS).length}`);
+    // eslint-disable-next-line no-console
+    console.log(
+      `Enabled: ${enabledCount}/${Object.keys(FEATURE_FLAGS).length}`
+    );
 
     if (enabledCount > 0) {
+      // eslint-disable-next-line no-console
       console.table(enabled);
     } else {
+      // eslint-disable-next-line no-console
       console.log("No features enabled");
     }
 
+    // eslint-disable-next-line no-console
     console.groupEnd();
   }
 }
