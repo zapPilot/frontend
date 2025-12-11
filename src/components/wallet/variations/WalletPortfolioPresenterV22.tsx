@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import type { V22PortfolioData } from "@/adapters/portfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
 import { GradientButton } from "@/components/ui";
 import {
@@ -36,8 +37,14 @@ import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
 
-export function WalletPortfolioPresenterV22() {
-  const currentRegime = getRegimeById(MOCK_DATA.currentRegime);
+interface WalletPortfolioPresenterV22Props {
+  data?: typeof MOCK_DATA | V22PortfolioData;
+}
+
+export function WalletPortfolioPresenterV22({
+  data = MOCK_DATA,
+}: WalletPortfolioPresenterV22Props = {}) {
+  const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -122,11 +129,11 @@ export function WalletPortfolioPresenterV22() {
                   <div className="flex items-center gap-3 mb-6">
                     <div className="flex-1">
                       <div className="text-5xl font-bold text-white tracking-tight mb-4">
-                        ${MOCK_DATA.balance.toLocaleString()}
+                        ${data.balance.toLocaleString()}
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1">
-                          <ArrowUpRight className="w-3 h-3" /> {MOCK_DATA.roi}%
+                          <ArrowUpRight className="w-3 h-3" /> {data.roi}%
                         </span>
                         <span className="text-xs text-gray-500">
                           All Time Return
@@ -175,7 +182,7 @@ export function WalletPortfolioPresenterV22() {
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0">
                         <span style={{ color: currentRegime.fillColor }}>
-                          {MOCK_DATA.currentRegime.toUpperCase()}
+                          {data.currentRegime.toUpperCase()}
                         </span>
                       </div>
                       <div>
@@ -358,10 +365,10 @@ export function WalletPortfolioPresenterV22() {
                     <div
                       className="h-full flex gap-1 transition-all duration-500 ease-out"
                       style={{
-                        width: `${MOCK_DATA.currentAllocation.crypto}%`,
+                        width: `${data.currentAllocation.crypto}%`,
                       }}
                     >
-                      {MOCK_DATA.currentAllocation.simplifiedCrypto.map(
+                      {data.currentAllocation.simplifiedCrypto.map(
                         asset => (
                           <motion.div
                             key={asset.symbol}
@@ -390,7 +397,7 @@ export function WalletPortfolioPresenterV22() {
                     <motion.div
                       className="h-full rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative group"
                       style={{
-                        width: `${MOCK_DATA.currentAllocation.stable}%`,
+                        width: `${data.currentAllocation.stable}%`,
                       }}
                       whileHover={{ scale: 1.02, y: -2 }}
                     >
@@ -399,7 +406,7 @@ export function WalletPortfolioPresenterV22() {
                           STABLES
                         </span>
                         <div className="text-xs text-emerald-500/60 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                          {MOCK_DATA.currentAllocation.stable}%
+                          {data.currentAllocation.stable}%
                         </div>
                       </div>
                     </motion.div>
@@ -409,7 +416,7 @@ export function WalletPortfolioPresenterV22() {
                 {/* Legend */}
                 <div className="flex justify-between mt-4 px-1">
                   <div className="flex gap-4 text-xs text-gray-400">
-                    {MOCK_DATA.currentAllocation.simplifiedCrypto.map(asset => (
+                    {data.currentAllocation.simplifiedCrypto.map(asset => (
                       <div
                         key={asset.symbol}
                         className="flex items-center gap-1.5"
@@ -427,7 +434,7 @@ export function WalletPortfolioPresenterV22() {
                     </div>
                   </div>
                   <div className="text-xs font-bold text-orange-400">
-                    Drift: {MOCK_DATA.delta}%
+                    Drift: {data.delta}%
                   </div>
                 </div>
               </div>
