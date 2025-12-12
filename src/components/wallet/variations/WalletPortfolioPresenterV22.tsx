@@ -368,29 +368,27 @@ export function WalletPortfolioPresenterV22({
                         width: `${data.currentAllocation.crypto}%`,
                       }}
                     >
-                      {data.currentAllocation.simplifiedCrypto.map(
-                        asset => (
-                          <motion.div
-                            key={asset.symbol}
-                            className="h-full rounded-lg relative group overflow-hidden cursor-pointer"
-                            style={{
-                              flex: asset.value,
-                              backgroundColor: `${asset.color}20`,
-                              border: `1px solid ${asset.color}50`,
-                            }}
-                            whileHover={{ scale: 1.02, y: -2 }}
-                          >
-                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                              <span className="font-bold text-white text-lg">
-                                {asset.symbol}
-                              </span>
-                              <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                                {asset.value}%
-                              </span>
-                            </div>
-                          </motion.div>
-                        )
-                      )}
+                      {data.currentAllocation.simplifiedCrypto.map(asset => (
+                        <motion.div
+                          key={asset.symbol}
+                          className="h-full rounded-lg relative group overflow-hidden cursor-pointer"
+                          style={{
+                            flex: asset.value,
+                            backgroundColor: `${asset.color}20`,
+                            border: `1px solid ${asset.color}50`,
+                          }}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                        >
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="font-bold text-white text-lg">
+                              {asset.symbol}
+                            </span>
+                            <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                              {asset.value.toFixed(2)}%
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
                     </div>
 
                     {/* Stable Section */}
@@ -406,7 +404,7 @@ export function WalletPortfolioPresenterV22({
                           STABLES
                         </span>
                         <div className="text-xs text-emerald-500/60 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                          {data.currentAllocation.stable}%
+                          {data.currentAllocation.stable.toFixed(2)}%
                         </div>
                       </div>
                     </motion.div>
@@ -434,7 +432,7 @@ export function WalletPortfolioPresenterV22({
                     </div>
                   </div>
                   <div className="text-xs font-bold text-orange-400">
-                    Drift: {data.delta}%
+                    Drift: {data.delta.toFixed(2)}%
                   </div>
                 </div>
               </div>
