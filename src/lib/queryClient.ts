@@ -119,5 +119,6 @@ export const queryKeys = {
   sentiment: {
     all: ["sentiment"] as const,
     market: () => ["sentiment", "market"] as const,
+    regimeHistory: () => ["sentiment", "regime-history"] as const,
   },
 } as const;

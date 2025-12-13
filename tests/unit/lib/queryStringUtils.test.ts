@@ -203,7 +203,7 @@ describe("queryStringUtils", () => {
           allocation_days: 4,
           rolling_days: 5,
         });
-        
+
         // Check that params appear in consistent order
         const trendIndex = result.indexOf("trend_days");
         const riskIndex = result.indexOf("risk_days");

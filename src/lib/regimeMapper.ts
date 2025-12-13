@@ -7,6 +7,14 @@
 
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 
+export const REGIME_LABELS: Record<RegimeId, string> = {
+  ef: "Extreme Fear",
+  f: "Fear",
+  n: "Neutral",
+  g: "Greed",
+  eg: "Extreme Greed",
+};
+
 /**
  * Maps a sentiment value (0-100) to the corresponding market regime.
  *
@@ -66,16 +74,7 @@ export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
  */
 export function getRegimeLabelFromSentiment(sentimentValue: number): string {
   const regimeId = getRegimeFromSentiment(sentimentValue);
-
-  const labels: Record<RegimeId, string> = {
-    ef: "Extreme Fear",
-    f: "Fear",
-    n: "Neutral",
-    g: "Greed",
-    eg: "Extreme Greed",
-  };
-
-  return labels[regimeId];
+  return REGIME_LABELS[regimeId];
 }
 
 /**

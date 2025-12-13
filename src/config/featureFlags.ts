@@ -35,12 +35,37 @@ export const FEATURE_FLAGS = {
    * @default false
    */
   USE_V22_LAYOUT: process.env["NEXT_PUBLIC_USE_V22_LAYOUT"] === "true",
+
+  /**
+   * Regime History Tracking
+   *
+   * @deprecated ALWAYS ENABLED - This flag is deprecated and will be removed.
+   * The regime history feature is now permanently enabled for all V22 layouts.
+   *
+   * Migration: The feature flag check has been removed from service layer
+   * (regimeHistoryService.ts) and hook layer (usePortfolioDataV22.ts).
+   *
+   * Keep this definition for backward compatibility until confirmed no other
+   * references exist in the codebase.
+   *
+   * Features:
+   * - Directional strategy indicators (fromLeft/fromRight)
+   * - Regime duration display
+   * - Transition animation cues
+   *
+   * Graceful Degradation:
+   * - If API fails: Logs error but continues with default neutral regime
+   * - Error handling in useRegimeHistory() ensures UI never breaks
+   *
+   * @default true (always enabled, env var ignored)
+   */
+  REGIME_HISTORY_ENABLED: true,
 };
 
 /**
  * Type-safe feature flag keys
  */
-export type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
+type FeatureFlagKey = keyof typeof FEATURE_FLAGS;
 
 /**
  * Check if a feature flag is enabled

@@ -7,7 +7,13 @@
 
 import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
+import { getActiveStrategy } from "@/lib/strategySelector";
+import type {
+  DirectionType,
+  DurationInfo,
+} from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
+import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import {
@@ -42,7 +48,7 @@ interface AllocationConstituent {
  * V22 Portfolio Data Structure
  * Matches the structure expected by WalletPortfolioPresenterV22
  */
-export interface V22PortfolioData {
+interface V22PortfolioData {
   // Portfolio metrics
   balance: number;
   roi: number;
@@ -81,6 +87,22 @@ export interface V22PortfolioData {
   // Loading states
   isLoading: boolean;
   hasError: boolean;
+}
+
+/**
+ * V22 Portfolio Data with Directional Strategy Support
+ *
+ * Extends V22PortfolioData with regime transition context for
+ * directional portfolio visualization and strategy guidance.
+ */
+export interface V22PortfolioDataWithDirection extends V22PortfolioData {
+  // Regime history fields
+  /** Previous regime for context (null if no history) */
+  previousRegime: RegimeId | null;
+  /** Computed strategy direction (fromLeft/fromRight/default) */
+  strategyDirection: DirectionType;
+  /** Duration in current regime */
+  regimeDuration: DurationInfo;
 }
 
 /**
@@ -359,6 +381,65 @@ function getDefaultQuoteForRegime(regimeId: RegimeId): string {
   };
 
   return quotes[regimeId];
+}
+
+/**
+ * Transforms Landing Page, Sentiment, and Regime History Data into V22 Portfolio Data with Direction
+ *
+ * Enhanced version of transformToV22Data that includes regime transition context
+ * for directional strategy visualization.
+ *
+ * @param landingData - Portfolio data from /api/v2/portfolio/{userId}/landing
+ * @param sentimentData - Market sentiment from /api/v2/market/sentiment
+ * @param regimeHistoryData - Regime history from /api/v2/market/regime/history
+ * @returns V22-compatible portfolio data with directional strategy fields
+ *
+ * @example
+ * ```typescript
+ * const data = transformToV22DataWithDirection(
+ *   landingData,
+ *   sentimentData,
+ *   regimeHistoryData
+ * );
+ *
+ * // Use directional fields
+ * if (data.previousRegime) {
+ *   console.log(`Transitioning from ${data.previousRegime} to ${data.currentRegime}`);
+ *   console.log(`Direction: ${data.strategyDirection}`);
+ * }
+ * ```
+ */
+export function transformToV22DataWithDirection(
+  landingData: LandingPageResponse,
+  sentimentData: MarketSentimentData | null,
+  regimeHistoryData: RegimeHistoryData | null
+): V22PortfolioDataWithDirection {
+  // Start with base V22 data
+  const baseData = transformToV22Data(landingData, sentimentData);
+
+  // If no regime history, return base data with null defaults
+  if (!regimeHistoryData) {
+    return {
+      ...baseData,
+      previousRegime: null,
+      strategyDirection: "default",
+      regimeDuration: null,
+    };
+  }
+
+  // Compute active strategy direction (prefer server, fall back to client)
+  const strategyDirection = getActiveStrategy(
+    regimeHistoryData.direction,
+    regimeHistoryData.currentRegime,
+    regimeHistoryData.previousRegime
+  );
+
+  return {
+    ...baseData,
+    previousRegime: regimeHistoryData.previousRegime,
+    strategyDirection,
+    regimeDuration: regimeHistoryData.duration,
+  };
 }
 
 /**

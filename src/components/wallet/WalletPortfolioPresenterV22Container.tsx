@@ -7,17 +7,12 @@
 
 "use client";
 
-import { useMemo } from "react";
-
 import {
-    createV22ErrorState,
-    createV22LoadingState,
-    transformToV22Data,
-    type V22PortfolioData,
+  createV22ErrorState,
+  createV22LoadingState,
 } from "@/adapters/walletPortfolioV22Adapter";
 import { WalletPortfolioPresenterV22 } from "@/components/wallet/variations/WalletPortfolioPresenterV22";
-import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
-import { useSentimentData } from "@/services/sentimentService";
+import { usePortfolioDataV22 } from "@/hooks/queries/usePortfolioDataV22";
 import { logger } from "@/utils/logger";
 
 interface WalletPortfolioPresenterV22ContainerProps {
@@ -42,62 +37,31 @@ interface WalletPortfolioPresenterV22ContainerProps {
  * Data Flow:
  * 1. Fetch landing page data (portfolio metrics)
  * 2. Fetch sentiment data (market regime)
- * 3. Transform into V22 format via adapter
- * 4. Pass to V22 presenter component
+ * 3. Fetch regime history data (directional strategy, optional)
+ * 4. Transform into V22 format via unified hook
+ * 5. Pass to V22 presenter component
  */
 export function WalletPortfolioPresenterV22Container({
   userId,
 }: WalletPortfolioPresenterV22ContainerProps) {
-  // Fetch portfolio data
-  const {
-    data: landingData,
-    isLoading: isLandingLoading,
-    error: landingError,
-  } = useLandingPageData(userId);
+  // Fetch and transform all portfolio data via unified hook
+  // Includes landing data, sentiment, and regime history (if enabled)
+  const { data, isLoading, error } = usePortfolioDataV22(userId ?? "");
 
-  // Fetch market sentiment data
-  const {
-    data: sentimentData,
-    error: sentimentError,
-  } = useSentimentData();
+  // Handle loading state
+  if (isLoading) {
+    return <WalletPortfolioPresenterV22 data={createV22LoadingState()} />;
+  }
 
-  // Transform data to V22 format
-  const v22Data: V22PortfolioData = useMemo(() => {
-    // Handle loading state
-    if (isLandingLoading) {
-      return createV22LoadingState();
-    }
-
-    // Handle error state
-    if (landingError || !landingData) {
-      logger.error("Failed to load portfolio data for V22", {
-        landingError,
-        userId,
-      });
-      return createV22ErrorState();
-    }
-
-    // Log sentiment errors but don't block rendering
-    if (sentimentError) {
-      logger.warn("Failed to load sentiment data for V22, using fallback", {
-        sentimentError,
-      });
-    }
-
-    // Transform to V22 format
-    return transformToV22Data(
-      landingData,
-      sentimentData ?? null
-    );
-  }, [
-    landingData,
-    sentimentData,
-    isLandingLoading,
-    landingError,
-    sentimentError,
-    userId,
-  ]);
+  // Handle error state
+  if (error || !data) {
+    logger.error("Failed to load portfolio data for V22", {
+      error,
+      userId,
+    });
+    return <WalletPortfolioPresenterV22 data={createV22ErrorState()} />;
+  }
 
   // Note: Action handlers and flags will be implemented during production migration
-  return <WalletPortfolioPresenterV22 data={v22Data} />;
+  return <WalletPortfolioPresenterV22 data={data} />;
 }

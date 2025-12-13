@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import type { V22PortfolioData } from "@/adapters/portfolioDataAdapter";
+import type { V22PortfolioDataWithDirection } from "@/adapters/portfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
 import { GradientButton } from "@/components/ui";
 import {
@@ -33,12 +33,13 @@ import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView"
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
+import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
 
 import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
 
 interface WalletPortfolioPresenterV22Props {
-  data?: typeof MOCK_DATA | V22PortfolioData;
+  data?: typeof MOCK_DATA | V22PortfolioDataWithDirection;
 }
 
 export function WalletPortfolioPresenterV22({
@@ -49,6 +50,13 @@ export function WalletPortfolioPresenterV22({
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Extract directional strategy metadata (safely handle missing fields)
+  const strategyDirection =
+    "strategyDirection" in data ? data.strategyDirection : "default";
+  const previousRegime = "previousRegime" in data ? data.previousRegime : null;
+  const regimeDuration = "regimeDuration" in data ? data.regimeDuration : null;
+  const strategyMeta = getStrategyMeta(strategyDirection);
 
   // Mock Regime Spectrum Data (from V20)
   const regimes = [
@@ -193,9 +201,35 @@ export function WalletPortfolioPresenterV22({
                         <div className="text-2xl font-bold text-white mb-1">
                           {currentRegime.label}
                         </div>
-                        <div className="text-sm text-gray-400 italic">
+                        <div className="text-sm text-gray-400 italic mb-2">
                           &ldquo;{currentRegime.philosophy}&rdquo;
                         </div>
+
+                        {/* Directional Strategy Indicator */}
+                        {previousRegime && strategyDirection !== "default" && (
+                          <div
+                            className="flex items-center gap-2 text-xs mt-2"
+                            aria-label={strategyMeta.ariaLabel}
+                          >
+                            <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md font-medium border border-purple-500/20">
+                              {strategyDirection === "fromLeft" ? "↗" : "↘"}{" "}
+                              {strategyMeta.description}
+                            </span>
+                            <span className="text-gray-500">
+                              from {getRegimeName(previousRegime)}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Regime Duration Badge */}
+                        {regimeDuration?.human_readable && (
+                          <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                            <span className="opacity-60">In regime for</span>
+                            <span className="font-mono text-gray-400">
+                              {regimeDuration.human_readable}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 

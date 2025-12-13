@@ -8,7 +8,11 @@
  * and calculating derived metrics on the frontend.
  */
 
-import { getRegimeById, type RegimeId } from "@/components/wallet/regime/regimeData";
+import type { V22PortfolioDataWithDirection } from "@/adapters/portfolioDataAdapter";
+import {
+  getRegimeById,
+  type RegimeId,
+} from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
@@ -39,8 +43,9 @@ interface V22AllocationData {
 
 /**
  * Complete V22 data model
+ * Internal-only; consumed via V22PortfolioDataWithDirection
  */
-export interface V22PortfolioData {
+interface V22PortfolioData {
   // Portfolio metrics
   balance: number;
   roi: number;
@@ -244,10 +249,7 @@ function extractROIChanges(landingData: LandingPageResponse): {
 /**
  * Calculate allocation delta (drift from target)
  */
-function calculateDelta(
-  currentCrypto: number,
-  targetCrypto: number
-): number {
+function calculateDelta(currentCrypto: number, targetCrypto: number): number {
   return Math.abs(currentCrypto - targetCrypto);
 }
 
@@ -303,7 +305,8 @@ export function transformToV22Data(
     delta,
 
     // Portfolio details
-    positions: landingData.total_positions ?? landingData.pool_details?.length ?? 0,
+    positions:
+      landingData.total_positions ?? landingData.pool_details?.length ?? 0,
     protocols: landingData.protocols_count ?? 0,
     chains: landingData.chains_count ?? 0,
 
@@ -316,7 +319,7 @@ export function transformToV22Data(
 /**
  * Create loading state for V22 data
  */
-export function createV22LoadingState(): V22PortfolioData {
+export function createV22LoadingState(): V22PortfolioDataWithDirection {
   return {
     balance: 0,
     roi: 0,
@@ -326,6 +329,9 @@ export function createV22LoadingState(): V22PortfolioData {
     sentimentStatus: "Neutral",
     sentimentQuote: "",
     currentRegime: "n",
+    previousRegime: null,
+    strategyDirection: "default",
+    regimeDuration: null,
     currentAllocation: {
       crypto: 0,
       stable: 0,
@@ -345,7 +351,7 @@ export function createV22LoadingState(): V22PortfolioData {
 /**
  * Create error state for V22 data
  */
-export function createV22ErrorState(): V22PortfolioData {
+export function createV22ErrorState(): V22PortfolioDataWithDirection {
   return {
     ...createV22LoadingState(),
     isLoading: false,

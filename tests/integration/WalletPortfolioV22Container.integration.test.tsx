@@ -14,6 +14,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { WalletPortfolioPresenterV22Container } from "@/components/wallet/WalletPortfolioPresenterV22Container";
 import * as portfolioQuery from "@/hooks/queries/usePortfolioQuery";
+import * as regimeHistoryService from "@/services/regimeHistoryService";
 import * as sentimentService from "@/services/sentimentService";
 
 // Mock the presenter component
@@ -30,7 +31,7 @@ vi.mock("@/components/wallet/variations/WalletPortfolioPresenterV22", () => {
     </div>
   );
   MockPresenter.displayName = "MockWalletPortfolioPresenterV22";
-  
+
   return {
     WalletPortfolioPresenterV22: MockPresenter,
   };
@@ -45,12 +46,10 @@ describe("WalletPortfolioPresenterV22Container", () => {
     });
 
     const Wrapper = ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
     );
     Wrapper.displayName = "TestWrapper";
-    
+
     return Wrapper;
   };
 
@@ -72,10 +71,19 @@ describe("WalletPortfolioPresenterV22Container", () => {
       refetch: vi.fn(),
     });
 
-    render(
-      <WalletPortfolioPresenterV22Container userId="0x123" />,
-      { wrapper: createWrapper() }
-    );
+    vi.spyOn(regimeHistoryService, "useRegimeHistory").mockReturnValue({
+      data: regimeHistoryService.DEFAULT_REGIME_HISTORY,
+      isLoading: false,
+      error: null,
+      isSuccess: true,
+      isError: false,
+      // @ts-expect-error - partial mock
+      refetch: vi.fn(),
+    });
+
+    render(<WalletPortfolioPresenterV22Container userId="0x123" />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByTestId("loading-state")).toHaveTextContent("true");
   });
@@ -168,10 +176,19 @@ describe("WalletPortfolioPresenterV22Container", () => {
       refetch: vi.fn(),
     });
 
-    render(
-      <WalletPortfolioPresenterV22Container userId="0x123" />,
-      { wrapper: createWrapper() }
-    );
+    vi.spyOn(regimeHistoryService, "useRegimeHistory").mockReturnValue({
+      data: regimeHistoryService.DEFAULT_REGIME_HISTORY,
+      isLoading: false,
+      error: null,
+      isSuccess: true,
+      isError: false,
+      // @ts-expect-error - partial mock
+      refetch: vi.fn(),
+    });
+
+    render(<WalletPortfolioPresenterV22Container userId="0x123" />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("loading-state")).toHaveTextContent("false");
@@ -198,10 +215,19 @@ describe("WalletPortfolioPresenterV22Container", () => {
       refetch: vi.fn(),
     });
 
-    render(
-      <WalletPortfolioPresenterV22Container userId="0x123" />,
-      { wrapper: createWrapper() }
-    );
+    vi.spyOn(regimeHistoryService, "useRegimeHistory").mockReturnValue({
+      data: regimeHistoryService.DEFAULT_REGIME_HISTORY,
+      isLoading: false,
+      error: null,
+      isSuccess: true,
+      isError: false,
+      // @ts-expect-error - partial mock
+      refetch: vi.fn(),
+    });
+
+    render(<WalletPortfolioPresenterV22Container userId="0x123" />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("loading-state")).toHaveTextContent("false");
@@ -281,10 +307,20 @@ describe("WalletPortfolioPresenterV22Container", () => {
       refetch: vi.fn(),
     });
 
-    render(
-      <WalletPortfolioPresenterV22Container userId="0x123" />,
-      { wrapper: createWrapper() }
-    );
+    // Regime history returns defaults (graceful fallback)
+    vi.spyOn(regimeHistoryService, "useRegimeHistory").mockReturnValue({
+      data: regimeHistoryService.DEFAULT_REGIME_HISTORY,
+      isLoading: false,
+      error: null,
+      isSuccess: true,
+      isError: false,
+      // @ts-expect-error - partial mock
+      refetch: vi.fn(),
+    });
+
+    render(<WalletPortfolioPresenterV22Container userId="0x123" />, {
+      wrapper: createWrapper(),
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId("loading-state")).toHaveTextContent("false");
@@ -361,6 +397,16 @@ describe("WalletPortfolioPresenterV22Container", () => {
       data: undefined,
       isLoading: false,
       error: null,
+      // @ts-expect-error - partial mock
+      refetch: vi.fn(),
+    });
+
+    vi.spyOn(regimeHistoryService, "useRegimeHistory").mockReturnValue({
+      data: regimeHistoryService.DEFAULT_REGIME_HISTORY,
+      isLoading: false,
+      error: null,
+      isSuccess: true,
+      isError: false,
       // @ts-expect-error - partial mock
       refetch: vi.fn(),
     });

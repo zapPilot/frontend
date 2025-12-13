@@ -14,9 +14,9 @@ import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import {
-    createV22ErrorState,
-    createV22LoadingState,
-    transformToV22Data,
+  createV22ErrorState,
+  createV22LoadingState,
+  transformToV22Data,
 } from "../walletPortfolioV22Adapter";
 
 describe("walletPortfolioV22Adapter", () => {
@@ -460,7 +460,11 @@ describe("walletPortfolioV22Adapter", () => {
         value: 20,
         status: "Extreme Fear",
         timestamp: "2025-01-01T00:00:00Z",
-        quote: { quote: "Panic selling", author: "Market", sentiment: "Extreme Fear" },
+        quote: {
+          quote: "Panic selling",
+          author: "Market",
+          sentiment: "Extreme Fear",
+        },
       });
       expect(extremeFearResult.currentRegime).toBe("ef");
       expect(extremeFearResult.targetAllocation.crypto).toBe(30);
@@ -471,7 +475,11 @@ describe("walletPortfolioV22Adapter", () => {
         value: 85,
         status: "Extreme Greed",
         timestamp: "2025-01-01T00:00:00Z",
-        quote: { quote: "FOMO buying", author: "Market", sentiment: "Extreme Greed" },
+        quote: {
+          quote: "FOMO buying",
+          author: "Market",
+          sentiment: "Extreme Greed",
+        },
       });
       expect(extremeGreedResult.currentRegime).toBe("eg");
       expect(extremeGreedResult.targetAllocation.crypto).toBe(90);

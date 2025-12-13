@@ -11,7 +11,10 @@ import type { DashboardWindowParams } from "@/services/analyticsService";
  * Numeric parameter keys for dashboard window params
  * Used for type-safe iteration over numeric fields
  */
-const NUMERIC_PARAM_KEYS: readonly (keyof Omit<DashboardWindowParams, 'metrics'>)[] = [
+const NUMERIC_PARAM_KEYS: readonly (keyof Omit<
+  DashboardWindowParams,
+  "metrics"
+>)[] = [
   "trend_days",
   "risk_days",
   "drawdown_days",
@@ -42,7 +45,9 @@ const NUMERIC_PARAM_KEYS: readonly (keyof Omit<DashboardWindowParams, 'metrics'>
  * buildAnalyticsQueryString({})
  * // Returns: ""
  */
-export function buildAnalyticsQueryString(params: DashboardWindowParams): string {
+export function buildAnalyticsQueryString(
+  params: DashboardWindowParams
+): string {
   const query = new URLSearchParams();
 
   // Add numeric parameters
