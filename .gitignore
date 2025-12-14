@@ -72,3 +72,4 @@ zen_generated.code
 jscpd-report/
 jscpd-analysis/
 jscpd-report.json
+.playwright-mcp/

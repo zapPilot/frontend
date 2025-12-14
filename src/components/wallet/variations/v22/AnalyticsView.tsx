@@ -12,90 +12,66 @@ import {
 import { useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
+import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
+import type { AnalyticsTimePeriod } from "@/types/analytics";
 
 // ============================================================================
-// MOCK DATA
+// PROPS & TYPES
 // ============================================================================
 
-const MOCK_ANALYTICS = {
-  // Key metrics (static values - don't need charts)
-  metrics: [
-    {
-      label: "Time-Weighted Return",
-      value: "+124.5%",
-      subValue: "+2.4% vs BTC",
-      trend: "up",
-    },
-    {
-      label: "Max Drawdown",
-      value: "-12.8%",
-      subValue: "Recovered in 14 days",
-      trend: "up",
-    },
-    {
-      label: "Sharpe Ratio",
-      value: "2.45",
-      subValue: "Top 5% of Pilots",
-      trend: "up",
-    },
-    {
-      label: "Win Rate",
-      value: "68%",
-      subValue: "34 winning months",
-      trend: "up",
-    },
-  ],
+interface AnalyticsViewProps {
+  userId: string;
+}
 
-  // Net Worth over time (cumulative growth)
-  netWorthHistory: [
-    { x: 0, portfolio: 80, btc: 85 },
-    { x: 10, portfolio: 72, btc: 78 },
-    { x: 20, portfolio: 68, btc: 82 },
-    { x: 30, portfolio: 55, btc: 70 },
-    { x: 40, portfolio: 50, btc: 65 },
-    { x: 50, portfolio: 40, btc: 55 },
-    { x: 60, portfolio: 35, btc: 60 },
-    { x: 70, portfolio: 25, btc: 45 },
-    { x: 80, portfolio: 20, btc: 40 },
-    { x: 90, portfolio: 12, btc: 30 },
-    { x: 100, portfolio: 8, btc: 25 },
-  ],
+// ============================================================================
+// LOADING & ERROR STATES
+// ============================================================================
 
-  // Drawdown over time (underwater chart) - shows resilience
-  drawdownHistory: [
-    { x: 0, value: 0 },
-    { x: 8, value: -2 },
-    { x: 16, value: -5 },
-    { x: 24, value: -1 },
-    { x: 32, value: 0 },
-    { x: 40, value: -3 },
-    { x: 48, value: -8 },
-    { x: 56, value: -12.8 }, // Max drawdown point
-    { x: 64, value: -6 },
-    { x: 72, value: -2 },
-    { x: 80, value: 0 },
-    { x: 88, value: -4 },
-    { x: 96, value: -2 },
-    { x: 100, value: 0 },
-  ],
+const AnalyticsLoadingSkeleton = () => (
+  <div className="space-y-6 animate-pulse">
+    {/* Header skeleton */}
+    <div className="h-12 bg-gray-800/30 rounded-lg w-1/3" />
 
-  // Monthly PnL for heatmap
-  monthlyPnL: [
-    { month: "Jan", year: 2024, value: 5.2 },
-    { month: "Feb", year: 2024, value: 8.4 },
-    { month: "Mar", year: 2024, value: -2.1 },
-    { month: "Apr", year: 2024, value: 4.5 },
-    { month: "May", year: 2024, value: 1.2 },
-    { month: "Jun", year: 2024, value: -0.5 },
-    { month: "Jul", year: 2024, value: 6.8 },
-    { month: "Aug", year: 2024, value: 3.2 },
-    { month: "Sep", year: 2024, value: -1.8 },
-    { month: "Oct", year: 2024, value: 9.5 },
-    { month: "Nov", year: 2024, value: 4.1 },
-    { month: "Dec", year: 2024, value: 2.2 },
-  ],
-};
+    {/* Chart skeleton */}
+    <div className="h-64 bg-gray-800/30 rounded-xl" />
 
+    {/* Metrics grid skeleton */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-32 bg-gray-800/30 rounded-xl" />
+      ))}
+    </div>
+
+    {/* Additional metrics skeleton */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="h-24 bg-gray-800/30 rounded-xl" />
+      ))}
+    </div>
+  </div>
+);
+
+const AnalyticsErrorState = ({ error, onRetry }: { error: any; onRetry: () => void }) => (
+  <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
+    <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+      <Info className="w-8 h-8 text-red-400" />
+    </div>
+    <h3 className="text-lg font-semibold text-white mb-2">
+      Failed to Load Analytics Data
+    </h3>
+    <p className="text-sm text-gray-400 mb-6 text-center max-w-md">
+      {error?.message || "Unable to fetch analytics data. Please try again."}
+    </p>
+    <button
+      onClick={onRetry}
+      className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+    >
+      Retry
+    </button>
+  </div>
+);
+
+// ============================================================================
 // ============================================================================
 // REUSABLE CHART HELPERS
 // ============================================================================
@@ -170,15 +146,15 @@ const AnalyticsMetricCard = ({
 // ============================================================================
 
 /** Net Worth Performance Chart - Shows portfolio vs benchmark over time */
-const PerformanceChart = () => {
-  const data = MOCK_ANALYTICS.netWorthHistory;
+const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: number; btc: number }[] }) => {
+  const data = chartData;
 
   // Build SVG paths
   const portfolioPath = data.map(p => `${p.x},${p.portfolio}`).join(" L ");
   const btcPath = data.map(p => `${p.x},${p.btc}`).join(" L ");
 
   return (
-    <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800">
+    <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
       {/* Grid Lines */}
       <ChartGridLines positions={[0, 25, 50, 75, 100]} />
 
@@ -249,8 +225,8 @@ const PerformanceChart = () => {
 };
 
 /** Underwater/Drawdown Chart - Shows how deep drawdowns go and recovery speed */
-const DrawdownChart = () => {
-  const data = MOCK_ANALYTICS.drawdownHistory;
+const DrawdownChart = ({ chartData }: { chartData: { x: number; value: number }[] }) => {
+  const data = chartData;
 
   // Normalize: 0% drawdown = y:0, -15% drawdown = y:100
   const maxDrawdown = 15; // Scale to -15%
@@ -259,7 +235,7 @@ const DrawdownChart = () => {
     .join(" L ");
 
   return (
-    <div className="relative w-full h-40 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800">
+    <div className="relative w-full h-40 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
       {/* Grid Lines */}
       <ChartGridLines positions={[0, 33, 66, 100]} />
 
@@ -305,10 +281,27 @@ const DrawdownChart = () => {
 // MAIN COMPONENT
 // ============================================================================
 
-export const AnalyticsView = () => {
+export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
+  // Time period definitions
+  const TIME_PERIODS: AnalyticsTimePeriod[] = [
+    { key: "1M", days: 30, label: "1M" },
+    { key: "3M", days: 90, label: "3M" },
+    { key: "6M", days: 180, label: "6M" },
+    { key: "1Y", days: 365, label: "1Y" },
+    { key: "ALL", days: 730, label: "ALL" },
+  ];
+
+  const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsTimePeriod>(TIME_PERIODS[3]!); // 1Y default
   const [activeChartTab, setActiveChartTab] = useState<
     "performance" | "drawdown"
   >("performance");
+
+  // Fetch real data
+  const { data, isLoading, error, refetch } = useAnalyticsData(userId, selectedPeriod);
+
+  // Handle states
+  if (isLoading) return <AnalyticsLoadingSkeleton />;
+  if (error || !data) return <AnalyticsErrorState error={error} onRetry={refetch} />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -357,26 +350,27 @@ export const AnalyticsView = () => {
 
           {/* Time Period Selector */}
           <div className="flex gap-2">
-            {["1M", "3M", "6M", "1Y", "ALL"].map(period => (
+            {TIME_PERIODS.map(period => (
               <button
-                key={period}
+                key={period.key}
+                onClick={() => setSelectedPeriod(period)}
                 className={`px-2 py-0.5 text-xs rounded-md transition-colors ${
-                  period === "1Y"
+                  selectedPeriod.key === period.key
                     ? "bg-purple-500/20 text-purple-300"
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
-                {period}
+                {period.label}
               </button>
             ))}
           </div>
         </div>
 
         <div className="p-4">
-          {activeChartTab === "performance" && <PerformanceChart />}
+          {activeChartTab === "performance" && <PerformanceChart chartData={data.performanceChart.points} />}
           {activeChartTab === "drawdown" && (
             <div className="space-y-3">
-              <DrawdownChart />
+              <DrawdownChart chartData={data.drawdownChart.points} />
               <p className="text-xs text-gray-500">
                 <span className="text-white font-medium">
                   Resilience Analysis:
@@ -391,7 +385,32 @@ export const AnalyticsView = () => {
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {MOCK_ANALYTICS.metrics.map((metric, idx) => (
+        {[
+          {
+            label: "Time-Weighted Return",
+            value: data.keyMetrics.timeWeightedReturn.value,
+            subValue: data.keyMetrics.timeWeightedReturn.subValue,
+            trend: data.keyMetrics.timeWeightedReturn.trend,
+          },
+          {
+            label: "Max Drawdown",
+            value: data.keyMetrics.maxDrawdown.value,
+            subValue: data.keyMetrics.maxDrawdown.subValue,
+            trend: data.keyMetrics.maxDrawdown.trend,
+          },
+          {
+            label: "Sharpe Ratio",
+            value: data.keyMetrics.sharpe.value,
+            subValue: data.keyMetrics.sharpe.subValue,
+            trend: data.keyMetrics.sharpe.trend,
+          },
+          {
+            label: "Win Rate",
+            value: data.keyMetrics.winRate.value,
+            subValue: data.keyMetrics.winRate.subValue,
+            trend: data.keyMetrics.winRate.trend,
+          },
+        ].map((metric, idx) => (
           <BaseCard
             key={idx}
             variant="glass"
@@ -402,8 +421,20 @@ export const AnalyticsView = () => {
                 {metric.label}
                 <Info className="w-3 h-3 text-gray-600 cursor-help" />
               </span>
-              <span className="p-1 rounded bg-green-500/10 text-green-400">
-                <ArrowUpRight className="w-3.5 h-3.5" />
+              <span className={`p-1 rounded ${
+                metric.trend === "up"
+                  ? "bg-green-500/10 text-green-400"
+                  : metric.trend === "down"
+                  ? "bg-red-500/10 text-red-400"
+                  : "bg-gray-500/10 text-gray-400"
+              }`}>
+                {metric.trend === "up" ? (
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                ) : metric.trend === "down" ? (
+                  <ArrowDownRight className="w-3.5 h-3.5" />
+                ) : (
+                  <Activity className="w-3.5 h-3.5" />
+                )}
               </span>
             </div>
             <div className="text-xl font-bold text-white tracking-tight mb-1">
@@ -419,27 +450,27 @@ export const AnalyticsView = () => {
         <AnalyticsMetricCard
           icon={Activity}
           label="Sortino Ratio"
-          value="3.12"
-          subValue="vs 1.2 Benchmark"
+          value={data.keyMetrics.sortino?.value || "N/A"}
+          subValue={data.keyMetrics.sortino?.subValue || "Coming soon"}
         />
         <AnalyticsMetricCard
           icon={Activity}
           label="Beta (vs BTC)"
-          value="0.35"
-          subValue="Low Correlation"
+          value={data.keyMetrics.beta?.value || "N/A"}
+          subValue={data.keyMetrics.beta?.subValue || "vs BTC"}
         />
         <AnalyticsMetricCard
           icon={Activity}
           label="Volatility"
-          value="18.2%"
-          subValue="Annualized"
+          value={data.keyMetrics.volatility.value}
+          subValue={data.keyMetrics.volatility.subValue}
         />
         <AnalyticsMetricCard
           icon={Activity}
           label="Alpha"
-          value="+4.2%"
-          subValue="Excess Return"
-          valueColor="text-green-400"
+          value={data.keyMetrics.alpha?.value || "N/A"}
+          subValue={data.keyMetrics.alpha?.subValue || "Excess Return"}
+          {...(data.keyMetrics.alpha?.value?.startsWith('+') && { valueColor: "text-green-400" })}
         />
       </div>
 
@@ -450,29 +481,39 @@ export const AnalyticsView = () => {
           Monthly PnL Heatmap
         </h3>
         <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
-          {MOCK_ANALYTICS.monthlyPnL.map((item, idx) => (
-            <div key={idx} className="flex flex-col gap-1">
-              <div
-                className={`h-12 rounded-md flex items-center justify-center text-xs font-medium transition-transform hover:scale-105 cursor-pointer ${
-                  item.value > 0
-                    ? "bg-green-500/20 text-green-300 border border-green-500/20"
-                    : "bg-red-500/20 text-red-300 border border-red-500/20"
-                }`}
-                style={{
-                  opacity:
+          {data.monthlyPnL.length > 0 ? (
+            data.monthlyPnL.map((item, idx) => (
+              <div key={idx} className="flex flex-col gap-1">
+                <div
+                  className={`h-12 rounded-md flex items-center justify-center text-xs font-medium transition-transform hover:scale-105 cursor-pointer ${
                     item.value > 0
-                      ? Math.min(0.4 + item.value * 0.06, 1)
-                      : Math.min(0.4 + Math.abs(item.value) * 0.1, 1),
-                }}
-              >
-                {item.value > 0 ? "+" : ""}
-                {item.value}%
+                      ? "bg-green-500/20 text-green-300 border border-green-500/20"
+                      : item.value < 0
+                      ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                      : "bg-gray-800/50 text-gray-400 border border-gray-700/30"
+                  }`}
+                  style={{
+                    opacity:
+                      item.value > 0
+                        ? Math.min(0.4 + item.value * 0.06, 1)
+                        : item.value < 0
+                        ? Math.min(0.4 + Math.abs(item.value) * 0.1, 1)
+                        : 0.3,
+                  }}
+                >
+                  {item.value > 0 ? "+" : ""}
+                  {item.value.toFixed(1)}%
+                </div>
+                <span className="text-[10px] text-center text-gray-500 font-mono uppercase">
+                  {item.month}
+                </span>
               </div>
-              <span className="text-[10px] text-center text-gray-500 font-mono uppercase">
-                {item.month}
-              </span>
+            ))
+          ) : (
+            <div className="col-span-12 text-center text-gray-500 py-8">
+              No monthly data available for this period
             </div>
-          ))}
+          )}
         </div>
       </BaseCard>
     </div>

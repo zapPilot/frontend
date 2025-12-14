@@ -40,10 +40,12 @@ import { MOCK_DATA } from "./mockPortfolioData";
 
 interface WalletPortfolioPresenterV22Props {
   data?: typeof MOCK_DATA | V22PortfolioDataWithDirection;
+  userId?: string;
 }
 
 export function WalletPortfolioPresenterV22({
   data = MOCK_DATA,
+  userId = "",
 }: WalletPortfolioPresenterV22Props = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -356,11 +358,11 @@ export function WalletPortfolioPresenterV22({
                     <p className="text-sm text-gray-400">
                       Target:{" "}
                       <span className="text-gray-300 font-mono">
-                        {currentRegime.allocation.crypto}% Crypto
+                        {currentRegime.allocation.stable}% Stable
                       </span>{" "}
                       /{" "}
                       <span className="text-gray-300 font-mono">
-                        {currentRegime.allocation.stable}% Stable
+                        {currentRegime.allocation.crypto}% Crypto
                       </span>
                     </p>
                   </div>
@@ -377,20 +379,16 @@ export function WalletPortfolioPresenterV22({
 
                 {/* THE GHOST BAR TRACK */}
                 <div className="relative h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 p-1 flex overflow-hidden">
-                  {/* GHOST TARGET BACKGROUND */}
+                  {/* GHOST TARGET BACKGROUND - Visual guide only */}
                   <div className="absolute inset-0 flex opacity-20 pointer-events-none">
                     <div
                       style={{ width: `${currentRegime.allocation.crypto}%` }}
-                      className="h-full border-r border-dashed border-white/30 flex items-start justify-center pt-2 text-[10px] uppercase tracking-widest font-bold text-white"
-                    >
-                      Target Crypto
-                    </div>
+                      className="h-full border-r border-dashed border-white/30"
+                    />
                     <div
                       style={{ width: `${currentRegime.allocation.stable}%` }}
-                      className="h-full flex items-start justify-center pt-2 text-[10px] uppercase tracking-widest font-bold text-emerald-400"
-                    >
-                      Target Stable
-                    </div>
+                      className="h-full"
+                    />
                   </div>
 
                   {/* ACTUAL BARS (Foreground) */}
@@ -474,7 +472,7 @@ export function WalletPortfolioPresenterV22({
           )}
 
           {/* Analytics View */}
-          {activeTab === "analytics" && <AnalyticsView />}
+          {activeTab === "analytics" && userId && <AnalyticsView userId={userId} />}
 
           {/* Backtesting View */}
           {activeTab === "backtesting" && <BacktestingView />}

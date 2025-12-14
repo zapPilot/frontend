@@ -47,5 +47,5 @@ export default function LayoutDemoV22Page() {
   // Use real data if available, fallback to MOCK_DATA
   const portfolioData = data ?? MOCK_DATA;
 
-  return <WalletPortfolioPresenterV22 data={portfolioData} />;
+  return <WalletPortfolioPresenterV22 data={portfolioData} userId={userId} />;
 }

@@ -50,7 +50,7 @@ export function WalletPortfolioPresenterV22Container({
 
   // Handle loading state
   if (isLoading) {
-    return <WalletPortfolioPresenterV22 data={createV22LoadingState()} />;
+    return <WalletPortfolioPresenterV22 data={createV22LoadingState()} userId={userId ?? ""} />;
   }
 
   // Handle error state
@@ -59,9 +59,9 @@ export function WalletPortfolioPresenterV22Container({
       error,
       userId,
     });
-    return <WalletPortfolioPresenterV22 data={createV22ErrorState()} />;
+    return <WalletPortfolioPresenterV22 data={createV22ErrorState()} userId={userId ?? ""} />;
   }
 
   // Note: Action handlers and flags will be implemented during production migration
-  return <WalletPortfolioPresenterV22 data={data} />;
+  return <WalletPortfolioPresenterV22 data={data} userId={userId ?? ""} />;
 }
