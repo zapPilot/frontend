@@ -191,9 +191,21 @@ const PerformanceChart = ({
     }),
   });
 
-  // Build SVG paths
-  const portfolioPath = data.map((p) => `${p.x},${p.portfolio}`).join(" L ");
-  const btcPath = data.map((p) => `${p.x},${p.btc}`).join(" L ");
+  // Build SVG paths - convert normalized 0-100 coords to pixel coords
+  const portfolioPath = data
+    .map((p) => {
+      const x = (p.x / 100) * width;
+      const y = (p.portfolio / 100) * height;
+      return `${x},${y}`;
+    })
+    .join(" L ");
+  const btcPath = data
+    .map((p) => {
+      const x = (p.x / 100) * width;
+      const y = (p.btc / 100) * height;
+      return `${x},${y}`;
+    })
+    .join(" L ");
 
   return (
     <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
