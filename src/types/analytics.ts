@@ -12,7 +12,13 @@
  */
 export interface PerformanceChartData {
   /** Normalized data points (x: 0-100, portfolio/btc: 0-100 inverted Y) */
-  points: { x: number; portfolio: number; btc: number }[];
+  points: {
+    x: number;
+    portfolio: number;
+    btc: number;
+    date: string; // ISO date string for each point
+    portfolioValue: number; // Original USD value for tooltip
+  }[];
   /** ISO date string for chart start */
   startDate: string;
   /** ISO date string for chart end */
@@ -26,7 +32,11 @@ export interface PerformanceChartData {
  */
 export interface DrawdownChartData {
   /** Normalized data points (x: 0-100, value: drawdown percentage) */
-  points: { x: number; value: number }[];
+  points: {
+    x: number;
+    value: number;
+    date: string; // ISO date string for each point
+  }[];
   /** Maximum drawdown percentage (negative number, e.g., -12.8) */
   maxDrawdown: number;
   /** ISO date string when max drawdown occurred */

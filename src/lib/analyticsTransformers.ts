@@ -76,6 +76,8 @@ export function transformToPerformanceChart(
       x: (idx / (dailyValues.length - 1)) * 100,
       portfolio: normalizedPortfolio,
       btc: normalizedBTC,
+      date: d.date ?? new Date().toISOString(), // Add date for tooltip
+      portfolioValue: value, // Add original value for tooltip display
     };
   });
 
@@ -123,7 +125,7 @@ export function transformToDrawdownChart(
 
   if (underwaterData.length === 0) {
     return {
-      points: [{ x: 0, value: 0 }],
+      points: [{ x: 0, value: 0, date: new Date().toISOString() }],
       maxDrawdown: 0,
       maxDrawdownDate: new Date().toISOString(),
     };
@@ -133,6 +135,7 @@ export function transformToDrawdownChart(
   const points = underwaterData.map((d, idx) => ({
     x: (idx / (underwaterData.length - 1)) * 100,
     value: d.drawdown_pct ?? 0, // Already in percentage (negative values)
+    date: d.date ?? new Date().toISOString(), // Add date for tooltip
   }));
 
   return {

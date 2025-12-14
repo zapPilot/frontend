@@ -9,11 +9,17 @@ import {
   Info,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { ChartIndicator, ChartTooltip } from "@/components/charts";
 import { BaseCard } from "@/components/ui/BaseCard";
 import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
+import { useChartHover } from "@/hooks/useChartHover";
 import type { AnalyticsTimePeriod } from "@/types/analytics";
+import type {
+  DrawdownHoverData,
+  PerformanceHoverData,
+} from "@/types/ui/chartHover";
 
 // ============================================================================
 // PROPS & TYPES
@@ -89,17 +95,6 @@ const ChartGridLines = ({ positions }: { positions: number[] }) => (
   </div>
 );
 
-/** Reusable SVG wrapper for charts with common styling */
-const ChartSvgWrapper = ({ children }: { children: React.ReactNode }) => (
-  <svg
-    viewBox="0 0 100 100"
-    preserveAspectRatio="none"
-    className="absolute inset-0 w-full h-full"
-  >
-    {children}
-  </svg>
-);
-
 /** Reusable Y-axis labels for drawdown-style charts */
 const YAxisLabels = ({
   labels,
@@ -146,20 +141,78 @@ const AnalyticsMetricCard = ({
 // ============================================================================
 
 /** Net Worth Performance Chart - Shows portfolio vs benchmark over time */
-const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: number; btc: number }[] }) => {
+const PerformanceChart = ({
+  chartData,
+  width = 800,
+  height = 300,
+}: {
+  chartData: {
+    x: number;
+    portfolio: number;
+    btc: number;
+    date: string;
+    portfolioValue: number;
+  }[];
+  width?: number;
+  height?: number;
+}) => {
   const data = chartData;
 
+  // Calculate min/max for Y-axis scaling
+  const minValue = useMemo(
+    () => Math.min(...data.map((d) => d.portfolioValue)),
+    [data]
+  );
+  const maxValue = useMemo(
+    () => Math.max(...data.map((d) => d.portfolioValue)),
+    [data]
+  );
+
+  // Chart hover with tooltip
+  const performanceHover = useChartHover(data, {
+    chartType: "performance",
+    chartWidth: width,
+    chartHeight: height,
+    chartPadding: 0,
+    minValue,
+    maxValue,
+    getYValue: (point) => point.portfolioValue,
+    buildHoverData: (point, x, y): PerformanceHoverData => ({
+      chartType: "performance",
+      x,
+      y,
+      date: new Date(point.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      value: point.portfolioValue,
+      benchmark: 0, // BTC benchmark not available yet
+    }),
+  });
+
   // Build SVG paths
-  const portfolioPath = data.map(p => `${p.x},${p.portfolio}`).join(" L ");
-  const btcPath = data.map(p => `${p.x},${p.btc}`).join(" L ");
+  const portfolioPath = data.map((p) => `${p.x},${p.portfolio}`).join(" L ");
+  const btcPath = data.map((p) => `${p.x},${p.btc}`).join(" L ");
 
   return (
     <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
       {/* Grid Lines */}
       <ChartGridLines positions={[0, 25, 50, 75, 100]} />
 
-      {/* Chart */}
-      <ChartSvgWrapper>
+      {/* Chart SVG with hover handlers */}
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full"
+        onMouseMove={performanceHover.handleMouseMove}
+        onMouseLeave={performanceHover.handleMouseLeave}
+        onPointerMove={performanceHover.handlePointerMove}
+        onPointerDown={performanceHover.handlePointerDown}
+        onTouchMove={performanceHover.handleTouchMove}
+        onTouchEnd={performanceHover.handleTouchEnd}
+        style={{ touchAction: "none" }}
+      >
         <defs>
           <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
@@ -169,7 +222,7 @@ const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: nu
 
         {/* Portfolio Area Fill */}
         <path
-          d={`M 0,100 L ${portfolioPath} L 100,100 Z`}
+          d={`M 0,${height} L ${portfolioPath} L ${width},${height} Z`}
           fill="url(#portfolioGradient)"
         />
 
@@ -192,7 +245,10 @@ const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: nu
           vectorEffect="non-scaling-stroke"
           opacity="0.6"
         />
-      </ChartSvgWrapper>
+
+        {/* Hover indicator */}
+        <ChartIndicator hoveredPoint={performanceHover.hoveredPoint} />
+      </svg>
 
       {/* Regime Overlay */}
       <div className="absolute inset-0 flex pointer-events-none opacity-5">
@@ -202,7 +258,7 @@ const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: nu
       </div>
 
       {/* Legend */}
-      <div className="absolute top-3 right-3 flex gap-4 text-[10px]">
+      <div className="absolute top-3 right-3 flex gap-4 text-[10px] pointer-events-none">
         <div className="flex items-center gap-1">
           <div className="w-3 h-0.5 bg-purple-500 rounded" />
           <span className="text-gray-400">Portfolio</span>
@@ -220,18 +276,66 @@ const PerformanceChart = ({ chartData }: { chartData: { x: number; portfolio: nu
       <div className="absolute bottom-2 right-4 text-xs text-gray-500 font-mono">
         Dec 24
       </div>
+
+      {/* Tooltip */}
+      <ChartTooltip
+        hoveredPoint={performanceHover.hoveredPoint}
+        chartWidth={width}
+        chartHeight={height}
+      />
     </div>
   );
 };
 
 /** Underwater/Drawdown Chart - Shows how deep drawdowns go and recovery speed */
-const DrawdownChart = ({ chartData }: { chartData: { x: number; value: number }[] }) => {
+const DrawdownChart = ({
+  chartData,
+  maxDrawdown,
+  width = 800,
+  height = 200,
+}: {
+  chartData: { x: number; value: number; date: string }[];
+  maxDrawdown: number;
+  width?: number;
+  height?: number;
+}) => {
   const data = chartData;
 
-  // Normalize: 0% drawdown = y:0, -15% drawdown = y:100
-  const maxDrawdown = 15; // Scale to -15%
+  // Calculate min/max for Y-axis scaling
+  const minValue = useMemo(() => Math.min(...data.map((d) => d.value), 0), [data]);
+  const maxValue = 0; // Zero line at top
+
+  // Chart hover with tooltip
+  const drawdownHover = useChartHover(data, {
+    chartType: "drawdown-recovery",
+    chartWidth: width,
+    chartHeight: height,
+    chartPadding: 0,
+    minValue,
+    maxValue,
+    getYValue: (point) => point.value,
+    buildHoverData: (point, x, y): DrawdownHoverData => ({
+      chartType: "drawdown-recovery",
+      x,
+      y,
+      date: new Date(point.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+      drawdown: point.value,
+    }),
+  });
+
+  // Normalize drawdown values to SVG coordinates
+  // 0% drawdown = y:0 (top), maxDrawdown = y:height (bottom)
+  const drawdownScale = Math.abs(minValue) || 15; // Use actual min or fallback to 15%
   const points = data
-    .map(p => `${p.x},${(Math.abs(p.value) / maxDrawdown) * 100}`)
+    .map((p) => {
+      const x = (p.x / 100) * width;
+      const y = (Math.abs(p.value) / drawdownScale) * height;
+      return `${x},${y}`;
+    })
     .join(" L ");
 
   return (
@@ -242,8 +346,19 @@ const DrawdownChart = ({ chartData }: { chartData: { x: number; value: number }[
       {/* Zero Line (at top) */}
       <div className="absolute top-0 w-full h-px bg-gray-600" />
 
-      {/* Chart */}
-      <ChartSvgWrapper>
+      {/* Chart SVG with hover handlers */}
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        className="absolute inset-0 w-full h-full"
+        onMouseMove={drawdownHover.handleMouseMove}
+        onMouseLeave={drawdownHover.handleMouseLeave}
+        onPointerMove={drawdownHover.handlePointerMove}
+        onPointerDown={drawdownHover.handlePointerDown}
+        onTouchMove={drawdownHover.handleTouchMove}
+        onTouchEnd={drawdownHover.handleTouchEnd}
+        style={{ touchAction: "none" }}
+      >
         <defs>
           <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
@@ -252,7 +367,7 @@ const DrawdownChart = ({ chartData }: { chartData: { x: number; value: number }[
         </defs>
 
         {/* Drawdown Area */}
-        <path d={`M 0,0 L ${points} L 100,0 Z`} fill="url(#drawdownGradient)" />
+        <path d={`M 0,0 L ${points} L ${width},0 Z`} fill="url(#drawdownGradient)" />
 
         {/* Drawdown Line */}
         <path
@@ -262,17 +377,35 @@ const DrawdownChart = ({ chartData }: { chartData: { x: number; value: number }[
           strokeWidth="1.5"
           vectorEffect="non-scaling-stroke"
         />
-      </ChartSvgWrapper>
+
+        {/* Hover indicator */}
+        <ChartIndicator hoveredPoint={drawdownHover.hoveredPoint} />
+      </svg>
 
       {/* Y-Axis Labels */}
       <YAxisLabels labels={["0%", "-5%", "-10%", "-15%"]} />
 
-      {/* Max Drawdown Annotation */}
-      <div className="absolute left-[56%] top-[85%] transform -translate-x-1/2">
-        <div className="text-[10px] text-red-400 font-bold whitespace-nowrap">
-          -12.8% Max
+      {/* Legend (NEW) */}
+      <div className="absolute top-2 right-2 flex gap-2 text-[10px] pointer-events-none">
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-0.5 bg-red-500 rounded" />
+          <span className="text-gray-400">Drawdown</span>
         </div>
       </div>
+
+      {/* Max Drawdown Annotation */}
+      <div className="absolute left-[56%] top-[85%] transform -translate-x-1/2 pointer-events-none">
+        <div className="text-[10px] text-red-400 font-bold whitespace-nowrap">
+          {maxDrawdown.toFixed(1)}% Max
+        </div>
+      </div>
+
+      {/* Tooltip */}
+      <ChartTooltip
+        hoveredPoint={drawdownHover.hoveredPoint}
+        chartWidth={width}
+        chartHeight={height}
+      />
     </div>
   );
 };
@@ -370,7 +503,10 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
           {activeChartTab === "performance" && <PerformanceChart chartData={data.performanceChart.points} />}
           {activeChartTab === "drawdown" && (
             <div className="space-y-3">
-              <DrawdownChart chartData={data.drawdownChart.points} />
+              <DrawdownChart
+                chartData={data.drawdownChart.points}
+                maxDrawdown={data.drawdownChart.maxDrawdown}
+              />
               <p className="text-xs text-gray-500">
                 <span className="text-white font-medium">
                   Resilience Analysis:
