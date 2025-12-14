@@ -16,7 +16,7 @@ import {
   Wallet,
   Zap,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import type { V22PortfolioDataWithDirection } from "@/adapters/portfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
@@ -33,7 +33,9 @@ import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView"
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
+import { formatAddress } from "@/lib/formatters";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
+import { useWalletProvider } from "@/providers/WalletProvider";
 
 import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
@@ -48,10 +50,42 @@ export function WalletPortfolioPresenterV22({
   userId = "",
 }: WalletPortfolioPresenterV22Props = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
+  const { connectedWallets, switchActiveWallet, hasMultipleWallets } =
+    useWalletProvider();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showWalletSwitcher, setShowWalletSwitcher] = useState(false);
+  const [isSwitchingWallet, setIsSwitchingWallet] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Click outside handler for wallet switcher dropdown
+  useEffect(() => {
+    if (!showWalletSwitcher) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowWalletSwitcher(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowWalletSwitcher(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, [showWalletSwitcher]);
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -109,6 +143,72 @@ export function WalletPortfolioPresenterV22({
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Multi-wallet switcher (V22 Phase 2D) */}
+          {hasMultipleWallets && (
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowWalletSwitcher(!showWalletSwitcher)}
+                className="px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-purple-500/30 text-xs font-bold flex items-center gap-2"
+                aria-expanded={showWalletSwitcher}
+                aria-haspopup="menu"
+                aria-label={`Wallet switcher, ${connectedWallets.length} wallets connected`}
+              >
+                <Wallet className="w-4 h-4" aria-hidden="true" />
+                {connectedWallets.length} Wallets
+              </button>
+
+              <AnimatePresence>
+                {showWalletSwitcher && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50"
+                    role="menu"
+                    aria-label="Wallet selection menu"
+                  >
+                    {connectedWallets.map(wallet => (
+                      <button
+                        key={wallet.address}
+                        onClick={async () => {
+                          setIsSwitchingWallet(true);
+                          try {
+                            await switchActiveWallet(wallet.address);
+                            setShowWalletSwitcher(false);
+                          } finally {
+                            setIsSwitchingWallet(false);
+                          }
+                        }}
+                        disabled={isSwitchingWallet || wallet.isActive}
+                        className={`w-full px-4 py-3 text-left hover:bg-gray-800 first:rounded-t-xl last:rounded-b-xl transition-colors ${
+                          wallet.isActive ? "bg-purple-500/20" : ""
+                        } ${isSwitchingWallet ? "opacity-50 cursor-wait" : ""}`}
+                        role="menuitem"
+                        aria-current={wallet.isActive ? "true" : undefined}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-white text-sm font-mono">
+                            {formatAddress(wallet.address)}
+                          </span>
+                          {wallet.isActive && (
+                            <span className="text-xs text-purple-400 font-bold flex items-center gap-1">
+                              <Zap
+                                className="w-3 h-3 inline"
+                                aria-hidden="true"
+                              />
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
@@ -472,7 +572,9 @@ export function WalletPortfolioPresenterV22({
           )}
 
           {/* Analytics View */}
-          {activeTab === "analytics" && userId && <AnalyticsView userId={userId} />}
+          {activeTab === "analytics" && userId && (
+            <AnalyticsView userId={userId} />
+          )}
 
           {/* Backtesting View */}
           {activeTab === "backtesting" && <BacktestingView />}

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Zap } from "lucide-react";
 import { memo } from "react";
 
 import { LoadingSpinner } from "@/components/ui";
@@ -16,6 +17,7 @@ interface WalletCardProps {
   onCopyAddress: (address: string, walletId: string) => void;
   onEditWallet: (walletId: string, label: string) => void;
   onDeleteWallet: (walletId: string) => void;
+  onSwitchWallet?: (address: string) => void; // V22 Phase 2B
   openDropdown: string | null;
   menuPosition: { top: number; left: number } | null;
   onToggleDropdown: (walletId: string, element: HTMLElement) => void;
@@ -30,6 +32,7 @@ export const WalletCard = memo(
     onCopyAddress,
     onEditWallet,
     onDeleteWallet,
+    onSwitchWallet,
     openDropdown,
     menuPosition,
     onToggleDropdown,
@@ -41,8 +44,27 @@ export const WalletCard = memo(
         layout
         {...fadeInUp}
         transition={SMOOTH_TRANSITION}
-        className="p-4 rounded-xl border transition-all duration-200 glass-morphism border-gray-700 hover:border-gray-600"
+        className={`relative p-4 rounded-xl border transition-all duration-200 ${
+          wallet.isActive
+            ? "border-purple-500/50 bg-purple-500/10 shadow-lg shadow-purple-500/20"
+            : "glass-morphism border-gray-700 hover:border-gray-600"
+        }`}
+        role="article"
+        aria-label={`Wallet ${wallet.label}`}
       >
+        {/* Active Badge */}
+        {wallet.isActive && (
+          <div className="absolute top-2 right-2">
+            <span
+              className="px-2 py-1 bg-purple-500 text-white text-xs font-bold rounded-full flex items-center gap-1"
+              role="status"
+              aria-label="Active wallet"
+            >
+              <Zap className="w-3 h-3" aria-hidden="true" /> Active
+            </span>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -58,6 +80,18 @@ export const WalletCard = memo(
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Switch Button (only for non-active wallets when owner) */}
+            {!wallet.isActive && isOwner && onSwitchWallet && (
+              <button
+                onClick={() => onSwitchWallet(wallet.address)}
+                className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-bold rounded-lg transition-colors border border-purple-500/30"
+                aria-label={`Switch to wallet ${wallet.label || formatAddress(wallet.address)}`}
+              >
+                <span className="hidden sm:inline">Switch to this wallet</span>
+                <span className="sm:hidden">Switch</span>
+              </button>
+            )}
+
             {operations.editing[wallet.id]?.isLoading && (
               <div className="flex items-center gap-2 text-sm text-gray-400">
                 <LoadingSpinner size="sm" />

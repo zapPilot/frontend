@@ -180,6 +180,7 @@ const WalletManagerComponent = ({
               onCopyAddress={walletOperations.handleCopyAddress}
               onEditWallet={handleEditWallet}
               onDeleteWallet={walletOperations.handleDeleteWallet}
+              onSwitchWallet={walletOperations.handleSwitchWallet}
               onToggleDropdown={dropdownMenu.toggleDropdown}
               onCloseDropdown={dropdownMenu.closeDropdown}
               onWalletChange={handleWalletChange}

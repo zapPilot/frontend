@@ -26,6 +26,7 @@ interface WalletListProps extends WalletMenuHandlers {
   onAddWallet: () => void;
   onStartAdding: () => void;
   onCancelAdding: () => void;
+  onSwitchWallet?: (address: string) => void; // V22 Phase 2B
 }
 
 export const WalletList = ({
@@ -40,6 +41,7 @@ export const WalletList = ({
   onCopyAddress,
   onEditWallet,
   onDeleteWallet,
+  onSwitchWallet,
   onToggleDropdown,
   onCloseDropdown,
   onWalletChange,
@@ -96,6 +98,7 @@ export const WalletList = ({
               onCopyAddress={onCopyAddress}
               onEditWallet={onEditWallet}
               onDeleteWallet={onDeleteWallet}
+              {...(onSwitchWallet && { onSwitchWallet })}
               openDropdown={openDropdown}
               menuPosition={menuPosition}
               onToggleDropdown={onToggleDropdown}

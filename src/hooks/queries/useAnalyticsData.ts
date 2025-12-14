@@ -22,7 +22,7 @@ import { usePortfolioDashboard } from "../usePortfolioDashboard";
 /**
  * Hook return type
  */
-export interface UseAnalyticsDataReturn {
+interface UseAnalyticsDataReturn {
   /** Transformed analytics data ready for rendering */
   data: AnalyticsData | null;
   /** Loading state (true while primary dashboard query is loading) */
@@ -120,9 +120,9 @@ export function useAnalyticsData(
   // ============================================================================
 
   const refetch = () => {
-    dashboardQuery.refetch();
+    void dashboardQuery.refetch();
     if (dashboardQuery.data) {
-      monthlyPnLQuery.refetch();
+      void monthlyPnLQuery.refetch();
     }
   };
 

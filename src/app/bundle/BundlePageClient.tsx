@@ -24,10 +24,11 @@ const WalletManager: ComponentType<WalletManagerProps> = dynamic(
 
 interface BundlePageClientProps {
   userId: string;
+  walletId?: string;
 }
 
-export function BundlePageClient({ userId }: BundlePageClientProps) {
-  const vm = useBundlePage(userId);
+export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
+  const vm = useBundlePage(userId, walletId);
 
   // Header banners (switch prompt + email banner)
   const headerBanners = useMemo(

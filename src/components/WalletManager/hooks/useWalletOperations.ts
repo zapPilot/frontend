@@ -8,6 +8,7 @@ import { useWallet } from "@/hooks/useWallet";
 import { formatAddress } from "@/lib/formatters";
 import { queryKeys } from "@/lib/queryClient";
 import { handleWalletError, type WalletData } from "@/lib/walletUtils";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import { deleteUser as deleteUserAccount } from "@/services/accountService";
 import { copyTextToClipboard } from "@/utils/clipboard";
 import { walletLogger } from "@/utils/logger";
@@ -47,6 +48,7 @@ export const useWalletOperations = ({
   const { refetch } = useUser();
   const { showToast } = useToast();
   const { disconnect, isConnected } = useWallet();
+  const { connectedWallets, switchActiveWallet } = useWalletProvider();
 
   // State
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -96,7 +98,18 @@ export const useWalletOperations = ({
 
       try {
         const loadedWallets = await fetchWallets(viewingUserId);
-        setWallets(loadedWallets);
+
+        // Mark wallets as active based on WalletProvider's connectedWallets
+        const walletsWithActiveState = loadedWallets.map(wallet => ({
+          ...wallet,
+          isActive: connectedWallets.some(
+            cw =>
+              cw.address.toLowerCase() === wallet.address.toLowerCase() &&
+              cw.isActive
+          ),
+        }));
+
+        setWallets(walletsWithActiveState);
       } catch {
         // Handle silently - error state is managed by service response
       } finally {
@@ -105,7 +118,7 @@ export const useWalletOperations = ({
         }
       }
     },
-    [viewingUserId]
+    [viewingUserId, connectedWallets]
   );
 
   // Load wallets when component opens or user changes
@@ -395,6 +408,32 @@ export const useWalletOperations = ({
     }
   }, [realUserId, queryClient, refetch, showToast, disconnect, isConnected]);
 
+  // Handle wallet switching (V22 Phase 2B)
+  const handleSwitchWallet = useCallback(
+    async (walletAddress: string) => {
+      try {
+        await switchActiveWallet(walletAddress);
+
+        showToast({
+          type: "success",
+          title: "Wallet Switched",
+          message: `Active wallet changed to ${formatAddress(walletAddress)}`,
+        });
+
+        // Reload wallets to update active state
+        await loadWallets(true);
+      } catch (error) {
+        const errorMessage = handleWalletError(error);
+        showToast({
+          type: "error",
+          title: "Switch Failed",
+          message: errorMessage,
+        });
+      }
+    },
+    [switchActiveWallet, showToast, loadWallets]
+  );
+
   return {
     // State
     wallets,
@@ -417,5 +456,6 @@ export const useWalletOperations = ({
     handleAddWallet,
     handleCopyAddress,
     handleDeleteAccount,
+    handleSwitchWallet, // V22 Phase 2B
   };
 };

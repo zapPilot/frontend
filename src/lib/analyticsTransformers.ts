@@ -17,6 +17,11 @@ import type {
   PerformanceChartData,
 } from "@/types/analytics";
 
+const buildDateRange = (values: { date?: string }[]) => ({
+  startDate: values[0]?.date ?? new Date().toISOString(),
+  endDate: values[values.length - 1]?.date ?? new Date().toISOString(),
+});
+
 // ============================================================================
 // CHART TRANSFORMERS
 // ============================================================================
@@ -38,22 +43,19 @@ export function transformToPerformanceChart(
   if (dailyValues.length === 0) {
     return {
       points: [],
-      startDate: new Date().toISOString(),
-      endDate: new Date().toISOString(),
+      ...buildDateRange(dailyValues),
     };
   }
 
   // Extract portfolio values
   const portfolioValues = dailyValues
-    .map((d) => d.total_value_usd ?? 0)
-    .filter((v) => v > 0);
+    .map(d => d.total_value_usd ?? 0)
+    .filter(v => v > 0);
 
   if (portfolioValues.length === 0) {
     return {
       points: [],
-      startDate: dailyValues[0]?.date ?? new Date().toISOString(),
-      endDate:
-        dailyValues[dailyValues.length - 1]?.date ?? new Date().toISOString(),
+      ...buildDateRange(dailyValues),
     };
   }
 
@@ -65,12 +67,16 @@ export function transformToPerformanceChart(
   // Normalize to 0-100 scale (inverted Y-axis for SVG)
   const points = dailyValues.map((d, idx) => {
     const value = d.total_value_usd ?? min;
-    const normalizedPortfolio = range > 0 ? 100 - ((value - min) / range) * 100 : 50;
+    const normalizedPortfolio =
+      range > 0 ? 100 - ((value - min) / range) * 100 : 50;
 
     // Simulate BTC benchmark (±20% variance from portfolio for demo)
     // In production, this would come from actual BTC price data
     const btcOffset = Math.sin(idx * 0.1) * 10;
-    const normalizedBTC = Math.max(0, Math.min(100, normalizedPortfolio + btcOffset));
+    const normalizedBTC = Math.max(
+      0,
+      Math.min(100, normalizedPortfolio + btcOffset)
+    );
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
@@ -83,9 +89,7 @@ export function transformToPerformanceChart(
 
   return {
     points,
-    startDate: dailyValues[0]?.date ?? new Date().toISOString(),
-    endDate:
-      dailyValues[dailyValues.length - 1]?.date ?? new Date().toISOString(),
+    ...buildDateRange(dailyValues),
   };
 }
 
@@ -118,10 +122,13 @@ export function transformToDrawdownChart(
       }
     | undefined;
 
-  const underwaterData = drawdownAnalysis?.underwater_recovery?.underwater_data ?? [];
-  const maxDrawdown = drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0;
+  const underwaterData =
+    drawdownAnalysis?.underwater_recovery?.underwater_data ?? [];
+  const maxDrawdown =
+    drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0;
   const maxDrawdownDate =
-    drawdownAnalysis?.enhanced?.summary?.max_drawdown_date ?? new Date().toISOString();
+    drawdownAnalysis?.enhanced?.summary?.max_drawdown_date ??
+    new Date().toISOString();
 
   if (underwaterData.length === 0) {
     return {
@@ -236,21 +243,28 @@ function calculateTWR(
 /**
  * Extract Max Drawdown from drawdown analysis
  */
-function extractMaxDrawdown(drawdownAnalysis: {
-  enhanced?: {
-    summary?: {
-      max_drawdown_pct?: number;
-      recovery_days?: number;
-    };
-  };
-} | undefined): MetricData {
-  const maxDrawdownPct = drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0;
+function extractMaxDrawdown(
+  drawdownAnalysis:
+    | {
+        enhanced?: {
+          summary?: {
+            max_drawdown_pct?: number;
+            recovery_days?: number;
+          };
+        };
+      }
+    | undefined
+): MetricData {
+  const maxDrawdownPct =
+    drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0;
   const recoveryDays = drawdownAnalysis?.enhanced?.summary?.recovery_days ?? 0;
 
   return {
     value: `${maxDrawdownPct.toFixed(1)}%`,
     subValue:
-      recoveryDays > 0 ? `Recovered in ${recoveryDays} days` : "Not yet recovered",
+      recoveryDays > 0
+        ? `Recovered in ${recoveryDays} days`
+        : "Not yet recovered",
     trend: maxDrawdownPct > -15 ? "up" : "down", // Better if closer to 0
   };
 }
@@ -258,7 +272,9 @@ function extractMaxDrawdown(drawdownAnalysis: {
 /**
  * Extract Sharpe Ratio from rolling analytics
  */
-function extractSharpe(rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]): MetricData {
+function extractSharpe(
+  rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]
+): MetricData {
   const sharpeData = rollingAnalytics?.sharpe?.rolling_sharpe_data ?? [];
 
   if (sharpeData.length === 0) {
@@ -267,14 +283,15 @@ function extractSharpe(rollingAnalytics: UnifiedDashboardResponse["rolling_analy
 
   // Average Sharpe ratio from rolling data
   const validSharpes = sharpeData
-    .map((d) => d.rolling_sharpe_ratio ?? 0)
-    .filter((s) => !isNaN(s) && isFinite(s));
+    .map(d => d.rolling_sharpe_ratio ?? 0)
+    .filter(s => !isNaN(s) && isFinite(s));
 
   if (validSharpes.length === 0) {
     return createPlaceholderMetric("N/A", "No valid data");
   }
 
-  const avgSharpe = validSharpes.reduce((sum, s) => sum + s, 0) / validSharpes.length;
+  const avgSharpe =
+    validSharpes.reduce((sum, s) => sum + s, 0) / validSharpes.length;
   const percentile = getSharpePercentile(avgSharpe);
 
   return {
@@ -294,7 +311,9 @@ function calculateWinRate(
     return createPlaceholderMetric("0%", "No data");
   }
 
-  const positiveDays = dailyValues.filter((d) => (d.pnl_percentage ?? 0) > 0).length;
+  const positiveDays = dailyValues.filter(
+    d => (d.pnl_percentage ?? 0) > 0
+  ).length;
   const winRatePct = (positiveDays / dailyValues.length) * 100;
 
   return {
@@ -307,8 +326,11 @@ function calculateWinRate(
 /**
  * Extract Volatility from rolling analytics
  */
-function extractVolatility(rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]): MetricData {
-  const volatilityData = rollingAnalytics?.volatility?.rolling_volatility_data ?? [];
+function extractVolatility(
+  rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]
+): MetricData {
+  const volatilityData =
+    rollingAnalytics?.volatility?.rolling_volatility_data ?? [];
 
   if (volatilityData.length === 0) {
     return createPlaceholderMetric("N/A", "No data");
@@ -316,8 +338,8 @@ function extractVolatility(rollingAnalytics: UnifiedDashboardResponse["rolling_a
 
   // Average annualized volatility
   const validVolatilities = volatilityData
-    .map((d) => d.annualized_volatility_pct ?? 0)
-    .filter((v) => !isNaN(v) && isFinite(v));
+    .map(d => d.annualized_volatility_pct ?? 0)
+    .filter(v => !isNaN(v) && isFinite(v));
 
   if (validVolatilities.length === 0) {
     return createPlaceholderMetric("N/A", "No valid data");
@@ -328,7 +350,12 @@ function extractVolatility(rollingAnalytics: UnifiedDashboardResponse["rolling_a
 
   return {
     value: `${avgVolatility.toFixed(1)}%`,
-    subValue: avgVolatility < 20 ? "Low risk" : avgVolatility < 40 ? "Moderate" : "High risk",
+    subValue:
+      avgVolatility < 20
+        ? "Low risk"
+        : avgVolatility < 40
+          ? "Moderate"
+          : "High risk",
     trend: avgVolatility < 25 ? "up" : "down", // Lower is better
   };
 }
@@ -400,20 +427,41 @@ export function aggregateMonthlyPnL(
       const [yearStr, monthStr] = monthKey.split("-");
       const year = parseInt(yearStr ?? "", 10);
       const month = parseInt(monthStr ?? "", 10);
-      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
 
       // Validate year and month
-      if (!year || !month || month < 1 || month > 12 || isNaN(year) || isNaN(month)) {
+      if (
+        !year ||
+        !month ||
+        month < 1 ||
+        month > 12 ||
+        isNaN(year) ||
+        isNaN(month)
+      ) {
         return null;
       }
 
       // Find portfolio value at start of month
       const monthStart = new Date(year, month - 1, 1).toISOString();
       const portfolioValue =
-        portfolioValues.find((pv) => pv.date && pv.date >= monthStart)
+        portfolioValues.find(pv => pv.date && pv.date >= monthStart)
           ?.total_value_usd ?? 100000; // Default to 100k if not found
 
-      const percentageReturn = portfolioValue > 0 ? (yieldUSD / portfolioValue) * 100 : 0;
+      const percentageReturn =
+        portfolioValue > 0 ? (yieldUSD / portfolioValue) * 100 : 0;
 
       return {
         month: monthNames[month - 1] ?? "N/A",

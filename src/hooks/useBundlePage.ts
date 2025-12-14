@@ -1,9 +1,11 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import {
   BundleUser,
   generateBundleUrl,
@@ -87,6 +89,7 @@ export function computeRedirectUrl(search: string): string {
  * Hook for managing bundle page state and visibility logic.
  *
  * @param userId - The bundle owner's user ID from URL
+ * @param walletId - Optional wallet ID for auto-switch (V22 Phase 2A)
  * @returns Bundle page state including banner visibility
  *
  * Note: Banner visibility depends on:
@@ -94,13 +97,56 @@ export function computeRedirectUrl(search: string): string {
  * - User must be connected
  * - Connected user must be different from bundle owner
  */
-export function useBundlePage(userId: string): UseBundlePageResult {
+export function useBundlePage(
+  userId: string,
+  walletId?: string
+): UseBundlePageResult {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { userInfo, isConnected, connectedWallet, loading } = useUser();
+  const { switchActiveWallet, connectedWallets } = useWalletProvider();
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
+
+  // Auto-switch wallet on mount (only for own bundles with walletId)
+  useEffect(() => {
+    if (!walletId || !isConnected || !userInfo) return;
+
+    const isOwnBundle = userInfo.userId === userId;
+    if (!isOwnBundle) return;
+
+    const targetWallet = connectedWallets.find(
+      w => w.address.toLowerCase() === walletId.toLowerCase()
+    );
+
+    if (targetWallet && !targetWallet.isActive) {
+      void (async () => {
+        try {
+          await switchActiveWallet(walletId);
+          // Invalidate portfolio and wallet queries after successful switch
+          await queryClient.invalidateQueries({
+            queryKey: ["portfolio"],
+          });
+          await queryClient.invalidateQueries({
+            queryKey: ["wallets"],
+          });
+          logger.info("Cache invalidated after wallet switch");
+        } catch (err) {
+          logger.error("Failed to auto-switch wallet:", err);
+        }
+      })();
+    }
+  }, [
+    walletId,
+    isConnected,
+    userInfo,
+    userId,
+    connectedWallets,
+    switchActiveWallet,
+    queryClient,
+  ]);
 
   // Compute if viewing different user's bundle (no dismissal state)
   const isDifferentUser = useMemo(

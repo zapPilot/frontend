@@ -9,7 +9,14 @@ import {
   Info,
   TrendingUp,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+  type MouseEvent,
+  type PointerEvent,
+  type ReactNode,
+  type TouchEvent,
+  useMemo,
+  useState,
+} from "react";
 
 import { ChartIndicator, ChartTooltip } from "@/components/charts";
 import { BaseCard } from "@/components/ui/BaseCard";
@@ -57,7 +64,13 @@ const AnalyticsLoadingSkeleton = () => (
   </div>
 );
 
-const AnalyticsErrorState = ({ error, onRetry }: { error: any; onRetry: () => void }) => (
+const AnalyticsErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+}) => (
   <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
     <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
       <Info className="w-8 h-8 text-red-400" />
@@ -81,6 +94,62 @@ const AnalyticsErrorState = ({ error, onRetry }: { error: any; onRetry: () => vo
 // ============================================================================
 // REUSABLE CHART HELPERS
 // ============================================================================
+
+const formatDateLabel = (date: string) =>
+  new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+interface ChartHoverHandlers {
+  handleMouseMove: (event: MouseEvent<SVGSVGElement>) => void;
+  handleMouseLeave: (event?: MouseEvent<SVGSVGElement>) => void;
+  handlePointerMove: (event: PointerEvent<SVGSVGElement>) => void;
+  handlePointerDown: (event: PointerEvent<SVGSVGElement>) => void;
+  handleTouchMove: (event: TouchEvent<SVGSVGElement>) => void;
+  handleTouchEnd: (event?: TouchEvent<SVGSVGElement>) => void;
+}
+
+const ChartSurface = ({
+  width,
+  height,
+  handlers,
+  children,
+}: {
+  width: number;
+  height: number;
+  handlers: ChartHoverHandlers;
+  children: ReactNode;
+}) => (
+  <svg
+    viewBox={`0 0 ${width} ${height}`}
+    preserveAspectRatio="none"
+    className="absolute inset-0 w-full h-full"
+    onMouseMove={handlers.handleMouseMove}
+    onMouseLeave={handlers.handleMouseLeave}
+    onPointerMove={handlers.handlePointerMove}
+    onPointerDown={handlers.handlePointerDown}
+    onTouchMove={handlers.handleTouchMove}
+    onTouchEnd={handlers.handleTouchEnd}
+    style={{ touchAction: "none" }}
+  >
+    {children}
+  </svg>
+);
+
+const buildPath = <T extends { x: number }>(
+  points: T[],
+  width: number,
+  getY: (point: T) => number
+) =>
+  points
+    .map(point => {
+      const x = (point.x / 100) * width;
+      const y = getY(point);
+      return `${x},${y}`;
+    })
+    .join(" L ");
 
 /** Reusable grid lines for charts */
 const ChartGridLines = ({ positions }: { positions: number[] }) => (
@@ -158,15 +227,24 @@ const PerformanceChart = ({
 }) => {
   const data = chartData;
 
-  // Calculate min/max for Y-axis scaling
-  const minValue = useMemo(
-    () => Math.min(...data.map((d) => d.portfolioValue)),
-    [data]
-  );
-  const maxValue = useMemo(
-    () => Math.max(...data.map((d) => d.portfolioValue)),
-    [data]
-  );
+  const { minValue, maxValue } = useMemo(() => {
+    if (data.length === 0) {
+      return { minValue: 0, maxValue: 0 };
+    }
+
+    const initialValue = data[0]?.portfolioValue ?? 0;
+
+    return data.reduce(
+      (range, point) => ({
+        minValue: Math.min(range.minValue, point.portfolioValue),
+        maxValue: Math.max(range.maxValue, point.portfolioValue),
+      }),
+      {
+        minValue: initialValue,
+        maxValue: initialValue,
+      }
+    );
+  }, [data]);
 
   // Chart hover with tooltip
   const performanceHover = useChartHover(data, {
@@ -176,55 +254,31 @@ const PerformanceChart = ({
     chartPadding: 0,
     minValue,
     maxValue,
-    getYValue: (point) => point.portfolioValue,
+    getYValue: point => point.portfolioValue,
     buildHoverData: (point, x, y): PerformanceHoverData => ({
       chartType: "performance",
       x,
       y,
-      date: new Date(point.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      date: formatDateLabel(point.date),
       value: point.portfolioValue,
       benchmark: 0, // BTC benchmark not available yet
     }),
   });
 
   // Build SVG paths - convert normalized 0-100 coords to pixel coords
-  const portfolioPath = data
-    .map((p) => {
-      const x = (p.x / 100) * width;
-      const y = (p.portfolio / 100) * height;
-      return `${x},${y}`;
-    })
-    .join(" L ");
-  const btcPath = data
-    .map((p) => {
-      const x = (p.x / 100) * width;
-      const y = (p.btc / 100) * height;
-      return `${x},${y}`;
-    })
-    .join(" L ");
+  const portfolioPath = buildPath(
+    data,
+    width,
+    point => (point.portfolio / 100) * height
+  );
+  const btcPath = buildPath(data, width, point => (point.btc / 100) * height);
 
   return (
     <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
       {/* Grid Lines */}
       <ChartGridLines positions={[0, 25, 50, 75, 100]} />
 
-      {/* Chart SVG with hover handlers */}
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-        className="absolute inset-0 w-full h-full"
-        onMouseMove={performanceHover.handleMouseMove}
-        onMouseLeave={performanceHover.handleMouseLeave}
-        onPointerMove={performanceHover.handlePointerMove}
-        onPointerDown={performanceHover.handlePointerDown}
-        onTouchMove={performanceHover.handleTouchMove}
-        onTouchEnd={performanceHover.handleTouchEnd}
-        style={{ touchAction: "none" }}
-      >
+      <ChartSurface width={width} height={height} handlers={performanceHover}>
         <defs>
           <linearGradient id="portfolioGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
@@ -260,7 +314,7 @@ const PerformanceChart = ({
 
         {/* Hover indicator */}
         <ChartIndicator hoveredPoint={performanceHover.hoveredPoint} />
-      </svg>
+      </ChartSurface>
 
       {/* Regime Overlay */}
       <div className="absolute inset-0 flex pointer-events-none opacity-5">
@@ -314,7 +368,10 @@ const DrawdownChart = ({
   const data = chartData;
 
   // Calculate min/max for Y-axis scaling
-  const minValue = useMemo(() => Math.min(...data.map((d) => d.value), 0), [data]);
+  const minValue = useMemo(
+    () => Math.min(...data.map(d => d.value), 0),
+    [data]
+  );
   const maxValue = 0; // Zero line at top
 
   // Chart hover with tooltip
@@ -325,16 +382,12 @@ const DrawdownChart = ({
     chartPadding: 0,
     minValue,
     maxValue,
-    getYValue: (point) => point.value,
+    getYValue: point => point.value,
     buildHoverData: (point, x, y): DrawdownHoverData => ({
       chartType: "drawdown-recovery",
       x,
       y,
-      date: new Date(point.date).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      }),
+      date: formatDateLabel(point.date),
       drawdown: point.value,
     }),
   });
@@ -342,13 +395,11 @@ const DrawdownChart = ({
   // Normalize drawdown values to SVG coordinates
   // 0% drawdown = y:0 (top), maxDrawdown = y:height (bottom)
   const drawdownScale = Math.abs(minValue) || 15; // Use actual min or fallback to 15%
-  const points = data
-    .map((p) => {
-      const x = (p.x / 100) * width;
-      const y = (Math.abs(p.value) / drawdownScale) * height;
-      return `${x},${y}`;
-    })
-    .join(" L ");
+  const points = buildPath(
+    data,
+    width,
+    point => (Math.abs(point.value) / drawdownScale) * height
+  );
 
   return (
     <div className="relative w-full h-40 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
@@ -358,19 +409,7 @@ const DrawdownChart = ({
       {/* Zero Line (at top) */}
       <div className="absolute top-0 w-full h-px bg-gray-600" />
 
-      {/* Chart SVG with hover handlers */}
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-        className="absolute inset-0 w-full h-full"
-        onMouseMove={drawdownHover.handleMouseMove}
-        onMouseLeave={drawdownHover.handleMouseLeave}
-        onPointerMove={drawdownHover.handlePointerMove}
-        onPointerDown={drawdownHover.handlePointerDown}
-        onTouchMove={drawdownHover.handleTouchMove}
-        onTouchEnd={drawdownHover.handleTouchEnd}
-        style={{ touchAction: "none" }}
-      >
+      <ChartSurface width={width} height={height} handlers={drawdownHover}>
         <defs>
           <linearGradient id="drawdownGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
@@ -379,7 +418,10 @@ const DrawdownChart = ({
         </defs>
 
         {/* Drawdown Area */}
-        <path d={`M 0,0 L ${points} L ${width},0 Z`} fill="url(#drawdownGradient)" />
+        <path
+          d={`M 0,0 L ${points} L ${width},0 Z`}
+          fill="url(#drawdownGradient)"
+        />
 
         {/* Drawdown Line */}
         <path
@@ -392,7 +434,7 @@ const DrawdownChart = ({
 
         {/* Hover indicator */}
         <ChartIndicator hoveredPoint={drawdownHover.hoveredPoint} />
-      </svg>
+      </ChartSurface>
 
       {/* Y-Axis Labels */}
       <YAxisLabels labels={["0%", "-5%", "-10%", "-15%"]} />
@@ -436,17 +478,26 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
     { key: "ALL", days: 730, label: "ALL" },
   ];
 
-  const [selectedPeriod, setSelectedPeriod] = useState<AnalyticsTimePeriod>(TIME_PERIODS[3]!); // 1Y default
+  const defaultPeriod: AnalyticsTimePeriod = TIME_PERIODS.find(
+    period => period.key === "1Y"
+  ) ??
+    TIME_PERIODS[0] ?? { key: "1M", days: 30, label: "1M" };
+  const [selectedPeriod, setSelectedPeriod] =
+    useState<AnalyticsTimePeriod>(defaultPeriod);
   const [activeChartTab, setActiveChartTab] = useState<
     "performance" | "drawdown"
   >("performance");
 
   // Fetch real data
-  const { data, isLoading, error, refetch } = useAnalyticsData(userId, selectedPeriod);
+  const { data, isLoading, error, refetch } = useAnalyticsData(
+    userId,
+    selectedPeriod
+  );
 
   // Handle states
   if (isLoading) return <AnalyticsLoadingSkeleton />;
-  if (error || !data) return <AnalyticsErrorState error={error} onRetry={refetch} />;
+  if (error || !data)
+    return <AnalyticsErrorState error={error} onRetry={refetch} />;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -512,7 +563,9 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
         </div>
 
         <div className="p-4">
-          {activeChartTab === "performance" && <PerformanceChart chartData={data.performanceChart.points} />}
+          {activeChartTab === "performance" && (
+            <PerformanceChart chartData={data.performanceChart.points} />
+          )}
           {activeChartTab === "drawdown" && (
             <div className="space-y-3">
               <DrawdownChart
@@ -569,13 +622,15 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
                 {metric.label}
                 <Info className="w-3 h-3 text-gray-600 cursor-help" />
               </span>
-              <span className={`p-1 rounded ${
-                metric.trend === "up"
-                  ? "bg-green-500/10 text-green-400"
-                  : metric.trend === "down"
-                  ? "bg-red-500/10 text-red-400"
-                  : "bg-gray-500/10 text-gray-400"
-              }`}>
+              <span
+                className={`p-1 rounded ${
+                  metric.trend === "up"
+                    ? "bg-green-500/10 text-green-400"
+                    : metric.trend === "down"
+                      ? "bg-red-500/10 text-red-400"
+                      : "bg-gray-500/10 text-gray-400"
+                }`}
+              >
                 {metric.trend === "up" ? (
                   <ArrowUpRight className="w-3.5 h-3.5" />
                 ) : metric.trend === "down" ? (
@@ -618,7 +673,9 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
           label="Alpha"
           value={data.keyMetrics.alpha?.value || "N/A"}
           subValue={data.keyMetrics.alpha?.subValue || "Excess Return"}
-          {...(data.keyMetrics.alpha?.value?.startsWith('+') && { valueColor: "text-green-400" })}
+          {...(data.keyMetrics.alpha?.value?.startsWith("+") && {
+            valueColor: "text-green-400",
+          })}
         />
       </div>
 
@@ -637,16 +694,16 @@ export const AnalyticsView = ({ userId }: AnalyticsViewProps) => {
                     item.value > 0
                       ? "bg-green-500/20 text-green-300 border border-green-500/20"
                       : item.value < 0
-                      ? "bg-red-500/20 text-red-300 border border-red-500/20"
-                      : "bg-gray-800/50 text-gray-400 border border-gray-700/30"
+                        ? "bg-red-500/20 text-red-300 border border-red-500/20"
+                        : "bg-gray-800/50 text-gray-400 border border-gray-700/30"
                   }`}
                   style={{
                     opacity:
                       item.value > 0
                         ? Math.min(0.4 + item.value * 0.06, 1)
                         : item.value < 0
-                        ? Math.min(0.4 + Math.abs(item.value) * 0.1, 1)
-                        : 0.3,
+                          ? Math.min(0.4 + Math.abs(item.value) * 0.1, 1)
+                          : 0.3,
                   }}
                 >
                   {item.value > 0 ? "+" : ""}
