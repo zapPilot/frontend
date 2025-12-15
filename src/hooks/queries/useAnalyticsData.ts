@@ -6,7 +6,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import {
   aggregateMonthlyPnL,
@@ -61,14 +61,35 @@ export function useAnalyticsData(
   timePeriod: AnalyticsTimePeriod
 ): UseAnalyticsDataReturn {
   // ============================================================================
+  // PERIOD CHANGE DETECTION
+  // ============================================================================
+
+  // Track previous period to detect changes and force refetch
+  const prevPeriodRef = useRef<number>(timePeriod.days);
+  const periodChanged = prevPeriodRef.current !== timePeriod.days;
+
+  // Update ref after render
+  useEffect(() => {
+    prevPeriodRef.current = timePeriod.days;
+  }, [timePeriod.days]);
+
+  // ============================================================================
   // PRIMARY QUERY: Unified Dashboard (96% faster than 6 separate calls)
   // ============================================================================
 
-  const dashboardQuery = usePortfolioDashboard(userId, {
-    trend_days: timePeriod.days,
-    drawdown_days: timePeriod.days,
-    rolling_days: timePeriod.days,
-  });
+  const dashboardQuery = usePortfolioDashboard(
+    userId,
+    {
+      trend_days: timePeriod.days,
+      drawdown_days: timePeriod.days,
+      rolling_days: timePeriod.days,
+    },
+    {
+      // Force refetch when period changes to bypass staleTime cache
+      staleTime: periodChanged ? 0 : 2 * 60 * 1000,
+      refetchOnMount: periodChanged ? "always" : false,
+    }
+  );
 
   // ============================================================================
   // SECONDARY QUERY: Monthly PnL (conditional on dashboard success)
@@ -119,16 +140,16 @@ export function useAnalyticsData(
   // REFETCH HANDLER
   // ============================================================================
 
+  // ============================================================================
+  // REFETCH HANDLER
+  // ============================================================================
+
   const refetch = () => {
     void dashboardQuery.refetch();
     if (dashboardQuery.data) {
       void monthlyPnLQuery.refetch();
     }
   };
-
-  // ============================================================================
-  // RETURN
-  // ============================================================================
 
   return {
     data,
