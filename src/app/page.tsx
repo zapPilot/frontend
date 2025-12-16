@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-import { DashboardShell } from "@/components/DashboardShell";
 import { useUser } from "@/contexts/UserContext";
 
 export default function DashboardApp() {
@@ -29,17 +28,31 @@ export default function DashboardApp() {
     }
   }, [isConnected, userInfo?.userId, router]);
 
-  // While redirecting from root to /bundle, avoid mounting heavy components
+  // While redirecting from root to /bundle, show simple loading state
   const isOnRoot =
     typeof window !== "undefined" && window.location.pathname === "/";
   const pendingRedirect = isOnRoot && isConnected && !!userInfo?.userId;
 
+  if (pendingRedirect) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-lg">Opening your bundle...</div>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-purple-500 border-t-transparent mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  // Default landing page - simple wallet connection prompt
   return (
-    <DashboardShell
-      pendingState={{
-        isPending: pendingRedirect,
-        message: "Opening your bundle...",
-      }}
-    />
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="mb-4 text-4xl font-bold">Welcome to Zap Pilot</h1>
+        <p className="text-lg text-gray-400">
+          Connect your wallet to view your portfolio
+        </p>
+      </div>
+    </div>
   );
 }

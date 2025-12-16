@@ -21,20 +21,20 @@ export const FEATURE_FLAGS = {
   /**
    * V22 Layout Migration
    *
-   * Enables the new V22 portfolio layout with:
-   * - Dashboard with real-time regime detection
-   * - Portfolio composition visualization
-   * - Analytics tab (mock data)
-   * - Backtesting tab (mock data)
+   * @deprecated V22 is now the default layout. This flag is no longer used.
+   * V22 was deployed via hard cutover on 2025-12-16.
    *
-   * Rollout Plan:
-   * - Week 1: Internal testing (manually enable via .env.local)
-   * - Week 2: Canary (10% of users)
-   * - Week 2-3: Gradual rollout (10% → 25% → 50% → 100%)
+   * Keep this definition for backward compatibility until confirmed no other
+   * references exist in the codebase.
    *
-   * @default false
+   * Migration Complete:
+   * - /bundle route now uses V22 layout by default
+   * - Feature flag logic removed from BundlePageEntry.tsx
+   * - Percentage rollout system deprecated (isUserInV22Rollout removed)
+   *
+   * @default true (always enabled, env var ignored)
    */
-  USE_V22_LAYOUT: process.env["NEXT_PUBLIC_USE_V22_LAYOUT"] === "true",
+  USE_V22_LAYOUT: true,
 
   /**
    * Regime History Tracking
@@ -101,49 +101,6 @@ export function getEnabledFeatures(): Record<string, boolean> {
       },
       {} as Record<string, boolean>
     );
-}
-
-/**
- * Percentage-based V22 feature rollout
- *
- * Deterministic hash ensures same user always gets same experience.
- * Useful for gradual rollout: 10% → 25% → 50% → 75% → 90% → 100%
- *
- * @param userId - User ID (wallet address) for deterministic hashing
- * @returns True if user should see V22 layout
- *
- * @example
- * ```typescript
- * // In BundlePageEntry.tsx
- * const shouldUseV22 = isUserInV22Rollout(userId);
- * ```
- *
- * Environment Variables:
- * - NEXT_PUBLIC_USE_V22_LAYOUT: Master switch (must be 'true')
- * - NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE: Rollout percentage (0-100, default: 100)
- */
-export function isUserInV22Rollout(userId: string): boolean {
-  // Always respect explicit flag first
-  if (!FEATURE_FLAGS.USE_V22_LAYOUT) return false;
-
-  const percentage = parseInt(
-    process.env["NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE"] || "100",
-    10
-  );
-
-  // Full rollout
-  if (percentage >= 100) return true;
-
-  // No rollout
-  if (percentage <= 0) return false;
-
-  // Deterministic hash for stable rollout
-  // Same user always gets same result
-  const hash = userId.split("").reduce((acc, char) => {
-    return acc + char.charCodeAt(0);
-  }, 0);
-
-  return hash % 100 < percentage;
 }
 
 /**

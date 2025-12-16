@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 import { MOCK_DATA } from "@/components/wallet/variations/mockPortfolioData";
 import {
@@ -14,19 +15,11 @@ import { usePortfolioDataV22 } from "@/hooks/queries/usePortfolioDataV22";
 const DEFAULT_DEMO_UUID = "5fc63d4e-4e07-47d8-840b-ccd3420d553f";
 
 /**
- * V22 Layout Demo Page
+ * V22 Layout Demo Page Content
  *
- * Demonstrates the V22 portfolio layout with real API data.
- * Uses UUID query parameter for user identification (matches production bundle route).
- *
- * @example
- * // With explicit UUID
- * http://localhost:3000/layout-demo/v22?userId=5fc63d4e-4e07-47d8-840b-ccd3420d553f
- *
- * // Without parameter (uses fallback UUID)
- * http://localhost:3000/layout-demo/v22
+ * Inner component that uses useSearchParams() - wrapped in Suspense boundary
  */
-export default function LayoutDemoV22Page() {
+function LayoutDemoV22Content() {
   const searchParams = useSearchParams();
 
   // Read userId from URL query parameter (UUID format required)
@@ -48,4 +41,25 @@ export default function LayoutDemoV22Page() {
   const portfolioData = data ?? MOCK_DATA;
 
   return <WalletPortfolioPresenterV22 data={portfolioData} userId={userId} />;
+}
+
+/**
+ * V22 Layout Demo Page
+ *
+ * Demonstrates the V22 portfolio layout with real API data.
+ * Uses UUID query parameter for user identification (matches production bundle route).
+ *
+ * @example
+ * // With explicit UUID
+ * http://localhost:3000/layout-demo/v22?userId=5fc63d4e-4e07-47d8-840b-ccd3420d553f
+ *
+ * // Without parameter (uses fallback UUID)
+ * http://localhost:3000/layout-demo/v22
+ */
+export default function LayoutDemoV22Page() {
+  return (
+    <Suspense fallback={<LoadingStateV22 />}>
+      <LayoutDemoV22Content />
+    </Suspense>
+  );
 }

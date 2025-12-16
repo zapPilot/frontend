@@ -498,42 +498,90 @@ src/components/WalletManager/components/ConnectWalletButton.tsx (ARIA props)
 
 ## 🎨 Phase 3: V22 Layout Migration Strategy
 
+### Important: Two Separate Routes
+
+**⚠️ CRITICAL DISTINCTION:**
+
+This migration involves **TWO SEPARATE ROUTES** with different purposes:
+
+1. **`/layout-demo/v22` - Standalone Testing Route**
+   - **Purpose:** Development and QA testing environment
+   - **Feature Flags:** NONE - Always shows V22 layout
+   - **URL Structure:** `/layout-demo/v22?userId={userId}&walletId={walletId}`
+   - **Status:** Already exists and fully functional
+   - **Migration Impact:** None - this route is independent of production migration
+   - **Post-Migration:** Can optionally be kept for ongoing comparison/testing
+
+2. **`/bundle` - Production Route (Migration Target)**
+   - **Purpose:** User-facing bundle sharing with gradual V1→V22 migration
+   - **Feature Flags:** YES - Uses `NEXT_PUBLIC_USE_V22_LAYOUT` + `NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE`
+   - **URL Structure:** `/bundle?userId={userId}&walletId={walletId}` (same URL for V1 and V22)
+   - **Status:** Currently V1, migrating to V22 via feature flags
+   - **Migration Impact:** HIGH - This is the main migration focus
+   - **Post-Migration:** Feature flags removed, V22 becomes permanent
+
+**Key Takeaway:** Feature flag system ONLY applies to `/bundle` route. The `/layout-demo/v22` route exists independently as a testing tool.
+
+---
+
 ### 3.1 Route Architecture & V1 Deprecation Strategy
 
 **Current State:**
 
-- Demo V22 implementation: `/layout-demo/v22?userId={userId}`
-- Legacy V1 routes: `/`, `/bundle`, `/analytics` (existing implementation)
+- **Demo/Testing Route:** `/layout-demo/v22?userId={userId}` (standalone, no flags)
+- **Production Routes:** `/`, `/bundle`, `/analytics` (V1, will use feature flags for migration)
 - V1 components: `src/components/PortfolioAllocation/`, `src/components/SwapPage/`, etc.
 
 **Target State:**
 
-- V22 becomes primary: `/` (root), `/analytics`, `/backtesting`
-- Legacy V1: Deprecated and removed
-- Demo route: `/layout-demo/v22` removed after migration
+- **Production Routes:** V22 becomes primary at `/` (root), `/analytics`, `/backtesting`, `/bundle`
+- **Legacy V1:** Deprecated and removed from production routes
+- **Demo Route:** `/layout-demo/v22` optionally kept as permanent testing/comparison tool
 
 **V1 Deprecation Decision Matrix:**
 
 **Critical Question:** Should we keep V1 alongside V22 or fully replace?
 
-**Option A: Hard Cutover (Recommended)**
+**Option A: Immediate Hard Cutover (Fastest & Simplest) ⭐ RECOMMENDED IF CONFIDENT**
+
+```
+Timeline:
+Day 1: Copy V22 components to production routing
+  - Move BundlePageClientV22 logic directly into BundlePageEntry
+  - Delete BundlePageClient (V1)
+  - Deploy to production
+Day 2-3: Monitor closely (error logs, user feedback)
+Day 4-7: Remove V1 code and variations backup
+```
+
+- **Pros**:
+  - ✅ Fastest (1 day vs 2-3 weeks)
+  - ✅ Simplest (no feature flags needed)
+  - ✅ Clean architecture immediately
+  - ✅ V22 already proven at `/layout-demo/v22`
+- **Cons**:
+  - ❌ All users affected immediately if bugs exist
+  - ❌ Rollback requires git revert + redeploy (~5-10 min)
+  - ❌ No gradual monitoring
+- **Risk Level**: Medium (mitigated by extensive E2E tests already passing)
+- **Best For**: Confident teams, well-tested code, low-traffic periods
+
+**Option B: Hard Cutover with Feature Flag (Conservative)**
 
 ```
 Timeline:
 Week 1-2: Finalize V22 with real data
 Week 3: Deploy V22 to staging, test thoroughly
-Week 4: Cutover production routes:
-  / → V22 Dashboard
-  /analytics → V22 Analytics
-  /backtesting → V22 Backtesting
-Week 5: Remove V1 code, tests, and /layout-demo/v22 route
+Week 4: Cutover production routes with feature flag as safety net
+Week 5: Remove V1 code after monitoring
 ```
 
-- **Pros**: Clean architecture, no maintenance overhead, clear user experience
-- **Cons**: Risky if V22 has bugs, no easy rollback
-- **Mitigation**: Deploy behind feature flag first, gradual rollout
+- **Pros**: Safety net for rollback, gradual confidence building
+- **Cons**: More complex, slower
+- **Risk Level**: Low
+- **Best For**: Risk-averse teams, high-traffic applications
 
-**Option B: Parallel Maintenance (30-day overlap)**
+**Option C: Parallel Maintenance (30-day overlap)**
 
 ```
 Timeline:
@@ -545,9 +593,10 @@ Week 10-12: Archive V1 code, remove after 30-day grace period
 
 - **Pros**: Safe rollback option, users can switch if issues
 - **Cons**: 2x maintenance, confusion, technical debt accumulates
-- **Mitigation**: Clear deprecation banners, forced migration date
+- **Risk Level**: Very Low
+- **Best For**: Large user base, critical applications
 
-**Option C: Feature Flag Gradual Rollout (Most Conservative)**
+**Option D: Feature Flag Gradual Rollout (Most Conservative)**
 
 ```
 Timeline:
@@ -560,9 +609,137 @@ Week 9: Remove V1 code and flag logic
 
 - **Pros**: Safest rollout, data-driven decision, easy rollback
 - **Cons**: Complex implementation, flag management overhead
-- **Mitigation**: Clear metrics dashboard, automated rollback triggers
+- **Risk Level**: Lowest
+- **Best For**: Mission-critical apps, first major migration
 
-**Recommended Strategy:** **Option C (Feature Flag) → Option A (Hard Cutover)**
+---
+
+**Recommended Strategy:**
+
+**For This Project: Option A (Immediate Hard Cutover)** ⭐
+
+**Rationale:**
+1. ✅ **V22 already proven:** Fully functional at `/layout-demo/v22`
+2. ✅ **163 E2E tests passing:** Comprehensive test coverage
+3. ✅ **Real data wired:** Dashboard + Analytics working
+4. ✅ **Multi-wallet tested:** Phase 2 integration complete
+5. ✅ **Bundle sharing tested:** Owner/visitor modes working
+6. ✅ **No database changes:** Zero data migration risk
+7. ✅ **Fast rollback:** Git revert + redeploy in 5-10 minutes
+
+**Why NOT feature flags:**
+- Adds complexity without significant safety benefit
+- 2-3 week rollout when we could deploy in 1 day
+- V22 has been battle-tested enough at demo route
+
+**Fallback Plan:**
+- If hard cutover reveals issues → git revert → redeploy V1
+- Monitor first 48 hours closely
+- Keep V1 code in git history for 30 days
+
+**Alternative:** Use **Option D** only if post-deployment you discover issues and need controlled rollback
+
+---
+
+### 3.1.1 Option A Implementation (Immediate Hard Cutover)
+
+**If choosing Option A, follow this simplified plan instead of Phase 3A-3F:**
+
+**Day 1: Deploy V22 to Production**
+
+1. **Simplify BundlePageEntry.tsx** - Remove feature flag logic, hardcode V22:
+   ```typescript
+   "use client";
+   import { useSearchParams } from "next/navigation";
+   import { BundlePageClientV22 } from "./BundlePageClientV22";
+   import { logger } from "../../utils/logger";
+
+   export function BundlePageEntry() {
+     const searchParams = useSearchParams();
+
+     let userId = "";
+     let walletId: string | null = null;
+     if (searchParams) {
+       try {
+         userId = searchParams.get("userId") ?? "";
+         walletId = searchParams.get("walletId");
+       } catch (error) {
+         if (process.env.NODE_ENV !== "production") {
+           logger.error("Failed to read search params", error, "BundlePageEntry");
+         }
+       }
+     }
+
+     // V22 layout (no feature flags needed)
+     return walletId
+       ? <BundlePageClientV22 userId={userId} walletId={walletId} />
+       : <BundlePageClientV22 userId={userId} />;
+   }
+   ```
+
+2. **Delete V1 components:**
+   ```bash
+   git rm src/app/bundle/BundlePageClient.tsx
+   git rm src/components/DashboardShell.tsx
+   git rm src/components/Navigation.tsx
+   ```
+
+3. **Commit and deploy:**
+   ```bash
+   git add .
+   git commit -m "feat(v22): Deploy V22 to production (hard cutover)
+
+   - Replace V1 bundle routing with V22
+   - Remove feature flag logic (not needed)
+   - Delete V1 components
+   - Keep /layout-demo/v22 as testing route
+
+   Rollback plan: git revert HEAD && git push origin main"
+
+   git push origin main
+   ```
+
+**Day 2-3: Monitor Production**
+
+- ✅ Check error logs (Sentry/Vercel)
+- ✅ Monitor page load times
+- ✅ Review user feedback/support tickets
+- ✅ Test bundle sharing URLs manually
+- ✅ Verify multi-wallet switching works
+
+**Day 4-7: Cleanup (if stable)**
+
+```bash
+# Remove variations backup
+git rm -r src/components/wallet/variations/
+
+# Remove V1 tests
+git rm -rf tests/unit/PortfolioAllocation/
+
+# Commit cleanup
+git commit -m "chore(v22): Remove V1 backup files after successful migration"
+git push origin main
+```
+
+**Rollback Procedure (if needed):**
+
+```bash
+# Revert the deployment commit
+git revert HEAD
+git push origin main
+
+# Vercel/deployment platform will auto-deploy V1
+# Downtime: ~3-5 minutes
+```
+
+**Success Criteria:**
+- Zero P0/P1 bugs in first 48 hours
+- Error rate < 1%
+- No increase in support tickets
+- Bundle sharing URLs working
+- Multi-wallet switching working
+
+---
 
 ### 3.2 V1 Code Removal Checklist
 
@@ -572,11 +749,16 @@ Week 9: Remove V1 code and flag logic
 
 ```
 src/app/
-├── layout-demo/v22/           # DELETE after migration
-├── bundle/                    # MIGRATE to V22 bundle sharing
+├── layout-demo/v22/           # OPTIONAL: Can keep as testing route or delete
+├── bundle/                    # MIGRATE to V22 (feature flag routing, not deletion)
 ├── (legacy analytics route)   # REPLACE with V22 Analytics
 └── page.tsx                   # REPLACE with V22 Dashboard
 ```
+
+**Note:** The `/layout-demo/v22` route is independent of the production migration. It can be:
+- **Kept permanently:** Useful for ongoing testing and comparison
+- **Deleted post-migration:** If no longer needed for QA purposes
+- **Decision:** Make after Phase 3F (cleanup) based on team preferences
 
 **Components to Remove:**
 
@@ -642,8 +824,11 @@ src/app/
 ├── page.tsx                   # Conditional: V22 or V1 based on flag
 ├── analytics/page.tsx         # Conditional: V22 or V1
 ├── backtesting/page.tsx       # V22 only (new feature)
-└── layout-demo/v22/           # Keep temporarily for comparison
+├── bundle/                    # Feature flag routing in BundlePageEntry.tsx
+└── layout-demo/v22/           # Standalone testing route (no flags, independent)
 ```
+
+**Note:** `/layout-demo/v22` is NOT affected by feature flags. It's a permanent testing route that always shows V22 for development and QA purposes.
 
 **Step 3: Gradual Rollout (10% → 50% → 100%)**
 
@@ -681,12 +866,23 @@ window.addEventListener("error", event => {
 
 ```bash
 # After 100% rollout + 2 weeks observation
-git rm -rf src/app/layout-demo/v22/  # Remove demo route
+
+# OPTIONAL: Remove demo route (decision based on team preference)
+# git rm -rf src/app/layout-demo/v22/  # Can keep for ongoing testing
+
+# Remove V1 production code
 git rm -rf src/components/PortfolioAllocation/
 git rm -rf src/components/SwapPage/
 git rm -rf tests/unit/PortfolioAllocation/
-git rm src/config/featureFlags.ts  # Remove flag logic
+
+# Remove feature flag system (no longer needed for /bundle route)
+git rm src/config/featureFlags.ts  # Remove isUserInV22Rollout function
 ```
+
+**Demo Route Decision:**
+- **Keep:** Useful as permanent testing environment for V22 vs future versions
+- **Remove:** Simplifies codebase if no longer needed for QA
+- **Recommendation:** Keep until team confirms it's no longer useful
 
 **Phase 3.2.3 - Deprecation Communication:**
 
@@ -1311,11 +1507,19 @@ Does data come from backend API?
 
 ```bash
 # After V22 cutover
-git rm -rf src/app/layout-demo/v22/        # Demo route (no longer needed)
-git rm -rf src/app/bundle/                 # Legacy bundle route
+
+# OPTIONAL: Demo route (can keep as permanent testing tool)
+# git rm -rf src/app/layout-demo/v22/
+
+# Legacy V1 bundle client (replaced by BundlePageClientV22.tsx)
+git rm src/app/bundle/BundlePageClient.tsx
+
+# Transform existing routes (don't delete, update to V22)
 # src/app/page.tsx → REPLACE with V22 Dashboard (don't delete, transform)
 # src/app/analytics/ → REPLACE with V22 Analytics (don't delete, transform)
 ```
+
+**Note:** `/layout-demo/v22` is independent of production migration. Keep as testing tool or remove based on team preference.
 
 **Components to Delete:**
 
