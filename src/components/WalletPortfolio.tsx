@@ -1,6 +1,7 @@
 "use client";
 
-import { WalletPortfolioPresenterV22Container } from "@/components/wallet/WalletPortfolioPresenterV22Container";
+import { WalletPortfolioPresenter } from "@/components/wallet/WalletPortfolioPresenter";
+import { useWalletPortfolioState } from "@/hooks/useWalletPortfolioState";
 
 interface WalletPortfolioProps {
   urlUserId?: string;
@@ -18,20 +19,22 @@ export function WalletPortfolio({
   onOptimizeClick,
   onZapInClick,
   onZapOutClick,
+  onCategoryClick,
   isOwnBundle,
+  bundleUserName,
+  bundleUrl,
 }: WalletPortfolioProps = {}) {
-  // V22 Layout: Use new portfolio presenter with real data transformation
-  // Build props object with only defined values (strict exactOptionalPropertyTypes)
-  const v22Props: Parameters<typeof WalletPortfolioPresenterV22Container>[0] = {
-    userId: urlUserId ?? null,
-    ...(onOptimizeClick && { onOptimizeClick }),
-    ...(onZapInClick && { onZapInClick }),
-    ...(onZapOutClick && { onZapOutClick }),
-    ...(typeof isOwnBundle !== "undefined" && { isOwnBundle }),
-    ...(typeof isOwnBundle !== "undefined" && {
-      isVisitorMode: !isOwnBundle,
-    }),
-  };
+  const vm = useWalletPortfolioState({
+    ...(urlUserId ? { urlUserId } : {}),
+    ...(onOptimizeClick ? { onOptimizeClick } : {}),
+    ...(onZapInClick ? { onZapInClick } : {}),
+    ...(onZapOutClick ? { onZapOutClick } : {}),
+    ...(onCategoryClick ? { onCategoryClick } : {}),
+    ...(typeof isOwnBundle !== "undefined" ? { isOwnBundle } : {}),
+    ...(bundleUserName ? { bundleUserName } : {}),
+    ...(bundleUrl ? { bundleUrl } : {}),
+  });
 
-  return <WalletPortfolioPresenterV22Container {...v22Props} />;
+  // V1 Layout: Legacy portfolio presenter (default)
+  return <WalletPortfolioPresenter vm={vm} />;
 }

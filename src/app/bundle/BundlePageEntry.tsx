@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 
 import { logger } from "../../utils/logger";
-import { BundlePageClientV22 } from "./BundlePageClientV22";
+import { BundlePageClient } from "./BundlePageClient";
 
 export function BundlePageEntry() {
   const searchParams = useSearchParams();
@@ -21,10 +21,10 @@ export function BundlePageEntry() {
     }
   }
 
-  // V22 layout with horizontal navigation and 3 tabs
+  // V1 layout (default)
   return walletId ? (
-    <BundlePageClientV22 userId={userId} walletId={walletId} />
+    <BundlePageClient userId={userId} walletId={walletId} />
   ) : (
-    <BundlePageClientV22 userId={userId} />
+    <BundlePageClient userId={userId} />
   );
 }
