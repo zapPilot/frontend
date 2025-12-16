@@ -31,6 +31,8 @@ const TOAST_MESSAGES = {
   DELETION_FAILED: "Deletion Failed",
 } as const;
 
+const EMPTY_CONNECTED_WALLETS: WalletData[] = [];
+
 interface UseWalletOperationsParams {
   viewingUserId: string;
   realUserId: string;
@@ -48,7 +50,10 @@ export const useWalletOperations = ({
   const { refetch } = useUser();
   const { showToast } = useToast();
   const { disconnect, isConnected } = useWallet();
-  const { connectedWallets, switchActiveWallet } = useWalletProvider();
+  const {
+    connectedWallets = EMPTY_CONNECTED_WALLETS,
+    switchActiveWallet = () => Promise.resolve(),
+  } = useWalletProvider();
 
   // State
   const [wallets, setWallets] = useState<WalletData[]>([]);

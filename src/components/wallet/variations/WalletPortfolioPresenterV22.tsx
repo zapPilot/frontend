@@ -109,7 +109,7 @@ export function WalletPortfolioPresenterV22({
   );
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30">
+    <div className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30" data-testid="v22-dashboard">
       {/* --- TOP NAVIGATION (Minimalist) --- */}
       <nav className="h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -129,7 +129,10 @@ export function WalletPortfolioPresenterV22({
           ].map(tab => (
             <button
               key={tab.id}
+              data-testid={`v22-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
+              role="button"
+              aria-label={`${tab.label} tab`}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
                 activeTab === tab.id
                   ? "bg-gradient-to-r from-purple-500/10 to-blue-600/10 border border-purple-500/30 text-white shadow-sm"
@@ -147,6 +150,7 @@ export function WalletPortfolioPresenterV22({
           {hasMultipleWallets && (
             <div className="relative" ref={dropdownRef}>
               <button
+                data-testid="wallet-switcher-button"
                 onClick={() => setShowWalletSwitcher(!showWalletSwitcher)}
                 className="px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-purple-500/30 text-xs font-bold flex items-center gap-2"
                 aria-expanded={showWalletSwitcher}
@@ -160,6 +164,7 @@ export function WalletPortfolioPresenterV22({
               <AnimatePresence>
                 {showWalletSwitcher && (
                   <motion.div
+                    data-testid="wallet-switcher-dropdown"
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
@@ -171,6 +176,7 @@ export function WalletPortfolioPresenterV22({
                     {connectedWallets.map(wallet => (
                       <button
                         key={wallet.address}
+                        data-testid={`wallet-option-${wallet.address}`}
                         onClick={async () => {
                           setIsSwitchingWallet(true);
                           try {
@@ -192,7 +198,7 @@ export function WalletPortfolioPresenterV22({
                             {formatAddress(wallet.address)}
                           </span>
                           {wallet.isActive && (
-                            <span className="text-xs text-purple-400 font-bold flex items-center gap-1">
+                            <span className="text-xs text-purple-400 font-bold flex items-center gap-1" data-testid="active-wallet-indicator">
                               <Zap
                                 className="w-3 h-3 inline"
                                 aria-hidden="true"
@@ -210,17 +216,19 @@ export function WalletPortfolioPresenterV22({
           )}
 
           <button
+            data-testid="settings-button"
             onClick={() => setIsSettingsOpen(true)}
             className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
           >
             <Settings className="w-4 h-4" />
           </button>
-          <div
+          <button
+            data-testid="wallet-manager-button"
             onClick={() => setIsWalletManagerOpen(true)}
             className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
           >
             <Wallet className="w-4 h-4" />
-          </div>
+          </button>
         </div>
       </nav>
 
@@ -228,7 +236,7 @@ export function WalletPortfolioPresenterV22({
       <main className="flex-1 flex justify-center p-4 md:p-8">
         <div className="w-full max-w-4xl flex flex-col gap-8 min-h-[600px]">
           {activeTab === "dashboard" && (
-            <>
+            <div data-testid="dashboard-content">
               {/* HERO SECTION: Balance + Expandable Strategy Card */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Balance Card */}
@@ -238,11 +246,11 @@ export function WalletPortfolioPresenterV22({
                   </div>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="flex-1">
-                      <div className="text-5xl font-bold text-white tracking-tight mb-4">
+                      <div className="text-5xl font-bold text-white tracking-tight mb-4" data-testid="net-worth">
                         ${data.balance.toLocaleString()}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1">
+                        <span className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1" data-testid="performance-change">
                           <ArrowUpRight className="w-3 h-3" /> {data.roi}%
                         </span>
                         <span className="text-xs text-gray-500">
@@ -255,12 +263,14 @@ export function WalletPortfolioPresenterV22({
                   {/* Quick Actions - Moved to top for visibility on mobile */}
                   <div className="grid grid-cols-2 gap-3">
                     <button
+                      data-testid="deposit-button"
                       onClick={() => setActiveModal("deposit")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-bold rounded-lg transition-colors border border-green-500/20"
                     >
                       <ArrowDownCircle className="w-4 h-4" /> Deposit
                     </button>
                     <button
+                      data-testid="withdraw-button"
                       onClick={() => setActiveModal("withdraw")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-lg transition-colors border border-red-500/20"
                     >
@@ -271,6 +281,7 @@ export function WalletPortfolioPresenterV22({
 
                 {/* EXPANDABLE STRATEGY CARD */}
                 <motion.div
+                  data-testid="strategy-card"
                   layout
                   className={`bg-gray-900/40 backdrop-blur-sm border rounded-2xl p-8 relative overflow-hidden group cursor-pointer transition-all duration-200 ${
                     isStrategyExpanded
@@ -291,7 +302,7 @@ export function WalletPortfolioPresenterV22({
                   >
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0">
-                        <span style={{ color: currentRegime.fillColor }}>
+                        <span style={{ color: currentRegime.fillColor }} data-testid="regime-badge">
                           {data.currentRegime.toUpperCase()}
                         </span>
                       </div>
@@ -351,7 +362,7 @@ export function WalletPortfolioPresenterV22({
                       >
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           {/* Left: Regime Spectrum */}
-                          <div>
+                          <div data-testid="regime-spectrum">
                             <h4 className="text-sm font-bold text-white mb-4">
                               Market Cycle Position
                             </h4>
@@ -449,7 +460,7 @@ export function WalletPortfolioPresenterV22({
               </div>
 
               {/* UNIFIED COMPOSITION BAR (V21 Style) - Only visible in Dashboard */}
-              <div className="bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden">
+              <div className="bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden" data-testid="composition-bar">
                 <div className="flex justify-between items-end mb-8">
                   <div>
                     <h2 className="text-xl font-bold text-white mb-1">
@@ -468,6 +479,7 @@ export function WalletPortfolioPresenterV22({
                   </div>
                   <div className="flex gap-2">
                     <GradientButton
+                      data-testid="optimize-button"
                       gradient={GRADIENTS.PRIMARY}
                       icon={Zap}
                       className="h-8 text-xs"
@@ -503,6 +515,7 @@ export function WalletPortfolioPresenterV22({
                       {data.currentAllocation.simplifiedCrypto.map(asset => (
                         <motion.div
                           key={asset.symbol}
+                          data-testid={`composition-${asset.symbol.toLowerCase()}`}
                           className="h-full rounded-lg relative group overflow-hidden cursor-pointer"
                           style={{
                             flex: asset.value,
@@ -525,6 +538,7 @@ export function WalletPortfolioPresenterV22({
 
                     {/* Stable Section */}
                     <motion.div
+                      data-testid="composition-stables"
                       className="h-full rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative group"
                       style={{
                         width: `${data.currentAllocation.stable}%`,
@@ -568,16 +582,22 @@ export function WalletPortfolioPresenterV22({
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* Analytics View */}
           {activeTab === "analytics" && userId && (
-            <AnalyticsView userId={userId} />
+            <div data-testid="analytics-content">
+              <AnalyticsView userId={userId} />
+            </div>
           )}
 
           {/* Backtesting View */}
-          {activeTab === "backtesting" && <BacktestingView />}
+          {activeTab === "backtesting" && (
+            <div data-testid="backtesting-content">
+              <BacktestingView />
+            </div>
+          )}
         </div>
       </main>
 

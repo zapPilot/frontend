@@ -17,7 +17,7 @@ import { ChartGridLines, ChartSurface } from "./ChartUI";
 /**
  * Performance chart data point
  */
-export interface PerformanceChartDataPoint {
+interface PerformanceChartDataPoint {
   x: number;
   portfolio: number;
   btc: number;
@@ -28,7 +28,7 @@ export interface PerformanceChartDataPoint {
 /**
  * Performance Chart Props
  */
-export interface PerformanceChartProps {
+interface PerformanceChartProps {
   chartData: PerformanceChartDataPoint[];
   startDate: string;
   endDate: string;

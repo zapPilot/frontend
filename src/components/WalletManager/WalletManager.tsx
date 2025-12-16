@@ -30,7 +30,7 @@ const WalletManagerComponent = ({
   onEmailSubscribed,
 }: WalletManagerProps) => {
   const { userInfo, loading, error, isConnected, refetch } = useUser();
-  const { connectedWallets } = useWalletProvider();
+  const { connectedWallets = [] } = useWalletProvider();
 
   // User identification logic
   const realUserId = userInfo?.userId; // Authenticated user (for operations)

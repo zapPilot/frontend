@@ -15,44 +15,23 @@ import type { AnalyticsTimePeriod } from "@/types/analytics";
 import { AnalyticsView } from "./AnalyticsView";
 import { AnalyticsErrorState } from "./components/AnalyticsErrorState";
 import { AnalyticsLoadingSkeleton } from "./components/AnalyticsLoadingSkeleton";
+import { DEFAULT_ANALYTICS_PERIOD } from "./constants";
 
 /**
  * Analytics View Container Props
  */
-export interface AnalyticsViewContainerProps {
+interface AnalyticsViewContainerProps {
   userId: string;
 }
 
 /**
  * Time period definitions
  */
-const TIME_PERIODS: AnalyticsTimePeriod[] = [
-  { key: "1M", days: 30, label: "1M" },
-  { key: "3M", days: 90, label: "3M" },
-  { key: "6M", days: 180, label: "6M" },
-  { key: "1Y", days: 365, label: "1Y" },
-  { key: "ALL", days: 730, label: "ALL" },
-];
-
-/**
- * Analytics View Container
- *
- * Manages:
- * - Time period state
- * - Chart tab state
- * - Data fetching via useAnalyticsData
- * - Loading/error states
- *
- * Delegates rendering to AnalyticsView presentation component.
- */
 export const AnalyticsViewContainer = ({
   userId,
 }: AnalyticsViewContainerProps) => {
   // Find default period (1Y)
-  const defaultPeriod: AnalyticsTimePeriod = TIME_PERIODS.find(
-    period => period.key === "1Y"
-  ) ??
-    TIME_PERIODS[0] ?? { key: "1M", days: 30, label: "1M" };
+  const defaultPeriod: AnalyticsTimePeriod = DEFAULT_ANALYTICS_PERIOD;
 
   // State management
   const [selectedPeriod, setSelectedPeriod] =

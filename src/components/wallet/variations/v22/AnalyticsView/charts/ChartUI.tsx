@@ -43,7 +43,7 @@ export const YAxisLabels = ({
 /**
  * Chart hover handlers interface
  */
-export interface ChartHoverHandlers {
+interface ChartHoverHandlers {
   handleMouseMove: (event: React.MouseEvent<SVGSVGElement>) => void;
   handleMouseLeave: (event?: React.MouseEvent<SVGSVGElement>) => void;
   handlePointerMove: (event: React.PointerEvent<SVGSVGElement>) => void;

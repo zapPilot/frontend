@@ -9,7 +9,7 @@ import { Info } from "lucide-react";
 /**
  * Analytics Error State Props
  */
-export interface AnalyticsErrorStateProps {
+interface AnalyticsErrorStateProps {
   /** Error object (may be null) */
   error: Error | null;
   /** Retry callback */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -39,6 +39,25 @@ interface UseBundlePageResult {
     closeWalletManager: () => void;
     onEmailSubscribed: () => void;
   };
+}
+
+const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
+const NOOP_SWITCH_ACTIVE_WALLET = () => Promise.resolve();
+
+function useSafeQueryClient(fallback: QueryClient) {
+  try {
+    return useQueryClient();
+  } catch {
+    return fallback;
+  }
+}
+
+function useSafeWalletProvider() {
+  try {
+    return useWalletProvider();
+  } catch {
+    return null;
+  }
 }
 
 // Pure helpers extracted for clarity and testability
@@ -102,9 +121,14 @@ export function useBundlePage(
   walletId?: string
 ): UseBundlePageResult {
   const router = useRouter();
-  const queryClient = useQueryClient();
+  const fallbackQueryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = useSafeQueryClient(fallbackQueryClient);
   const { userInfo, isConnected, connectedWallet, loading } = useUser();
-  const { switchActiveWallet, connectedWallets } = useWalletProvider();
+  const walletContext = useSafeWalletProvider();
+  const connectedWallets =
+    walletContext?.connectedWallets ?? EMPTY_CONNECTED_WALLETS;
+  const switchActiveWallet =
+    walletContext?.switchActiveWallet ?? NOOP_SWITCH_ACTIVE_WALLET;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);

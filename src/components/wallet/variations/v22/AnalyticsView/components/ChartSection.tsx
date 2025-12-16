@@ -11,17 +11,7 @@ import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { DrawdownChart } from "../charts/DrawdownChart";
 import { PerformanceChart } from "../charts/PerformanceChart";
-
-/**
- * Time period definitions
- */
-const TIME_PERIODS: AnalyticsTimePeriod[] = [
-  { key: "1M", days: 30, label: "1M" },
-  { key: "3M", days: 90, label: "3M" },
-  { key: "6M", days: 180, label: "6M" },
-  { key: "1Y", days: 365, label: "1Y" },
-  { key: "ALL", days: 730, label: "ALL" },
-];
+import { ANALYTICS_TIME_PERIODS } from "../constants";
 
 /**
  * Chart tab definition
@@ -40,7 +30,7 @@ const CHART_TABS: ChartTab[] = [
 /**
  * Chart Section Props
  */
-export interface ChartSectionProps {
+interface ChartSectionProps {
   data: AnalyticsData;
   selectedPeriod: AnalyticsTimePeriod;
   activeChartTab: "performance" | "drawdown";
@@ -85,7 +75,7 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
 
       {/* Time Period Selector */}
       <div className="flex gap-2">
-        {TIME_PERIODS.map(period => (
+        {ANALYTICS_TIME_PERIODS.map(period => (
           <button
             key={period.key}
             onClick={() => onPeriodChange(period)}

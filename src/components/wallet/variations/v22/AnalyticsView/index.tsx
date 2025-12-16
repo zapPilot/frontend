@@ -5,6 +5,3 @@
  */
 
 export { AnalyticsViewContainer as AnalyticsView } from "./AnalyticsViewContainer";
-
-// Re-export types for external use
-export type { AnalyticsViewContainerProps as AnalyticsViewProps } from "./AnalyticsViewContainer";

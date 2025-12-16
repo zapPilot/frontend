@@ -11,7 +11,7 @@ import { BaseCard } from "@/components/ui/BaseCard";
 /**
  * Monthly PnL data point
  */
-export interface MonthlyPnLItem {
+interface MonthlyPnLItem {
   month: string;
   value: number;
 }
@@ -19,7 +19,7 @@ export interface MonthlyPnLItem {
 /**
  * Monthly PnL Heatmap Props
  */
-export interface MonthlyPnLHeatmapProps {
+interface MonthlyPnLHeatmapProps {
   monthlyPnL: MonthlyPnLItem[];
 }
 

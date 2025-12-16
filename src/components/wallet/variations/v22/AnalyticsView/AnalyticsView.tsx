@@ -16,7 +16,7 @@ import { MonthlyPnLHeatmap } from "./components/MonthlyPnLHeatmap";
 /**
  * Analytics View Props
  */
-export interface AnalyticsViewProps {
+interface AnalyticsViewProps {
   /** Transformed analytics data */
   data: AnalyticsData;
   /** Currently selected time period */

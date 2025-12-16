@@ -28,7 +28,7 @@ import {
  * Query options override for usePortfolioDashboard
  * Allows customization of React Query behavior
  */
-export interface DashboardQueryOptions {
+interface DashboardQueryOptions {
   /** Override staleTime (default: 2 minutes) */
   staleTime?: number;
   /** Override refetchOnMount behavior */

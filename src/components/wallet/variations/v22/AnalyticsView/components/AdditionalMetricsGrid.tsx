@@ -13,7 +13,7 @@ import { AnalyticsMetricCard } from "./AnalyticsMetricCard";
 /**
  * Additional Metrics Grid Props
  */
-export interface AdditionalMetricsGridProps {
+interface AdditionalMetricsGridProps {
   metrics: KeyMetrics;
 }
 

@@ -17,7 +17,7 @@ import { ChartGridLines, ChartSurface, YAxisLabels } from "./ChartUI";
 /**
  * Drawdown chart data point
  */
-export interface DrawdownChartDataPoint {
+interface DrawdownChartDataPoint {
   x: number;
   value: number;
   date: string;
@@ -26,7 +26,7 @@ export interface DrawdownChartDataPoint {
 /**
  * Drawdown Chart Props
  */
-export interface DrawdownChartProps {
+interface DrawdownChartProps {
   chartData: DrawdownChartDataPoint[];
   maxDrawdown: number;
   width?: number;

@@ -12,7 +12,7 @@ import type { KeyMetrics, MetricData } from "@/types/analytics";
 /**
  * Key Metrics Grid Props
  */
-export interface KeyMetricsGridProps {
+interface KeyMetricsGridProps {
   metrics: KeyMetrics;
 }
 

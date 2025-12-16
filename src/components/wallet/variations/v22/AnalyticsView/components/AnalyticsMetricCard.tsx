@@ -11,7 +11,7 @@ import { BaseCard } from "@/components/ui/BaseCard";
 /**
  * Analytics Metric Card Props
  */
-export interface AnalyticsMetricCardProps {
+interface AnalyticsMetricCardProps {
   /** Icon component */
   icon: React.ElementType;
   /** Metric label */
