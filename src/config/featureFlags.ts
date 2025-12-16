@@ -104,6 +104,49 @@ export function getEnabledFeatures(): Record<string, boolean> {
 }
 
 /**
+ * Percentage-based V22 feature rollout
+ *
+ * Deterministic hash ensures same user always gets same experience.
+ * Useful for gradual rollout: 10% → 25% → 50% → 75% → 90% → 100%
+ *
+ * @param userId - User ID (wallet address) for deterministic hashing
+ * @returns True if user should see V22 layout
+ *
+ * @example
+ * ```typescript
+ * // In BundlePageEntry.tsx
+ * const shouldUseV22 = isUserInV22Rollout(userId);
+ * ```
+ *
+ * Environment Variables:
+ * - NEXT_PUBLIC_USE_V22_LAYOUT: Master switch (must be 'true')
+ * - NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE: Rollout percentage (0-100, default: 100)
+ */
+export function isUserInV22Rollout(userId: string): boolean {
+  // Always respect explicit flag first
+  if (!FEATURE_FLAGS.USE_V22_LAYOUT) return false;
+
+  const percentage = parseInt(
+    process.env["NEXT_PUBLIC_V22_ROLLOUT_PERCENTAGE"] || "100",
+    10
+  );
+
+  // Full rollout
+  if (percentage >= 100) return true;
+
+  // No rollout
+  if (percentage <= 0) return false;
+
+  // Deterministic hash for stable rollout
+  // Same user always gets same result
+  const hash = userId.split("").reduce((acc, char) => {
+    return acc + char.charCodeAt(0);
+  }, 0);
+
+  return hash % 100 < percentage;
+}
+
+/**
  * Development helper: Log feature flag status
  *
  * Only logs in development mode to avoid cluttering production logs.
