@@ -12,11 +12,9 @@ import {
   Info,
   LayoutDashboard,
   LineChart,
-  Settings,
-  Wallet,
   Zap,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import type { V22PortfolioDataWithDirection } from "@/adapters/portfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
@@ -34,12 +32,12 @@ import {
   RebalanceModal,
   WithdrawModal,
 } from "@/components/wallet/variations/v22/modals";
-import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
+import { WalletUIVariation1 } from "@/components/wallet/variations/v22/WalletUIVariation1";
+import { WalletUIVariation2 } from "@/components/wallet/variations/v22/WalletUIVariation2";
+import { WalletUIVariation3 } from "@/components/wallet/variations/v22/WalletUIVariation3";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
-import { formatAddress } from "@/lib/formatters";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
-import { useWalletProvider } from "@/providers/WalletProvider";
 
 import { getRegimeById } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
@@ -54,47 +52,11 @@ export function WalletPortfolioPresenterV22({
   userId = "",
 }: WalletPortfolioPresenterV22Props = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
-  const {
-    connectedWallets,
-    switchActiveWallet,
-    hasMultipleWallets,
-    account,
-    isConnected,
-  } = useWalletProvider();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showWalletSwitcher, setShowWalletSwitcher] = useState(false);
-  const [isSwitchingWallet, setIsSwitchingWallet] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Click outside handler for wallet switcher dropdown
-  useEffect(() => {
-    if (!showWalletSwitcher) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setShowWalletSwitcher(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setShowWalletSwitcher(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [showWalletSwitcher]);
+  const [walletUIVariation, setWalletUIVariation] = useState<1 | 2 | 3>(1);
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -126,6 +88,32 @@ export function WalletPortfolioPresenterV22({
       className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30"
       data-testid="v22-dashboard"
     >
+      {/* DEV TOGGLE: Wallet UI Variation Selector */}
+      <div className="fixed top-20 left-4 z-50 bg-gray-900 border border-purple-500/30 rounded-lg p-3 shadow-xl">
+        <div className="text-xs text-gray-400 uppercase tracking-wide mb-2 font-bold">
+          Wallet UI Variation
+        </div>
+        <div className="flex gap-2">
+          {([1, 2, 3] as const).map(variant => (
+            <button
+              key={variant}
+              onClick={() => setWalletUIVariation(variant)}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
+                walletUIVariation === variant
+                  ? "bg-purple-600 text-white shadow-sm"
+                  : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
+              }`}
+            >
+              V{variant}
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 text-xs text-gray-500">
+          {walletUIVariation === 1 && "Unified Menu"}
+          {walletUIVariation === 2 && "Progressive Disclosure"}
+          {walletUIVariation === 3 && "Split Actions"}
+        </div>
+      </div>
       {/* --- TOP NAVIGATION (Minimalist) --- */}
       <nav className="h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -162,103 +150,25 @@ export function WalletPortfolioPresenterV22({
         </div>
 
         <div className="flex items-center gap-4">
-          {!isConnected && <ConnectWalletButton className="min-w-[180px]" />}
-
-          {isConnected && account?.address ? (
-            <div className="hidden sm:flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-bold text-purple-100">
-              <Zap className="w-3 h-3" />
-              {formatAddress(account.address)}
-            </div>
-          ) : null}
-
-          {/* Multi-wallet switcher (V22 Phase 2D) */}
-          {hasMultipleWallets && (
-            <div className="relative" ref={dropdownRef}>
-              <button
-                data-testid="wallet-switcher-button"
-                onClick={() => setShowWalletSwitcher(!showWalletSwitcher)}
-                className="px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 rounded-lg transition-colors border border-purple-500/30 text-xs font-bold flex items-center gap-2"
-                aria-expanded={showWalletSwitcher}
-                aria-haspopup="menu"
-                aria-label={`Wallet switcher, ${connectedWallets.length} wallets connected`}
-              >
-                <Wallet className="w-4 h-4" aria-hidden="true" />
-                {connectedWallets.length} Wallets
-              </button>
-
-              <AnimatePresence>
-                {showWalletSwitcher && (
-                  <motion.div
-                    data-testid="wallet-switcher-dropdown"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute top-full right-0 mt-2 w-64 bg-gray-900 border border-gray-700 rounded-xl shadow-xl z-50"
-                    role="menu"
-                    aria-label="Wallet selection menu"
-                  >
-                    {connectedWallets.map(wallet => (
-                      <button
-                        key={wallet.address}
-                        data-testid={`wallet-option-${wallet.address}`}
-                        onClick={async () => {
-                          setIsSwitchingWallet(true);
-                          try {
-                            await switchActiveWallet(wallet.address);
-                            setShowWalletSwitcher(false);
-                          } finally {
-                            setIsSwitchingWallet(false);
-                          }
-                        }}
-                        disabled={isSwitchingWallet || wallet.isActive}
-                        className={`w-full px-4 py-3 text-left hover:bg-gray-800 first:rounded-t-xl last:rounded-b-xl transition-colors ${
-                          wallet.isActive ? "bg-purple-500/20" : ""
-                        } ${isSwitchingWallet ? "opacity-50 cursor-wait" : ""}`}
-                        role="menuitem"
-                        aria-current={wallet.isActive ? "true" : undefined}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-white text-sm font-mono">
-                            {formatAddress(wallet.address)}
-                          </span>
-                          {wallet.isActive && (
-                            <span
-                              className="text-xs text-purple-400 font-bold flex items-center gap-1"
-                              data-testid="active-wallet-indicator"
-                            >
-                              <Zap
-                                className="w-3 h-3 inline"
-                                aria-hidden="true"
-                              />
-                              Active
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          {/* Wallet UI Variations - Conditionally Rendered */}
+          {walletUIVariation === 1 && (
+            <WalletUIVariation1
+              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
           )}
-
-          <button
-            data-testid="settings-button"
-            onClick={() => setIsSettingsOpen(true)}
-            className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="sr-only">Settings</span>
-          </button>
-          <button
-            data-testid="wallet-manager-button"
-            onClick={() => setIsWalletManagerOpen(true)}
-            className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
-          >
-            <Wallet className="w-4 h-4" />
-            <span className="sr-only">Manage Wallets</span>
-          </button>
+          {walletUIVariation === 2 && (
+            <WalletUIVariation2
+              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
+          )}
+          {walletUIVariation === 3 && (
+            <WalletUIVariation3
+              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
+              onOpenSettings={() => setIsSettingsOpen(true)}
+            />
+          )}
         </div>
       </nav>
 
