@@ -24,16 +24,7 @@ export function BundlePageClientV22({ userId }: BundlePageClientV22Props) {
     );
   }
 
-  if (error) {
-    const errorData = createV22ErrorState();
-    return (
-      <div data-testid="v22-error">
-        <WalletPortfolioPresenterV22 data={errorData} userId={userId} />
-      </div>
-    );
-  }
-
-  if (!data) {
+  if (error || !data) {
     const errorData = createV22ErrorState();
     return (
       <div data-testid="v22-error">

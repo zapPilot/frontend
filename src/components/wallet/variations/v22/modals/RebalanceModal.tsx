@@ -2,16 +2,15 @@
 
 import { useMemo, useState } from "react";
 
-import { GradientButton } from "@/components/ui";
 import { StrategySlider } from "@/components/wallet/variations/v22/modals/components/StrategySlider";
+import { ActionButtons } from "@/components/wallet/variations/v22/modals/components/TransactionFormLayout";
 import { TransactionSummary } from "@/components/wallet/variations/v22/modals/components/TransactionSummary";
 import { TransactionModal } from "@/components/wallet/variations/v22/modals/TransactionModal";
-import { transactionService } from "@/services";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import type {
-  AllocationBreakdown,
-  TransactionResult,
-} from "@/types/domain/transaction";
+import { transactionService } from "@/services";
+import type { AllocationBreakdown } from "@/types/domain/transaction";
+
+import { useTransactionStatus } from "./hooks/useTransactionStatus";
 
 interface RebalanceModalProps {
   isOpen: boolean;
@@ -28,10 +27,8 @@ export function RebalanceModal({
 }: RebalanceModalProps) {
   const { isConnected } = useWalletProvider();
   const [intensity, setIntensity] = useState(50);
-  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
-    "idle"
-  );
-  const [result, setResult] = useState<TransactionResult | null>(null);
+  const { status, setStatus, result, setResult, resetStatus } =
+    useTransactionStatus();
 
   const previewAllocation = useMemo(
     () =>
@@ -73,8 +70,7 @@ export function RebalanceModal({
   };
 
   const resetState = () => {
-    setResult(null);
-    setStatus("idle");
+    resetStatus();
     onClose();
   };
 
@@ -109,7 +105,10 @@ export function RebalanceModal({
         </div>
         <div className="mt-2 flex flex-col gap-1 text-purple-100/80">
           <span>APR change: +{aprDelta.toFixed(2)}%</span>
-          <span>Projected drift after: {(targetAllocation.crypto - previewAllocation.crypto).toFixed(2)}%</span>
+          <span>
+            Projected drift after:{" "}
+            {(targetAllocation.crypto - previewAllocation.crypto).toFixed(2)}%
+          </span>
           <span>Est. gas: ~$3.20</span>
         </div>
       </div>
@@ -124,28 +123,16 @@ export function RebalanceModal({
         gasEstimateUsd={3.2}
       />
 
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          onClick={resetState}
-          className="rounded-xl border border-gray-800 px-4 py-3 text-sm font-semibold text-gray-300 transition-colors hover:border-gray-600 hover:text-white"
-        >
-          Cancel
-        </button>
-        <GradientButton
-          data-testid="confirm-button"
-          gradient="from-purple-500 to-blue-500"
-          disabled={isSubmitDisabled}
-          onClick={handleSubmit}
-          className="min-w-[180px]"
-        >
-          {status === "submitting"
-            ? "Calculating…"
-            : !isConnected
-              ? "Connect Wallet"
-              : "Execute Rebalance"}
-        </GradientButton>
-      </div>
+      <ActionButtons
+        gradient="from-purple-500 to-blue-500"
+        disabled={isSubmitDisabled}
+        isConnected={isConnected}
+        status={status}
+        submittingLabel="Calculating…"
+        readyLabel="Execute Rebalance"
+        onConfirm={handleSubmit}
+        onCancel={resetState}
+      />
 
       {result ? (
         <div

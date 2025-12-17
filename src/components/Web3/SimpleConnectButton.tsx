@@ -52,8 +52,7 @@ interface SimpleConnectButtonProps {
   size?: StandardSize;
 }
 
-const isTestEnv =
-  typeof process !== "undefined" && !!process.env["VITEST"];
+const isTestEnv = typeof process !== "undefined" && !!process.env["VITEST"];
 
 export function SimpleConnectButton({
   className = "",
@@ -79,42 +78,42 @@ export function SimpleConnectButton({
       {/* Connect Button */}
       {isTestEnv ? (
         <button className="px-4 py-2 rounded-lg bg-purple-600 text-white text-sm font-semibold">
-          Connect Wallet
+          Connect Wallet22
         </button>
       ) : (
-      <QueryClientBoundary>
-        <ConnectButton
-          client={THIRDWEB_CLIENT}
-          autoConnect={true}
-          wallets={DEFAULT_WALLETS}
-          theme="light"
-          chains={DEFAULT_SUPPORTED_CHAINS}
-          connectModal={{
-            size: getSizeConfig() as "compact" | "wide",
-            title: "Connect Wallet",
-            titleIcon: "",
-            showThirdwebBranding: false,
-          }}
-          detailsButton={{
-            render() {
-              const address = activeAccount?.address;
-              return address ? (
-                <DetailsButton address={address} />
-              ) : (
-                <DetailsButton />
-              );
-            },
-            style: { borderRadius: "8px" },
-          }}
-          switchButton={{
-            style: {
-              borderRadius: "8px",
-              background: "rgba(255, 255, 255, 0.1)",
-              border: "1px solid rgba(255, 255, 255, 0.2)",
-            },
-          }}
-        />
-      </QueryClientBoundary>
+        <QueryClientBoundary>
+          <ConnectButton
+            client={THIRDWEB_CLIENT}
+            autoConnect={true}
+            wallets={DEFAULT_WALLETS}
+            theme="light"
+            chains={DEFAULT_SUPPORTED_CHAINS}
+            connectModal={{
+              size: getSizeConfig() as "compact" | "wide",
+              title: "Connect Wallet",
+              titleIcon: "",
+              showThirdwebBranding: false,
+            }}
+            detailsButton={{
+              render() {
+                const address = activeAccount?.address;
+                return address ? (
+                  <DetailsButton address={address} />
+                ) : (
+                  <DetailsButton />
+                );
+              },
+              style: { borderRadius: "8px" },
+            }}
+            switchButton={{
+              style: {
+                borderRadius: "8px",
+                background: "rgba(255, 255, 255, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+              },
+            }}
+          />
+        </QueryClientBoundary>
       )}
     </div>
   );

@@ -27,7 +27,6 @@ import {
   ModalFooter,
   ModalHeader,
 } from "@/components/ui/modal";
-import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import {
@@ -35,6 +34,7 @@ import {
   RebalanceModal,
   WithdrawModal,
 } from "@/components/wallet/variations/v22/modals";
+import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 import { formatAddress } from "@/lib/formatters";
@@ -117,13 +117,15 @@ export function WalletPortfolioPresenterV22({
     "deposit" | "withdraw" | "rebalance" | null
   >(null);
 
-  const openModal = (
-    type: "deposit" | "withdraw" | "rebalance" | null
-  ) => setActiveModal(type);
+  const openModal = (type: "deposit" | "withdraw" | "rebalance" | null) =>
+    setActiveModal(type);
   const closeModal = () => setActiveModal(null);
 
   return (
-    <div className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30" data-testid="v22-dashboard">
+    <div
+      className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30"
+      data-testid="v22-dashboard"
+    >
       {/* --- TOP NAVIGATION (Minimalist) --- */}
       <nav className="h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -160,9 +162,7 @@ export function WalletPortfolioPresenterV22({
         </div>
 
         <div className="flex items-center gap-4">
-          {!isConnected && (
-            <ConnectWalletButton className="min-w-[180px]" />
-          )}
+          {!isConnected && <ConnectWalletButton className="min-w-[180px]" />}
 
           {isConnected && account?.address ? (
             <div className="hidden sm:flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-bold text-purple-100">
@@ -223,7 +223,10 @@ export function WalletPortfolioPresenterV22({
                             {formatAddress(wallet.address)}
                           </span>
                           {wallet.isActive && (
-                            <span className="text-xs text-purple-400 font-bold flex items-center gap-1" data-testid="active-wallet-indicator">
+                            <span
+                              className="text-xs text-purple-400 font-bold flex items-center gap-1"
+                              data-testid="active-wallet-indicator"
+                            >
                               <Zap
                                 className="w-3 h-3 inline"
                                 aria-hidden="true"
@@ -246,6 +249,7 @@ export function WalletPortfolioPresenterV22({
             className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
           >
             <Settings className="w-4 h-4" />
+            <span className="sr-only">Settings</span>
           </button>
           <button
             data-testid="wallet-manager-button"
@@ -253,6 +257,7 @@ export function WalletPortfolioPresenterV22({
             className="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-gray-400 hover:text-white hover:bg-purple-500/10 hover:border-purple-500/50 transition-all duration-200 cursor-pointer"
           >
             <Wallet className="w-4 h-4" />
+            <span className="sr-only">Manage Wallets</span>
           </button>
         </div>
       </nav>
@@ -271,11 +276,17 @@ export function WalletPortfolioPresenterV22({
                   </div>
                   <div className="flex items-center gap-3 mb-6">
                     <div className="flex-1">
-                      <div className="text-5xl font-bold text-white tracking-tight mb-4" data-testid="net-worth">
+                      <div
+                        className="text-5xl font-bold text-white tracking-tight mb-4"
+                        data-testid="net-worth"
+                      >
                         ${data.balance.toLocaleString()}
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1" data-testid="performance-change">
+                        <span
+                          className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1"
+                          data-testid="performance-change"
+                        >
                           <ArrowUpRight className="w-3 h-3" /> {data.roi}%
                         </span>
                         <span className="text-xs text-gray-500">
@@ -327,7 +338,10 @@ export function WalletPortfolioPresenterV22({
                   >
                     <div className="flex items-center gap-6">
                       <div className="w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0">
-                        <span style={{ color: currentRegime.fillColor }} data-testid="regime-badge">
+                        <span
+                          style={{ color: currentRegime.fillColor }}
+                          data-testid="regime-badge"
+                        >
                           {data.currentRegime.toUpperCase()}
                         </span>
                       </div>
@@ -485,7 +499,10 @@ export function WalletPortfolioPresenterV22({
               </div>
 
               {/* UNIFIED COMPOSITION BAR (V21 Style) - Only visible in Dashboard */}
-              <div className="bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden" data-testid="composition-bar">
+              <div
+                className="bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden"
+                data-testid="composition-bar"
+              >
                 <div className="flex justify-between items-end mb-8">
                   <div>
                     <h2 className="text-xl font-bold text-white mb-1">

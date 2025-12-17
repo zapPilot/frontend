@@ -32,13 +32,13 @@ function LayoutDemoV22Content() {
     return <LoadingStateV22 />;
   }
 
-  // Error state with retry
-  if (error && !data) {
+  // Use real data if available, fallback to MOCK_DATA even when API fails
+  const portfolioData = data ?? MOCK_DATA;
+  const shouldShowError = Boolean(error && !data && !portfolioData);
+
+  if (shouldShowError) {
     return <ErrorStateV22 error={error as Error} onRetry={refetch} />;
   }
-
-  // Use real data if available, fallback to MOCK_DATA
-  const portfolioData = data ?? MOCK_DATA;
 
   return <WalletPortfolioPresenterV22 data={portfolioData} userId={userId} />;
 }

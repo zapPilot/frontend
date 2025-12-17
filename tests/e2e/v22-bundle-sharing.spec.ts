@@ -69,7 +69,7 @@ test.describe("V22 Bundle Sharing", () => {
 
       // Action buttons should be enabled
       const depositButton = page.getByRole("button", { name: /deposit/i });
-      const _withdrawButton = page.getByRole("button", { name: /withdraw/i });
+      const withdrawButton = page.getByRole("button", { name: /withdraw/i });
       const optimizeButton = page.getByRole("button", { name: /optimize/i });
 
       if (await depositButton.count()) {
@@ -150,7 +150,7 @@ test.describe("V22 Bundle Sharing", () => {
       await page.waitForLoadState("networkidle");
 
       // Settings should not be accessible
-      const _settingsButton = page.locator('[data-testid="settings-button"]');
+      const settingsButton = page.locator('[data-testid="settings-button"]');
       await expect(settingsButton).not.toBeVisible();
     });
 
@@ -159,7 +159,7 @@ test.describe("V22 Bundle Sharing", () => {
       await page.waitForLoadState("networkidle");
 
       // Wallet manager should not be accessible
-      const _walletManagerButton = page.locator(
+      const walletManagerButton = page.locator(
         '[data-testid="wallet-manager-button"]'
       );
       await expect(walletManagerButton).not.toBeVisible();

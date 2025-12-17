@@ -31,7 +31,7 @@ function calculateYPosition(
   chartHeight: number,
   chartPadding: number
 ): number {
-  const valueRange = maxValue - minValue;
+  const valueRange = Math.max(maxValue - minValue, 1);
   return (
     chartHeight -
     chartPadding -

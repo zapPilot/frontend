@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ComponentType, useMemo } from "react";
+import { ComponentType, useEffect, useMemo } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
 import { SwitchPromptBanner } from "@/components/bundle/SwitchPromptBanner";
@@ -29,6 +29,25 @@ interface BundlePageClientProps {
 
 export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
   const vm = useBundlePage(userId, walletId);
+
+  useEffect(() => {
+    const sanitizeInlineScripts = () => {
+      const scripts = document.querySelectorAll("body script");
+      for (const script of scripts) {
+        if (!script.textContent) continue;
+        if (/@[^@\s]+\.[^@\s]+/.test(script.textContent)) {
+          script.textContent = "";
+        }
+      }
+    };
+
+    sanitizeInlineScripts();
+
+    const observer = new MutationObserver(() => sanitizeInlineScripts());
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, []);
 
   // Header banners (switch prompt + email banner)
   const headerBanners = useMemo(

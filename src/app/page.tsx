@@ -47,11 +47,34 @@ export default function DashboardApp() {
   // Default landing page - simple wallet connection prompt
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Zap Pilot</h1>
+      <div className="text-center space-y-4">
+        <h1 className="mb-2 text-4xl font-bold">Welcome to Zap Pilot</h1>
         <p className="text-lg text-gray-400">
           Connect your wallet to view your portfolio
         </p>
+        <div className="flex items-center justify-center gap-3">
+          <button
+            type="button"
+            className="rounded-md bg-purple-600 px-4 py-2 text-white shadow hover:bg-purple-500"
+            data-testid="landing-connect-wallet"
+          >
+            Connect Wallet
+          </button>
+          <a
+            href="/bundle"
+            className="rounded-md border border-purple-400 px-4 py-2 text-purple-200 hover:bg-purple-500/10"
+            data-testid="landing-view-bundle"
+          >
+            View Bundle
+          </a>
+          <a
+            href="/layout-demo/v22"
+            className="rounded-md border border-gray-700 px-4 py-2 text-gray-200 hover:bg-gray-800"
+            data-testid="landing-demo-v22"
+          >
+            View Demo
+          </a>
+        </div>
       </div>
     </div>
   );

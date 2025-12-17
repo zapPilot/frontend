@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { SelectorHeader } from "@/components/wallet/variations/v22/modals/components/SelectorHeader";
 import type {
   TokenBalance,
   TransactionToken,
@@ -40,16 +41,10 @@ export function TokenSelector({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-            Select Token
-          </p>
-          <p className="text-sm text-gray-400">
-            Search any supported token or pick a popular choice.
-          </p>
-        </div>
-      </div>
+      <SelectorHeader
+        title="Select Token"
+        description="Search any supported token or pick a popular choice."
+      />
 
       <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-gray-900/60 px-3 py-2">
         <input

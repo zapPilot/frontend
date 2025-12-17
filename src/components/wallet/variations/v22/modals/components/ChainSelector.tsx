@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 
+import { SelectorHeader } from "@/components/wallet/variations/v22/modals/components/SelectorHeader";
 import type { ChainData } from "@/types/domain/transaction";
 
 interface ChainSelectorProps {
@@ -17,16 +18,10 @@ export function ChainSelector({
 }: ChainSelectorProps) {
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-            Select Chain
-          </p>
-          <p className="text-sm text-gray-400">
-            Multi-chain ready. Disabled chains are marked as coming soon.
-          </p>
-        </div>
-      </div>
+      <SelectorHeader
+        title="Select Chain"
+        description="Multi-chain ready. Disabled chains are marked as coming soon."
+      />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {chains.map(chain => {
           const isSelected = chain.chainId === selectedChainId;

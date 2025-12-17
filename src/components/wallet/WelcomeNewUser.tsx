@@ -1,5 +1,3 @@
-import React from "react";
-
 import { BaseCard } from "@/components/ui";
 
 interface WelcomeNewUserProps {

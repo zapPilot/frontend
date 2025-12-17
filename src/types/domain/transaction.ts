@@ -1,6 +1,6 @@
 import type { SwapToken } from "@/types/ui/swap";
 
-export type TransactionType = "deposit" | "withdraw" | "rebalance";
+type TransactionType = "deposit" | "withdraw" | "rebalance";
 
 export interface ChainData {
   chainId: number;
@@ -43,16 +43,12 @@ export interface TransactionToken extends SwapToken {
 export interface AllocationBreakdown {
   crypto: number;
   stable: number;
-  simplifiedCrypto?: {
-    symbol: string;
-    name: string;
-    value: number;
-    color?: string;
-  }[] | undefined;
-}
-
-export interface RebalancePreview {
-  projectedAllocation: AllocationBreakdown;
-  aprDelta: number;
-  gasEstimateUsd: number;
+  simplifiedCrypto?:
+    | {
+        symbol: string;
+        name: string;
+        value: number;
+        color?: string;
+      }[]
+    | undefined;
 }

@@ -7,6 +7,24 @@ import type {
 
 const delay = (ms = 700) => new Promise(resolve => setTimeout(resolve, ms));
 
+async function simulateBasicTransaction(
+  type: TransactionResult["type"],
+  data: TransactionFormData,
+  message: string
+): Promise<TransactionResult> {
+  await delay(1100);
+
+  return {
+    type,
+    status: "success",
+    txHash: createTxHash(),
+    amount: data.amount,
+    token: data.tokenAddress,
+    timestamp: Date.now(),
+    message,
+  };
+}
+
 export const MOCK_TOKENS: TransactionToken[] = [
   {
     symbol: "USDC",
@@ -54,20 +72,24 @@ export const MOCK_TOKENS: TransactionToken[] = [
   },
 ];
 
-export const MOCK_TOKEN_BALANCES: Record<string, { balance: string; usdValue: number }> =
-  {
-    "1:0xusdc": { balance: "1000.50", usdValue: 1000.5 },
-    "1:0xeth": { balance: "2.5", usdValue: 8000 },
-    "1:0xwbtc": { balance: "0.05", usdValue: 3250 },
-    "137:0xmatic": { balance: "1200", usdValue: 984 },
-  };
+export const MOCK_TOKEN_BALANCES: Record<
+  string,
+  { balance: string; usdValue: number }
+> = {
+  "1:0xusdc": { balance: "1000.50", usdValue: 1000.5 },
+  "1:0xeth": { balance: "2.5", usdValue: 8000 },
+  "1:0xwbtc": { balance: "0.05", usdValue: 3250 },
+  "137:0xmatic": { balance: "1200", usdValue: 984 },
+};
 
 const createTxHash = () =>
   `0x${Math.random().toString(16).slice(2)}${Math.random()
     .toString(16)
     .slice(2)}`.slice(0, 66);
 
-export async function getSupportedTokens(chainId: number): Promise<TransactionToken[]> {
+export async function getSupportedTokens(
+  chainId: number
+): Promise<TransactionToken[]> {
   await delay(120);
   return MOCK_TOKENS.filter(token => token.chainId === chainId);
 }
@@ -89,33 +111,21 @@ export async function getTokenBalance(
 export async function simulateDeposit(
   data: TransactionFormData
 ): Promise<TransactionResult> {
-  await delay(1100);
-
-  return {
-    type: "deposit",
-    status: "success",
-    txHash: createTxHash(),
-    amount: data.amount,
-    token: data.tokenAddress,
-    timestamp: Date.now(),
-    message: "Deposit simulated successfully",
-  };
+  return simulateBasicTransaction(
+    "deposit",
+    data,
+    "Deposit simulated successfully"
+  );
 }
 
 export async function simulateWithdraw(
   data: TransactionFormData
 ): Promise<TransactionResult> {
-  await delay(1100);
-
-  return {
-    type: "withdraw",
-    status: "success",
-    txHash: createTxHash(),
-    amount: data.amount,
-    token: data.tokenAddress,
-    timestamp: Date.now(),
-    message: "Withdraw simulated successfully",
-  };
+  return simulateBasicTransaction(
+    "withdraw",
+    data,
+    "Withdraw simulated successfully"
+  );
 }
 
 export async function simulateRebalance(
@@ -152,8 +162,16 @@ export function computeProjectedAllocation(
   const stableDelta = targetAllocation.stable - currentAllocation.stable;
 
   return {
-    crypto: clamp(currentAllocation.crypto + cryptoDelta * intensityFactor, 0, 100),
-    stable: clamp(currentAllocation.stable + stableDelta * intensityFactor, 0, 100),
+    crypto: clamp(
+      currentAllocation.crypto + cryptoDelta * intensityFactor,
+      0,
+      100
+    ),
+    stable: clamp(
+      currentAllocation.stable + stableDelta * intensityFactor,
+      0,
+      100
+    ),
     simplifiedCrypto: currentAllocation.simplifiedCrypto,
   };
 }

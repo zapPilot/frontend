@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { transactionService } from "@/services";
 import { useWalletProvider } from "@/providers/WalletProvider";
+import { transactionService } from "@/services";
 
 interface UseTokenBalanceQueryOptions {
   enabled?: boolean;
