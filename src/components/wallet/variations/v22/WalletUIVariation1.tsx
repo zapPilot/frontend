@@ -3,10 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, LogOut, Plus, Settings, Wallet } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useConnectModal } from "thirdweb/react";
 
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
+import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { formatAddress } from "@/lib/formatters";
 import { useWalletProvider } from "@/providers/WalletProvider";
+import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 interface WalletUIVariation1Props {
   onOpenWalletManager: () => void;
@@ -34,6 +37,26 @@ export function WalletUIVariation1({
   const [isSwitchingWallet, setIsSwitchingWallet] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // ThirdWeb connect modal hook
+  const { connect, isConnecting } = useConnectModal();
+
+  // Handle direct wallet connection (1-step flow)
+  const handleConnectClick = async () => {
+    try {
+      await connect({
+        client: THIRDWEB_CLIENT,
+        wallets: DEFAULT_WALLETS,
+        chains: DEFAULT_SUPPORTED_CHAINS,
+        theme: "dark",
+        size: "compact",
+        title: "Connect Wallet",
+        showThirdwebBranding: false,
+      });
+    } catch (error) {
+      console.error("Connection failed:", error);
+    }
+  };
 
   // Click outside and Escape key handler
   useEffect(() => {
@@ -88,8 +111,9 @@ export function WalletUIVariation1({
       {/* Unified Menu Button */}
       <button
         data-testid="unified-wallet-menu-button"
-        onClick={() => setIsMenuOpen(!isMenuOpen)}
-        className="h-10 px-4 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/20 hover:border-purple-500/40 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium text-gray-200 hover:text-white"
+        onClick={!isConnected ? handleConnectClick : () => setIsMenuOpen(!isMenuOpen)}
+        disabled={isConnecting}
+        className={`h-10 px-4 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/20 hover:border-purple-500/40 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium text-gray-200 hover:text-white ${isConnecting ? "opacity-50 cursor-wait" : ""}`}
         aria-expanded={isMenuOpen}
         aria-haspopup="menu"
       >
@@ -122,7 +146,7 @@ export function WalletUIVariation1({
 
       {/* Dropdown Menu */}
       <AnimatePresence>
-        {isMenuOpen && (
+        {isConnected && isMenuOpen && (
           <motion.div
             data-testid="unified-wallet-menu-dropdown"
             initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -133,40 +157,6 @@ export function WalletUIVariation1({
             role="menu"
             aria-label="Wallet menu"
           >
-            {/* Not Connected State */}
-            {!isConnected && (
-              <div className="p-4">
-                <div className="text-sm text-gray-400 mb-3">
-                  Connect your wallet to get started
-                </div>
-                <ConnectWalletButton className="w-full" />
-                <div className="mt-3 pt-3 border-t border-gray-800">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      // TODO: Link to help/FAQ
-                    }}
-                    className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1"
-                  >
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    Why connect a wallet?
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Connected State - Single Wallet */}
             {isConnected && account?.address && !hasMultipleWallets && (
               <div className="py-2">
@@ -208,7 +198,7 @@ export function WalletUIVariation1({
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      // TODO: Navigate to bundle view
+                      // Navigate to bundle view (implementation pending)
                     }}
                     className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
                   >
