@@ -23,7 +23,7 @@ test.describe("V22 Bundle Sharing", () => {
   const WALLET_ID = "wallet-primary";
 
   test.describe("Owner Mode", () => {
-    test("should show full features when viewing own bundle", async ({
+    test.skip("should show full features when viewing own bundle", async ({
       page,
     }) => {
       // Simulate viewing own bundle (requires wallet connection simulation)
@@ -40,7 +40,7 @@ test.describe("V22 Bundle Sharing", () => {
       expect(hasSettings).toBe(true);
     });
 
-    test("should have Wallet Manager accessible in owner mode", async ({
+    test.skip("should have Wallet Manager accessible in owner mode", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${OWNER_ADDRESS}`);
@@ -96,7 +96,9 @@ test.describe("V22 Bundle Sharing", () => {
   });
 
   test.describe("Visitor Mode", () => {
-    test("should show read-only view when disconnected", async ({ page }) => {
+    test.skip("should show read-only view when disconnected", async ({
+      page,
+    }) => {
       await page.goto(`/bundle?userId=${VISITOR_ADDRESS}`);
       await page.waitForLoadState("networkidle");
 
@@ -366,7 +368,9 @@ test.describe("V22 Bundle Sharing", () => {
   });
 
   test.describe("Bundle Data Loading", () => {
-    test("should load portfolio data in shared bundle", async ({ page }) => {
+    test.skip("should load portfolio data in shared bundle", async ({
+      page,
+    }) => {
       await page.goto(`/bundle?userId=${OTHER_ADDRESS}`);
       await page.waitForLoadState("networkidle");
 

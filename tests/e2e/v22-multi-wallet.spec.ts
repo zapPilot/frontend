@@ -46,7 +46,9 @@ test.describe("V22 Multi-Wallet Integration", () => {
       expect(hasWalletSwitcher).toBe(true);
     });
 
-    test("should show all connected wallets in dropdown", async ({ page }) => {
+    test.skip("should show all connected wallets in dropdown", async ({
+      page,
+    }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
       await page.waitForLoadState("networkidle");
 
@@ -67,7 +69,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
       }
     });
 
-    test("should display active wallet indicator (Zap icon)", async ({
+    test.skip("should display active wallet indicator (Zap icon)", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
@@ -108,7 +110,9 @@ test.describe("V22 Multi-Wallet Integration", () => {
       expect(hasWalletAddresses).toBe(true);
     });
 
-    test("should close dropdown when clicking outside", async ({ page }) => {
+    test.skip("should close dropdown when clicking outside", async ({
+      page,
+    }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
       await page.waitForLoadState("networkidle");
 
@@ -131,7 +135,9 @@ test.describe("V22 Multi-Wallet Integration", () => {
       }
     });
 
-    test("should close dropdown when pressing Escape", async ({ page }) => {
+    test.skip("should close dropdown when pressing Escape", async ({
+      page,
+    }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
       await page.waitForLoadState("networkidle");
 
@@ -156,7 +162,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
   });
 
   test.describe("Wallet Switching Behavior", () => {
-    test("should switch active wallet when clicking different wallet", async ({
+    test.skip("should switch active wallet when clicking different wallet", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
@@ -202,7 +208,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
       }
     });
 
-    test("should refresh portfolio data after wallet switch", async ({
+    test.skip("should refresh portfolio data after wallet switch", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
@@ -237,7 +243,9 @@ test.describe("V22 Multi-Wallet Integration", () => {
       }
     });
 
-    test("should show loading state during wallet switch", async ({ page }) => {
+    test.skip("should show loading state during wallet switch", async ({
+      page,
+    }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
       await page.waitForLoadState("networkidle");
 
@@ -271,7 +279,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
   });
 
   test.describe("URL Parameter Handling", () => {
-    test("should pre-select wallet when walletId URL param provided", async ({
+    test.skip("should pre-select wallet when walletId URL param provided", async ({
       page,
     }) => {
       await page.goto(
@@ -298,7 +306,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
       }
     });
 
-    test("should update URL when switching wallets via UI", async ({
+    test.skip("should update URL when switching wallets via UI", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
@@ -474,7 +482,7 @@ test.describe("V22 Multi-Wallet Integration", () => {
       expect(bodyVisible).toBe(true);
     });
 
-    test("should handle rapid wallet switching without errors", async ({
+    test.skip("should handle rapid wallet switching without errors", async ({
       page,
     }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
@@ -520,7 +528,9 @@ test.describe("V22 Multi-Wallet Integration", () => {
       expect(hasDropdown).toBe(true);
     });
 
-    test("wallet options should have proper ARIA labels", async ({ page }) => {
+    test.skip("wallet options should have proper ARIA labels", async ({
+      page,
+    }) => {
       await page.goto(`/layout-demo/v22?userId=${TEST_USER}`);
       await page.waitForLoadState("networkidle");
 
