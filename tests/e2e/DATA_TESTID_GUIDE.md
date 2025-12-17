@@ -9,38 +9,44 @@ These are the most critical data-testid attributes needed for the test suite to 
 
 ### WalletPortfolioPresenterV22.tsx
 
-**Wallet Switcher:**
+**Unified Wallet Menu (WalletMenu.tsx):**
+
+The V22 layout uses a unified wallet menu component that adapts to user state (disconnected, single
+wallet, multiple wallets).
 
 ```typescript
-// Wallet switcher button (line ~149)
+// Main wallet menu button (line ~113)
 <button
-  data-testid="wallet-switcher-button"
-  onClick={() => setShowWalletSwitcher(!showWalletSwitcher)}
-  // ... rest of props
+  data-testid="unified-wallet-menu-button"
+  onClick={!isConnected ? handleConnectClick : () => setIsMenuOpen(!isMenuOpen)}
+  aria-expanded={isMenuOpen}
+  aria-haspopup="menu"
 >
+  <Wallet className="w-4 h-4" />
+  {!isConnected && <span>Connect Wallet</span>}
+  {isConnected && account?.address && (
+    <span className="font-mono">{formatAddress(account.address)}</span>
+  )}
+</button>
 
-// Wallet switcher dropdown (line ~162)
+// Dropdown menu container (line ~151)
 <motion.div
-  data-testid="wallet-switcher-dropdown"
+  data-testid="unified-wallet-menu-dropdown"
   className="absolute top-full right-0..."
-  // ... rest of props
+  role="menu"
+  aria-label="Wallet menu"
 >
-
-// Individual wallet options (line ~172)
-<button
-  data-testid={`wallet-option-${wallet.address}`}
-  key={wallet.address}
-  onClick={async () => {...}}
-  // ... rest of props
->
-
-// Active wallet indicator (line ~196)
-<Zap
-  data-testid="active-wallet-indicator"
-  className="w-3 h-3 inline"
-  aria-hidden="true"
-/>
+  {/* Menu items rendered conditionally based on wallet state */}
+</motion.div>
 ```
+
+**States:**
+
+- **Disconnected**: Button shows "Connect Wallet", opens ThirdWeb modal on click
+- **Single Wallet**: Dropdown shows address, balance, menu items (View Bundle, Manage Wallets,
+  Settings, Disconnect)
+- **Multiple Wallets**: Dropdown shows wallet list with active indicator, switch buttons, and
+  "Connect Another Wallet" option
 
 **Settings & Wallet Manager:**
 
@@ -245,6 +251,7 @@ npm run test:e2e:ui
 ## Component Locations
 
 - **V22 Layout**: `/src/components/wallet/variations/WalletPortfolioPresenterV22.tsx`
+- **V22 Wallet Menu**: `/src/components/wallet/variations/v22/WalletMenu.tsx`
 - **V22 Bundle Client**: `/src/app/bundle/BundlePageClientV22.tsx`
 - **V1 Layout**: `/src/components/wallet/variations/WalletPortfolioPresenter.tsx`
 - **V1 Bundle Client**: `/src/app/bundle/BundlePageClient.tsx`

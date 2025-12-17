@@ -118,6 +118,34 @@ export const fadeInDown: Variants = {
 };
 
 /**
+ * Dropdown menu animation with scale
+ *
+ * Use for:
+ * - Dropdown menus
+ * - Popover content
+ * - Menu panels
+ *
+ * Combines fade, slide from top, and subtle scale for polished dropdown effect
+ */
+export const dropdownMenu: Variants = {
+  initial: {
+    opacity: 0,
+    y: -10,
+    scale: 0.95,
+  },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    scale: 0.95,
+  },
+};
+
+/**
  * Slide in from left
  *
  * Use for:

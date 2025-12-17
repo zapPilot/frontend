@@ -5,6 +5,7 @@ import { AlertTriangle, ChevronDown, Settings } from "lucide-react";
 
 import { Z_INDEX } from "@/constants/design-system";
 import { useDropdown } from "@/hooks/useDropdown";
+import { dropdownMenu } from "@/lib/animationVariants";
 
 import { type SlippagePreset, useSlippage } from "../PortfolioAllocation/hooks";
 
@@ -135,9 +136,10 @@ export function SlippageComponent({
         {/* Expanded Settings Panel */}
         {dropdown.isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            variants={dropdownMenu}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             className={getDropdownClasses()}
             data-testid="slippage-panel"
           >

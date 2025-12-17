@@ -32,9 +32,7 @@ import {
   RebalanceModal,
   WithdrawModal,
 } from "@/components/wallet/variations/v22/modals";
-import { WalletUIVariation1 } from "@/components/wallet/variations/v22/WalletUIVariation1";
-import { WalletUIVariation2 } from "@/components/wallet/variations/v22/WalletUIVariation2";
-import { WalletUIVariation3 } from "@/components/wallet/variations/v22/WalletUIVariation3";
+import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
@@ -56,7 +54,6 @@ export function WalletPortfolioPresenterV22({
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [walletUIVariation, setWalletUIVariation] = useState<1 | 2 | 3>(1);
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -88,32 +85,6 @@ export function WalletPortfolioPresenterV22({
       className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30"
       data-testid="v22-dashboard"
     >
-      {/* DEV TOGGLE: Wallet UI Variation Selector */}
-      <div className="fixed top-20 left-4 z-50 bg-gray-900 border border-purple-500/30 rounded-lg p-3 shadow-xl">
-        <div className="text-xs text-gray-400 uppercase tracking-wide mb-2 font-bold">
-          Wallet UI Variation
-        </div>
-        <div className="flex gap-2">
-          {([1, 2, 3] as const).map(variant => (
-            <button
-              key={variant}
-              onClick={() => setWalletUIVariation(variant)}
-              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                walletUIVariation === variant
-                  ? "bg-purple-600 text-white shadow-sm"
-                  : "bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200"
-              }`}
-            >
-              V{variant}
-            </button>
-          ))}
-        </div>
-        <div className="mt-2 text-xs text-gray-500">
-          {walletUIVariation === 1 && "Unified Menu"}
-          {walletUIVariation === 2 && "Progressive Disclosure"}
-          {walletUIVariation === 3 && "Split Actions"}
-        </div>
-      </div>
       {/* --- TOP NAVIGATION (Minimalist) --- */}
       <nav className="h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -150,25 +121,10 @@ export function WalletPortfolioPresenterV22({
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Wallet UI Variations - Conditionally Rendered */}
-          {walletUIVariation === 1 && (
-            <WalletUIVariation1
-              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-            />
-          )}
-          {walletUIVariation === 2 && (
-            <WalletUIVariation2
-              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-            />
-          )}
-          {walletUIVariation === 3 && (
-            <WalletUIVariation3
-              onOpenWalletManager={() => setIsWalletManagerOpen(true)}
-              onOpenSettings={() => setIsSettingsOpen(true)}
-            />
-          )}
+          <WalletMenu
+            onOpenWalletManager={() => setIsWalletManagerOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+          />
         </div>
       </nav>
 

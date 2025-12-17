@@ -7,23 +7,24 @@ import { useConnectModal } from "thirdweb/react";
 
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
+import { dropdownMenu } from "@/lib/animationVariants";
 import { formatAddress } from "@/lib/formatters";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
-interface WalletUIVariation1Props {
+interface WalletMenuProps {
   onOpenWalletManager: () => void;
   onOpenSettings: () => void;
 }
 
 /**
- * Variation 1: Unified Wallet Menu
+ * Unified Wallet Menu
  * Single entry point for ALL wallet operations that adapts to user state.
  */
-export function WalletUIVariation1({
+export function WalletMenu({
   onOpenWalletManager,
   onOpenSettings,
-}: WalletUIVariation1Props) {
+}: WalletMenuProps) {
   const {
     connectedWallets,
     switchActiveWallet,
@@ -43,19 +44,15 @@ export function WalletUIVariation1({
 
   // Handle direct wallet connection (1-step flow)
   const handleConnectClick = async () => {
-    try {
-      await connect({
-        client: THIRDWEB_CLIENT,
-        wallets: DEFAULT_WALLETS,
-        chains: DEFAULT_SUPPORTED_CHAINS,
-        theme: "dark",
-        size: "compact",
-        title: "Connect Wallet",
-        showThirdwebBranding: false,
-      });
-    } catch (error) {
-      console.error("Connection failed:", error);
-    }
+    await connect({
+      client: THIRDWEB_CLIENT,
+      wallets: DEFAULT_WALLETS,
+      chains: DEFAULT_SUPPORTED_CHAINS,
+      theme: "dark",
+      size: "compact",
+      title: "Connect Wallet",
+      showThirdwebBranding: false,
+    });
   };
 
   // Click outside and Escape key handler
@@ -83,13 +80,9 @@ export function WalletUIVariation1({
   }, [isMenuOpen]);
 
   const handleCopyAddress = async (address: string) => {
-    try {
-      await navigator.clipboard.writeText(address);
-      setCopiedAddress(address);
-      setTimeout(() => setCopiedAddress(null), 2000);
-    } catch (error) {
-      console.error("Failed to copy address:", error);
-    }
+    await navigator.clipboard.writeText(address);
+    setCopiedAddress(address);
+    setTimeout(() => setCopiedAddress(null), 2000);
   };
 
   const handleSwitchWallet = async (address: string) => {
@@ -106,12 +99,52 @@ export function WalletUIVariation1({
     setIsMenuOpen(false);
   };
 
+  // Helper components to eliminate code duplication
+  const MenuItems = () => (
+    <>
+      <button
+        onClick={() => {
+          setIsMenuOpen(false);
+          onOpenWalletManager();
+        }}
+        className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
+      >
+        <Settings className="w-4 h-4 text-purple-400" />
+        Manage Wallets
+      </button>
+      <button
+        onClick={() => {
+          setIsMenuOpen(false);
+          onOpenSettings();
+        }}
+        className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
+      >
+        <Settings className="w-4 h-4 text-purple-400" />
+        Settings
+      </button>
+    </>
+  );
+
+  const DisconnectButton = ({ label }: { label: string }) => (
+    <div className="border-t border-gray-800 py-1">
+      <button
+        onClick={handleDisconnect}
+        className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-3"
+      >
+        <LogOut className="w-4 h-4" />
+        {label}
+      </button>
+    </div>
+  );
+
   return (
     <div className="relative" ref={menuRef}>
       {/* Unified Menu Button */}
       <button
         data-testid="unified-wallet-menu-button"
-        onClick={!isConnected ? handleConnectClick : () => setIsMenuOpen(!isMenuOpen)}
+        onClick={
+          !isConnected ? handleConnectClick : () => setIsMenuOpen(!isMenuOpen)
+        }
         disabled={isConnecting}
         className={`h-10 px-4 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/20 hover:border-purple-500/40 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium text-gray-200 hover:text-white ${isConnecting ? "opacity-50 cursor-wait" : ""}`}
         aria-expanded={isMenuOpen}
@@ -149,9 +182,10 @@ export function WalletUIVariation1({
         {isConnected && isMenuOpen && (
           <motion.div
             data-testid="unified-wallet-menu-dropdown"
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            variants={dropdownMenu}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             transition={{ duration: 0.15, ease: "easeOut" }}
             className="absolute top-full right-0 mt-2 w-80 bg-gray-900 border border-purple-500/30 rounded-xl shadow-2xl shadow-purple-500/10 backdrop-blur-xl z-50 overflow-hidden"
             role="menu"
@@ -205,38 +239,11 @@ export function WalletUIVariation1({
                     <Wallet className="w-4 h-4 text-purple-400" />
                     View My Bundle
                   </button>
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenWalletManager();
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-                  >
-                    <Settings className="w-4 h-4 text-purple-400" />
-                    Manage Wallets
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenSettings();
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-                  >
-                    <Settings className="w-4 h-4 text-purple-400" />
-                    Settings
-                  </button>
+                  <MenuItems />
                 </div>
 
                 {/* Disconnect */}
-                <div className="border-t border-gray-800 py-1">
-                  <button
-                    onClick={handleDisconnect}
-                    className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-3"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Disconnect
-                  </button>
-                </div>
+                <DisconnectButton label="Disconnect" />
               </div>
             )}
 
@@ -288,7 +295,9 @@ export function WalletUIVariation1({
                             disabled={isSwitchingWallet}
                             className="text-xs text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50 disabled:cursor-wait transition-colors"
                           >
-                            {isSwitchingWallet ? "Switching..." : "Switch to this wallet"}
+                            {isSwitchingWallet
+                              ? "Switching..."
+                              : "Switch to this wallet"}
                           </button>
                         )}
                       </div>
@@ -306,38 +315,11 @@ export function WalletUIVariation1({
 
                 {/* Menu Items */}
                 <div className="py-1">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenWalletManager();
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-                  >
-                    <Settings className="w-4 h-4 text-purple-400" />
-                    Manage Wallets
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onOpenSettings();
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-                  >
-                    <Settings className="w-4 h-4 text-purple-400" />
-                    Settings
-                  </button>
+                  <MenuItems />
                 </div>
 
                 {/* Disconnect All */}
-                <div className="border-t border-gray-800 py-1">
-                  <button
-                    onClick={handleDisconnect}
-                    className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors flex items-center gap-3"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    Disconnect All
-                  </button>
-                </div>
+                <DisconnectButton label="Disconnect All" />
               </div>
             )}
           </motion.div>
