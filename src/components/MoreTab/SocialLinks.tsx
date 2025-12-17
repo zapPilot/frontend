@@ -36,7 +36,7 @@ const defaultLinks: SocialLink[] = [
   {
     icon: MessageSquare,
     label: "Farcaster",
-    url: "https://warpcast.com/zappilot",
+    url: "https://farcaster.xyz/david-chang",
   },
   {
     icon: Send,

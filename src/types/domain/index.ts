@@ -10,5 +10,6 @@ export * from "./pool";
 export * from "./portfolio";
 export * from "./risk";
 export * from "./strategies";
+export * from "./transaction";
 export * from "./user.types";
 export * from "./wallet";

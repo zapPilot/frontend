@@ -23,14 +23,18 @@ import { Footer } from "@/components/Footer/Footer";
 import { GradientButton } from "@/components/ui";
 import {
   Modal,
-  ModalButtonGroup,
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalInput,
 } from "@/components/ui/modal";
+import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
+import {
+  DepositModal,
+  RebalanceModal,
+  WithdrawModal,
+} from "@/components/wallet/variations/v22/modals";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 import { formatAddress } from "@/lib/formatters";
@@ -50,8 +54,13 @@ export function WalletPortfolioPresenterV22({
   userId = "",
 }: WalletPortfolioPresenterV22Props = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
-  const { connectedWallets, switchActiveWallet, hasMultipleWallets } =
-    useWalletProvider();
+  const {
+    connectedWallets,
+    switchActiveWallet,
+    hasMultipleWallets,
+    account,
+    isConnected,
+  } = useWalletProvider();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -104,9 +113,14 @@ export function WalletPortfolioPresenterV22({
   ];
 
   // Modal state - consolidated to avoid duplication
-  const [activeModal, setActiveModal] = useState<"deposit" | "withdraw" | null>(
-    null
-  );
+  const [activeModal, setActiveModal] = useState<
+    "deposit" | "withdraw" | "rebalance" | null
+  >(null);
+
+  const openModal = (
+    type: "deposit" | "withdraw" | "rebalance" | null
+  ) => setActiveModal(type);
+  const closeModal = () => setActiveModal(null);
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30" data-testid="v22-dashboard">
@@ -146,6 +160,17 @@ export function WalletPortfolioPresenterV22({
         </div>
 
         <div className="flex items-center gap-4">
+          {!isConnected && (
+            <ConnectWalletButton className="min-w-[180px]" />
+          )}
+
+          {isConnected && account?.address ? (
+            <div className="hidden sm:flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/10 px-3 py-2 text-xs font-bold text-purple-100">
+              <Zap className="w-3 h-3" />
+              {formatAddress(account.address)}
+            </div>
+          ) : null}
+
           {/* Multi-wallet switcher (V22 Phase 2D) */}
           {hasMultipleWallets && (
             <div className="relative" ref={dropdownRef}>
@@ -264,14 +289,14 @@ export function WalletPortfolioPresenterV22({
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       data-testid="deposit-button"
-                      onClick={() => setActiveModal("deposit")}
+                      onClick={() => openModal("deposit")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-400 text-xs font-bold rounded-lg transition-colors border border-green-500/20"
                     >
                       <ArrowDownCircle className="w-4 h-4" /> Deposit
                     </button>
                     <button
                       data-testid="withdraw-button"
-                      onClick={() => setActiveModal("withdraw")}
+                      onClick={() => openModal("withdraw")}
                       className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold rounded-lg transition-colors border border-red-500/20"
                     >
                       <ArrowUpCircle className="w-4 h-4" /> Withdraw
@@ -479,12 +504,13 @@ export function WalletPortfolioPresenterV22({
                   </div>
                   <div className="flex gap-2">
                     <GradientButton
-                      data-testid="optimize-button"
+                      data-testid="rebalance-button"
                       gradient={GRADIENTS.PRIMARY}
                       icon={Zap}
                       className="h-8 text-xs"
+                      onClick={() => openModal("rebalance")}
                     >
-                      Optimize
+                      Rebalance
                     </GradientButton>
                   </div>
                 </div>
@@ -613,72 +639,36 @@ export function WalletPortfolioPresenterV22({
         onClose={() => setIsWalletManagerOpen(false)}
       />
 
-      {/* Transaction Modal - Consolidated Deposit/Withdraw */}
-      <Modal
-        isOpen={activeModal === "deposit" || activeModal === "withdraw"}
-        onClose={() => setActiveModal(null)}
-        maxWidth="md"
-      >
-        <ModalHeader
-          title={
-            activeModal === "deposit" ? "Deposit to Pilot" : "Withdraw Funds"
-          }
-          {...(activeModal === "withdraw" && {
-            subtitle:
-              "Divesting will convert your active positions back to USDC.",
-          })}
-          onClose={() => setActiveModal(null)}
-        />
-        <ModalContent>
-          {activeModal === "deposit" ? (
-            <>
-              <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700/50">
-                <div className="text-xs text-gray-400 mb-1">
-                  Based on Current Regime:{" "}
-                  <span className="text-green-400 font-bold">Greed</span>
-                </div>
-                <div className="flex gap-2 text-sm font-mono">
-                  <span className="text-white">40% Crypto</span>
-                  <span className="text-gray-600">/</span>
-                  <span className="text-emerald-400">60% Stable</span>
-                </div>
-              </div>
-              <ModalInput
-                label="Amount (USDC)"
-                type="number"
-                placeholder="0.00"
-              />
-            </>
-          ) : (
-            <div>
-              <label className="text-xs text-gray-500 font-bold uppercase mb-2 block">
-                Amount to Withdraw
-              </label>
-              <div className="grid grid-cols-4 gap-2 mb-4">
-                {["25%", "50%", "75%", "Max"].map(pct => (
-                  <button
-                    key={pct}
-                    className="py-1 bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 rounded-lg transition-colors border border-gray-700"
-                  >
-                    {pct}
-                  </button>
-                ))}
-              </div>
-              <ModalInput type="number" placeholder="0.00" />
-            </div>
-          )}
-        </ModalContent>
-        <ModalFooter>
-          <ModalButtonGroup
-            onCancel={() => setActiveModal(null)}
-            onConfirm={() => setActiveModal(null)}
-            confirmLabel={
-              activeModal === "deposit" ? "Confirm Deposit" : "Withdraw"
-            }
-            confirmVariant={activeModal === "deposit" ? "primary" : "danger"}
-          />
-        </ModalFooter>
-      </Modal>
+      <DepositModal
+        isOpen={activeModal === "deposit"}
+        onClose={closeModal}
+        defaultChainId={1}
+        regimeAllocation={
+          currentRegime
+            ? {
+                crypto: currentRegime.allocation.crypto,
+                stable: currentRegime.allocation.stable,
+              }
+            : undefined
+        }
+      />
+
+      <WithdrawModal
+        isOpen={activeModal === "withdraw"}
+        onClose={closeModal}
+        currentBalance={data.balance}
+      />
+
+      <RebalanceModal
+        isOpen={activeModal === "rebalance"}
+        onClose={closeModal}
+        currentAllocation={{
+          crypto: data.currentAllocation.crypto,
+          stable: data.currentAllocation.stable,
+          simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+        }}
+        targetAllocation={data.targetAllocation}
+      />
 
       {/* Core Settings Modal */}
       <Modal

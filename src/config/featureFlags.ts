@@ -4,7 +4,7 @@
  * Centralized feature flag management for gradual rollouts and A/B testing.
  *
  * @note All V22 migration flags have been removed after successful hard cutover.
- * @see docs/V22_MIGRATION_ROADMAP.md for migration history
+ * @see docs/V22_OVERVIEW.md for consolidated migration history
  */
 
 /**
