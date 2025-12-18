@@ -1,11 +1,11 @@
 "use client";
 
+import { ArrowRight, Check } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { GradientButton } from "@/components/ui/GradientButton";
+import { Modal, ModalContent } from "@/components/ui/modal";
 import { StrategySlider } from "@/components/wallet/variations/v22/modals/components/StrategySlider";
-import { ActionButtons } from "@/components/wallet/variations/v22/modals/components/TransactionFormLayout";
-import { TransactionSummary } from "@/components/wallet/variations/v22/modals/components/TransactionSummary";
-import { TransactionModal } from "@/components/wallet/variations/v22/modals/TransactionModal";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
 import type { AllocationBreakdown } from "@/types/domain/transaction";
@@ -76,91 +76,128 @@ export function RebalanceModal({
   };
 
   const isSubmitDisabled = status === "submitting" || !isConnected;
+  const isSubmitting = status === "submitting" || status === "success";
 
   return (
-    <TransactionModal
-      isOpen={isOpen}
-      onClose={resetState}
-      title="Rebalance with Strategy Slider"
-      subtitle="Choose how aggressively to rebalance. 0% = no change, 100% = full target."
-      accent="primary"
-      testId="rebalance-modal"
-    >
-      {(status === "submitting" || status === "success") ? (
-        <div className="animate-in fade-in zoom-in duration-300">
-             <div className="mb-6">
-                <IntentVisualizer steps={["Analyze", "Rebalance", "Invest"]} />
-             </div>
-             {result ? (
-                <div
-                data-testid="success-message"
-                className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-sm text-purple-100"
-                >
-                Rebalance simulated. Tx: {result.txHash.slice(0, 12)}…
+    <Modal isOpen={isOpen} onClose={resetState} maxWidth="md">
+      <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800">
+        {/* Header with purple status indicator */}
+        <div className="bg-gray-900/50 p-4 flex justify-between items-center border-b border-gray-800">
+          <h3 className="font-bold text-white flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+            Portfolio Rebalance
+          </h3>
+          {!isSubmitting && (
+            <button
+              onClick={resetState}
+              className="text-gray-400 hover:text-white"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+
+        <div className="p-6">
+          {isSubmitting ? (
+            // Submission view with IntentVisualizer
+            <div className="animate-in fade-in zoom-in duration-300">
+              <div className="mb-6">
+                <IntentVisualizer
+                  steps={["Analyze", "Rebalance", "Allocate"]}
+                />
+              </div>
+              {status === "success" && result && (
+                <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl flex items-center gap-3 text-purple-400">
+                  <Check className="w-5 h-5 flex-shrink-0" />
+                  <div className="text-sm font-semibold">
+                    Rebalance Successfully Executed!
+                  </div>
+                  {result.txHash && (
+                    <div className="ml-auto text-xs underline cursor-pointer hover:text-purple-300">
+                      View Tx
+                    </div>
+                  )}
                 </div>
-            ) : null}
-        </div>
-      ) : (
-      <>
-      <StrategySlider
-        value={intensity}
-        onChange={setIntensity}
-        currentAllocation={currentAllocation}
-        targetAllocation={targetAllocation}
-        previewAllocation={previewAllocation}
-      />
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              {/* Strategy Slider - Keep existing component */}
+              <StrategySlider
+                value={intensity}
+                onChange={setIntensity}
+                currentAllocation={currentAllocation}
+                targetAllocation={targetAllocation}
+                previewAllocation={previewAllocation}
+              />
 
-      <div
-        data-testid="rebalance-preview"
-        className="rounded-xl border border-purple-500/40 bg-purple-500/10 p-4 text-sm text-purple-50"
-      >
-        <div className="flex items-center justify-between">
-          <span className="font-semibold">Impact Preview</span>
-          <span className="rounded-full bg-black/30 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-widest">
-            {intensity}% intensity
-          </span>
-        </div>
-        <div className="mt-2 flex flex-col gap-1 text-purple-100/80">
-          <span>APR change: +{aprDelta.toFixed(2)}%</span>
-          <span>
-            Projected drift after:{" "}
-            {(targetAllocation.crypto - previewAllocation.crypto).toFixed(2)}%
-          </span>
-          <span>Est. gas: ~$3.20</span>
-        </div>
-      </div>
+              {/* Impact Preview - Redesigned */}
+              <div className="bg-gray-900/50 border border-purple-500/40 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-semibold text-purple-100">
+                    Impact Preview
+                  </span>
+                  <span className="rounded-full bg-purple-500/20 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-purple-300">
+                    {intensity}% Intensity
+                  </span>
+                </div>
+                <div className="space-y-2 text-sm text-purple-100/80">
+                  <div className="flex justify-between">
+                    <span>APR Change:</span>
+                    <span className="font-semibold text-green-400">
+                      +{aprDelta.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Projected Drift:</span>
+                    <span className="font-semibold">
+                      {Math.abs(
+                        targetAllocation.crypto - previewAllocation.crypto
+                      ).toFixed(2)}
+                      %
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Est. Gas:</span>
+                    <span className="font-semibold text-gray-400">~$3.20</span>
+                  </div>
+                </div>
+              </div>
 
-      <TransactionSummary
-        chain={null}
-        token={null}
-        amount={intensity.toString()}
-        usdAmount={usdAmount}
-        actionLabel="Rebalance"
-        allocationAfter={previewAllocation}
-        gasEstimateUsd={3.2}
-      />
+              {/* Transaction Value Display */}
+              <div className="relative">
+                <div className="absolute top-0 left-0 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                  Transaction Value
+                </div>
+                <div className="w-full bg-transparent text-4xl font-mono font-bold text-white py-6 border-b border-gray-800">
+                  ${usdAmount.toLocaleString()}
+                </div>
+                <div className="absolute top-6 right-0 text-sm text-gray-500">
+                  Based on {intensity}% intensity
+                </div>
+              </div>
 
-      <ActionButtons
-        gradient="from-purple-500 to-blue-500"
-        disabled={isSubmitDisabled}
-        isConnected={isConnected}
-        status={status}
-        submittingLabel="Calculating…"
-        readyLabel="Execute Rebalance"
-        onConfirm={handleSubmit}
-        onCancel={resetState}
-      />
-
-      {result ? (
-        <div
-          data-testid="success-message"
-          className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-sm text-purple-100"
-        >
-          Rebalance simulated. Tx: {result.txHash.slice(0, 12)}…
+              {/* Submit Button - Purple/Blue Gradient */}
+              <GradientButton
+                gradient="from-purple-600 to-blue-600"
+                className="w-full py-4 text-lg font-bold shadow-lg shadow-purple-500/10 flex items-center justify-center gap-2 group"
+                disabled={isSubmitDisabled}
+                onClick={handleSubmit}
+                testId="rebalance-submit"
+              >
+                <span>
+                  {(() => {
+                    if (!isConnected) return "Connect Wallet";
+                    if (intensity === 0) return "Adjust Intensity";
+                    return "Execute Rebalance";
+                  })()}
+                </span>
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </GradientButton>
+            </div>
+          )}
         </div>
-      ) : null}
-      </>
-      )}
-    </TransactionModal>
+      </ModalContent>
+    </Modal>
   );
 }

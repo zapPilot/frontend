@@ -30,7 +30,7 @@ import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingV
 import {
   DepositModalV3,
   RebalanceModal,
-  WithdrawModal
+  WithdrawModal,
 } from "@/components/wallet/variations/v22/modals";
 import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
@@ -526,14 +526,6 @@ export function WalletPortfolioPresenterV22({
         isOpen={activeModal === "deposit"}
         onClose={closeModal}
         defaultChainId={1}
-        regimeAllocation={
-          currentRegime
-            ? {
-                crypto: currentRegime.allocation.crypto,
-                stable: currentRegime.allocation.stable,
-              }
-            : undefined
-        }
       />
 
       <WithdrawModal
