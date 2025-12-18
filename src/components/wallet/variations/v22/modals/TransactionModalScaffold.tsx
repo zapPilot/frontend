@@ -3,9 +3,9 @@
 import type { ReactNode } from "react";
 
 import {
-  type ActionButtonsProps,
-  TransactionFormLayout,
-  type TransactionFormLayoutProps,
+    type ActionButtonsProps,
+    TransactionFormLayout,
+    type TransactionFormLayoutProps,
 } from "./components/TransactionFormLayout";
 import type { useTransactionForm } from "./hooks/useTransactionForm";
 import type { useTransactionTokenData } from "./hooks/useTransactionTokenData";
@@ -31,6 +31,8 @@ interface TransactionModalScaffoldProps {
   successClassName?: string;
   preFormContent?: ReactNode;
   postAmountContent?: ReactNode;
+  isSubmitting?: boolean;
+  visualizer?: ReactNode;
 }
 
 export function TransactionModalScaffold({
@@ -49,6 +51,8 @@ export function TransactionModalScaffold({
   successClassName,
   preFormContent,
   postAmountContent,
+  isSubmitting,
+  visualizer,
 }: TransactionModalScaffoldProps) {
   return (
     <TransactionFormLayout
@@ -78,6 +82,9 @@ export function TransactionModalScaffold({
       {...(successClassName ? { successClassName } : {})}
       preFormContent={preFormContent}
       postAmountContent={postAmountContent}
+
+      isSubmitting={!!isSubmitting}
+      visualizer={visualizer}
     />
   );
 }

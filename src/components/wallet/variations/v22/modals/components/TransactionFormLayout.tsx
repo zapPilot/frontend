@@ -9,10 +9,10 @@ import { TokenSelector } from "@/components/wallet/variations/v22/modals/compone
 import { TransactionSummary } from "@/components/wallet/variations/v22/modals/components/TransactionSummary";
 import { TransactionModal } from "@/components/wallet/variations/v22/modals/TransactionModal";
 import type {
-  AllocationBreakdown,
-  ChainData,
-  TokenBalance,
-  TransactionToken,
+    AllocationBreakdown,
+    ChainData,
+    TokenBalance,
+    TransactionToken,
 } from "@/types/domain/transaction";
 
 export interface SummaryProps {
@@ -64,6 +64,8 @@ export interface TransactionFormLayoutProps {
   successClassName?: string;
   preFormContent?: ReactNode;
   postAmountContent?: ReactNode;
+  isSubmitting?: boolean;
+  visualizer?: ReactNode;
 }
 
 export function ActionButtons({
@@ -130,6 +132,8 @@ export function TransactionFormLayout({
   successClassName,
   preFormContent,
   postAmountContent,
+  isSubmitting,
+  visualizer,
 }: TransactionFormLayoutProps) {
   return (
     <TransactionModal
@@ -140,48 +144,69 @@ export function TransactionFormLayout({
       accent={accent}
       testId={testId}
     >
-      {preFormContent}
-
-      <ChainSelector
-        chains={chainList}
-        selectedChainId={selectedChainId}
-        onSelect={onSelectChain}
-      />
-
-      <TokenSelector
-        tokens={tokens}
-        selectedToken={selectedTokenAddress}
-        onSelect={onSelectToken}
-        balances={balances}
-        loading={tokensLoading}
-      />
-
-      <AmountInput
-        value={amount}
-        onChange={onChangeAmount}
-        max={maxAmount}
-        token={token}
-        readOnly={readOnlyAmount}
-        error={amountError}
-      />
-
-      {postAmountContent}
-
-      <TransactionSummary {...summary} />
-
-      <ActionButtons {...actionButtons} />
-
-      {successMessage ? (
-        <div
-          data-testid="success-message"
-          className={
-            successClassName ??
-            "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
-          }
-        >
-          {successMessage}
+      {isSubmitting && visualizer ? (
+        <div className="animate-in fade-in zoom-in duration-300">
+            <div className="mb-6">
+                {visualizer}
+            </div>
+             {successMessage ? (
+                <div
+                data-testid="success-message"
+                className={
+                    successClassName ??
+                    "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
+                }
+                >
+                {successMessage}
+                </div>
+            ) : null}
         </div>
-      ) : null}
+      ) : (
+        <>
+            {preFormContent}
+
+            <ChainSelector
+                chains={chainList}
+                selectedChainId={selectedChainId}
+                onSelect={onSelectChain}
+            />
+
+            <TokenSelector
+                tokens={tokens}
+                selectedToken={selectedTokenAddress}
+                onSelect={onSelectToken}
+                balances={balances}
+                loading={tokensLoading}
+            />
+
+            <AmountInput
+                value={amount}
+                onChange={onChangeAmount}
+                max={maxAmount}
+                token={token}
+                readOnly={readOnlyAmount}
+                error={amountError}
+            />
+
+            {postAmountContent}
+
+            <TransactionSummary {...summary} />
+
+            <ActionButtons {...actionButtons} />
+
+            {successMessage ? (
+                <div
+                data-testid="success-message"
+                className={
+                    successClassName ??
+                    "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
+                }
+                >
+                {successMessage}
+                </div>
+            ) : null}
+        </>
+      )}
     </TransactionModal>
   );
 }

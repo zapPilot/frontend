@@ -16,7 +16,7 @@ export function useTransactionViewModel(
     isOpen,
     chainId,
     tokenAddress,
-    setTokenAddress: address => form.setValue("tokenAddress", address),
+    setTokenAddress: address => form.setValue("tokenAddress", address, { shouldValidate: true }),
     amount,
   });
 

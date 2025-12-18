@@ -11,6 +11,7 @@ import { transactionService } from "@/services";
 import type { AllocationBreakdown } from "@/types/domain/transaction";
 
 import { useTransactionStatus } from "./hooks/useTransactionStatus";
+import { IntentVisualizer } from "./visualizers/IntentVisualizer";
 
 interface RebalanceModalProps {
   isOpen: boolean;
@@ -85,6 +86,22 @@ export function RebalanceModal({
       accent="primary"
       testId="rebalance-modal"
     >
+      {(status === "submitting" || status === "success") ? (
+        <div className="animate-in fade-in zoom-in duration-300">
+             <div className="mb-6">
+                <IntentVisualizer steps={["Analyze", "Rebalance", "Invest"]} />
+             </div>
+             {result ? (
+                <div
+                data-testid="success-message"
+                className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-3 text-sm text-purple-100"
+                >
+                Rebalance simulated. Tx: {result.txHash.slice(0, 12)}…
+                </div>
+            ) : null}
+        </div>
+      ) : (
+      <>
       <StrategySlider
         value={intensity}
         onChange={setIntensity}
@@ -142,6 +159,8 @@ export function RebalanceModal({
           Rebalance simulated. Tx: {result.txHash.slice(0, 12)}…
         </div>
       ) : null}
+      </>
+      )}
     </TransactionModal>
   );
 }

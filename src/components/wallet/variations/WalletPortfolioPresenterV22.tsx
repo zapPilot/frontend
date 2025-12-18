@@ -28,9 +28,9 @@ import {
 import { AnalyticsView } from "@/components/wallet/variations/v22/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingView";
 import {
-  DepositModal,
+  DepositModalV3,
   RebalanceModal,
-  WithdrawModal,
+  WithdrawModal
 } from "@/components/wallet/variations/v22/modals";
 import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
@@ -522,7 +522,7 @@ export function WalletPortfolioPresenterV22({
         onClose={() => setIsWalletManagerOpen(false)}
       />
 
-      <DepositModal
+      <DepositModalV3
         isOpen={activeModal === "deposit"}
         onClose={closeModal}
         defaultChainId={1}
