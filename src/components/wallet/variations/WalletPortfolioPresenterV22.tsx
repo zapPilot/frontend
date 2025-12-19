@@ -32,8 +32,21 @@ import {
   RebalanceModal,
 } from "@/components/wallet/variations/v22/modals";
 import { RebalanceModalV1 } from "@/components/wallet/variations/v22/modals/RebalanceModalV1";
+import { RebalanceModalV10 } from "@/components/wallet/variations/v22/modals/RebalanceModalV10";
+import { RebalanceModalV11 } from "@/components/wallet/variations/v22/modals/RebalanceModalV11";
+import { RebalanceModalV12 } from "@/components/wallet/variations/v22/modals/RebalanceModalV12";
+import { RebalanceModalV13 } from "@/components/wallet/variations/v22/modals/RebalanceModalV13";
+import { RebalanceModalV14 } from "@/components/wallet/variations/v22/modals/RebalanceModalV14";
+import { RebalanceModalV15 } from "@/components/wallet/variations/v22/modals/RebalanceModalV15";
 import { RebalanceModalV2 } from "@/components/wallet/variations/v22/modals/RebalanceModalV2";
 import { RebalanceModalV3 } from "@/components/wallet/variations/v22/modals/RebalanceModalV3";
+import { RebalanceModalV4 } from "@/components/wallet/variations/v22/modals/RebalanceModalV4";
+import { RebalanceModalV5 } from "@/components/wallet/variations/v22/modals/RebalanceModalV5";
+import { RebalanceModalV6 } from "@/components/wallet/variations/v22/modals/RebalanceModalV6";
+import { RebalanceModalV7 } from "@/components/wallet/variations/v22/modals/RebalanceModalV7";
+import { RebalanceModalV8 } from "@/components/wallet/variations/v22/modals/RebalanceModalV8";
+import { RebalanceModalV9 } from "@/components/wallet/variations/v22/modals/RebalanceModalV9";
+import { RebalanceModalV18 } from "@/components/wallet/variations/v22/modals/RebalanceModalV18";
 import { WithdrawModalV10Dropdown } from "@/components/wallet/variations/v22/modals/WithdrawModalV10Dropdown";
 
 import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
@@ -59,7 +72,7 @@ export function WalletPortfolioPresenterV22({
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   
   // Rebalance Variations (Dev Switcher)
-  const [rebalanceVariation, setRebalanceVariation] = useState<"v0" | "v1" | "v2" | "v3">("v0");
+  const [rebalanceVariation, setRebalanceVariation] = useState<"v0" | "v1" | "v2" | "v3" | "v4" | "v5" | "v6" | "v7" | "v8" | "v9" | "v10" | "v11" | "v12" | "v13" | "v14" | "v15" | "v18">("v0");
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -178,7 +191,7 @@ export function WalletPortfolioPresenterV22({
                   <div className="mb-4 bg-gray-900/40 p-2 rounded-lg border border-gray-800 overflow-x-auto">
                     <div className="flex gap-1 min-w-max">
                         <span className="text-xs text-gray-500 font-bold uppercase py-1.5 px-2">Rebal:</span>
-                        {(["v0", "v1", "v2", "v3"] as const).map((v) => (
+                        {(["v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15", "v18"] as const).map((v) => (
                             <button
                                 key={v}
                                 onClick={() => setRebalanceVariation(v)}
@@ -605,6 +618,162 @@ export function WalletPortfolioPresenterV22({
             )}
             {rebalanceVariation === "v3" && (
                 <RebalanceModalV3
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v4" && (
+                <RebalanceModalV4
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v5" && (
+                <RebalanceModalV5
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v6" && (
+                <RebalanceModalV6
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v7" && (
+                <RebalanceModalV7
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v8" && (
+                <RebalanceModalV8
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v9" && (
+                <RebalanceModalV9
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v10" && (
+                <RebalanceModalV10
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v11" && (
+                <RebalanceModalV11
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v12" && (
+                <RebalanceModalV12
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v13" && (
+                <RebalanceModalV13
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v14" && (
+                <RebalanceModalV14
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v15" && (
+                <RebalanceModalV15
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v18" && (
+                <RebalanceModalV18
                     isOpen={true}
                     onClose={closeModal}
                     currentAllocation={{
