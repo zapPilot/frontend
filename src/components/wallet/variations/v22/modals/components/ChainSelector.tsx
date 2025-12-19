@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { SelectorHeader } from "@/components/wallet/variations/v22/modals/components/SelectorHeader";
+import { FOCUS_STYLES } from "@/constants/design-system";
 import type { ChainData } from "@/types/domain/transaction";
 
 interface ChainSelectorProps {
@@ -22,8 +23,12 @@ export function ChainSelector({
         title="Select Chain"
         description="Multi-chain ready. Disabled chains are marked as coming soon."
       />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {chains.map(chain => {
+      <div role="group" aria-labelledby="chain-selector-label">
+        <h3 id="chain-selector-label" className="sr-only">
+          Select blockchain network
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {chains.map(chain => {
           const isSelected = chain.chainId === selectedChainId;
           return (
             <button
@@ -34,7 +39,7 @@ export function ChainSelector({
               aria-label={`Select ${chain.name}`}
               onClick={() => onSelect(chain.chainId)}
               disabled={!chain.isActive}
-              className={`relative rounded-xl border p-3 text-left transition-all duration-150 ${
+              className={`relative rounded-xl border p-3 text-left transition-all duration-150 ${FOCUS_STYLES} ${
                 isSelected
                   ? "border-purple-500/60 bg-purple-500/10 shadow-lg shadow-purple-500/20"
                   : "border-gray-800 bg-gray-900/50 hover:border-purple-500/30 hover:bg-gray-900/80"
@@ -77,6 +82,7 @@ export function ChainSelector({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

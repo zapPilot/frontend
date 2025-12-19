@@ -36,34 +36,34 @@ export function TransactionSummary({
         </span>
       </div>
 
-      <div className="mt-3 space-y-2 text-sm text-gray-300">
+      <dl className="mt-3 space-y-2 text-sm text-gray-300">
         <div className="flex justify-between">
-          <span>Amount</span>
-          <span className="font-semibold text-white">
+          <dt>Amount</dt>
+          <dd className="font-semibold text-white">
             {amount || "0"} {token?.symbol ?? ""}
-          </span>
+          </dd>
         </div>
         <div className="flex justify-between">
-          <span>Value</span>
-          <span className="font-semibold text-white">
+          <dt>Value</dt>
+          <dd className="font-semibold text-white">
             ${usdAmount.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-          </span>
+          </dd>
         </div>
         {chain ? (
           <div className="flex justify-between">
-            <span>Chain</span>
-            <span className="font-semibold text-white">
+            <dt>Chain</dt>
+            <dd className="font-semibold text-white">
               {chain.name} ({chain.symbol})
-            </span>
+            </dd>
           </div>
         ) : null}
         <div className="flex justify-between">
-          <span>Estimated Gas</span>
-          <span className="font-semibold text-white">
+          <dt>Estimated Gas</dt>
+          <dd className="font-semibold text-white">
             ~${gasEstimateUsd.toFixed(2)}
-          </span>
+          </dd>
         </div>
-      </div>
+      </dl>
 
       {allocationAfter ? (
         <div className="mt-4 rounded-lg border border-gray-800 bg-gray-900/80 p-3 text-xs text-gray-400">

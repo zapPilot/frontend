@@ -70,6 +70,10 @@ export const Z_INDEX = {
   TOOLTIP: "z-[9999]",
 } as const;
 
+// Focus styles for consistent keyboard navigation indicators (WCAG 2.4.7)
+export const FOCUS_STYLES =
+  "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900" as const;
+
 // Header sizing/offset tokens
 export const HEADER = {
   HEIGHT: "h-16",

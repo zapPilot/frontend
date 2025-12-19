@@ -32,6 +32,7 @@ export function TransactionModal({
   testId,
 }: TransactionModalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const focusableSelectors = useMemo(
     () => [
@@ -44,6 +45,17 @@ export function TransactionModal({
     ],
     []
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      // Store current focus before opening modal
+      previousFocusRef.current = document.activeElement as HTMLElement;
+    } else if (previousFocusRef.current) {
+      // Restore focus when modal closes
+      previousFocusRef.current.focus();
+      previousFocusRef.current = null;
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -81,11 +93,15 @@ export function TransactionModal({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [focusableSelectors, isOpen]);
 
+  const titleId = `${testId}-title`;
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="xl"
+      aria-labelledby={titleId}
+      aria-describedby={subtitle ? `${testId}-subtitle` : undefined}
       className="bg-gray-900/90 border border-gray-800 shadow-2xl"
     >
       <div
@@ -96,9 +112,16 @@ export function TransactionModal({
         <div
           className={`rounded-2xl border border-white/5 bg-gradient-to-br ${ACCENT_CLASS[accent]} p-4`}
         >
-          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <h2 id={titleId} className="text-xl font-bold text-white">
+            {title}
+          </h2>
           {subtitle ? (
-            <p className="text-sm text-gray-200/80 mt-1">{subtitle}</p>
+            <p
+              id={`${testId}-subtitle`}
+              className="text-sm text-gray-200/80 mt-1"
+            >
+              {subtitle}
+            </p>
           ) : null}
         </div>
 

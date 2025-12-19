@@ -30,8 +30,9 @@ import { BacktestingView } from "@/components/wallet/variations/v22/BacktestingV
 import {
   DepositModalV3,
   RebalanceModal,
-  WithdrawModal,
 } from "@/components/wallet/variations/v22/modals";
+import { WithdrawModalV10Dropdown } from "@/components/wallet/variations/v22/modals/WithdrawModalV10Dropdown";
+
 import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
 import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
@@ -51,9 +52,11 @@ export function WalletPortfolioPresenterV22({
 }: WalletPortfolioPresenterV22Props = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
+
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -163,6 +166,10 @@ export function WalletPortfolioPresenterV22({
                   </div>
 
                   {/* Quick Actions - Moved to top for visibility on mobile */}
+                  
+                  {/* Withdraw Variation Switcher (For Demo/Dev) */}
+
+                  
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       data-testid="deposit-button"
@@ -528,11 +535,12 @@ export function WalletPortfolioPresenterV22({
         defaultChainId={1}
       />
 
-      <WithdrawModal
-        isOpen={activeModal === "withdraw"}
-        onClose={closeModal}
-        currentBalance={data.balance}
-      />
+      {activeModal === "withdraw" && (
+        <WithdrawModalV10Dropdown
+          isOpen={true}
+          onClose={closeModal}
+        />
+      )}
 
       <RebalanceModal
         isOpen={activeModal === "rebalance"}

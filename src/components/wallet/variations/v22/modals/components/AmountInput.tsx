@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useId, useMemo } from "react";
 
+import { FOCUS_STYLES } from "@/constants/design-system";
 import type { TransactionToken } from "@/types/domain/transaction";
 
 interface AmountInputProps {
@@ -25,6 +26,10 @@ export function AmountInput({
   showMaxButton = true,
   readOnly = false,
 }: AmountInputProps) {
+  const inputId = useId();
+  const errorId = `${inputId}-error`;
+  const descriptionId = `${inputId}-description`;
+
   const usdValue = useMemo(() => {
     const numericAmount = parseFloat(value || "0");
     if (!token?.usdPrice || Number.isNaN(numericAmount)) return 0;
@@ -49,7 +54,8 @@ export function AmountInput({
           <button
             type="button"
             onClick={() => onChange(max)}
-            className="text-xs font-semibold text-purple-300 hover:text-white"
+            aria-label={`Set amount to maximum balance: ${max} ${token?.symbol || "tokens"}`}
+            className={`text-xs font-semibold text-purple-300 hover:text-white ${FOCUS_STYLES}`}
           >
             Max: {max}
           </button>
@@ -59,16 +65,21 @@ export function AmountInput({
       <div className="rounded-2xl border border-gray-800 bg-gray-900/60 p-4">
         <div className="flex items-center gap-3">
           <input
+            id={inputId}
             type="number"
             value={value}
             onChange={event => onChange(event.target.value)}
             placeholder="0.00"
             min="0"
             inputMode="decimal"
-            aria-label="Amount"
+            aria-label={`${token?.symbol || "Token"} amount`}
+            aria-describedby={
+              [descriptionId, error ? errorId : null].filter(Boolean).join(" ")
+            }
+            aria-invalid={!!error}
             readOnly={readOnly}
             data-testid="amount-input"
-            className="w-full bg-transparent text-2xl font-semibold text-white placeholder:text-gray-600 focus:outline-none"
+            className={`w-full bg-transparent text-2xl font-semibold text-white placeholder:text-gray-600 ${FOCUS_STYLES}`}
           />
           {token ? (
             <div className="rounded-xl bg-gray-800 px-3 py-2 text-sm font-semibold text-white">
@@ -77,8 +88,13 @@ export function AmountInput({
           ) : null}
         </div>
 
-        <div className="mt-2 flex items-center justify-between text-sm text-gray-500">
-          <div>≈ ${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+        <div
+          id={descriptionId}
+          className="mt-2 flex items-center justify-between text-sm text-gray-500"
+        >
+          <div>
+            ≈ ${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+          </div>
           {token?.usdPrice ? (
             <div className="text-xs">
               1 {token.symbol} ≈ ${token.usdPrice.toLocaleString()}
@@ -92,8 +108,9 @@ export function AmountInput({
               key={pct}
               type="button"
               onClick={() => handlePreset(pct)}
+              aria-label={`Set amount to ${pct} percent of maximum balance`}
               data-testid={`preset-${pct}`}
-              className="rounded-lg border border-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-300 transition-colors hover:border-purple-500/40 hover:text-white"
+              className={`rounded-lg border border-gray-800 px-3 py-1.5 text-xs font-semibold text-gray-300 transition-colors hover:border-purple-500/40 hover:text-white ${FOCUS_STYLES}`}
             >
               {pct}%
             </button>
@@ -101,7 +118,13 @@ export function AmountInput({
         </div>
 
         {error ? (
-          <p className="mt-2 text-xs font-semibold text-red-300">{error}</p>
+          <p
+            id={errorId}
+            role="alert"
+            className="mt-2 text-xs font-semibold text-red-300"
+          >
+            {error}
+          </p>
         ) : null}
       </div>
     </div>

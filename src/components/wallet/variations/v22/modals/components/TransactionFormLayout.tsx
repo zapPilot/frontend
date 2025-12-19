@@ -8,6 +8,7 @@ import { ChainSelector } from "@/components/wallet/variations/v22/modals/compone
 import { TokenSelector } from "@/components/wallet/variations/v22/modals/components/TokenSelector";
 import { TransactionSummary } from "@/components/wallet/variations/v22/modals/components/TransactionSummary";
 import { TransactionModal } from "@/components/wallet/variations/v22/modals/TransactionModal";
+import { FOCUS_STYLES } from "@/constants/design-system";
 import type {
     AllocationBreakdown,
     ChainData,
@@ -84,7 +85,8 @@ export function ActionButtons({
       <button
         type="button"
         onClick={onCancel}
-        className="rounded-xl border border-gray-800 px-4 py-3 text-sm font-semibold text-gray-300 transition-colors hover:border-gray-600 hover:text-white"
+        aria-label="Cancel transaction and close modal"
+        className={`rounded-xl border border-gray-800 px-4 py-3 text-sm font-semibold text-gray-300 transition-colors hover:border-gray-600 hover:text-white ${FOCUS_STYLES}`}
       >
         Cancel
       </button>
@@ -93,6 +95,14 @@ export function ActionButtons({
         gradient={gradient}
         disabled={disabled}
         onClick={onConfirm}
+        aria-label={
+          status === "submitting"
+            ? submittingLabel
+            : !isConnected
+              ? connectLabel
+              : `Confirm ${readyLabel.toLowerCase()}`
+        }
+        aria-busy={status === "submitting"}
         className="min-w-[180px]"
       >
         {status === "submitting"

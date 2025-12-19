@@ -1,5 +1,6 @@
 "use client";
 
+import { FOCUS_STYLES } from "@/constants/design-system";
 import type { AllocationBreakdown } from "@/types/domain/transaction";
 
 interface StrategySliderProps {
@@ -30,14 +31,20 @@ export function StrategySlider({
 
       <input
         type="range"
+        role="slider"
         min={0}
         max={100}
         step={1}
         value={value}
-        aria-label="Strategy intensity slider"
+        aria-label="Rebalancing intensity slider"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={value}
+        aria-valuetext={`${value} percent intensity: will adjust ${value}% toward target allocation`}
+        aria-orientation="horizontal"
         data-testid="strategy-slider"
         onChange={event => onChange(Number(event.target.value))}
-        className="w-full accent-purple-500"
+        className={`w-full accent-purple-500 ${FOCUS_STYLES}`}
       />
 
       <div className="flex flex-wrap gap-2">
@@ -45,9 +52,10 @@ export function StrategySlider({
           <button
             key={preset}
             type="button"
+            aria-label={`Set intensity to ${preset} percent`}
             data-testid={`preset-${preset}`}
             onClick={() => onChange(preset)}
-            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${FOCUS_STYLES} ${
               value === preset
                 ? "border-purple-500/60 bg-purple-500/10 text-white"
                 : "border-gray-800 bg-gray-900/60 text-gray-300 hover:border-purple-500/40 hover:text-white"
