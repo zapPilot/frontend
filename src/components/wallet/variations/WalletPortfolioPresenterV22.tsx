@@ -31,6 +31,9 @@ import {
   DepositModalV3,
   RebalanceModal,
 } from "@/components/wallet/variations/v22/modals";
+import { RebalanceModalV1 } from "@/components/wallet/variations/v22/modals/RebalanceModalV1";
+import { RebalanceModalV2 } from "@/components/wallet/variations/v22/modals/RebalanceModalV2";
+import { RebalanceModalV3 } from "@/components/wallet/variations/v22/modals/RebalanceModalV3";
 import { WithdrawModalV10Dropdown } from "@/components/wallet/variations/v22/modals/WithdrawModalV10Dropdown";
 
 import { WalletMenu } from "@/components/wallet/variations/v22/WalletMenu";
@@ -54,6 +57,10 @@ export function WalletPortfolioPresenterV22({
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
+  
+  // Rebalance Variations (Dev Switcher)
+  const [rebalanceVariation, setRebalanceVariation] = useState<"v0" | "v1" | "v2" | "v3">("v0");
+
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
@@ -167,9 +174,25 @@ export function WalletPortfolioPresenterV22({
 
                   {/* Quick Actions - Moved to top for visibility on mobile */}
                   
-                  {/* Withdraw Variation Switcher (For Demo/Dev) */}
-
-                  
+                  {/* Rebalance Variation Switcher (For Demo) */}
+                  <div className="mb-4 bg-gray-900/40 p-2 rounded-lg border border-gray-800 overflow-x-auto">
+                    <div className="flex gap-1 min-w-max">
+                        <span className="text-xs text-gray-500 font-bold uppercase py-1.5 px-2">Rebal:</span>
+                        {(["v0", "v1", "v2", "v3"] as const).map((v) => (
+                            <button
+                                key={v}
+                                onClick={() => setRebalanceVariation(v)}
+                                className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded transition-colors ${
+                                    rebalanceVariation === v 
+                                        ? "bg-purple-900/50 text-purple-300 shadow-sm ring-1 ring-purple-500/50" 
+                                        : "text-gray-500 hover:text-gray-300 hover:bg-gray-800/50"
+                                }`}
+                            >
+                                {v === "v0" ? "Original" : v}
+                            </button>
+                        ))}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       data-testid="deposit-button"
@@ -542,16 +565,58 @@ export function WalletPortfolioPresenterV22({
         />
       )}
 
-      <RebalanceModal
-        isOpen={activeModal === "rebalance"}
-        onClose={closeModal}
-        currentAllocation={{
-          crypto: data.currentAllocation.crypto,
-          stable: data.currentAllocation.stable,
-          simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
-        }}
-        targetAllocation={data.targetAllocation}
-      />
+      {activeModal === "rebalance" && (
+         <>
+            {rebalanceVariation === "v0" && (
+                <RebalanceModal
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v1" && (
+                <RebalanceModalV1
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v2" && (
+                <RebalanceModalV2
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+            {rebalanceVariation === "v3" && (
+                <RebalanceModalV3
+                    isOpen={true}
+                    onClose={closeModal}
+                    currentAllocation={{
+                    crypto: data.currentAllocation.crypto,
+                    stable: data.currentAllocation.stable,
+                    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+                    }}
+                    targetAllocation={data.targetAllocation}
+                />
+            )}
+         </>
+      )}
 
       {/* Core Settings Modal */}
       <Modal
