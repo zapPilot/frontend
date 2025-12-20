@@ -10,6 +10,7 @@
 
 import type { V22PortfolioDataWithDirection } from "@/adapters/portfolioDataAdapter";
 import {
+  getRegimeAllocation,
   getRegimeById,
   type RegimeId,
 } from "@/components/wallet/regime/regimeData";
@@ -272,7 +273,11 @@ export function transformToV22Data(
 
   // Get regime configuration for target allocation
   const regimeConfig = getRegimeById(currentRegime);
-  const targetAllocation = regimeConfig.allocation;
+  const regimeAllocation = getRegimeAllocation(regimeConfig);
+  const targetAllocation = {
+    crypto: regimeAllocation.spot + regimeAllocation.lp,
+    stable: regimeAllocation.stable,
+  };
 
   // Calculate current allocation
   const currentAllocation = calculateAllocation(landingData);

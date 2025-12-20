@@ -3,7 +3,7 @@
 import {
   createV22ErrorState,
   createV22LoadingState,
-} from "@/adapters/walletPortfolioV22Adapter";
+} from "@/adapters/walletPortfolioV22";
 import { WalletPortfolioPresenterV22 } from "@/components/wallet/WalletPortfolioPresenterV22";
 import { usePortfolioDataV22 } from "@/hooks/queries/usePortfolioDataV22";
 

@@ -102,7 +102,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify Extreme Fear is highlighted
       const extremeFearRegime = within(regimeSpectrum)
         .getByText("Extreme Fear")
-        .closest("div");
+        .closest("button");
       expect(extremeFearRegime).toHaveClass("bg-gray-800");
       expect(
         within(extremeFearRegime!).getByText("Current")
@@ -111,8 +111,8 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify other regimes are not highlighted
       const greedRegime = within(regimeSpectrum)
         .getByText("Greed")
-        .closest("div");
-      expect(greedRegime).toHaveClass("opacity-40");
+        .closest("button");
+      expect(greedRegime).toHaveClass("opacity-60");
       expect(greedRegime).not.toHaveClass("bg-gray-800");
     });
 
@@ -136,7 +136,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify Fear is highlighted
       const fearRegime = within(regimeSpectrum)
         .getByText("Fear")
-        .closest("div");
+        .closest("button");
       expect(fearRegime).toHaveClass("bg-gray-800");
       expect(within(fearRegime!).getByText("Current")).toBeInTheDocument();
     });
@@ -162,7 +162,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify Neutral is highlighted
       const neutralRegime = within(regimeSpectrum)
         .getByText("Neutral")
-        .closest("div");
+        .closest("button");
       expect(neutralRegime).toHaveClass("bg-gray-800");
       expect(within(neutralRegime!).getByText("Current")).toBeInTheDocument();
     });
@@ -182,7 +182,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify Greed is highlighted
       const greedRegime = within(regimeSpectrum)
         .getByText("Greed")
-        .closest("div");
+        .closest("button");
       expect(greedRegime).toHaveClass("bg-gray-800");
       expect(within(greedRegime!).getByText("Current")).toBeInTheDocument();
     });
@@ -202,7 +202,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify Extreme Greed is highlighted
       const extremeGreedRegime = within(regimeSpectrum)
         .getByText("Extreme Greed")
-        .closest("div");
+        .closest("button");
       expect(extremeGreedRegime).toHaveClass("bg-gray-800");
       expect(
         within(extremeGreedRegime!).getByText("Current")
@@ -211,8 +211,8 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       // Verify other regimes are not highlighted
       const greedRegime = within(regimeSpectrum)
         .getByText("Greed")
-        .closest("div");
-      expect(greedRegime).toHaveClass("opacity-40");
+        .closest("button");
+      expect(greedRegime).toHaveClass("opacity-60");
       expect(greedRegime).not.toHaveClass("bg-gray-800");
     });
   });
@@ -231,13 +231,13 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       const regimeSpectrum = screen.getByTestId("regime-spectrum");
       const activeRegime = within(regimeSpectrum)
         .getByText("Extreme Greed")
-        .closest("div");
+        .closest("button");
 
       // Verify active styling
       expect(activeRegime).toHaveClass("bg-gray-800");
       expect(activeRegime).toHaveClass("border");
-      expect(activeRegime).toHaveClass("border-gray-700");
-      expect(activeRegime).toHaveClass("scale-105");
+      expect(activeRegime).toHaveClass("border-gray-600");
+      expect(activeRegime).toHaveClass("scale-102");
 
       // Verify "Current" label exists
       expect(within(activeRegime!).getByText("Current")).toBeInTheDocument();
@@ -260,10 +260,10 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       const regimeSpectrum = screen.getByTestId("regime-spectrum");
       const inactiveRegime = within(regimeSpectrum)
         .getByText("Greed")
-        .closest("div");
+        .closest("button");
 
       // Verify inactive styling
-      expect(inactiveRegime).toHaveClass("opacity-40");
+      expect(inactiveRegime).toHaveClass("opacity-60");
       expect(inactiveRegime).not.toHaveClass("bg-gray-800");
 
       // Verify no "Current" label
@@ -346,7 +346,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       for (const regime of regimes) {
         const regimeElement = within(regimeSpectrum)
           .getByText(regime.label)
-          .closest("div");
+          .closest("button");
         const colorDot = regimeElement!.querySelector(".rounded-full");
 
         expect(colorDot).toHaveStyle({

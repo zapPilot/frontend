@@ -5,33 +5,28 @@
  * into the V22 portfolio data structure.
  */
 
-import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
+import {
+    getRegimeAllocation,
+    type RegimeId,
+    regimes,
+} from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import { getActiveStrategy } from "@/lib/strategySelector";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import {
-  createV22ErrorState,
-  createV22LoadingState,
-} from "./walletPortfolioV22Adapter";
+    ASSET_COLORS,
+    createV22ErrorState,
+    createV22LoadingState,
+} from "./walletPortfolioV22";
 
-/**
- * Asset color mapping for consistent visualization
- */
-const ASSET_COLORS = {
-  BTC: "#F7931A",
-  ETH: "#627EEA",
-  SOL: "#14F195",
-  ALT: "#8C8C8C",
-  USDC: "#2775CA",
-  USDT: "#26A17B",
-} as const;
+// ASSET_COLORS now imported from walletPortfolioV22 module to eliminate duplication
 
 /**
  * Constituent asset type for allocation breakdown
@@ -310,9 +305,10 @@ function getTargetAllocation(
     return { crypto: 50, stable: 50 };
   }
 
+  const allocation = getRegimeAllocation(regime);
   return {
-    crypto: regime.allocation.crypto,
-    stable: regime.allocation.stable,
+    crypto: allocation.spot + allocation.lp,
+    stable: allocation.stable,
   };
 }
 

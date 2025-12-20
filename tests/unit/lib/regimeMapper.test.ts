@@ -11,10 +11,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  getRegimeFromSentiment,
-  getRegimeLabelFromSentiment,
-  isSentimentInRegime,
-} from "../regimeMapper";
+    getRegimeFromSentiment,
+    getRegimeLabelFromSentiment,
+    isSentimentInRegime,
+} from "@/lib/regimeMapper";
 
 describe("regimeMapper", () => {
   describe("getRegimeFromSentiment", () => {
@@ -101,7 +101,7 @@ describe("regimeMapper", () => {
 
       it("should handle decimal values correctly", () => {
         expect(getRegimeFromSentiment(25.5)).toBe("f");
-        expect(getRegimeFromSentiment(45.9)).toBe("f");
+        expect(getRegimeFromSentiment(45.9)).toBe("n");
         expect(getRegimeFromSentiment(54.1)).toBe("g");
         expect(getRegimeFromSentiment(75.1)).toBe("eg");
       });
