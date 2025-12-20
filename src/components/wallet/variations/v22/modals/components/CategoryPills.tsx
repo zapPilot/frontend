@@ -1,10 +1,9 @@
 "use client";
 
 import { ASSET_CATEGORIES } from "@/constants/portfolio";
-import type {
-  AssetCategoryKey,
-  CategoryFilter,
-} from "@/lib/assetCategoryUtils";
+import type { AssetCategoryKey } from "@/lib/assetCategoryUtils";
+
+type CategoryFilter = AssetCategoryKey | "all";
 
 interface CategoryPillsProps {
   activeCategory: CategoryFilter;

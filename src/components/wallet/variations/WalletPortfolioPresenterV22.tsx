@@ -37,7 +37,7 @@ import { WalletManager } from "@/components/WalletManager/WalletManager";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
 
-import { getRegimeById } from "../regime/regimeData";
+import { getRegimeById, regimes } from "../regime/regimeData";
 import { MOCK_DATA } from "./mockPortfolioData";
 
 interface WalletPortfolioPresenterV22Props {
@@ -53,12 +53,9 @@ export function WalletPortfolioPresenterV22({
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
-  
-
 
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -66,15 +63,6 @@ export function WalletPortfolioPresenterV22({
   const previousRegime = "previousRegime" in data ? data.previousRegime : null;
   const regimeDuration = "regimeDuration" in data ? data.regimeDuration : null;
   const strategyMeta = getStrategyMeta(strategyDirection);
-
-  // Mock Regime Spectrum Data (from V20)
-  const regimes = [
-    { id: "extreme-fear", label: "Extreme Fear", color: "#ef4444" },
-    { id: "fear", label: "Fear", color: "#f97316" },
-    { id: "neutral", label: "Neutral", color: "#eab308" },
-    { id: "greed", label: "Greed", color: "#84cc16" },
-    { id: "extreme-greed", label: "Extreme Greed", color: "#22c55e" },
-  ];
 
   // Modal state - consolidated to avoid duplication
   const [activeModal, setActiveModal] = useState<
@@ -278,7 +266,8 @@ export function WalletPortfolioPresenterV22({
                             </h4>
                             <div className="flex flex-col gap-2">
                               {regimes.map(regime => {
-                                const isActive = regime.id === "greed"; // Hardcoded
+                                const isActive =
+                                  regime.id === data.currentRegime;
                                 return (
                                   <div
                                     key={regime.id}
@@ -290,7 +279,9 @@ export function WalletPortfolioPresenterV22({
                                   >
                                     <div
                                       className={`w-3 h-3 rounded-full ${isActive ? "animate-pulse" : ""}`}
-                                      style={{ backgroundColor: regime.color }}
+                                      style={{
+                                        backgroundColor: regime.fillColor,
+                                      }}
                                     />
                                     <span
                                       className={`text-sm font-bold ${isActive ? "text-white" : "text-gray-400"}`}
@@ -317,9 +308,17 @@ export function WalletPortfolioPresenterV22({
                               <p>
                                 In{" "}
                                 <span className="text-green-400 font-bold">
-                                  Greed
+                                  {currentRegime.label}
                                 </span>{" "}
-                                markets, prices are high and risk is elevated.
+                                markets,{" "}
+                                {currentRegime.label === "Extreme Greed" ||
+                                currentRegime.label === "Greed"
+                                  ? "prices are high and risk is elevated"
+                                  : currentRegime.label === "Extreme Fear" ||
+                                      currentRegime.label === "Fear"
+                                    ? "prices are low and opportunity is high"
+                                    : "market sentiment is balanced"}
+                                .
                               </p>
                               <p>
                                 Zap Pilot automatically{" "}
@@ -534,23 +533,20 @@ export function WalletPortfolioPresenterV22({
       />
 
       {activeModal === "withdraw" && (
-        <WithdrawModalV10Dropdown
-          isOpen={true}
-          onClose={closeModal}
-        />
+        <WithdrawModalV10Dropdown isOpen={true} onClose={closeModal} />
       )}
 
       {activeModal === "rebalance" && (
-            <RebalanceModalV18
-                isOpen={true}
-                onClose={closeModal}
-                currentAllocation={{
-                crypto: data.currentAllocation.crypto,
-                stable: data.currentAllocation.stable,
-                simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
-                }}
-                targetAllocation={data.targetAllocation}
-            />
+        <RebalanceModalV18
+          isOpen={true}
+          onClose={closeModal}
+          currentAllocation={{
+            crypto: data.currentAllocation.crypto,
+            stable: data.currentAllocation.stable,
+            simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+          }}
+          targetAllocation={data.targetAllocation}
+        />
       )}
 
       {/* Core Settings Modal */}

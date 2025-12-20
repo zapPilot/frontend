@@ -15,7 +15,7 @@ export type AssetCategoryKey = "btc" | "eth" | "stablecoin" | "altcoin";
 /**
  * Extended category type including "all" for UI filters
  */
-export type CategoryFilter = AssetCategoryKey | "all";
+type CategoryFilter = AssetCategoryKey | "all";
 
 /**
  * Maps a token symbol to its asset category

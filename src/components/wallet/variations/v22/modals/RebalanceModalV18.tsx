@@ -1,16 +1,20 @@
 "use client";
 
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { GradientButton } from "@/components/ui/GradientButton";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
 import type { AllocationBreakdown } from "@/types/domain/transaction";
 
+import {
+  SubmittingState,
+  TransactionActionButton,
+  TransactionModalHeader,
+} from "./components/TransactionModalParts";
 import { useTransactionStatus } from "./hooks/useTransactionStatus";
-import { IntentVisualizer } from "./visualizers/IntentVisualizer";
+import { resolveActionLabel } from "./utils/actionLabelUtils";
 
 interface RebalanceModalV18Props {
   isOpen: boolean;
@@ -26,10 +30,9 @@ export function RebalanceModalV18({
   targetAllocation,
 }: RebalanceModalV18Props) {
   const { isConnected } = useWalletProvider();
-  const [intensity, setIntensity] = useState(100);
+  const [intensity] = useState(100);
   const { status, setStatus, setResult, resetStatus } = useTransactionStatus();
 
-  // Compute Projected
   const projected = useMemo(
     () =>
       transactionService.computeProjectedAllocation(
@@ -39,16 +42,6 @@ export function RebalanceModalV18({
       ),
     [currentAllocation, intensity, targetAllocation]
   );
-
-  // Calculate drift reduction
-  const currentDrift =
-    Math.abs(currentAllocation.crypto - targetAllocation.crypto) +
-    Math.abs(currentAllocation.stable - targetAllocation.stable);
-  const projectedDrift =
-    Math.abs(projected.crypto - targetAllocation.crypto) +
-    Math.abs(projected.stable - targetAllocation.stable);
-  const driftReduction =
-    currentDrift > 0 ? ((1 - projectedDrift / currentDrift) * 100) : 0;
 
   const handleSubmit = async () => {
     setStatus("submitting");
@@ -71,41 +64,30 @@ export function RebalanceModalV18({
   };
 
   const isSubmitting = status === "submitting" || status === "success";
+  const actionLabel = resolveActionLabel({
+    isConnected,
+    isReady: intensity !== 0,
+    readyLabel: "Confirm Rebalance",
+    notReadyLabel: "Set Intensity",
+  });
 
   return (
     <Modal isOpen={isOpen} onClose={resetState} maxWidth="md">
       <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800">
-        <div className="bg-gray-900/50 p-4 flex justify-between items-center border-b border-gray-800">
-          <h3 className="font-bold text-white flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
-            Rebalance Portfolio
-          </h3>
-          {!isSubmitting && (
-            <button
-              onClick={resetState}
-              className="text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-          )}
-        </div>
+        <TransactionModalHeader
+          title="Rebalance Portfolio"
+          indicatorClassName="bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"
+          isSubmitting={isSubmitting}
+          onClose={resetState}
+        />
 
         <div className="p-6">
           {isSubmitting ? (
-            <div className="animate-in fade-in zoom-in duration-300">
-              <div className="mb-6">
-                <IntentVisualizer />
-              </div>
-
-              {status === "success" && (
-                <div className="mt-6 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-xl flex items-center gap-3 text-indigo-400">
-                  <Check className="w-5 h-5 flex-shrink-0" />
-                  <div className="text-sm font-semibold">
-                    Rebalance Successfully Executed!
-                  </div>
-                </div>
-              )}
-            </div>
+            <SubmittingState
+              isSuccess={status === "success"}
+              successMessage="Rebalance Successfully Executed!"
+              successTone="indigo"
+            />
           ) : (
             <div className="flex flex-col gap-6">
               {/* Side-by-Side Comparison Grid */}
@@ -173,21 +155,12 @@ export function RebalanceModalV18({
                 </div>
               </div>
 
-              <GradientButton
+              <TransactionActionButton
                 gradient="from-indigo-600 to-purple-600"
-                className="w-full py-4 text-lg font-bold shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2 group"
                 disabled={!isConnected || intensity === 0}
                 onClick={handleSubmit}
-              >
-                <span>
-                  {(() => {
-                    if (!isConnected) return "Connect Wallet";
-                    if (intensity === 0) return "Set Intensity";
-                    return "Confirm Rebalance";
-                  })()}
-                </span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </GradientButton>
+                label={actionLabel}
+              />
             </div>
           )}
         </div>

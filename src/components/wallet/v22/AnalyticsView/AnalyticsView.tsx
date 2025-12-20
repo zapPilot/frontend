@@ -27,6 +27,8 @@ interface AnalyticsViewProps {
   onPeriodChange: (period: AnalyticsTimePeriod) => void;
   /** Chart tab change handler */
   onChartTabChange: (tab: "performance" | "drawdown") => void;
+  /** Loading state for individual components */
+  isLoading?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   activeChartTab,
   onPeriodChange,
   onChartTabChange,
+  isLoading = false,
 }) => (
   <div className="space-y-6 animate-in fade-in duration-500">
     {/* Header */}
@@ -59,6 +62,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       activeChartTab={activeChartTab}
       onPeriodChange={onPeriodChange}
       onChartTabChange={onChartTabChange}
+      isLoading={isLoading}
     />
 
     {/* Key Metrics Grid */}
@@ -68,6 +72,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     <AdditionalMetricsGrid metrics={data.keyMetrics} />
 
     {/* PnL Heatmap */}
-    <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} />
+    <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} isLoading={isLoading} />
   </div>
 );

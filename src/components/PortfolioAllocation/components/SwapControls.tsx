@@ -5,14 +5,9 @@ import { ArrowRightLeft, RotateCcw, Zap } from "lucide-react";
 import React, {
   forwardRef,
   type Ref,
-  useCallback,
   useImperativeHandle,
   useMemo,
-  useRef,
-  useState,
 } from "react";
-
-import type { SwapToken } from "@/types/ui/swap";
 
 import { useUser } from "../../../contexts/UserContext";
 import { SlippageComponent } from "../../shared/SlippageComponent";
@@ -20,13 +15,13 @@ import type {
   OperationMode,
   ProcessedAssetCategory,
   SwapSettings,
-  SwapValidation,
 } from "../types";
 import {
   AmountInput,
   TokenSelector,
   ValidationMessages,
 } from "./ActionsAndControls";
+import { useSwapControlsState } from "./useSwapControlsState";
 
 interface SwapControlsProps {
   operationMode: OperationMode;
@@ -58,6 +53,69 @@ const DEFAULT_FROM_LABEL = "From Token";
 const DEFAULT_FROM_PLACEHOLDER = "Select token to convert";
 const DEFAULT_TO_LABEL = "To Token";
 const DEFAULT_TO_PLACEHOLDER = "Select token to receive";
+
+interface ModeConfig {
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: string;
+  bgColor: string;
+  showFromToken: boolean;
+  showToToken: boolean;
+  fromLabel?: string;
+  fromPlaceholder?: string;
+  toLabel?: string;
+  toPlaceholder?: string;
+}
+
+const getModeConfig = (operationMode: OperationMode): ModeConfig => {
+  switch (operationMode) {
+    case "zapIn":
+      return {
+        title: "Zap In",
+        subtitle: "Convert token to portfolio allocation",
+        icon: <Zap className="w-5 h-5" />,
+        color: "text-green-400",
+        bgColor: "bg-green-500/20",
+        showFromToken: true,
+        showToToken: false,
+        fromLabel: DEFAULT_FROM_LABEL,
+        fromPlaceholder: DEFAULT_FROM_PLACEHOLDER,
+      };
+    case "zapOut":
+      return {
+        title: "Zap Out",
+        subtitle: "Convert portfolio to single token",
+        icon: <ArrowRightLeft className="w-5 h-5" />,
+        color: "text-red-400",
+        bgColor: "bg-red-500/20",
+        showFromToken: false,
+        showToToken: true,
+        toLabel: DEFAULT_TO_LABEL,
+        toPlaceholder: DEFAULT_TO_PLACEHOLDER,
+      };
+    case "rebalance":
+      return {
+        title: "Rebalance",
+        subtitle: "Optimize portfolio allocation",
+        icon: <RotateCcw className="w-5 h-5" />,
+        color: "text-blue-400",
+        bgColor: "bg-blue-500/20",
+        showFromToken: false,
+        showToToken: false,
+      };
+    default:
+      return {
+        title: "Portfolio Operation",
+        subtitle: "",
+        icon: <Zap className="w-5 h-5" />,
+        color: "text-gray-400",
+        bgColor: "bg-gray-500/20",
+        showFromToken: false,
+        showToToken: false,
+      };
+  }
+};
 
 const OptimizationToggle = ({
   label,
@@ -118,37 +176,21 @@ const SwapControlsComponent = forwardRef<SwapControlsRef, SwapControlsProps>(
   ) => {
     const { connectedWallet } = useUser();
     const walletAddress = connectedWallet;
-    const [validationAttempted, setValidationAttempted] = useState(false);
-    const [validationMode, setValidationMode] = useState<
-      "onSubmit" | "onChange"
-    >("onSubmit");
-
-    // Function to trigger validation attempt
-    const attemptValidation = useCallback(() => {
-      setValidationAttempted(true);
-      setValidationMode("onChange"); // Switch to real-time validation after first attempt
-    }, []);
-
-    // Function to reset validation state
-    const resetValidation = useCallback(() => {
-      setValidationAttempted(false);
-      setValidationMode("onSubmit");
-    }, []);
-
-    // Reset validation when key form fields change (after first attempt)
-    const resetValidationOnChange = useCallback(() => {
-      if (validationAttempted && validationMode === "onChange") {
-        // In onChange mode, reset validation when user makes corrections
-        setValidationAttempted(false);
-      }
-    }, [validationAttempted, validationMode]);
-
-    // Track changes to reset validation appropriately
-    const prevSwapSettingsRef = useRef(swapSettings);
-    if (prevSwapSettingsRef.current !== swapSettings) {
-      resetValidationOnChange();
-      prevSwapSettingsRef.current = swapSettings;
-    }
+    const {
+      validation,
+      attemptValidation,
+      resetValidation,
+      handleTokenChange,
+      handleAmountChange,
+      handleSlippageChange,
+      handleOptimizationChange,
+      totalPortfolioValue,
+    } = useSwapControlsState({
+      operationMode,
+      swapSettings,
+      onSwapSettingsChange,
+      includedCategories,
+    });
 
     // Expose the validation functions to parent via ref
     useImperativeHandle(
@@ -160,160 +202,11 @@ const SwapControlsComponent = forwardRef<SwapControlsRef, SwapControlsProps>(
       [attemptValidation, resetValidation]
     );
 
-    const handleTokenChange = useCallback(
-      (field: "fromToken" | "toToken", token: SwapToken) => {
-        onSwapSettingsChange({
-          ...swapSettings,
-          [field]: token,
-        });
-      },
-      [swapSettings, onSwapSettingsChange]
-    );
-
-    const handleAmountChange = useCallback(
-      (amount: string) => {
-        onSwapSettingsChange({
-          ...swapSettings,
-          amount,
-        });
-      },
-      [swapSettings, onSwapSettingsChange]
-    );
-
-    const handleSlippageChange = useCallback(
-      (slippageTolerance: number) => {
-        onSwapSettingsChange({
-          ...swapSettings,
-          slippageTolerance,
-        });
-      },
-      [swapSettings, onSwapSettingsChange]
-    );
-
-    const handleOptimizationChange = useCallback(
-      (option: "dustZap" | "rebalance", checked: boolean) => {
-        const currentOptions =
-          swapSettings.optimizationOptions ??
-          ({
-            dustZap: false,
-            rebalance: false,
-          } as const);
-
-        onSwapSettingsChange({
-          ...swapSettings,
-          optimizationOptions: {
-            ...currentOptions,
-            [option]: checked,
-          },
-        });
-      },
-      [swapSettings, onSwapSettingsChange]
-    );
-
-    // Calculate portfolio value for display
-    const totalPortfolioValue = useMemo(() => {
-      return includedCategories.reduce((sum, cat) => sum + cat.totalValue, 0);
-    }, [includedCategories]);
-
-    // Validation logic - progressive validation based on mode
-    const validation: SwapValidation = useMemo(() => {
-      const errors: string[] = [];
-      const warnings: string[] = [];
-
-      // Progressive validation: show errors based on validation mode
-      const shouldShowErrors =
-        validationAttempted || validationMode === "onChange";
-
-      if (shouldShowErrors) {
-        // Amount validation
-        if (!swapSettings.amount || parseFloat(swapSettings.amount) <= 0) {
-          errors.push("Please enter a valid amount");
-        }
-
-        // Token validation based on operation mode
-        if (operationMode === "zapIn" && !swapSettings.fromToken) {
-          errors.push("Please select a token to zap in");
-        }
-
-        if (operationMode === "zapOut" && !swapSettings.toToken) {
-          errors.push("Please select a token to receive");
-        }
-
-        // Balance validation for zapIn
-        if (
-          operationMode === "zapIn" &&
-          swapSettings.fromToken &&
-          swapSettings.amount &&
-          swapSettings.fromToken.balance !== undefined
-        ) {
-          const amount = parseFloat(swapSettings.amount);
-          if (amount > swapSettings.fromToken.balance) {
-            errors.push("Insufficient balance");
-          }
-        }
-      }
-
-      // Slippage warnings - always show these
-      if (swapSettings.slippageTolerance > 5) {
-        warnings.push("High slippage may result in unexpected losses");
-      }
-
-      return {
-        isValid: errors.length === 0,
-        errors,
-        warnings,
-      };
-    }, [operationMode, swapSettings, validationAttempted, validationMode]);
-
     // Operation mode display configuration
-    const modeConfig = useMemo(() => {
-      switch (operationMode) {
-        case "zapIn":
-          return {
-            title: "Zap In",
-            subtitle: "Convert token to portfolio allocation",
-            icon: <Zap className="w-5 h-5" />,
-            color: "text-green-400",
-            bgColor: "bg-green-500/20",
-            showFromToken: true,
-            showToToken: false,
-            fromLabel: DEFAULT_FROM_LABEL,
-            fromPlaceholder: DEFAULT_FROM_PLACEHOLDER,
-          };
-        case "zapOut":
-          return {
-            title: "Zap Out",
-            subtitle: "Convert portfolio to single token",
-            icon: <ArrowRightLeft className="w-5 h-5" />,
-            color: "text-red-400",
-            bgColor: "bg-red-500/20",
-            showFromToken: false,
-            showToToken: true,
-            toLabel: DEFAULT_TO_LABEL,
-            toPlaceholder: DEFAULT_TO_PLACEHOLDER,
-          };
-        case "rebalance":
-          return {
-            title: "Rebalance",
-            subtitle: "Optimize portfolio allocation",
-            icon: <RotateCcw className="w-5 h-5" />,
-            color: "text-blue-400",
-            bgColor: "bg-blue-500/20",
-            showFromToken: false,
-            showToToken: false,
-          };
-        default:
-          return {
-            title: "Portfolio Operation",
-            subtitle: "",
-            icon: <Zap className="w-5 h-5" />,
-            color: "text-gray-400",
-            bgColor: "bg-gray-500/20",
-            showFromToken: false,
-            showToToken: false,
-          };
-      }
-    }, [operationMode]);
+    const modeConfig = useMemo(
+      () => getModeConfig(operationMode),
+      [operationMode]
+    );
 
     const fromLabel = modeConfig.fromLabel ?? DEFAULT_FROM_LABEL;
     const fromPlaceholder =

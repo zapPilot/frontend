@@ -10,13 +10,13 @@ import { TransactionSummary } from "@/components/wallet/variations/v22/modals/co
 import { TransactionModal } from "@/components/wallet/variations/v22/modals/TransactionModal";
 import { FOCUS_STYLES } from "@/constants/design-system";
 import type {
-    AllocationBreakdown,
-    ChainData,
-    TokenBalance,
-    TransactionToken,
+  AllocationBreakdown,
+  ChainData,
+  TokenBalance,
+  TransactionToken,
 } from "@/types/domain/transaction";
 
-export interface SummaryProps {
+interface SummaryProps {
   chain: ChainData | null;
   token: TransactionToken | null;
   amount: string;
@@ -156,65 +156,63 @@ export function TransactionFormLayout({
     >
       {isSubmitting && visualizer ? (
         <div className="animate-in fade-in zoom-in duration-300">
-            <div className="mb-6">
-                {visualizer}
+          <div className="mb-6">{visualizer}</div>
+          {successMessage ? (
+            <div
+              data-testid="success-message"
+              className={
+                successClassName ??
+                "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
+              }
+            >
+              {successMessage}
             </div>
-             {successMessage ? (
-                <div
-                data-testid="success-message"
-                className={
-                    successClassName ??
-                    "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
-                }
-                >
-                {successMessage}
-                </div>
-            ) : null}
+          ) : null}
         </div>
       ) : (
         <>
-            {preFormContent}
+          {preFormContent}
 
-            <ChainSelector
-                chains={chainList}
-                selectedChainId={selectedChainId}
-                onSelect={onSelectChain}
-            />
+          <ChainSelector
+            chains={chainList}
+            selectedChainId={selectedChainId}
+            onSelect={onSelectChain}
+          />
 
-            <TokenSelector
-                tokens={tokens}
-                selectedToken={selectedTokenAddress}
-                onSelect={onSelectToken}
-                balances={balances}
-                loading={tokensLoading}
-            />
+          <TokenSelector
+            tokens={tokens}
+            selectedToken={selectedTokenAddress}
+            onSelect={onSelectToken}
+            balances={balances}
+            loading={tokensLoading}
+          />
 
-            <AmountInput
-                value={amount}
-                onChange={onChangeAmount}
-                max={maxAmount}
-                token={token}
-                readOnly={readOnlyAmount}
-                error={amountError}
-            />
+          <AmountInput
+            value={amount}
+            onChange={onChangeAmount}
+            max={maxAmount}
+            token={token}
+            readOnly={readOnlyAmount}
+            error={amountError}
+          />
 
-            {postAmountContent}
+          {postAmountContent}
 
-            <TransactionSummary {...summary} />
+          <TransactionSummary {...summary} />
 
-            <ActionButtons {...actionButtons} />
+          <ActionButtons {...actionButtons} />
 
-            {successMessage ? (
-                <div
-                data-testid="success-message"
-                className={
-                    successClassName ??
-                    "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
-                }
-                >
-                {successMessage}
-                </div>
-            ) : null}
+          {successMessage ? (
+            <div
+              data-testid="success-message"
+              className={
+                successClassName ??
+                "rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-100"
+              }
+            >
+              {successMessage}
+            </div>
+          ) : null}
         </>
       )}
     </TransactionModal>

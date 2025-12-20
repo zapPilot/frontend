@@ -10,7 +10,7 @@
 import { useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
-import type { AnalyticsTimePeriod } from "@/types/analytics";
+import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { AnalyticsView } from "./AnalyticsView";
 import { AnalyticsErrorState } from "./components/AnalyticsErrorState";
@@ -55,24 +55,42 @@ export const AnalyticsViewContainer = ({
     setActiveChartTab(tab);
   };
 
-  // Loading state
-  if (isLoading) {
-    return <AnalyticsLoadingSkeleton />;
-  }
-
-  // Error state
-  if (error || !data) {
+  // Error state (show error UI only when there's an actual error and no data)
+  if (error && !data) {
     return <AnalyticsErrorState error={error} onRetry={refetch} />;
   }
 
-  // Render presentation component
+  // Render presentation component with component-level loading
+  // If data is null during initial load, show full-page skeleton as fallback
+  if (!data && isLoading) {
+    return <AnalyticsLoadingSkeleton />;
+  }
+
+  // Provide fallback empty data structure if needed (shouldn't happen in normal flow)
+  // This fallback is only used when data is null but not loading (edge case)
+  const analyticsData: AnalyticsData =
+    data ??
+    ({
+      performanceChart: { points: [], startDate: "", endDate: "" },
+      drawdownChart: { points: [], maxDrawdown: 0, maxDrawdownDate: "" },
+      keyMetrics: {
+        timeWeightedReturn: { value: 0, label: "Time-Weighted Return" },
+        maxDrawdown: { value: 0, label: "Max Drawdown" },
+        sharpe: { value: 0, label: "Sharpe Ratio" },
+        winRate: { value: 0, label: "Win Rate" },
+        volatility: { value: 0, label: "Volatility" },
+      },
+      monthlyPnL: [],
+    } as unknown as AnalyticsData);
+
   return (
     <AnalyticsView
-      data={data}
+      data={analyticsData}
       selectedPeriod={selectedPeriod}
       activeChartTab={activeChartTab}
       onPeriodChange={handlePeriodChange}
       onChartTabChange={handleChartTabChange}
+      isLoading={isLoading}
     />
   );
 };
