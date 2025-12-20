@@ -6,7 +6,7 @@ import { RiskLevel } from "./risk";
  * - 'zapIn': Shows strategy selector, user chooses where to invest
  * - 'zapOut': Shows position selector, user chooses what to exit from
  */
-export type NavigationContext = "invest" | "zapIn" | "zapOut";
+type NavigationContext = "invest" | "zapIn" | "zapOut";
 
 export interface InvestmentOpportunity {
   id: string;

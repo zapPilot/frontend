@@ -35,20 +35,6 @@
  */
 export type ComponentSize = "xs" | "sm" | "md" | "lg" | "xl";
 
-/**
- * Subset of ComponentSize for components that don't need all size variants.
- * Most interactive components (buttons, inputs, cards) use this simplified set.
- * Excludes extreme sizes (xs, xl) for better UX consistency.
- *
- * @example
- * ```tsx
- * <Button size="md">Submit</Button>
- * <Input size="lg" />
- * <Card size="sm" />
- * ```
- */
-export type StandardSize = "sm" | "md" | "lg";
-
 // =============================================================================
 // VARIANT TYPES
 // =============================================================================
@@ -73,7 +59,7 @@ export type StandardSize = "sm" | "md" | "lg";
  * <Button variant="ghost">Learn More</Button>
  * ```
  */
-export type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
 
 /**
  * Loading display variants for different UI contexts.

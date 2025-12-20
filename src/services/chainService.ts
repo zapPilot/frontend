@@ -31,7 +31,9 @@ export async function getSupportedChains(): Promise<ChainData[]> {
   return MOCK_CHAIN_DATA;
 }
 
-export async function getChainById(chainId: number): Promise<ChainData | undefined> {
+export async function getChainById(
+  chainId: number
+): Promise<ChainData | undefined> {
   await delay();
   return MOCK_CHAIN_DATA.find(chain => chain.chainId === chainId);
 }

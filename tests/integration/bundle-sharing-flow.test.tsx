@@ -295,20 +295,6 @@ describe("Bundle Sharing Flow Integration Tests", () => {
         "0xOwner...123"
       );
     });
-
-    it("should handle missing userId parameter", async () => {
-      mockSearchParams = new URLSearchParams("");
-
-      await act(async () => {
-        render(<BundlePageEntry />);
-      });
-
-      // Should show bundle not found
-      expect(screen.getByTestId("bundle-not-found")).toBeInTheDocument();
-      expect(screen.getByTestId("bundle-not-found-message")).toHaveTextContent(
-        "Bundle not found"
-      );
-    });
   });
 
   describe("Visitor Mode (Disconnected User)", () => {
@@ -336,19 +322,6 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       expect(screen.getByTestId("portfolio-content")).toHaveTextContent(
         "0xOwner...123"
       );
-    });
-
-    it("should show connect CTA when bundle not found and user disconnected", async () => {
-      mockIsConnected = false;
-
-      await act(async () => {
-        render(<BundlePageClient userId="" />);
-      });
-
-      expect(screen.getByTestId("bundle-not-found")).toBeInTheDocument();
-      expect(
-        screen.getByTestId("bundle-not-found-connect")
-      ).toBeInTheDocument();
     });
   });
 
@@ -537,34 +510,6 @@ describe("Bundle Sharing Flow Integration Tests", () => {
   });
 
   describe("Wallet Manager Integration", () => {
-    it("should open wallet manager from bundle not found screen", async () => {
-      const user = userEvent.setup();
-
-      mockIsConnected = false;
-
-      const { rerender } = await act(async () => {
-        return render(<BundlePageClient userId="" />);
-      });
-
-      expect(screen.getByTestId("bundle-not-found")).toBeInTheDocument();
-
-      // Open wallet manager
-      const connectButton = screen.getByTestId("bundle-not-found-connect");
-      await act(async () => {
-        await user.click(connectButton);
-      });
-
-      // Re-render to reflect wallet manager opened state
-      await act(async () => {
-        rerender(<BundlePageClient userId="" />);
-      });
-
-      // Wallet manager should open
-      await waitFor(() => {
-        expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
-      });
-    });
-
     it("should close wallet manager", async () => {
       const user = userEvent.setup();
 
@@ -753,14 +698,6 @@ describe("Bundle Sharing Flow Integration Tests", () => {
   });
 
   describe("Edge Cases", () => {
-    it("should handle empty userId gracefully", async () => {
-      await act(async () => {
-        render(<BundlePageClient userId="" />);
-      });
-
-      expect(screen.getByTestId("bundle-not-found")).toBeInTheDocument();
-    });
-
     it("should handle malformed userId", async () => {
       await act(async () => {
         render(<BundlePageClient userId="invalid-user-id" />);

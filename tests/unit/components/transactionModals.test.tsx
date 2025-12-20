@@ -15,11 +15,7 @@ describe("Transaction modal building blocks", () => {
     const onSelect = vi.fn();
 
     render(
-      <ChainSelector
-        chains={chains}
-        selectedChainId={1}
-        onSelect={onSelect}
-      />
+      <ChainSelector chains={chains} selectedChainId={1} onSelect={onSelect} />
     );
 
     fireEvent.click(screen.getByTestId("chain-card-137"));

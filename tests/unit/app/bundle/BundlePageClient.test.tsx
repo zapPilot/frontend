@@ -15,6 +15,25 @@ vi.mock("@/components/wallet/portfolio/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 
+vi.mock("@/components/DashboardShell", () => ({
+  DashboardShell: ({
+    headerBanners,
+    footerOverlays,
+  }: {
+    headerBanners?: unknown;
+    footerOverlays?: unknown;
+  }) => (
+    <div data-testid="dashboard-shell">
+      <div data-testid="dashboard-header-banners">{headerBanners}</div>
+      <div data-testid="dashboard-footer-overlays">{footerOverlays}</div>
+    </div>
+  ),
+}));
+
+vi.mock("@/components/WalletManager", () => ({
+  WalletManager: () => null,
+}));
+
 // Router mock
 const replaceMock = vi.fn();
 vi.mock("next/navigation", async () => {

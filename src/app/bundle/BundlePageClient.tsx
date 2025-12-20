@@ -1,16 +1,15 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
 import { SwitchPromptBanner } from "@/components/bundle/SwitchPromptBanner";
+import { DashboardShell } from "@/components/DashboardShell";
 import { EmailReminderBanner } from "@/components/EmailReminderBanner";
-import { BundleNotFound } from "@/components/ui";
-import { MOCK_DATA } from "@/components/wallet/portfolio/data/mockPortfolioData";
-import { WalletPortfolioLoadingState } from "@/components/wallet/portfolio/views/LoadingStates";
-import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
+import { WalletManager } from "@/components/WalletManager";
+import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/useBundlePage";
-import { usePortfolioData } from "@/hooks/queries/usePortfolioData";
 
 interface BundlePageClientProps {
   userId: string;
@@ -18,8 +17,25 @@ interface BundlePageClientProps {
 }
 
 export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
+  const router = useRouter();
+  const { userInfo, isConnected } = useUser();
   const vm = useBundlePage(userId, walletId);
-  const { data, isLoading } = usePortfolioData(userId);
+
+  // Redirect to user's bundle page after wallet connection (if currently on guest view)
+  useEffect(() => {
+    if (
+      isConnected &&
+      userInfo?.userId &&
+      !userId &&
+      window.location.pathname === "/"
+    ) {
+      const searchParams = new URLSearchParams(window.location.search);
+      searchParams.set("userId", userInfo.userId);
+      const queryString = searchParams.toString();
+      const newUrl = `/bundle?${queryString}`;
+      router.replace(newUrl);
+    }
+  }, [isConnected, userInfo?.userId, userId, router]);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
@@ -67,38 +83,51 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ]
   );
 
-  // Footer overlays (quick switch FAB only - WalletManager removed)
+  const walletManagerOverlay = useMemo(
+    () => (
+      <WalletManager
+        isOpen={vm.overlays.isWalletManagerOpen}
+        onClose={vm.overlays.closeWalletManager}
+        onEmailSubscribed={vm.overlays.onEmailSubscribed}
+        {...(userId ? { urlUserId: userId } : {})}
+      />
+    ),
+    [
+      userId,
+      vm.overlays.closeWalletManager,
+      vm.overlays.isWalletManagerOpen,
+      vm.overlays.onEmailSubscribed,
+    ]
+  );
+
+  // Footer overlays (quick switch FAB + WalletManager)
   const footerOverlays = useMemo(
     () => (
       <>
         {vm.overlays.showQuickSwitch && (
           <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
         )}
+        {walletManagerOverlay}
       </>
     ),
-    [vm.overlays.showQuickSwitch, vm.switchPrompt.onSwitch]
+    [
+      vm.overlays.showQuickSwitch,
+      vm.switchPrompt.onSwitch,
+      walletManagerOverlay,
+    ]
   );
-
-  // Handle bundle not found case
-  if (vm.bundleNotFound) {
-    return <BundleNotFound message="Bundle not found" showConnectCTA={vm.showConnectCTA} />;
-  }
-
-  // Loading state
-  if (isLoading && !data) {
-    return <WalletPortfolioLoadingState />;
-  }
-
-  // Use real data if available, fallback to mock data
-  const portfolioData = data ?? MOCK_DATA;
 
   // Render v22 portfolio with bundle features
   return (
-    <WalletPortfolioPresenter
-      data={portfolioData}
-      userId={userId}
+    <DashboardShell
+      urlUserId={userId}
+      isOwnBundle={vm.isOwnBundle}
+      bundleUrl={vm.bundleUrl}
       headerBanners={headerBanners}
       footerOverlays={footerOverlays}
+      {...(vm.bundleUser?.displayName
+        ? { bundleUserName: vm.bundleUser.displayName }
+        : {})}
     />
   );
 }

@@ -423,6 +423,8 @@ describe("WalletPortfolio", () => {
 
     // Action handlers are passed as props to presenter
     // (Actual click testing would be in E2E tests)
-    expect(screen.getByTestId("wallet-portfolio-presenter")).toBeInTheDocument();
+    expect(
+      screen.getByTestId("wallet-portfolio-presenter")
+    ).toBeInTheDocument();
   });
 });

@@ -1,10 +1,10 @@
 import { Calendar } from "lucide-react";
 
 import {
-    Modal,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
+  Modal,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
 } from "@/components/ui/modal";
 
 interface SettingsModalProps {

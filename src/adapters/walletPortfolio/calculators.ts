@@ -13,8 +13,15 @@
 
 import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 
-import { ASSET_COLORS, DEFAULT_STABLE_SPLIT, ZERO_ALLOCATION } from "./constants";
-import type { AllocationConstituent, WalletPortfolioAllocationData } from "./types";
+import {
+  ASSET_COLORS,
+  DEFAULT_STABLE_SPLIT,
+  ZERO_ALLOCATION,
+} from "./constants";
+import type {
+  AllocationConstituent,
+  WalletPortfolioAllocationData,
+} from "./types";
 
 /**
  * Calculate total assets from landing page data
@@ -38,7 +45,12 @@ function calculateTotalAssets(landingData: LandingPageResponse): number {
  */
 export function calculateAllocationPercentages(
   landingData: LandingPageResponse
-): { crypto: number; stable: number; cryptoTotal: number; stableTotal: number } {
+): {
+  crypto: number;
+  stable: number;
+  cryptoTotal: number;
+  stableTotal: number;
+} {
   const { portfolio_allocation } = landingData;
   const totalAssets = calculateTotalAssets(landingData);
 
@@ -163,10 +175,8 @@ export function buildSimplifiedCrypto(
 
   if (totalAssets === 0) return simplified;
 
-  const btcPercent =
-    (portfolio_allocation.btc.total_value / totalAssets) * 100;
-  const ethPercent =
-    (portfolio_allocation.eth.total_value / totalAssets) * 100;
+  const btcPercent = (portfolio_allocation.btc.total_value / totalAssets) * 100;
+  const ethPercent = (portfolio_allocation.eth.total_value / totalAssets) * 100;
   const othersPercent =
     (portfolio_allocation.others.total_value / totalAssets) * 100;
 

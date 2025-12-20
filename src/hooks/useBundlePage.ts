@@ -34,6 +34,10 @@ interface UseBundlePageResult {
   // Footer overlays
   overlays: {
     showQuickSwitch: boolean;
+    isWalletManagerOpen: boolean;
+    openWalletManager: () => void;
+    closeWalletManager: () => void;
+    onEmailSubscribed: () => void;
   };
 }
 
@@ -128,6 +132,7 @@ export function useBundlePage(
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
   // Auto-switch wallet on mount (only for own bundles with walletId)
   useEffect(() => {
@@ -249,10 +254,20 @@ export function useBundlePage(
     // This keeps UX consistent but removes permanent dismissal
   }, []);
 
+  const openWalletManager = useCallback(() => {
+    setIsWalletManagerOpen(true);
+  }, []);
+
+  const closeWalletManager = useCallback(() => {
+    setIsWalletManagerOpen(false);
+  }, []);
+
   const handleEmailSubscribe = useCallback(() => {
-    // WalletManager modal removed - this is now a no-op
-    // Email subscription can be handled through other UI flows if needed
-    logger.info("Email subscribe clicked - WalletManager modal removed");
+    openWalletManager();
+  }, [openWalletManager]);
+
+  const handleEmailSubscribed = useCallback(() => {
+    setEmailBannerDismissed(true);
   }, []);
 
   const handleEmailReminderDismiss = useCallback(() => {
@@ -277,6 +292,10 @@ export function useBundlePage(
     },
     overlays: {
       showQuickSwitch,
+      isWalletManagerOpen,
+      openWalletManager,
+      closeWalletManager,
+      onEmailSubscribed: handleEmailSubscribed,
     },
   };
 }

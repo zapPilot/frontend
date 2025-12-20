@@ -19,6 +19,21 @@ vi.mock("@/components/bundle", () => ({
   QuickSwitchFAB: () => null,
 }));
 
+vi.mock("@/components/DashboardShell", () => ({
+  DashboardShell: ({
+    headerBanners,
+    footerOverlays,
+  }: {
+    headerBanners?: unknown;
+    footerOverlays?: unknown;
+  }) => (
+    <div data-testid="dashboard-shell">
+      <div data-testid="dashboard-header-banners">{headerBanners}</div>
+      <div data-testid="dashboard-footer-overlays">{footerOverlays}</div>
+    </div>
+  ),
+}));
+
 // Stub WalletManager to expose a control that calls onEmailSubscribed
 vi.mock("@/components/WalletManager", () => ({
   WalletManager: ({

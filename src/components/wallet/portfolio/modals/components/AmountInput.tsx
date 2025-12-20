@@ -73,9 +73,9 @@ export function AmountInput({
             min="0"
             inputMode="decimal"
             aria-label={`${token?.symbol || "Token"} amount`}
-            aria-describedby={
-              [descriptionId, error ? errorId : null].filter(Boolean).join(" ")
-            }
+            aria-describedby={[descriptionId, error ? errorId : null]
+              .filter(Boolean)
+              .join(" ")}
             aria-invalid={!!error}
             readOnly={readOnly}
             data-testid="amount-input"
@@ -93,7 +93,8 @@ export function AmountInput({
           className="mt-2 flex items-center justify-between text-sm text-gray-500"
         >
           <div>
-            ≈ ${usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+            ≈ $
+            {usdValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}
           </div>
           {token?.usdPrice ? (
             <div className="text-xs">

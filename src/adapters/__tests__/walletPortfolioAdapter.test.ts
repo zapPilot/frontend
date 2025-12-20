@@ -456,31 +456,37 @@ describe("walletPortfolioAdapter", () => {
       };
 
       // Extreme Fear (ef) - 30/70 crypto/stable
-      const extremeFearResult = transformToWalletPortfolioData(baseLandingData, {
-        value: 20,
-        status: "Extreme Fear",
-        timestamp: "2025-01-01T00:00:00Z",
-        quote: {
-          quote: "Panic selling",
-          author: "Market",
-          sentiment: "Extreme Fear",
-        },
-      });
+      const extremeFearResult = transformToWalletPortfolioData(
+        baseLandingData,
+        {
+          value: 20,
+          status: "Extreme Fear",
+          timestamp: "2025-01-01T00:00:00Z",
+          quote: {
+            quote: "Panic selling",
+            author: "Market",
+            sentiment: "Extreme Fear",
+          },
+        }
+      );
       expect(extremeFearResult.currentRegime).toBe("ef");
       expect(extremeFearResult.targetAllocation.crypto).toBe(30);
       expect(extremeFearResult.targetAllocation.stable).toBe(70);
 
       // Extreme Greed (eg) - 90/10 crypto/stable
-      const extremeGreedResult = transformToWalletPortfolioData(baseLandingData, {
-        value: 85,
-        status: "Extreme Greed",
-        timestamp: "2025-01-01T00:00:00Z",
-        quote: {
-          quote: "FOMO buying",
-          author: "Market",
-          sentiment: "Extreme Greed",
-        },
-      });
+      const extremeGreedResult = transformToWalletPortfolioData(
+        baseLandingData,
+        {
+          value: 85,
+          status: "Extreme Greed",
+          timestamp: "2025-01-01T00:00:00Z",
+          quote: {
+            quote: "FOMO buying",
+            author: "Market",
+            sentiment: "Extreme Greed",
+          },
+        }
+      );
       expect(extremeGreedResult.currentRegime).toBe("eg");
       expect(extremeGreedResult.targetAllocation.crypto).toBe(90);
       expect(extremeGreedResult.targetAllocation.stable).toBe(10);

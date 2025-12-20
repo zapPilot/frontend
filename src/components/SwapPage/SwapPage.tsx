@@ -69,7 +69,7 @@ function StateRenderer({
   );
 }
 
-export interface SwapPageProps {
+interface SwapPageProps {
   strategy: InvestmentOpportunity;
   onBack: () => void;
 }

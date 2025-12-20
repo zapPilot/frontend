@@ -6,15 +6,15 @@
  */
 
 import {
-    getRegimeAllocation,
-    type RegimeId,
-    regimes,
+  getRegimeAllocation,
+  type RegimeId,
+  regimes,
 } from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import { getActiveStrategy } from "@/lib/strategySelector";
 import type {
-    DirectionType,
-    DurationInfo,
+  DirectionType,
+  DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -338,6 +338,31 @@ function extractROIChanges(landingData: LandingPageResponse): {
   return { change7d, change30d };
 }
 
+function applyRegimeHistoryFields(
+  baseData: WalletPortfolioData,
+  regimeHistoryData: RegimeHistoryData | null
+): WalletPortfolioDataWithDirection {
+  if (!regimeHistoryData) {
+    return {
+      ...baseData,
+      previousRegime: null,
+      strategyDirection: "default",
+      regimeDuration: null,
+    };
+  }
+
+  return {
+    ...baseData,
+    previousRegime: regimeHistoryData.previousRegime,
+    strategyDirection: getActiveStrategy(
+      regimeHistoryData.direction,
+      regimeHistoryData.currentRegime,
+      regimeHistoryData.previousRegime
+    ),
+    regimeDuration: regimeHistoryData.duration,
+  };
+}
+
 /**
  * Counts unique protocols in pool details
  */
@@ -407,29 +432,74 @@ export function transformToWalletPortfolioDataWithDirection(
   // Start with base portfolio data
   const baseData = transformToWalletPortfolioData(landingData, sentimentData);
 
-  // If no regime history, return base data with null defaults
-  if (!regimeHistoryData) {
-    return {
-      ...baseData,
-      previousRegime: null,
-      strategyDirection: "default",
-      regimeDuration: null,
-    };
-  }
+  return applyRegimeHistoryFields(baseData, regimeHistoryData);
+}
 
-  // Compute active strategy direction (prefer server, fall back to client)
-  const strategyDirection = getActiveStrategy(
-    regimeHistoryData.direction,
-    regimeHistoryData.currentRegime,
-    regimeHistoryData.previousRegime
-  );
+/**
+ * Creates an empty portfolio state with real sentiment data
+ * Used for disconnected users to show intriguing market regime preview
+ *
+ * @param sentimentData - Real-time market sentiment from /api/v2/market/sentiment
+ * @param regimeHistoryData - Regime history from /api/v2/market/regime/history
+ * @returns Empty portfolio state with real sentiment and regime-based targets
+ *
+ * @example
+ * ```typescript
+ * const emptyState = createEmptyPortfolioState(sentimentData, regimeHistoryData);
+ * // Returns portfolio with $0 balance but real regime strategy
+ * ```
+ */
+export function createEmptyPortfolioState(
+  sentimentData: MarketSentimentData | null,
+  regimeHistoryData: RegimeHistoryData | null
+): WalletPortfolioDataWithDirection {
+  const sentimentValue = sentimentData?.value ?? 50;
+  const currentRegime = getRegimeFromSentiment(sentimentValue);
+  const targetAllocation = getTargetAllocation(currentRegime);
 
-  return {
-    ...baseData,
-    previousRegime: regimeHistoryData.previousRegime,
-    strategyDirection,
-    regimeDuration: regimeHistoryData.duration,
+  // Empty allocation structure (0% current)
+  const emptyAllocation = {
+    crypto: 0,
+    stable: 0,
+    constituents: {
+      crypto: [],
+      stable: [],
+    },
+    simplifiedCrypto: [], // Empty array for PortfolioComposition
   };
+
+  const baseData: WalletPortfolioData = {
+    // Portfolio metrics - all zeros
+    balance: 0,
+    roi: 0,
+    roiChange7d: 0,
+    roiChange30d: 0,
+
+    // Market sentiment - REAL data
+    sentimentValue,
+    sentimentStatus: sentimentData?.status ?? "Neutral",
+    sentimentQuote:
+      sentimentData?.quote?.quote ?? getDefaultQuoteForRegime(currentRegime),
+
+    // Regime - derived from REAL sentiment
+    currentRegime,
+
+    // Allocations
+    currentAllocation: emptyAllocation,
+    targetAllocation, // Real target from regime
+    delta: targetAllocation.crypto, // Full gap (0% → target%)
+
+    // Portfolio details - all zeros
+    positions: 0,
+    protocols: 0,
+    chains: 0,
+
+    // States
+    isLoading: false,
+    hasError: false,
+  };
+
+  return applyRegimeHistoryFields(baseData, regimeHistoryData);
 }
 
 /**

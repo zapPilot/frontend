@@ -9,12 +9,13 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
+import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
+
 import {
   MOCK_DATA,
   MOCK_SCENARIOS,
-} from "@/components/wallet/portfolio/data/mockPortfolioData";
-import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
-import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
+} from "../../../../fixtures/mockPortfolioData";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
   const regime = regimes.find(item => item.id === regimeId);

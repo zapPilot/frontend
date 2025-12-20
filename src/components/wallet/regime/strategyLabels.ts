@@ -3,9 +3,9 @@
  * Maps regime IDs and strategy directions to human-readable tab labels
  */
 
-import type { RegimeId } from './regimeData';
+import type { RegimeId } from "./regimeData";
 
-export type StrategyDirection = 'fromLeft' | 'fromRight' | 'default';
+export type StrategyDirection = "fromLeft" | "fromRight" | "default";
 
 /**
  * Tab labels for each regime's strategy variants
@@ -13,23 +13,26 @@ export type StrategyDirection = 'fromLeft' | 'fromRight' | 'default';
  * - fromRight: User coming from a higher regime (correction/bear market)
  * - default: Single strategy regimes (EF, N, EG)
  */
-export const STRATEGY_TAB_LABELS: Record<RegimeId, Partial<Record<StrategyDirection, string>>> = {
+export const STRATEGY_TAB_LABELS: Record<
+  RegimeId,
+  Partial<Record<StrategyDirection, string>>
+> = {
   ef: {
-    default: 'Market Bottom',
+    default: "Market Bottom",
   },
   f: {
-    fromLeft: 'From Extreme Fear ↑',
-    fromRight: 'From Neutral ↓',
+    fromLeft: "From Extreme Fear ↑",
+    fromRight: "From Neutral ↓",
   },
   n: {
-    default: 'Holiday Mode',
+    default: "Holiday Mode",
   },
   g: {
-    fromLeft: 'From Neutral ↑',
-    fromRight: 'From Peak ↓',
+    fromLeft: "From Neutral ↑",
+    fromRight: "From Peak ↓",
   },
   eg: {
-    default: 'Market Peak',
+    default: "Market Peak",
   },
 } as const;
 

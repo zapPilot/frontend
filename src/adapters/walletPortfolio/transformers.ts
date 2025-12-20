@@ -9,18 +9,18 @@
  */
 
 import {
-    getRegimeAllocation,
-    getRegimeById,
-    type RegimeId,
+  getRegimeAllocation,
+  getRegimeById,
+  type RegimeId,
 } from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import {
-    calculateAllocation,
-    calculateDelta,
-    extractROIChanges,
+  calculateAllocation,
+  calculateDelta,
+  extractROIChanges,
 } from "./calculators";
 import { DEFAULT_REGIME } from "./constants";
 import type { WalletPortfolioData } from "./types";

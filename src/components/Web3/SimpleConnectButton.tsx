@@ -6,7 +6,6 @@ import { ConnectButton, useActiveAccount } from "thirdweb/react";
 // Import from unified chain configuration
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { formatAddress } from "@/lib/formatters";
-import type { StandardSize } from "@/types/ui/ui.types";
 import { QueryClientBoundary } from "@/utils/QueryClientBoundary";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
@@ -49,7 +48,7 @@ const DetailsButton = memo(function DetailsButton({
 
 interface SimpleConnectButtonProps {
   className?: string;
-  size?: StandardSize;
+  size?: "sm" | "md" | "lg";
 }
 
 const isTestEnv = typeof process !== "undefined" && !!process.env["VITEST"];

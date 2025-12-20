@@ -10,8 +10,7 @@ interface ConnectWalletButtonProps {
   className?: string;
 }
 
-const isTestEnv =
-  typeof process !== "undefined" && !!process.env["VITEST"];
+const isTestEnv = typeof process !== "undefined" && !!process.env["VITEST"];
 
 export function ConnectWalletButton({
   className = "",

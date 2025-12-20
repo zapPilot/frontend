@@ -16,6 +16,14 @@ vi.mock("../../../src/components/Navigation", () => ({
   ),
 }));
 
+vi.mock("@/components/DashboardShell", () => ({
+  DashboardShell: () => <div data-testid="dashboard-shell" />,
+}));
+
+vi.mock("@/components/WalletManager", () => ({
+  WalletManager: () => null,
+}));
+
 // Mock useUser to control connection state
 let mockUser = {
   userInfo: { userId: "user-abc" },
@@ -34,6 +42,7 @@ vi.mock("../../../src/contexts/UserContext", () => ({
 const replaceSpy = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceSpy }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 describe("DashboardApp redirect to bundle", () => {

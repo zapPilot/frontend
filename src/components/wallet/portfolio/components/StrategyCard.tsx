@@ -15,14 +15,17 @@ import {
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
 
-import { MOCK_DATA } from "../data/mockPortfolioData";
-
 interface StrategyCardProps {
-  data: typeof MOCK_DATA | WalletPortfolioDataWithDirection;
+  data: WalletPortfolioDataWithDirection;
   currentRegime: Regime;
+  isEmptyState?: boolean;
 }
 
-export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
+export function StrategyCard({
+  data,
+  currentRegime,
+  isEmptyState = false,
+}: StrategyCardProps) {
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
   const [selectedDirection, setSelectedDirection] =
@@ -143,6 +146,12 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
               Current Strategy
               <Info className="w-3 h-3" />
+              {/* Empty State Badge */}
+              {isEmptyState && (
+                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-[10px] font-bold border border-purple-500/20">
+                  Connect to Activate
+                </span>
+              )}
             </div>
             <div className="text-2xl font-bold text-white mb-1">
               {currentRegime.label}

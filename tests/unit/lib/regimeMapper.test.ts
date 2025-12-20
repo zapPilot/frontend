@@ -11,9 +11,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    getRegimeFromSentiment,
-    getRegimeLabelFromSentiment,
-    isSentimentInRegime,
+  getRegimeFromSentiment,
+  getRegimeLabelFromSentiment,
+  isSentimentInRegime,
 } from "@/lib/regimeMapper";
 
 describe("regimeMapper", () => {

@@ -9,7 +9,6 @@ import { PortfolioComposition } from "@/components/wallet/portfolio/components/P
 import { SettingsModal } from "@/components/wallet/portfolio/components/SettingsModal";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
-import { MOCK_DATA } from "@/components/wallet/portfolio/data/mockPortfolioData";
 import {
   DepositModal,
   RebalanceModal,
@@ -20,18 +19,20 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 
 interface WalletPortfolioPresenterProps {
-  data?: typeof MOCK_DATA | WalletPortfolioDataWithDirection;
+  data: WalletPortfolioDataWithDirection;
   userId?: string;
+  isEmptyState?: boolean;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
 }
 
 export function WalletPortfolioPresenter({
-  data = MOCK_DATA,
+  data,
   userId = "",
+  isEmptyState = false,
   headerBanners,
   footerOverlays,
-}: WalletPortfolioPresenterProps = {}) {
+}: WalletPortfolioPresenterProps) {
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -72,17 +73,23 @@ export function WalletPortfolioPresenter({
                 <BalanceCard
                   balance={data.balance}
                   roi={data.roi}
+                  isEmptyState={isEmptyState}
                   onOpenModal={openModal}
                 />
 
                 {/* EXPANDABLE STRATEGY CARD */}
-                <StrategyCard data={data} currentRegime={currentRegime} />
+                <StrategyCard
+                  data={data}
+                  currentRegime={currentRegime}
+                  isEmptyState={isEmptyState}
+                />
               </div>
 
               {/* UNIFIED COMPOSITION BAR (V21 Style) - Only visible in Dashboard */}
               <PortfolioComposition
                 data={data}
                 currentRegime={currentRegime}
+                isEmptyState={isEmptyState}
                 onRebalance={() => openModal("rebalance")}
               />
             </div>

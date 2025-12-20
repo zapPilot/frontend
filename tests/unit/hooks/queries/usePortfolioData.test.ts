@@ -236,7 +236,9 @@ describe("usePortfolioData", () => {
         error: null,
       } as any);
 
-      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(mockPortfolioData);
+      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(
+        mockPortfolioData
+      );
 
       const { result } = renderHook(() => usePortfolioData("0xUSER123"), {
         wrapper,
@@ -317,7 +319,9 @@ describe("usePortfolioData", () => {
         error: null,
       } as any);
 
-      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(mockPortfolioData);
+      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(
+        mockPortfolioData
+      );
 
       const { result } = renderHook(() => usePortfolioData("0xUSER123"), {
         wrapper,
@@ -497,7 +501,9 @@ describe("usePortfolioData", () => {
         error: null,
       } as any);
 
-      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(mockPortfolioData);
+      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(
+        mockPortfolioData
+      );
 
       const { result } = renderHook(() => usePortfolioData("0xUSER123"), {
         wrapper,
@@ -533,7 +539,9 @@ describe("usePortfolioData", () => {
         error: regimeError,
       } as any);
 
-      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(mockPortfolioData);
+      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(
+        mockPortfolioData
+      );
 
       const { result } = renderHook(() => usePortfolioData("0xUSER123"), {
         wrapper,
@@ -575,7 +583,9 @@ describe("usePortfolioData", () => {
         error: null,
       } as any);
 
-      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(mockPortfolioData);
+      vi.mocked(transformToWalletPortfolioDataWithDirection).mockReturnValue(
+        mockPortfolioData
+      );
 
       renderHook(() => usePortfolioData("0xUSER123"), { wrapper });
 
@@ -763,7 +773,9 @@ describe("usePortfolioData", () => {
       });
 
       expect(result.current.data).toBeNull();
-      expect(transformToWalletPortfolioDataWithDirection).not.toHaveBeenCalled();
+      expect(
+        transformToWalletPortfolioDataWithDirection
+      ).not.toHaveBeenCalled();
     });
 
     it("should handle rapid userId changes", () => {

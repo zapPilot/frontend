@@ -29,15 +29,13 @@ const CARD_COLORS = {
   },
   eth: {
     border: "border-indigo-500/30",
-    activeBorder:
-      "border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)]",
+    activeBorder: "border-indigo-500 shadow-[0_0_20px_rgba(99,102,241,0.3)]",
     bg: "bg-indigo-500/5",
     icon: "bg-indigo-500/20 text-indigo-400 border-indigo-500/30",
   },
   stablecoin: {
     border: "border-emerald-500/30",
-    activeBorder:
-      "border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]",
+    activeBorder: "border-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.3)]",
     bg: "bg-emerald-500/5",
     icon: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
   },
@@ -88,9 +86,7 @@ export function CategoryCard({
 
       {/* Category Name */}
       <div className="mb-2">
-        <h4 className="font-bold text-white text-sm">
-          {categoryInfo.label}
-        </h4>
+        <h4 className="font-bold text-white text-sm">{categoryInfo.label}</h4>
       </div>
 
       {/* USD Total */}
