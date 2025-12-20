@@ -5,20 +5,6 @@ export interface PieChartData {
   color: string;
 }
 
-export interface PortfolioMetrics {
-  totalValue: number;
-  totalChange24h: number;
-  totalChangePercentage: number;
-  annualAPR?: number;
-  monthlyReturn?: number;
-}
-
-export interface PortfolioAllocationSplit {
-  stable: number;
-  crypto: number;
-  target?: number;
-}
-
 // Chart and Analytics types
 export interface PortfolioDataPoint {
   date: string;

@@ -471,7 +471,6 @@ export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-export type ProtocolYieldWindow = z.infer<typeof protocolYieldWindowSchema>;
 /** @public */ export type ProtocolYieldToday = z.infer<
   typeof protocolYieldTodaySchema
 >;

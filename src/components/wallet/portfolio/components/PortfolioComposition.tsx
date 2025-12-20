@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 
-import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { ASSET_COLORS } from "@/adapters/walletPortfolio";
+import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
 import {
   getRegimeAllocation,
@@ -71,10 +71,7 @@ export function PortfolioComposition({
             style={{ width: `${target.crypto}%` }}
             className="h-full border-r border-dashed border-white/30"
           />
-          <div
-            style={{ width: `${target.stable}%` }}
-            className="h-full"
-          />
+          <div style={{ width: `${target.stable}%` }} className="h-full" />
         </div>
 
         {/* ACTUAL BARS (Foreground) */}

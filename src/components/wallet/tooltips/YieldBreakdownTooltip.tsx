@@ -9,7 +9,7 @@ import React, { useState } from "react";
 import type {
   ProtocolYieldBreakdown,
   YieldWindowSummary,
-} from "@/services/analyticsService";
+} from "@/schemas/api/analyticsSchemas";
 
 import { MetricsTooltipContainer } from "./MetricsTooltipContainer";
 import type { MetricsTooltipProps } from "./types";

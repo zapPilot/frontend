@@ -9,12 +9,12 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 import {
   MOCK_DATA,
   MOCK_SCENARIOS,
 } from "@/components/wallet/portfolio/data/mockPortfolioData";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
+import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
   const regime = regimes.find(item => item.id === regimeId);
@@ -363,9 +363,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
     it("should show 'prices are high' for Greed/Extreme Greed", async () => {
       const user = userEvent.setup();
-      render(
-        <WalletPortfolioPresenter data={MOCK_SCENARIOS.extremeGreed} />
-      );
+      render(<WalletPortfolioPresenter data={MOCK_SCENARIOS.extremeGreed} />);
 
       const strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);

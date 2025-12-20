@@ -25,10 +25,13 @@ interface WalletPortfolioProps {
   onZapInClick?: () => void;
   onZapOutClick?: () => void;
   onWalletManagerClick?: () => void;
+  onCategoryClick?: (categoryId: string) => void;
 
   /** Additional flags (not yet implemented in presenter) */
   isOwnBundle?: boolean;
   isVisitorMode?: boolean;
+  bundleUserName?: string;
+  bundleUrl?: string;
 }
 
 /**
@@ -42,9 +45,7 @@ interface WalletPortfolioProps {
  * 4. Transform into portfolio format via unified hook
  * 5. Pass to presenter component
  */
-export function WalletPortfolio({
-  userId,
-}: WalletPortfolioProps) {
+export function WalletPortfolio({ userId }: WalletPortfolioProps) {
   // Fetch and transform all portfolio data via unified hook
   // Includes landing data, sentiment, and regime history (if enabled)
   const { data, isLoading, error } = usePortfolioData(userId ?? "");

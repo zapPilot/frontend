@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 
 import { SelectorHeader } from "./SelectorHeader";
 import { TokenSelectorList } from "./TokenSelectorList";
-
 import {
   filterTokensBySearch,
   type TokenSelectorBaseProps,

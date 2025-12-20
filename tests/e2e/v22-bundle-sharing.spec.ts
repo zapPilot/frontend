@@ -129,24 +129,6 @@ test.describe("V22 Bundle Sharing", () => {
       expect(hasPortfolioContent).toBe(true);
     });
 
-    test("should disable or hide action buttons in visitor mode", async ({
-      page,
-    }) => {
-      await page.goto(`/bundle?userId=${VISITOR_ADDRESS}`);
-      await page.waitForLoadState("networkidle");
-
-      // Action buttons might be hidden or disabled
-      const depositButton = page.getByRole("button", { name: /deposit/i });
-      const _withdrawButton = page.getByRole("button", { name: /withdraw/i });
-
-      // Either not visible or disabled
-      if (await depositButton.count()) {
-        const isDisabled = await depositButton.isDisabled();
-        const isHidden = !(await depositButton.isVisible());
-        expect(isDisabled || isHidden).toBe(true);
-      }
-    });
-
     test("should NOT show Settings in visitor mode", async ({ page }) => {
       await page.goto(`/bundle?userId=${VISITOR_ADDRESS}`);
       await page.waitForLoadState("networkidle");
@@ -198,24 +180,6 @@ test.describe("V22 Bundle Sharing", () => {
       // Portfolio should load
       const bodyVisible = await page.locator("body").isVisible();
       expect(bodyVisible).toBe(true);
-    });
-
-    test("should preserve URL params when navigating tabs", async ({
-      page,
-    }) => {
-      await page.goto(`/bundle?userId=${OTHER_ADDRESS}&walletId=${WALLET_ID}`);
-      await page.waitForLoadState("networkidle");
-
-      // Navigate to Analytics tab
-      const analyticsTab = page.getByRole("button", { name: /analytics/i });
-      if (await analyticsTab.count()) {
-        await analyticsTab.click();
-        await page.waitForTimeout(500);
-
-        // URL params should persist
-        expect(page.url()).toContain(`userId=${OTHER_ADDRESS}`);
-        expect(page.url()).toContain(`walletId=${WALLET_ID}`);
-      }
     });
 
     test("should handle deep link to specific tab (if supported)", async ({

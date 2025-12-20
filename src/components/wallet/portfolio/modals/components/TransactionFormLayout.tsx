@@ -3,11 +3,6 @@
 import type { ReactNode } from "react";
 
 import { GradientButton } from "@/components/ui";
-import { AmountInput } from "./AmountInput";
-import { ChainSelector } from "./ChainSelector";
-import { TokenSelector } from "./TokenSelector";
-import { TransactionSummary } from "./TransactionSummary";
-import { TransactionModal } from "../TransactionModal";
 import { FOCUS_STYLES } from "@/constants/design-system";
 import type {
   AllocationBreakdown,
@@ -15,6 +10,12 @@ import type {
   TokenBalance,
   TransactionToken,
 } from "@/types/domain/transaction";
+
+import { TransactionModal } from "../TransactionModal";
+import { AmountInput } from "./AmountInput";
+import { ChainSelector } from "./ChainSelector";
+import { TokenSelector } from "./TokenSelector";
+import { TransactionSummary } from "./TransactionSummary";
 
 interface SummaryProps {
   chain: ChainData | null;

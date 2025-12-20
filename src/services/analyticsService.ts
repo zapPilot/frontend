@@ -30,10 +30,8 @@ export type {
   /** @public */ PoolPerformanceResponse,
   ProtocolYieldBreakdown,
   /** @public */ ProtocolYieldToday,
-  ProtocolYieldWindow,
   UnifiedDashboardResponse,
   YieldReturnsSummaryResponse,
-  YieldWindowSummary,
 } from "@/schemas/api/analyticsSchemas";
 
 // Direct re-export to avoid unused imports while keeping public API stable

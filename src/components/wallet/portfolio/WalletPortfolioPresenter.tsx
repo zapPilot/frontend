@@ -4,20 +4,21 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
-import { WalletManager } from "@/components/WalletManager/WalletManager";
-
-import { getRegimeById } from "@/components/wallet/regime/regimeData";
-
-import { MOCK_DATA } from "@/components/wallet/portfolio/data/mockPortfolioData";
-import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
-import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCard";
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
 import { SettingsModal } from "@/components/wallet/portfolio/components/SettingsModal";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
-import { DepositModal, RebalanceModal } from "@/components/wallet/portfolio/modals";
+import { MOCK_DATA } from "@/components/wallet/portfolio/data/mockPortfolioData";
+import {
+  DepositModal,
+  RebalanceModal,
+} from "@/components/wallet/portfolio/modals";
 import { WithdrawModal } from "@/components/wallet/portfolio/modals/WithdrawModal";
+import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
+import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
+import { getRegimeById } from "@/components/wallet/regime/regimeData";
+import { WalletManager } from "@/components/WalletManager/WalletManager";
 
 interface WalletPortfolioPresenterProps {
   data?: typeof MOCK_DATA | WalletPortfolioDataWithDirection;

@@ -4,9 +4,11 @@
 
 import { formatCurrency } from "@/lib/formatters";
 import type {
-  ProtocolYieldWindow,
+  ProtocolYieldBreakdown,
   YieldWindowSummary,
-} from "@/services/analyticsService";
+} from "@/schemas/api/analyticsSchemas";
+
+type ProtocolYieldWindow = ProtocolYieldBreakdown["window"];
 
 /**
  * Get color class based on value (positive/negative/neutral)

@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 
-import { CategoryPills } from "./CategoryPills";
-import { SelectorHeader } from "./SelectorHeader";
-import { TokenSelectorList } from "./TokenSelectorList";
 import {
   filterTokensByCategory,
   getTokenCountsByCategory,
 } from "@/lib/assetCategoryUtils";
 
+import { CategoryPills } from "./CategoryPills";
+import { SelectorHeader } from "./SelectorHeader";
+import { TokenSelectorList } from "./TokenSelectorList";
 import {
   filterTokensBySearch,
   type TokenSelectorBaseProps,

@@ -34,7 +34,6 @@ export {
   protocolYieldBreakdownSchema,
   type ProtocolYieldToday,
   protocolYieldTodaySchema,
-  type ProtocolYieldWindow,
   protocolYieldWindowSchema,
   safeValidateUnifiedDashboardResponse,
   type UnifiedDashboardResponse,
