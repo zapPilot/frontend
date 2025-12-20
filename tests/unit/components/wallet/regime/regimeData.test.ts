@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { regimes, RegimeStrategy } from "../../../../../src/components/wallet/regime/regimeData";
+
+import {
+  regimes,
+  type RegimeStrategy,
+} from "../../../../../src/components/wallet/regime/regimeData";
 
 describe("regimeData Validation", () => {
   it("should have valid philosophy and author on all strategies", () => {
-    regimes.forEach((regime) => {
+    for (const regime of regimes) {
       // Check specific strategies based on type guards or property checks
       if (regime.strategies.fromLeft) {
         expect(regime.strategies.fromLeft.philosophy).toBeDefined();
@@ -27,11 +31,11 @@ describe("regimeData Validation", () => {
         expect(typeof strat.philosophy).toBe("string");
         expect(typeof strat.author).toBe("string");
       }
-    });
+    }
   });
 
   it("should enforce mutual exclusivity: strategies should not have 'default' if 'fromLeft'/'fromRight' are present", () => {
-    regimes.forEach((regime) => {
+    for (const regime of regimes) {
       const hasDirectional =
         "fromLeft" in regime.strategies || "fromRight" in regime.strategies;
       const hasDefault = "default" in regime.strategies;
@@ -41,15 +45,15 @@ describe("regimeData Validation", () => {
       } else {
         expect(hasDefault).toBe(true);
       }
-    });
+    }
   });
 
   it("should valid visual configuration on all regimes", () => {
-     regimes.forEach((regime) => {
-         expect(regime.visual).toBeDefined();
-         expect(regime.visual.badge).toBeDefined();
-         expect(regime.visual.gradient).toBeDefined();
-         expect(regime.visual.icon).toBeDefined();
-     })
-  })
+    for (const regime of regimes) {
+      expect(regime.visual).toBeDefined();
+      expect(regime.visual.badge).toBeDefined();
+      expect(regime.visual.gradient).toBeDefined();
+      expect(regime.visual.icon).toBeDefined();
+    }
+  });
 });

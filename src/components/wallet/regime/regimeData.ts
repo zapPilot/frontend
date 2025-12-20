@@ -37,7 +37,7 @@ export const PHILOSOPHIES = {
 
 export type RegimeId = "ef" | "f" | "n" | "g" | "eg";
 
-export interface AllocationBreakdown {
+interface AllocationBreakdown {
   spot: number;
   lp: number;
   stable: number;
@@ -251,7 +251,7 @@ export function getRegimeById(regimeId: RegimeId): Regime {
     return neutralRegime;
   }
 
-// ... existing code ...
+  // ... existing code ...
   return regime;
 }
 
@@ -264,7 +264,7 @@ export function getRegimeAllocation(regime: Regime) {
   // Try default first, then fromLeft (first tab) if default is missing
   const strategy = regime.strategies.default || regime.strategies.fromLeft;
   const target = strategy?.useCase?.allocationAfter;
-  
+
   if (target) {
     return {
       spot: target.spot,
@@ -273,5 +273,7 @@ export function getRegimeAllocation(regime: Regime) {
     };
   }
 
-  throw new Error(`Critical: No valid strategy found for regime ${regime.id} to determine allocation`);
+  throw new Error(
+    `Critical: No valid strategy found for regime ${regime.id} to determine allocation`
+  );
 }

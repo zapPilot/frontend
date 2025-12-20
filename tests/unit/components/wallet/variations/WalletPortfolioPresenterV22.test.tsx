@@ -16,6 +16,23 @@ import {
 } from "@/components/wallet/variations/mockPortfolioData";
 import { WalletPortfolioPresenterV22 } from "@/components/wallet/variations/WalletPortfolioPresenterV22";
 
+const getDefaultStrategy = (regimeId: RegimeId) => {
+  const regime = regimes.find(item => item.id === regimeId);
+
+  if (!regime) {
+    throw new Error(`Missing regime configuration for ${regimeId}`);
+  }
+
+  if ("default" in regime.strategies) {
+    return regime.strategies.default;
+  }
+
+  return regime.strategies.fromLeft ?? regime.strategies.fromRight;
+};
+
+const getZapAction = (regimeId: RegimeId) =>
+  getDefaultStrategy(regimeId)?.useCase?.zapAction ?? "";
+
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
   motion: {
@@ -287,9 +304,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       );
       let strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
-      expect(
-        screen.getByText(/prices are high and risk is elevated/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("eg"))).toBeInTheDocument();
       unmount1();
 
       // Test Greed
@@ -298,9 +313,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       );
       strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
-      expect(
-        screen.getByText(/prices are high and risk is elevated/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("g"))).toBeInTheDocument();
       unmount2();
 
       // Test Neutral (with fixed mock data)
@@ -316,18 +329,14 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       );
       strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
-      expect(
-        screen.getByText(/market sentiment is balanced/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("n"))).toBeInTheDocument();
       unmount3();
 
       // Test Extreme Fear
       render(<WalletPortfolioPresenterV22 data={MOCK_SCENARIOS.extremeFear} />);
       strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
-      expect(
-        screen.getByText(/prices are low and opportunity is high/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("ef"))).toBeInTheDocument();
     });
 
     it("should use correct regime colors from regimeData", async () => {
@@ -364,9 +373,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       const strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
 
-      expect(
-        screen.getByText(/prices are high and risk is elevated/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("eg"))).toBeInTheDocument();
     });
 
     it("should show 'prices are low' for Fear/Extreme Fear", async () => {
@@ -376,9 +383,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       const strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
 
-      expect(
-        screen.getByText(/prices are low and opportunity is high/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("ef"))).toBeInTheDocument();
     });
 
     it("should show 'market sentiment is balanced' for Neutral", async () => {
@@ -396,9 +401,7 @@ describe("WalletPortfolioPresenterV22 - Regime Highlighting", () => {
       const strategyCard = screen.getByTestId("strategy-card");
       await user.click(strategyCard);
 
-      expect(
-        screen.getByText(/market sentiment is balanced/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(getZapAction("n"))).toBeInTheDocument();
     });
   });
 

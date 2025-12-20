@@ -8,15 +8,14 @@ import {
   type Regime,
   regimes,
 } from "@/components/wallet/regime/regimeData";
-import { ANIMATIONS } from "@/constants/design-system";
-import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
-
-import { MOCK_DATA } from "../../mockPortfolioData";
-
 import {
   getStrategyTabLabel,
   type StrategyDirection,
 } from "@/components/wallet/regime/strategyLabels";
+import { ANIMATIONS } from "@/constants/design-system";
+import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
+
+import { MOCK_DATA } from "../../mockPortfolioData";
 
 interface StrategyCardProps {
   data: typeof MOCK_DATA | V22PortfolioDataWithDirection;
@@ -26,7 +25,8 @@ interface StrategyCardProps {
 export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
-  const [selectedDirection, setSelectedDirection] = useState<StrategyDirection | null>(null);
+  const [selectedDirection, setSelectedDirection] =
+    useState<StrategyDirection | null>(null);
 
   // Determine which regime to display (selected or current)
   // If user selects a regime, we show that. Otherwise we show the current regime.
@@ -39,7 +39,7 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
   // Reset selected direction when switching regimes
   // checking if the selected direction is valid for the new regime is done in activeDirection calculation indirectly,
   // but explicitly resetting gives better UX.
-  // We can't use useEffect easily inside this conditional logic block style, 
+  // We can't use useEffect easily inside this conditional logic block style,
   // so we'll rely on activeDirection logic to be robust.
 
   // Extract directional strategy metadata (safely handle missing fields)
@@ -50,36 +50,43 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
   const strategyMeta = getStrategyMeta(strategyDirection);
 
   // Determine the active strategy to display
-  // Priority: 
+  // Priority:
   // 1. User selected direction (via tabs)
   // 2. Data-driven direction (if viewing current regime)
   // 3. Default (if viewing other regime and no selection)
-  
+
   // Available strategies for displayRegime
-  const hasStrategy = (dir: StrategyDirection) => !!displayRegime.strategies[dir as keyof typeof displayRegime.strategies];
+  const hasStrategy = (dir: StrategyDirection) =>
+    !!displayRegime.strategies[dir as keyof typeof displayRegime.strategies];
 
-  let calculatedDirection: StrategyDirection = "default";
+  const activeDirection = (() => {
+    if (selectedDirection && hasStrategy(selectedDirection)) {
+      return selectedDirection;
+    }
 
-  if (selectedDirection && hasStrategy(selectedDirection)) {
-    calculatedDirection = selectedDirection;
-  } else if (isViewingCurrent && "strategyDirection" in data && data.strategyDirection !== 'default') {
-    // If not manually selected, and we are on current regime WITH A SPECIFIC DIRECTION, use the data's direction
-    calculatedDirection = data.strategyDirection as StrategyDirection;
-  } else {
+    if (
+      isViewingCurrent &&
+      "strategyDirection" in data &&
+      data.strategyDirection !== "default"
+    ) {
+      // If not manually selected, and we are on current regime WITH A SPECIFIC DIRECTION, use the data's direction
+      return data.strategyDirection as StrategyDirection;
+    }
+
     // Fallback logic / Default handling
     // If the regime has explicit directional strategies (like Fear/Greed),
     // we prefer showing the first tab (fromLeft) as the default view
     // rather than the generic 'default' strategy which might be hidden/internal.
     if (hasStrategy("fromLeft")) {
-      calculatedDirection = "fromLeft";
-    } else if (hasStrategy("fromRight")) {
-      calculatedDirection = "fromRight";
-    } else {
-      calculatedDirection = "default";
+      return "fromLeft";
     }
-  }
 
-  const activeDirection = calculatedDirection;
+    if (hasStrategy("fromRight")) {
+      return "fromRight";
+    }
+
+    return "default";
+  })();
 
   const activeStrategy =
     displayRegime.strategies[activeDirection] ||
@@ -88,13 +95,13 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
   // Calculate target allocation dynamically from the strategy
   // If the strategy has a specific 'allocationAfter' defined in useCase, use that.
   // Otherwise, fallback to the regime's static allocation (though this is deprecated).
-      const targetAllocation = activeStrategy?.useCase?.allocationAfter
-        ? {
-            spot: activeStrategy.useCase.allocationAfter.spot,
-            lp: activeStrategy.useCase.allocationAfter.lp,
-            stable: activeStrategy.useCase.allocationAfter.stable,
-          }
-        : getRegimeAllocation(displayRegime);
+  const targetAllocation = activeStrategy?.useCase?.allocationAfter
+    ? {
+        spot: activeStrategy.useCase.allocationAfter.spot,
+        lp: activeStrategy.useCase.allocationAfter.lp,
+        stable: activeStrategy.useCase.allocationAfter.stable,
+      }
+    : getRegimeAllocation(displayRegime);
 
   return (
     <motion.div
@@ -105,7 +112,7 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
           ? "row-span-2 md:col-span-2 border-purple-500/30 shadow-lg shadow-purple-500/10"
           : "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60"
       }`}
-      onClick={(e) => {
+      onClick={e => {
         // Prevent collapsing when clicking on interactive elements inside
         if ((e.target as HTMLElement).closest('[data-interactive="true"]')) {
           return;
@@ -197,14 +204,14 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
                   Market Cycle Position
                 </h4>
                 <div className="flex flex-col gap-2">
-                  {regimes.map((regime) => {
+                  {regimes.map(regime => {
                     const isCurrent = regime.id === data.currentRegime;
                     const isSelected = displayRegime.id === regime.id;
 
                     return (
                       <button
                         key={regime.id}
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation();
                           setSelectedRegimeId(regime.id);
                           setSelectedDirection(null);
@@ -245,31 +252,29 @@ export function StrategyCard({ data, currentRegime }: StrategyCardProps) {
               {/* Right: Strategy Explanation */}
               <div>
                 <h4 className="text-sm font-bold text-white mb-4 flex items-center justify-between">
-                  <span>
-                    Why this allocation?
-                    {/* {activeStrategy && activeDirection !== "default" && (
-                      <span className="ml-2 text-xs font-normal text-gray-400 bg-gray-800 px-2 py-0.5 rounded border border-gray-700">
-                        {activeStrategy.title}
-                      </span>
-                    )} */}
-                  </span>
+                  <span>Why this allocation?</span>
                   {/* Strategy Tabs */}
                   <div className="flex gap-2">
                     {/* Only show tabs if we have multiple strategies (active choice) */}
-                    {(Object.keys(displayRegime.strategies) as (keyof typeof displayRegime.strategies)[]).filter(
-                      k => k !== "default"
-                    ).length > 0 && (
+                    {(
+                      Object.keys(
+                        displayRegime.strategies
+                      ) as (keyof typeof displayRegime.strategies)[]
+                    ).filter(k => k !== "default").length > 0 && (
                       <div className="flex gap-2 mb-2 overflow-x-auto">
-                        {(["fromLeft", "fromRight"] as const).map((direction) => {
+                        {(["fromLeft", "fromRight"] as const).map(direction => {
                           if (!displayRegime.strategies[direction]) return null;
-                          
+
                           const isSelected = activeDirection === direction;
-                          const label = getStrategyTabLabel(displayRegime.id, direction);
+                          const label = getStrategyTabLabel(
+                            displayRegime.id,
+                            direction
+                          );
 
                           return (
                             <button
                               key={direction}
-                              onClick={(e) => {
+                              onClick={e => {
                                 e.stopPropagation();
                                 setSelectedDirection(direction);
                               }}

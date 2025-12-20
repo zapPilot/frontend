@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup, configure } from "@testing-library/react";
 // Import React for the dynamic component mock
@@ -5,6 +8,11 @@ import React from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { chartMatchers } from "./utils/chartTypeGuards";
+
+const coverageTmpDir = path.join(process.cwd(), "coverage", ".tmp");
+if (!fs.existsSync(coverageTmpDir)) {
+  fs.mkdirSync(coverageTmpDir, { recursive: true });
+}
 
 // Configure React Testing Library to work better with React 18+
 configure({
