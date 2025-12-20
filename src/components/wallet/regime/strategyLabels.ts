@@ -26,7 +26,7 @@ export const STRATEGY_TAB_LABELS: Record<RegimeId, Partial<Record<StrategyDirect
   },
   g: {
     fromLeft: 'From Neutral ↑',
-    fromRight: 'From Extreme Greed ↓',
+    fromRight: 'From Peak ↓',
   },
   eg: {
     default: 'Market Peak',

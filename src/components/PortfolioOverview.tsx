@@ -11,7 +11,6 @@ import { PortfolioState } from "@/types/ui/portfolioState";
 import { BaseComponentProps } from "@/types/ui/ui.types";
 
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
 import { usePortfolioStateHelpers } from "../hooks/usePortfolioState";
 import { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
@@ -112,7 +111,6 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
   }) => {
     // Tab state management
     const [activeTab, setActiveTab] = useState<TabType>("assets");
-    useBalanceVisibility();
 
     // Use portfolio state helpers for consistent logic
     const {

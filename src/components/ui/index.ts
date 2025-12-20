@@ -28,7 +28,6 @@ export {
   Skeleton,
   Spinner,
   TokenListSkeleton,
-  WalletMetricsSkeleton,
 } from "./LoadingSystem";
 export {
   ButtonSkeleton as LoadingButton,

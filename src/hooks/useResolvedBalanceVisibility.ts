@@ -1,8 +1,6 @@
-import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
-
 /**
- * Resolves balance visibility from props or context.
- * Prioritizes prop value over context value for component flexibility.
+ * Resolves balance visibility from props with a safe default.
+ * Prioritizes prop value over the default for component flexibility.
  *
  * This hook consolidates the common pattern of resolving visibility state
  * that was previously duplicated across multiple components.
@@ -21,7 +19,7 @@ import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
  *
  * @example
  * ```tsx
- * // In component without prop (uses context only)
+ * // In component without prop (defaults to visible)
  * function MyComponent() {
  *   const resolvedHidden = useResolvedBalanceVisibility();
  *   return <div>{resolvedHidden ? '****' : '$1,234.56'}</div>;
@@ -29,6 +27,5 @@ import { useBalanceVisibility } from "../contexts/BalanceVisibilityContext";
  * ```
  */
 export function useResolvedBalanceVisibility(propValue?: boolean): boolean {
-  const { balanceHidden: contextValue } = useBalanceVisibility();
-  return propValue ?? contextValue;
+  return propValue ?? false;
 }

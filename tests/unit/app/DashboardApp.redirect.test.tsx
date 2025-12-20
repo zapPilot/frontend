@@ -5,7 +5,7 @@ import DashboardApp from "../../../src/app/page";
 import { render } from "../../test-utils";
 
 // Mock WalletPortfolio to avoid heavy rendering
-vi.mock("../../../src/components/WalletPortfolio", () => ({
+vi.mock("../../../src/components/wallet/portfolio/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 

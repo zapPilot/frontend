@@ -11,7 +11,7 @@ vi.mock("@/components/Navigation", () => ({
   Navigation: () => null,
 }));
 
-vi.mock("@/components/WalletPortfolio", () => ({
+vi.mock("@/components/wallet/portfolio/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 

@@ -2,9 +2,9 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 
-import { AmountInput } from "@/components/wallet/variations/v22/modals/components/AmountInput";
-import { ChainSelector } from "@/components/wallet/variations/v22/modals/components/ChainSelector";
-import { StrategySlider } from "@/components/wallet/variations/v22/modals/components/StrategySlider";
+import { AmountInput } from "@/components/wallet/portfolio/modals/components/AmountInput";
+import { ChainSelector } from "@/components/wallet/portfolio/modals/components/ChainSelector";
+import { StrategySlider } from "@/components/wallet/portfolio/modals/components/StrategySlider";
 
 describe("Transaction modal building blocks", () => {
   it("selects a chain", () => {

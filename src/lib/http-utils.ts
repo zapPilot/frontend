@@ -23,8 +23,10 @@ export const API_ENDPOINTS = {
 
 // Default configuration
 // Updated for analytics endpoints: longer timeout, fewer retries to reduce cancelled request spam
+const DEFAULT_TIMEOUT_MS = process.env.NODE_ENV === "production" ? 30000 : 15000;
+
 export const HTTP_CONFIG = {
-  timeout: 30000, // 30s for complex analytics queries (was 10s)
+  timeout: DEFAULT_TIMEOUT_MS, // Shorter in dev/test to avoid hanging requests
   retries: 1, // Only retry once to avoid request storms (was 3)
   retryDelay: 2000, // 2s delay before retry (was 1s)
 } as const;

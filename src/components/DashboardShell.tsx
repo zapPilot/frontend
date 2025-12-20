@@ -7,7 +7,7 @@ import { AnalyticsTab } from "@/components/AnalyticsTab";
 import { Navigation } from "@/components/Navigation";
 import type { SwapPageProps } from "@/components/SwapPage/SwapPage";
 import { LoadingState } from "@/components/ui/LoadingSystem";
-import { WalletPortfolio } from "@/components/WalletPortfolio";
+import { WalletPortfolio } from "@/components/wallet/portfolio/WalletPortfolio";
 import { GRADIENTS, Z_INDEX } from "@/constants/design-system";
 import { CategoryFilterProvider } from "@/contexts/CategoryFilterContext";
 import {
@@ -203,7 +203,7 @@ export function DashboardShell({
       default:
         return (
           <WalletPortfolio
-            {...(urlUserId && { urlUserId })}
+            {...(urlUserId && { userId: urlUserId })}
             onOptimizeClick={handleOptimizeClick}
             onZapInClick={handleZapInClick}
             onZapOutClick={handleZapOutClick}

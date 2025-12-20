@@ -526,32 +526,8 @@ export function LoadingWrapper({
 }
 
 // =============================================================================
-// SPECIALIZED LEGACY COMPONENTS
+// SPECIALIZED COMPONENTS
 // =============================================================================
-
-export function WalletMetricsSkeleton({
-  className = "",
-  showValue = true,
-  showPercentage = false,
-}: {
-  className?: string;
-  showValue?: boolean;
-  showPercentage?: boolean;
-}) {
-  return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      {showValue && (
-        <>
-          <Skeleton variant="circular" width={16} height={16} />
-          <Skeleton variant="rectangular" width={64} height={24} />
-        </>
-      )}
-      {showPercentage && (
-        <Skeleton variant="rectangular" width={96} height={24} />
-      )}
-    </div>
-  );
-}
 
 export function AssetCategorySkeleton({
   className = "",
