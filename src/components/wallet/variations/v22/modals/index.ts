@@ -1,6 +1,6 @@
 
 export * from "./DepositModalV3";
-export * from "./RebalanceModal";
+export * from "./RebalanceModalV18";
 export * from "./TransactionModal";
 export * from "./TransactionModalScaffold";
 export * from "./VariationSelector";

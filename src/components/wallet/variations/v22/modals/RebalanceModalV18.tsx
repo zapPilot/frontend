@@ -60,7 +60,7 @@ export function RebalanceModalV18({
       );
       setResult(response);
       setStatus("success");
-    } catch (e) {
+    } catch {
       setStatus("idle");
     }
   };
@@ -172,54 +172,6 @@ export function RebalanceModalV18({
                   </div>
                 </div>
               </div>
-
-              {/* Intensity Slider with Presets */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest">
-                    Intensity
-                  </div>
-                  <span className="text-sm font-bold text-white font-mono">
-                    {intensity}%
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={intensity}
-                  onChange={e => setIntensity(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-800 rounded-full appearance-none cursor-pointer accent-indigo-500 outline-none focus:ring-2 focus:ring-indigo-500/50 focus:ring-offset-2 focus:ring-offset-gray-950"
-                />
-
-                {/* Quick Presets */}
-                <div className="flex gap-2">
-                  {[25, 50, 75, 100].map(pct => (
-                    <button
-                      key={pct}
-                      onClick={() => setIntensity(pct)}
-                      className={`flex-1 px-3 py-1.5 text-xs font-bold rounded-lg border transition-colors ${
-                        intensity === pct
-                          ? "border-indigo-500/60 bg-indigo-500/10 text-white"
-                          : "border-gray-800 bg-gray-900/60 text-gray-400 hover:border-indigo-500/40 hover:text-white"
-                      }`}
-                    >
-                      {pct === 100 ? "MAX" : `${pct}%`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Delta Summary */}
-              {intensity > 0 && (
-                <div className="text-center">
-                  <span className="text-sm font-medium text-indigo-400">
-                    Reducing drift by {driftReduction.toFixed(0)}%
-                  </span>
-                </div>
-              )}
 
               <GradientButton
                 gradient="from-indigo-600 to-purple-600"
