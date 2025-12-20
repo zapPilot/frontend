@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Zap } from "lucide-react";
 
 import { ASSET_COLORS } from "@/adapters/walletPortfolio";
@@ -10,11 +9,78 @@ import {
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
 
+import { AllocationBars, type AllocationConstituent } from "./AllocationBars";
+
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime;
   isEmptyState?: boolean;
   onRebalance: () => void;
+}
+
+/**
+ * Helper: Build target crypto assets from regime breakdown for empty state
+ * Uses BTC for Spot allocation and ETH for LP allocation
+ */
+function buildTargetCryptoAssets(regime: Regime): AllocationConstituent[] {
+  const breakdown = getRegimeAllocation(regime);
+  const totalCrypto = breakdown.spot + breakdown.lp;
+
+  if (totalCrypto === 0) {
+    return [];
+  }
+
+  const assets: AllocationConstituent[] = [];
+
+  // Add Spot (BTC) if present
+  if (breakdown.spot > 0) {
+    assets.push({
+      asset: "BTC",
+      symbol: "BTC",
+      name: "Bitcoin (Spot)",
+      value: (breakdown.spot / totalCrypto) * 100,
+      color: ASSET_COLORS.BTC,
+    });
+  }
+
+  // Add LP (ETH) if present
+  if (breakdown.lp > 0) {
+    assets.push({
+      asset: "ETH",
+      symbol: "ETH",
+      name: "Ethereum (LP)",
+      value: (breakdown.lp / totalCrypto) * 100,
+      color: ASSET_COLORS.ETH,
+    });
+  }
+
+  return assets;
+}
+
+/**
+ * Helper: Get real crypto assets from portfolio data
+ */
+function buildRealCryptoAssets(
+  data: WalletPortfolioDataWithDirection
+): AllocationConstituent[] {
+  return data.currentAllocation.simplifiedCrypto;
+}
+
+interface LegendItemProps {
+  label: string;
+  color: string;
+}
+
+function LegendItem({ label, color }: LegendItemProps) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <div
+        className="w-2 h-2 rounded-full"
+        style={{ backgroundColor: color }}
+      />
+      <span>{label}</span>
+    </div>
+  );
 }
 
 export function PortfolioComposition({
@@ -29,6 +95,19 @@ export function PortfolioComposition({
     stable: targetBreakdown.stable,
   };
   const allocationLabel = isEmptyState ? "Recommended" : "Target";
+
+  // Determine which assets to display
+  const cryptoAssets = isEmptyState
+    ? buildTargetCryptoAssets(currentRegime)
+    : buildRealCryptoAssets(data);
+
+  const cryptoPercentage = isEmptyState
+    ? target.crypto
+    : data.currentAllocation.crypto;
+  const stablePercentage = isEmptyState
+    ? target.stable
+    : data.currentAllocation.stable;
+
   const renderAllocationChip = (label: string, color: string) => (
     <div
       className="px-2 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5"
@@ -99,98 +178,42 @@ export function PortfolioComposition({
 
         {/* ACTUAL BARS (Foreground) */}
         <div className="relative w-full h-full flex gap-1 z-10">
-          {/* Empty State Placeholder */}
-          {isEmptyState &&
-          data.currentAllocation.simplifiedCrypto.length === 0 ? (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs text-gray-600 font-medium">
-                Connect wallet to view your allocation
-              </span>
-            </div>
-          ) : (
-            <>
-              {/* Crypto Section */}
-              {data.currentAllocation.simplifiedCrypto.length > 0 && (
-                <div
-                  className="h-full flex gap-1 transition-all duration-500 ease-out"
-                  style={{
-                    width: `${data.currentAllocation.crypto}%`,
-                  }}
-                >
-                  {data.currentAllocation.simplifiedCrypto.map(asset => (
-                    <motion.div
-                      key={asset.symbol}
-                      data-testid={`composition-${asset.symbol.toLowerCase()}`}
-                      className="h-full rounded-lg relative group overflow-hidden cursor-pointer"
-                      style={{
-                        flex: asset.value,
-                        backgroundColor: `${asset.color}20`,
-                        border: `1px solid ${asset.color}50`,
-                      }}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                    >
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="font-bold text-white text-lg">
-                          {asset.symbol}
-                        </span>
-                        <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                          {asset.value.toFixed(2)}%
-                        </span>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-
-              {/* Stable Section - Only show if has value */}
-              {data.currentAllocation.stable > 0 && (
-                <motion.div
-                  data-testid="composition-stables"
-                  className="h-full rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative group"
-                  style={{
-                    width: `${data.currentAllocation.stable}%`,
-                  }}
-                  whileHover={{ scale: 1.02, y: -2 }}
-                >
-                  <div className="text-center">
-                    <span className="font-bold text-emerald-400 text-lg">
-                      STABLES
-                    </span>
-                    <div className="text-xs text-emerald-500/60 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                      {data.currentAllocation.stable.toFixed(2)}%
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </>
-          )}
+          <AllocationBars
+            cryptoAssets={cryptoAssets}
+            cryptoPercentage={cryptoPercentage}
+            stablePercentage={stablePercentage}
+          />
         </div>
       </div>
 
       {/* Legend - Conditional rendering for empty state */}
       <div className="flex justify-between mt-4 px-1">
         {isEmptyState ? (
-          <div className="text-xs text-gray-500">
-            Current allocation will appear here after wallet connection
+          <div className="flex gap-4 text-xs text-gray-400">
+            {cryptoAssets.map(asset => (
+              <LegendItem
+                key={asset.symbol}
+                color={asset.color}
+                label={asset.symbol === "BTC" ? "Spot (Target)" : "LP (Target)"}
+              />
+            ))}
+            {stablePercentage > 0 && (
+              <LegendItem
+                color={ASSET_COLORS.USDT}
+                label="Stablecoins (Target)"
+              />
+            )}
           </div>
         ) : (
           <div className="flex gap-4 text-xs text-gray-400">
             {data.currentAllocation.simplifiedCrypto.map(asset => (
-              <div key={asset.symbol} className="flex items-center gap-1.5">
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: asset.color }}
-                />
-                <span>{asset.name}</span>
-              </div>
-            ))}
-            <div className="flex items-center gap-1.5">
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: ASSET_COLORS.USDT }}
+              <LegendItem
+                key={asset.symbol}
+                color={asset.color}
+                label={asset.name}
               />
-              <span>Stablecoins</span>
-            </div>
+            ))}
+            <LegendItem color={ASSET_COLORS.USDT} label="Stablecoins" />
           </div>
         )}
         <div className="text-xs font-bold text-orange-400">
