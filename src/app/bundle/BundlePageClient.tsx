@@ -1,26 +1,16 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { ComponentType, useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
 import { SwitchPromptBanner } from "@/components/bundle/SwitchPromptBanner";
-import { DashboardShell } from "@/components/DashboardShell";
 import { EmailReminderBanner } from "@/components/EmailReminderBanner";
 import { BundleNotFound } from "@/components/ui";
-import type { WalletManagerProps } from "@/components/WalletManager";
-import { WalletManagerSkeleton } from "@/components/WalletManager/WalletManagerSkeleton";
+import { MOCK_DATA } from "@/components/wallet/portfolio/data/mockPortfolioData";
+import { WalletPortfolioLoadingState } from "@/components/wallet/portfolio/views/LoadingStates";
+import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
 import { useBundlePage } from "@/hooks/useBundlePage";
-
-const WalletManager: ComponentType<WalletManagerProps> = dynamic(
-  async () => {
-    const mod = await import("@/components/WalletManager");
-    return { default: mod.WalletManager };
-  },
-  {
-    loading: () => <WalletManagerSkeleton />, // Friendly skeleton while loading chunk
-  }
-);
+import { usePortfolioData } from "@/hooks/queries/usePortfolioData";
 
 interface BundlePageClientProps {
   userId: string;
@@ -29,6 +19,7 @@ interface BundlePageClientProps {
 
 export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
   const vm = useBundlePage(userId, walletId);
+  const { data, isLoading } = usePortfolioData(userId);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
@@ -76,42 +67,36 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ]
   );
 
-  // Footer overlays (quick switch FAB + wallet manager modal)
-  const footerOverlays = (
-    <>
-      {vm.overlays.showQuickSwitch && (
-        <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
-      )}
-      <WalletManager
-        isOpen={vm.overlays.isWalletManagerOpen}
-        onClose={vm.overlays.closeWalletManager}
-        onEmailSubscribed={vm.overlays.onEmailSubscribed}
-      />
-    </>
+  // Footer overlays (quick switch FAB only - WalletManager removed)
+  const footerOverlays = useMemo(
+    () => (
+      <>
+        {vm.overlays.showQuickSwitch && (
+          <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
+        )}
+      </>
+    ),
+    [vm.overlays.showQuickSwitch, vm.switchPrompt.onSwitch]
   );
 
   // Handle bundle not found case
   if (vm.bundleNotFound) {
-    return (
-      <>
-        <BundleNotFound
-          message="Bundle not found"
-          showConnectCTA={vm.showConnectCTA}
-          onConnectClick={vm.overlays.openWalletManager}
-        />
-        {footerOverlays}
-      </>
-    );
+    return <BundleNotFound message="Bundle not found" showConnectCTA={vm.showConnectCTA} />;
   }
 
+  // Loading state
+  if (isLoading && !data) {
+    return <WalletPortfolioLoadingState />;
+  }
+
+  // Use real data if available, fallback to mock data
+  const portfolioData = data ?? MOCK_DATA;
+
+  // Render v22 portfolio with bundle features
   return (
-    <DashboardShell
-      urlUserId={userId}
-      isOwnBundle={vm.isOwnBundle}
-      {...(vm.bundleUser?.displayName && {
-        bundleUserName: vm.bundleUser.displayName,
-      })}
-      bundleUrl={vm.bundleUrl}
+    <WalletPortfolioPresenter
+      data={portfolioData}
+      userId={userId}
       headerBanners={headerBanners}
       footerOverlays={footerOverlays}
     />

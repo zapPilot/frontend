@@ -5,7 +5,7 @@ import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu"
 interface WalletNavigationProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  onOpenWalletManager: () => void;
+  onOpenWalletManager?: () => void;
   onOpenSettings: () => void;
 }
 
@@ -52,7 +52,7 @@ export function WalletNavigation({
 
       <div className="flex items-center gap-4">
         <WalletMenu
-          onOpenWalletManager={onOpenWalletManager}
+          {...(onOpenWalletManager && { onOpenWalletManager })}
           onOpenSettings={onOpenSettings}
         />
       </div>

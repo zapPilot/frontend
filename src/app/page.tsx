@@ -67,13 +67,6 @@ export default function DashboardApp() {
           >
             View Bundle
           </a>
-          <a
-            href="/layout-demo/v22"
-            className="rounded-md border border-gray-700 px-4 py-2 text-gray-200 hover:bg-gray-800"
-            data-testid="landing-demo-v22"
-          >
-            View Demo
-          </a>
         </div>
       </div>
     </div>

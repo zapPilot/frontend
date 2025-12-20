@@ -34,10 +34,6 @@ interface UseBundlePageResult {
   // Footer overlays
   overlays: {
     showQuickSwitch: boolean;
-    isWalletManagerOpen: boolean;
-    openWalletManager: () => void;
-    closeWalletManager: () => void;
-    onEmailSubscribed: () => void;
   };
 }
 
@@ -131,7 +127,6 @@ export function useBundlePage(
     walletContext?.switchActiveWallet ?? NOOP_SWITCH_ACTIVE_WALLET;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
-  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
 
   // Auto-switch wallet on mount (only for own bundles with walletId)
@@ -255,7 +250,9 @@ export function useBundlePage(
   }, []);
 
   const handleEmailSubscribe = useCallback(() => {
-    setIsWalletManagerOpen(true);
+    // WalletManager modal removed - this is now a no-op
+    // Email subscription can be handled through other UI flows if needed
+    logger.info("Email subscribe clicked - WalletManager modal removed");
   }, []);
 
   const handleEmailReminderDismiss = useCallback(() => {
@@ -280,10 +277,6 @@ export function useBundlePage(
     },
     overlays: {
       showQuickSwitch,
-      isWalletManagerOpen,
-      openWalletManager: () => setIsWalletManagerOpen(true),
-      closeWalletManager: () => setIsWalletManagerOpen(false),
-      onEmailSubscribed: () => setEmailBannerDismissed(true),
     },
   };
 }

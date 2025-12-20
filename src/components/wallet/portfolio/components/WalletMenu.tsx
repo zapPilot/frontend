@@ -13,7 +13,7 @@ import { useWalletProvider } from "@/providers/WalletProvider";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 interface WalletMenuProps {
-  onOpenWalletManager: () => void;
+  onOpenWalletManager?: () => void;
   onOpenSettings: () => void;
 }
 
@@ -102,16 +102,18 @@ export function WalletMenu({
   // Helper components to eliminate code duplication
   const MenuItems = () => (
     <>
-      <button
-        onClick={() => {
-          setIsMenuOpen(false);
-          onOpenWalletManager();
-        }}
-        className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-      >
-        <Settings className="w-4 h-4 text-purple-400" />
-        Manage Wallets
-      </button>
+      {onOpenWalletManager && (
+        <button
+          onClick={() => {
+            setIsMenuOpen(false);
+            onOpenWalletManager();
+          }}
+          className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
+        >
+          <Settings className="w-4 h-4 text-purple-400" />
+          Manage Wallets
+        </button>
+      )}
       <button
         onClick={() => {
           setIsMenuOpen(false);

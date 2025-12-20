@@ -18,21 +18,23 @@ import { WithdrawModal } from "@/components/wallet/portfolio/modals/WithdrawModa
 import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
-import { WalletManager } from "@/components/WalletManager/WalletManager";
 
 interface WalletPortfolioPresenterProps {
   data?: typeof MOCK_DATA | WalletPortfolioDataWithDirection;
   userId?: string;
+  headerBanners?: React.ReactNode;
+  footerOverlays?: React.ReactNode;
 }
 
 export function WalletPortfolioPresenter({
   data = MOCK_DATA,
   userId = "",
+  headerBanners,
+  footerOverlays,
 }: WalletPortfolioPresenterProps = {}) {
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState("dashboard");
 
-  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Modal state - consolidated to avoid duplication
@@ -49,11 +51,13 @@ export function WalletPortfolioPresenter({
       className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30"
       data-testid="v22-dashboard"
     >
+      {/* --- HEADER BANNERS (Bundle-specific: SwitchPrompt, EmailReminder) --- */}
+      {headerBanners}
+
       {/* --- TOP NAVIGATION (Minimalist) --- */}
       <WalletNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenWalletManager={() => setIsWalletManagerOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
@@ -107,11 +111,6 @@ export function WalletPortfolioPresenter({
       />
 
       {/* --- MODALS --- */}
-      <WalletManager
-        isOpen={isWalletManagerOpen}
-        onClose={() => setIsWalletManagerOpen(false)}
-      />
-
       <DepositModal
         isOpen={activeModal === "deposit"}
         onClose={closeModal}
@@ -140,6 +139,9 @@ export function WalletPortfolioPresenter({
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
       />
+
+      {/* --- FOOTER OVERLAYS (Bundle-specific: QuickSwitchFAB) --- */}
+      {footerOverlays}
     </div>
   );
 }
