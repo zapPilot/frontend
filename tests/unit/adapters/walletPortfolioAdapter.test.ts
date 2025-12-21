@@ -17,7 +17,7 @@ import {
     createWalletPortfolioErrorState,
     createWalletPortfolioLoadingState,
     transformToWalletPortfolioData,
-} from "../walletPortfolioDataAdapter";
+} from "@/adapters/walletPortfolioDataAdapter";
 
 describe("walletPortfolioAdapter", () => {
   describe("transformToWalletPortfolioData", () => {
@@ -141,9 +141,9 @@ describe("walletPortfolioAdapter", () => {
       // Allocations
       expect(result.currentAllocation.crypto).toBe(80); // (20k + 15k + 5k) / 50k * 100
       expect(result.currentAllocation.stable).toBe(20); // 10k / 50k * 100
-      expect(result.targetAllocation.crypto).toBe(75); // Greed regime target
-      expect(result.targetAllocation.stable).toBe(25);
-      expect(result.delta).toBe(5); // |80 - 75|
+      expect(result.targetAllocation.crypto).toBe(70); // Greed regime target (Balanced LP: 70/30)
+      expect(result.targetAllocation.stable).toBe(30);
+      expect(result.delta).toBe(10); // |80 - 70|
 
       // Portfolio details
       expect(result.positions).toBe(2);
@@ -226,8 +226,8 @@ describe("walletPortfolioAdapter", () => {
       expect(result.sentimentValue).toBe(50);
       expect(result.sentimentStatus).toBe("Neutral");
       expect(result.currentRegime).toBe("n");
-      expect(result.targetAllocation.crypto).toBe(50); // Neutral regime
-      expect(result.targetAllocation.stable).toBe(50);
+      expect(result.targetAllocation.crypto).toBe(70); // Neutral regime (Heavy Spot: 70/30)
+      expect(result.targetAllocation.stable).toBe(30);
     });
 
     it("should handle empty portfolio correctly", () => {
@@ -455,7 +455,7 @@ describe("walletPortfolioAdapter", () => {
         },
       };
 
-      // Extreme Fear (ef) - 30/70 crypto/stable
+      // Extreme Fear (ef) - 70/30 crypto/stable (Buying the dip strategy)
       const extremeFearResult = transformToWalletPortfolioData(
         baseLandingData,
         {
@@ -470,10 +470,10 @@ describe("walletPortfolioAdapter", () => {
         }
       );
       expect(extremeFearResult.currentRegime).toBe("ef");
-      expect(extremeFearResult.targetAllocation.crypto).toBe(30);
-      expect(extremeFearResult.targetAllocation.stable).toBe(70);
+      expect(extremeFearResult.targetAllocation.crypto).toBe(70);
+      expect(extremeFearResult.targetAllocation.stable).toBe(30);
 
-      // Extreme Greed (eg) - 90/10 crypto/stable
+      // Extreme Greed (eg) - 30/70 crypto/stable (Profit taking)
       const extremeGreedResult = transformToWalletPortfolioData(
         baseLandingData,
         {
@@ -488,8 +488,8 @@ describe("walletPortfolioAdapter", () => {
         }
       );
       expect(extremeGreedResult.currentRegime).toBe("eg");
-      expect(extremeGreedResult.targetAllocation.crypto).toBe(90);
-      expect(extremeGreedResult.targetAllocation.stable).toBe(10);
+      expect(extremeGreedResult.targetAllocation.crypto).toBe(30);
+      expect(extremeGreedResult.targetAllocation.stable).toBe(70);
     });
   });
 

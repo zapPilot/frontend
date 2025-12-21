@@ -3,12 +3,12 @@
  * Maps /api/v1/strategies endpoint response to UI components
  */
 
-import {
-  AssetCategory,
-  Protocol,
-} from "../../components/PortfolioAllocation/types";
 import { ASSET_CATEGORIES } from "../../constants/portfolio";
 import { PoolDetail } from "../../services/analyticsService";
+import {
+    AssetCategory,
+    Protocol,
+} from "../../types/portfolio";
 import { categorizePool } from "../../utils/portfolio.utils";
 
 /**

@@ -1,33 +1,55 @@
+import { BarChart3, History, LayoutDashboard } from "lucide-react";
+
 /**
- * Portfolio Type Definitions
- *
- * Shared types for the wallet portfolio components to ensure
- * consistency and type safety across the component tree.
+ * Protocol definition for strategy and portfolio visualization
  */
-
-import {
-  History,
-  LayoutDashboard,
-  LineChart,
-  type LucideIcon,
-} from "lucide-react";
-
-/** Modal types for portfolio actions */
-export type ModalType = "deposit" | "withdraw" | "rebalance";
-
-/** Navigation tab identifiers */
-export type TabType = "dashboard" | "analytics" | "backtesting";
-
-/** Tab configuration for navigation */
-interface TabConfig {
-  id: TabType;
-  label: string;
-  icon: LucideIcon;
+export interface Protocol {
+  id: string; // snapshot_id or constructed string
+  name: string;
+  allocationPercentage: number;
+  chain: string;
+  protocol?: string;
+  tvl?: number;
+  apy?: number;
+  riskScore?: number;
+  poolSymbols?: string[];
+  aprConfidence?: string;
+  aprBreakdown?: {
+    total: number;
+  };
+  targetTokens?: string[];
 }
 
-/** Available tabs in the portfolio navigation */
-export const TABS: TabConfig[] = [
+/**
+ * Asset Category for strategy and portfolio visualization
+ */
+export interface AssetCategory {
+  id: string;
+  name: string;
+  color: string;
+  description: string;
+  targetAssets: string[];
+  chains: string[];
+  protocolCount: number;
+  enabledProtocolCount: number;
+  protocols: Protocol[];
+}
+
+/**
+ * Available tabs in the portfolio view
+ */
+export type TabType = "dashboard" | "analytics" | "backtesting";
+
+/**
+ * Modal types for portfolio actions
+ */
+export type ModalType = "deposit" | "withdraw" | "rebalance";
+
+/**
+ * Tab configuration
+ */
+export const TABS: { id: TabType; label: string; icon: any }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "analytics", label: "Analytics", icon: LineChart },
+  { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "backtesting", label: "Backtesting", icon: History },
 ];

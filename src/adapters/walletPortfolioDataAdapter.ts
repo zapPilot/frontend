@@ -3,15 +3,25 @@
  *
  * Transforms API responses from analyticsService and sentimentService
  * into the wallet portfolio data structure.
+ *
+ * Orchestrates sub-adapters for specific domain logic:
+ * - allocationAdapter: Portfolio math and constituent checking
+ * - regimeAdapter: Regime targets and history
+ * - sentimentAdapter: Sentiment value and text processing
  */
 
 import {
-    getRegimeAllocation,
-    type RegimeId,
-    regimes,
-} from "@/components/wallet/regime/regimeData";
+    calculateAllocation,
+    calculateDelta,
+} from "@/adapters/portfolio/allocationAdapter";
+import {
+    getRegimeStrategyInfo,
+    getTargetAllocation,
+} from "@/adapters/portfolio/regimeAdapter";
+import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
+import type { RegimeId } from "@/components/wallet/regime/regimeData";
+import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
-import { getActiveStrategy } from "@/lib/strategySelector";
 import type {
     DirectionType,
     DurationInfo,
@@ -20,22 +30,14 @@ import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-/**
- * Asset color mapping for consistent visualization across components
- */
-export const ASSET_COLORS = {
-  BTC: "#F7931A",
-  ETH: "#627EEA",
-  SOL: "#14F195",
-  ALT: "#8C8C8C", // Others/Altcoins
-  USDC: "#2775CA",
-  USDT: "#26A17B",
-} as const;
+// Re-export ASSET_COLORS for components that might use it from different paths
+// (Ideally components should import from @/constants/assets directly, but this keeps backwards compat if needed)
+export { ASSET_COLORS } from "@/constants/assets";
 
 /**
  * Constituent asset type for allocation breakdown
  */
-interface AllocationConstituent {
+export interface AllocationConstituent {
   asset: string;
   symbol: string;
   name: string;
@@ -115,12 +117,11 @@ export function transformToWalletPortfolioData(
   landingData: LandingPageResponse,
   sentimentData: MarketSentimentData | null
 ): WalletPortfolioData {
-  // Determine current regime from sentiment
-  const sentimentValue = sentimentData?.value ?? 50;
-  const currentRegime = getRegimeFromSentiment(sentimentValue);
+  // Process sentiment
+  const sentimentInfo = processSentimentData(sentimentData);
 
   // Get target allocation for current regime
-  const targetAllocation = getTargetAllocation(currentRegime);
+  const targetAllocation = getTargetAllocation(sentimentInfo.regime);
 
   // Calculate current allocation from portfolio data
   const currentAllocation = calculateAllocation(landingData);
@@ -142,13 +143,12 @@ export function transformToWalletPortfolioData(
     roiChange30d: roiChanges.change30d,
 
     // Market sentiment
-    sentimentValue,
-    sentimentStatus: sentimentData?.status ?? "Neutral",
-    sentimentQuote:
-      sentimentData?.quote?.quote ?? getDefaultQuoteForRegime(currentRegime),
+    sentimentValue: sentimentInfo.value,
+    sentimentStatus: sentimentInfo.status,
+    sentimentQuote: sentimentInfo.quote,
 
     // Regime
-    currentRegime,
+    currentRegime: sentimentInfo.regime,
 
     // Allocations
     currentAllocation,
@@ -164,163 +164,6 @@ export function transformToWalletPortfolioData(
     isLoading: false,
     hasError: false,
   };
-}
-
-/**
- * Calculates current allocation from portfolio data
- */
-function calculateAllocation(
-  landingData: LandingPageResponse
-): WalletPortfolioData["currentAllocation"] {
-  const allocation = landingData.portfolio_allocation;
-
-  // Calculate total values
-  const btcValue = allocation.btc.total_value;
-  const ethValue = allocation.eth.total_value;
-  const othersValue = allocation.others.total_value;
-  const stablecoinsValue = allocation.stablecoins.total_value;
-
-  const totalCrypto = btcValue + ethValue + othersValue;
-  const totalAssets = totalCrypto + stablecoinsValue;
-
-  // Protect against division by zero
-  if (totalAssets === 0) {
-    return {
-      crypto: 0,
-      stable: 0,
-      constituents: {
-        crypto: [],
-        stable: [],
-      },
-      simplifiedCrypto: [],
-    };
-  }
-
-  // Calculate percentages
-  const cryptoPercent = (totalCrypto / totalAssets) * 100;
-  const stablePercent = (stablecoinsValue / totalAssets) * 100;
-
-  // Build constituents for detailed breakdown
-  const cryptoConstituents: AllocationConstituent[] = [];
-  const stableConstituents: AllocationConstituent[] = [];
-
-  // Add BTC if present
-  if (btcValue > 0) {
-    cryptoConstituents.push({
-      asset: "BTC",
-      symbol: "BTC",
-      name: "Bitcoin",
-      value: (btcValue / totalCrypto) * 100,
-      color: ASSET_COLORS.BTC,
-    });
-  }
-
-  // Add ETH if present
-  if (ethValue > 0) {
-    cryptoConstituents.push({
-      asset: "ETH",
-      symbol: "ETH",
-      name: "Ethereum",
-      value: (ethValue / totalCrypto) * 100,
-      color: ASSET_COLORS.ETH,
-    });
-  }
-
-  // Add Others if present
-  if (othersValue > 0) {
-    cryptoConstituents.push({
-      asset: "Others",
-      symbol: "ALT",
-      name: "Altcoins",
-      value: (othersValue / totalCrypto) * 100,
-      color: ASSET_COLORS.ALT,
-    });
-  }
-
-  // Estimate USDC/USDT split (60/40 default - backend does not provide breakdown yet)
-  if (stablecoinsValue > 0) {
-    const usdcValue = stablecoinsValue * 0.6;
-    const usdtValue = stablecoinsValue * 0.4;
-
-    stableConstituents.push(
-      {
-        asset: "USDC",
-        symbol: "USDC",
-        name: "USD Coin",
-        value: (usdcValue / stablecoinsValue) * 100,
-        color: ASSET_COLORS.USDC,
-      },
-      {
-        asset: "USDT",
-        symbol: "USDT",
-        name: "Tether",
-        value: (usdtValue / stablecoinsValue) * 100,
-        color: ASSET_COLORS.USDT,
-      }
-    );
-  }
-
-  // Create simplified crypto breakdown for composition bar
-  const simplifiedCrypto: AllocationConstituent[] = [
-    {
-      symbol: "BTC",
-      name: "Bitcoin",
-      asset: "BTC",
-      value: btcValue > 0 ? (btcValue / totalCrypto) * 100 : 0,
-      color: ASSET_COLORS.BTC,
-    },
-    {
-      symbol: "ETH",
-      name: "Ethereum",
-      asset: "ETH",
-      value: ethValue > 0 ? (ethValue / totalCrypto) * 100 : 0,
-      color: ASSET_COLORS.ETH,
-    },
-    {
-      symbol: "ALT",
-      name: "Altcoins",
-      asset: "Others",
-      value: othersValue > 0 ? (othersValue / totalCrypto) * 100 : 0,
-      color: ASSET_COLORS.ALT,
-    },
-  ].filter(c => c.value > 0);
-
-  return {
-    crypto: cryptoPercent,
-    stable: stablePercent,
-    constituents: {
-      crypto: cryptoConstituents,
-      stable: stableConstituents,
-    },
-    simplifiedCrypto,
-  };
-}
-
-/**
- * Gets target allocation for a regime
- */
-function getTargetAllocation(
-  regimeId: RegimeId
-): WalletPortfolioData["targetAllocation"] {
-  const regime = regimes.find(r => r.id === regimeId);
-
-  if (!regime) {
-    // Fallback to neutral (50/50)
-    return { crypto: 50, stable: 50 };
-  }
-
-  const allocation = getRegimeAllocation(regime);
-  return {
-    crypto: allocation.spot + allocation.lp,
-    stable: allocation.stable,
-  };
-}
-
-/**
- * Calculates delta (drift) between current and target allocation
- */
-function calculateDelta(currentCrypto: number, targetCrypto: number): number {
-  return Math.abs(targetCrypto - currentCrypto);
 }
 
 /**
@@ -352,24 +195,13 @@ function applyRegimeHistoryFields(
   baseData: WalletPortfolioData,
   regimeHistoryData: RegimeHistoryData | null
 ): WalletPortfolioDataWithDirection {
-  if (!regimeHistoryData) {
-    return {
-      ...baseData,
-      previousRegime: null,
-      strategyDirection: "default",
-      regimeDuration: null,
-    };
-  }
+  const strategyInfo = getRegimeStrategyInfo(
+    regimeHistoryData
+  );
 
   return {
     ...baseData,
-    previousRegime: regimeHistoryData.previousRegime,
-    strategyDirection: getActiveStrategy(
-      regimeHistoryData.direction,
-      regimeHistoryData.currentRegime,
-      regimeHistoryData.previousRegime
-    ),
-    regimeDuration: regimeHistoryData.duration,
+    ...strategyInfo,
   };
 }
 
@@ -379,7 +211,7 @@ function applyRegimeHistoryFields(
 function countUniqueProtocols(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
+  const uniqueProtocols = new Set(poolDetails.map((pool) => pool.protocol_id));
   return uniqueProtocols.size;
 }
 
@@ -389,23 +221,8 @@ function countUniqueProtocols(
 function countUniqueChains(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
+  const uniqueChains = new Set(poolDetails.map((pool) => pool.chain));
   return uniqueChains.size;
-}
-
-/**
- * Gets default quote for a regime when sentiment data is unavailable
- */
-function getDefaultQuoteForRegime(regimeId: RegimeId): string {
-  const quotes: Record<RegimeId, string> = {
-    ef: "Market panic creates opportunities for disciplined investors.",
-    f: "Cautiously increase exposure as sentiment improves.",
-    n: "Maintain balanced position across market cycles.",
-    g: "Market conditions favor aggressive positioning with higher allocation to growth assets.",
-    eg: "Extreme optimism requires caution - protect gains and prepare for reversal.",
-  };
-
-  return quotes[regimeId];
 }
 
 /**
@@ -418,21 +235,6 @@ function getDefaultQuoteForRegime(regimeId: RegimeId): string {
  * @param sentimentData - Market sentiment from /api/v2/market/sentiment
  * @param regimeHistoryData - Regime history from /api/v2/market/regime/history
  * @returns Portfolio data with directional strategy fields
- *
- * @example
- * ```typescript
- * const data = transformToWalletPortfolioDataWithDirection(
- *   landingData,
- *   sentimentData,
- *   regimeHistoryData
- * );
- *
- * // Use directional fields
- * if (data.previousRegime) {
- *   console.log(`Transitioning from ${data.previousRegime} to ${data.currentRegime}`);
- *   console.log(`Direction: ${data.strategyDirection}`);
- * }
- * ```
  */
 export function transformToWalletPortfolioDataWithDirection(
   landingData: LandingPageResponse,
@@ -452,12 +254,6 @@ export function transformToWalletPortfolioDataWithDirection(
  * @param sentimentData - Real-time market sentiment from /api/v2/market/sentiment
  * @param regimeHistoryData - Regime history from /api/v2/market/regime/history
  * @returns Empty portfolio state with real sentiment and regime-based targets
- *
- * @example
- * ```typescript
- * const emptyState = createEmptyPortfolioState(sentimentData, regimeHistoryData);
- * // Returns portfolio with $0 balance but real regime strategy
- * ```
  */
 export function createEmptyPortfolioState(
   sentimentData: MarketSentimentData | null,

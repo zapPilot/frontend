@@ -1,0 +1,65 @@
+import {
+    getRegimeAllocation,
+    type RegimeId,
+    regimes,
+} from "@/components/wallet/regime/regimeData";
+import { getActiveStrategy } from "@/lib/strategySelector";
+import type {
+    DirectionType,
+    DurationInfo,
+} from "@/schemas/api/regimeHistorySchemas";
+import type { RegimeHistoryData } from "@/services/regimeHistoryService";
+
+export interface TargetAllocation {
+  crypto: number;
+  stable: number;
+}
+
+/**
+ * Gets target allocation for a regime
+ */
+export function getTargetAllocation(regimeId: RegimeId): TargetAllocation {
+  const regime = regimes.find((r) => r.id === regimeId);
+
+  if (!regime) {
+    // Fallback to neutral (50/50)
+    return { crypto: 50, stable: 50 };
+  }
+
+  const allocation = getRegimeAllocation(regime);
+  return {
+    crypto: allocation.spot + allocation.lp,
+    stable: allocation.stable,
+  };
+}
+
+export interface RegimeStrategyInfo {
+  previousRegime: RegimeId | null;
+  strategyDirection: DirectionType;
+  regimeDuration: DurationInfo;
+}
+
+/**
+ * Derives strategy information from regime history
+ */
+export function getRegimeStrategyInfo(
+  regimeHistoryData: RegimeHistoryData | null
+): RegimeStrategyInfo {
+  if (!regimeHistoryData) {
+    return {
+      previousRegime: null,
+      strategyDirection: "default",
+      regimeDuration: null,
+    };
+  }
+
+  return {
+    previousRegime: regimeHistoryData.previousRegime,
+    strategyDirection: getActiveStrategy(
+      regimeHistoryData.direction,
+      regimeHistoryData.currentRegime,
+      regimeHistoryData.previousRegime
+    ),
+    regimeDuration: regimeHistoryData.duration,
+  };
+}
