@@ -8,16 +8,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  computeStrategyDirection,
-  getActiveStrategy,
-  getRegimeName,
-  getStrategyMeta,
-  isValidRegimeId,
-  REGIME_ORDER,
+    computeStrategyDirection,
+    getActiveStrategy,
+    getRegimeName,
+    getStrategyMeta,
+    REGIME_ORDER,
 } from "@/lib/strategySelector";
 import type {
-  DirectionType,
-  RegimeId,
+    DirectionType,
+    RegimeId,
 } from "@/schemas/api/regimeHistorySchemas";
 
 describe("strategySelector", () => {
@@ -288,39 +287,7 @@ describe("strategySelector", () => {
     });
   });
 
-  describe("isValidRegimeId", () => {
-    it("should return true for valid regime IDs", () => {
-      expect(isValidRegimeId("ef")).toBe(true);
-      expect(isValidRegimeId("f")).toBe(true);
-      expect(isValidRegimeId("n")).toBe(true);
-      expect(isValidRegimeId("g")).toBe(true);
-      expect(isValidRegimeId("eg")).toBe(true);
-    });
-
-    it("should return false for invalid strings", () => {
-      expect(isValidRegimeId("invalid")).toBe(false);
-      expect(isValidRegimeId("EF")).toBe(false);
-      expect(isValidRegimeId("")).toBe(false);
-      expect(isValidRegimeId("extreme-fear")).toBe(false);
-    });
-
-    it("should return false for non-string values", () => {
-      expect(isValidRegimeId(null)).toBe(false);
-      expect(isValidRegimeId()).toBe(false);
-      expect(isValidRegimeId(42)).toBe(false);
-      expect(isValidRegimeId({})).toBe(false);
-      expect(isValidRegimeId([])).toBe(false);
-    });
-
-    it("should work as type guard", () => {
-      const value: unknown = "ef";
-      if (isValidRegimeId(value)) {
-        // TypeScript should infer value as RegimeId here
-        const order: number = REGIME_ORDER[value];
-        expect(order).toBe(0);
-      }
-    });
-  });
+  // Tests for removed isValidRegimeId function have been deleted
 
   describe("getRegimeName", () => {
     it("should return correct name for ef", () => {
