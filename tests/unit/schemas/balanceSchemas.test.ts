@@ -409,7 +409,7 @@ describe("balanceSchemas", () => {
 
       it("provides detailed error information on failure", () => {
         const invalidData = {
-          tokens: "not-an-array",
+          data: "not-an-object", // Invalid: data should be object, not string
         };
 
         const result = safeValidateWalletResponse(invalidData);

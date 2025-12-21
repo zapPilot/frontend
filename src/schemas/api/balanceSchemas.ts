@@ -65,24 +65,17 @@ export const normalizedTokenBalanceSchema = z.object({
 
 /**
  * Schema for wallet response data structure
- * Supports both new structure (with data.balances) and legacy structure
+ * Current backend format uses object with balances and nativeBalance
  */
 export const walletResponseDataSchema = z
   .object({
-    // New structure: data object with balances array
-    // Legacy structure: data can also be a direct array of tokens
+    // Current structure: data object with balances array and optional nativeBalance
     data: z
-      .union([
-        z.object({
-          balances: z.array(tokenBalanceRawSchema).optional(),
-          nativeBalance: tokenBalanceRawSchema.optional(),
-        }),
-        z.array(tokenBalanceRawSchema), // Legacy: data as array
-      ])
+      .object({
+        balances: z.array(tokenBalanceRawSchema).optional(),
+        nativeBalance: tokenBalanceRawSchema.optional(),
+      })
       .optional(),
-
-    // Legacy structure: direct tokens array
-    tokens: z.array(tokenBalanceRawSchema).optional(),
 
     // Chain and wallet info
     chainId: z.union([z.number(), z.string()]).optional(),

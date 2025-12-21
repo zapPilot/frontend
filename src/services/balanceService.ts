@@ -254,32 +254,20 @@ const normalizeWalletResponse = (
   // This catches malformed API responses early with detailed error messages
   const validatedResponse = validateWalletResponseData(response);
 
-  // Parse tokens from the correct data structure
+  // Parse tokens from the current data structure (object format only)
   let tokensSource: unknown[] = [];
 
-  // Check if we have the data field
+  // Backend sends data as an object with balances and nativeBalance
   const data = validatedResponse.data;
-  if (data) {
-    // Case 1: data is an array (legacy format)
-    if (Array.isArray(data)) {
-      tokensSource = data;
+  if (data && typeof data === "object" && !Array.isArray(data)) {
+    // Check for balances array (token metadata)
+    if ("balances" in data && Array.isArray(data.balances)) {
+      tokensSource = data.balances;
     }
-    // Case 2: data is an object with balances (new format)
-    else if (typeof data === "object") {
-      // Check for balances array (token metadata)
-      if ("balances" in data && Array.isArray(data.balances)) {
-        tokensSource = data.balances;
-      }
-      // Also check for nativeBalance (single object, not array)
-      if ("nativeBalance" in data && typeof data.nativeBalance === "object") {
-        tokensSource.push(data.nativeBalance);
-      }
+    // Also check for nativeBalance (single object, not array)
+    if ("nativeBalance" in data && typeof data.nativeBalance === "object") {
+      tokensSource.push(data.nativeBalance);
     }
-  }
-
-  // Fallback to old structure for backward compatibility
-  if (tokensSource.length === 0) {
-    tokensSource = validatedResponse.tokens ?? [];
   }
 
   const tokens = tokensSource.map(normalizeTokenBalance);

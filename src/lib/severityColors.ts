@@ -84,7 +84,31 @@ export const getColorForSeverity = (level: SeverityLevel) =>
   SEVERITY_COLORS[level];
 
 /**
+ * Backend label mappings (current analytics-engine API format)
+ *
+ * Backend uses:
+ * - Sharpe Ratio: "Poor", "Below Average", "Good", "Very Good", "Excellent"
+ * - Volatility: "Very Low", "Low", "Moderate", "High", "Very High"
+ */
+export const backendSeverityMapping = {
+  // Sharpe Ratio interpretation labels
+  Poor: "critical" as SeverityLevel,
+  "Below Average": "poor" as SeverityLevel,
+  Good: "good" as SeverityLevel,
+  "Very Good": "good" as SeverityLevel, // Elevated good performance
+  Excellent: "excellent" as SeverityLevel,
+
+  // Volatility interpretation labels
+  "Very Low": "excellent" as SeverityLevel,
+  Low: "good" as SeverityLevel,
+  Moderate: "fair" as SeverityLevel,
+  High: "poor" as SeverityLevel,
+  "Very High": "critical" as SeverityLevel,
+} as const;
+
+/**
  * Legacy label mappings for backwards compatibility
+ * @deprecated Use backendSeverityMapping for current backend API
  */
 export const legacyLabelMapping = {
   Minor: "good" as SeverityLevel,

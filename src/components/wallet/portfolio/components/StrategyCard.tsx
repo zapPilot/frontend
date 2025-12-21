@@ -4,13 +4,13 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
-    getRegimeAllocation,
-    type Regime,
-    regimes,
+  getRegimeAllocation,
+  type Regime,
+  regimes,
 } from "@/components/wallet/regime/regimeData";
 import {
-    getStrategyTabLabel,
-    type StrategyDirection,
+  getStrategyTabLabel,
+  type StrategyDirection,
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
@@ -193,6 +193,12 @@ export function StrategyCard({
             </div>
             <div className="text-2xl font-bold text-white mb-1">
               {currentRegime.label}
+              <span 
+                className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle" 
+                title="Market Sentiment Score"
+              >
+                {data.sentimentValue}
+              </span>
             </div>
             <div className="text-sm text-gray-400 italic mb-2">
               &ldquo;{activeStrategy?.philosophy}&rdquo;

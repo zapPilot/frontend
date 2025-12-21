@@ -18,7 +18,6 @@ import { getDailyYieldReturns } from "@/services/analyticsService";
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { usePortfolioDashboard } from "../usePortfolioDashboard";
-import { MOCK_ANALYTICS_DATA } from "./mockAnalyticsData";
 
 /**
  * Hook return type
@@ -117,10 +116,9 @@ export function useAnalyticsData(
   // ============================================================================
 
   const data = useMemo<AnalyticsData | null>(() => {
-    // If no dashboard data available, fallback to mock data
-    // This ensures analytics tab works in dev/demo/test environments
+    // If no dashboard data available, return null
     if (!dashboardQuery.data) {
-      return MOCK_ANALYTICS_DATA;
+      return null;
     }
 
     // Get daily values for monthly PnL calculation

@@ -1044,38 +1044,6 @@ describe("balanceService", () => {
           expect(result.tokens).toHaveLength(2);
         });
 
-        it("should fallback to legacy tokens array structure", async () => {
-          mockIntentEngineGet.mockResolvedValue({
-            tokens: [
-              { address: "0xtoken1", decimals: 18, balance: "100" },
-              { address: "0xtoken2", decimals: 6, balance: "200" },
-            ],
-          });
-
-          const result = await getTokenBalances({
-            chainId: 1,
-            walletAddress: "0x123",
-          });
-
-          expect(result.tokens).toHaveLength(2);
-        });
-
-        it("should fallback to data array for backward compatibility", async () => {
-          mockIntentEngineGet.mockResolvedValue({
-            data: [
-              { address: "0xtoken1", decimals: 18, balance: "100" },
-              { address: "0xtoken2", decimals: 6, balance: "200" },
-            ],
-          });
-
-          const result = await getTokenBalances({
-            chainId: 1,
-            walletAddress: "0x123",
-          });
-
-          expect(result.tokens).toHaveLength(2);
-        });
-
         it("should handle empty response with no tokens", async () => {
           mockIntentEngineGet.mockResolvedValue({
             data: { balances: [] },

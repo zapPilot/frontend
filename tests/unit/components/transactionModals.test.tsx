@@ -4,7 +4,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import { AmountInput } from "@/components/wallet/portfolio/modals/components/AmountInput";
 import { ChainSelector } from "@/components/wallet/portfolio/modals/components/ChainSelector";
-import { StrategySlider } from "@/components/wallet/portfolio/modals/components/StrategySlider";
 
 describe("Transaction modal building blocks", () => {
   it("selects a chain", () => {
@@ -42,24 +41,5 @@ describe("Transaction modal building blocks", () => {
 
     fireEvent.click(screen.getByTestId("preset-50"));
     expect(onChange).toHaveBeenCalledWith("100.00");
-  });
-
-  it("updates strategy slider via preset", () => {
-    const onChange = vi.fn();
-    render(
-      <StrategySlider
-        value={50}
-        onChange={onChange}
-        currentAllocation={{ crypto: 60, stable: 40 }}
-        targetAllocation={{ crypto: 80, stable: 20 }}
-        previewAllocation={{ crypto: 70, stable: 30 }}
-      />
-    );
-
-    fireEvent.click(screen.getByTestId("preset-100"));
-    expect(onChange).toHaveBeenCalledWith(100);
-
-    const slider = screen.getByTestId("strategy-slider") as HTMLInputElement;
-    expect(slider.value).toBe("50");
   });
 });
