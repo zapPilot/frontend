@@ -28,7 +28,6 @@ export type {
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
   /** @public */ PoolPerformanceResponse,
-  ProtocolYieldBreakdown,
   /** @public */ ProtocolYieldToday,
   UnifiedDashboardResponse,
   YieldReturnsSummaryResponse,

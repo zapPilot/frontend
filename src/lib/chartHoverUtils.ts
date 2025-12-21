@@ -5,7 +5,6 @@
 
 import {
   getColorForSeverity,
-  legacyLabelMapping,
   type SeverityLevel,
   severityMappers,
 } from "./severityColors";
@@ -137,7 +136,17 @@ export function getSharpeColor(sharpe: number): string {
 export function getDrawdownSeverityColor(
   severity: "Minor" | "Moderate" | "Significant" | "Severe"
 ): { color: string; bgColor: string } {
-  const severityLevel = legacyLabelMapping[severity];
+  const drawdownSeverityMap: Record<
+    "Minor" | "Moderate" | "Significant" | "Severe",
+    SeverityLevel
+  > = {
+    Minor: "good",
+    Moderate: "fair",
+    Significant: "poor",
+    Severe: "critical",
+  };
+
+  const severityLevel = drawdownSeverityMap[severity];
   return getColorForSeverity(severityLevel);
 }
 

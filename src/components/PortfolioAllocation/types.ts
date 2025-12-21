@@ -1,7 +1,5 @@
 // src/components/PortfolioAllocation/types.ts
 
-import { SwapToken } from "@/types/ui/swap";
-
 export interface Protocol {
   id: string;
   name: string;
@@ -54,9 +52,6 @@ export interface ChartDataPoint {
   isExcluded?: boolean; // Useful for visual styling in charts
 }
 
-// UI Variation types
-type PortfolioVariationType = "enhancedOverview";
-
 // Rebalance mode interfaces
 export interface CategoryShift {
   categoryId: string;
@@ -84,31 +79,10 @@ export interface RebalanceMode {
 // Operation mode types for enhanced swap functionality
 export type OperationMode = "zapIn" | "zapOut" | "rebalance";
 
-export interface SwapSettings {
-  fromToken?: SwapToken; // For zapIn operations
-  toToken?: SwapToken; // For zapOut operations
-  amount: string;
-  slippageTolerance: number; // Percentage (see SLIPPAGE_CONFIG in constants/slippage.ts)
-  priceImpact?: number; // Calculated price impact
-  minimumReceived?: string; // Minimum tokens received after slippage
-  // Optimization options (only for rebalance mode)
-  optimizationOptions?: {
-    dustZap: boolean;
-    rebalance: boolean;
-  };
-}
-
 export interface SwapValidation {
   isValid: boolean;
   errors: string[];
   warnings: string[];
-}
-
-export interface PortfolioSwapAction {
-  operationMode: OperationMode;
-  includedCategories: ProcessedAssetCategory[];
-  swapSettings: SwapSettings;
-  rebalanceData?: RebalanceData;
 }
 
 // Shared interface for components that display category with rebalance data
@@ -116,15 +90,4 @@ export interface CategoryWithRebalance {
   category: ProcessedAssetCategory;
   rebalanceShift?: CategoryShift;
   rebalanceTarget?: ProcessedAssetCategory;
-}
-
-export interface PortfolioAllocationContainerProps {
-  variationType?: PortfolioVariationType;
-  assetCategories: AssetCategory[];
-  operationMode?: OperationMode;
-  isRebalanceMode?: boolean;
-  onZapAction?: (action: PortfolioSwapAction) => void;
-  excludedCategoryIds: string[];
-  onToggleCategoryExclusion: (categoryId: string) => void;
-  chainId?: number;
 }

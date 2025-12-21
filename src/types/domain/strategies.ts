@@ -209,14 +209,3 @@ export class StrategiesApiError extends Error {
     return this.status;
   }
 }
-
-/**
- * Configuration options for strategies fetching
- */
-export interface StrategiesFetchConfig {
-  chainId?: number;
-  category?: string;
-  minTvl?: number;
-  maxRisk?: number;
-  includeInactive?: boolean;
-}
