@@ -2,6 +2,12 @@ import type { ReactNode } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
+/** StatisticCard styling constants */
+const STYLES = {
+  label: "text-xs font-semibold uppercase tracking-wide text-gray-400",
+  valueBase: "mt-2 text-xl font-bold",
+} as const;
+
 interface StatisticCardProps {
   label: string;
   value: ReactNode;
@@ -24,10 +30,9 @@ export function StatisticCard({
       borderRadius="md"
       className="border-white/10"
     >
-      <div className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-        {label}
-      </div>
-      <div className={`mt-2 text-xl font-bold ${valueClassName}`}>{value}</div>
+      <div className={STYLES.label}>{label}</div>
+      <div className={`${STYLES.valueBase} ${valueClassName}`}>{value}</div>
     </BaseCard>
   );
 }
+

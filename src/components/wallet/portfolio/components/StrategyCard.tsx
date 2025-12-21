@@ -17,6 +17,32 @@ import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
 
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 
+/** StrategyCard styling constants */
+const STYLES = {
+  cardBase:
+    "bg-gray-900/40 backdrop-blur-sm border rounded-2xl p-8 relative overflow-hidden group cursor-pointer transition-all duration-200",
+  cardExpanded:
+    "row-span-2 md:col-span-2 border-purple-500/30 shadow-lg shadow-purple-500/10",
+  cardCollapsed:
+    "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60",
+  regimeBadge:
+    "w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0",
+  regimeButtonSelected:
+    "bg-gray-800 border border-gray-600 shadow-lg scale-102 ring-1 ring-purple-500/50",
+  regimeButtonUnselected: "opacity-60 hover:opacity-100 hover:bg-gray-800/50",
+  directionTabBase:
+    "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer border",
+  directionTabUnselected:
+    "bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300",
+  allocationContainer:
+    "bg-gray-800/50 rounded-lg p-4 border border-gray-700 mt-4",
+  progressBarTrack: "w-full bg-gray-700 h-2 rounded-full overflow-hidden",
+} as const;
+
+/** Get card className based on expanded state */
+const getCardClassName = (isExpanded: boolean): string =>
+  `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
+
 interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
@@ -126,11 +152,7 @@ export function StrategyCard({
     <motion.div
       data-testid="strategy-card"
       layout
-      className={`bg-gray-900/40 backdrop-blur-sm border rounded-2xl p-8 relative overflow-hidden group cursor-pointer transition-all duration-200 ${
-        isStrategyExpanded
-          ? "row-span-2 md:col-span-2 border-purple-500/30 shadow-lg shadow-purple-500/10"
-          : "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60"
-      }`}
+      className={getCardClassName(isStrategyExpanded)}
       onClick={e => {
         // Prevent collapsing when clicking on interactive elements inside
         if ((e.target as HTMLElement).closest('[data-interactive="true"]')) {
@@ -150,7 +172,7 @@ export function StrategyCard({
         className="relative z-10 flex items-start justify-between"
       >
         <div className="flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0">
+          <div className={STYLES.regimeBadge}>
             <span
               style={{ color: currentRegime.fillColor }}
               data-testid="regime-badge"
@@ -243,8 +265,8 @@ export function StrategyCard({
                         }}
                         className={`flex items-center gap-3 p-2 rounded-lg transition-all w-full text-left ${
                           isSelected
-                            ? "bg-gray-800 border border-gray-600 shadow-lg scale-102 ring-1 ring-purple-500/50"
-                            : "opacity-60 hover:opacity-100 hover:bg-gray-800/50"
+                            ? STYLES.regimeButtonSelected
+                            : STYLES.regimeButtonUnselected
                         }`}
                       >
                         <div

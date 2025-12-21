@@ -2,13 +2,13 @@
 
 import { motion } from "framer-motion";
 import {
-  Activity,
-  BarChart3,
-  Calendar,
-  DollarSign,
-  PieChart,
-  Target,
-  TrendingUp,
+    Activity,
+    BarChart3,
+    Calendar,
+    DollarSign,
+    PieChart,
+    Target,
+    TrendingUp,
 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 
@@ -18,12 +18,12 @@ import { CHART_PERIODS } from "../../lib/portfolio-analytics";
 import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
-  AssetAllocationChart,
-  DailyYieldChart,
-  DrawdownRecoveryChart,
-  PerformanceChart,
-  SharpeChart,
-  VolatilityChart,
+    AssetAllocationChart,
+    DailyYieldChart,
+    DrawdownRecoveryChart,
+    PerformanceChart,
+    SharpeChart,
+    VolatilityChart,
 } from "./charts";
 import { StatisticCard } from "./components/StatisticCard";
 import { useChartData } from "./hooks";
@@ -57,8 +57,26 @@ const CHART_TYPES = [
 
 type ChartType = (typeof CHART_TYPES)[number]["key"];
 
-const ACTIVE_SEGMENT_CLASSES =
-  "bg-purple-600/30 text-purple-300 border border-purple-500/30";
+/** Styling constants for chart orchestrator */
+const STYLES = {
+  activeSegment:
+    "bg-purple-600/30 text-purple-300 border border-purple-500/30",
+  inactiveSegment:
+    "glass-morphism text-gray-400 hover:text-white hover:bg-white/5",
+  periodInactive: "text-gray-400 hover:text-white hover:bg-white/5",
+  chartTabBase:
+    "px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer",
+  periodTabBase: "px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer",
+  statsGrid: "mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4",
+} as const;
+
+/** Get chart tab className based on selected state */
+const getChartTabClassName = (isSelected: boolean): string =>
+  `${STYLES.chartTabBase} ${isSelected ? STYLES.activeSegment : STYLES.inactiveSegment}`;
+
+/** Get period tab className based on selected state */
+const getPeriodTabClassName = (isSelected: boolean): string =>
+  `${STYLES.periodTabBase} ${isSelected ? STYLES.activeSegment : STYLES.periodInactive}`;
 
 /**
  * Main orchestrator for portfolio chart visualization.
@@ -232,11 +250,7 @@ const PortfolioChartComponent = ({
                 key={key}
                 type="button"
                 onClick={() => setSelectedChart(key)}
-                className={`px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer ${
-                  selectedChart === key
-                    ? ACTIVE_SEGMENT_CLASSES
-                    : "glass-morphism text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
+                className={getChartTabClassName(selectedChart === key)}
                 role="tab"
                 aria-selected={selectedChart === key}
                 tabIndex={selectedChart === key ? 0 : -1}
@@ -259,11 +273,7 @@ const PortfolioChartComponent = ({
             <button
               key={period.value}
               onClick={() => setSelectedPeriod(period.value)}
-              className={`px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer ${
-                selectedPeriod === period.value
-                  ? ACTIVE_SEGMENT_CLASSES
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
-              }`}
+              className={getPeriodTabClassName(selectedPeriod === period.value)}
             >
               {period.label}
             </button>

@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  type LucideIcon,
-  MessageCircle,
-  MessageSquare,
-  Send,
-  X,
+    type LucideIcon,
+    MessageCircle,
+    MessageSquare,
+    Send,
+    X,
 } from "lucide-react";
 
 import { GithubIcon } from "@/components/icons/GithubIcon";
@@ -71,17 +71,26 @@ function CopyrightText({ year }: { year: number }) {
 
 interface FooterProps {
   className?: string;
+  containerClassName?: string;
 }
+
+/** Footer styling constants */
+const STYLES = {
+  base: "border-t border-gray-800 bg-gray-900",
+  container: "mx-auto px-4 py-6 lg:px-8",
+  mobileLayout: "flex flex-col items-center gap-4 md:hidden",
+  desktopLayout: "hidden md:flex items-center justify-between",
+} as const;
 
 export function Footer({
   className = "",
   containerClassName = "max-w-7xl",
-}: FooterProps & { containerClassName?: string }) {
+}: FooterProps) {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className={`border-t border-gray-800 bg-gray-900 ${className}`}>
-      <div className={`${containerClassName} mx-auto px-4 py-6 lg:px-8`}>
+    <footer className={`${STYLES.base} ${className}`}>
+      <div className={`${containerClassName} ${STYLES.container}`}>
         {/* Mobile: stacked layout */}
         <div className="flex flex-col items-center gap-4 md:hidden">
           <SocialLinksSection />

@@ -6,13 +6,13 @@ import React, { useCallback, useMemo, useState } from "react";
 
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
 import type { LeverageMetrics } from "@/lib/leverageUtils";
-import { PieChartData } from "@/types/domain/portfolio";
-import { PortfolioState } from "@/types/ui/portfolioState";
-import { BaseComponentProps } from "@/types/ui/ui.types";
+import type { PieChartData } from "@/types/domain/portfolio";
+import type { PortfolioState } from "@/types/ui/portfolioState";
+import type { BaseComponentProps } from "@/types/ui/ui.types";
 
 import { SCROLLABLE_CONTAINER } from "../constants/design-system";
 import { usePortfolioStateHelpers } from "../hooks/usePortfolioState";
-import { CategorySummary } from "../utils/portfolio.utils";
+import type { CategorySummary } from "../utils/portfolio.utils";
 import { AssetCategoriesDetail } from "./AssetCategoriesDetail";
 import { PieChart } from "./PieChart";
 import { PieChartSkeleton } from "./ui/LoadingSystem";
@@ -21,6 +21,15 @@ import { WalletConnectionPrompt } from "./ui/WalletConnectionPrompt";
 import { LeverageBadge } from "./wallet/metrics/LeverageRatioMetric";
 
 type TabType = "assets" | "borrowing";
+
+/** Layout styling constants */
+const LAYOUT = {
+  container: "glass-morphism rounded-3xl p-6 border border-gray-800",
+  desktopGrid: "hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8",
+  mobileStack: "lg:hidden space-y-6",
+  pieChartContainer: "flex justify-center items-start pt-8",
+  pieChartMobileContainer: "flex justify-center items-center",
+} as const;
 
 interface OverviewTabListProps {
   idSuffix?: string;
@@ -205,7 +214,7 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
       <motion.div
         {...fadeInUp}
         transition={SMOOTH_TRANSITION}
-        className={`glass-morphism rounded-3xl p-6 border border-gray-800 ${className}`}
+        className={`${LAYOUT.container} ${className}`}
         data-testid={testId || "portfolio-overview"}
       >
         {/* Header with responsive tab navigation */}
@@ -303,18 +312,18 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
 
         {/* Desktop Layout: Sticky PieChart with Scrollable Details */}
         {(shouldShowPortfolioContent || shouldShowLoading) && (
-          <div className="hidden lg:grid lg:grid-cols-2 lg:h-[500px] gap-8">
-            {/* Left Column: Sticky PieChart (50% width like original) */}
+          <div className={LAYOUT.desktopGrid}>
+            {/* Left Column: Sticky PieChart */}
             <div className="sticky top-0">
               <div
-                className="flex justify-center items-start pt-8"
+                className={LAYOUT.pieChartContainer}
                 data-testid="pie-chart-container"
               >
                 {renderPieChart(250, 10)}
               </div>
             </div>
 
-            {/* Right Column: Scrollable Details (50% width like original) */}
+            {/* Right Column: Scrollable Details */}
             <div>
               <div
                 className={`${SCROLLABLE_CONTAINER.PORTFOLIO_DETAILS} pr-2`}
@@ -328,9 +337,9 @@ export const PortfolioOverview = React.memo<PortfolioOverviewProps>(
 
         {/* Mobile Layout: Vertical Stack */}
         {(shouldShowPortfolioContent || shouldShowLoading) && (
-          <div className="lg:hidden space-y-6">
+          <div className={LAYOUT.mobileStack}>
             <div
-              className="flex justify-center items-center"
+              className={LAYOUT.pieChartMobileContainer}
               data-testid="pie-chart-container-mobile"
             >
               {renderPieChart(200, 8)}

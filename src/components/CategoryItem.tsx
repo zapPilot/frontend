@@ -7,6 +7,31 @@ import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibil
 import { formatCurrency, formatPercentage } from "../lib/formatters";
 import type { CategorySummary } from "../utils/portfolio.utils";
 
+/** CategoryItem styling constants */
+const STYLES = {
+  cardBase: "border rounded-2xl p-4 transition-all duration-200",
+  assetCard: "border-gray-800 bg-gray-900/20",
+  borrowingCard: "border-orange-800 bg-orange-900/20",
+  assetHover:
+    "hover:bg-gray-900/40 hover:border-gray-700 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-purple-500/10",
+  borrowingHover:
+    "hover:bg-orange-900/40 hover:border-orange-700 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-orange-500/10",
+  disabled: "opacity-75 pointer-events-none",
+} as const;
+
+/** Get card className based on variant, clickability, and navigation state */
+function getCardClassName(
+  variant: "assets" | "borrowing",
+  isClickable: boolean,
+  isNavigating: boolean
+): string {
+  const isAssets = variant === "assets";
+  const base = `${STYLES.cardBase} ${isAssets ? STYLES.assetCard : STYLES.borrowingCard}`;
+  const hover = isClickable ? (isAssets ? STYLES.assetHover : STYLES.borrowingHover) : "";
+  const disabled = isNavigating ? STYLES.disabled : "";
+  return `${base} ${hover} ${disabled}`.trim();
+}
+
 interface CategoryItemProps {
   category: CategorySummary;
   onCategoryClick?: (id: string) => void;
@@ -18,17 +43,7 @@ export const CategoryItem = React.memo(
   ({ category, onCategoryClick, isNavigating, variant }: CategoryItemProps) => {
     const balanceHidden = useResolvedBalanceVisibility();
     const isAssets = variant === "assets";
-    const cardClasses = isAssets
-      ? "border border-gray-800 rounded-2xl p-4 bg-gray-900/20 transition-all duration-200"
-      : "border border-orange-800 rounded-2xl p-4 bg-orange-900/20 transition-all duration-200";
-    const hoverClasses = onCategoryClick
-      ? isAssets
-        ? "hover:bg-gray-900/40 hover:border-gray-700 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-purple-500/10"
-        : "hover:bg-orange-900/40 hover:border-orange-700 hover:scale-[1.02] cursor-pointer hover:shadow-lg hover:shadow-orange-500/10"
-      : "";
-    const disabledClasses = isNavigating
-      ? "opacity-75 pointer-events-none"
-      : "";
+    const cardClassName = getCardClassName(variant, !!onCategoryClick, !!isNavigating);
 
     const dotStyle = React.useMemo(
       () => ({ backgroundColor: category.color }),
@@ -51,7 +66,7 @@ export const CategoryItem = React.memo(
 
     return (
       <div
-        className={`${cardClasses} ${hoverClasses} ${disabledClasses}`}
+        className={cardClassName}
         onClick={handleClick}
         role={onCategoryClick ? "button" : undefined}
         tabIndex={onCategoryClick ? 0 : undefined}
