@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import {
-  WalletPortfolioErrorState,
-  WalletPortfolioLoadingState,
+    WalletPortfolioErrorState,
+    WalletPortfolioLoadingState,
 } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
 import { usePortfolioData } from "@/hooks/queries/usePortfolioData";
@@ -59,7 +59,6 @@ export function DashboardShell({
     >
       <WalletPortfolioPresenter
         data={portfolioData}
-        userId={urlUserId}
         isEmptyState={isEmptyState}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}

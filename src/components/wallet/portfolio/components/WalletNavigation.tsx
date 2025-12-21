@@ -1,10 +1,9 @@
-import { History, LayoutDashboard, LineChart } from "lucide-react";
-
 import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu";
+import { TABS, type TabType } from "@/types/portfolio";
 
 interface WalletNavigationProps {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab: TabType;
+  setActiveTab: (tab: TabType) => void;
   onOpenWalletManager?: () => void;
   onOpenSettings: () => void;
 }
@@ -27,11 +26,7 @@ export function WalletNavigation({
       </div>
 
       <div className="flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50">
-        {[
-          { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-          { id: "analytics", label: "Analytics", icon: LineChart },
-          { id: "backtesting", label: "Backtesting", icon: History },
-        ].map(tab => (
+        {TABS.map(tab => (
           <button
             key={tab.id}
             data-testid={`v22-tab-${tab.id}`}

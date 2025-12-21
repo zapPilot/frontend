@@ -14,10 +14,10 @@ import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 import {
-  createWalletPortfolioErrorState,
-  createWalletPortfolioLoadingState,
-  transformToWalletPortfolioData,
-} from "../walletPortfolio";
+    createWalletPortfolioErrorState,
+    createWalletPortfolioLoadingState,
+    transformToWalletPortfolioData,
+} from "../walletPortfolioDataAdapter";
 
 describe("walletPortfolioAdapter", () => {
   describe("transformToWalletPortfolioData", () => {
@@ -295,7 +295,7 @@ describe("walletPortfolioAdapter", () => {
         },
       };
 
-      const result = transformToWalletPortfolioData(landingData);
+      const result = transformToWalletPortfolioData(landingData, null);
 
       // Should handle zero division gracefully
       expect(result.balance).toBe(0);
@@ -371,7 +371,7 @@ describe("walletPortfolioAdapter", () => {
         },
       };
 
-      const result = transformToWalletPortfolioData(landingData);
+      const result = transformToWalletPortfolioData(landingData, null);
 
       // Crypto = 30k + 20k + 10k = 60k / 100k = 60%
       expect(result.currentAllocation.crypto).toBe(60);

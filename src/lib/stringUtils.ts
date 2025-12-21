@@ -66,7 +66,7 @@ interface NormalizeOptions {
  * @param options - Normalization configuration
  * @returns Normalized string array
  */
-export function normalizeStrings(
+function normalizeStrings(
   strings: string[],
   options: NormalizeOptions = {}
 ): string[] {
@@ -257,7 +257,7 @@ export function dedupeStrings(strings: string[]): string[] {
  * @param str - Value to check
  * @returns True if str is a non-empty string
  */
-export function isValidString(str: unknown): str is string {
+function isValidString(str: unknown): str is string {
   return typeof str === "string" && str.trim().length > 0;
 }
 

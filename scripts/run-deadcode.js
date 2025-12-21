@@ -16,22 +16,22 @@ const { spawnSync } = require("node:child_process");
 const MODES = {
   default: {
     label: "Local dead-code scan",
-    knipArgs: ["--exports", "--dependencies"],
+    knipArgs: ["--files", "--exports", "--dependencies"],
     tsPruneArgs: [],
   },
   ci: {
     label: "CI dead-code scan",
-    knipArgs: ["--exports", "--dependencies", "--reporter=json"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--reporter=json"],
     tsPruneArgs: [],
   },
   fix: {
     label: "Knip --fix + ts-prune",
-    knipArgs: ["--exports", "--dependencies", "--fix"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--fix"],
     tsPruneArgs: [],
   },
   check: {
     label: "Knip check + ts-prune",
-    knipArgs: ["--exports", "--dependencies", "--no-config-hints"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--no-config-hints"],
     tsPruneArgs: [],
   },
 };

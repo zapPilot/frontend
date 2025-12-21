@@ -269,23 +269,7 @@ export function isNonEmptyString(value: unknown): value is string {
  * Type guard: checks if value is an array.
  * Provides generic type parameter for element type narrowing.
  *
- * @param value - Value to check
- * @returns True if value is an array
- *
- * @example
- * isArray([1, 2, 3]) // true
- * isArray([]) // true
- * isArray("not array") // false
- * isArray(null) // false
- *
- * // With type narrowing:
- * if (isArray<string>(value)) {
- *   // TypeScript knows value is string[]
- * }
- */
-export function isArray<T>(value: unknown): value is T[] {
-  return Array.isArray(value);
-}
+
 
 /**
  * Type guard: checks if value is a valid Date object.

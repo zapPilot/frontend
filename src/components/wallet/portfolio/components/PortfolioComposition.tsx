@@ -1,7 +1,9 @@
 import { Zap } from "lucide-react";
 
-import { ASSET_COLORS } from "@/adapters/walletPortfolio";
-import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import {
+  ASSET_COLORS,
+  type WalletPortfolioDataWithDirection,
+} from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
 import {
   getRegimeAllocation,

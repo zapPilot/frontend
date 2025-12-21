@@ -466,6 +466,8 @@ export function httpDelete<T = unknown>(
   return requestWithMethod("DELETE", endpoint, config, transformer);
 }
 
+
+
 /**
  * Service-specific HTTP utilities for different API endpoints
  */
@@ -521,6 +523,7 @@ function createServiceHttpClient(baseURL: string) {
       config?: GetConfig,
       transformer?: ResponseTransformer<T>
     ) => httpDelete(endpoint, withBase(config), transformer),
+
   } as const;
 }
 
@@ -550,6 +553,7 @@ export const httpUtils = {
    */
   debank: createServiceHttpClient(API_ENDPOINTS.debank),
 } as const;
+
 
 /**
  * Common error handler function

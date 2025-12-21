@@ -6,21 +6,31 @@
  */
 
 import {
-  getRegimeAllocation,
-  type RegimeId,
-  regimes,
+    getRegimeAllocation,
+    type RegimeId,
+    regimes,
 } from "@/components/wallet/regime/regimeData";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import { getActiveStrategy } from "@/lib/strategySelector";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
-import { ASSET_COLORS } from "./walletPortfolio";
+/**
+ * Asset color mapping for consistent visualization across components
+ */
+export const ASSET_COLORS = {
+  BTC: "#F7931A",
+  ETH: "#627EEA",
+  SOL: "#14F195",
+  ALT: "#8C8C8C", // Others/Altcoins
+  USDC: "#2775CA",
+  USDT: "#26A17B",
+} as const;
 
 /**
  * Constituent asset type for allocation breakdown
@@ -505,3 +515,57 @@ export function createEmptyPortfolioState(
 /**
  * Creates a loading state placeholder
  */
+export function createWalletPortfolioLoadingState(): WalletPortfolioData {
+  return {
+    balance: 0,
+    roi: 0,
+    roiChange7d: 0,
+    roiChange30d: 0,
+    sentimentValue: 50,
+    sentimentStatus: "Neutral",
+    sentimentQuote: "",
+    currentRegime: "n",
+    currentAllocation: {
+      crypto: 0,
+      stable: 0,
+      constituents: { crypto: [], stable: [] },
+      simplifiedCrypto: [],
+    },
+    targetAllocation: { crypto: 0, stable: 0 },
+    delta: 0,
+    positions: 0,
+    protocols: 0,
+    chains: 0,
+    isLoading: true,
+    hasError: false,
+  };
+}
+
+/**
+ * Creates an error state placeholder
+ */
+export function createWalletPortfolioErrorState(): WalletPortfolioData {
+  return {
+    balance: 0,
+    roi: 0,
+    roiChange7d: 0,
+    roiChange30d: 0,
+    sentimentValue: 0,
+    sentimentStatus: "Error",
+    sentimentQuote: "",
+    currentRegime: "n",
+    currentAllocation: {
+      crypto: 0,
+      stable: 0,
+      constituents: { crypto: [], stable: [] },
+      simplifiedCrypto: [],
+    },
+    targetAllocation: { crypto: 0, stable: 0 },
+    delta: 0,
+    positions: 0,
+    protocols: 0,
+    chains: 0,
+    isLoading: false,
+    hasError: true,
+  };
+}

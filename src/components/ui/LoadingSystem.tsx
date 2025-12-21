@@ -614,60 +614,6 @@ export function LoadingState({
   }
 }
 
-export function withLoadingState<P extends object>(
-  Component: React.ComponentType<P>,
-  loadingProps?: Omit<LoadingStateProps, "className">
-) {
-  return function LoadingWrappedComponent(
-    props: P & { isLoading?: boolean; className?: string }
-  ) {
-    const { isLoading, className, ...componentProps } = props;
-
-    if (isLoading) {
-      return <LoadingState {...loadingProps} className={className ?? ""} />;
-    }
-
-    return <Component {...(componentProps as P)} />;
-  };
-}
-
-export function useLoadingComponent(
-  context: "page" | "card" | "inline" | "chart"
-) {
-  switch (context) {
-    case "page":
-      const PageLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="card" size="lg" {...props} />
-      );
-      PageLoadingComponent.displayName = "PageLoadingComponent";
-      return PageLoadingComponent;
-    case "card":
-      const CardLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="skeleton" skeletonType="card" {...props} />
-      );
-      CardLoadingComponent.displayName = "CardLoadingComponent";
-      return CardLoadingComponent;
-    case "inline":
-      const InlineLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="inline" size="sm" {...props} />
-      );
-      InlineLoadingComponent.displayName = "InlineLoadingComponent";
-      return InlineLoadingComponent;
-    case "chart":
-      const ChartLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="skeleton" skeletonType="chart" {...props} />
-      );
-      ChartLoadingComponent.displayName = "ChartLoadingComponent";
-      return ChartLoadingComponent;
-    default:
-      const DefaultLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="spinner" {...props} />
-      );
-      DefaultLoadingComponent.displayName = "DefaultLoadingComponent";
-      return DefaultLoadingComponent;
-  }
-}
-
 // =============================================================================
 // TOKEN LIST SKELETON
 // =============================================================================

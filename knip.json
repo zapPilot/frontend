@@ -12,9 +12,7 @@
     "playwright.config.ts",
     "vitest.config.ts",
     "eslint.config.mjs",
-    "postcss.config.mjs",
-    "**/index.ts",
-    "**/index.tsx"
+    "postcss.config.mjs"
   ],
 
   "ignoreDependencies": [

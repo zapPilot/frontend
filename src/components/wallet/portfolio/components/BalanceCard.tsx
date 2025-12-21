@@ -1,10 +1,12 @@
 import { ArrowDownCircle, ArrowUpCircle, ArrowUpRight } from "lucide-react";
 
+import type { ModalType } from "@/types/portfolio";
+
 interface BalanceCardProps {
   balance: number;
   roi: number;
   isEmptyState?: boolean;
-  onOpenModal: (type: "deposit" | "withdraw") => void;
+  onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
 }
 
 export function BalanceCard({
