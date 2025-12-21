@@ -4,7 +4,7 @@ import {
   getDrawdownSeverity,
   getSharpeInterpretation,
   getVolatilityRiskLevel,
-} from "@/lib/chartHoverUtils";
+} from "@/utils/chartHoverUtils";
 
 describe("chartHoverUtils", () => {
   it.each([

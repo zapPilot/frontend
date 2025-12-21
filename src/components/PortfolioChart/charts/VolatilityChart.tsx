@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 
-import { getVolatilityRiskLevel } from "../../../lib/chartHoverUtils";
+import { getVolatilityRiskLevel } from "../../../utils/chartHoverUtils";
 import { CHART_DIMENSIONS, VOLATILITY_CONSTANTS } from "../chartConstants";
 import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import { getChartInteractionProps } from "../utils";

@@ -17,8 +17,8 @@ import {
 
 import type { ChartHoverState } from "@/types/ui/chartHover";
 
-import { clamp, clampMin } from "../lib/mathUtils";
 import { logger } from "../utils/logger";
+import { clamp, clampMin } from "../utils/mathUtils";
 
 /**
  * Calculate Y position in SVG coordinates based on value and chart dimensions

@@ -2,8 +2,8 @@
  * DailyYieldTooltip - Daily yield with protocol breakdown
  */
 
-import { formatters } from "@/lib/formatters";
 import type { DailyYieldHoverData } from "@/types/ui/chartHover";
+import { formatters } from "@/utils/formatters";
 
 import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";

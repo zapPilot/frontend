@@ -4,7 +4,7 @@ import { createServiceCaller } from "../lib/createServiceCaller";
 import { safeNumber } from "../lib/dataValidation";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
-import { normalizeAddress, normalizeAddresses } from "../lib/stringUtils";
+import { normalizeAddress, normalizeAddresses } from "../utils/stringUtils";
 
 const MAX_TOKEN_ADDRESSES = 50;
 const MORALIS_API_KEY =

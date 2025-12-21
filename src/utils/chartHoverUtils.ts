@@ -7,7 +7,7 @@ import {
   getColorForSeverity,
   type SeverityLevel,
   severityMappers,
-} from "./severityColors";
+} from "../lib/severityColors";
 
 // ============================================================================
 // Drawdown Functions

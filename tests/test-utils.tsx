@@ -120,7 +120,7 @@ export { customRender as render, customRenderHook as renderHook };
  * ```typescript
  * import { mockFormatters } from 'tests/test-utils';
  *
- * vi.mock('@/lib/formatters', () => mockFormatters);
+ * vi.mock('@/utils/formatters', () => mockFormatters);
  * ```
  */
 export { mockFormatters, resetFormatterMocks } from "./mocks/formatters";

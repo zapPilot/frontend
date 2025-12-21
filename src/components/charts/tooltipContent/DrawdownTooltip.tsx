@@ -2,12 +2,12 @@
  * DrawdownTooltip - Drawdown with severity and recovery info
  */
 
+import type { DrawdownHoverData } from "@/types/ui/chartHover";
 import {
   getDrawdownSeverity,
   getDrawdownSeverityColor,
-} from "@/lib/chartHoverUtils";
-import { formatters } from "@/lib/formatters";
-import type { DrawdownHoverData } from "@/types/ui/chartHover";
+} from "@/utils/chartHoverUtils";
+import { formatters } from "@/utils/formatters";
 
 import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";

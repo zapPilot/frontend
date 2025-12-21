@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PieChart } from "../../../src/components/PieChart";
 import { PORTFOLIO_CONFIG } from "../../../src/constants/portfolio";
-import { formatCurrency } from "../../../src/lib/formatters";
 import { PieChartData } from "../../../src/types/portfolio";
+import { formatCurrency } from "../../../src/utils/formatters";
 
 // Mock framer-motion with reduced-motion hook
 vi.mock("framer-motion", () => ({
@@ -17,7 +17,7 @@ vi.mock("framer-motion", () => ({
 }));
 
 // Mock formatCurrency utility to support options object
-vi.mock("../../../src/lib/formatters", () => ({
+vi.mock("../../../src/utils/formatters", () => ({
   formatCurrency: vi.fn((amount: number, opts?: { isHidden?: boolean }) =>
     opts?.isHidden ? "••••••••" : `$${amount.toFixed(2)}`
   ),

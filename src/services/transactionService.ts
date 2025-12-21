@@ -1,10 +1,10 @@
-import { clamp } from "@/lib/mathUtils";
 import type {
   AllocationBreakdown,
   TransactionFormData,
   TransactionResult,
   TransactionToken,
 } from "@/types/domain/transaction";
+import { clamp } from "@/utils/mathUtils";
 
 const delay = (ms = 700) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -177,4 +177,4 @@ export function computeProjectedAllocation(
   };
 }
 
-// Removed duplicate clamp function - now imported from @/lib/mathUtils
+// Removed duplicate clamp function - now imported from @/utils/mathUtils

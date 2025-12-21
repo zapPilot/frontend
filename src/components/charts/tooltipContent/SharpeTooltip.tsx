@@ -2,8 +2,11 @@
  * SharpeTooltip - Sharpe ratio with color-coded rating
  */
 
-import { getSharpeColor, getSharpeInterpretation } from "@/lib/chartHoverUtils";
 import type { SharpeHoverData } from "@/types/ui/chartHover";
+import {
+  getSharpeColor,
+  getSharpeInterpretation,
+} from "@/utils/chartHoverUtils";
 
 import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";

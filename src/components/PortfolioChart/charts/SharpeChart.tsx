@@ -2,7 +2,7 @@
 
 import { memo, useMemo } from "react";
 
-import { getSharpeInterpretation } from "../../../lib/chartHoverUtils";
+import { getSharpeInterpretation } from "../../../utils/chartHoverUtils";
 import { CHART_DIMENSIONS, SHARPE_CONSTANTS } from "../chartConstants";
 import { useStandardChartHover } from "../hooks/useStandardChartHover";
 import { getChartInteractionProps } from "../utils";

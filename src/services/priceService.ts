@@ -11,7 +11,7 @@
 import { createServiceCaller } from "../lib/createServiceCaller";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
-import { normalizeSymbol, normalizeSymbols } from "../lib/stringUtils";
+import { normalizeSymbol, normalizeSymbols } from "../utils/stringUtils";
 
 // Get configured client
 const intentEngineClient = httpUtils.intentEngine;

@@ -5,12 +5,12 @@ import { useUser } from "@/contexts/UserContext";
 import { invalidateAndRefetch } from "@/hooks/useQueryInvalidation";
 import { useToast } from "@/hooks/useToast";
 import { useWallet } from "@/hooks/useWallet";
-import { formatAddress } from "@/lib/formatters";
 import { queryKeys } from "@/lib/queryClient";
 import { handleWalletError, type WalletData } from "@/lib/walletUtils";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { deleteUser as deleteUserAccount } from "@/services/accountService";
 import { copyTextToClipboard } from "@/utils/clipboard";
+import { formatAddress } from "@/utils/formatters";
 import { walletLogger } from "@/utils/logger";
 
 import {

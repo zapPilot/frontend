@@ -8,8 +8,8 @@ import { useConnectModal } from "thirdweb/react";
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { dropdownMenu } from "@/lib/animationVariants";
-import { formatAddress } from "@/lib/formatters";
 import { useWalletProvider } from "@/providers/WalletProvider";
+import { formatAddress } from "@/utils/formatters";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 interface WalletMenuProps {

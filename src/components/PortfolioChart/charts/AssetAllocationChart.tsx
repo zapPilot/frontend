@@ -3,8 +3,8 @@
 import { motion } from "framer-motion";
 import { memo } from "react";
 
-import { formatChartDate } from "@/lib/formatters";
 import type { AssetAllocationPoint } from "@/types/domain/portfolio";
+import { formatChartDate } from "@/utils/formatters";
 
 import { ASSET_CATEGORIES, CHART_COLORS } from "../../../constants/portfolio";
 import { useChartHover } from "../../../hooks/useChartHover";

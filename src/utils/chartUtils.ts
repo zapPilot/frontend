@@ -5,7 +5,7 @@ import {
   type ApiCategoryKey,
   ASSET_CATEGORIES,
 } from "../constants/portfolio";
-import { formatLargeNumber, formatPercentage } from "./formatters";
+import { formatLargeNumber, formatPercentage } from "../utils/formatters";
 
 /**
  * Generate SVG path for line chart from portfolio data points

@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useMemo } from "react";
 
-import { formatCurrency } from "../../../lib/formatters";
+import { formatCurrency } from "../../../utils/formatters";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS } from "../chartConstants";
 import { useStandardChartHover } from "../hooks/useStandardChartHover";

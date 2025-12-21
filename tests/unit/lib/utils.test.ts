@@ -4,7 +4,7 @@ import {
   formatCurrency,
   formatNumber,
   formatPercentage,
-} from "../../../src/lib/formatters";
+} from "../../../src/utils/formatters";
 
 describe("utils", () => {
   describe("formatCurrency", () => {

@@ -36,7 +36,6 @@ import {
   useRollingAnalytics,
 } from "../../../hooks/charts/useRollingAnalytics";
 import { usePortfolioDashboard } from "../../../hooks/usePortfolioDashboard";
-import { transformVolatilityPoint } from "../../../lib/chartDataUtils";
 import {
   asPartialArray,
   toDateString,
@@ -48,6 +47,7 @@ import {
   getDailyYieldReturns,
   type UnifiedDashboardResponse,
 } from "../../../services/analyticsService";
+import { transformVolatilityPoint } from "../../../utils/chartDataUtils";
 import type {
   AllocationTimeseriesInputPoint,
   DailyYieldOverridePoint,

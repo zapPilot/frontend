@@ -4,7 +4,7 @@
  * Consolidates all formatting functions from formatters.js and lib/utils.ts
  * into a single, type-safe TypeScript module with comprehensive functionality.
  *
- * @module lib/formatters
+ * @module utils/formatters
  */
 
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
@@ -322,7 +322,7 @@ export function formatChartDate(date: string | Date): string {
  * Provides convenient access to all formatting functions
  *
  * @example
- * import { formatters } from '@/lib/formatters';
+ * import { formatters } from '@/utils/formatters';
  * const formatted = formatters.currency(1000); // "$1,000.00"
  * const percent = formatters.percent(25.5); // "25.5%"
  */

@@ -10,7 +10,7 @@ import { vi } from "vitest";
  * ```typescript
  * import { mockFormatters } from 'tests/mocks/formatters';
  *
- * vi.mock('@/lib/formatters', () => mockFormatters);
+ * vi.mock('@/utils/formatters', () => mockFormatters);
  *
  * describe('MyComponent', () => {
  *   it('formats currency', () => {

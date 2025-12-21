@@ -2,7 +2,7 @@
  * TooltipRow - Reusable row component for tooltip content
  */
 
-import { formatters } from "@/lib/formatters";
+import { formatters } from "@/utils/formatters";
 
 interface TooltipRowProps {
   label: string;

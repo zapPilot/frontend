@@ -9,8 +9,6 @@ import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 import { CHART_COLORS } from "@/constants/portfolio";
-import { getDrawdownSeverity, getSharpeColor } from "@/lib/chartHoverUtils";
-import { formatters } from "@/lib/formatters";
 import {
   type ChartHoverState,
   isAllocationHover,
@@ -19,6 +17,8 @@ import {
   isSharpeHover,
   isVolatilityHover,
 } from "@/types/ui/chartHover";
+import { getDrawdownSeverity, getSharpeColor } from "@/utils/chartHoverUtils";
+import { formatters } from "@/utils/formatters";
 
 const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
 const INDICATOR_COLOR_MAP: Record<string, string> = {

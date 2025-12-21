@@ -12,12 +12,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
 import { queryKeys } from "../../lib/queryClient";
-import { normalizeSymbols } from "../../lib/stringUtils";
 import {
   getTokenPrices,
   type TokenPriceData,
 } from "../../services/priceService";
 import { logger } from "../../utils/logger";
+import { normalizeSymbols } from "../../utils/stringUtils";
 import { createQueryConfig } from "./queryDefaults";
 
 // Price-specific timing constants

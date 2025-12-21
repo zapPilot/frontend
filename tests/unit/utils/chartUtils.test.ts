@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
+import type { PortfolioDataPoint } from "../../../src/types/portfolio";
 import {
   formatAxisLabel,
   generateSVGPath,
   generateYAxisLabels,
   transformToPieChartData,
-} from "../../../src/lib/chartUtils";
-import type { PortfolioDataPoint } from "../../../src/types/portfolio";
+} from "../../../src/utils/chartUtils";
 
 // Mock the portfolioStateUtils dependency
 vi.mock("@/hooks/usePortfolioState", () => ({

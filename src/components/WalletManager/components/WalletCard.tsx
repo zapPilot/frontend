@@ -4,8 +4,8 @@ import { memo } from "react";
 
 import { LoadingSpinner } from "@/components/ui";
 import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
-import { formatAddress } from "@/lib/formatters";
 import type { WalletData } from "@/lib/walletUtils";
+import { formatAddress } from "@/utils/formatters";
 
 import type { WalletOperations } from "../types/wallet.types";
 import { WalletActionMenu } from "./WalletActionMenu";

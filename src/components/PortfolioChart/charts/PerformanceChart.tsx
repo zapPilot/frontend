@@ -6,7 +6,7 @@ import {
   formatAxisLabel,
   generateSVGPath,
   generateYAxisLabels,
-} from "../../../lib/chartUtils";
+} from "../../../utils/chartUtils";
 import { ChartIndicator, ChartTooltip } from "../../charts";
 import { CHART_DIMENSIONS } from "../chartConstants";
 import { useStandardChartHover } from "../hooks/useStandardChartHover";

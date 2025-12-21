@@ -14,8 +14,8 @@ import {
   type ApiCategoryKey,
   ASSET_CATEGORIES,
 } from "@/constants/portfolio";
-import { transformToPieChartData } from "@/lib/chartUtils";
 import type { PieChartData } from "@/types/domain/portfolio";
+import { transformToPieChartData } from "@/utils/chartUtils";
 
 export interface CategorySummary {
   id: string;

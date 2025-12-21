@@ -2,12 +2,12 @@
  * VolatilityTooltip - Volatility with risk assessment
  */
 
+import type { VolatilityHoverData } from "@/types/ui/chartHover";
 import {
   calculateDailyVolatility,
   getVolatilityRiskColor,
   getVolatilityRiskLevel,
-} from "@/lib/chartHoverUtils";
-import type { VolatilityHoverData } from "@/types/ui/chartHover";
+} from "@/utils/chartHoverUtils";
 
 import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";

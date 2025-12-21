@@ -7,7 +7,7 @@ import { PieChartData } from "@/types/domain/portfolio";
 
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
 import { useResolvedBalanceVisibility } from "../hooks/useResolvedBalanceVisibility";
-import { formatCurrency } from "../lib/formatters";
+import { formatCurrency } from "../utils/formatters";
 
 interface PieChartProps {
   data: PieChartData[];

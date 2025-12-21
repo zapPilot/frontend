@@ -2,28 +2,28 @@
 
 import { motion } from "framer-motion";
 import {
-    Activity,
-    BarChart3,
-    Calendar,
-    DollarSign,
-    PieChart,
-    Target,
-    TrendingUp,
+  Activity,
+  BarChart3,
+  Calendar,
+  DollarSign,
+  PieChart,
+  Target,
+  TrendingUp,
 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 
 import { useUser } from "../../contexts/UserContext";
-import { formatPercentage } from "../../lib/formatters";
 import { CHART_PERIODS } from "../../lib/portfolio-analytics";
+import { formatPercentage } from "../../utils/formatters";
 import { logger } from "../../utils/logger";
 import { BaseCard } from "../ui";
 import {
-    AssetAllocationChart,
-    DailyYieldChart,
-    DrawdownRecoveryChart,
-    PerformanceChart,
-    SharpeChart,
-    VolatilityChart,
+  AssetAllocationChart,
+  DailyYieldChart,
+  DrawdownRecoveryChart,
+  PerformanceChart,
+  SharpeChart,
+  VolatilityChart,
 } from "./charts";
 import { StatisticCard } from "./components/StatisticCard";
 import { useChartData } from "./hooks";
@@ -59,14 +59,14 @@ type ChartType = (typeof CHART_TYPES)[number]["key"];
 
 /** Styling constants for chart orchestrator */
 const STYLES = {
-  activeSegment:
-    "bg-purple-600/30 text-purple-300 border border-purple-500/30",
+  activeSegment: "bg-purple-600/30 text-purple-300 border border-purple-500/30",
   inactiveSegment:
     "glass-morphism text-gray-400 hover:text-white hover:bg-white/5",
   periodInactive: "text-gray-400 hover:text-white hover:bg-white/5",
   chartTabBase:
     "px-3 py-2 rounded-lg transition-all duration-200 flex items-center space-x-2 cursor-pointer",
-  periodTabBase: "px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer",
+  periodTabBase:
+    "px-3 py-1 rounded-lg text-sm transition-all duration-200 cursor-pointer",
   statsGrid: "mt-6 grid grid-cols-2 lg:grid-cols-4 gap-4",
 } as const;
 
