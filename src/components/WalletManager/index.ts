@@ -1,9 +1,6 @@
 // Main component
 export { WalletManager } from "./WalletManager";
 
-// Types
-export type { WalletManagerProps } from "./types/wallet.types";
-
 // Components
 export { AddWalletForm } from "./components/AddWalletForm";
 export { EditWalletModal } from "./components/EditWalletModal";

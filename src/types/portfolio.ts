@@ -5,7 +5,12 @@
  * consistency and type safety across the component tree.
  */
 
-import { History, LayoutDashboard, LineChart, type LucideIcon } from "lucide-react";
+import {
+  History,
+  LayoutDashboard,
+  LineChart,
+  type LucideIcon,
+} from "lucide-react";
 
 /** Modal types for portfolio actions */
 export type ModalType = "deposit" | "withdraw" | "rebalance";
@@ -14,7 +19,7 @@ export type ModalType = "deposit" | "withdraw" | "rebalance";
 export type TabType = "dashboard" | "analytics" | "backtesting";
 
 /** Tab configuration for navigation */
-export interface TabConfig {
+interface TabConfig {
   id: TabType;
   label: string;
   icon: LucideIcon;

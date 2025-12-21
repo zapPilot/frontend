@@ -15,7 +15,7 @@ import { AllocationBars, type AllocationConstituent } from "./AllocationBars";
 
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
-  currentRegime: Regime;
+  currentRegime: Regime | undefined;
   isEmptyState?: boolean;
   onRebalance: () => void;
 }
@@ -91,6 +91,11 @@ export function PortfolioComposition({
   isEmptyState = false,
   onRebalance,
 }: PortfolioCompositionProps) {
+  // Early return if no regime data
+  if (!currentRegime) {
+    return null;
+  }
+
   const targetBreakdown = getRegimeAllocation(currentRegime);
   const target = {
     crypto: targetBreakdown.spot + targetBreakdown.lp,

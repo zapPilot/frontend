@@ -2,8 +2,6 @@
  * Risk assessment types for portfolio analysis
  */
 
-export type RiskLevel = "Low" | "Medium" | "High" | "Very High";
-
 /**
  * Period information for risk analysis
  */

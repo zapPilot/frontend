@@ -17,7 +17,7 @@ import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
 
 interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
-  currentRegime: Regime;
+  currentRegime: Regime | undefined;
   isEmptyState?: boolean;
 }
 
@@ -30,6 +30,11 @@ export function StrategyCard({
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
   const [selectedDirection, setSelectedDirection] =
     useState<StrategyDirection | null>(null);
+
+  // Early return if no regime data - AFTER hooks to comply with React rules
+  if (!currentRegime) {
+    return null;
+  }
 
   // Determine which regime to display (selected or current)
   // If user selects a regime, we show that. Otherwise we show the current regime.

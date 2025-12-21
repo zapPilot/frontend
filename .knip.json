@@ -28,6 +28,8 @@
       "WalletResponseData",
       "WalletTokenBalances"
     ],
-    "src/services/analyticsService.ts": ["DailyYieldReturnsResponse", "PoolPerformanceResponse", "ProtocolYieldToday"]
+    "src/services/analyticsService.ts": ["DailyYieldReturnsResponse", "PoolPerformanceResponse", "ProtocolYieldToday"],
+    "src/schemas/sseEventSchemas.ts": ["UnifiedZapRawEvent", "NormalizedZapEvent"],
+    "src/types/domain/risk.ts": ["RiskLevel"]
   }
 }

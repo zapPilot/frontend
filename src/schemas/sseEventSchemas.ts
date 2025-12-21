@@ -325,8 +325,6 @@ export const UnifiedZapRawEventSchema = z
   .passthrough()
   .describe("Raw SSE event from UnifiedZap backend");
 
-export type UnifiedZapRawEvent = z.infer<typeof UnifiedZapRawEventSchema>;
-
 // ============================================================================
 // Normalized Event Schemas
 // ============================================================================
