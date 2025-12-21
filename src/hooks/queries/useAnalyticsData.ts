@@ -28,6 +28,8 @@ interface UseAnalyticsDataReturn {
   data: AnalyticsData | null;
   /** Loading state (true while primary dashboard query is loading) */
   isLoading: boolean;
+  /** Loading state for monthly PnL data (independent from dashboard) */
+  isMonthlyPnLLoading: boolean;
   /** Error from any query */
   error: Error | null;
   /** Refetch function to manually refresh data */
@@ -158,8 +160,12 @@ export function useAnalyticsData(
 
   return {
     data,
-    // When using mock data fallback (no real data), don't show loading or error
-    isLoading: dashboardQuery.data ? dashboardQuery.isLoading : false,
+    // Show loading during initial fetch OR refetch
+    // Previously: false during initial load (when dashboardQuery.data is null)
+    // Fixed: true when loading the first time or fetching fresh data
+    isLoading: dashboardQuery.isLoading || dashboardQuery.isFetching,
+    // Independent loading state for monthly PnL (yield/daily endpoint)
+    isMonthlyPnLLoading: monthlyPnLQuery.isLoading || monthlyPnLQuery.isFetching,
     error: dashboardQuery.data ? error : null,
     refetch,
   };

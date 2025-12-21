@@ -40,7 +40,7 @@ export const AnalyticsViewContainer = ({
   >("performance");
 
   // Data fetching with period change detection
-  const { data, isLoading, error, refetch } = useAnalyticsData(
+  const { data, isLoading, isMonthlyPnLLoading, error, refetch } = useAnalyticsData(
     userId,
     selectedPeriod
   );
@@ -84,6 +84,7 @@ export const AnalyticsViewContainer = ({
       onPeriodChange={handlePeriodChange}
       onChartTabChange={handleChartTabChange}
       isLoading={isLoading}
+      isMonthlyPnLLoading={isMonthlyPnLLoading}
     />
   );
 };

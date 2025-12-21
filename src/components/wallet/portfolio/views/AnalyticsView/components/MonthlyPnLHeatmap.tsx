@@ -40,7 +40,23 @@ export const MonthlyPnLHeatmap: React.FC<MonthlyPnLHeatmapProps> = ({
         Monthly PnL Heatmap
       </h3>
       <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
-        {monthlyPnL.length > 0 ? (
+        {/* Priority 1: Show skeleton during loading */}
+        {isLoading ? (
+          // Content-aware skeleton: show real month labels, skeleton for values
+          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((month, idx) => (
+            <div key={idx} className="flex flex-col gap-1">
+              <div
+                className="h-12 bg-gray-800/50 rounded-md border border-gray-700/30 animate-pulse"
+                aria-hidden="true"
+              />
+              {/* Real month label */}
+              <span className="text-[10px] text-center text-gray-500 font-mono uppercase">
+                {month}
+              </span>
+            </div>
+          ))
+        ) : monthlyPnL.length > 0 ? (
+          // Priority 2: Show data when loaded
           monthlyPnL.map((item, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               <div
@@ -68,24 +84,8 @@ export const MonthlyPnLHeatmap: React.FC<MonthlyPnLHeatmapProps> = ({
               </span>
             </div>
           ))
-        ) : isLoading ? (
-          // Content-aware skeleton: show real month labels, skeleton for values
-          [...Array(12)].map((_, idx) => {
-            const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-            return (
-              <div key={idx} className="flex flex-col gap-1">
-                <div
-                  className="h-12 bg-gray-800/50 rounded-md border border-gray-700/30 animate-pulse"
-                  aria-hidden="true"
-                />
-                {/* Real month label */}
-                <span className="text-[10px] text-center text-gray-500 font-mono uppercase">
-                  {monthLabels[idx]}
-                </span>
-              </div>
-            );
-          })
         ) : (
+          // Priority 3: Empty data message (only when NOT loading and NO data)
           <div className="col-span-12 text-center text-gray-500 py-8">
             No monthly data available for this period
           </div>

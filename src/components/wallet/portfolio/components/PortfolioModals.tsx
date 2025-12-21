@@ -1,4 +1,4 @@
-import { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { SettingsModal } from "@/components/wallet/portfolio/components/SettingsModal";
 import {
     DepositModal,
@@ -22,29 +22,26 @@ export function PortfolioModals({
   isSettingsOpen,
   setIsSettingsOpen,
 }: PortfolioModalsProps) {
+  const rebalanceAllocation = {
+    crypto: data.currentAllocation.crypto,
+    stable: data.currentAllocation.stable,
+    simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
+  };
+
   return (
     <>
-      {/* --- MODALS --- */}
       <DepositModal
         isOpen={activeModal === "deposit"}
         onClose={onClose}
         defaultChainId={1}
       />
-
       <WithdrawModal isOpen={activeModal === "withdraw"} onClose={onClose} />
-
       <RebalanceModal
         isOpen={activeModal === "rebalance"}
         onClose={onClose}
-        currentAllocation={{
-          crypto: data.currentAllocation.crypto,
-          stable: data.currentAllocation.stable,
-          simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
-        }}
+        currentAllocation={rebalanceAllocation}
         targetAllocation={data.targetAllocation}
       />
-
-      {/* Core Settings Modal */}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

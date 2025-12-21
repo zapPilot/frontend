@@ -8,11 +8,9 @@
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { AdditionalMetricsGrid } from "./components/AdditionalMetricsGrid";
-import { AdditionalMetricsGridSkeleton } from "./components/AdditionalMetricsGridSkeleton";
 import { AnalyticsHeader } from "./components/AnalyticsHeader";
 import { ChartSection } from "./components/ChartSection";
 import { KeyMetricsGrid } from "./components/KeyMetricsGrid";
-import { KeyMetricsGridSkeleton } from "./components/KeyMetricsGridSkeleton";
 import { MonthlyPnLHeatmap } from "./components/MonthlyPnLHeatmap";
 
 /**
@@ -31,6 +29,8 @@ interface AnalyticsViewProps {
   onChartTabChange: (tab: "performance" | "drawdown") => void;
   /** Loading state for individual components */
   isLoading?: boolean;
+  /** Independent loading state for monthly PnL (yield/daily endpoint) */
+  isMonthlyPnLLoading?: boolean;
 }
 
 /**
@@ -52,6 +52,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   onPeriodChange,
   onChartTabChange,
   isLoading = false,
+  isMonthlyPnLLoading = false,
 }) => (
   <div className="space-y-6 animate-in fade-in duration-500">
     {/* Header */}
@@ -67,21 +68,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       isLoading={isLoading}
     />
 
-    {/* Key Metrics Grid - Show skeleton or content */}
-    {isLoading ? (
-      <KeyMetricsGridSkeleton />
-    ) : (
-      <KeyMetricsGrid metrics={data.keyMetrics} />
-    )}
+    {/* Key Metrics Grid */}
+    <KeyMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
 
-    {/* Additional Metrics Row - Show skeleton or content */}
-    {isLoading ? (
-      <AdditionalMetricsGridSkeleton />
-    ) : (
-      <AdditionalMetricsGrid metrics={data.keyMetrics} />
-    )}
+    {/* Additional Metrics Row */}
+    <AdditionalMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
 
-    {/* PnL Heatmap - Handles own skeleton internally */}
-    <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} isLoading={isLoading} />
+    {/* PnL Heatmap - Uses independent loading state for yield/daily endpoint */}
+    <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} isLoading={isMonthlyPnLLoading} />
   </div>
 );

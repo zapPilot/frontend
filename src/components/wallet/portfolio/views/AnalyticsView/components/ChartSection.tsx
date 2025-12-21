@@ -12,7 +12,6 @@ import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 import { DrawdownChart } from "../charts/DrawdownChart";
 import { PerformanceChart } from "../charts/PerformanceChart";
 import { ANALYTICS_TIME_PERIODS } from "../constants";
-import { ChartSectionSkeleton } from "./ChartSectionSkeleton";
 
 /**
  * Chart tab definition
@@ -56,11 +55,6 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
   onChartTabChange,
   isLoading = false,
 }) => {
-  // Show skeleton during loading
-  if (isLoading) {
-    return <ChartSectionSkeleton />;
-  }
-
   return (
     <BaseCard variant="glass" className="p-1">
       <div className="p-4 border-b border-gray-800/50 flex justify-between items-center bg-gray-900/40 rounded-t-xl">
@@ -70,11 +64,12 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
             <button
               key={tab.id}
               onClick={() => onChartTabChange(tab.id)}
+              disabled={isLoading}
               className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
                 activeChartTab === tab.id
                   ? "bg-gray-700 text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-300"
-              }`}
+              } ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
             >
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
@@ -88,11 +83,12 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
             <button
               key={period.key}
               onClick={() => onPeriodChange(period)}
+              disabled={isLoading}
               className={`px-2 py-0.5 text-xs rounded-md transition-colors ${
                 selectedPeriod.key === period.key
                   ? "bg-purple-500/20 text-purple-300"
                   : "text-gray-500 hover:text-gray-300"
-              }`}
+              } ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
             >
               {period.label}
             </button>
@@ -101,27 +97,38 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
       </div>
 
       <div className="p-4">
-        {activeChartTab === "performance" && (
-          <PerformanceChart
-            chartData={data.performanceChart.points}
-            startDate={data.performanceChart.startDate}
-            endDate={data.performanceChart.endDate}
+        {isLoading ? (
+          // Skeleton for chart area only
+          <div
+            className="h-64 bg-gray-800/30 rounded-xl animate-pulse"
+            role="status"
+            aria-label="Loading chart"
           />
-        )}
-        {activeChartTab === "drawdown" && (
-          <div className="space-y-3">
-            <DrawdownChart
-              chartData={data.drawdownChart.points}
-              maxDrawdown={data.drawdownChart.maxDrawdown}
-            />
-            <p className="text-xs text-gray-500">
-              <span className="text-white font-medium">
-                Resilience Analysis:
-              </span>{" "}
-              Maximum drawdown of -12.8% with an average recovery time of 14
-              days. This is 52% better than the Bitcoin benchmark (-25%).
-            </p>
-          </div>
+        ) : (
+          <>
+            {activeChartTab === "performance" && (
+              <PerformanceChart
+                chartData={data.performanceChart.points}
+                startDate={data.performanceChart.startDate}
+                endDate={data.performanceChart.endDate}
+              />
+            )}
+            {activeChartTab === "drawdown" && (
+              <div className="space-y-3">
+                <DrawdownChart
+                  chartData={data.drawdownChart.points}
+                  maxDrawdown={data.drawdownChart.maxDrawdown}
+                />
+                <p className="text-xs text-gray-500">
+                  <span className="text-white font-medium">
+                    Resilience Analysis:
+                  </span>{" "}
+                  Maximum drawdown of -12.8% with an average recovery time of 14
+                  days. This is 52% better than the Bitcoin benchmark (-25%).
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </BaseCard>

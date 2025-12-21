@@ -15,6 +15,7 @@ import { AnalyticsMetricCard } from "./AnalyticsMetricCard";
  */
 interface AdditionalMetricsGridProps {
   metrics: KeyMetrics;
+  isLoading?: boolean;
 }
 
 /**
@@ -24,6 +25,7 @@ interface AdditionalMetricsGridProps {
  */
 export const AdditionalMetricsGrid: React.FC<AdditionalMetricsGridProps> = ({
   metrics,
+  isLoading = false,
 }) => (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
     <AnalyticsMetricCard
@@ -31,18 +33,21 @@ export const AdditionalMetricsGrid: React.FC<AdditionalMetricsGridProps> = ({
       label="Sortino Ratio"
       value={metrics.sortino?.value || "N/A"}
       subValue={metrics.sortino?.subValue || "Coming soon"}
+      isLoading={isLoading}
     />
     <AnalyticsMetricCard
       icon={Activity}
       label="Beta (vs BTC)"
       value={metrics.beta?.value || "N/A"}
       subValue={metrics.beta?.subValue || "vs BTC"}
+      isLoading={isLoading}
     />
     <AnalyticsMetricCard
       icon={Activity}
       label="Volatility"
       value={metrics.volatility.value}
       subValue={metrics.volatility.subValue}
+      isLoading={isLoading}
     />
     <AnalyticsMetricCard
       icon={Activity}
@@ -52,6 +57,7 @@ export const AdditionalMetricsGrid: React.FC<AdditionalMetricsGridProps> = ({
       {...(metrics.alpha?.value?.startsWith("+") && {
         valueColor: "text-green-400",
       })}
+      isLoading={isLoading}
     />
   </div>
 );

@@ -1,6 +1,22 @@
 import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu";
 import { TABS, type TabType } from "@/types/portfolio";
 
+/** Navigation styling constants */
+const STYLES = {
+  nav: "h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between",
+  logo: "w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-500/20",
+  tabContainer: "flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50",
+  tabBase: "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
+  tabActive:
+    "bg-gradient-to-r from-purple-500/10 to-blue-600/10 border border-purple-500/30 text-white shadow-sm",
+  tabInactive:
+    "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 hover:border-purple-500/20 border border-transparent",
+} as const;
+
+/** Get tab button className based on active state */
+const getTabClassName = (isActive: boolean): string =>
+  `${STYLES.tabBase} ${isActive ? STYLES.tabActive : STYLES.tabInactive}`;
+
 interface WalletNavigationProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
@@ -15,17 +31,17 @@ export function WalletNavigation({
   onOpenSettings,
 }: WalletNavigationProps) {
   return (
-    <nav className="h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between">
+    <nav className={STYLES.nav}>
+      {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-500/20">
-          ZP
-        </div>
+        <div className={STYLES.logo}>ZP</div>
         <span className="text-white font-bold tracking-tight hidden md:block">
           Zap Pilot
         </span>
       </div>
 
-      <div className="flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50">
+      {/* Tab buttons */}
+      <div className={STYLES.tabContainer}>
         {TABS.map(tab => (
           <button
             key={tab.id}
@@ -33,11 +49,7 @@ export function WalletNavigation({
             onClick={() => setActiveTab(tab.id)}
             role="button"
             aria-label={`${tab.label} tab`}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
-              activeTab === tab.id
-                ? "bg-gradient-to-r from-purple-500/10 to-blue-600/10 border border-purple-500/30 text-white shadow-sm"
-                : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 hover:border-purple-500/20 border border-transparent"
-            }`}
+            className={getTabClassName(activeTab === tab.id)}
           >
             <tab.icon className="w-4 h-4" />
             <span className="hidden sm:inline">{tab.label}</span>

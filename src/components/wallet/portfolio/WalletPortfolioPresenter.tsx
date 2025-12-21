@@ -6,11 +6,20 @@ import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfoli
 import { Footer } from "@/components/Footer/Footer";
 import { PortfolioModals } from "@/components/wallet/portfolio/components/PortfolioModals";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
+import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
-import type { ModalType, TabType } from "@/types/portfolio";
+import type { TabType } from "@/types/portfolio";
+
+/** Layout class constants for consistent styling */
+const LAYOUT = {
+  container:
+    "min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30",
+  main: "flex-1 flex justify-center p-4 md:p-8",
+  content: "w-full max-w-4xl flex flex-col gap-8 min-h-[600px]",
+} as const;
 
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
@@ -23,7 +32,7 @@ interface WalletPortfolioPresenterProps {
 
 export function WalletPortfolioPresenter({
   data,
-  userId = "",
+  userId,
   isEmptyState = false,
   isLoading = false,
   headerBanners,
@@ -32,59 +41,50 @@ export function WalletPortfolioPresenter({
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { activeModal, isSettingsOpen, openModal, closeModal, openSettings, setIsSettingsOpen } =
+    usePortfolioModalState();
 
-  // Modal state - consolidated to avoid duplication
-  const [activeModal, setActiveModal] = useState<ModalType | null>(null);
-
-  const openModal = (type: ModalType | null) => setActiveModal(type);
-  const closeModal = () => setActiveModal(null);
+  /** Tab view mapping for cleaner conditional rendering */
+  const TAB_VIEWS: Record<TabType, React.ReactNode> = {
+    dashboard: (
+      <DashboardView
+        data={data}
+        currentRegime={currentRegime}
+        isEmptyState={isEmptyState}
+        isLoading={isLoading}
+        onOpenModal={openModal}
+      />
+    ),
+    analytics: userId ? (
+      <div data-testid="analytics-content">
+        <AnalyticsView userId={userId} />
+      </div>
+    ) : null,
+    backtesting: (
+      <div data-testid="backtesting-content">
+        <BacktestingView />
+      </div>
+    ),
+  };
 
   return (
-    <div
-      className="min-h-screen bg-gray-950 flex flex-col font-sans selection:bg-purple-500/30"
-      data-testid="v22-dashboard"
-    >
-      {/* --- HEADER BANNERS (Bundle-specific: SwitchPrompt, EmailReminder) --- */}
+    <div className={LAYOUT.container} data-testid="v22-dashboard">
+      {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}
       {headerBanners}
 
-      {/* --- TOP NAVIGATION (Minimalist) --- */}
+      {/* Top navigation */}
       <WalletNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={openSettings}
       />
 
-      {/* --- MAIN CONTENT --- */}
-      <main className="flex-1 flex justify-center p-4 md:p-8">
-        <div className="w-full max-w-4xl flex flex-col gap-8 min-h-[600px]">
-          {activeTab === "dashboard" && (
-            <DashboardView
-              data={data}
-              currentRegime={currentRegime}
-              isEmptyState={isEmptyState}
-              isLoading={isLoading}
-              onOpenModal={openModal}
-            />
-          )}
-
-          {/* Analytics View */}
-          {activeTab === "analytics" && userId && (
-            <div data-testid="analytics-content">
-              <AnalyticsView userId={userId} />
-            </div>
-          )}
-
-          {/* Backtesting View */}
-          {activeTab === "backtesting" && (
-            <div data-testid="backtesting-content">
-              <BacktestingView />
-            </div>
-          )}
-        </div>
+      {/* Main content */}
+      <main className={LAYOUT.main}>
+        <div className={LAYOUT.content}>{TAB_VIEWS[activeTab]}</div>
       </main>
 
-      {/* --- FOOTER --- */}
+      {/* Footer */}
       <Footer
         className="bg-gray-950 border-gray-800/50"
         containerClassName="max-w-4xl"
@@ -98,7 +98,7 @@ export function WalletPortfolioPresenter({
         setIsSettingsOpen={setIsSettingsOpen}
       />
 
-      {/* --- FOOTER OVERLAYS (Bundle-specific: QuickSwitchFAB) --- */}
+      {/* Footer overlays (Bundle-specific: QuickSwitchFAB) */}
       {footerOverlays}
     </div>
   );

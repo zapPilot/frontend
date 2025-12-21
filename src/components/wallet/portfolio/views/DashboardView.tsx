@@ -1,9 +1,15 @@
-import { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCard";
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
-import { Regime } from "@/components/wallet/regime/regimeData";
+import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";
+
+/** Layout styling constants */
+const STYLES = {
+  container: "animate-in fade-in duration-300",
+  heroGrid: "grid grid-cols-1 md:grid-cols-2 gap-6",
+} as const;
 
 interface DashboardViewProps {
   data: WalletPortfolioDataWithDirection;
@@ -21,10 +27,9 @@ export function DashboardView({
   onOpenModal,
 }: DashboardViewProps) {
   return (
-    <div data-testid="dashboard-content" className="animate-in fade-in duration-300">
-      {/* HERO SECTION: Balance + Expandable Strategy Card */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Balance Card */}
+    <div data-testid="dashboard-content" className={STYLES.container}>
+      {/* Hero Section: Balance + Expandable Strategy Card */}
+      <div className={STYLES.heroGrid}>
         <BalanceCard
           balance={data.balance}
           roi={data.roi}
@@ -32,8 +37,6 @@ export function DashboardView({
           isLoading={isLoading}
           onOpenModal={onOpenModal}
         />
-
-        {/* EXPANDABLE STRATEGY CARD */}
         <StrategyCard
           data={data}
           currentRegime={currentRegime}
@@ -42,7 +45,7 @@ export function DashboardView({
         />
       </div>
 
-      {/* UNIFIED COMPOSITION BAR (V21 Style) - Only visible in Dashboard */}
+      {/* Unified Composition Bar */}
       <PortfolioComposition
         data={data}
         currentRegime={currentRegime}
