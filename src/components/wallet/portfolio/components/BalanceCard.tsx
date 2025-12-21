@@ -2,10 +2,13 @@ import { ArrowDownCircle, ArrowUpCircle, ArrowUpRight } from "lucide-react";
 
 import type { ModalType } from "@/types/portfolio";
 
+import { BalanceCardSkeleton } from "../views/DashboardSkeleton";
+
 interface BalanceCardProps {
   balance: number;
   roi: number;
   isEmptyState?: boolean;
+  isLoading?: boolean;
   onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
 }
 
@@ -13,8 +16,13 @@ export function BalanceCard({
   balance,
   roi,
   isEmptyState = false,
+  isLoading = false,
   onOpenModal,
 }: BalanceCardProps) {
+  if (isLoading) {
+    return <BalanceCardSkeleton />;
+  }
+
   return (
     <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 flex flex-col justify-center">
       <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-2">

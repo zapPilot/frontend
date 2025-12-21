@@ -4,32 +4,43 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
-  getRegimeAllocation,
-  type Regime,
-  regimes,
+    getRegimeAllocation,
+    type Regime,
+    regimes,
 } from "@/components/wallet/regime/regimeData";
 import {
-  getStrategyTabLabel,
-  type StrategyDirection,
+    getStrategyTabLabel,
+    type StrategyDirection,
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
+
+import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 
 interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
   isEmptyState?: boolean;
+  isLoading?: boolean;
 }
 
 export function StrategyCard({
   data,
   currentRegime,
   isEmptyState = false,
+  isLoading = false,
 }: StrategyCardProps) {
+  // Show skeleton during loading - must be before hooks for consistency
+  // but after destructuring (which is before hooks anyway)
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
   const [selectedDirection, setSelectedDirection] =
     useState<StrategyDirection | null>(null);
+
+  // Early return for loading state - AFTER hooks to comply with React rules
+  if (isLoading) {
+    return <StrategyCardSkeleton />;
+  }
 
   // Early return if no regime data - AFTER hooks to comply with React rules
   if (!currentRegime) {

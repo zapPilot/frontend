@@ -11,12 +11,15 @@ import {
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
 
+import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
 import { AllocationBars, type AllocationConstituent } from "./AllocationBars";
+
 
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
   isEmptyState?: boolean;
+  isLoading?: boolean;
   onRebalance: () => void;
 }
 
@@ -89,8 +92,14 @@ export function PortfolioComposition({
   data,
   currentRegime,
   isEmptyState = false,
+  isLoading = false,
   onRebalance,
 }: PortfolioCompositionProps) {
+  // Early return for loading state
+  if (isLoading) {
+    return <PortfolioCompositionSkeleton />;
+  }
+
   // Early return if no regime data
   if (!currentRegime) {
     return null;

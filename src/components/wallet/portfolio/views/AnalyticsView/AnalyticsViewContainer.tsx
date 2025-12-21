@@ -14,7 +14,6 @@ import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { AnalyticsView } from "./AnalyticsView";
 import { AnalyticsErrorState } from "./components/AnalyticsErrorState";
-import { AnalyticsLoadingSkeleton } from "./components/AnalyticsLoadingSkeleton";
 import { DEFAULT_ANALYTICS_PERIOD } from "./constants";
 
 /**
@@ -60,14 +59,8 @@ export const AnalyticsViewContainer = ({
     return <AnalyticsErrorState error={error} onRetry={refetch} />;
   }
 
-  // Render presentation component with component-level loading
-  // If data is null during initial load, show full-page skeleton as fallback
-  if (!data && isLoading) {
-    return <AnalyticsLoadingSkeleton />;
-  }
-
-  // Provide fallback empty data structure if needed (shouldn't happen in normal flow)
-  // This fallback is only used when data is null but not loading (edge case)
+  // Provide fallback empty data structure to ensure components always render
+  // Component-level skeletons will be shown via isLoading prop
   const analyticsData: AnalyticsData =
     data ??
     ({

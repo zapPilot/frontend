@@ -1,50 +1,76 @@
 /**
  * Chart Section Skeleton Component
  *
- * Loading state for the chart section with tabs and time period selector
+ * Content-aware loading state showing real tabs and time period buttons
+ * with skeleton placeholder only for the chart area
  */
+
+import { ArrowDownRight, TrendingUp } from "lucide-react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
 /**
+ * Chart tabs matching ChartSection.tsx
+ */
+const CHART_TABS = [
+  { label: "Performance", icon: TrendingUp },
+  { label: "Drawdown", icon: ArrowDownRight },
+];
+
+/**
+ * Time periods matching ChartSection.tsx
+ */
+const TIME_PERIODS = ["1M", "3M", "6M", "1Y", "ALL"];
+
+/**
  * Chart Section Skeleton
  *
- * Displays a skeleton loader that matches the ChartSection layout:
- * - Chart type tabs (Performance/Drawdown)
- * - Time period selector (1M/3M/6M/1Y/ALL)
- * - Chart area placeholder
+ * Shows real tabs and time period buttons, skeleton for chart area only
  */
 export const ChartSectionSkeleton: React.FC = () => (
-  <BaseCard variant="glass" className="p-1 animate-pulse">
-    {/* Header with tabs and period selector */}
+  <BaseCard variant="glass" className="p-1">
+    {/* Real Header with tabs and period selector */}
     <div className="p-4 border-b border-gray-800/50 flex justify-between items-center bg-gray-900/40 rounded-t-xl">
-      {/* Chart tabs skeleton */}
+      {/* Real Chart tabs */}
       <div className="flex gap-1 bg-gray-800/50 p-1 rounded-lg">
-        {[...Array(2)].map((_, i) => (
-          <div
+        {CHART_TABS.map((tab, i) => (
+          <button
             key={i}
-            className="h-8 w-24 bg-gray-700/50 rounded-md"
-            aria-hidden="true"
-          />
+            disabled
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-not-allowed ${
+              i === 0
+                ? "bg-gray-700 text-white shadow-sm"
+                : "text-gray-500"
+            }`}
+          >
+            <tab.icon className="w-3.5 h-3.5" />
+            {tab.label}
+          </button>
         ))}
       </div>
 
-      {/* Time period buttons skeleton */}
+      {/* Real Time period buttons */}
       <div className="flex gap-2">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className="h-6 w-12 bg-gray-800/50 rounded-md"
-            aria-hidden="true"
-          />
+        {TIME_PERIODS.map((period, i) => (
+          <button
+            key={period}
+            disabled
+            className={`px-2 py-0.5 text-xs rounded-md cursor-not-allowed ${
+              i === 0
+                ? "bg-purple-500/20 text-purple-300"
+                : "text-gray-500"
+            }`}
+          >
+            {period}
+          </button>
         ))}
       </div>
     </div>
 
-    {/* Chart area skeleton */}
+    {/* Skeleton: Chart area only */}
     <div className="p-4">
       <div
-        className="h-64 bg-gray-800/30 rounded-xl"
+        className="h-64 bg-gray-800/30 rounded-xl animate-pulse"
         role="status"
         aria-label="Loading chart"
       />

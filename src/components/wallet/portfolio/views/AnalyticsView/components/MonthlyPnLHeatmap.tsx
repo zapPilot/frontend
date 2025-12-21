@@ -69,19 +69,22 @@ export const MonthlyPnLHeatmap: React.FC<MonthlyPnLHeatmapProps> = ({
             </div>
           ))
         ) : isLoading ? (
-          // Skeleton loading state
-          [...Array(12)].map((_, idx) => (
-            <div key={idx} className="flex flex-col gap-1 animate-pulse">
-              <div
-                className="h-12 bg-gray-800/50 rounded-md border border-gray-700/30"
-                aria-hidden="true"
-              />
-              <div
-                className="h-3 bg-gray-800/30 rounded w-8 mx-auto"
-                aria-hidden="true"
-              />
-            </div>
-          ))
+          // Content-aware skeleton: show real month labels, skeleton for values
+          [...Array(12)].map((_, idx) => {
+            const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            return (
+              <div key={idx} className="flex flex-col gap-1">
+                <div
+                  className="h-12 bg-gray-800/50 rounded-md border border-gray-700/30 animate-pulse"
+                  aria-hidden="true"
+                />
+                {/* Real month label */}
+                <span className="text-[10px] text-center text-gray-500 font-mono uppercase">
+                  {monthLabels[idx]}
+                </span>
+              </div>
+            );
+          })
         ) : (
           <div className="col-span-12 text-center text-gray-500 py-8">
             No monthly data available for this period

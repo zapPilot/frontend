@@ -16,6 +16,7 @@ interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
   userId?: string;
   isEmptyState?: boolean;
+  isLoading?: boolean;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
 }
@@ -24,6 +25,7 @@ export function WalletPortfolioPresenter({
   data,
   userId = "",
   isEmptyState = false,
+  isLoading = false,
   headerBanners,
   footerOverlays,
 }: WalletPortfolioPresenterProps) {
@@ -61,6 +63,7 @@ export function WalletPortfolioPresenter({
               data={data}
               currentRegime={currentRegime}
               isEmptyState={isEmptyState}
+              isLoading={isLoading}
               onOpenModal={openModal}
             />
           )}

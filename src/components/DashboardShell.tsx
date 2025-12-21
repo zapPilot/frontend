@@ -3,10 +3,7 @@
 import type { ReactNode } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
-import {
-    WalletPortfolioErrorState,
-    WalletPortfolioLoadingState,
-} from "@/components/wallet/portfolio/views/LoadingStates";
+import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
 import { usePortfolioData } from "@/hooks/queries/usePortfolioData";
 import { useRegimeHistory } from "@/services/regimeHistoryService";
@@ -34,16 +31,13 @@ export function DashboardShell({
   const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = error instanceof Error ? error : null;
 
-  if (isLoading && !data) {
-    return <WalletPortfolioLoadingState />;
-  }
-
+  // Keep error state handling (full-page replacement is appropriate for errors)
   if (safeError && !data) {
     return <WalletPortfolioErrorState error={safeError} onRetry={refetch} />;
   }
 
-  // Determine if this is empty state (no real portfolio data)
-  const isEmptyState = !data;
+  // Determine if this is empty state (no real portfolio data, excluding loading)
+  const isEmptyState = !data && !isLoading;
 
   // Use real data if available, otherwise create empty state with real sentiment
   const portfolioData =
@@ -61,6 +55,7 @@ export function DashboardShell({
         data={portfolioData}
         userId={urlUserId}
         isEmptyState={isEmptyState}
+        isLoading={isLoading}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}
       />

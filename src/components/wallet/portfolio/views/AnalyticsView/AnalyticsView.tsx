@@ -8,9 +8,11 @@
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { AdditionalMetricsGrid } from "./components/AdditionalMetricsGrid";
+import { AdditionalMetricsGridSkeleton } from "./components/AdditionalMetricsGridSkeleton";
 import { AnalyticsHeader } from "./components/AnalyticsHeader";
 import { ChartSection } from "./components/ChartSection";
 import { KeyMetricsGrid } from "./components/KeyMetricsGrid";
+import { KeyMetricsGridSkeleton } from "./components/KeyMetricsGridSkeleton";
 import { MonthlyPnLHeatmap } from "./components/MonthlyPnLHeatmap";
 
 /**
@@ -65,13 +67,21 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       isLoading={isLoading}
     />
 
-    {/* Key Metrics Grid */}
-    <KeyMetricsGrid metrics={data.keyMetrics} />
+    {/* Key Metrics Grid - Show skeleton or content */}
+    {isLoading ? (
+      <KeyMetricsGridSkeleton />
+    ) : (
+      <KeyMetricsGrid metrics={data.keyMetrics} />
+    )}
 
-    {/* Additional Metrics Row */}
-    <AdditionalMetricsGrid metrics={data.keyMetrics} />
+    {/* Additional Metrics Row - Show skeleton or content */}
+    {isLoading ? (
+      <AdditionalMetricsGridSkeleton />
+    ) : (
+      <AdditionalMetricsGrid metrics={data.keyMetrics} />
+    )}
 
-    {/* PnL Heatmap */}
+    {/* PnL Heatmap - Handles own skeleton internally */}
     <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} isLoading={isLoading} />
   </div>
 );

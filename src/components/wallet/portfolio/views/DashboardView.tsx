@@ -9,6 +9,7 @@ interface DashboardViewProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
   isEmptyState: boolean;
+  isLoading?: boolean;
   onOpenModal: (type: ModalType) => void;
 }
 
@@ -16,10 +17,11 @@ export function DashboardView({
   data,
   currentRegime,
   isEmptyState,
+  isLoading = false,
   onOpenModal,
 }: DashboardViewProps) {
   return (
-    <div data-testid="dashboard-content">
+    <div data-testid="dashboard-content" className="animate-in fade-in duration-300">
       {/* HERO SECTION: Balance + Expandable Strategy Card */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Balance Card */}
@@ -27,6 +29,7 @@ export function DashboardView({
           balance={data.balance}
           roi={data.roi}
           isEmptyState={isEmptyState}
+          isLoading={isLoading}
           onOpenModal={onOpenModal}
         />
 
@@ -35,6 +38,7 @@ export function DashboardView({
           data={data}
           currentRegime={currentRegime}
           isEmptyState={isEmptyState}
+          isLoading={isLoading}
         />
       </div>
 
@@ -43,6 +47,7 @@ export function DashboardView({
         data={data}
         currentRegime={currentRegime}
         isEmptyState={isEmptyState}
+        isLoading={isLoading}
         onRebalance={() => onOpenModal("rebalance")}
       />
     </div>
