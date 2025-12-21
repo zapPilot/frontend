@@ -11,20 +11,20 @@
  */
 
 import {
-    calculateAllocation,
-    calculateDelta,
+  calculateAllocation,
+  calculateDelta,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-    getRegimeStrategyInfo,
-    getTargetAllocation,
+  getRegimeStrategyInfo,
+  getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 import type {
-    DirectionType,
-    DurationInfo,
+  DirectionType,
+  DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -195,9 +195,7 @@ function applyRegimeHistoryFields(
   baseData: WalletPortfolioData,
   regimeHistoryData: RegimeHistoryData | null
 ): WalletPortfolioDataWithDirection {
-  const strategyInfo = getRegimeStrategyInfo(
-    regimeHistoryData
-  );
+  const strategyInfo = getRegimeStrategyInfo(regimeHistoryData);
 
   return {
     ...baseData,
@@ -211,7 +209,7 @@ function applyRegimeHistoryFields(
 function countUniqueProtocols(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueProtocols = new Set(poolDetails.map((pool) => pool.protocol_id));
+  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
   return uniqueProtocols.size;
 }
 
@@ -221,7 +219,7 @@ function countUniqueProtocols(
 function countUniqueChains(
   poolDetails: LandingPageResponse["pool_details"]
 ): number {
-  const uniqueChains = new Set(poolDetails.map((pool) => pool.chain));
+  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
   return uniqueChains.size;
 }
 
@@ -309,9 +307,11 @@ export function createEmptyPortfolioState(
 }
 
 /**
- * Creates a loading state placeholder
+ * Base state factory for creating placeholder states
  */
-export function createWalletPortfolioLoadingState(): WalletPortfolioData {
+function createBaseState(
+  overrides: Partial<WalletPortfolioData> = {}
+): WalletPortfolioData {
   return {
     balance: 0,
     roi: 0,
@@ -332,36 +332,26 @@ export function createWalletPortfolioLoadingState(): WalletPortfolioData {
     positions: 0,
     protocols: 0,
     chains: 0,
-    isLoading: true,
+    isLoading: false,
     hasError: false,
+    ...overrides,
   };
+}
+
+/**
+ * Creates a loading state placeholder
+ */
+export function createWalletPortfolioLoadingState(): WalletPortfolioData {
+  return createBaseState({ isLoading: true });
 }
 
 /**
  * Creates an error state placeholder
  */
 export function createWalletPortfolioErrorState(): WalletPortfolioData {
-  return {
-    balance: 0,
-    roi: 0,
-    roiChange7d: 0,
-    roiChange30d: 0,
+  return createBaseState({
     sentimentValue: 0,
     sentimentStatus: "Error",
-    sentimentQuote: "",
-    currentRegime: "n",
-    currentAllocation: {
-      crypto: 0,
-      stable: 0,
-      constituents: { crypto: [], stable: [] },
-      simplifiedCrypto: [],
-    },
-    targetAllocation: { crypto: 0, stable: 0 },
-    delta: 0,
-    positions: 0,
-    protocols: 0,
-    chains: 0,
-    isLoading: false,
     hasError: true,
-  };
+  });
 }
