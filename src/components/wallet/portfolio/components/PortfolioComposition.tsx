@@ -137,7 +137,7 @@ export function PortfolioComposition({
           <h2 className="text-xl font-bold text-white mb-1">
             Portfolio Composition
           </h2>
-          <p className="text-sm text-gray-400">
+          <div className="text-sm text-gray-400">
             <div className="flex gap-2 items-center">
               <span className="text-sm text-gray-400 mr-2">
                 {allocationLabel}:
@@ -151,7 +151,7 @@ export function PortfolioComposition({
                 ASSET_COLORS.BTC
               )}
             </div>
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <GradientButton

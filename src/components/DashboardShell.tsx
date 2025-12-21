@@ -59,6 +59,7 @@ export function DashboardShell({
     >
       <WalletPortfolioPresenter
         data={portfolioData}
+        userId={urlUserId}
         isEmptyState={isEmptyState}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}

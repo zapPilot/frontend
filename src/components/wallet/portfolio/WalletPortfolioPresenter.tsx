@@ -6,6 +6,7 @@ import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfoli
 import { Footer } from "@/components/Footer/Footer";
 import { PortfolioModals } from "@/components/wallet/portfolio/components/PortfolioModals";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
+import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
@@ -13,6 +14,7 @@ import type { ModalType, TabType } from "@/types/portfolio";
 
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
+  userId?: string;
   isEmptyState?: boolean;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
@@ -20,6 +22,7 @@ interface WalletPortfolioPresenterProps {
 
 export function WalletPortfolioPresenter({
   data,
+  userId = "",
   isEmptyState = false,
   headerBanners,
   footerOverlays,
@@ -60,6 +63,13 @@ export function WalletPortfolioPresenter({
               isEmptyState={isEmptyState}
               onOpenModal={openModal}
             />
+          )}
+
+          {/* Analytics View */}
+          {activeTab === "analytics" && userId && (
+            <div data-testid="analytics-content">
+              <AnalyticsView userId={userId} />
+            </div>
           )}
 
           {/* Backtesting View */}
