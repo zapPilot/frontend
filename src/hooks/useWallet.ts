@@ -90,8 +90,6 @@ export function useWallet(): WalletHooks {
   };
 }
 
-// Legacy exports for backward compatibility
-export { useWallet as useWalletConnection };
-
+// Legacy useWalletConnection alias removed - use useWallet directly
 // Chain constants for backward compatibility - now using canonical CHAIN_IDS
 export { CHAIN_IDS as SUPPORTED_CHAINS } from "@/config/chains";

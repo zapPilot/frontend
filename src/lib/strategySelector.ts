@@ -184,25 +184,7 @@ export function getStrategyMeta(direction: DirectionType): StrategyMeta {
   }
 }
 
-/**
- * Validates regime ID at runtime
- *
- * Useful for defensive programming when dealing with user input
- * or external data sources.
- *
- * @param regime - String to validate
- * @returns True if valid regime ID
- */
-export function isValidRegimeId(regime: unknown): regime is RegimeId {
-  return (
-    typeof regime === "string" &&
-    (regime === "ef" ||
-      regime === "f" ||
-      regime === "n" ||
-      regime === "g" ||
-      regime === "eg")
-  );
-}
+// Unused export removed: isValidRegimeId
 
 /**
  * Gets human-readable regime name

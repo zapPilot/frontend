@@ -1,6 +1,6 @@
 import type { ChainData } from "@/types/domain/transaction";
 
-export const MOCK_CHAIN_DATA: ChainData[] = [
+const MOCK_CHAIN_DATA: ChainData[] = [
   {
     chainId: 1,
     name: "Ethereum",

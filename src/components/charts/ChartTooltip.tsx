@@ -8,17 +8,6 @@
 import { motion } from "framer-motion";
 import { useRef } from "react";
 
-import { ASSET_CATEGORIES } from "@/constants/portfolio";
-import {
-  calculateDailyVolatility,
-  getDrawdownSeverity,
-  getDrawdownSeverityColor,
-  getSharpeColor,
-  getSharpeInterpretation,
-  getVolatilityRiskColor,
-  getVolatilityRiskLevel,
-} from "@/lib/chartHoverUtils";
-import { formatters } from "@/lib/formatters";
 import type {
   AllocationHoverData,
   ChartHoverState,
@@ -29,6 +18,16 @@ import type {
   VolatilityHoverData,
 } from "@/types/ui/chartHover";
 
+import {
+  AllocationTooltip,
+  DailyYieldTooltip,
+  DrawdownTooltip,
+  PerformanceTooltip,
+  SharpeTooltip,
+  VolatilityTooltip,
+} from "./tooltipContent";
+
+// Charts that have legends at the top requiring tooltip offset
 const CHARTS_WITH_TOP_LEGEND = new Set([
   "performance",
   "asset-allocation",
@@ -36,16 +35,12 @@ const CHARTS_WITH_TOP_LEGEND = new Set([
   "volatility",
 ]);
 
-const SHARPE_INTERPRETATION_COLOR: Record<
-  SharpeHoverData["interpretation"],
-  string
-> = {
-  Excellent: "text-green-400",
-  Good: "text-lime-400",
-  Fair: "text-yellow-400",
-  Poor: "text-orange-400",
-  "Very Poor": "text-red-400",
-};
+// Positioning constants
+const TOOLTIP_MIN_WIDTH = 180;
+const TOOLTIP_MIN_HEIGHT = 120;
+const EDGE_PADDING = 12;
+const VERTICAL_OFFSET = 20;
+const LEGEND_GUARD_TOP = 60;
 
 interface ChartTooltipProps {
   /** Current hover state or null */
@@ -57,379 +52,37 @@ interface ChartTooltipProps {
 }
 
 /**
- * Render Performance chart tooltip content with percentage breakdown
+ * Render chart-specific tooltip content based on chart type
  */
-function PerformanceTooltipContent({ data }: { data: PerformanceHoverData }) {
-  const formattedValue = formatters.currencyPrecise(data.value);
-  const totalValue = data.value;
-
-  // Calculate percentages for breakdown (handle optional values)
-  const defiValue = data.defiValue ?? 0;
-  const walletValue = data.walletValue ?? 0;
-  const defiPercent = totalValue > 0 ? (defiValue / totalValue) * 100 : 0;
-  const walletPercent = totalValue > 0 ? (walletValue / totalValue) * 100 : 0;
-
-  const breakdownRows = [
-    {
-      label: "DeFi",
-      colorClass: "text-purple-300",
-      value: defiValue,
-      percent: defiPercent,
-    },
-    {
-      label: "Wallet",
-      colorClass: "text-cyan-300",
-      value: walletValue,
-      percent: walletPercent,
-    },
-  ].filter(
-    (
-      entry
-    ): entry is {
-      label: string;
-      colorClass: string;
-      value: number;
-      percent: number;
-    } => typeof entry.value === "number" && Number.isFinite(entry.value)
-  );
-
-  return (
-    <>
-      <div className="text-xs text-gray-300 mb-1">{data.date}</div>
-      <div className="space-y-1">
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-purple-300">Portfolio</span>
-          <span className="text-sm font-semibold text-white">
-            {formattedValue}
-          </span>
-        </div>
-        {breakdownRows.map(({ label, colorClass, value, percent }) => (
-          <div key={label} className="flex items-center justify-between gap-3">
-            <span className={`text-xs ${colorClass}`}>{label}</span>
-            <span className="text-sm font-semibold text-gray-200">
-              {formatters.currencyPrecise(value)}{" "}
-              <span className="text-xs text-gray-400">
-                ({percent.toFixed(1)}%)
-              </span>
-            </span>
-          </div>
-        ))}
-      </div>
-    </>
-  );
+function TooltipContent({ data }: { data: ChartHoverState }) {
+  switch (data.chartType) {
+    case "performance":
+      return <PerformanceTooltip data={data as PerformanceHoverData} />;
+    case "asset-allocation":
+      return <AllocationTooltip data={data as AllocationHoverData} />;
+    case "drawdown-recovery":
+      return <DrawdownTooltip data={data as DrawdownHoverData} />;
+    case "sharpe":
+      return <SharpeTooltip data={data as SharpeHoverData} />;
+    case "volatility":
+      return <VolatilityTooltip data={data as VolatilityHoverData} />;
+    case "daily-yield":
+      return <DailyYieldTooltip data={data as DailyYieldHoverData} />;
+    default:
+      return null;
+  }
 }
 
 /**
- * Render Allocation chart tooltip content
+ * Calculate tooltip position to keep it within bounds
  */
-function AllocationTooltipContent({ data }: { data: AllocationHoverData }) {
-  const allocations = [
-    {
-      label: ASSET_CATEGORIES.btc.shortLabel,
-      value: data.btc,
-      color: ASSET_CATEGORIES.btc.tailwindColor,
-    },
-    {
-      label: ASSET_CATEGORIES.eth.shortLabel,
-      value: data.eth,
-      color: ASSET_CATEGORIES.eth.tailwindColor,
-    },
-    {
-      label: ASSET_CATEGORIES.stablecoin.shortLabel,
-      value: data.stablecoin,
-      color: ASSET_CATEGORIES.stablecoin.tailwindColor,
-    },
-    {
-      label: ASSET_CATEGORIES.altcoin.shortLabel,
-      value: data.altcoin,
-      color: ASSET_CATEGORIES.altcoin.tailwindColor,
-    },
-  ];
-
-  return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{data.date}</div>
-      <div className="space-y-1">
-        {allocations
-          .filter(({ value }) => value > 0.5) // Only show allocations > 0.5%
-          .map(({ label, value, color }) => (
-            <div
-              key={label}
-              className="flex items-center justify-between gap-3"
-            >
-              <span className={`text-xs ${color}`}>{label}</span>
-              <span className="text-sm font-semibold text-white">
-                {formatters.percent(value)}
-              </span>
-            </div>
-          ))}
-      </div>
-    </>
-  );
-}
-
-/**
- * Wrapper component for tooltip content with consistent date header and spacing
- * Deduplicates the repeated tooltip structure across all chart types
- */
-function TooltipContentWrapper({
-  date,
-  children,
-}: {
-  date: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <>
-      <div className="text-xs text-gray-300 mb-2">{date}</div>
-      <div className="space-y-1.5">{children}</div>
-    </>
-  );
-}
-
-/**
- * Render Drawdown chart tooltip content with severity badge
- */
-function DrawdownTooltipContent({ data }: { data: DrawdownHoverData }) {
-  const severityLabel = getDrawdownSeverity(data.drawdown);
-  const severityColors = getDrawdownSeverityColor(severityLabel);
-
-  return (
-    <TooltipContentWrapper date={data.date}>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-red-300">Drawdown</span>
-        <span className="text-sm font-semibold text-white">
-          {formatters.percent(data.drawdown, 2)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-400">Severity</span>
-        <span
-          className={`text-xs font-semibold px-2 py-0.5 rounded ${severityColors.bgColor} ${severityColors.color}`}
-        >
-          {severityLabel}
-        </span>
-      </div>
-      {data.peakDate && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Peak Date</span>
-          <span className="text-xs text-gray-300">{data.peakDate}</span>
-        </div>
-      )}
-      {data.distanceFromPeak != null && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Days from Peak</span>
-          <span className="text-sm font-semibold text-blue-400">
-            {data.distanceFromPeak}
-          </span>
-        </div>
-      )}
-      {data.recoveryDurationDays != null && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Recovery Time</span>
-          <span className="text-sm font-semibold text-emerald-400">
-            {data.recoveryDurationDays} days
-          </span>
-        </div>
-      )}
-      {data.recoveryDepth != null && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-gray-400">Cycle Depth</span>
-          <span className="text-sm font-semibold text-gray-200">
-            {formatters.percent(data.recoveryDepth, 1)}
-          </span>
-        </div>
-      )}
-      {data.isRecoveryPoint && (
-        <div className="flex items-center gap-2 mt-1 pt-1.5 border-t border-gray-700">
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 12 12"
-            className="text-emerald-400"
-          >
-            <path
-              d="M2 10 L2 2 L10 6 Z"
-              fill="currentColor"
-              stroke="white"
-              strokeWidth="0.5"
-            />
-          </svg>
-          <span className="text-xs text-emerald-400 font-semibold">
-            New Peak
-          </span>
-        </div>
-      )}
-    </TooltipContentWrapper>
-  );
-}
-
-/**
- * Render Sharpe Ratio chart tooltip content with color-coded rating
- */
-function SharpeTooltipContent({ data }: { data: SharpeHoverData }) {
-  const interpretation = getSharpeInterpretation(data.sharpe);
-  const indicatorColor = getSharpeColor(data.sharpe);
-
-  // Map interpretation to text color class
-  const textColorClass = SHARPE_INTERPRETATION_COLOR[interpretation];
-
-  return (
-    <TooltipContentWrapper date={data.date}>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: indicatorColor }}
-          />
-          <span className="text-xs text-gray-300">Sharpe Ratio</span>
-        </div>
-        <span className="text-sm font-semibold text-white">
-          {data.sharpe.toFixed(2)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-400">Rating</span>
-        <span className={`text-sm font-semibold ${textColorClass}`}>
-          {interpretation}
-        </span>
-      </div>
-    </TooltipContentWrapper>
-  );
-}
-
-/**
- * Render Volatility chart tooltip content with risk badge and values
- */
-function VolatilityTooltipContent({ data }: { data: VolatilityHoverData }) {
-  const riskLevel = getVolatilityRiskLevel(data.volatility);
-  const riskColors = getVolatilityRiskColor(riskLevel);
-  const dailyVol = calculateDailyVolatility(data.volatility);
-  const isHighRisk = data.volatility >= 25;
-
-  return (
-    <TooltipContentWrapper date={data.date}>
-      <div className="text-sm font-semibold text-white">
-        Volatility overview
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-amber-300">Annualized Vol</span>
-        <span className="text-sm font-semibold text-white">
-          {formatters.percent(data.volatility)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-400">Daily Vol</span>
-        <span className="text-sm font-semibold text-gray-300">
-          {formatters.percent(dailyVol, 2)}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-400">Risk Level</span>
-        <span
-          className={`text-xs font-semibold px-2 py-0.5 rounded ${riskColors.bgColor} ${riskColors.color}`}
-        >
-          {riskLevel}
-        </span>
-      </div>
-      {isHighRisk && (
-        <div className="flex items-center gap-1.5 mt-1 pt-1 border-t border-gray-700">
-          <span className="text-xs text-red-400">
-            ⚠ High volatility warning
-          </span>
-        </div>
-      )}
-    </TooltipContentWrapper>
-  );
-}
-
-/**
- * Render Daily Yield chart tooltip content with protocol breakdown
- */
-function DailyYieldTooltipContent({ data }: { data: DailyYieldHoverData }) {
-  const isPositive = data.totalYield >= 0;
-  const colorClass = isPositive ? "text-emerald-400" : "text-red-400";
-
-  // Sort protocols by yield (descending absolute value)
-  const sortedProtocols =
-    data.protocols
-      ?.slice()
-      .sort(
-        (a, b) => Math.abs(b.yield_return_usd) - Math.abs(a.yield_return_usd)
-      ) ?? [];
-
-  return (
-    <TooltipContentWrapper date={data.date}>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-xs text-gray-300">Daily Yield</span>
-        <span className={`text-sm font-semibold ${colorClass}`}>
-          {isPositive ? "+" : ""}
-          {formatters.currency(data.totalYield)}
-        </span>
-      </div>
-      {data.cumulativeYield !== undefined && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-xs text-purple-300">Cumulative</span>
-          <span className="text-sm font-semibold text-white">
-            {formatters.currency(data.cumulativeYield)}
-          </span>
-        </div>
-      )}
-      {sortedProtocols.length > 0 && (
-        <>
-          <div className="border-t border-gray-700 pt-1.5 mt-1.5">
-            <div className="text-xs text-gray-400 mb-1">
-              By Protocol ({data.protocolCount})
-            </div>
-            <div className="space-y-1 max-h-32 overflow-y-auto">
-              {sortedProtocols.map((protocol, idx) => {
-                const protocolPositive = protocol.yield_return_usd >= 0;
-                const protocolColor = protocolPositive
-                  ? "text-emerald-300"
-                  : "text-red-300";
-                return (
-                  <div
-                    key={`${protocol.protocol_name}-${protocol.chain}-${idx}`}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <span className="text-xs text-gray-300 truncate">
-                      {protocol.protocol_name}
-                      <span className="text-gray-500 ml-1">
-                        ({protocol.chain})
-                      </span>
-                    </span>
-                    <span className={`text-xs font-semibold ${protocolColor}`}>
-                      {protocolPositive ? "+" : ""}
-                      {formatters.currency(protocol.yield_return_usd)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
-    </TooltipContentWrapper>
-  );
-}
-
-/**
- * ChartTooltip component with smart positioning
- */
-export function ChartTooltip({
-  hoveredPoint,
-  chartWidth = 800,
-  chartHeight = 300,
-}: ChartTooltipProps) {
-  const tooltipRef = useRef<HTMLDivElement>(null);
-
-  if (!hoveredPoint) return null;
-
-  const TOOLTIP_MIN_WIDTH = 180;
-  const TOOLTIP_MIN_HEIGHT = 120;
-  const EDGE_PADDING = 12;
-  const VERTICAL_OFFSET = 20;
-
+function calculatePosition(
+  hoveredPoint: ChartHoverState,
+  chartWidth: number,
+  chartHeight: number,
+  tooltipWidth: number,
+  tooltipHeight: number
+) {
   const containerWidth = hoveredPoint.containerWidth ?? chartWidth;
   const containerHeight = hoveredPoint.containerHeight ?? chartHeight;
 
@@ -440,11 +93,7 @@ export function ChartTooltip({
     hoveredPoint.screenY ??
     (chartHeight > 0 ? (hoveredPoint.y / chartHeight) * containerHeight : 0);
 
-  const measuredWidth = tooltipRef.current?.offsetWidth ?? 0;
-  const measuredHeight = tooltipRef.current?.offsetHeight ?? 0;
-  const tooltipWidth = measuredWidth || TOOLTIP_MIN_WIDTH;
-  const tooltipHeight = measuredHeight || TOOLTIP_MIN_HEIGHT;
-
+  // Horizontal positioning
   let left = pointerX;
   let translateX = "-50%";
   const halfWidth = tooltipWidth / 2;
@@ -457,6 +106,7 @@ export function ChartTooltip({
     translateX = "-100%";
   }
 
+  // Vertical positioning
   let top = pointerY - VERTICAL_OFFSET;
   let translateY = "-100%";
 
@@ -465,13 +115,39 @@ export function ChartTooltip({
     translateY = "0";
   }
 
+  // Avoid top legend overlap
   if (CHARTS_WITH_TOP_LEGEND.has(hoveredPoint.chartType)) {
-    const legendGuardTop = 60;
-    if (translateY === "-100%" && top < legendGuardTop + tooltipHeight) {
+    if (translateY === "-100%" && top < LEGEND_GUARD_TOP + tooltipHeight) {
       translateY = "0";
-      top = Math.max(pointerY + VERTICAL_OFFSET, legendGuardTop);
+      top = Math.max(pointerY + VERTICAL_OFFSET, LEGEND_GUARD_TOP);
     }
   }
+
+  return { left, top, translateX, translateY };
+}
+
+/**
+ * ChartTooltip - Smart positioning tooltip for all chart types
+ */
+export function ChartTooltip({
+  hoveredPoint,
+  chartWidth = 800,
+  chartHeight = 300,
+}: ChartTooltipProps) {
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  if (!hoveredPoint) return null;
+
+  const tooltipWidth = tooltipRef.current?.offsetWidth || TOOLTIP_MIN_WIDTH;
+  const tooltipHeight = tooltipRef.current?.offsetHeight || TOOLTIP_MIN_HEIGHT;
+
+  const { left, top, translateX, translateY } = calculatePosition(
+    hoveredPoint,
+    chartWidth,
+    chartHeight,
+    tooltipWidth,
+    tooltipHeight
+  );
 
   return (
     <motion.div
@@ -493,32 +169,7 @@ export function ChartTooltip({
         ref={tooltipRef}
         className="px-3 py-2 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl min-w-[160px]"
       >
-        {hoveredPoint.chartType === "performance" && (
-          <PerformanceTooltipContent
-            data={hoveredPoint as PerformanceHoverData}
-          />
-        )}
-        {hoveredPoint.chartType === "asset-allocation" && (
-          <AllocationTooltipContent
-            data={hoveredPoint as AllocationHoverData}
-          />
-        )}
-        {hoveredPoint.chartType === "drawdown-recovery" && (
-          <DrawdownTooltipContent data={hoveredPoint as DrawdownHoverData} />
-        )}
-        {hoveredPoint.chartType === "sharpe" && (
-          <SharpeTooltipContent data={hoveredPoint as SharpeHoverData} />
-        )}
-        {hoveredPoint.chartType === "volatility" && (
-          <VolatilityTooltipContent
-            data={hoveredPoint as VolatilityHoverData}
-          />
-        )}
-        {hoveredPoint.chartType === "daily-yield" && (
-          <DailyYieldTooltipContent
-            data={hoveredPoint as DailyYieldHoverData}
-          />
-        )}
+        <TooltipContent data={hoveredPoint} />
       </div>
     </motion.div>
   );

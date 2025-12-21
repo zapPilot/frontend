@@ -10,11 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  getRegimeFromSentiment,
-  getRegimeLabelFromSentiment,
-  isSentimentInRegime,
-} from "@/lib/regimeMapper";
+import { getRegimeFromSentiment } from "@/lib/regimeMapper";
 
 describe("regimeMapper", () => {
   describe("getRegimeFromSentiment", () => {
@@ -114,64 +110,6 @@ describe("regimeMapper", () => {
         expect(getRegimeFromSentiment(Infinity)).toBe("n");
         expect(getRegimeFromSentiment(-Infinity)).toBe("n");
       });
-    });
-  });
-
-  describe("getRegimeLabelFromSentiment", () => {
-    it("should return correct labels for each regime", () => {
-      expect(getRegimeLabelFromSentiment(10)).toBe("Extreme Fear");
-      expect(getRegimeLabelFromSentiment(35)).toBe("Fear");
-      expect(getRegimeLabelFromSentiment(50)).toBe("Neutral");
-      expect(getRegimeLabelFromSentiment(65)).toBe("Greed");
-      expect(getRegimeLabelFromSentiment(85)).toBe("Extreme Greed");
-    });
-
-    it("should return Neutral label for out-of-range values", () => {
-      expect(getRegimeLabelFromSentiment(-10)).toBe("Neutral");
-      expect(getRegimeLabelFromSentiment(150)).toBe("Neutral");
-    });
-  });
-
-  describe("isSentimentInRegime", () => {
-    it("should correctly identify sentiment within Extreme Fear regime", () => {
-      expect(isSentimentInRegime(0, "ef")).toBe(true);
-      expect(isSentimentInRegime(25, "ef")).toBe(true);
-      expect(isSentimentInRegime(26, "ef")).toBe(false);
-    });
-
-    it("should correctly identify sentiment within Fear regime", () => {
-      expect(isSentimentInRegime(25, "f")).toBe(false);
-      expect(isSentimentInRegime(26, "f")).toBe(true);
-      expect(isSentimentInRegime(45, "f")).toBe(true);
-      expect(isSentimentInRegime(46, "f")).toBe(false);
-    });
-
-    it("should correctly identify sentiment within Neutral regime", () => {
-      expect(isSentimentInRegime(45, "n")).toBe(false);
-      expect(isSentimentInRegime(46, "n")).toBe(true);
-      expect(isSentimentInRegime(54, "n")).toBe(true);
-      expect(isSentimentInRegime(55, "n")).toBe(false);
-    });
-
-    it("should correctly identify sentiment within Greed regime", () => {
-      expect(isSentimentInRegime(54, "g")).toBe(false);
-      expect(isSentimentInRegime(55, "g")).toBe(true);
-      expect(isSentimentInRegime(75, "g")).toBe(true);
-      expect(isSentimentInRegime(76, "g")).toBe(false);
-    });
-
-    it("should correctly identify sentiment within Extreme Greed regime", () => {
-      expect(isSentimentInRegime(75, "eg")).toBe(false);
-      expect(isSentimentInRegime(76, "eg")).toBe(true);
-      expect(isSentimentInRegime(100, "eg")).toBe(true);
-    });
-
-    it("should handle invalid regime checks correctly", () => {
-      // Out-of-range sentiment defaults to neutral
-      expect(isSentimentInRegime(-10, "ef")).toBe(false);
-      expect(isSentimentInRegime(-10, "n")).toBe(true);
-      expect(isSentimentInRegime(150, "eg")).toBe(false);
-      expect(isSentimentInRegime(150, "n")).toBe(true);
     });
   });
 

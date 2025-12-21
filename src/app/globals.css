@@ -9,12 +9,7 @@
   --purple-primary: #8b5cf6;
   --blue-primary: #3b82f6;
   --gradient-purple-blue: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
-  --gradient-extended: linear-gradient(
-    135deg,
-    #8b5cf6 0%,
-    #ec4899 50%,
-    #3b82f6 100%
-  );
+  /* Removed: --gradient-extended (unused) */
 }
 
 @theme inline {
@@ -59,79 +54,11 @@ body {
   overflow-x: hidden;
 }
 
-.gradient-text {
-  background: var(--gradient-purple-blue);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  padding: 1px;
-  background: var(--gradient-purple-blue);
-  border-radius: inherit;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: xor;
-  -webkit-mask-composite: xor;
-}
+/* Removed unused: .gradient-text, .gradient-border */
 
 .glass-morphism {
   background: rgba(17, 24, 39, 0.5);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite alternate;
-  will-change: box-shadow;
-}
-
-@keyframes glow {
-  from {
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
-  }
-  to {
-    box-shadow:
-      0 0 30px rgba(139, 92, 246, 0.6),
-      0 0 40px rgba(59, 130, 246, 0.3);
-  }
-}
-
-/* GPU acceleration utilities */
-.gpu-accelerated {
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
-}
-
-.hover-transform {
-  will-change: transform;
-  transition: transform 0.2s ease;
-}
-
-.hover-transform:hover {
-  transform: translate3d(0, -1px, 0);
 }

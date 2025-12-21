@@ -243,12 +243,7 @@ function createSourceErrorMessage(source: ErrorSource) {
     });
 }
 
-/**
- * Get error message for backend service
- * Convenience wrapper for getErrorMessage with source set to "backend-service"
- */
-export const getBackendErrorMessage =
-  createSourceErrorMessage("backend-service");
+// Removed: getBackendErrorMessage - unused export (dead code cleanup)
 
 /**
  * Get error message for intent service

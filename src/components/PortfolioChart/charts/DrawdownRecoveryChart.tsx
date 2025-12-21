@@ -3,7 +3,7 @@
 import { memo, useCallback, useMemo } from "react";
 
 import { useChartHover } from "@/hooks/useChartHover";
-import { formatChartDate } from "@/lib/chartFormatters";
+import { formatChartDate } from "@/lib/formatters";
 import type { DrawdownHoverData } from "@/types/ui/chartHover";
 
 import { ChartIndicator, ChartTooltip } from "../../charts";

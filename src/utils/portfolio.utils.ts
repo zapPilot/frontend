@@ -116,26 +116,4 @@ export function categorizePool(poolSymbols: string[]): ApiCategoryKey {
   return "others";
 }
 
-/**
- * Create category summaries from unified API data structure
- * Works for both assets (pie_chart_categories) and debt (category_summary_debt)
- */
-export function createCategoriesFromApiData(
-  categoryData: Record<ApiCategoryKey, number>,
-  totalValue: number
-): CategorySummary[] {
-  if (!categoryData) {
-    return [];
-  }
-
-  const categories = (
-    Object.entries(categoryData) as [ApiCategoryKey, number][]
-  ).map(([categoryId, value]) => ({
-    id: categoryId,
-    value,
-  }));
-
-  return transformPortfolioCategories(categories, {
-    totalValue,
-  }).summaries;
-}
+// Unused export removed: createCategoriesFromApiData

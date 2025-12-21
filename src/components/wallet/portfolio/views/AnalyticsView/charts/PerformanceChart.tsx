@@ -83,7 +83,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
         y,
         date: formatDateLabel(point.date),
         value: point.portfolioValue,
-        benchmark: 0, // BTC benchmark not available yet
+        benchmark: point.btc,
       }),
     });
 

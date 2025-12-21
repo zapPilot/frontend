@@ -1,3 +1,4 @@
+import { clamp } from "@/lib/mathUtils";
 import type {
   AllocationBreakdown,
   TransactionFormData,
@@ -25,7 +26,7 @@ async function simulateBasicTransaction(
   };
 }
 
-export const MOCK_TOKENS: TransactionToken[] = [
+const MOCK_TOKENS: TransactionToken[] = [
   {
     symbol: "USDC",
     name: "USD Coin",
@@ -72,7 +73,7 @@ export const MOCK_TOKENS: TransactionToken[] = [
   },
 ];
 
-export const MOCK_TOKEN_BALANCES: Record<
+const MOCK_TOKEN_BALANCES: Record<
   string,
   { balance: string; usdValue: number }
 > = {
@@ -176,5 +177,4 @@ export function computeProjectedAllocation(
   };
 }
 
-const clamp = (value: number, min: number, max: number) =>
-  Math.min(Math.max(value, min), max);
+// Removed duplicate clamp function - now imported from @/lib/mathUtils

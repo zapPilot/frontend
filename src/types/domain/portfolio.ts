@@ -42,11 +42,4 @@ export interface ChartPeriod {
   days: number;
 }
 
-export interface AnalyticsMetric {
-  label: string;
-  value: string;
-  change: number;
-  trend: "up" | "down" | "neutral";
-  icon: React.ComponentType<{ className?: string }>;
-  description?: string;
-}
+// Removed: AnalyticsMetric interface (unused after getAnalyticsMetrics deletion)

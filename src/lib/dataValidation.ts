@@ -131,7 +131,33 @@ export function asPartialArray<T>(items: T[] | undefined): Partial<T>[] {
 // OPTIONAL TYPE CONVERTERS
 // =============================================================================
 
-// safeString, safeHexishString removed - unused exports
+/**
+ * Safely converts unknown value to string, returning undefined if invalid.
+ * Accepts non-empty strings and preserves whitespace.
+ */
+export function safeString(value?: unknown): string | undefined {
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+/**
+ * Safely converts unknown value to string for hex-like fields.
+ * Accepts non-empty strings, finite numbers, and bigint values.
+ */
+export function safeHexishString(value?: unknown): string | undefined {
+  if (typeof value === "string") {
+    return value.length > 0 ? value : undefined;
+  }
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value.toString() : undefined;
+  }
+
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+
+  return undefined;
+}
 
 /**
  * Safely converts value to number, returning undefined if invalid.
@@ -166,4 +192,22 @@ export function safeNumber(value: unknown): number | undefined {
   return undefined;
 }
 
-// Type guards removed - isObject, isValidNumber, isNonEmptyString, isValidDate were unused
+// =============================================================================
+// TYPE GUARDS
+// =============================================================================
+
+export function isObject(value?: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isValidNumber(value?: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function isNonEmptyString(value?: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+export function isValidDate(value?: unknown): value is Date {
+  return value instanceof Date && !Number.isNaN(value.getTime());
+}

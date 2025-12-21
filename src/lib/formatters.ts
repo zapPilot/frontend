@@ -225,27 +225,7 @@ export function formatVolatility(value: number): string {
   return `${value.toFixed(1)}%`;
 }
 
-// =============================================================================
-// CRYPTOCURRENCY FORMATTING
-// =============================================================================
-
-/**
- * Format token amounts with symbol
- *
- * @param amount - Token amount
- * @param symbol - Token symbol
- * @param decimals - Number of decimal places
- * @returns Formatted token amount with symbol
- */
-export function formatTokenAmount(
-  amount: number,
-  symbol: string,
-  decimals = 4
-): string {
-  if (amount === 0) return `0 ${symbol}`;
-  if (amount < 0.0001) return `< 0.0001 ${symbol}`;
-  return `${amount.toFixed(decimals)} ${symbol}`;
-}
+// Unused export removed: formatTokenAmount
 
 // =============================================================================
 // UTILITY FUNCTIONS
