@@ -32,32 +32,6 @@ export const GRADIENTS = {
   LIGHT: "from-gray-200 to-gray-300",
 } as const;
 
-/**
- * Common flexbox layout patterns
- * Used for consistent spacing and alignment across components
- */
-export const FLEX_PATTERNS = {
-  /** Flex row with centered items, 0.25rem gap */
-  CENTER_GAP_1: "flex items-center gap-1",
-  /** Flex row with centered items, 0.5rem gap */
-  CENTER_GAP_2: "flex items-center gap-2",
-  /** Flex row with centered items, 0.75rem gap */
-  CENTER_GAP_3: "flex items-center gap-3",
-  /** Flex row with centered items, 1rem gap */
-  CENTER_GAP_4: "flex items-center gap-4",
-  /** Flex row with items centered, space-between distribution */
-  BETWEEN: "flex items-center justify-between",
-} as const;
-
-// Custom Scrollable Container Classes
-export const SCROLLABLE_CONTAINER = {
-  BASE: "overflow-y-auto",
-  WITH_FADE:
-    "overflow-y-auto relative before:absolute before:top-0 before:left-0 before:right-0 before:h-4 before:bg-gradient-to-b before:from-gray-900/20 before:to-transparent before:pointer-events-none before:z-10 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-4 after:bg-gradient-to-t after:from-gray-900/20 after:to-transparent after:pointer-events-none after:z-10",
-  PORTFOLIO_DETAILS:
-    "overflow-y-auto max-h-96 scrollbar-thin scrollbar-thumb-purple-500/50 scrollbar-track-transparent hover:scrollbar-thumb-purple-400/70",
-} as const;
-
 // Layering (z-index) tokens for consistent stacking order
 export const Z_INDEX = {
   CONTENT: "z-10",
