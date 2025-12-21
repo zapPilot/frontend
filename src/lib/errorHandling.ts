@@ -51,48 +51,7 @@ export async function wrapServiceCall<T = void>(
   }
 }
 
-/**
- * @deprecated Use `wrapServiceCall` instead. This function is kept for backward compatibility.
- *
- * Wraps an async operation that doesn't return data
- *
- * @param operation - Async function to execute
- * @returns ServiceResult with success flag and optional error message
- */
-export async function wrapServiceCallVoid(
-  operation: () => Promise<void>
-): Promise<ServiceResult> {
-  return wrapServiceCall(operation);
-}
-
-/**
- * Extracts error message from unknown error type
- *
- * @param error - Error of unknown type
- * @returns Error message string
- */
-export function extractErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  if (typeof error === "string") {
-    return error;
-  }
-  return "Unknown error occurred";
-}
-
-/**
- * Creates a standardized error response
- *
- * @param message - Error message
- * @returns ServiceResult with error
- */
-export function createErrorResult(message: string): ServiceResult {
-  return {
-    success: false,
-    error: message,
-  };
-}
+// Unused exports removed: wrapServiceCallVoid, extractErrorMessage, createErrorResult
 
 /**
  * Creates a standardized success response

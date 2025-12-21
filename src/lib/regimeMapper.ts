@@ -61,38 +61,4 @@ export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
   return "eg"; // Extreme Greed: 76-100
 }
 
-/**
- * Returns a human-readable label for a sentiment value.
- *
- * @param sentimentValue - Sentiment score from 0 to 100
- * @returns Human-readable regime label
- *
- * @example
- * ```typescript
- * const label = getRegimeLabelFromSentiment(30); // returns "Fear"
- * ```
- */
-export function getRegimeLabelFromSentiment(sentimentValue: number): string {
-  const regimeId = getRegimeFromSentiment(sentimentValue);
-  return REGIME_LABELS[regimeId];
-}
-
-/**
- * Checks if a sentiment value falls within a specific regime.
- *
- * @param sentimentValue - Sentiment score from 0 to 100
- * @param regimeId - Regime ID to check against
- * @returns True if the sentiment belongs to the specified regime
- *
- * @example
- * ```typescript
- * const isGreed = isSentimentInRegime(60, "g"); // returns true
- * const isFear = isSentimentInRegime(60, "f"); // returns false
- * ```
- */
-export function isSentimentInRegime(
-  sentimentValue: number,
-  regimeId: RegimeId
-): boolean {
-  return getRegimeFromSentiment(sentimentValue) === regimeId;
-}
+// Unused exports removed: getRegimeLabelFromSentiment, isSentimentInRegime

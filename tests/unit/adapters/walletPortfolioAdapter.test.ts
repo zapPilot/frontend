@@ -10,14 +10,13 @@
 
 import { describe, expect, it } from "vitest";
 
+import {
+  createWalletPortfolioErrorState,
+  createWalletPortfolioLoadingState,
+  transformToWalletPortfolioData,
+} from "@/adapters/walletPortfolioDataAdapter";
 import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
-
-import {
-    createWalletPortfolioErrorState,
-    createWalletPortfolioLoadingState,
-    transformToWalletPortfolioData,
-} from "@/adapters/walletPortfolioDataAdapter";
 
 describe("walletPortfolioAdapter", () => {
   describe("transformToWalletPortfolioData", () => {

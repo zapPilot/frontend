@@ -4,26 +4,7 @@
  * Centralized utilities for transforming chart data to reduce duplication.
  */
 
-/**
- * Creates a standardized loading state configuration
- */
-export function createLoadingState(
-  externalLoading: boolean | undefined,
-  hasPreloadedData: boolean,
-  isDashboardLoading: boolean
-): boolean {
-  return Boolean(externalLoading) || (!hasPreloadedData && isDashboardLoading);
-}
-
-/**
- * Creates a standardized error state
- */
-export function createErrorState(
-  normalizedError: string | null | undefined,
-  dashboardError: { message?: string } | null | undefined
-): string | null {
-  return normalizedError ?? dashboardError?.message ?? null;
-}
+// createLoadingState, createErrorState, transformDrawdownPoint removed - unused
 
 /**
  * Point transformation type for volatility data
@@ -53,28 +34,5 @@ export function transformVolatilityPoint(point: {
       point.rolling_volatility_daily_pct !== undefined
         ? point.rolling_volatility_daily_pct
         : null,
-  };
-}
-
-/**
- * Point transformation type for drawdown data
- * Internal type - not part of public API
- */
-interface DrawdownPoint {
-  date: string;
-  drawdown: number;
-}
-
-/**
- * Transforms drawdown data points to standardized format
- */
-export function transformDrawdownPoint(point: {
-  date: string;
-  drawdown?: number;
-  drawdown_pct?: number;
-}): DrawdownPoint {
-  return {
-    date: point.date,
-    drawdown: Number(point.drawdown ?? point.drawdown_pct ?? 0),
   };
 }

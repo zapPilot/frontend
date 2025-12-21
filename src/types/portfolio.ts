@@ -1,4 +1,9 @@
-import { BarChart3, History, LayoutDashboard } from "lucide-react";
+import {
+  BarChart3,
+  History,
+  LayoutDashboard,
+  type LucideIcon,
+} from "lucide-react";
 
 /**
  * Protocol definition for strategy and portfolio visualization
@@ -48,7 +53,7 @@ export type ModalType = "deposit" | "withdraw" | "rebalance";
 /**
  * Tab configuration
  */
-export const TABS: { id: TabType; label: string; icon: any }[] = [
+export const TABS: { id: TabType; label: string; icon: LucideIcon }[] = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "backtesting", label: "Backtesting", icon: History },
