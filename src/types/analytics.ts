@@ -6,8 +6,7 @@
  */
 
 import type {
-  AssetAllocationPoint,
-  PortfolioDataPoint,
+    PortfolioDataPoint
 } from "./domain/portfolio";
 
 /**
@@ -217,72 +216,5 @@ export interface DrawdownRecoverySummary {
   latestRecoveryDurationDays?: number;
 }
 
-/**
- * Override point for drawdown data (API response format)
- */
-export interface DrawdownOverridePoint extends DrawdownRecoveryMetadata {
-  date: string;
-  drawdown_pct?: number;
-  drawdown?: number;
-  portfolio_value?: number;
-}
-
-/**
- * Override point for Sharpe ratio data (API response format)
- */
-export interface SharpeOverridePoint {
-  date: string;
-  rolling_sharpe_ratio?: number;
-}
-
-/**
- * Override point for volatility data (API response format)
- */
-export interface VolatilityOverridePoint {
-  date: string;
-  annualized_volatility_pct?: number;
-  rolling_volatility_daily_pct?: number;
-}
-
-/**
- * Protocol-level daily yield data
- */
-interface DailyYieldProtocol {
-  protocol_name: string;
-  chain: string;
-  yield_return_usd: number;
-}
-
-/**
- * Override point for daily yield data (API response format)
- */
-export interface DailyYieldOverridePoint {
-  date: string;
-  total_yield_usd: number;
-  protocol_count?: number;
-  cumulative_yield_usd?: number;
-  protocols?: DailyYieldProtocol[];
-}
-
-/**
- * Chart component props for PortfolioChart
- * Note: PortfolioChart component is deprecated but types are preserved for reference
- */
-export interface PortfolioChartProps {
-  userId?: string | undefined;
-  portfolioData?: PortfolioDataPoint[];
-  allocationData?: AllocationTimeseriesInputPoint[] | AssetAllocationPoint[];
-  drawdownData?: DrawdownOverridePoint[];
-  sharpeData?: SharpeOverridePoint[];
-  volatilityData?: VolatilityOverridePoint[];
-  dailyYieldData?: DailyYieldOverridePoint[];
-  activeTab?:
-    | "performance"
-    | "asset-allocation"
-    | "drawdown"
-    | "sharpe"
-    | "volatility"
-    | "daily-yield";
-  isLoading?: boolean;
-  error?: Error | string | null;
-}
+// DrawdownOverridePoint, SharpeOverridePoint, VolatilityOverridePoint, 
+// DailyYieldOverridePoint interfaces removed - deprecated with PortfolioChart (2025-12-22)

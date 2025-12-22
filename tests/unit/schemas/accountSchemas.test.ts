@@ -2,26 +2,25 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import {
-  accountTokenSchema,
-  addWalletResponseSchema,
-  connectWalletResponseSchema,
-  healthCheckResponseSchema,
-  messageResponseSchema,
-  planSchema,
-  safeValidateUserProfile,
-  updateEmailResponseSchema,
-  userCryptoWalletSchema,
-  userProfileResponseSchema,
-  userSchema,
-  userSubscriptionSchema,
-  validateAccountTokens,
-  validateAddWalletResponse,
-  validateConnectWalletResponse,
-  validateHealthCheckResponse,
-  validateMessageResponse,
-  validateUpdateEmailResponse,
-  validateUserProfileResponse,
-  validateUserWallets,
+    accountTokenSchema,
+    addWalletResponseSchema,
+    connectWalletResponseSchema,
+    healthCheckResponseSchema,
+    messageResponseSchema,
+    planSchema,
+    updateEmailResponseSchema,
+    userCryptoWalletSchema,
+    userProfileResponseSchema,
+    userSchema,
+    userSubscriptionSchema,
+    validateAccountTokens,
+    validateAddWalletResponse,
+    validateConnectWalletResponse,
+    validateHealthCheckResponse,
+    validateMessageResponse,
+    validateUpdateEmailResponse,
+    validateUserProfileResponse,
+    validateUserWallets
 } from "@/schemas/api/accountSchemas";
 
 describe("accountSchemas", () => {
@@ -561,40 +560,6 @@ describe("accountSchemas", () => {
 
         const result = validateMessageResponse(validData);
         expect(result.message).toBe("Operation completed successfully");
-      });
-    });
-
-    describe("safeValidateUserProfile", () => {
-      it("returns success result for valid input", () => {
-        const validData = {
-          user: {
-            id: "user123",
-            is_active: true,
-            is_subscribed_to_reports: false,
-            created_at: "2025-01-17T00:00:00Z",
-          },
-          wallets: [],
-        };
-
-        const result = safeValidateUserProfile(validData);
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(result.data.user.id).toBe("user123");
-        }
-      });
-
-      it("returns error result for invalid input", () => {
-        const invalidData = {
-          user: {
-            id: "user123",
-          },
-        };
-
-        const result = safeValidateUserProfile(invalidData);
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeInstanceOf(ZodError);
-        }
       });
     });
   });

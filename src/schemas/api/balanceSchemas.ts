@@ -93,45 +93,18 @@ export const walletResponseDataSchema = z
   .catchall(z.unknown()); // Allow additional fields
 
 /**
- * Schema for normalized wallet balances response
- * This matches the WalletTokenBalances interface
- */
-export const walletTokenBalancesSchema = z.object({
-  chainId: z.number(),
-  address: z.string(),
-  fromCache: z.boolean(),
-  fetchedAt: z.string().optional(),
-  tokens: z.array(normalizedTokenBalanceSchema),
-});
-
-/**
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-/** @public */ export type TokenBalanceRaw = z.infer<
-  typeof tokenBalanceRawSchema
->;
-/** @public */ export type NormalizedTokenBalance = z.infer<
-  typeof normalizedTokenBalanceSchema
->;
 /** @public */ export type WalletResponseData = z.infer<
   typeof walletResponseDataSchema
->;
-/** @public */ export type WalletTokenBalances = z.infer<
-  typeof walletTokenBalancesSchema
 >;
 
 /**
  * Validation helper functions
  */
 
-/**
- * Validates raw token balance data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateTokenBalanceRaw(data: unknown): TokenBalanceRaw {
-  return tokenBalanceRawSchema.parse(data);
-}
+// validateTokenBalanceRaw and validateWalletTokenBalances removed (test-only)
 
 /**
  * Validates wallet response data from API
@@ -144,16 +117,6 @@ export function validateWalletResponseData(data: unknown): WalletResponseData {
     return {};
   }
   return walletResponseDataSchema.parse(data);
-}
-
-/**
- * Validates normalized wallet balances
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateWalletTokenBalances(
-  data: unknown
-): WalletTokenBalances {
-  return walletTokenBalancesSchema.parse(data);
 }
 
 /**

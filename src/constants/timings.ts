@@ -28,7 +28,4 @@ export const TIMINGS = {
   REQUEST_TIMEOUT: 30000,
 } as const;
 
-/**
- * Type helper for timing values
- */
-export type TimingKey = keyof typeof TIMINGS;
+// TimingKey type removed - unused (2025-12-22)

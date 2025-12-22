@@ -125,13 +125,4 @@ export function validateRegimeHistoryResponse(
   return regimeHistoryResponseSchema.parse(data);
 }
 
-/**
- * Safe validation that returns result with success/error information
- * Useful for cases where you want to handle validation errors gracefully
- *
- * @param data - Unknown data to validate
- * @returns Safe parse result with success flag and data/error
- */
-export function safeValidateRegimeHistoryResponse(data: unknown) {
-  return regimeHistoryResponseSchema.safeParse(data);
-}
+// safeValidateRegimeHistoryResponse removed (test-only)

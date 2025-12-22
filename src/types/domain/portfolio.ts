@@ -36,10 +36,4 @@ export interface AssetAllocationPoint {
   altcoin: number;
 }
 
-export interface ChartPeriod {
-  label: string;
-  value: string;
-  days: number;
-}
-
-// Removed: AnalyticsMetric interface (unused after getAnalyticsMetrics deletion)
+// ChartPeriod interface removed - unused (2025-12-22)
