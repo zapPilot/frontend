@@ -10,6 +10,7 @@
 import { useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
+import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { AnalyticsView } from "./AnalyticsView";
@@ -38,12 +39,12 @@ export const AnalyticsViewContainer = ({
   const [activeChartTab, setActiveChartTab] = useState<
     "performance" | "drawdown"
   >("performance");
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   // Data fetching with period change detection
-  const { data, isLoading, isMonthlyPnLLoading, error, refetch } = useAnalyticsData(
-    userId,
-    selectedPeriod
-  );
+  const { data, isLoading, isMonthlyPnLLoading, error, refetch } =
+    useAnalyticsData(userId, selectedPeriod);
 
   // Handlers
   const handlePeriodChange = (period: AnalyticsTimePeriod) => {
@@ -52,6 +53,27 @@ export const AnalyticsViewContainer = ({
 
   const handleChartTabChange = (tab: "performance" | "drawdown") => {
     setActiveChartTab(tab);
+  };
+
+  const handleExport = async () => {
+    if (!data) {
+      setExportError("No data available to export");
+      return;
+    }
+
+    setIsExporting(true);
+    setExportError(null);
+
+    try {
+      const result = await exportAnalyticsToCSV(userId, data, selectedPeriod);
+      if (!result.success) {
+        setExportError(result.error || "Export failed");
+      }
+    } catch {
+      setExportError("An unexpected error occurred");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Error state (show error UI only when there's an actual error and no data)
@@ -83,8 +105,11 @@ export const AnalyticsViewContainer = ({
       activeChartTab={activeChartTab}
       onPeriodChange={handlePeriodChange}
       onChartTabChange={handleChartTabChange}
+      onExport={handleExport}
       isLoading={isLoading}
       isMonthlyPnLLoading={isMonthlyPnLLoading}
+      isExporting={isExporting}
+      exportError={exportError}
     />
   );
 };

@@ -12,8 +12,13 @@ import {
 import { GRADIENTS } from "@/constants/design-system";
 
 import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
-import { AllocationBars, type AllocationConstituent } from "./AllocationBars";
-
+import { AllocationBars } from "./AllocationBars";
+import { AllocationChip } from "./AllocationChip";
+import { PortfolioLegend } from "./PortfolioLegend";
+import {
+  buildRealCryptoAssets,
+  buildTargetCryptoAssets,
+} from "./utils/portfolioCompositionHelpers";
 
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
@@ -23,70 +28,20 @@ interface PortfolioCompositionProps {
   onRebalance: () => void;
 }
 
-/**
- * Helper: Build target crypto assets from regime breakdown for empty state
- * Uses BTC for Spot allocation and ETH for LP allocation
- */
-function buildTargetCryptoAssets(regime: Regime): AllocationConstituent[] {
-  const breakdown = getRegimeAllocation(regime);
-  const totalCrypto = breakdown.spot + breakdown.lp;
-
-  if (totalCrypto === 0) {
-    return [];
-  }
-
-  const assets: AllocationConstituent[] = [];
-
-  // Add Spot (BTC) if present
-  if (breakdown.spot > 0) {
-    assets.push({
-      asset: "BTC",
-      symbol: "BTC",
-      name: "Bitcoin (Spot)",
-      value: (breakdown.spot / totalCrypto) * 100,
-      color: ASSET_COLORS.BTC,
-    });
-  }
-
-  // Add LP (ETH) if present
-  if (breakdown.lp > 0) {
-    assets.push({
-      asset: "ETH",
-      symbol: "ETH",
-      name: "Ethereum (LP)",
-      value: (breakdown.lp / totalCrypto) * 100,
-      color: ASSET_COLORS.ETH,
-    });
-  }
-
-  return assets;
-}
-
-/**
- * Helper: Get real crypto assets from portfolio data
- */
-function buildRealCryptoAssets(
-  data: WalletPortfolioDataWithDirection
-): AllocationConstituent[] {
-  return data.currentAllocation.simplifiedCrypto;
-}
-
-interface LegendItemProps {
-  label: string;
-  color: string;
-}
-
-function LegendItem({ label, color }: LegendItemProps) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <div
-        className="w-2 h-2 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      <span>{label}</span>
-    </div>
-  );
-}
+const STYLES = {
+  container:
+    "bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden",
+  header: "flex justify-between items-end mb-8",
+  title: "text-xl font-bold text-white mb-1",
+  subtitle: "text-sm text-gray-400",
+  allocationRow: "flex gap-2 items-center",
+  allocationLabel: "text-sm text-gray-400 mr-2",
+  ghostBarTrack:
+    "relative h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 p-1 flex overflow-hidden",
+  ghostBackground: "absolute inset-0 flex opacity-20 pointer-events-none",
+  ghostBorder: "h-full border-r border-dashed border-white/30",
+  actualBars: "relative w-full h-full flex gap-1 z-10",
+} as const;
 
 export function PortfolioComposition({
   data,
@@ -124,46 +79,22 @@ export function PortfolioComposition({
     ? target.stable
     : data.currentAllocation.stable;
 
-  const renderAllocationChip = (label: string, color: string) => (
-    <div
-      className="px-2 py-1 rounded-full text-xs font-mono font-bold flex items-center gap-1.5"
-      style={{
-        backgroundColor: `${color}20`,
-        color,
-        border: `1px solid ${color}40`,
-      }}
-    >
-      <div
-        className="w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: color }}
-      />
-      {label}
-    </div>
-  );
-
   return (
-    <div
-      className="bg-gray-900/20 border border-gray-800 rounded-2xl p-8 flex flex-col relative overflow-hidden"
-      data-testid="composition-bar"
-    >
-      <div className="flex justify-between items-end mb-8">
+    <div className={STYLES.container} data-testid="composition-bar">
+      <div className={STYLES.header}>
         <div>
-          <h2 className="text-xl font-bold text-white mb-1">
-            Portfolio Composition
-          </h2>
-          <div className="text-sm text-gray-400">
-            <div className="flex gap-2 items-center">
-              <span className="text-sm text-gray-400 mr-2">
-                {allocationLabel}:
-              </span>
-              {renderAllocationChip(
-                `${target.stable}% Stable`,
-                ASSET_COLORS.USDT
-              )}
-              {renderAllocationChip(
-                `${target.crypto}% Crypto`,
-                ASSET_COLORS.BTC
-              )}
+          <h2 className={STYLES.title}>Portfolio Composition</h2>
+          <div className={STYLES.subtitle}>
+            <div className={STYLES.allocationRow}>
+              <span className={STYLES.allocationLabel}>{allocationLabel}:</span>
+              <AllocationChip
+                label={`${target.stable}% Stable`}
+                color={ASSET_COLORS.USDT}
+              />
+              <AllocationChip
+                label={`${target.crypto}% Crypto`}
+                color={ASSET_COLORS.BTC}
+              />
             </div>
           </div>
         </div>
@@ -182,18 +113,18 @@ export function PortfolioComposition({
       </div>
 
       {/* THE GHOST BAR TRACK */}
-      <div className="relative h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 p-1 flex overflow-hidden">
+      <div className={STYLES.ghostBarTrack}>
         {/* GHOST TARGET BACKGROUND - Visual guide only */}
-        <div className="absolute inset-0 flex opacity-20 pointer-events-none">
+        <div className={STYLES.ghostBackground}>
           <div
             style={{ width: `${target.crypto}%` }}
-            className="h-full border-r border-dashed border-white/30"
+            className={STYLES.ghostBorder}
           />
           <div style={{ width: `${target.stable}%` }} className="h-full" />
         </div>
 
         {/* ACTUAL BARS (Foreground) */}
-        <div className="relative w-full h-full flex gap-1 z-10">
+        <div className={STYLES.actualBars}>
           <AllocationBars
             cryptoAssets={cryptoAssets}
             cryptoPercentage={cryptoPercentage}
@@ -203,45 +134,13 @@ export function PortfolioComposition({
       </div>
 
       {/* Legend - Conditional rendering for empty state */}
-      <div className="flex justify-between mt-4 px-1">
-        {isEmptyState ? (
-          <div className="flex gap-4 text-xs text-gray-400">
-            {cryptoAssets.map(asset => (
-              <LegendItem
-                key={asset.symbol}
-                color={asset.color}
-                label={asset.symbol === "BTC" ? "Spot (Target)" : "LP (Target)"}
-              />
-            ))}
-            {stablePercentage > 0 && (
-              <LegendItem
-                color={ASSET_COLORS.USDT}
-                label="Stablecoins (Target)"
-              />
-            )}
-          </div>
-        ) : (
-          <div className="flex gap-4 text-xs text-gray-400">
-            {data.currentAllocation.simplifiedCrypto.map(asset => (
-              <LegendItem
-                key={asset.symbol}
-                color={asset.color}
-                label={asset.name}
-              />
-            ))}
-            <LegendItem color={ASSET_COLORS.USDT} label="Stablecoins" />
-          </div>
-        )}
-        <div className="text-xs font-bold text-orange-400">
-          {isEmptyState ? (
-            <span className="text-purple-400">
-              Optimize: {data.delta.toFixed(0)}%
-            </span>
-          ) : (
-            <>Drift: {data.delta.toFixed(2)}%</>
-          )}
-        </div>
-      </div>
+      <PortfolioLegend
+        isEmptyState={isEmptyState}
+        cryptoAssets={cryptoAssets}
+        stablePercentage={stablePercentage}
+        delta={data.delta}
+        simplifiedCrypto={data.currentAllocation.simplifiedCrypto}
+      />
     </div>
   );
 }

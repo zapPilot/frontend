@@ -27,10 +27,16 @@ interface AnalyticsViewProps {
   onPeriodChange: (period: AnalyticsTimePeriod) => void;
   /** Chart tab change handler */
   onChartTabChange: (tab: "performance" | "drawdown") => void;
+  /** Export handler function */
+  onExport: () => void;
   /** Loading state for individual components */
   isLoading?: boolean;
   /** Independent loading state for monthly PnL (yield/daily endpoint) */
   isMonthlyPnLLoading?: boolean;
+  /** Whether export is in progress */
+  isExporting?: boolean;
+  /** Export error message */
+  exportError?: string | null;
 }
 
 /**
@@ -51,12 +57,19 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   activeChartTab,
   onPeriodChange,
   onChartTabChange,
+  onExport,
   isLoading = false,
   isMonthlyPnLLoading = false,
+  isExporting = false,
+  exportError = null,
 }) => (
   <div className="space-y-6 animate-in fade-in duration-500">
     {/* Header */}
-    <AnalyticsHeader />
+    <AnalyticsHeader
+      onExport={onExport}
+      isExporting={isExporting}
+      exportError={exportError}
+    />
 
     {/* Primary Chart Section with Tabs */}
     <ChartSection
@@ -75,6 +88,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     <AdditionalMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
 
     {/* PnL Heatmap - Uses independent loading state for yield/daily endpoint */}
-    <MonthlyPnLHeatmap monthlyPnL={data.monthlyPnL} isLoading={isMonthlyPnLLoading} />
+    <MonthlyPnLHeatmap
+      monthlyPnL={data.monthlyPnL}
+      isLoading={isMonthlyPnLLoading}
+    />
   </div>
 );
