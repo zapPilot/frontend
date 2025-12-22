@@ -26,21 +26,21 @@ import { getMainnetChains, toThirdWebChains } from "./adapters";
 import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
 export {
-  CHAIN_CONFIG,
-  CHAIN_IDS,
-  CHAIN_NAMES,
-  CHAIN_REGISTRY,
-  MAINNET_CHAINS,
-  SUPPORTED_CHAINS,
+    CHAIN_CONFIG,
+    CHAIN_IDS,
+    CHAIN_NAMES,
+    CHAIN_REGISTRY,
+    MAINNET_CHAINS,
+    SUPPORTED_CHAINS
 } from "./definitions";
 
 // Adapter functions
 export {
-  createChainSelector,
-  getMainnetChains,
-  getSupportedChains,
-  toThirdWebChain,
-  toThirdWebChains,
+    createChainSelector,
+    getMainnetChains,
+    getSupportedChains,
+    toThirdWebChain,
+    toThirdWebChains
 } from "./adapters";
 
 /**
@@ -85,42 +85,4 @@ export const getChainSymbol = (chainId: number): string => {
   return chain ? chain.symbol : "UNKNOWN";
 };
 
-/**
- * Get chain icon URL by ID
- */
-export const getChainIcon = (chainId: number): string | undefined => {
-  const chain = getChainById(chainId);
-  return chain?.iconUrl;
-};
 
-/**
- * Format chain for display in UI components
- */
-export const formatChainForDisplay = (chainId: number) => {
-  const chain = getChainById(chainId);
-  if (!chain) {
-    return { name: `Chain ${chainId}`, symbol: "UNKNOWN", icon: undefined };
-  }
-
-  return {
-    name: chain.name,
-    symbol: chain.symbol,
-    icon: chain.iconUrl,
-  };
-};
-
-/**
- * Get RPC URL for chain
- */
-export const getChainRpcUrl = (chainId: number): string | null => {
-  const chain = getChainById(chainId);
-  return chain ? chain.rpcUrls.default.http[0] || null : null;
-};
-
-/**
- * Get block explorer URL for chain
- */
-export const getChainBlockExplorer = (chainId: number): string | null => {
-  const chain = getChainById(chainId);
-  return chain ? chain.blockExplorers.default.url : null;
-};

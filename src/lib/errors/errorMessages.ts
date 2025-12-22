@@ -202,7 +202,7 @@ function findMessagePattern(
  * // Returns: "Database connection failed"
  * ```
  */
-export function getErrorMessage(context: ErrorMessageContext): string {
+function getErrorMessage(context: ErrorMessageContext): string {
   const { status, message, source = "unknown" } = context;
 
   // 1. Try service-specific pattern matching

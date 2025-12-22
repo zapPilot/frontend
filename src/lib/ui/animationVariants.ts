@@ -123,81 +123,9 @@ export const dropdownMenu: Variants = {
   },
 };
 
-/**
- * Slide in from left
- *
- * Use for:
- * - Sidebars and panels
- * - Off-canvas menus
- * - Horizontal content reveals
- *
- * Default offset: 30px rightward movement
- *
- * @example
- * ```tsx
- * <motion.aside
- *   initial="initial"
- *   animate="animate"
- *   exit="exit"
- *   variants={slideInLeft}
- *   transition={SMOOTH_TRANSITION}
- * >
- *   Sidebar content
- * </motion.aside>
- * ```
- */
-export const slideInLeft: Variants = {
-  initial: {
-    opacity: 0,
-    x: -30,
-  },
-  animate: {
-    opacity: 1,
-    x: 0,
-  },
-  exit: {
-    opacity: 0,
-    x: -30,
-  },
-};
 
-/**
- * Scale up fade in
- *
- * Use for:
- * - Modals and dialogs
- * - Tooltips
- * - Emphasized content
- *
- * Default scale: 0.95 (subtle scale effect)
- *
- * @example
- * ```tsx
- * <motion.dialog
- *   initial="initial"
- *   animate="animate"
- *   exit="exit"
- *   variants={scaleIn}
- *   transition={SPRING_TRANSITION}
- * >
- *   Modal content
- * </motion.dialog>
- * ```
- */
-export const scaleIn: Variants = {
-  initial: {
-    opacity: 0,
-    scale: 0.95,
-  },
-  animate: {
-    opacity: 1,
-    scale: 1,
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.95,
-  },
-};
+
+
 
 // ============================================================================
 // Compound Variants
@@ -209,8 +137,7 @@ export const scaleIn: Variants = {
 export default {
   // Variants
   fadeInUp,
-  slideInLeft,
-  scaleIn,
+  dropdownMenu,
 
   // Transitions (for backward compatibility)
   transitions: {

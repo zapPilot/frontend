@@ -52,21 +52,3 @@ export async function wrapServiceCall<T = void>(
 }
 
 // Unused exports removed: wrapServiceCallVoid, extractErrorMessage, createErrorResult
-
-/**
- * Creates a standardized success response
- *
- * @param data - Optional data to include
- * @returns ServiceResult with success
- */
-export function createSuccessResult<T>(data: T): ServiceResult<T>;
-export function createSuccessResult(): ServiceResult<void>;
-export function createSuccessResult<T>(data?: T): ServiceResult<T | void> {
-  if (data === undefined) {
-    return { success: true };
-  }
-  return {
-    success: true,
-    data,
-  };
-}

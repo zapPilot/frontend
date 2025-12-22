@@ -156,20 +156,3 @@ export const createQueryConfig = (options: QueryConfigOptions = {}) => {
       Math.min(1500 * 2 ** attemptIndex, 30_000),
   };
 };
-
-/**
- * Preset configurations for common use cases
- */
-export const QUERY_PRESETS = {
-  /** Portfolio/balance data */
-  portfolio: createQueryConfig(),
-
-  /** Token prices */
-  prices: createQueryConfig(),
-
-  /** User profile */
-  user: createQueryConfig(),
-
-  /** Strategies/tokens list */
-  metadata: createQueryConfig(),
-} as const;

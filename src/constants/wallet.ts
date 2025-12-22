@@ -20,9 +20,3 @@ export const WALLET_MESSAGES = {
   DISCONNECT_WALLET: "Disconnect Wallet",
   ACCOUNT_DELETED: "Account Deleted",
 } as const;
-
-export const WALLET_ERRORS = {
-  CONNECT_FAILED: "Failed to connect wallet",
-  DISCONNECT_FAILED: "Failed to disconnect wallet",
-  NO_WALLET_AVAILABLE: "No wallet available",
-} as const;

@@ -23,7 +23,7 @@ import { z } from "zod";
  * - g: Greed (56-75)
  * - eg: Extreme Greed (76-100)
  */
-export const regimeIdSchema = z.enum(["ef", "f", "n", "g", "eg"]);
+const regimeIdSchema = z.enum(["ef", "f", "n", "g", "eg"]);
 
 /**
  * Direction type indicates the strategy transition pattern
@@ -32,12 +32,12 @@ export const regimeIdSchema = z.enum(["ef", "f", "n", "g", "eg"]);
  * - fromRight: Transitioning from a more bullish regime (higher fear/greed index)
  * - default: No clear directional context (first load, invalid data, etc.)
  */
-export const directionTypeSchema = z.enum(["fromLeft", "fromRight", "default"]);
+const directionTypeSchema = z.enum(["fromLeft", "fromRight", "default"]);
 
 /**
  * Duration information for time spent in current regime
  */
-export const durationInfoSchema = z
+const durationInfoSchema = z
   .object({
     /** Number of milliseconds in current regime */
     milliseconds: z.number().int().nonnegative(),
@@ -59,7 +59,7 @@ export const durationInfoSchema = z
  *
  * Tracks when a regime change occurred and what the new regime became.
  */
-export const regimeTransitionSchema = z.object({
+const regimeTransitionSchema = z.object({
   /** Unique identifier for this transition record */
   regime_id: z.string(),
   /** The regime that this transition represents */
@@ -76,7 +76,7 @@ export const regimeTransitionSchema = z.object({
  * Provides current regime, previous regime, and transition direction
  * for contextual portfolio strategy visualization.
  */
-export const regimeHistoryResponseSchema = z.object({
+const regimeHistoryResponseSchema = z.object({
   /** Current active regime transition */
   current: regimeTransitionSchema,
   /** Previous regime transition (null if no history available) */

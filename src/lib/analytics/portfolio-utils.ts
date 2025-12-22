@@ -8,12 +8,12 @@
  */
 
 import type {
-  AllocationTimeseriesInputPoint,
-  PortfolioStackedDataPoint,
+    AllocationTimeseriesInputPoint,
+    PortfolioStackedDataPoint,
 } from "@/types/analytics";
 import type {
-  AssetAllocationPoint,
-  PortfolioDataPoint,
+    AssetAllocationPoint,
+    PortfolioDataPoint,
 } from "@/types/domain/portfolio";
 import { ensureNonNegative } from "@/utils/mathUtils";
 
@@ -21,7 +21,7 @@ import { ensureNonNegative } from "@/utils/mathUtils";
  * Default ratio for DeFi vs Wallet when source type data is unavailable
  * 65% DeFi / 35% Wallet is a reasonable default for most DeFi portfolios
  */
-export const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
+const DEFAULT_STACKED_FALLBACK_RATIO = 0.65;
 
 /**
  * Source totals for DeFi and Wallet breakdown
@@ -155,23 +155,7 @@ export function buildStackedPortfolioData(
   });
 }
 
-/**
- * Get the total stacked value for a portfolio data point
- * Prefers stackedTotalValue, falls back to sum of components, then raw value
- *
- * @param point - Stacked portfolio data point
- * @returns Total portfolio value
- */
-export function getStackedTotalValue(
-  point: PortfolioStackedDataPoint
-): number {
-  if (point.stackedTotalValue > 0) {
-    return point.stackedTotalValue;
-  }
 
-  const fallback = point.defiValue + point.walletValue;
-  return fallback > 0 ? fallback : point.value;
-}
 
 /**
  * Build allocation history from timeseries input points

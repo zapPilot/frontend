@@ -1,72 +1,10 @@
-import { PieChartData, PortfolioDataPoint } from "@/types/domain/portfolio";
+import { PieChartData } from "@/types/domain/portfolio";
 
 import {
-  API_CATEGORY_KEY_MAP,
-  type ApiCategoryKey,
-  ASSET_CATEGORIES,
+    API_CATEGORY_KEY_MAP,
+    type ApiCategoryKey,
+    ASSET_CATEGORIES,
 } from "../constants/portfolio";
-import { formatLargeNumber, formatPercentage } from "../utils/formatters";
-
-/**
- * Generate SVG path for line chart from portfolio data points
- * Scales data points to fit within specified dimensions
- */
-export const generateSVGPath = (
-  data: PortfolioDataPoint[],
-  getValue: (point: PortfolioDataPoint) => number,
-  width = 800,
-  height = 300,
-  padding = 20
-): string => {
-  if (!data || data.length === 0) return "";
-
-  const values = data.map(getValue);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const valueRange = Math.max(maxValue - minValue, 1);
-
-  const points = data.map((point, index) => {
-    const x = (index / Math.max(data.length - 1, 1)) * width;
-    const y =
-      height -
-      padding -
-      ((getValue(point) - minValue) / valueRange) * (height - 2 * padding);
-    return { x, y };
-  });
-
-  return points
-    .map((point, index) =>
-      index === 0 ? `M ${point.x} ${point.y}` : `L ${point.x} ${point.y}`
-    )
-    .join(" ");
-};
-
-export const formatAxisLabel = (
-  value: number,
-  type: "currency" | "percentage" = "currency"
-): string => {
-  if (type === "percentage") {
-    return formatPercentage(value, false, 1);
-  }
-
-  // For currency, use formatLargeNumber which already handles K/M/B
-  if (value >= 1000) {
-    return `$${formatLargeNumber(value, 0)}`;
-  }
-
-  return `$${Math.round(value)}`;
-};
-
-export const generateYAxisLabels = (
-  minValue: number,
-  maxValue: number,
-  steps = 5
-): number[] => {
-  const range = maxValue - minValue;
-  const stepSize = range / (steps - 1);
-
-  return Array.from({ length: steps }, (_, i) => maxValue - i * stepSize);
-};
 
 const DEFAULT_PIE_SLICE_COLOR = "#6366F1";
 
