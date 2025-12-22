@@ -40,7 +40,7 @@ export const AnalyticsHeader = ({
       <button
         onClick={onExport}
         disabled={isExporting}
-        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors border border-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-300 bg-gray-800/50 hover:bg-gray-800 rounded-lg transition-colors border border-gray-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isExporting ? (
           <Loader2 className="w-3.5 h-3.5 animate-spin" />

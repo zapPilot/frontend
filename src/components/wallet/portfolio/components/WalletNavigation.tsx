@@ -5,8 +5,10 @@ import { TABS, type TabType } from "@/types/portfolio";
 const STYLES = {
   nav: "h-16 border-b border-gray-800/50 bg-gray-950/80 backdrop-blur-md sticky top-0 z-50 px-4 md:px-8 flex items-center justify-between",
   logo: "w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-purple-500/20",
-  tabContainer: "flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50",
-  tabBase: "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2",
+  tabContainer:
+    "flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50",
+  tabBase:
+    "px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 cursor-pointer",
   tabActive:
     "bg-gradient-to-r from-purple-500/10 to-blue-600/10 border border-purple-500/30 text-white shadow-sm",
   tabInactive:

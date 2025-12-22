@@ -183,24 +183,26 @@ export function WithdrawModal({
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-2 gap-3 z-20">
                 <div className="relative">
-                  <modalDeps.CompactSelectorButton
-                    onClick={() => {
-                      setIsChainDropdownOpen(!isChainDropdownOpen);
-                      setIsAssetDropdownOpen(false);
-                    }}
-                    icon={
-                      <Image
-                        src={modalDeps.getChainLogo(selectedChain?.chainId)}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full bg-black p-1"
-                        alt={selectedChain?.name || "Chain"}
-                      />
-                    }
-                    label="Network"
-                    value={selectedChain?.name || "Select"}
-                    isOpen={isChainDropdownOpen}
-                  />
+                  <div className="cursor-pointer">
+                    <modalDeps.CompactSelectorButton
+                      onClick={() => {
+                        setIsChainDropdownOpen(!isChainDropdownOpen);
+                        setIsAssetDropdownOpen(false);
+                      }}
+                      icon={
+                        <Image
+                          src={modalDeps.getChainLogo(selectedChain?.chainId)}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 rounded-full bg-black p-1"
+                          alt={selectedChain?.name || "Chain"}
+                        />
+                      }
+                      label="Network"
+                      value={selectedChain?.name || "Select"}
+                      isOpen={isChainDropdownOpen}
+                    />
+                  </div>
 
                   <DropdownPanel
                     isOpen={isChainDropdownOpen}
@@ -215,7 +217,7 @@ export function WithdrawModal({
                             setIsChainDropdownOpen(false);
                           }}
                           className={cn(
-                            "w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors",
+                            "w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer",
                             chainId === chain.chainId && "bg-gray-800"
                           )}
                         >
@@ -236,22 +238,24 @@ export function WithdrawModal({
                 </div>
 
                 <div className="relative">
-                  <modalDeps.CompactSelectorButton
-                    onClick={() => {
-                      setIsAssetDropdownOpen(!isAssetDropdownOpen);
-                      setIsChainDropdownOpen(false);
-                    }}
-                    icon={
-                      <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-                        {transactionData.selectedToken?.symbol?.[0] || "?"}
-                      </div>
-                    }
-                    label="Asset"
-                    value={
-                      transactionData.selectedToken?.symbol || "Select Asset"
-                    }
-                    isOpen={isAssetDropdownOpen}
-                  />
+                  <div className="cursor-pointer">
+                    <modalDeps.CompactSelectorButton
+                      onClick={() => {
+                        setIsAssetDropdownOpen(!isAssetDropdownOpen);
+                        setIsChainDropdownOpen(false);
+                      }}
+                      icon={
+                        <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
+                          {transactionData.selectedToken?.symbol?.[0] || "?"}
+                        </div>
+                      }
+                      label="Asset"
+                      value={
+                        transactionData.selectedToken?.symbol || "Select Asset"
+                      }
+                      isOpen={isAssetDropdownOpen}
+                    />
+                  </div>
 
                   <DropdownPanel
                     isOpen={isAssetDropdownOpen}
@@ -289,7 +293,7 @@ export function WithdrawModal({
                                       setIsAssetDropdownOpen(false);
                                     }}
                                     className={cn(
-                                      "w-full flex items-center justify-between p-2.5 rounded-lg transition-colors group",
+                                      "w-full flex items-center justify-between p-2.5 rounded-lg transition-colors group cursor-pointer",
                                       isSelected
                                         ? "bg-indigo-500/10"
                                         : "hover:bg-gray-800"

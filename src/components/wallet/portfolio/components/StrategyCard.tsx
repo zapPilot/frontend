@@ -193,8 +193,8 @@ export function StrategyCard({
             </div>
             <div className="text-2xl font-bold text-white mb-1">
               {currentRegime.label}
-              <span 
-                className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle" 
+              <span
+                className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle"
                 title="Market Sentiment Score"
               >
                 {data.sentimentValue}
@@ -269,7 +269,7 @@ export function StrategyCard({
                           setSelectedRegimeId(regime.id);
                           setSelectedDirection(null);
                         }}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-all w-full text-left ${
+                        className={`flex items-center gap-3 p-2 rounded-lg transition-all w-full text-left cursor-pointer ${
                           isSelected
                             ? STYLES.regimeButtonSelected
                             : STYLES.regimeButtonUnselected

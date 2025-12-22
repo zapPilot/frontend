@@ -69,7 +69,7 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
                 activeChartTab === tab.id
                   ? "bg-gray-700 text-white shadow-sm"
                   : "text-gray-500 hover:text-gray-300"
-              } ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
+              } ${isLoading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
@@ -88,7 +88,7 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
                 selectedPeriod.key === period.key
                   ? "bg-purple-500/20 text-purple-300"
                   : "text-gray-500 hover:text-gray-300"
-              } ${isLoading ? "cursor-not-allowed opacity-50" : ""}`}
+              } ${isLoading ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
             >
               {period.label}
             </button>
