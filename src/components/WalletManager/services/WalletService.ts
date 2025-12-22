@@ -1,8 +1,9 @@
 import {
   type ServiceResult,
   wrapServiceCall,
-} from "../../../lib/errorHandling";
-import { transformWalletData, type WalletData } from "../../../lib/walletUtils";
+} from "@/lib/errors/errorHandling";
+import { transformWalletData, type WalletData } from "@/lib/validation/walletUtils";
+
 import {
   addWalletToBundle,
   getUserWallets,

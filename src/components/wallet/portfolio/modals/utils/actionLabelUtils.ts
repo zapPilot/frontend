@@ -1,3 +1,5 @@
+import { WALLET_LABELS } from "@/constants/wallet";
+
 interface ActionLabelConfig {
   isConnected: boolean;
   isReady: boolean;
@@ -15,7 +17,7 @@ export function resolveActionLabel({
   hasSelection = true,
   selectionLabel = notReadyLabel,
 }: ActionLabelConfig): string {
-  if (!isConnected) return "Connect Wallet";
+  if (!isConnected) return WALLET_LABELS.CONNECT;
   if (!hasSelection) return selectionLabel;
   if (!isReady) return notReadyLabel;
   return readyLabel;

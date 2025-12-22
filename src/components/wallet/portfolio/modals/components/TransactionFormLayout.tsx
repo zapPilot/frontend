@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 
 import { GradientButton } from "@/components/ui";
 import { FOCUS_STYLES } from "@/constants/design-system";
+import { WALLET_LABELS } from "@/constants/wallet";
 import type {
-  AllocationBreakdown,
-  ChainData,
-  TokenBalance,
-  TransactionToken,
+    AllocationBreakdown,
+    ChainData,
+    TokenBalance,
+    TransactionToken,
 } from "@/types/domain/transaction";
 
 import { TransactionModal } from "../TransactionModal";
@@ -77,7 +78,7 @@ export function ActionButtons({
   status,
   submittingLabel,
   readyLabel,
-  connectLabel = "Connect Wallet",
+  connectLabel = WALLET_LABELS.CONNECT,
   onConfirm,
   onCancel,
 }: ActionButtonsProps) {

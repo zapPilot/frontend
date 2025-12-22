@@ -3,7 +3,7 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import { buildAnalyticsQueryString } from "@/lib/queryStringUtils";
+import { buildAnalyticsQueryString } from "@/lib/analytics/queryStringUtils";
 import {
   type DailyYieldReturnsResponse,
   type LandingPageResponse,

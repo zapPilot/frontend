@@ -8,8 +8,8 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { AllocationTimeseriesInputPoint } from "@/components/PortfolioChart/types";
 import { useAllocationData } from "@/hooks/charts/useAllocationData";
+import type { AllocationTimeseriesInputPoint } from "@/types/analytics";
 import type { AssetAllocationPoint } from "@/types/domain/portfolio";
 
 type UseAllocationDataParams = Parameters<typeof useAllocationData>[0];

@@ -20,11 +20,11 @@
 
 import { useMemo } from "react";
 
-import { DRAWDOWN_CONSTANTS } from "@/components/PortfolioChart/chartConstants";
+import { DRAWDOWN_CONSTANTS } from "@/constants/chart-analytics";
 import type {
   DrawdownRecoveryData,
   DrawdownRecoverySummary,
-} from "@/components/PortfolioChart/types";
+} from "@/types/analytics";
 import type { PortfolioDataPoint } from "@/types/domain/portfolio";
 
 // Epsilon for floating point comparison (0.05%)

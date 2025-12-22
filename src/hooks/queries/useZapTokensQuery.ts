@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
+import { queryKeys } from "@/lib/state/queryClient";
 import type { SwapToken } from "@/types/ui/swap";
 
-import { queryKeys } from "../../lib/queryClient";
 import { tokenService } from "../../services";
 import type { WalletTokenBalances } from "../../services/balanceService";
 import { dedupeStrings } from "../../utils/stringUtils";

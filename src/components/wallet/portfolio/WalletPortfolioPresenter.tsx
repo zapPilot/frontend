@@ -4,10 +4,10 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
+import { AnalyticsView } from "@/components/wallet/portfolio/analytics";
 import { PortfolioModals } from "@/components/wallet/portfolio/components/PortfolioModals";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
-import { AnalyticsView } from "@/components/wallet/portfolio/views/AnalyticsView";
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";

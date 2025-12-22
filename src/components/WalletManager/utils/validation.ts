@@ -1,4 +1,4 @@
-import { validateWalletAddress } from "@/lib/walletUtils";
+import { validateWalletAddress } from "@/lib/validation/walletUtils";
 
 import type { NewWallet, ValidationResult } from "../types/wallet.types";
 

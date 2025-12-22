@@ -7,7 +7,8 @@ import { useConnectModal } from "thirdweb/react";
 
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
-import { dropdownMenu } from "@/lib/animationVariants";
+import { WALLET_LABELS } from "@/constants/wallet";
+import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { formatAddress } from "@/utils/formatters";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
@@ -50,7 +51,7 @@ export function WalletMenu({
       chains: DEFAULT_SUPPORTED_CHAINS,
       theme: "dark",
       size: "compact",
-      title: "Connect Wallet",
+      title: WALLET_LABELS.CONNECT,
       showThirdwebBranding: false,
     });
   };
@@ -153,7 +154,7 @@ export function WalletMenu({
         aria-haspopup="menu"
       >
         <Wallet className="w-4 h-4 text-purple-400" />
-        {!isConnected && <span>Connect Wallet</span>}
+        {!isConnected && <span>{WALLET_LABELS.CONNECT}</span>}
         {isConnected && account?.address && (
           <>
             <span className="font-mono">{formatAddress(account.address)}</span>

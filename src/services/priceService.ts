@@ -8,7 +8,8 @@
  * @module services/priceService
  */
 
-import { createServiceCaller } from "../lib/createServiceCaller";
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
+
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeSymbol, normalizeSymbols } from "../utils/stringUtils";

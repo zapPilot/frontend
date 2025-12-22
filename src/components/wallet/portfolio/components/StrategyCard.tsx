@@ -13,7 +13,7 @@ import {
   type StrategyDirection,
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
-import { getRegimeName, getStrategyMeta } from "@/lib/strategySelector";
+import { getRegimeName, getStrategyMeta } from "@/lib/domain/strategySelector";
 
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 

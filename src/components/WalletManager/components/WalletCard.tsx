@@ -3,8 +3,8 @@ import { Zap } from "lucide-react";
 import { memo } from "react";
 
 import { LoadingSpinner } from "@/components/ui";
-import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/animationVariants";
-import type { WalletData } from "@/lib/walletUtils";
+import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/ui/animationVariants";
+import type { WalletData } from "@/lib/validation/walletUtils";
 import { formatAddress } from "@/utils/formatters";
 
 import type { WalletOperations } from "../types/wallet.types";

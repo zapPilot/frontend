@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { toSeconds } from "./src/lib/envUtils";
+import { toSeconds } from "./src/lib/utils-moved/envUtils";
 
 const CACHE_MAX_AGE_SECONDS = toSeconds(
   process.env["NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS"],

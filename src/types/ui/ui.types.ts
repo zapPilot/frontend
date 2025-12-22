@@ -39,27 +39,7 @@ export type ComponentSize = "xs" | "sm" | "md" | "lg" | "xl";
 // VARIANT TYPES
 // =============================================================================
 
-/**
- * Standard button style variants.
- * Defines the visual style and hierarchy of buttons across the application.
- *
- * Visual Hierarchy:
- * - `primary`: Main call-to-action (gradient background, highest emphasis)
- * - `secondary`: Secondary actions (solid background, medium emphasis)
- * - `outline`: Outlined button (transparent with border, lower emphasis)
- * - `ghost`: Minimal button (transparent, no border, lowest emphasis)
- *
- * Used in: LoadingButton, GradientButton, ActionButtons, and 20+ components
- *
- * @example
- * ```tsx
- * <Button variant="primary">Submit Form</Button>
- * <Button variant="secondary">Save Draft</Button>
- * <Button variant="outline">Cancel</Button>
- * <Button variant="ghost">Learn More</Button>
- * ```
- */
-type ButtonVariant = "primary" | "secondary" | "outline" | "ghost";
+// ButtonVariant type removed - unused (2025-12-22)
 
 /**
  * Loading display variants for different UI contexts.
@@ -186,109 +166,6 @@ export interface InteractiveComponentProps extends BaseComponentProps {
   loading?: boolean;
 }
 
-// =============================================================================
-// TYPE GUARDS & VALIDATORS
-// =============================================================================
-
-/**
- * Type guard to check if a value is a valid ComponentSize.
- *
- * @example
- * ```tsx
- * const userInput = 'lg';
- * if (isComponentSize(userInput)) {
- *   // userInput is now typed as ComponentSize
- *   setSize(userInput);
- * }
- * ```
- */
-export function isComponentSize(value: unknown): value is ComponentSize {
-  return (
-    typeof value === "string" && ["xs", "sm", "md", "lg", "xl"].includes(value)
-  );
-}
-
-/**
- * Type guard to check if a value is a valid ButtonVariant.
- *
- * @example
- * ```tsx
- * const variant = props.variant;
- * if (isButtonVariant(variant)) {
- *   // variant is now typed as ButtonVariant
- *   applyVariantStyles(variant);
- * }
- * ```
- */
-export function isButtonVariant(value: unknown): value is ButtonVariant {
-  return (
-    typeof value === "string" &&
-    ["primary", "secondary", "outline", "ghost"].includes(value)
-  );
-}
-
-/**
- * Type guard to check if a value is a valid LoadingVariant.
- *
- * @example
- * ```tsx
- * const loadingType = getLoadingType();
- * if (isLoadingVariant(loadingType)) {
- *   renderLoading(loadingType);
- * }
- * ```
- */
-export function isLoadingVariant(value: unknown): value is LoadingVariant {
-  return (
-    typeof value === "string" &&
-    ["spinner", "card", "skeleton", "inline"].includes(value)
-  );
-}
-
-// =============================================================================
-// CONSTANTS
-// =============================================================================
-
-/**
- * Default size values for different component types.
- * Provides consistent defaults across the application.
- */
-export const DEFAULT_SIZES = {
-  button: "md" as const,
-  input: "md" as const,
-  spinner: "md" as const,
-  icon: "md" as const,
-  card: "md" as const,
-} as const;
-
-/**
- * Default variant values for different component types.
- * Provides consistent defaults across the application.
- */
-export const DEFAULT_VARIANTS = {
-  button: "primary" as const,
-  loading: "spinner" as const,
-  spinner: "default" as const,
-  skeleton: "rectangular" as const,
-} as const;
-
-/**
- * Size order for programmatic size comparisons.
- * Useful for size-based logic (e.g., "is this size larger than that?").
- *
- * @example
- * ```tsx
- * const isLarger = SIZE_ORDER.indexOf('lg') > SIZE_ORDER.indexOf('sm'); // true
- * ```
- */
-export const SIZE_ORDER: readonly ComponentSize[] = [
-  "xs",
-  "sm",
-  "md",
-  "lg",
-  "xl",
-] as const;
-
-// =============================================================================
-// EXPORTS
-// =============================================================================
+// NOTE: Type guards (isComponentSize, isButtonVariant, isLoadingVariant) and
+// constants (DEFAULT_SIZES, DEFAULT_VARIANTS, SIZE_ORDER) removed as dead code
+// (2025-12-22). Add back if needed.

@@ -15,8 +15,8 @@
 
 import { useMemo } from "react";
 
-import type { AllocationTimeseriesInputPoint } from "@/components/PortfolioChart/types";
-import { buildAllocationHistory } from "@/components/PortfolioChart/utils";
+import { buildAllocationHistory } from "@/lib/analytics/portfolio-utils";
+import type { AllocationTimeseriesInputPoint } from "@/types/analytics";
 import type { AssetAllocationPoint } from "@/types/domain/portfolio";
 
 /**

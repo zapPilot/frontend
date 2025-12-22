@@ -117,19 +117,29 @@ interface UseChartHoverReturn {
  * );
  * ```
  */
+/**
+ * Type guard to check if window has native PointerEvent support
+ */
+function hasNativePointerEvent(win: Window): boolean {
+  return "PointerEvent" in win && typeof win.PointerEvent === "function";
+}
+
+/**
+ * Polyfill PointerEvent for browsers that don't support it natively
+ * React's synthetic events handle most cases, but this ensures compatibility
+ */
+if (typeof window !== "undefined" && !hasNativePointerEvent(window)) {
+  class PointerEventPolyfill extends MouseEvent {}
+
+  // Safely extend window with PointerEvent polyfill
+  (window as Window & { PointerEvent: typeof PointerEvent }).PointerEvent =
+    PointerEventPolyfill as typeof PointerEvent;
+}
+
 export function useChartHover<T>(
   data: T[],
   options: UseChartHoverOptions<T>
 ): UseChartHoverReturn {
-  if (
-    typeof window !== "undefined" &&
-    typeof window.PointerEvent === "undefined"
-  ) {
-    class PointerEventPolyfill extends MouseEvent {}
-
-    (window as unknown as { PointerEvent: typeof PointerEvent }).PointerEvent =
-      PointerEventPolyfill as unknown as typeof PointerEvent;
-  }
 
   const {
     chartType,

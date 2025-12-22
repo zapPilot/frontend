@@ -15,8 +15,8 @@
 
 import { useMemo } from "react";
 
-import type { PortfolioStackedDataPoint } from "@/components/PortfolioChart/types";
-import { buildStackedPortfolioData } from "@/components/PortfolioChart/utils";
+import { buildStackedPortfolioData } from "@/lib/analytics/portfolio-utils";
+import type { PortfolioStackedDataPoint } from "@/types/analytics";
 import type { PortfolioDataPoint } from "@/types/domain/portfolio";
 
 /**

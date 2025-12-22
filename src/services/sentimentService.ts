@@ -12,9 +12,9 @@ import {
   type SentimentLabel,
 } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { createServiceCaller } from "@/lib/createServiceCaller";
-import { APIError, httpUtils } from "@/lib/http-utils";
-import { queryKeys } from "@/lib/queryClient";
+import { APIError, httpUtils } from "@/lib/http";
+import { queryKeys } from "@/lib/state/queryClient";
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,

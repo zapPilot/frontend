@@ -1,7 +1,7 @@
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
+import { safeNumber } from "@/lib/validation/dataValidation";
 import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
 
-import { createServiceCaller } from "../lib/createServiceCaller";
-import { safeNumber } from "../lib/dataValidation";
 import { createIntentServiceError } from "../lib/errors";
 import { httpUtils } from "../lib/http-utils";
 import { normalizeAddress, normalizeAddresses } from "../utils/stringUtils";

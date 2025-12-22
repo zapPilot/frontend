@@ -3,10 +3,10 @@
  * Service functions for fetching supported zap tokens from backend API
  */
 
-import { httpUtils } from "@/lib/http-utils";
+import { httpUtils } from "@/lib/http";
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import { SwapToken } from "@/types/ui/swap";
 
-import { createServiceCaller } from "../lib/createServiceCaller";
 import { createIntentServiceError } from "../lib/errors";
 
 // Get configured client

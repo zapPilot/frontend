@@ -3,6 +3,7 @@
 import { ConnectButton } from "thirdweb/react";
 
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
+import { WALLET_LABELS } from "@/constants/wallet";
 import { QueryClientBoundary } from "@/utils/QueryClientBoundary";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
@@ -19,7 +20,7 @@ export function ConnectWalletButton({
     return (
       <div className={className}>
         <button className="w-full px-4 py-3 rounded-xl bg-purple-600 text-white font-semibold">
-          Connect Wallet
+          {WALLET_LABELS.CONNECT}
         </button>
       </div>
     );
@@ -40,7 +41,7 @@ export function ConnectWalletButton({
             showThirdwebBranding: false,
           }}
           connectButton={{
-            label: "Connect Wallet",
+            label: WALLET_LABELS.CONNECT,
             style: {
               width: "100%",
               padding: "12px 16px",

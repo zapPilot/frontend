@@ -6,11 +6,11 @@ import Image from "next/image";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
-import { dropdownMenu } from "@/lib/animationVariants";
 import {
   type AssetCategoryKey,
   getCategoryForToken,
-} from "@/lib/assetCategoryUtils";
+} from "@/lib/domain/assetCategoryUtils";
+import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
 

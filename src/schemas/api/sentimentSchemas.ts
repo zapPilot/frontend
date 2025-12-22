@@ -53,10 +53,4 @@ export function validateSentimentApiResponse(
   return sentimentApiResponseSchema.parse(data);
 }
 
-/**
- * Safe validation that returns result with success/error information
- * Useful for cases where you want to handle validation errors gracefully
- */
-export function safeValidateSentimentApiResponse(data: unknown) {
-  return sentimentApiResponseSchema.safeParse(data);
-}
+// safeValidateSentimentApiResponse removed - only used in tests (2025-12-22)

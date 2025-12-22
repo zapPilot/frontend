@@ -13,7 +13,7 @@ import {
   calculateKeyMetrics,
   transformToDrawdownChart,
   transformToPerformanceChart,
-} from "@/lib/analyticsTransformers";
+} from "@/lib/analytics/transformers";
 import { getDailyYieldReturns } from "@/services/analyticsService";
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 

@@ -232,7 +232,7 @@ export const regimes: Regime[] = [
   },
 ];
 
-export const regimeOrder: RegimeId[] = ["ef", "f", "n", "g", "eg"];
+// regimeOrder removed - unused (2025-12-22)
 
 /**
  * Get regime configuration by ID

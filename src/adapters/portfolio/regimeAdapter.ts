@@ -3,7 +3,7 @@ import {
     type RegimeId,
     regimes,
 } from "@/components/wallet/regime/regimeData";
-import { getActiveStrategy } from "@/lib/strategySelector";
+import { getActiveStrategy } from "@/lib/domain/strategySelector";
 import type {
     DirectionType,
     DurationInfo,

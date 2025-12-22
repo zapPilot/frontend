@@ -143,21 +143,7 @@ export const transformCategory = (
       : transformPoolsToProtocols(poolDetails, strategy.id),
 });
 
-/**
- * Transform complete API response to AssetCategory array
- */
-export const transformStrategiesResponse = (
-  apiResponse: StrategiesApiResponse,
-  poolDetails: PoolDetail[] = []
-): AssetCategory[] => {
-  if (!apiResponse.success || !apiResponse.strategies) {
-    throw new Error("Invalid strategies API response");
-  }
-
-  return apiResponse.strategies.map(strategy =>
-    transformCategory(strategy, poolDetails)
-  );
-};
+// transformStrategiesResponse removed - unused (2025-12-22)
 
 /**
  * Get default color for category based on name/type
@@ -191,21 +177,4 @@ export const getDefaultCategoryColor = (categoryName: string): string => {
   );
 };
 
-/**
- * Error types for strategies API
- */
-export class StrategiesApiError extends Error {
-  constructor(
-    message: string,
-    public code?: string,
-    public status?: number
-  ) {
-    super(message);
-    this.name = "StrategiesApiError";
-  }
-
-  // Backward compatibility - deprecated
-  get statusCode() {
-    return this.status;
-  }
-}
+// StrategiesApiError class removed - unused (2025-12-22)

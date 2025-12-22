@@ -1,12 +1,16 @@
 /**
  * Shared HTTP utilities for making API requests
  *
+ * @deprecated This file has been split into modular files in @/lib/http/
+ * New code should import from '@/lib/http' instead.
+ * This file will be removed in a future update after all imports are migrated.
+ *
  * This module provides functional HTTP utilities extracted from APIClient
  * for direct use in service functions without the class-based wrapper.
  */
 
 import { CACHE_WINDOW } from "@/config/cacheWindow";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient } from "@/lib/state/queryClient";
 
 // Internal types for HTTP utilities
 type HTTPMethod = "GET" | "POST" | "PUT" | "DELETE" | "PATCH";

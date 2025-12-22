@@ -1,4 +1,4 @@
-import { toSeconds } from "@/lib/envUtils";
+import { toSeconds } from "@/lib/utils-moved/envUtils";
 
 const DEFAULT_MAX_AGE_SECONDS = toSeconds(
   process.env["NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS"],

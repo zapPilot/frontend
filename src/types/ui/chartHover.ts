@@ -174,8 +174,4 @@ export function isVolatilityHover(
   return state?.chartType === "volatility";
 }
 
-export function isDailyYieldHover(
-  state: ChartHoverState | null
-): state is DailyYieldHoverData {
-  return state?.chartType === "daily-yield";
-}
+// isDailyYieldHover removed - unused (2025-12-22)

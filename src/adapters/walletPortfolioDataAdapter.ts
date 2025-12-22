@@ -11,20 +11,21 @@
  */
 
 import {
-  calculateAllocation,
-  calculateDelta,
+    type AllocationConstituent,
+    calculateAllocation,
+    calculateDelta,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
-import { getRegimeFromSentiment } from "@/lib/regimeMapper";
+import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -34,16 +35,9 @@ import type { MarketSentimentData } from "@/services/sentimentService";
 // (Ideally components should import from @/constants/assets directly, but this keeps backwards compat if needed)
 export { ASSET_COLORS } from "@/constants/assets";
 
-/**
- * Constituent asset type for allocation breakdown
- */
-export interface AllocationConstituent {
-  asset: string;
-  symbol: string;
-  name: string;
-  value: number;
-  color: string;
-}
+// Re-export AllocationConstituent from canonical source (allocationAdapter)
+// This eliminates the duplicate interface definition
+export type { AllocationConstituent } from "@/adapters/portfolio/allocationAdapter";
 
 /**
  * Wallet Portfolio Data Structure

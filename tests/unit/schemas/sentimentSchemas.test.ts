@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import {
-  safeValidateSentimentApiResponse,
-  sentimentApiResponseSchema,
-  validateSentimentApiResponse,
+    sentimentApiResponseSchema,
+    validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
 
 describe("sentimentSchemas", () => {
@@ -257,44 +256,5 @@ describe("sentimentSchemas", () => {
     });
   });
 
-  describe("safeValidateSentimentApiResponse", () => {
-    it("returns success result for valid data", () => {
-      const validData = {
-        value: 26,
-        status: "Fear",
-        timestamp: "2025-12-04T00:00:00Z",
-        source: "alternative.me",
-        cached: true,
-      };
-
-      const result = safeValidateSentimentApiResponse(validData);
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.value).toBe(26);
-        expect(result.data.status).toBe("Fear");
-      }
-    });
-
-    it("returns error result for invalid data", () => {
-      const invalidData = {
-        value: 101,
-        status: "Fear",
-      };
-
-      const result = safeValidateSentimentApiResponse(invalidData);
-      expect(result.success).toBe(false);
-    });
-
-    it("returns error result for value out of range", () => {
-      const invalidData = {
-        value: -5,
-        status: "Fear",
-        timestamp: "2025-12-04T00:00:00Z",
-        source: "alternative.me",
-      };
-
-      const result = safeValidateSentimentApiResponse(invalidData);
-      expect(result.success).toBe(false);
-    });
-  });
+  // safeValidateSentimentApiResponse tests removed - function removed (2025-12-22)
 });

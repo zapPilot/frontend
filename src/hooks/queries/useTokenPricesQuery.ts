@@ -11,7 +11,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { queryKeys } from "../../lib/queryClient";
+import { queryKeys } from "@/lib/state/queryClient";
+
 import {
   getTokenPrices,
   type TokenPriceData,
