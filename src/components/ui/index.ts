@@ -3,31 +3,29 @@ export { AssetBadge } from "./AssetBadge";
 export { AsyncActionButton } from "./AsyncActionButton";
 export { BaseCard } from "./BaseCard";
 export { GradientButton } from "./GradientButton";
-export { TableHeaderCell } from "./TableHeaderCell";
 
 // Modal system
 export {
-    Modal,
-    ModalButtonGroup,
-    ModalContent,
-    ModalFooter,
-    ModalHeader,
-    ModalInput
+  Modal,
+  ModalButtonGroup,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalInput,
 } from "./modal";
 
 // Loading system - comprehensive re-exports
 export {
-    AssetCategorySkeleton,
-    BalanceSkeleton,
-    ButtonSkeleton,
-    CardSkeleton,
-    Skeleton as LoadingSkeleton,
-    Spinner as LoadingSpinner,
-    LoadingState,
-    LoadingWrapper,
-    PieChartSkeleton,
-    Skeleton,
-    Spinner,
-    TokenListSkeleton
+  AssetCategorySkeleton,
+  BalanceSkeleton,
+  ButtonSkeleton,
+  CardSkeleton,
+  Skeleton as LoadingSkeleton,
+  Spinner as LoadingSpinner,
+  LoadingState,
+  LoadingWrapper,
+  PieChartSkeleton,
+  Skeleton,
+  Spinner,
+  TokenListSkeleton,
 } from "./LoadingSystem";
-

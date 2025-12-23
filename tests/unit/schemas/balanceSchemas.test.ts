@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import {
-    normalizedTokenBalanceSchema,
-    safeValidateWalletResponse,
-    tokenBalanceRawSchema,
-    validateWalletResponseData,
-    walletResponseDataSchema
+  normalizedTokenBalanceSchema,
+  safeValidateWalletResponse,
+  tokenBalanceRawSchema,
+  validateWalletResponseData,
+  walletResponseDataSchema,
 } from "@/schemas/api/balanceSchemas";
 
 describe("balanceSchemas", () => {
@@ -243,7 +243,7 @@ describe("balanceSchemas", () => {
     });
   });
 
-// walletTokenBalancesSchema tests removed (schema deleted)
+  // walletTokenBalancesSchema tests removed (schema deleted)
 
   describe("validation helper functions", () => {
     describe("validateWalletResponseData", () => {
@@ -263,7 +263,7 @@ describe("balanceSchemas", () => {
       });
 
       it("returns empty object for undefined input", () => {
-        const result = validateWalletResponseData(undefined);
+        const result = validateWalletResponseData();
         expect(result).toEqual({});
       });
 

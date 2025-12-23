@@ -7,7 +7,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { buildAnalyticsQueryString } from "../../../src/lib/queryStringUtils";
+import { buildAnalyticsQueryString } from "@/lib/analytics/queryStringUtils";
+
 import type { DashboardWindowParams } from "../../../src/services/analyticsService";
 
 describe("queryStringUtils", () => {

@@ -1,3 +1,28 @@
+/**
+ * useBundlePage - Integration Tests with React
+ *
+ * This file contains comprehensive integration tests for the useBundlePage hook
+ * with full React rendering, component interaction, and mocked dependencies.
+ * These tests verify the hook's behavior with React state, effects, navigation,
+ * and user interactions.
+ *
+ * For fast unit tests of the isolated pure helper functions without React
+ * overhead, see useBundlePage.test.ts
+ *
+ * Test Coverage:
+ * - Switch prompt banner visibility and behavior
+ * - Email subscription banner flow (show/dismiss/subscribe)
+ * - Navigation redirects (disconnected user, own bundle)
+ * - Bundle not found error handling
+ * - Loading state behavior
+ * - User interaction flows (clicks, state updates)
+ *
+ * Mocked Dependencies:
+ * - next/navigation (router.replace)
+ * - UserContext (useUser hook)
+ * - bundleService (getBundleUser, isOwnBundle, generateBundleUrl)
+ */
+
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import React from "react";

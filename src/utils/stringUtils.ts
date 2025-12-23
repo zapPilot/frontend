@@ -211,25 +211,4 @@ export function normalizeSymbols(symbols: string[]): string[] {
   });
 }
 
-/**
- * Remove duplicate strings from an array
- *
- * Simple deduplication utility that preserves the order of first occurrence.
- * Case-sensitive by default - normalize case first if needed.
- *
- * @example
- * dedupeStrings(['a', 'b', 'a', 'c'])
- * // => ['a', 'b', 'c']
- *
- * @example
- * dedupeStrings(['ETH', 'eth', 'USDC'])
- * // => ['ETH', 'eth', 'USDC'] (case-sensitive)
- *
- * @param strings - Array of strings to deduplicate
- * @returns Array with duplicates removed
- */
-export function dedupeStrings(strings: string[]): string[] {
-  return Array.from(new Set(strings));
-}
-
-// Unused removed: isValidString, normalizeForComparison, normalizeProtocolName
+// Unused removed: isValidString, normalizeForComparison, normalizeProtocolName, dedupeStrings

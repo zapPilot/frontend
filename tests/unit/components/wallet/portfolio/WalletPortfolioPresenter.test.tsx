@@ -52,7 +52,7 @@ vi.mock("framer-motion", () => ({
 }));
 
 // Mock child components to simplify testing
-vi.mock("@/components/wallet/portfolio/views/AnalyticsView", () => ({
+vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics View</div>,
 }));
 

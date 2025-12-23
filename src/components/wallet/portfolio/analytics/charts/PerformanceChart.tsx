@@ -23,6 +23,7 @@ interface PerformanceChartDataPoint {
   btc: number;
   date: string;
   portfolioValue: number;
+  btcBenchmarkValue: number; // Actual BTC equivalent value in USD
 }
 
 /**
@@ -83,7 +84,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
         y,
         date: formatChartDate(point.date),
         value: point.portfolioValue,
-        benchmark: point.btc,
+        benchmark: point.btcBenchmarkValue, // Use actual USD value for tooltip
       }),
     });
 

@@ -4,6 +4,7 @@
  */
 
 import { buildAnalyticsQueryString } from "@/lib/analytics/queryStringUtils";
+import { httpUtils } from "@/lib/http";
 import {
   type DailyYieldReturnsResponse,
   type LandingPageResponse,
@@ -18,8 +19,6 @@ import {
   type YieldWindowSummary,
 } from "@/schemas/api/analyticsSchemas";
 import { ActualRiskSummaryResponse } from "@/types/domain/risk";
-
-import { httpUtils } from "../lib/http-utils";
 
 // Note: Types are imported and re-exported above at line 36
 

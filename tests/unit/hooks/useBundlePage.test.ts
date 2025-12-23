@@ -1,3 +1,20 @@
+/**
+ * useBundlePage - Unit Tests for Pure Functions
+ *
+ * This file contains fast unit tests for the isolated helper functions
+ * exported by the useBundlePage hook. These are pure functions that can
+ * be tested without React rendering or component mocking.
+ *
+ * For integration tests that verify the hook's behavior with React state,
+ * effects, and component rendering, see useBundlePage.test.tsx
+ *
+ * Test Coverage:
+ * - computeIsDifferentUser: User identity comparison logic
+ * - computeShowQuickSwitch: Quick switch banner visibility rules
+ * - computeShowEmailBanner: Email prompt banner display logic
+ * - computeRedirectUrl: URL formatting for redirects
+ */
+
 import { describe, expect, it } from "vitest";
 
 import {

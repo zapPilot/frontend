@@ -10,7 +10,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { getRegimeFromSentiment } from "@/lib/regimeMapper";
+import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 
 describe("regimeMapper", () => {
   describe("getRegimeFromSentiment", () => {

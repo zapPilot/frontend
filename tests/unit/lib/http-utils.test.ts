@@ -22,7 +22,7 @@ import {
   httpUtils,
   NetworkError,
   TimeoutError,
-} from "../../../src/lib/http-utils";
+} from "@/lib/http";
 
 // Preserve original fetch so we can restore after the suite runs
 const originalFetch = global.fetch;

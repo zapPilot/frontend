@@ -21,7 +21,7 @@ import { z } from "zod";
  * - 56-75: Greed
  * - 76-100: Extreme Greed
  */
-export const sentimentApiResponseSchema = z.object({
+const sentimentApiResponseSchema = z.object({
   value: z.number().int().min(0).max(100),
   status: z.string(),
   timestamp: z.string(),

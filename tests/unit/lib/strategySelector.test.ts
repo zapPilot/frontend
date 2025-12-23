@@ -8,15 +8,15 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    computeStrategyDirection,
-    getActiveStrategy,
-    getRegimeName,
-    getStrategyMeta,
-    REGIME_ORDER,
-} from "@/lib/strategySelector";
+  computeStrategyDirection,
+  getActiveStrategy,
+  getRegimeName,
+  getStrategyMeta,
+  REGIME_ORDER,
+} from "@/lib/domain/strategySelector";
 import type {
-    DirectionType,
-    RegimeId,
+  DirectionType,
+  RegimeId,
 } from "@/schemas/api/regimeHistorySchemas";
 
 describe("strategySelector", () => {

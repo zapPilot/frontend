@@ -9,8 +9,11 @@ import {
   parseCacheControlForHint,
   syncQueryCacheDefaultsFromHint,
 } from "./cache-control";
-import type { HttpRequestConfig, ResponseTransformer } from "./config";
-import { HTTP_CONFIG } from "./config";
+import {
+  HTTP_CONFIG,
+  type HttpRequestConfig,
+  type ResponseTransformer,
+} from "./config";
 import {
   APIError,
   NetworkError,
@@ -18,11 +21,7 @@ import {
   TimeoutError,
   toError,
 } from "./errors";
-import {
-  calculateBackoffDelay,
-  delay,
-  shouldAttemptRetry,
-} from "./retry";
+import { calculateBackoffDelay, delay, shouldAttemptRetry } from "./retry";
 
 async function executeRequest<T>(
   url: string,

@@ -8,21 +8,44 @@ import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";
 
 export function PerformanceTooltip({ data }: { data: PerformanceHoverData }) {
+  // Calculate relative performance if both values exist
+  const showRelativePerf = data.value && data.benchmark;
+  const relativePerf = showRelativePerf
+    ? ((data.value - data.benchmark) / data.benchmark) * 100
+    : null;
+
   return (
     <TooltipWrapper date={data.date} spacing="tight">
+      {/* Primary Metric */}
       <TooltipRow
-        label="Portfolio"
+        label="Portfolio Value"
         labelColor="text-purple-300"
         value={data.value}
+        valueColor="text-white"
         format="currencyPrecise"
       />
-      <TooltipRow
-        label="BTC"
-        labelColor="text-orange-300"
-        value={data.benchmark}
-        valueColor="text-gray-200"
-        format="percent"
-      />
+
+      {/* Benchmark Section with visual separator */}
+      <div className="border-t border-gray-700/50 mt-1.5 pt-1.5">
+        <TooltipRow
+          label="BTC Benchmark"
+          labelColor="text-orange-300"
+          value={data.benchmark}
+          valueColor="text-orange-200"
+          format="currencyPrecise"
+        />
+
+        {relativePerf !== null && (
+          <TooltipRow
+            label="Relative"
+            labelColor="text-gray-400"
+            value={relativePerf}
+            valueColor={relativePerf >= 0 ? "text-green-400" : "text-red-400"}
+            format="percent"
+            prefix={relativePerf >= 0 ? "+" : ""}
+          />
+        )}
+      </div>
     </TooltipWrapper>
   );
 }

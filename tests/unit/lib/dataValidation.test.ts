@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { safeNumber } from "@/lib/dataValidation";
+import { safeNumber } from "@/lib/validation/dataValidation";
 
 describe("dataValidation", () => {
   describe("safeNumber", () => {

@@ -14,23 +14,6 @@ import type { Transition, Variants } from "framer-motion";
 // Transition Presets
 // ============================================================================
 
-// Internal-only constants (not exported)
-const SPRING_TRANSITION: Transition = {
-  type: "spring",
-  stiffness: 260,
-  damping: 20,
-};
-
-const QUICK_TRANSITION: Transition = {
-  duration: 0.2,
-  ease: "easeOut",
-};
-
-const STAGGER_TRANSITION: Transition = {
-  staggerChildren: 0.1,
-  delayChildren: 0.05,
-};
-
 // SMOOTH_TRANSITION is still used in components, so it remains exported
 /**
  * Smooth easeInOut transition
@@ -123,10 +106,6 @@ export const dropdownMenu: Variants = {
   },
 };
 
-
-
-
-
 // ============================================================================
 // Compound Variants
 // ============================================================================
@@ -134,16 +113,3 @@ export const dropdownMenu: Variants = {
 /**
  * Default export containing all variants and transitions
  */
-export default {
-  // Variants
-  fadeInUp,
-  dropdownMenu,
-
-  // Transitions (for backward compatibility)
-  transitions: {
-    spring: SPRING_TRANSITION,
-    smooth: SMOOTH_TRANSITION,
-    quick: QUICK_TRANSITION,
-    stagger: STAGGER_TRANSITION,
-  },
-} as const;

@@ -18,6 +18,7 @@ import { getDailyYieldReturns } from "@/services/analyticsService";
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
 
 import { usePortfolioDashboard } from "../usePortfolioDashboard";
+import { useBtcPriceQuery } from "./useBtcPriceQuery";
 
 /**
  * Hook return type
@@ -94,7 +95,13 @@ export function useAnalyticsData(
   );
 
   // ============================================================================
-  // SECONDARY QUERY: Monthly PnL (conditional on dashboard success)
+  // SECONDARY QUERY: BTC Price History (for benchmark)
+  // ============================================================================
+
+  const btcPriceQuery = useBtcPriceQuery(timePeriod.days);
+
+  // ============================================================================
+  // TERTIARY QUERY: Monthly PnL (conditional on dashboard success)
   // ============================================================================
 
   const monthlyPnLQuery = useQuery({
@@ -124,26 +131,29 @@ export function useAnalyticsData(
     // Get daily values for monthly PnL calculation
     const dailyValues = dashboardQuery.data.trends?.daily_values ?? [];
 
+    // Get BTC price snapshots (gracefully handle missing data)
+    const btcSnapshots = btcPriceQuery.data?.snapshots;
+
     return {
-      performanceChart: transformToPerformanceChart(dashboardQuery.data),
+      performanceChart: transformToPerformanceChart(
+        dashboardQuery.data,
+        btcSnapshots
+      ),
       drawdownChart: transformToDrawdownChart(dashboardQuery.data),
       keyMetrics: calculateKeyMetrics(dashboardQuery.data),
       monthlyPnL: monthlyPnLQuery.data
         ? aggregateMonthlyPnL(monthlyPnLQuery.data, dailyValues)
         : [], // Graceful degradation if PnL query fails
     };
-  }, [dashboardQuery.data, monthlyPnLQuery.data]);
+  }, [dashboardQuery.data, monthlyPnLQuery.data, btcPriceQuery.data]);
 
   // ============================================================================
   // ERROR HANDLING
   // ============================================================================
 
-  // Prioritize dashboard error (critical), fallback to monthly PnL error
+  // Prioritize dashboard error (critical), fallback to BTC or monthly PnL errors
+  // Note: BTC price failure shouldn't block the dashboard (graceful degradation)
   const error = dashboardQuery.error ?? monthlyPnLQuery.error ?? null;
-
-  // ============================================================================
-  // REFETCH HANDLER
-  // ============================================================================
 
   // ============================================================================
   // REFETCH HANDLER
@@ -151,6 +161,7 @@ export function useAnalyticsData(
 
   const refetch = () => {
     void dashboardQuery.refetch();
+    void btcPriceQuery.refetch();
     if (dashboardQuery.data) {
       void monthlyPnLQuery.refetch();
     }
@@ -163,7 +174,8 @@ export function useAnalyticsData(
     // Fixed: true when loading the first time or fetching fresh data
     isLoading: dashboardQuery.isLoading || dashboardQuery.isFetching,
     // Independent loading state for monthly PnL (yield/daily endpoint)
-    isMonthlyPnLLoading: monthlyPnLQuery.isLoading || monthlyPnLQuery.isFetching,
+    isMonthlyPnLLoading:
+      monthlyPnLQuery.isLoading || monthlyPnLQuery.isFetching,
     error: dashboardQuery.data ? error : null,
     refetch,
   };

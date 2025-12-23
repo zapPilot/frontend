@@ -3,9 +3,12 @@
  * Pre-configured HTTP clients for each API service
  */
 
-import type { HttpRequestConfig, ResponseTransformer } from "./config";
-import { API_ENDPOINTS } from "./config";
-import { httpDelete,httpGet, httpPatch, httpPost, httpPut } from "./methods";
+import {
+  API_ENDPOINTS,
+  type HttpRequestConfig,
+  type ResponseTransformer,
+} from "./config";
+import { httpDelete, httpGet, httpPatch, httpPost, httpPut } from "./methods";
 
 type GetConfig = Omit<HttpRequestConfig, "method" | "body">;
 type MutateConfig = Omit<HttpRequestConfig, "method">;
@@ -59,7 +62,6 @@ function createServiceHttpClient(baseURL: string) {
       config?: GetConfig,
       transformer?: ResponseTransformer<T>
     ) => httpDelete(endpoint, withBase(config), transformer),
-
   } as const;
 }
 

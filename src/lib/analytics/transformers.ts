@@ -9,6 +9,7 @@ import type {
   DailyYieldReturnsResponse,
   UnifiedDashboardResponse,
 } from "@/services/analyticsService";
+import type { BtcPriceSnapshot } from "@/services/btcPriceService";
 import type {
   DrawdownChartData,
   KeyMetrics,
@@ -30,13 +31,15 @@ const buildDateRange = (values: { date?: string }[]) => ({
  * Transform dashboard trends to Performance Chart SVG points
  *
  * Normalizes portfolio values to 0-100 SVG scale (inverted Y-axis).
- * Adds BTC benchmark line for comparison.
+ * Adds BTC benchmark line for comparison using real price data.
  *
  * @param dashboard - Unified dashboard response with trends data
+ * @param btcPriceData - Real BTC price snapshots from API (optional)
  * @returns Performance chart data ready for SVG rendering
  */
 export function transformToPerformanceChart(
-  dashboard: UnifiedDashboardResponse | undefined
+  dashboard: UnifiedDashboardResponse | undefined,
+  btcPriceData?: BtcPriceSnapshot[]
 ): PerformanceChartData {
   const dailyValues = dashboard?.trends?.daily_values ?? [];
 
@@ -64,26 +67,44 @@ export function transformToPerformanceChart(
   const max = Math.max(...portfolioValues);
   const range = max - min;
 
+  // Build BTC price map for lookup
+  const btcPriceMap = new Map(
+    (btcPriceData ?? []).map(snap => [snap.date, snap.price_usd])
+  );
+
+  // Get first portfolio value and BTC price for normalization
+  const firstPortfolioValue = dailyValues[0]?.total_value_usd ?? 0;
+  const firstDate = dailyValues[0]?.date;
+  const firstBtcPrice = firstDate ? btcPriceMap.get(firstDate) : null;
+
   // Normalize to 0-100 scale (inverted Y-axis for SVG)
   const points = dailyValues.map((d, idx) => {
     const value = d.total_value_usd ?? min;
     const normalizedPortfolio =
       range > 0 ? 100 - ((value - min) / range) * 100 : 50;
 
-    // Simulate BTC benchmark (±20% variance from portfolio for demo)
-    // In production, this would come from actual BTC price data
-    const btcOffset = Math.sin(idx * 0.1) * 10;
-    const normalizedBTC = Math.max(
-      0,
-      Math.min(100, normalizedPortfolio + btcOffset)
-    );
+    // Calculate real BTC benchmark if data available
+    let btcEquivalentValue = value * 0.95; // Fallback to mock if no BTC data
+    if (firstBtcPrice && firstPortfolioValue > 0 && d.date) {
+      const currentBtcPrice = btcPriceMap.get(d.date);
+      if (currentBtcPrice) {
+        // What would initial portfolio value be worth if invested in BTC?
+        btcEquivalentValue =
+          (firstPortfolioValue / firstBtcPrice) * currentBtcPrice;
+      }
+    }
+
+    // Normalize BTC benchmark to same scale as portfolio
+    const normalizedBTC =
+      range > 0 ? 100 - ((btcEquivalentValue - min) / range) * 100 : 50;
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
       portfolio: normalizedPortfolio,
-      btc: normalizedBTC,
-      date: d.date ?? new Date().toISOString(), // Add date for tooltip
-      portfolioValue: value, // Add original value for tooltip display
+      btc: Math.max(0, Math.min(100, normalizedBTC)), // Clamp to 0-100
+      date: d.date ?? new Date().toISOString(),
+      portfolioValue: value,
+      btcBenchmarkValue: btcEquivalentValue, // Add actual USD value for tooltip
     };
   });
 

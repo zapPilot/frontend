@@ -7,13 +7,12 @@ import { APIError } from "./errors";
 
 // Retry logic helper
 export function shouldRetry(error: unknown): boolean {
-  // Don't retry client errors (4xx) or specific API errors
-  if (error instanceof APIError && error.status >= 400 && error.status < 500) {
-    return false;
-  }
-
-  // Retry on network errors, timeouts, and 5xx errors
-  return true;
+  // Don't retry client errors (4xx), retry on network errors, timeouts, and 5xx
+  return !(
+    error instanceof APIError &&
+    error.status >= 400 &&
+    error.status < 500
+  );
 }
 
 // Delay helper for exponential backoff
@@ -21,7 +20,10 @@ export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function calculateBackoffDelay(baseDelay: number, attempt: number): number {
+export function calculateBackoffDelay(
+  baseDelay: number,
+  attempt: number
+): number {
   return baseDelay * Math.pow(2, attempt);
 }
 

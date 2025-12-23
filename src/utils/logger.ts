@@ -256,8 +256,7 @@ export const createContextLogger = (context: string) =>
 
 // Export context-aware loggers for common areas
 export const walletLogger = logger.createContextLogger("Wallet");
-export const portfolioLogger = logger.createContextLogger("Portfolio");
+
 // Export types and classes
 export { ContextLogger, Logger };
 export type { LogEntry };
-

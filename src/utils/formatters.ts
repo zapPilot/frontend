@@ -178,55 +178,7 @@ export function formatNumber(
 // PERCENTAGE FORMATTING
 // =============================================================================
 
-/**
- * Format percentage values with appropriate sign
- *
- * @param value - The percentage value
- * @param showPlusSign - Show + sign for positive values
- * @param decimals - Number of decimal places
- * @returns Formatted percentage string
- */
-export function formatPercentage(
-  value: number,
-  showPlusSign = true,
-  decimals = 1
-): string {
-  const sign = value >= 0 && showPlusSign ? "+" : "";
-  return `${sign}${value.toFixed(decimals)}%`;
-}
-
-
-// Unused export removed: formatTokenAmount
-
-// =============================================================================
-// UTILITY FUNCTIONS
-// =============================================================================
-
-/**
- * Format large numbers with K/M/B suffixes
- *
- * @param value - The numerical value
- * @param decimals - Number of decimal places
- * @returns Formatted string with suffix
- */
-export function formatLargeNumber(value: number, decimals = 1): string {
-  if (value === 0) return "0";
-
-  const absValue = Math.abs(value);
-  const sign = value < 0 ? "-" : "";
-
-  if (absValue >= 1e9) {
-    return `${sign}${(absValue / 1e9).toFixed(decimals)}b`;
-  }
-  if (absValue >= 1e6) {
-    return `${sign}${(absValue / 1e6).toFixed(decimals)}m`;
-  }
-  if (absValue >= 1e3) {
-    return `${sign}${(absValue / 1e3).toFixed(decimals)}k`;
-  }
-
-  return value.toString();
-}
+// Unused exports removed: formatTokenAmount, formatPercentage, formatLargeNumber
 
 // =============================================================================
 // ADDRESS & IDENTIFIER FORMATTING

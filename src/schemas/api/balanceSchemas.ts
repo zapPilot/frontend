@@ -11,7 +11,7 @@ import { z } from "zod";
  * Schema for individual token balance from API response
  * Supports multiple field naming conventions (camelCase and snake_case)
  */
-export const tokenBalanceRawSchema = z
+const tokenBalanceRawSchema = z
   .object({
     // Address fields (multiple conventions supported)
     address: z.string().optional(),
@@ -48,26 +48,10 @@ export const tokenBalanceRawSchema = z
   .catchall(z.unknown()); // Allow additional fields
 
 /**
- * Schema for normalized token balance (after processing)
- * This matches the NormalizedTokenBalance interface
- */
-export const normalizedTokenBalanceSchema = z.object({
-  address: z.string(),
-  symbol: z.string().optional(),
-  name: z.string().optional(),
-  decimals: z.number().nullable(),
-  rawBalance: z.string().optional(),
-  formattedBalance: z.number().optional(),
-  usdValue: z.number().optional(),
-  balance: z.number(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-/**
  * Schema for wallet response data structure
  * Current backend format uses object with balances and nativeBalance
  */
-export const walletResponseDataSchema = z
+const walletResponseDataSchema = z
   .object({
     // Current structure: data object with balances array and optional nativeBalance
     data: z
@@ -96,9 +80,7 @@ export const walletResponseDataSchema = z
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-/** @public */ export type WalletResponseData = z.infer<
-  typeof walletResponseDataSchema
->;
+type WalletResponseData = z.infer<typeof walletResponseDataSchema>;
 
 /**
  * Validation helper functions
@@ -117,12 +99,4 @@ export function validateWalletResponseData(data: unknown): WalletResponseData {
     return {};
   }
   return walletResponseDataSchema.parse(data);
-}
-
-/**
- * Safe validation that returns result with success/error information
- * Useful for cases where you want to handle validation errors gracefully
- */
-export function safeValidateWalletResponse(data: unknown) {
-  return walletResponseDataSchema.safeParse(data);
 }

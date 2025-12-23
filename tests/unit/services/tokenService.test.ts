@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { httpUtils } from "@/lib/http-utils";
+import { httpUtils } from "@/lib/http";
 import * as tokenService from "@/services/tokenService";
 
 const mockIntentGet = () => vi.spyOn(httpUtils.intentEngine, "get");

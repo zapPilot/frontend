@@ -5,10 +5,6 @@
  * Used for transforming API responses into chart/metric display formats.
  */
 
-import type {
-    PortfolioDataPoint
-} from "./domain/portfolio";
-
 /**
  * Performance Chart Data
  *
@@ -22,6 +18,7 @@ export interface PerformanceChartData {
     btc: number;
     date: string; // ISO date string for each point
     portfolioValue: number; // Original USD value for tooltip
+    btcBenchmarkValue: number; // Actual BTC equivalent value in USD
   }[];
   /** ISO date string for chart start */
   startDate: string;
@@ -136,85 +133,3 @@ export interface AnalyticsTimePeriod {
  * Types originally from PortfolioChart component module
  * Migrated to centralized types for reuse across analytics hooks
  */
-
-/**
- * Input point for allocation timeseries data transformation
- * Supports multiple field naming conventions from different API versions
- */
-export interface AllocationTimeseriesInputPoint {
-  date: string;
-  category?: string;
-  protocol?: string;
-  percentage?: number;
-  percentage_of_portfolio?: number;
-  allocation_percentage?: number;
-  category_value?: number;
-  category_value_usd?: number;
-  total_value?: number;
-  total_portfolio_value_usd?: number;
-}
-
-/**
- * Extended portfolio data point with DeFi and Wallet breakdown
- * Used for stacked area chart visualization
- */
-export interface PortfolioStackedDataPoint extends PortfolioDataPoint {
-  /** DeFi protocols value in USD */
-  defiValue: number;
-  /** Wallet holdings value in USD */
-  walletValue: number;
-  /** Combined stacked total (should match value) */
-  stackedTotalValue: number;
-}
-
-/**
- * Base interface for drawdown recovery metadata
- * Shared fields between DrawdownOverridePoint and DrawdownRecoveryData
- */
-interface DrawdownRecoveryMetadata {
-  /** Whether this point marks a recovery to new peak */
-  isRecoveryPoint?: boolean;
-  /** Number of days since last peak */
-  daysFromPeak?: number;
-  /** ISO date string of the peak this drawdown is measured from */
-  peakDate?: string;
-  /** Days taken to recover from underwater to new peak */
-  recoveryDurationDays?: number;
-  /** Deepest drawdown percentage during recovery cycle */
-  recoveryDepth?: number;
-  /** Whether this is historical data (before current period) */
-  isHistoricalPeriod?: boolean;
-}
-
-/**
- * Drawdown data point with recovery annotations
- */
-export interface DrawdownRecoveryData extends DrawdownRecoveryMetadata {
-  /** ISO date string */
-  date: string;
-  /** Drawdown percentage (negative = underwater, 0 = at peak) */
-  drawdown: number;
-}
-
-/**
- * Summary metrics for drawdown analysis
- */
-export interface DrawdownRecoverySummary {
-  /** Most severe drawdown percentage (most negative value) */
-  maxDrawdown: number;
-  /** Number of recovery points (returns to new peaks) */
-  totalRecoveries: number;
-  /** Average recovery duration in days (null if no recoveries) */
-  averageRecoveryDays: number | null;
-  /** Current drawdown percentage */
-  currentDrawdown: number;
-  /** Current portfolio status */
-  currentStatus: "Underwater" | "At Peak";
-  /** ISO date string of most recent peak */
-  latestPeakDate?: string;
-  /** Duration in days of most recent recovery */
-  latestRecoveryDurationDays?: number;
-}
-
-// DrawdownOverridePoint, SharpeOverridePoint, VolatilityOverridePoint, 
-// DailyYieldOverridePoint interfaces removed - deprecated with PortfolioChart (2025-12-22)

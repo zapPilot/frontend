@@ -8,10 +8,10 @@
  * @module services/priceService
  */
 
+import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 
 import { createIntentServiceError } from "../lib/errors";
-import { httpUtils } from "../lib/http-utils";
 import { normalizeSymbol, normalizeSymbols } from "../utils/stringUtils";
 
 // Get configured client

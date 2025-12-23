@@ -75,4 +75,4 @@ jscpd-report.json
 .playwright-mcp/
 .pre-commit.log
 deadcode-analysis.json
-deadcode-report.txt
+*.txt
