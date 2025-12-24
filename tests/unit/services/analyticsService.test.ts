@@ -9,7 +9,8 @@
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { httpUtils } from "../../../src/lib/http-utils";
+import { httpUtils } from "@/lib/http";
+
 import {
   getDailyYieldReturns,
   getLandingPagePortfolioData,

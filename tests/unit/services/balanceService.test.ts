@@ -10,7 +10,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import mocked modules
-import { httpUtils } from "../../../src/lib/http-utils";
+import { httpUtils } from "@/lib/http";
+
 import {
   getTokenBalances,
   type GetTokenBalancesParams,
@@ -26,7 +27,7 @@ const originalEnv = {
 process.env["NEXT_PUBLIC_MORALIS_API_KEY"] = "test-moralis-key";
 
 // Mock dependencies
-vi.mock("../../../src/lib/http-utils", () => ({
+vi.mock("@/lib/http", () => ({
   httpUtils: {
     intentEngine: {
       get: vi.fn(),

@@ -6,6 +6,8 @@ export interface BtcPriceSnapshot {
   market_cap_usd?: number;
   volume_24h_usd?: number;
   source: string;
+  token_symbol?: string;
+  token_id?: string;
 }
 
 export interface BtcPriceHistoryResponse {
@@ -18,15 +20,19 @@ export interface BtcPriceHistoryResponse {
 }
 
 /**
- * Fetch BTC historical price data from analytics-engine
+ * Fetch token historical price data from analytics-engine
+ *
+ * Supports multiple tokens (BTC, ETH, SOL, etc.) with backward compatibility.
  *
  * @param days - Number of days of history (1-365, default: 90)
+ * @param token - Token symbol (default: 'btc', case insensitive)
  * @returns Promise<BtcPriceHistoryResponse>
  */
 export async function getBtcPriceHistory(
-  days = 90
+  days = 90,
+  token = "btc"
 ): Promise<BtcPriceHistoryResponse> {
   return httpUtils.analyticsEngine.get<BtcPriceHistoryResponse>(
-    `/api/v2/market/btc/history?days=${days}`
+    `/api/v2/market/btc/history?days=${days}&token=${token.toLowerCase()}`
   );
 }

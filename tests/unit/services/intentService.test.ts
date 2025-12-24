@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 // Import mocked modules after mocking
-import { httpUtils } from "../../../src/lib/http-utils";
+import { httpUtils } from "@/lib/http";
+
 import {
   checkIntentServiceHealth,
   type DustTokenParams,
@@ -24,7 +25,7 @@ import { executeServiceCall } from "../../../src/services/serviceHelpers";
 import type { StrategiesApiResponse } from "../../../src/types/strategies";
 
 // Mock http-utils module
-vi.mock("../../../src/lib/http-utils", () => ({
+vi.mock("@/lib/http", () => ({
   httpUtils: {
     intentEngine: {
       post: vi.fn(),

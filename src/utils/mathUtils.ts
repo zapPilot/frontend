@@ -36,12 +36,3 @@ export const clamp = (value: number, min: number, max: number): number =>
  */
 export const clampMin = (value: number, min: number): number =>
   Math.max(min, value);
-
-/**
- * Ensure value is non-negative (>= 0)
- * Alias for clampMin(value, 0)
- *
- * @param value - The value to ensure non-negative
- * @returns Non-negative value
- */
-export const ensureNonNegative = (value: number): number => clampMin(value, 0);
