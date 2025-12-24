@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
-import { usePortfolioData } from "@/hooks/queries/usePortfolioData";
+import { usePortfolioDataProgressive } from "@/hooks/queries/usePortfolioDataProgressive";
 import { useRegimeHistory } from "@/services/regimeHistoryService";
 import { useSentimentData } from "@/services/sentimentService";
 
@@ -26,22 +26,28 @@ export function DashboardShell({
   headerBanners,
   footerOverlays,
 }: DashboardShellProps) {
-  const { data, isLoading, error, refetch } = usePortfolioData(urlUserId);
+  const { 
+    unifiedData, 
+    sections, 
+    isLoading, 
+    error, 
+    refetch 
+  } = usePortfolioDataProgressive(urlUserId);
   const { data: sentimentData } = useSentimentData();
   const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = error instanceof Error ? error : null;
 
   // Keep error state handling (full-page replacement is appropriate for errors)
-  if (safeError && !data) {
+  if (safeError && !unifiedData) {
     return <WalletPortfolioErrorState error={safeError} onRetry={refetch} />;
   }
 
   // Determine if this is empty state (no real portfolio data, excluding loading)
-  const isEmptyState = !data && !isLoading;
+  const isEmptyState = !unifiedData && !isLoading;
 
   // Use real data if available, otherwise create empty state with real sentiment
   const portfolioData =
-    data ??
+    unifiedData ??
     createEmptyPortfolioState(sentimentData ?? null, regimeHistoryData ?? null);
 
   return (
@@ -53,6 +59,7 @@ export function DashboardShell({
     >
       <WalletPortfolioPresenter
         data={portfolioData}
+        sections={sections}
         userId={urlUserId}
         isEmptyState={isEmptyState}
         isLoading={isLoading}

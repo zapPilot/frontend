@@ -13,7 +13,9 @@ import {
   type StrategyDirection,
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
+import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import { getRegimeName, getStrategyMeta } from "@/lib/domain/strategySelector";
+import type { SectionState, SentimentData } from "@/types/portfolio-progressive";
 
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 
@@ -43,11 +45,13 @@ const STYLES = {
 const getCardClassName = (isExpanded: boolean): string =>
   `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
 
-interface StrategyCardProps {
+export interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
   isEmptyState?: boolean;
   isLoading?: boolean;
+  /** Independent sentiment section for progressive loading */
+  sentimentSection?: SectionState<SentimentData>;
 }
 
 export function StrategyCard({
@@ -55,6 +59,7 @@ export function StrategyCard({
   currentRegime,
   isEmptyState = false,
   isLoading = false,
+  sentimentSection,
 }: StrategyCardProps) {
   // Show skeleton during loading - must be before hooks for consistency
   // but after destructuring (which is before hooks anyway)
@@ -67,25 +72,29 @@ export function StrategyCard({
   if (isLoading) {
     return <StrategyCardSkeleton />;
   }
-
-  // Early return if no regime data - AFTER hooks to comply with React rules
-  if (!currentRegime) {
+  
+  // Independent Sentiment Logic:
+  // If we have independent sentiment data but no explicit regime (because main data is loading),
+  // we can derive the regime from the sentiment value to show the full card immediately.
+  const derivedRegimeId = sentimentSection?.data 
+    ? getRegimeFromSentiment(sentimentSection.data.value) 
+    : undefined;
+    
+  const effectiveRegime = currentRegime || (derivedRegimeId ? regimes.find(r => r.id === derivedRegimeId) : undefined);
+  
+  // Only return null if we truly have no regime info (neither explicit nor derived)
+  if (!effectiveRegime && !sentimentSection) {
     return null;
   }
 
   // Determine which regime to display (selected or current)
-  // If user selects a regime, we show that. Otherwise we show the current regime.
+  // If user selects a regime, we show that. Otherwise we show the effective regime.
   const displayRegime = selectedRegimeId
-    ? regimes.find(r => r.id === selectedRegimeId) || currentRegime
-    : currentRegime;
-
-  const isViewingCurrent = displayRegime.id === currentRegime.id;
-
-  // Reset selected direction when switching regimes
-  // checking if the selected direction is valid for the new regime is done in activeDirection calculation indirectly,
-  // but explicitly resetting gives better UX.
-  // We can't use useEffect easily inside this conditional logic block style,
-  // so we'll rely on activeDirection logic to be robust.
+    ? regimes.find(r => r.id === selectedRegimeId) || effectiveRegime
+    : effectiveRegime;
+    
+  // Use effectiveRegime for comparison
+  const isViewingCurrent = displayRegime && effectiveRegime ? displayRegime.id === effectiveRegime.id : false;
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -102,9 +111,11 @@ export function StrategyCard({
 
   // Available strategies for displayRegime
   const hasStrategy = (dir: StrategyDirection) =>
-    !!displayRegime.strategies[dir as keyof typeof displayRegime.strategies];
+    displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies];
 
   const activeDirection = (() => {
+    if (!displayRegime) return "default";
+
     if (selectedDirection && hasStrategy(selectedDirection)) {
       return selectedDirection;
     }
@@ -133,9 +144,9 @@ export function StrategyCard({
     return "default";
   })();
 
-  const activeStrategy =
-    displayRegime.strategies[activeDirection] ||
-    displayRegime.strategies.default;
+  const activeStrategy = displayRegime
+    ? displayRegime.strategies[activeDirection] || displayRegime.strategies.default
+    : undefined;
 
   // Calculate target allocation dynamically from the strategy
   // If the strategy has a specific 'allocationAfter' defined in useCase, use that.
@@ -146,7 +157,25 @@ export function StrategyCard({
         lp: activeStrategy.useCase.allocationAfter.lp,
         stable: activeStrategy.useCase.allocationAfter.stable,
       }
-    : getRegimeAllocation(displayRegime);
+    : displayRegime
+      ? getRegimeAllocation(displayRegime)
+      : { spot: 0, lp: 0, stable: 0 };
+
+  const sentimentDisplay = (
+    sentimentSection?.isLoading ? (
+      <span
+        className="inline-block w-10 h-5 ml-2 align-middle bg-gray-800/50 rounded border border-gray-700/50 animate-pulse"
+        title="Loading sentiment..."
+      />
+    ) : (
+      <span
+        className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle"
+        title="Market Sentiment Score"
+      >
+        {sentimentSection?.data?.value ?? data.sentimentValue ?? '—'}
+      </span>
+    )
+  );
 
   return (
     <motion.div
@@ -154,6 +183,9 @@ export function StrategyCard({
       layout
       className={getCardClassName(isStrategyExpanded)}
       onClick={e => {
+        // Prevent collapsing if we don't have a regime to show details for
+        if (!displayRegime) return;
+
         // Prevent collapsing when clicking on interactive elements inside
         if ((e.target as HTMLElement).closest('[data-interactive="true"]')) {
           return;
@@ -173,12 +205,18 @@ export function StrategyCard({
       >
         <div className="flex items-center gap-6">
           <div className={STYLES.regimeBadge}>
-            <span
-              style={{ color: currentRegime.fillColor }}
-              data-testid="regime-badge"
-            >
-              {data.currentRegime.toUpperCase()}
-            </span>
+            {effectiveRegime ? (
+              <span
+                style={{ color: effectiveRegime.fillColor }}
+                data-testid="regime-badge"
+              >
+                {effectiveRegime.id.toUpperCase()}
+              </span>
+            ) : (
+              <div className="w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center border border-gray-700 shadow-inner">
+                <div className="w-12 h-4 bg-gray-700/50 rounded animate-pulse" />
+              </div>
+            )}
           </div>
           <div>
             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
@@ -191,17 +229,21 @@ export function StrategyCard({
                 </span>
               )}
             </div>
-            <div className="text-2xl font-bold text-white mb-1">
-              {currentRegime.label}
-              <span
-                className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle"
-                title="Market Sentiment Score"
-              >
-                {data.sentimentValue}
-              </span>
+            <div className="text-2xl font-bold text-white mb-1 flex items-center">
+              {effectiveRegime ? (
+                effectiveRegime.label
+              ) : (
+                <div className="w-32 h-8 bg-gray-700/50 rounded animate-pulse mr-2" />
+              )}
+              {/* Sentiment value - loads independently */}
+              {sentimentDisplay}
             </div>
-            <div className="text-sm text-gray-400 italic mb-2">
-              &ldquo;{activeStrategy?.philosophy}&rdquo;
+            <div className="text-sm text-gray-400 italic mb-2 min-h-[1.25rem] flex items-center">
+              {activeStrategy ? (
+                <span>&ldquo;{activeStrategy.philosophy}&rdquo;</span>
+              ) : (
+                <div className="w-48 h-4 bg-gray-700/50 rounded animate-pulse" />
+              )}
             </div>
 
             {/* Directional Strategy Indicator */}
@@ -232,16 +274,19 @@ export function StrategyCard({
           </div>
         </div>
 
-        <div
-          className={`p-2 rounded-full bg-gray-800 text-gray-400 transition-transform duration-300 ${isStrategyExpanded ? "rotate-180" : ""}`}
-        >
-          <ChevronDown className="w-5 h-5" />
-        </div>
+        {displayRegime && (
+          <div
+            className={`p-2 rounded-full bg-gray-800 text-gray-400 transition-transform duration-300 ${isStrategyExpanded ? "rotate-180" : ""}`}
+            role="button"
+          >
+            <ChevronDown className="w-5 h-5" />
+          </div>
+        )}
       </motion.div>
 
       {/* Expanded Content (Progressive Disclosure) */}
       <AnimatePresence>
-        {isStrategyExpanded && (
+        {isStrategyExpanded && displayRegime && (
           <motion.div
             {...ANIMATIONS.EXPAND_COLLAPSE}
             className="relative z-10 mt-8 pt-8 border-t border-gray-800"
@@ -258,7 +303,7 @@ export function StrategyCard({
                 </h4>
                 <div className="flex flex-col gap-2">
                   {regimes.map(regime => {
-                    const isCurrent = regime.id === data.currentRegime;
+                    const isCurrent = effectiveRegime?.id === regime.id;
                     const isSelected = displayRegime.id === regime.id;
 
                     return (

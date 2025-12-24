@@ -13,6 +13,14 @@ import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import type { TabType } from "@/types/portfolio";
 
+import type {
+    BalanceData,
+    CompositionData,
+    SectionState,
+    SentimentData,
+    StrategyData,
+} from "@/types/portfolio-progressive";
+
 /** Layout class constants for consistent styling */
 const LAYOUT = {
   container:
@@ -26,6 +34,13 @@ interface WalletPortfolioPresenterProps {
   userId?: string;
   isEmptyState?: boolean;
   isLoading?: boolean;
+  /** Section states for progressive loading */
+  sections: {
+    balance: SectionState<BalanceData>;
+    composition: SectionState<CompositionData>;
+    strategy: SectionState<StrategyData>;
+    sentiment: SectionState<SentimentData>;
+  };
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
 }
@@ -35,6 +50,7 @@ export function WalletPortfolioPresenter({
   userId,
   isEmptyState = false,
   isLoading = false,
+  sections,
   headerBanners,
   footerOverlays,
 }: WalletPortfolioPresenterProps) {
@@ -49,6 +65,7 @@ export function WalletPortfolioPresenter({
     dashboard: (
       <DashboardView
         data={data}
+        sections={sections}
         currentRegime={currentRegime}
         isEmptyState={isEmptyState}
         isLoading={isLoading}
