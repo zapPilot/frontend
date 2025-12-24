@@ -4,17 +4,17 @@ import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCar
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
 import {
-    BalanceCardSkeleton,
-    PortfolioCompositionSkeleton,
+  BalanceCardSkeleton,
+  PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";
 import type {
-    BalanceData,
-    CompositionData,
-    SectionState,
-    SentimentData,
-    StrategyData,
+  BalanceData,
+  CompositionData,
+  SectionState,
+  SentimentData,
+  StrategyData,
 } from "@/types/portfolio-progressive";
 
 /** Layout styling constants */
@@ -44,7 +44,6 @@ export function DashboardView({
   sections,
   currentRegime,
   isEmptyState,
-  isLoading = false,
   onOpenModal,
 }: DashboardViewProps) {
   return (
@@ -60,7 +59,7 @@ export function DashboardView({
               balance={data.balance}
               roi={data.roi}
               isEmptyState={isEmptyState}
-              isLoading={isLoading}
+              isLoading={false}
               onOpenModal={onOpenModal}
             />
           )}
@@ -72,7 +71,9 @@ export function DashboardView({
           data={data}
           // If strategy is loading, suppress the default regime to show skeletons
           // This allows sentiment to load independently without showing "Neutral" fallback
-          currentRegime={sections.strategy.isLoading ? undefined : currentRegime}
+          currentRegime={
+            sections.strategy.isLoading ? undefined : currentRegime
+          }
           isEmptyState={isEmptyState}
           isLoading={false} // Allow partial rendering
           sentimentSection={sections.sentiment}
@@ -88,8 +89,9 @@ export function DashboardView({
           <PortfolioComposition
             data={data}
             currentRegime={currentRegime}
+            targetAllocation={sections.composition.data?.targetAllocation}
             isEmptyState={isEmptyState}
-            isLoading={isLoading}
+            isLoading={false}
             onRebalance={() => onOpenModal("rebalance")}
           />
         )}

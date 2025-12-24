@@ -23,6 +23,8 @@ import {
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
+  /** Optional target allocation to render without regime */
+  targetAllocation?: { crypto: number; stable: number } | undefined;
   isEmptyState?: boolean;
   isLoading?: boolean;
   onRebalance: () => void;
@@ -46,6 +48,7 @@ const STYLES = {
 export function PortfolioComposition({
   data,
   currentRegime,
+  targetAllocation,
   isEmptyState = false,
   isLoading = false,
   onRebalance,
@@ -55,22 +58,33 @@ export function PortfolioComposition({
     return <PortfolioCompositionSkeleton />;
   }
 
-  // Early return if no regime data
-  if (!currentRegime) {
+  // Determine target breakdown source
+  // Priority: 1. Explicit prop (from progressive loading) 2. Derived from Regime 3. Fallback
+  let target = targetAllocation;
+
+  if (!target && currentRegime) {
+    const breakdown = getRegimeAllocation(currentRegime);
+    target = {
+      crypto: breakdown.spot + breakdown.lp,
+      stable: breakdown.stable,
+    };
+  }
+
+  // If we still have no target (missing prop AND missing regime), we can't render meaningful bars
+  if (!target) {
     return null;
   }
 
-  const targetBreakdown = getRegimeAllocation(currentRegime);
-  const target = {
-    crypto: targetBreakdown.spot + targetBreakdown.lp,
-    stable: targetBreakdown.stable,
-  };
   const allocationLabel = isEmptyState ? "Recommended" : "Target";
 
   // Determine which assets to display
-  const cryptoAssets = isEmptyState
-    ? buildTargetCryptoAssets(currentRegime)
-    : buildRealCryptoAssets(data);
+  // If we lack regime, we can't infer target-specific assets for empty state perfectly,
+  // but we can try to be robust.
+  // buildTargetCryptoAssets usually depends on regime. If missing, maybe fallback or use current assets.
+  const cryptoAssets =
+    isEmptyState && currentRegime
+      ? buildTargetCryptoAssets(currentRegime)
+      : buildRealCryptoAssets(data);
 
   const cryptoPercentage = isEmptyState
     ? target.crypto
