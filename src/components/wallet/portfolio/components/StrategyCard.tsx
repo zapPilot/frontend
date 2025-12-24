@@ -15,7 +15,10 @@ import {
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import { getRegimeName, getStrategyMeta } from "@/lib/domain/strategySelector";
-import type { SectionState, SentimentData } from "@/types/portfolio-progressive";
+import type {
+  SectionState,
+  SentimentData,
+} from "@/types/portfolio-progressive";
 
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 
@@ -45,6 +48,65 @@ const STYLES = {
 const getCardClassName = (isExpanded: boolean): string =>
   `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
 
+/** Determine active direction based on user selection, data, and available strategies */
+const determineActiveDirection = (
+  displayRegime: Regime | undefined,
+  selectedDirection: StrategyDirection | null,
+  isViewingCurrent: boolean,
+  data: WalletPortfolioDataWithDirection
+): StrategyDirection => {
+  if (!displayRegime) return "default";
+
+  const hasStrategy = (dir: StrategyDirection) =>
+    displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies];
+
+  if (selectedDirection && hasStrategy(selectedDirection)) {
+    return selectedDirection;
+  }
+
+  if (
+    isViewingCurrent &&
+    "strategyDirection" in data &&
+    data.strategyDirection !== "default"
+  ) {
+    return data.strategyDirection as StrategyDirection;
+  }
+
+  if (hasStrategy("fromLeft")) {
+    return "fromLeft";
+  }
+
+  if (hasStrategy("fromRight")) {
+    return "fromRight";
+  }
+
+  return "default";
+};
+
+/** Render sentiment display badge */
+const renderSentimentDisplay = (
+  sentimentSection: SectionState<SentimentData> | undefined,
+  fallbackValue: string | number | undefined
+): React.ReactNode => {
+  if (sentimentSection?.isLoading) {
+    return (
+      <span
+        className="inline-block w-10 h-5 ml-2 align-middle bg-gray-800/50 rounded border border-gray-700/50 animate-pulse"
+        title="Loading sentiment..."
+      />
+    );
+  }
+
+  return (
+    <span
+      className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle"
+      title="Market Sentiment Score"
+    >
+      {sentimentSection?.data?.value ?? fallbackValue ?? "—"}
+    </span>
+  );
+};
+
 export interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
@@ -72,16 +134,18 @@ export function StrategyCard({
   if (isLoading) {
     return <StrategyCardSkeleton />;
   }
-  
+
   // Independent Sentiment Logic:
   // If we have independent sentiment data but no explicit regime (because main data is loading),
   // we can derive the regime from the sentiment value to show the full card immediately.
-  const derivedRegimeId = sentimentSection?.data 
-    ? getRegimeFromSentiment(sentimentSection.data.value) 
+  const derivedRegimeId = sentimentSection?.data
+    ? getRegimeFromSentiment(sentimentSection.data.value)
     : undefined;
-    
-  const effectiveRegime = currentRegime || (derivedRegimeId ? regimes.find(r => r.id === derivedRegimeId) : undefined);
-  
+
+  const effectiveRegime =
+    currentRegime ||
+    (derivedRegimeId ? regimes.find(r => r.id === derivedRegimeId) : undefined);
+
   // Only return null if we truly have no regime info (neither explicit nor derived)
   if (!effectiveRegime && !sentimentSection) {
     return null;
@@ -92,9 +156,12 @@ export function StrategyCard({
   const displayRegime = selectedRegimeId
     ? regimes.find(r => r.id === selectedRegimeId) || effectiveRegime
     : effectiveRegime;
-    
+
   // Use effectiveRegime for comparison
-  const isViewingCurrent = displayRegime && effectiveRegime ? displayRegime.id === effectiveRegime.id : false;
+  const isViewingCurrent =
+    displayRegime && effectiveRegime
+      ? displayRegime.id === effectiveRegime.id
+      : false;
 
   // Extract directional strategy metadata (safely handle missing fields)
   const strategyDirection =
@@ -104,48 +171,16 @@ export function StrategyCard({
   const strategyMeta = getStrategyMeta(strategyDirection);
 
   // Determine the active strategy to display
-  // Priority:
-  // 1. User selected direction (via tabs)
-  // 2. Data-driven direction (if viewing current regime)
-  // 3. Default (if viewing other regime and no selection)
-
-  // Available strategies for displayRegime
-  const hasStrategy = (dir: StrategyDirection) =>
-    displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies];
-
-  const activeDirection = (() => {
-    if (!displayRegime) return "default";
-
-    if (selectedDirection && hasStrategy(selectedDirection)) {
-      return selectedDirection;
-    }
-
-    if (
-      isViewingCurrent &&
-      "strategyDirection" in data &&
-      data.strategyDirection !== "default"
-    ) {
-      // If not manually selected, and we are on current regime WITH A SPECIFIC DIRECTION, use the data's direction
-      return data.strategyDirection as StrategyDirection;
-    }
-
-    // Fallback logic / Default handling
-    // If the regime has explicit directional strategies (like Fear/Greed),
-    // we prefer showing the first tab (fromLeft) as the default view
-    // rather than the generic 'default' strategy which might be hidden/internal.
-    if (hasStrategy("fromLeft")) {
-      return "fromLeft";
-    }
-
-    if (hasStrategy("fromRight")) {
-      return "fromRight";
-    }
-
-    return "default";
-  })();
+  const activeDirection = determineActiveDirection(
+    displayRegime,
+    selectedDirection,
+    isViewingCurrent,
+    data
+  );
 
   const activeStrategy = displayRegime
-    ? displayRegime.strategies[activeDirection] || displayRegime.strategies.default
+    ? displayRegime.strategies[activeDirection] ||
+      displayRegime.strategies.default
     : undefined;
 
   // Calculate target allocation dynamically from the strategy
@@ -161,20 +196,9 @@ export function StrategyCard({
       ? getRegimeAllocation(displayRegime)
       : { spot: 0, lp: 0, stable: 0 };
 
-  const sentimentDisplay = (
-    sentimentSection?.isLoading ? (
-      <span
-        className="inline-block w-10 h-5 ml-2 align-middle bg-gray-800/50 rounded border border-gray-700/50 animate-pulse"
-        title="Loading sentiment..."
-      />
-    ) : (
-      <span
-        className="text-sm font-mono text-gray-500 bg-gray-800/50 px-1.5 py-0.5 rounded border border-gray-700/50 ml-2 align-middle"
-        title="Market Sentiment Score"
-      >
-        {sentimentSection?.data?.value ?? data.sentimentValue ?? '—'}
-      </span>
-    )
+  const sentimentDisplay = renderSentimentDisplay(
+    sentimentSection,
+    data.sentimentValue
   );
 
   return (

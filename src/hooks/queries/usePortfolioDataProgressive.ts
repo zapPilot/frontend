@@ -12,20 +12,29 @@
  */
 
 import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
-import { getRegimeStrategyInfo, getTargetAllocation } from "@/adapters/portfolio/regimeAdapter";
+import {
+  getRegimeStrategyInfo,
+  getTargetAllocation,
+} from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import {
-    transformToWalletPortfolioDataWithDirection,
-    type WalletPortfolioDataWithDirection,
+  transformToWalletPortfolioDataWithDirection,
+  type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
-import { useRegimeHistory, type RegimeHistoryData } from "@/services/regimeHistoryService";
-import { useSentimentData, type MarketSentimentData } from "@/services/sentimentService";
+import {
+  type RegimeHistoryData,
+  useRegimeHistory,
+} from "@/services/regimeHistoryService";
+import {
+  type MarketSentimentData,
+  useSentimentData,
+} from "@/services/sentimentService";
 import type {
-    BalanceData,
-    CompositionData,
-    DashboardProgressiveState,
-    SentimentData,
-    StrategyData,
+  BalanceData,
+  CompositionData,
+  DashboardProgressiveState,
+  SentimentData,
+  StrategyData,
 } from "@/types/portfolio-progressive";
 
 import { useLandingPageData } from "./usePortfolioQuery";
@@ -64,10 +73,8 @@ function extractROIChanges(landingData: {
 /**
  * Count unique protocols in pool details
  */
-function countUniqueProtocols(
-  poolDetails: { protocol_id: string }[]
-): number {
-  const uniqueProtocols = new Set(poolDetails.map((pool) => pool.protocol_id));
+function countUniqueProtocols(poolDetails: { protocol_id: string }[]): number {
+  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
   return uniqueProtocols.size;
 }
 
@@ -75,7 +82,7 @@ function countUniqueProtocols(
  * Count unique chains in pool details
  */
 function countUniqueChains(poolDetails: { chain: string }[]): number {
-  const uniqueChains = new Set(poolDetails.map((pool) => pool.chain));
+  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
   return uniqueChains.size;
 }
 
@@ -102,7 +109,7 @@ function extractBalanceData(landing: any): BalanceData {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractCompositionData(landing: any): CompositionData {
   const currentAllocation = calculateAllocation(landing);
-  
+
   // Use imported utilities
   const sentimentInfo = processSentimentData(null); // Fallback to neutral for composition which is acceptable
   const targetAllocation = getTargetAllocation(sentimentInfo.regime);
@@ -130,7 +137,7 @@ function combineStrategyData(
   if (!landingData) return null;
 
   // Process sentiment (with fallback to neutral if undefined)
-  // If strict independent loading is required, this might be adjusted, 
+  // If strict independent loading is required, this might be adjusted,
   // but StrategyCard traditionally needs some strategy to display.
   // For V2 independent sentiment, the StrategyCard will handle nullish parts gracefully.
   const sentimentInfo = processSentimentData(sentimentData ?? null);
@@ -201,7 +208,7 @@ export function usePortfolioDataProgressive(
   };
 
   // 3. Strategy Section (Depends on Landing + Sentiment + Regime)
-  // Logic: Strategy needs landing data to exist basically. 
+  // Logic: Strategy needs landing data to exist basically.
   // Sentiment and Regime are technically optional but usually preferred.
   // We'll mark it loading if landing is loading.
   const strategySection = {
@@ -210,26 +217,32 @@ export function usePortfolioDataProgressive(
       sentimentQuery.data,
       regimeQuery.data
     ),
-    isLoading: landingQuery.isLoading || sentimentQuery.isLoading || regimeQuery.isLoading,
-    error: (landingQuery.error || sentimentQuery.error || regimeQuery.error) as Error | null,
+    isLoading:
+      landingQuery.isLoading ||
+      sentimentQuery.isLoading ||
+      regimeQuery.isLoading,
+    error: (landingQuery.error ||
+      sentimentQuery.error ||
+      regimeQuery.error) as Error | null,
   };
 
   // 4. Independent Sentiment Section (Depends only on Sentiment)
   const sentimentSection = {
-    data: sentimentQuery.data ? extractSentimentData(sentimentQuery.data) : null,
+    data: sentimentQuery.data
+      ? extractSentimentData(sentimentQuery.data)
+      : null,
     isLoading: sentimentQuery.isLoading,
     error: sentimentQuery.error as Error | null,
   };
 
   // Legacy Unified Data (for backward compatibility)
-  const unifiedData: WalletPortfolioDataWithDirection | null =
-    landingQuery.data
-      ? transformToWalletPortfolioDataWithDirection(
-          landingQuery.data,
-          sentimentQuery.data ?? null,
-          regimeQuery.data ?? null
-        )
-      : null;
+  const unifiedData: WalletPortfolioDataWithDirection | null = landingQuery.data
+    ? transformToWalletPortfolioDataWithDirection(
+        landingQuery.data,
+        sentimentQuery.data ?? null,
+        regimeQuery.data ?? null
+      )
+    : null;
 
   const refetchAll = async () => {
     await Promise.all([

@@ -12,13 +12,12 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import type { TabType } from "@/types/portfolio";
-
 import type {
-    BalanceData,
-    CompositionData,
-    SectionState,
-    SentimentData,
-    StrategyData,
+  BalanceData,
+  CompositionData,
+  SectionState,
+  SentimentData,
+  StrategyData,
 } from "@/types/portfolio-progressive";
 
 /** Layout class constants for consistent styling */
@@ -57,8 +56,14 @@ export function WalletPortfolioPresenter({
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
 
-  const { activeModal, isSettingsOpen, openModal, closeModal, openSettings, setIsSettingsOpen } =
-    usePortfolioModalState();
+  const {
+    activeModal,
+    isSettingsOpen,
+    openModal,
+    closeModal,
+    openSettings,
+    setIsSettingsOpen,
+  } = usePortfolioModalState();
 
   /** Tab view mapping for cleaner conditional rendering */
   const TAB_VIEWS: Record<TabType, React.ReactNode> = {
