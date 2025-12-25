@@ -3,6 +3,8 @@
 import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/ui/classNames";
+
 interface CompactSelectorButtonProps {
   icon: ReactNode;
   label: string;
@@ -10,10 +12,6 @@ interface CompactSelectorButtonProps {
   isOpen?: boolean;
   onClick?: () => void;
   className?: string;
-}
-
-function cn(...classes: (string | undefined | null | false)[]) {
-  return classes.filter(Boolean).join(" ");
 }
 
 export function CompactSelectorButton({

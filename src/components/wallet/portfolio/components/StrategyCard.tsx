@@ -183,9 +183,8 @@ export function StrategyCard({
       displayRegime.strategies.default
     : undefined;
 
-  // Calculate target allocation dynamically from the strategy
-  // If the strategy has a specific 'allocationAfter' defined in useCase, use that.
-  // Otherwise, fallback to the regime's static allocation (though this is deprecated).
+  // Calculate target allocation from strategy or regime
+  // Prefer strategy-specific 'allocationAfter' if defined, otherwise use regime default
   const targetAllocation = activeStrategy?.useCase?.allocationAfter
     ? {
         spot: activeStrategy.useCase.allocationAfter.spot,

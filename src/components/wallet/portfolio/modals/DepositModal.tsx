@@ -5,14 +5,9 @@ import Image from "next/image";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider as useDepositWalletProvider } from "@/providers/WalletProvider";
 import { transactionService as depositTransactionService } from "@/services";
+import type { DepositModalProps } from "@/types/ui/modals";
 
 import * as modalDeps from "./transactionModalDependencies";
-
-interface DepositModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultChainId?: number;
-}
 
 export function DepositModal({
   isOpen,

@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
-import type { AllocationBreakdown } from "@/types/domain/transaction";
+import type { RebalanceModalProps } from "@/types/ui/modals";
 
 import {
   SubmittingState,
@@ -15,13 +15,6 @@ import {
 } from "./components/TransactionModalParts";
 import { useTransactionStatus } from "./hooks/useTransactionStatus";
 import { resolveActionLabel } from "./utils/actionLabelUtils";
-
-interface RebalanceModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  currentAllocation: AllocationBreakdown;
-  targetAllocation: AllocationBreakdown;
-}
 
 export function RebalanceModal({
   isOpen,

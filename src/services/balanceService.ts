@@ -1,4 +1,8 @@
 import { httpUtils } from "@/lib/http";
+import {
+  COMMON_FIELD_KEYS,
+  pickStringField,
+} from "@/lib/utils/fieldNormalization";
 import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import { safeNumber } from "@/lib/validation/dataValidation";
 import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
@@ -50,32 +54,14 @@ const NAME_NATIVE_INDICATORS = [
   "base",
 ];
 
-const STRING_FALLBACK_KEYS = {
-  symbol: ["symbol", "tokenSymbol", "token_symbol"],
-  name: ["name", "tokenName", "token_name"],
-};
-
 const USD_VALUE_KEYS = ["usdValue", "usd_value", "fiatValue"] as const;
 
-function pickStringField(
-  record: Record<string, unknown>,
-  keys: readonly string[]
-): string | undefined {
-  for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim() !== "") {
-      return value;
-    }
-  }
-  return undefined;
-}
-
 function detectNativeAddress(record: Record<string, unknown>): string {
-  const symbol = pickStringField(record, [
-    "symbol",
-    "tokenSymbol",
-  ])?.toLowerCase();
-  const name = pickStringField(record, ["name", "tokenName"])?.toLowerCase();
+  const symbol = pickStringField(
+    record,
+    COMMON_FIELD_KEYS.symbol
+  )?.toLowerCase();
+  const name = pickStringField(record, COMMON_FIELD_KEYS.name)?.toLowerCase();
 
   const matchesSymbol = symbol
     ? SYMBOL_NATIVE_INDICATORS.includes(symbol)
@@ -212,8 +198,8 @@ const normalizeTokenBalance = (token: unknown): NormalizedTokenBalance => {
   const rawBalance = parseRawBalance(record["balance"]);
   const balance = computeBalanceValue(formattedBalance, rawBalance, decimals);
 
-  const symbol = pickStringField(record, STRING_FALLBACK_KEYS.symbol);
-  const name = pickStringField(record, STRING_FALLBACK_KEYS.name);
+  const symbol = pickStringField(record, COMMON_FIELD_KEYS.symbol);
+  const name = pickStringField(record, COMMON_FIELD_KEYS.name);
   const usdValue = extractUsdValue(record);
 
   const normalized: NormalizedTokenBalance = {

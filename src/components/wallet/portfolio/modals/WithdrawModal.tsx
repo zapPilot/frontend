@@ -11,14 +11,12 @@ import {
   getCategoryForToken,
 } from "@/lib/domain/assetCategoryUtils";
 import { dropdownMenu } from "@/lib/ui/animationVariants";
+import { cn } from "@/lib/ui/classNames";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
+import type { WithdrawModalProps } from "@/types/ui/modals";
 
 import * as modalDeps from "./transactionModalDependencies";
-
-function cn(...classes: (string | undefined | null | false)[]) {
-  return classes.filter(Boolean).join(" ");
-}
 
 interface DropdownPanelProps {
   isOpen: boolean;
@@ -42,12 +40,6 @@ function DropdownPanel({ isOpen, className, children }: DropdownPanelProps) {
       )}
     </AnimatePresence>
   );
-}
-
-interface WithdrawModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  defaultChainId?: number;
 }
 
 const CATEGORIES: {
