@@ -23,7 +23,6 @@ interface PortfolioLegendProps {
   isEmptyState: boolean;
   cryptoAssets: AllocationConstituent[];
   stablePercentage: number;
-  delta: number;
   simplifiedCrypto?: AllocationConstituent[];
 }
 
@@ -31,7 +30,6 @@ export function PortfolioLegend({
   isEmptyState,
   cryptoAssets,
   stablePercentage,
-  delta,
   simplifiedCrypto = [],
 }: PortfolioLegendProps) {
   return (
@@ -64,13 +62,6 @@ export function PortfolioLegend({
           <LegendItem color={ASSET_COLORS.USDT} label="Stablecoins" />
         </div>
       )}
-      <div className="text-xs font-bold text-orange-400">
-        {isEmptyState ? (
-          <span className="text-purple-400">Optimize: {delta.toFixed(0)}%</span>
-        ) : (
-          <>Drift: {delta.toFixed(2)}%</>
-        )}
-      </div>
     </div>
   );
 }

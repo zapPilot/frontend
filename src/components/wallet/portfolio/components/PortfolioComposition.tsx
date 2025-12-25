@@ -13,7 +13,6 @@ import { GRADIENTS } from "@/constants/design-system";
 
 import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
 import { AllocationBars } from "./AllocationBars";
-import { AllocationChip } from "./AllocationChip";
 import { PortfolioLegend } from "./PortfolioLegend";
 import {
   buildRealCryptoAssets,
@@ -37,12 +36,11 @@ const STYLES = {
   title: "text-xl font-bold text-white mb-1",
   subtitle: "text-sm text-gray-400",
   allocationRow: "flex gap-2 items-center",
-  allocationLabel: "text-sm text-gray-400 mr-2",
-  ghostBarTrack:
-    "relative h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 p-1 flex overflow-hidden",
-  ghostBackground: "absolute inset-0 flex opacity-20 pointer-events-none",
-  ghostBorder: "h-full border-r border-dashed border-white/30",
-  actualBars: "relative w-full h-full flex gap-1 z-10",
+  barTrack:
+    "relative w-full bg-gray-900/50 rounded-xl border border-gray-800 p-3 flex flex-col gap-1 overflow-hidden",
+  targetBar: "h-2 w-full rounded-full flex overflow-hidden opacity-40",
+  barLabel: "text-[10px] text-gray-500 font-medium mb-1",
+  actualBarsContainer: "h-20 w-full flex gap-1",
 } as const;
 
 export function PortfolioComposition({
@@ -75,8 +73,6 @@ export function PortfolioComposition({
     return null;
   }
 
-  const allocationLabel = isEmptyState ? "Recommended" : "Target";
-
   // Determine which assets to display
   // If we lack regime, we can't infer target-specific assets for empty state perfectly,
   // but we can try to be robust.
@@ -100,15 +96,14 @@ export function PortfolioComposition({
           <h2 className={STYLES.title}>Portfolio Composition</h2>
           <div className={STYLES.subtitle}>
             <div className={STYLES.allocationRow}>
-              <span className={STYLES.allocationLabel}>{allocationLabel}:</span>
-              <AllocationChip
-                label={`${target.stable}% Stable`}
-                color={ASSET_COLORS.USDT}
-              />
-              <AllocationChip
-                label={`${target.crypto}% Crypto`}
-                color={ASSET_COLORS.BTC}
-              />
+              {/* Drift Indicator moved here for context */}
+              <span
+                className={`text-xs font-bold ${
+                  data.delta > 5 ? "text-orange-400" : "text-gray-500"
+                }`}
+              >
+                Drift: {data.delta.toFixed(1)}%
+              </span>
             </div>
           </div>
         </div>
@@ -126,19 +121,22 @@ export function PortfolioComposition({
         </div>
       </div>
 
-      {/* THE GHOST BAR TRACK */}
-      <div className={STYLES.ghostBarTrack}>
-        {/* GHOST TARGET BACKGROUND - Visual guide only */}
-        <div className={STYLES.ghostBackground}>
+      {/* ALLOCATION BAR TRACK */}
+      <div className={STYLES.barTrack}>
+        {/* Target Indicator Bar (Minimal Stack style) */}
+        <div className={STYLES.barLabel}>Target Allocation</div>
+        <div className={STYLES.targetBar}>
           <div
-            style={{ width: `${target.crypto}%` }}
-            className={STYLES.ghostBorder}
+            style={{ width: `${target.crypto}%`, backgroundColor: ASSET_COLORS.BTC }}
           />
-          <div style={{ width: `${target.stable}%` }} className="h-full" />
+          <div
+            style={{ width: `${target.stable}%`, backgroundColor: ASSET_COLORS.USDT }}
+          />
         </div>
 
-        {/* ACTUAL BARS (Foreground) */}
-        <div className={STYLES.actualBars}>
+        {/* ACTUAL BARS */}
+        <div className={STYLES.barLabel}>Current Portfolio</div>
+        <div className={STYLES.actualBarsContainer}>
           <AllocationBars
             cryptoAssets={cryptoAssets}
             cryptoPercentage={cryptoPercentage}
@@ -152,9 +150,9 @@ export function PortfolioComposition({
         isEmptyState={isEmptyState}
         cryptoAssets={cryptoAssets}
         stablePercentage={stablePercentage}
-        delta={data.delta}
         simplifiedCrypto={data.currentAllocation.simplifiedCrypto}
       />
     </div>
   );
 }
+
