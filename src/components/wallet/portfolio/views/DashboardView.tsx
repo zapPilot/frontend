@@ -1,4 +1,5 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCard";
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
@@ -50,11 +51,9 @@ export function DashboardView({
     <div data-testid="dashboard-content" className={STYLES.container}>
       {/* Hero Section: Balance + Expandable Strategy Card */}
       <div className={STYLES.heroGrid}>
-        <SectionWrapper
-          state={sections.balance}
-          skeleton={<BalanceCardSkeleton />}
-        >
-          {() => (
+        {/* Balance Card - Ghost Mode bypasses SectionWrapper to show preview data */}
+        {isEmptyState ? (
+          <GhostModeOverlay enabled={true}>
             <BalanceCard
               balance={data.balance}
               roi={data.roi}
@@ -62,11 +61,25 @@ export function DashboardView({
               isLoading={false}
               onOpenModal={onOpenModal}
             />
-          )}
-        </SectionWrapper>
+          </GhostModeOverlay>
+        ) : (
+          <SectionWrapper
+            state={sections.balance}
+            skeleton={<BalanceCardSkeleton />}
+          >
+            {() => (
+              <BalanceCard
+                balance={data.balance}
+                roi={data.roi}
+                isEmptyState={isEmptyState}
+                isLoading={false}
+                onOpenModal={onOpenModal}
+              />
+            )}
+          </SectionWrapper>
+        )}
 
-        {/* Strategy Card with independent sentiment loading */}
-        {/* Strategy Card with independent sentiment loading */}
+        {/* Strategy Card shows market data - no blur needed */}
         <StrategyCard
           data={data}
           // If strategy is loading, suppress the default regime to show skeletons
@@ -80,22 +93,35 @@ export function DashboardView({
         />
       </div>
 
-      {/* Unified Composition Bar */}
-      <SectionWrapper
-        state={sections.composition}
-        skeleton={<PortfolioCompositionSkeleton />}
-      >
-        {() => (
+      {/* Unified Composition Bar - Ghost Mode bypasses SectionWrapper */}
+      {isEmptyState ? (
+        <GhostModeOverlay enabled={true} showCTA={false}>
           <PortfolioComposition
             data={data}
             currentRegime={currentRegime}
-            targetAllocation={sections.composition.data?.targetAllocation}
+            targetAllocation={data.targetAllocation}
             isEmptyState={isEmptyState}
             isLoading={false}
             onRebalance={() => onOpenModal("rebalance")}
           />
-        )}
-      </SectionWrapper>
+        </GhostModeOverlay>
+      ) : (
+        <SectionWrapper
+          state={sections.composition}
+          skeleton={<PortfolioCompositionSkeleton />}
+        >
+          {() => (
+            <PortfolioComposition
+              data={data}
+              currentRegime={currentRegime}
+              targetAllocation={sections.composition.data?.targetAllocation}
+              isEmptyState={isEmptyState}
+              isLoading={false}
+              onRebalance={() => onOpenModal("rebalance")}
+            />
+          )}
+        </SectionWrapper>
+      )}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import {
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
+import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import type {
@@ -255,23 +256,21 @@ export function createEmptyPortfolioState(
   const currentRegime = getRegimeFromSentiment(sentimentValue);
   const targetAllocation = getTargetAllocation(currentRegime);
 
-  // Empty allocation structure (0% current)
-  const emptyAllocation = {
-    crypto: 0,
-    stable: 0,
-    constituents: {
-      crypto: [],
-      stable: [],
-    },
-    simplifiedCrypto: [], // Empty array for PortfolioComposition
+  // Use Ghost Mode preview data for enticing visual preview
+  // This shows unconnected users what their dashboard could look like
+  const previewAllocation = {
+    crypto: GHOST_MODE_PREVIEW.currentAllocation.crypto,
+    stable: GHOST_MODE_PREVIEW.currentAllocation.stable,
+    constituents: GHOST_MODE_PREVIEW.currentAllocation.constituents,
+    simplifiedCrypto: GHOST_MODE_PREVIEW.currentAllocation.simplifiedCrypto,
   };
 
   const baseData: WalletPortfolioData = {
-    // Portfolio metrics - all zeros
-    balance: 0,
-    roi: 0,
-    roiChange7d: 0,
-    roiChange30d: 0,
+    // Portfolio metrics - use preview values for visual appeal
+    balance: GHOST_MODE_PREVIEW.balance,
+    roi: GHOST_MODE_PREVIEW.roi,
+    roiChange7d: GHOST_MODE_PREVIEW.roiChange7d,
+    roiChange30d: GHOST_MODE_PREVIEW.roiChange30d,
 
     // Market sentiment - REAL data
     sentimentValue,
@@ -282,15 +281,15 @@ export function createEmptyPortfolioState(
     // Regime - derived from REAL sentiment
     currentRegime,
 
-    // Allocations
-    currentAllocation: emptyAllocation,
+    // Allocations - use preview for visual, real target from regime
+    currentAllocation: previewAllocation,
     targetAllocation, // Real target from regime
-    delta: targetAllocation.crypto, // Full gap (0% → target%)
+    delta: GHOST_MODE_PREVIEW.delta,
 
-    // Portfolio details - all zeros
-    positions: 0,
-    protocols: 0,
-    chains: 0,
+    // Portfolio details - use preview values
+    positions: GHOST_MODE_PREVIEW.positions,
+    protocols: GHOST_MODE_PREVIEW.protocols,
+    chains: GHOST_MODE_PREVIEW.chains,
 
     // States
     isLoading: false,
