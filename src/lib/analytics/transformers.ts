@@ -476,7 +476,8 @@ export function aggregateMonthlyPnL(
       }
 
       // Find portfolio value at start of month
-      const monthStart = new Date(year, month - 1, 1).toISOString();
+      // Use YYYY-MM-01 format to avoid timezone issues (toISOString varies by TZ)
+      const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
       const portfolioValue =
         portfolioValues.find(pv => pv.date && pv.date >= monthStart)
           ?.total_value_usd ?? 100000; // Default to 100k if not found
