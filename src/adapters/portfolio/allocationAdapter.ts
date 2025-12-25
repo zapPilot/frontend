@@ -142,7 +142,7 @@ export function calculateAllocation(
       value: othersValue > 0 ? (othersValue / totalCrypto) * 100 : 0,
       color: ASSET_COLORS.ALT,
     },
-  ].filter((c) => c.value > 0);
+  ].filter(c => c.value > 0);
 
   return {
     crypto: cryptoPercent,

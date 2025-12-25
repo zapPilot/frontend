@@ -22,7 +22,10 @@ interface KeyMetricsGridProps {
  *
  * Displays a 4-column grid of key analytics metrics with trend indicators.
  */
-export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({ metrics, isLoading = false }) => {
+export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({
+  metrics,
+  isLoading = false,
+}) => {
   const metricList: MetricData[] = [
     metrics.timeWeightedReturn,
     metrics.maxDrawdown,

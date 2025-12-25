@@ -43,7 +43,20 @@ export const MonthlyPnLHeatmap: React.FC<MonthlyPnLHeatmapProps> = ({
         {/* Priority 1: Show skeleton during loading */}
         {isLoading ? (
           // Content-aware skeleton: show real month labels, skeleton for values
-          ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].map((month, idx) => (
+          [
+            "Jan",
+            "Feb",
+            "Mar",
+            "Apr",
+            "May",
+            "Jun",
+            "Jul",
+            "Aug",
+            "Sep",
+            "Oct",
+            "Nov",
+            "Dec",
+          ].map((month, idx) => (
             <div key={idx} className="flex flex-col gap-1">
               <div
                 className="h-12 bg-gray-800/50 rounded-md border border-gray-700/30 animate-pulse"

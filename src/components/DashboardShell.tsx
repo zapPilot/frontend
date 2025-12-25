@@ -26,13 +26,8 @@ export function DashboardShell({
   headerBanners,
   footerOverlays,
 }: DashboardShellProps) {
-  const { 
-    unifiedData, 
-    sections, 
-    isLoading, 
-    error, 
-    refetch 
-  } = usePortfolioDataProgressive(urlUserId);
+  const { unifiedData, sections, isLoading, error, refetch } =
+    usePortfolioDataProgressive(urlUserId);
   const { data: sentimentData } = useSentimentData();
   const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = error instanceof Error ? error : null;

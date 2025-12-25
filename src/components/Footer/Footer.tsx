@@ -1,11 +1,11 @@
 "use client";
 
 import {
-    type LucideIcon,
-    MessageCircle,
-    MessageSquare,
-    Send,
-    X,
+  type LucideIcon,
+  MessageCircle,
+  MessageSquare,
+  Send,
+  X,
 } from "lucide-react";
 
 import { GithubIcon } from "@/components/icons/GithubIcon";

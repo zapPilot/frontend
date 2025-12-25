@@ -1,12 +1,10 @@
 // Convenience sets for fast asset symbol lookups (lowercased)
 export const ASSET_SYMBOL_SETS = {
-  btc: new Set(
-    ["btc", "wbtc", "cbbtc", "tbtc"].map((s) => s.toLowerCase()),
-  ),
+  btc: new Set(["btc", "wbtc", "cbbtc", "tbtc"].map(s => s.toLowerCase())),
   eth: new Set(
-    ["eth", "weth", "steth", "wsteth", "weeth", "mseth", "frxeth"].map((s) =>
-      s.toLowerCase(),
-    ),
+    ["eth", "weth", "steth", "wsteth", "weeth", "mseth", "frxeth"].map(s =>
+      s.toLowerCase()
+    )
   ),
   stablecoins: new Set(
     [
@@ -24,6 +22,6 @@ export const ASSET_SYMBOL_SETS = {
       "frxusd",
       "wfrax",
       "legacy frax dollar",
-    ].map((s) => s.toLowerCase()),
+    ].map(s => s.toLowerCase())
   ),
 } as const;

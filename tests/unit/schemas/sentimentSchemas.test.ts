@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import {
-    sentimentApiResponseSchema,
-    validateSentimentApiResponse,
+  sentimentApiResponseSchema,
+  validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
 
 describe("sentimentSchemas", () => {

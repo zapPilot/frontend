@@ -5,7 +5,13 @@
  * while only using pulsing placeholders for dynamic data (numbers, charts)
  */
 
-import { ArrowDownCircle, ArrowUpCircle, ChevronDown, Info, Zap } from "lucide-react";
+import {
+  ArrowDownCircle,
+  ArrowUpCircle,
+  ChevronDown,
+  Info,
+  Zap,
+} from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";

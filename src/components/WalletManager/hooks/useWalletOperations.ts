@@ -7,7 +7,10 @@ import { useUser } from "@/contexts/UserContext";
 import { invalidateAndRefetch } from "@/hooks/useQueryInvalidation";
 import { useToast } from "@/hooks/useToast";
 import { queryKeys } from "@/lib/state/queryClient";
-import { handleWalletError, type WalletData } from "@/lib/validation/walletUtils";
+import {
+  handleWalletError,
+  type WalletData,
+} from "@/lib/validation/walletUtils";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { deleteUser as deleteUserAccount } from "@/services/accountService";
 import { copyTextToClipboard } from "@/utils/clipboard";
@@ -15,15 +18,15 @@ import { formatAddress } from "@/utils/formatters";
 import { walletLogger } from "@/utils/logger";
 
 import {
-    addWallet as addWalletToBundle,
-    loadWallets as fetchWallets,
-    removeWallet as removeWalletFromBundle,
-    updateWalletLabel as updateWalletLabelRequest,
+  addWallet as addWalletToBundle,
+  loadWallets as fetchWallets,
+  removeWallet as removeWalletFromBundle,
+  updateWalletLabel as updateWalletLabelRequest,
 } from "../services/WalletService";
 import type {
-    EditingWallet,
-    NewWallet,
-    WalletOperations,
+  EditingWallet,
+  NewWallet,
+  WalletOperations,
 } from "../types/wallet.types";
 import { validateNewWallet } from "../utils/validation";
 

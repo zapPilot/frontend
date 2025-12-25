@@ -140,7 +140,6 @@ export function useChartHover<T>(
   data: T[],
   options: UseChartHoverOptions<T>
 ): UseChartHoverReturn {
-
   const {
     chartType,
     chartWidth,

@@ -71,7 +71,7 @@ export interface StrategyData {
 export interface DashboardProgressiveState {
   // Legacy unified data (for backward compatibility during migration)
   unifiedData: WalletPortfolioDataWithDirection | null;
-  
+
   // Progressive sections
   sections: {
     balance: SectionState<BalanceData>;
@@ -79,7 +79,7 @@ export interface DashboardProgressiveState {
     strategy: SectionState<StrategyData>;
     sentiment: SectionState<SentimentData>;
   };
-  
+
   // Global states
   isLoading: boolean;
   error: Error | null;

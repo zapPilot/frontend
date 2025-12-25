@@ -1,8 +1,8 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { SettingsModal } from "@/components/wallet/portfolio/components/SettingsModal";
 import {
-    DepositModal,
-    RebalanceModal,
+  DepositModal,
+  RebalanceModal,
 } from "@/components/wallet/portfolio/modals";
 import { WithdrawModal } from "@/components/wallet/portfolio/modals/WithdrawModal";
 import type { ModalType } from "@/types/portfolio";

@@ -2,7 +2,10 @@ import {
   type ServiceResult,
   wrapServiceCall,
 } from "@/lib/errors/errorHandling";
-import { transformWalletData, type WalletData } from "@/lib/validation/walletUtils";
+import {
+  transformWalletData,
+  type WalletData,
+} from "@/lib/validation/walletUtils";
 
 import {
   addWalletToBundle,

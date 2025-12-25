@@ -8,16 +8,16 @@
 import { useQuery } from "@tanstack/react-query";
 
 import {
-    getQuoteForSentiment,
-    type SentimentLabel,
+  getQuoteForSentiment,
+  type SentimentLabel,
 } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { APIError, httpUtils } from "@/lib/http";
 import { queryKeys } from "@/lib/state/queryClient";
 import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import {
-    type SentimentApiResponse,
-    validateSentimentApiResponse,
+  type SentimentApiResponse,
+  validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
 import { logger } from "@/utils/logger";
 

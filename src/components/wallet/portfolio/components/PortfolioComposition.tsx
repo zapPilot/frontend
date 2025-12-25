@@ -127,10 +127,16 @@ export function PortfolioComposition({
         <div className={STYLES.barLabel}>Target Allocation</div>
         <div className={STYLES.targetBar}>
           <div
-            style={{ width: `${target.crypto}%`, backgroundColor: ASSET_COLORS.BTC }}
+            style={{
+              width: `${target.crypto}%`,
+              backgroundColor: ASSET_COLORS.BTC,
+            }}
           />
           <div
-            style={{ width: `${target.stable}%`, backgroundColor: ASSET_COLORS.USDT }}
+            style={{
+              width: `${target.stable}%`,
+              backgroundColor: ASSET_COLORS.USDT,
+            }}
           />
         </div>
 
@@ -155,4 +161,3 @@ export function PortfolioComposition({
     </div>
   );
 }
-

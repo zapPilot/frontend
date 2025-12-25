@@ -12,9 +12,12 @@ const STYLES = {
   netWorthEmpty: "text-5xl font-bold tracking-tight mb-4 text-gray-600",
   buttonBase:
     "flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-colors border",
-  buttonDisabled: "bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed",
-  depositEnabled: "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20",
-  withdrawEnabled: "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20",
+  buttonDisabled:
+    "bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed",
+  depositEnabled:
+    "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20",
+  withdrawEnabled:
+    "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20",
 } as const;
 
 /** Get button className based on action type and disabled state */
@@ -51,7 +54,9 @@ export function BalanceCard({
       <div className="flex items-center gap-3 mb-6">
         <div className="flex-1">
           <div
-            className={isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive}
+            className={
+              isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive
+            }
             data-testid="net-worth"
           >
             ${balance.toLocaleString()}

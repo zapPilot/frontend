@@ -1,12 +1,12 @@
 import {
-    getRegimeAllocation,
-    type RegimeId,
-    regimes,
+  getRegimeAllocation,
+  type RegimeId,
+  regimes,
 } from "@/components/wallet/regime/regimeData";
 import { getActiveStrategy } from "@/lib/domain/strategySelector";
 import type {
-    DirectionType,
-    DurationInfo,
+  DirectionType,
+  DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 
@@ -19,7 +19,7 @@ export interface TargetAllocation {
  * Gets target allocation for a regime
  */
 export function getTargetAllocation(regimeId: RegimeId): TargetAllocation {
-  const regime = regimes.find((r) => r.id === regimeId);
+  const regime = regimes.find(r => r.id === regimeId);
 
   if (!regime) {
     // Fallback to neutral (50/50)

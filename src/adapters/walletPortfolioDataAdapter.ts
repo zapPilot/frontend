@@ -11,21 +11,21 @@
  */
 
 import {
-    type AllocationConstituent,
-    calculateAllocation,
-    calculateDelta,
+  type AllocationConstituent,
+  calculateAllocation,
+  calculateDelta,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-    getRegimeStrategyInfo,
-    getTargetAllocation,
+  getRegimeStrategyInfo,
+  getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import type {
-    DirectionType,
-    DurationInfo,
+  DirectionType,
+  DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";

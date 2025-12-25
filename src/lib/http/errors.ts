@@ -64,7 +64,7 @@ export function toError(error: unknown): Error {
 
   if (error && typeof error === "object") {
     const errorObj = error as Record<string, unknown>;
-    return new Error(errorObj["message"] as string || "Unknown error");
+    return new Error((errorObj["message"] as string) || "Unknown error");
   }
 
   return new Error("Unknown error occurred");

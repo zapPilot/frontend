@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Import after mocks
-import { useWalletProvider,WalletProvider } from "@/providers/WalletProvider";
+import { useWalletProvider, WalletProvider } from "@/providers/WalletProvider";
 
 // Mock ThirdWeb hooks
 const mockUseActiveAccount = vi.fn();

@@ -34,7 +34,9 @@ const parseDirectiveSeconds = (
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-export function parseCacheControlForHint(value?: string | null): CacheHint | null {
+export function parseCacheControlForHint(
+  value?: string | null
+): CacheHint | null {
   if (!value) {
     return null;
   }

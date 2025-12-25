@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/state/queryClient";
 
 import {
-    getLandingPagePortfolioData,
-    type LandingPageResponse,
+  getLandingPagePortfolioData,
+  type LandingPageResponse,
 } from "../../services/analyticsService";
 import { createQueryConfig } from "./queryDefaults";
 
@@ -59,4 +59,3 @@ export function useLandingPageData(userId: string | null | undefined) {
     })
   );
 }
-

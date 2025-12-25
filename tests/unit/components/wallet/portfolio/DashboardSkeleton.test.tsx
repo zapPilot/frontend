@@ -9,10 +9,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import {
-    BalanceCardSkeleton,
-    DashboardSkeleton,
-    PortfolioCompositionSkeleton,
-    StrategyCardSkeleton,
+  BalanceCardSkeleton,
+  DashboardSkeleton,
+  PortfolioCompositionSkeleton,
+  StrategyCardSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 
 describe("BalanceCardSkeleton", () => {
@@ -23,14 +23,20 @@ describe("BalanceCardSkeleton", () => {
 
   it("should render disabled Deposit button", () => {
     render(<BalanceCardSkeleton />);
-    const depositButton = screen.getByRole("button", { name: /deposit/i, hidden: true });
+    const depositButton = screen.getByRole("button", {
+      name: /deposit/i,
+      hidden: true,
+    });
     expect(depositButton).toBeInTheDocument();
     expect(depositButton).toBeDisabled();
   });
 
   it("should render disabled Withdraw button", () => {
     render(<BalanceCardSkeleton />);
-    const withdrawButton = screen.getByRole("button", { name: /withdraw/i, hidden: true });
+    const withdrawButton = screen.getByRole("button", {
+      name: /withdraw/i,
+      hidden: true,
+    });
     expect(withdrawButton).toBeInTheDocument();
     expect(withdrawButton).toBeDisabled();
   });
@@ -107,7 +113,10 @@ describe("PortfolioCompositionSkeleton", () => {
 
   it("should render disabled Rebalance button", () => {
     render(<PortfolioCompositionSkeleton />);
-    const rebalanceButton = screen.getByRole("button", { name: /rebalance/i, hidden: true });
+    const rebalanceButton = screen.getByRole("button", {
+      name: /rebalance/i,
+      hidden: true,
+    });
     expect(rebalanceButton).toBeInTheDocument();
     expect(rebalanceButton).toBeDisabled();
   });
@@ -189,8 +198,12 @@ describe("Content-Aware Pattern", () => {
 
     // Real UI elements
     expect(screen.getByText("Net Worth")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /deposit/i, hidden: true })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /withdraw/i, hidden: true })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /deposit/i, hidden: true })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /withdraw/i, hidden: true })
+    ).toBeInTheDocument();
 
     // Skeleton placeholders (animate-pulse class)
     const skeletons = container.querySelectorAll(".animate-pulse");
@@ -215,7 +228,9 @@ describe("Content-Aware Pattern", () => {
     expect(screen.getByText("Portfolio Composition")).toBeInTheDocument();
     expect(screen.getByText("Crypto")).toBeInTheDocument();
     expect(screen.getByText("Stablecoins")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /rebalance/i, hidden: true })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /rebalance/i, hidden: true })
+    ).toBeInTheDocument();
 
     // Skeleton placeholders
     const skeletons = container.querySelectorAll(".animate-pulse");
