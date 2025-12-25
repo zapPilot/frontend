@@ -119,7 +119,7 @@ export interface StrategyCardProps {
 export function StrategyCard({
   data,
   currentRegime,
-  isEmptyState = false,
+  // isEmptyState intentionally not destructured - kept in props for API consistency
   isLoading = false,
   sentimentSection,
 }: StrategyCardProps) {
@@ -245,12 +245,6 @@ export function StrategyCard({
             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
               Current Strategy
               <Info className="w-3 h-3" />
-              {/* Empty State Badge */}
-              {isEmptyState && (
-                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md text-[10px] font-bold border border-purple-500/20">
-                  Connect to Activate
-                </span>
-              )}
             </div>
             <div className="text-2xl font-bold text-white mb-1 flex items-center">
               {effectiveRegime ? (
