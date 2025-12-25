@@ -11,7 +11,7 @@ const httpUtilsMock = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("@/lib/http-utils", () => httpUtilsMock);
+vi.mock("@/lib/http", () => httpUtilsMock);
 
 // Mock string utils
 vi.mock("@/lib/stringUtils", () => ({
@@ -26,7 +26,7 @@ vi.mock("@/lib/stringUtils", () => ({
 vi.unmock("@/services/priceService");
 
 type PriceServiceModule = typeof import("@/services/priceService");
-type HttpUtilsModule = typeof import("@/lib/http-utils");
+type HttpUtilsModule = typeof import("@/lib/http");
 
 let priceService: PriceServiceModule;
 let httpUtils: HttpUtilsModule["httpUtils"];
@@ -35,7 +35,7 @@ const loadModules = async () => {
   // Reset module registry so previous mocks don't bleed between suites
   vi.resetModules();
 
-  ({ httpUtils } = await import("@/lib/http-utils"));
+  ({ httpUtils } = await import("@/lib/http"));
   priceService = await import("@/services/priceService");
 };
 

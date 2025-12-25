@@ -140,13 +140,8 @@ export const messageResponseSchema = z.object({
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-/** @public */ export type User = z.infer<typeof userSchema>;
 /** @public */ export type UserCryptoWallet = z.infer<
   typeof userCryptoWalletSchema
->;
-/** @public */ export type Plan = z.infer<typeof planSchema>;
-/** @public */ export type UserSubscription = z.infer<
-  typeof userSubscriptionSchema
 >;
 /** @public */ export type ConnectWalletResponse = z.infer<
   typeof connectWalletResponseSchema
@@ -244,10 +239,4 @@ export function validateMessageResponse(data: unknown): MessageResponse {
   return messageResponseSchema.parse(data);
 }
 
-/**
- * Safe validation that returns result with success/error information
- * Useful for cases where you want to handle validation errors gracefully
- */
-export function safeValidateUserProfile(data: unknown) {
-  return userProfileResponseSchema.safeParse(data);
-}
+// safeValidateUserProfile removed (test-only usage)

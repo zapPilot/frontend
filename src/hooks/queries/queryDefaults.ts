@@ -51,7 +51,7 @@ const VOLATILE_TIMINGS = {
   gcTime: 15 * 60 * 1000,
 } as const;
 
-export const QUERY_TIMINGS = {
+const QUERY_TIMINGS = {
   /** Default timing that mirrors Cache-Control max-age/stale-while-revalidate */
   etl: HOURLY_ETL_TIMINGS,
   /** Short-lived override for explicitly real-time data */
@@ -68,7 +68,7 @@ export const QUERY_TIMINGS = {
  * @param error - Error object to check
  * @returns True if error has 4xx status code
  */
-export const isClientError = (error: unknown): boolean => {
+const isClientError = (error: unknown): boolean => {
   // Check BaseServiceError (preferred)
   if (error instanceof BaseServiceError) {
     return error.isClientError();
@@ -156,20 +156,3 @@ export const createQueryConfig = (options: QueryConfigOptions = {}) => {
       Math.min(1500 * 2 ** attemptIndex, 30_000),
   };
 };
-
-/**
- * Preset configurations for common use cases
- */
-export const QUERY_PRESETS = {
-  /** Portfolio/balance data */
-  portfolio: createQueryConfig(),
-
-  /** Token prices */
-  prices: createQueryConfig(),
-
-  /** User profile */
-  user: createQueryConfig(),
-
-  /** Strategies/tokens list */
-  metadata: createQueryConfig(),
-} as const;

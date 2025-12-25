@@ -13,6 +13,7 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useState,
 } from "react";
 import {
   useActiveAccount,
@@ -21,6 +22,7 @@ import {
   useConnect,
   useConnectedWallets,
   useDisconnect,
+  useSetActiveWallet,
   useSwitchActiveWalletChain,
   useWalletBalance,
 } from "thirdweb/react";
@@ -73,6 +75,51 @@ export function WalletProvider({ children }: WalletProviderProps) {
     client: THIRDWEB_CLIENT,
   });
   const connectedWallets = useConnectedWallets();
+  const setActiveWallet = useSetActiveWallet();
+
+  // Transform connectedWallets to simplified format with active state
+  const walletList = useMemo(() => {
+    return connectedWallets
+      .map(wallet => ({
+        address: wallet.getAccount()?.address || "",
+        isActive: wallet.getAccount()?.address === account?.address,
+      }))
+      .filter(w => w.address);
+  }, [connectedWallets, account?.address]);
+
+  // Implement switchActiveWallet handler
+  const handleSwitchActiveWallet = useCallback(
+    async (address: string) => {
+      const targetWallet = connectedWallets.find(
+        w => w.getAccount()?.address === address
+      );
+
+      if (!targetWallet) {
+        const errorMessage = `Wallet ${address} not found`;
+        setError({
+          message: errorMessage,
+          code: "WALLET_NOT_FOUND",
+        });
+        throw new Error(errorMessage);
+      }
+
+      try {
+        setError(null); // Clear previous errors
+        await setActiveWallet(targetWallet);
+        walletLogger.info("Switched active wallet to", address);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to switch active wallet";
+        setError({
+          message: errorMessage,
+          code: "SWITCH_WALLET_ERROR",
+        });
+        walletLogger.error("Failed to switch active wallet:", err);
+        throw err;
+      }
+    },
+    [connectedWallets, setActiveWallet]
+  );
 
   // Simplified account state
   const walletAccount = useMemo((): SimplifiedWalletAccount | null => {
@@ -101,10 +148,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const isConnecting = Boolean(!account?.address && wallet);
   const isDisconnecting = Boolean(account?.address && !wallet);
 
-  // Error state (simplified - could be enhanced)
-  const error: WalletError | null = null;
+  // Error state management
+  const [error, setError] = useState<WalletError | null>(null);
   const clearError = useCallback(() => {
-    // In a more complex implementation, you'd manage error state here
+    setError(null);
   }, []);
 
   // Connect function
@@ -112,6 +159,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!connect) return;
 
     try {
+      setError(null); // Clear previous errors
       // Get the first available wallet from connected wallets
       // In a real app, you might want wallet selection UI
       const availableWallet = connectedWallets[0];
@@ -121,6 +169,12 @@ export function WalletProvider({ children }: WalletProviderProps) {
         throw new Error("No wallet available");
       }
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to connect wallet";
+      setError({
+        message: errorMessage,
+        code: "CONNECT_ERROR",
+      });
       walletLogger.error("Failed to connect wallet:", err);
       throw err;
     }
@@ -131,8 +185,15 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!disconnect || !wallet) return;
 
     try {
+      setError(null); // Clear previous errors
       await Promise.resolve(disconnect(wallet));
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to disconnect wallet";
+      setError({
+        message: errorMessage,
+        code: "DISCONNECT_ERROR",
+      });
       walletLogger.error("Failed to disconnect wallet:", err);
       throw err;
     }
@@ -208,6 +269,11 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
       // Signing
       signMessage,
+
+      // Multi-wallet support (V22 Phase 2A)
+      connectedWallets: walletList,
+      switchActiveWallet: handleSwitchActiveWallet,
+      hasMultipleWallets: walletList.length > 1,
     }),
     [
       walletAccount,
@@ -221,6 +287,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
       error,
       clearError,
       signMessage,
+      walletList,
+      handleSwitchActiveWallet,
     ]
   );
 

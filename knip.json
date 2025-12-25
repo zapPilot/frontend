@@ -9,12 +9,11 @@
     "**/*.test.{ts,tsx}",
     "**/*.spec.{ts,tsx}",
     "tests/**",
+    "**/index.ts",
     "playwright.config.ts",
     "vitest.config.ts",
     "eslint.config.mjs",
-    "postcss.config.mjs",
-    "**/index.ts",
-    "**/index.tsx"
+    "postcss.config.mjs"
   ],
 
   "ignoreDependencies": [
@@ -27,8 +26,8 @@
   ],
 
   "ignoreExportsUsedInFile": {
-    "interface": false,
-    "type": false
+    "interface": true,
+    "type": true
   },
 
   "includeEntryExports": true,

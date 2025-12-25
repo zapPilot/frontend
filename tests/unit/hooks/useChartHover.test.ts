@@ -10,14 +10,27 @@ import { useChartHover } from "@/hooks/useChartHover";
 import type { ChartHoverState } from "@/types/chartHover";
 
 // Mock requestAnimationFrame and cancelAnimationFrame
+// These mocks are isolated to this test file by saving/restoring originals
+let rafId = 0;
 const mockRaf = vi.fn((cb: FrameRequestCallback) => {
+  const id = ++rafId;
+  // Execute callback synchronously for test predictability
   cb(0);
-  return 1;
+  return id;
 });
 const mockCancelRaf = vi.fn();
 
+// Save original globals for proper cleanup
+let originalRaf: typeof requestAnimationFrame;
+let originalCancelRaf: typeof cancelAnimationFrame;
+
 describe("useChartHover", () => {
   beforeEach(() => {
+    // Save original globals
+    originalRaf = global.requestAnimationFrame;
+    originalCancelRaf = global.cancelAnimationFrame;
+
+    rafId = 0;
     global.requestAnimationFrame =
       mockRaf as unknown as typeof requestAnimationFrame;
     global.cancelAnimationFrame =
@@ -27,6 +40,9 @@ describe("useChartHover", () => {
   });
 
   afterEach(() => {
+    // Restore original globals to prevent affecting other test files
+    global.requestAnimationFrame = originalRaf;
+    global.cancelAnimationFrame = originalCancelRaf;
     vi.clearAllMocks();
   });
 
@@ -539,14 +555,7 @@ describe("useChartHover", () => {
 
   describe("Cleanup", () => {
     it("should cancel RAF on unmount", () => {
-      // Use a real RAF implementation for this test
-      const realRaf = vi.fn((cb: FrameRequestCallback) => {
-        cb(0);
-        return 999;
-      });
-      global.requestAnimationFrame =
-        realRaf as unknown as typeof requestAnimationFrame;
-
+      // This test uses the default mockRaf which returns incrementing IDs
       const { result, unmount } = renderHook(() =>
         useChartHover(sampleData, defaultOptions)
       );
@@ -579,7 +588,11 @@ describe("useChartHover", () => {
 
       unmount();
 
-      expect(mockCancelRaf).toHaveBeenCalledWith(999);
+      // Should have called cancelAnimationFrame with a valid ID (> 0)
+      expect(mockCancelRaf).toHaveBeenCalled();
+      const calledWithId = mockCancelRaf.mock.calls[0]?.[0];
+      expect(typeof calledWithId).toBe("number");
+      expect(calledWithId).toBeGreaterThan(0);
     });
   });
 

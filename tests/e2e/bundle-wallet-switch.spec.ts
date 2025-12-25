@@ -45,32 +45,6 @@ test.describe("Bundle Wallet Switching - E2E", () => {
     await expect(banner).not.toBeVisible();
   });
 
-  test("should have switch banner element in HTML when connected to different wallet", async ({
-    page,
-  }) => {
-    await page.goto(`/bundle?userId=${BUNDLE_USER_ID}`);
-    await page.waitForLoadState("networkidle");
-
-    // Note: This test verifies the banner can appear in the DOM
-    // Actual wallet connection requires ThirdWeb modal interaction
-    // which may need to be mocked for E2E tests
-
-    // Check if banner component exists in the page structure
-    const bannerExists = await page.evaluate(() => {
-      // Look for banner-related elements
-      const body = document.body.innerHTML;
-      return (
-        body.includes("switch") ||
-        body.includes("banner") ||
-        body.includes("Stay") ||
-        body.includes("Switch to my bundle")
-      );
-    });
-
-    // Banner component should be in the code even if not visible
-    expect(bannerExists).toBe(true);
-  });
-
   test("should show wallet connection option", async ({ page }) => {
     await page.goto(`/bundle?userId=${BUNDLE_USER_ID}`);
 

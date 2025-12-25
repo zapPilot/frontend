@@ -48,40 +48,20 @@ export const tokenBalanceRawSchema = z
   .catchall(z.unknown()); // Allow additional fields
 
 /**
- * Schema for normalized token balance (after processing)
- * This matches the NormalizedTokenBalance interface
- */
-export const normalizedTokenBalanceSchema = z.object({
-  address: z.string(),
-  symbol: z.string().optional(),
-  name: z.string().optional(),
-  decimals: z.number().nullable(),
-  rawBalance: z.string().optional(),
-  formattedBalance: z.number().optional(),
-  usdValue: z.number().optional(),
-  balance: z.number(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-/**
  * Schema for wallet response data structure
- * Supports both new structure (with data.balances) and legacy structure
+ * Current backend format uses object with balances and nativeBalance
  */
 export const walletResponseDataSchema = z
   .object({
-    // New structure: data object with balances array
-    // Legacy structure: data can also be a direct array of tokens
+    // Current structure: data object with balances array and optional nativeBalance
     data: z
-      .union([
-        z.object({
-          balances: z.array(tokenBalanceRawSchema).optional(),
-          nativeBalance: tokenBalanceRawSchema.optional(),
-        }),
-        z.array(tokenBalanceRawSchema), // Legacy: data as array
-      ])
+      .object({
+        balances: z.array(tokenBalanceRawSchema).optional(),
+        nativeBalance: tokenBalanceRawSchema.optional(),
+      })
       .optional(),
 
-    // Legacy structure: direct tokens array
+    // Legacy structure: tokens array at top level
     tokens: z.array(tokenBalanceRawSchema).optional(),
 
     // Chain and wallet info
@@ -100,45 +80,29 @@ export const walletResponseDataSchema = z
   .catchall(z.unknown()); // Allow additional fields
 
 /**
- * Schema for normalized wallet balances response
- * This matches the WalletTokenBalances interface
+ * Schema for normalized token balance (after processing)
  */
-export const walletTokenBalancesSchema = z.object({
-  chainId: z.number(),
+export const normalizedTokenBalanceSchema = z.object({
   address: z.string(),
-  fromCache: z.boolean(),
-  fetchedAt: z.string().optional(),
-  tokens: z.array(normalizedTokenBalanceSchema),
+  symbol: z.string().optional(),
+  name: z.string().optional(),
+  decimals: z.number().nullable(),
+  rawBalance: z.string().optional(),
+  formattedBalance: z.number().optional(),
+  usdValue: z.number().optional(),
+  balance: z.number(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
-/** @public */ export type TokenBalanceRaw = z.infer<
-  typeof tokenBalanceRawSchema
->;
-/** @public */ export type NormalizedTokenBalance = z.infer<
-  typeof normalizedTokenBalanceSchema
->;
-/** @public */ export type WalletResponseData = z.infer<
-  typeof walletResponseDataSchema
->;
-/** @public */ export type WalletTokenBalances = z.infer<
-  typeof walletTokenBalancesSchema
->;
+type WalletResponseData = z.infer<typeof walletResponseDataSchema>;
 
 /**
  * Validation helper functions
  */
-
-/**
- * Validates raw token balance data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateTokenBalanceRaw(data: unknown): TokenBalanceRaw {
-  return tokenBalanceRawSchema.parse(data);
-}
 
 /**
  * Validates wallet response data from API
@@ -154,18 +118,7 @@ export function validateWalletResponseData(data: unknown): WalletResponseData {
 }
 
 /**
- * Validates normalized wallet balances
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateWalletTokenBalances(
-  data: unknown
-): WalletTokenBalances {
-  return walletTokenBalancesSchema.parse(data);
-}
-
-/**
- * Safe validation that returns result with success/error information
- * Useful for cases where you want to handle validation errors gracefully
+ * Safe validation helper that returns a result object instead of throwing
  */
 export function safeValidateWalletResponse(data: unknown) {
   return walletResponseDataSchema.safeParse(data);

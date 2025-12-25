@@ -526,32 +526,8 @@ export function LoadingWrapper({
 }
 
 // =============================================================================
-// SPECIALIZED LEGACY COMPONENTS
+// SPECIALIZED COMPONENTS
 // =============================================================================
-
-export function WalletMetricsSkeleton({
-  className = "",
-  showValue = true,
-  showPercentage = false,
-}: {
-  className?: string;
-  showValue?: boolean;
-  showPercentage?: boolean;
-}) {
-  return (
-    <div className={`flex items-center space-x-2 ${className}`}>
-      {showValue && (
-        <>
-          <Skeleton variant="circular" width={16} height={16} />
-          <Skeleton variant="rectangular" width={64} height={24} />
-        </>
-      )}
-      {showPercentage && (
-        <Skeleton variant="rectangular" width={96} height={24} />
-      )}
-    </div>
-  );
-}
 
 export function AssetCategorySkeleton({
   className = "",
@@ -635,60 +611,6 @@ export function LoadingState({
           <Spinner size={size} color="primary" />
         </div>
       );
-  }
-}
-
-export function withLoadingState<P extends object>(
-  Component: React.ComponentType<P>,
-  loadingProps?: Omit<LoadingStateProps, "className">
-) {
-  return function LoadingWrappedComponent(
-    props: P & { isLoading?: boolean; className?: string }
-  ) {
-    const { isLoading, className, ...componentProps } = props;
-
-    if (isLoading) {
-      return <LoadingState {...loadingProps} className={className ?? ""} />;
-    }
-
-    return <Component {...(componentProps as P)} />;
-  };
-}
-
-export function useLoadingComponent(
-  context: "page" | "card" | "inline" | "chart"
-) {
-  switch (context) {
-    case "page":
-      const PageLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="card" size="lg" {...props} />
-      );
-      PageLoadingComponent.displayName = "PageLoadingComponent";
-      return PageLoadingComponent;
-    case "card":
-      const CardLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="skeleton" skeletonType="card" {...props} />
-      );
-      CardLoadingComponent.displayName = "CardLoadingComponent";
-      return CardLoadingComponent;
-    case "inline":
-      const InlineLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="inline" size="sm" {...props} />
-      );
-      InlineLoadingComponent.displayName = "InlineLoadingComponent";
-      return InlineLoadingComponent;
-    case "chart":
-      const ChartLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="skeleton" skeletonType="chart" {...props} />
-      );
-      ChartLoadingComponent.displayName = "ChartLoadingComponent";
-      return ChartLoadingComponent;
-    default:
-      const DefaultLoadingComponent = (props: Partial<LoadingStateProps>) => (
-        <LoadingState variant="spinner" {...props} />
-      );
-      DefaultLoadingComponent.displayName = "DefaultLoadingComponent";
-      return DefaultLoadingComponent;
   }
 }
 

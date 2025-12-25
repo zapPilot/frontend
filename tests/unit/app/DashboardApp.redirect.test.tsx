@@ -5,7 +5,7 @@ import DashboardApp from "../../../src/app/page";
 import { render } from "../../test-utils";
 
 // Mock WalletPortfolio to avoid heavy rendering
-vi.mock("../../../src/components/WalletPortfolio", () => ({
+vi.mock("../../../src/components/wallet/portfolio/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 
@@ -14,6 +14,14 @@ vi.mock("../../../src/components/Navigation", () => ({
   Navigation: ({ activeTab }: any) => (
     <div data-testid="navigation" data-tab={activeTab} />
   ),
+}));
+
+vi.mock("@/components/DashboardShell", () => ({
+  DashboardShell: () => <div data-testid="dashboard-shell" />,
+}));
+
+vi.mock("@/components/WalletManager", () => ({
+  WalletManager: () => null,
 }));
 
 // Mock useUser to control connection state
@@ -34,6 +42,7 @@ vi.mock("../../../src/contexts/UserContext", () => ({
 const replaceSpy = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceSpy }),
+  useSearchParams: () => new URLSearchParams(""),
 }));
 
 describe("DashboardApp redirect to bundle", () => {

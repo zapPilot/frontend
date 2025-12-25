@@ -1,15 +1,20 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
+import { TIMINGS } from "@/constants/timings";
+import { WALLET_MESSAGES } from "@/constants/wallet";
 import { useUser } from "@/contexts/UserContext";
 import { invalidateAndRefetch } from "@/hooks/useQueryInvalidation";
 import { useToast } from "@/hooks/useToast";
-import { useWallet } from "@/hooks/useWallet";
-import { formatAddress } from "@/lib/formatters";
-import { queryKeys } from "@/lib/queryClient";
-import { handleWalletError, type WalletData } from "@/lib/walletUtils";
+import { queryKeys } from "@/lib/state/queryClient";
+import {
+  handleWalletError,
+  type WalletData,
+} from "@/lib/validation/walletUtils";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import { deleteUser as deleteUserAccount } from "@/services/accountService";
 import { copyTextToClipboard } from "@/utils/clipboard";
+import { formatAddress } from "@/utils/formatters";
 import { walletLogger } from "@/utils/logger";
 
 import {
@@ -25,10 +30,9 @@ import type {
 } from "../types/wallet.types";
 import { validateNewWallet } from "../utils/validation";
 
-// Toast message constants to avoid duplicate strings
-const TOAST_MESSAGES = {
-  DELETION_FAILED: "Deletion Failed",
-} as const;
+// Use centralized wallet constants from @/constants/wallet
+
+const EMPTY_CONNECTED_WALLETS: WalletData[] = [];
 
 interface UseWalletOperationsParams {
   viewingUserId: string;
@@ -46,7 +50,12 @@ export const useWalletOperations = ({
   const queryClient = useQueryClient();
   const { refetch } = useUser();
   const { showToast } = useToast();
-  const { disconnect, isConnected } = useWallet();
+  const {
+    disconnect,
+    isConnected,
+    connectedWallets = EMPTY_CONNECTED_WALLETS,
+    switchActiveWallet = () => Promise.resolve(),
+  } = useWalletProvider();
 
   // State
   const [wallets, setWallets] = useState<WalletData[]>([]);
@@ -96,7 +105,18 @@ export const useWalletOperations = ({
 
       try {
         const loadedWallets = await fetchWallets(viewingUserId);
-        setWallets(loadedWallets);
+
+        // Mark wallets as active based on WalletProvider's connectedWallets
+        const walletsWithActiveState = loadedWallets.map(wallet => ({
+          ...wallet,
+          isActive: connectedWallets.some(
+            cw =>
+              cw.address.toLowerCase() === wallet.address.toLowerCase() &&
+              cw.isActive
+          ),
+        }));
+
+        setWallets(walletsWithActiveState);
       } catch {
         // Handle silently - error state is managed by service response
       } finally {
@@ -105,7 +125,7 @@ export const useWalletOperations = ({
         }
       }
     },
-    [viewingUserId]
+    [viewingUserId, connectedWallets]
   );
 
   // Load wallets when component opens or user changes
@@ -121,7 +141,7 @@ export const useWalletOperations = ({
 
     const interval = setInterval(() => {
       void loadWallets(true); // Silent refresh
-    }, 30000);
+    }, TIMINGS.WALLET_REFRESH_INTERVAL);
 
     return () => clearInterval(interval);
   }, [isOpen, viewingUserId, isOwner, loadWallets]);
@@ -341,7 +361,7 @@ export const useWalletOperations = ({
 
           showToast({
             type: "warning",
-            title: "Disconnect Wallet",
+            title: WALLET_MESSAGES.DISCONNECT_WALLET,
             message: `${disconnectMessage} Please disconnect manually to prevent automatic reconnection.`,
           });
 
@@ -381,19 +401,45 @@ export const useWalletOperations = ({
         setTimeout(() => {
           // Trigger logout/reconnect flow
           window.location.reload();
-        }, 1500);
+        }, TIMINGS.MODAL_CLOSE_DELAY);
       }
     } catch (error) {
       const errorMessage = handleWalletError(error);
       showToast({
         type: "error",
-        title: TOAST_MESSAGES.DELETION_FAILED,
+        title: WALLET_MESSAGES.DELETION_FAILED,
         message: errorMessage,
       });
     } finally {
       setIsDeletingAccount(false);
     }
   }, [realUserId, queryClient, refetch, showToast, disconnect, isConnected]);
+
+  // Handle wallet switching (V22 Phase 2B)
+  const handleSwitchWallet = useCallback(
+    async (walletAddress: string) => {
+      try {
+        await switchActiveWallet(walletAddress);
+
+        showToast({
+          type: "success",
+          title: "Wallet Switched",
+          message: `Active wallet changed to ${formatAddress(walletAddress)}`,
+        });
+
+        // Reload wallets to update active state
+        await loadWallets(true);
+      } catch (error) {
+        const errorMessage = handleWalletError(error);
+        showToast({
+          type: "error",
+          title: "Switch Failed",
+          message: errorMessage,
+        });
+      }
+    },
+    [switchActiveWallet, showToast, loadWallets]
+  );
 
   return {
     // State
@@ -417,5 +463,6 @@ export const useWalletOperations = ({
     handleAddWallet,
     handleCopyAddress,
     handleDeleteAccount,
+    handleSwitchWallet, // V22 Phase 2B
   };
 };

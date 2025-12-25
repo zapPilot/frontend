@@ -7,6 +7,7 @@ import { HEADER, Z_INDEX } from "@/constants/design-system";
 
 interface StickyBannerShellProps {
   cardClassName?: string;
+  "data-testid"?: string;
 }
 
 const BASE_CARD_CLASSES =
@@ -15,6 +16,7 @@ const BASE_CARD_CLASSES =
 export function StickyBannerShell({
   children,
   cardClassName,
+  "data-testid": dataTestId,
 }: PropsWithChildren<StickyBannerShellProps>) {
   const mergedCardClasses = cardClassName
     ? `${BASE_CARD_CLASSES} ${cardClassName}`
@@ -23,6 +25,7 @@ export function StickyBannerShell({
   return (
     <div
       className={`sticky ${HEADER.TOP_OFFSET} ${Z_INDEX.BANNER} mx-4 lg:mx-8 mt-4`}
+      data-testid={dataTestId}
     >
       <BaseCard
         variant="glass"

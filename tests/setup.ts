@@ -1,3 +1,6 @@
+import fs from "node:fs";
+import path from "node:path";
+
 import * as matchers from "@testing-library/jest-dom/matchers";
 import { cleanup, configure } from "@testing-library/react";
 // Import React for the dynamic component mock
@@ -5,6 +8,11 @@ import React from "react";
 import { afterEach, beforeEach, expect, vi } from "vitest";
 
 import { chartMatchers } from "./utils/chartTypeGuards";
+
+const coverageTmpDir = path.join(process.cwd(), "coverage", ".tmp");
+if (!fs.existsSync(coverageTmpDir)) {
+  fs.mkdirSync(coverageTmpDir, { recursive: true });
+}
 
 // Configure React Testing Library to work better with React 18+
 configure({
@@ -203,97 +211,6 @@ vi.mock("next/dynamic", () => {
             );
             if (override) {
               return override.renderer(props);
-            }
-
-            // For PortfolioOverview, return a mock aligned with current props
-            if (importString.includes("PortfolioOverview")) {
-              // Calculate total from portfolioState or pieChartData like the real component would
-              const calculatedTotal =
-                props?.portfolioState?.totalValue ??
-                props?.pieChartData?.reduce(
-                  (sum, item) => sum + (item.value || 0),
-                  0
-                ) ??
-                25000; // Default fallback for tests
-
-              const formatCurrency = amount => {
-                return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-              };
-
-              return React.createElement(
-                "div",
-                {
-                  "data-testid": "portfolio-overview",
-                  "data-dynamic": "true",
-                },
-                [
-                  React.createElement(
-                    "div",
-                    {
-                      key: "loading-state",
-                      "data-testid": "loading-state",
-                    },
-                    props?.portfolioState?.isLoading ? "loading" : "not-loading"
-                  ),
-                  React.createElement(
-                    "div",
-                    {
-                      key: "error-state",
-                      "data-testid": "error-state",
-                    },
-                    props?.portfolioState?.errorMessage || "no-error"
-                  ),
-                  React.createElement(
-                    "div",
-                    {
-                      key: "pie-chart",
-                      "data-testid": "pie-chart-mock",
-                    },
-                    [
-                      (() => {
-                        // Prefer explicit prop, otherwise default to visible since context isn't accessible here
-                        const hidden = props?.balanceHidden === true;
-                        return React.createElement(
-                          "div",
-                          {
-                            key: "pie-chart-visibility",
-                            "data-testid": "pie-chart-visibility-state",
-                          },
-                          hidden ? "hidden" : "visible"
-                        );
-                      })(),
-                      React.createElement(
-                        "div",
-                        {
-                          key: "pie-chart-balance",
-                          "data-testid": "pie-chart-balance",
-                        },
-                        props?.balanceHidden
-                          ? "••••••••"
-                          : formatCurrency(calculatedTotal)
-                      ),
-                      React.createElement(
-                        "div",
-                        {
-                          key: "pie-chart-data",
-                          "data-testid": "pie-chart-data",
-                        },
-                        props?.pieChartData && props.pieChartData.length > 0
-                          ? "has-data"
-                          : "no-data"
-                      ),
-                    ]
-                  ),
-                  React.createElement(
-                    "div",
-                    {
-                      key: "portfolio-data",
-                      "data-testid": "portfolio-data-count",
-                    },
-                    props?.pieChartData?.length || 0
-                  ),
-                ]
-              );
             }
 
             // Special-case WalletManager so tests can interact with its props synchronously

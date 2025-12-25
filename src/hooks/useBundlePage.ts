@@ -1,9 +1,11 @@
 "use client";
 
+import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useUser } from "@/contexts/UserContext";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import {
   BundleUser,
   generateBundleUrl,
@@ -37,6 +39,25 @@ interface UseBundlePageResult {
     closeWalletManager: () => void;
     onEmailSubscribed: () => void;
   };
+}
+
+const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
+const NOOP_SWITCH_ACTIVE_WALLET = () => Promise.resolve();
+
+function useSafeQueryClient(fallback: QueryClient) {
+  try {
+    return useQueryClient();
+  } catch {
+    return fallback;
+  }
+}
+
+function useSafeWalletProvider() {
+  try {
+    return useWalletProvider();
+  } catch {
+    return null;
+  }
 }
 
 // Pure helpers extracted for clarity and testability
@@ -87,6 +108,7 @@ export function computeRedirectUrl(search: string): string {
  * Hook for managing bundle page state and visibility logic.
  *
  * @param userId - The bundle owner's user ID from URL
+ * @param walletId - Optional wallet ID for auto-switch (V22 Phase 2A)
  * @returns Bundle page state including banner visibility
  *
  * Note: Banner visibility depends on:
@@ -94,13 +116,61 @@ export function computeRedirectUrl(search: string): string {
  * - User must be connected
  * - Connected user must be different from bundle owner
  */
-export function useBundlePage(userId: string): UseBundlePageResult {
+export function useBundlePage(
+  userId: string,
+  walletId?: string
+): UseBundlePageResult {
   const router = useRouter();
+  const fallbackQueryClient = useMemo(() => new QueryClient(), []);
+  const queryClient = useSafeQueryClient(fallbackQueryClient);
   const { userInfo, isConnected, connectedWallet, loading } = useUser();
+  const walletContext = useSafeWalletProvider();
+  const connectedWallets =
+    walletContext?.connectedWallets ?? EMPTY_CONNECTED_WALLETS;
+  const switchActiveWallet =
+    walletContext?.switchActiveWallet ?? NOOP_SWITCH_ACTIVE_WALLET;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
-  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+
+  // Auto-switch wallet on mount (only for own bundles with walletId)
+  useEffect(() => {
+    if (!walletId || !isConnected || !userInfo) return;
+
+    const isOwnBundle = userInfo.userId === userId;
+    if (!isOwnBundle) return;
+
+    const targetWallet = connectedWallets.find(
+      w => w.address.toLowerCase() === walletId.toLowerCase()
+    );
+
+    if (targetWallet && !targetWallet.isActive) {
+      void (async () => {
+        try {
+          await switchActiveWallet(walletId);
+          // Invalidate portfolio and wallet queries after successful switch
+          await queryClient.invalidateQueries({
+            queryKey: ["portfolio"],
+          });
+          await queryClient.invalidateQueries({
+            queryKey: ["wallets"],
+          });
+          logger.info("Cache invalidated after wallet switch");
+        } catch (err) {
+          logger.error("Failed to auto-switch wallet:", err);
+        }
+      })();
+    }
+  }, [
+    walletId,
+    isConnected,
+    userInfo,
+    userId,
+    connectedWallets,
+    switchActiveWallet,
+    queryClient,
+  ]);
 
   // Compute if viewing different user's bundle (no dismissal state)
   const isDifferentUser = useMemo(
@@ -184,8 +254,20 @@ export function useBundlePage(userId: string): UseBundlePageResult {
     // This keeps UX consistent but removes permanent dismissal
   }, []);
 
-  const handleEmailSubscribe = useCallback(() => {
+  const openWalletManager = useCallback(() => {
     setIsWalletManagerOpen(true);
+  }, []);
+
+  const closeWalletManager = useCallback(() => {
+    setIsWalletManagerOpen(false);
+  }, []);
+
+  const handleEmailSubscribe = useCallback(() => {
+    openWalletManager();
+  }, [openWalletManager]);
+
+  const handleEmailSubscribed = useCallback(() => {
+    setEmailBannerDismissed(true);
   }, []);
 
   const handleEmailReminderDismiss = useCallback(() => {
@@ -211,9 +293,9 @@ export function useBundlePage(userId: string): UseBundlePageResult {
     overlays: {
       showQuickSwitch,
       isWalletManagerOpen,
-      openWalletManager: () => setIsWalletManagerOpen(true),
-      closeWalletManager: () => setIsWalletManagerOpen(false),
-      onEmailSubscribed: () => setEmailBannerDismissed(true),
+      openWalletManager,
+      closeWalletManager,
+      onEmailSubscribed: handleEmailSubscribed,
     },
   };
 }

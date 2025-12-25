@@ -12,9 +12,9 @@ import {
   type SentimentLabel,
 } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { createServiceCaller } from "@/lib/createServiceCaller";
-import { APIError, httpUtils } from "@/lib/http-utils";
-import { queryKeys } from "@/lib/queryClient";
+import { APIError, httpUtils } from "@/lib/http";
+import { queryKeys } from "@/lib/state/queryClient";
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,
@@ -98,7 +98,7 @@ function transformSentimentData(
  * Calls `/api/v2/market/sentiment` which proxies the Fear & Greed Index API
  * to avoid CORS issues. Backend handles caching and error handling.
  */
-export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
+async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   return callSentimentApi(async () => {
     const response = await httpUtils.analyticsEngine.get(
       "/api/v2/market/sentiment"

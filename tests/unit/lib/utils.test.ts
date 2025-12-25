@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { getChangeColorClasses } from "../../../src/lib/color-utils";
 import {
   formatCurrency,
   formatNumber,
   formatPercentage,
-} from "../../../src/lib/formatters";
+} from "../../../src/utils/formatters";
 
 describe("utils", () => {
   describe("formatCurrency", () => {
@@ -50,19 +49,6 @@ describe("utils", () => {
 
     it("should format zero percentage with + sign", () => {
       expect(formatPercentage(0)).toBe("+0.0%");
-    });
-  });
-
-  describe("getChangeColorClasses", () => {
-    it("should return green classes for positive values", () => {
-      expect(getChangeColorClasses(5)).toBe("text-green-400");
-      expect(getChangeColorClasses(0.1)).toBe("text-green-400");
-      expect(getChangeColorClasses(0)).toBe("text-green-400");
-    });
-
-    it("should return red classes for negative values", () => {
-      expect(getChangeColorClasses(-5)).toBe("text-red-400");
-      expect(getChangeColorClasses(-0.1)).toBe("text-red-400");
     });
   });
 });

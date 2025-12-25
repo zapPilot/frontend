@@ -38,4 +38,12 @@ export interface WalletProviderInterface {
   isDisconnecting: boolean;
   error: { message: string; code?: string } | null;
   clearError(): void;
+
+  // Multi-wallet support (V22 Phase 2A)
+  connectedWallets: {
+    address: string;
+    isActive: boolean;
+  }[];
+  switchActiveWallet(address: string): Promise<void>;
+  hasMultipleWallets: boolean;
 }

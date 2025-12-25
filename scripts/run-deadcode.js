@@ -16,22 +16,22 @@ const { spawnSync } = require("node:child_process");
 const MODES = {
   default: {
     label: "Local dead-code scan",
-    knipArgs: ["--exports", "--dependencies"],
+    knipArgs: ["--files", "--exports", "--dependencies"],
     tsPruneArgs: [],
   },
   ci: {
     label: "CI dead-code scan",
-    knipArgs: ["--exports", "--dependencies", "--reporter=json"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--reporter=json"],
     tsPruneArgs: [],
   },
   fix: {
     label: "Knip --fix + ts-prune",
-    knipArgs: ["--exports", "--dependencies", "--fix"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--fix"],
     tsPruneArgs: [],
   },
   check: {
     label: "Knip check + ts-prune",
-    knipArgs: ["--exports", "--dependencies", "--no-config-hints"],
+    knipArgs: ["--files", "--exports", "--dependencies", "--no-config-hints"],
     tsPruneArgs: [],
   },
 };
@@ -69,9 +69,10 @@ const run = (command, args) => {
 
 const knipStatus = run("knip", mode.knipArgs);
 
-// Run ts-prune for informational purposes only (many false positives from Next.js/internal modules)
-// Only fail the build based on knip's more accurate analysis
-run("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
+// Skip ts-prune in 'check' mode - knip is more accurate and ts-prune has many false positives
+if (modeKey !== "check") {
+  run("ts-prune", ["-p", "tsconfig.tsprune.json", ...mode.tsPruneArgs]);
+}
 
-// Exit based only on knip status (ts-prune has too many false positives)
+// Exit based only on knip status
 process.exit(knipStatus);

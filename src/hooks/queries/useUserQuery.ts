@@ -1,9 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 
+import { queryKeys } from "@/lib/state/queryClient";
 import type { UserProfileResponse } from "@/types/domain/user.types";
 
-import { queryKeys } from "../../lib/queryClient";
 // Use account service directly for wallet connection and profile data
 import { connectWallet, getUserProfile } from "../../services/accountService";
 import { createQueryConfig } from "./queryDefaults";
@@ -86,35 +86,4 @@ export function useCurrentUser() {
     // Transform error messages for UI consistency
     error: (userQuery.error as Error | null)?.message || null,
   };
-}
-
-// Mutation for refreshing user data
-export function useRefreshUser() {
-  const queryClient = useQueryClient();
-  const activeAccount = useActiveAccount();
-  const connectedWallet = activeAccount?.address || null;
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!connectedWallet) {
-        throw new Error("No wallet connected");
-      }
-
-      // Invalidate current user cache
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.user.byWallet(connectedWallet),
-      });
-
-      // Refetch user data
-      return queryClient.fetchQuery({
-        queryKey: queryKeys.user.byWallet(connectedWallet),
-      });
-    },
-    onSuccess: () => {
-      // Optionally invalidate related queries
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.portfolio.all,
-      });
-    },
-  });
 }

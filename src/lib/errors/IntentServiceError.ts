@@ -5,7 +5,8 @@
  * @module lib/errors/IntentServiceError
  */
 
-import { getIntentErrorMessage } from "../errorMessages";
+import { getIntentErrorMessage } from "@/lib/errors/errorMessages";
+
 import { BaseServiceError } from "./BaseServiceError";
 import type {
   ErrorContext,

@@ -5,11 +5,8 @@ import {
   normalizedTokenBalanceSchema,
   safeValidateWalletResponse,
   tokenBalanceRawSchema,
-  validateTokenBalanceRaw,
   validateWalletResponseData,
-  validateWalletTokenBalances,
   walletResponseDataSchema,
-  walletTokenBalancesSchema,
 } from "@/schemas/api/balanceSchemas";
 
 describe("balanceSchemas", () => {
@@ -246,100 +243,9 @@ describe("balanceSchemas", () => {
     });
   });
 
-  describe("walletTokenBalancesSchema", () => {
-    it("validates correct wallet token balances", () => {
-      const validData = {
-        chainId: 1,
-        address: "0x123",
-        fromCache: false,
-        fetchedAt: "2025-01-01T00:00:00Z",
-        tokens: [
-          {
-            address: "0x456",
-            decimals: 18,
-            balance: 1.5,
-            symbol: "ETH",
-          },
-        ],
-      };
-
-      expect(() => walletTokenBalancesSchema.parse(validData)).not.toThrow();
-    });
-
-    it("validates wallet balances without optional fields", () => {
-      const minimalData = {
-        chainId: 1,
-        address: "0xabc",
-        fromCache: true,
-        tokens: [],
-      };
-
-      expect(() => walletTokenBalancesSchema.parse(minimalData)).not.toThrow();
-    });
-
-    it("rejects wallet balances with wrong chainId type", () => {
-      const invalidData = {
-        chainId: "1", // should be number
-        address: "0xdef",
-        fromCache: false,
-        tokens: [],
-      };
-
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
-    });
-
-    it("rejects wallet balances without required fields", () => {
-      const invalidData = {
-        chainId: 1,
-        // missing address, fromCache, tokens
-      };
-
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
-    });
-
-    it("rejects wallet balances with invalid tokens array", () => {
-      const invalidData = {
-        chainId: 1,
-        address: "0x111",
-        fromCache: false,
-        tokens: [
-          {
-            // missing required normalized fields
-            symbol: "TEST",
-          },
-        ],
-      };
-
-      expect(() => walletTokenBalancesSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
-    });
-  });
+  // walletTokenBalancesSchema tests removed (schema deleted)
 
   describe("validation helper functions", () => {
-    describe("validateTokenBalanceRaw", () => {
-      it("returns validated data for valid input", () => {
-        const validData = {
-          address: "0x123",
-          symbol: "ETH",
-          balance: "1000",
-        };
-
-        const result = validateTokenBalanceRaw(validData);
-        expect(result).toEqual(validData);
-      });
-
-      it("throws ZodError for invalid input", () => {
-        const invalidData = null;
-
-        expect(() => validateTokenBalanceRaw(invalidData)).toThrow(ZodError);
-      });
-    });
-
     describe("validateWalletResponseData", () => {
       it("returns validated data for valid input", () => {
         const validData = {
@@ -351,35 +257,19 @@ describe("balanceSchemas", () => {
         expect(result).toEqual(validData);
       });
 
+      it("returns empty object for null input", () => {
+        const result = validateWalletResponseData(null);
+        expect(result).toEqual({});
+      });
+
+      it("returns empty object for undefined input", () => {
+        const result = validateWalletResponseData();
+        expect(result).toEqual({});
+      });
+
       it("throws ZodError for invalid input", () => {
         const invalidData = "not-an-object";
-
         expect(() => validateWalletResponseData(invalidData)).toThrow(ZodError);
-      });
-    });
-
-    describe("validateWalletTokenBalances", () => {
-      it("returns validated data for valid input", () => {
-        const validData = {
-          chainId: 1,
-          address: "0x123",
-          fromCache: false,
-          tokens: [],
-        };
-
-        const result = validateWalletTokenBalances(validData);
-        expect(result).toEqual(validData);
-      });
-
-      it("throws ZodError for invalid input", () => {
-        const invalidData = {
-          chainId: 1,
-          // missing required fields
-        };
-
-        expect(() => validateWalletTokenBalances(invalidData)).toThrow(
-          ZodError
-        );
       });
     });
 
@@ -409,7 +299,7 @@ describe("balanceSchemas", () => {
 
       it("provides detailed error information on failure", () => {
         const invalidData = {
-          tokens: "not-an-array",
+          data: "not-an-object", // Invalid: data should be object, not string
         };
 
         const result = safeValidateWalletResponse(invalidData);

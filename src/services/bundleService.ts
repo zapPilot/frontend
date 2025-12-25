@@ -2,7 +2,7 @@
  * Bundle Service - Handles bundle metadata and sharing functionality
  */
 
-import { formatAddress } from "@/lib/formatters";
+import { formatAddress } from "@/utils/formatters";
 import { logger } from "@/utils/logger";
 
 export interface BundleUser {
@@ -54,23 +54,45 @@ export const getBundleUser = async (
 
 /**
  * Generate bundle URL for sharing
+ * @param userId - User wallet address (required)
+ * @param walletId - Specific wallet address (optional, V22 Phase 2A)
+ * @param baseUrl - Base URL (optional, defaults to current origin)
  */
-export const generateBundleUrl = (userId: string, baseUrl?: string): string => {
+export const generateBundleUrl = (
+  userId: string,
+  walletId?: string,
+  baseUrl?: string
+): string => {
   const resolvedBaseUrl = resolveBaseUrl(baseUrl);
   const params = new URLSearchParams({ userId });
+
+  if (walletId) {
+    params.set("walletId", walletId);
+  }
+
   const path = `/bundle?${params.toString()}`;
   return resolvedBaseUrl ? `${resolvedBaseUrl}${path}` : path;
 };
 
 /**
- * Parse bundle URL to extract userId
+ * Parse bundle URL to extract userId and optional walletId
+ * @param url - Bundle URL to parse
+ * @returns Object with userId and walletId (both can be null if not found)
  */
-export const parseBundleUrl = (url: string): string | null => {
+export const parseBundleUrl = (
+  url: string
+): {
+  userId: string | null;
+  walletId: string | null;
+} => {
   try {
     const urlObj = new URL(url);
-    return urlObj.searchParams.get("userId");
+    return {
+      userId: urlObj.searchParams.get("userId"),
+      walletId: urlObj.searchParams.get("walletId"),
+    };
   } catch {
-    return null;
+    return { userId: null, walletId: null };
   }
 };
 

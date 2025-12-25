@@ -17,8 +17,8 @@ import {
 
 import type { ChartHoverState } from "@/types/ui/chartHover";
 
-import { clamp, clampMin } from "../lib/mathUtils";
 import { logger } from "../utils/logger";
+import { clamp, clampMin } from "../utils/mathUtils";
 
 /**
  * Calculate Y position in SVG coordinates based on value and chart dimensions
@@ -31,7 +31,7 @@ function calculateYPosition(
   chartHeight: number,
   chartPadding: number
 ): number {
-  const valueRange = maxValue - minValue;
+  const valueRange = Math.max(maxValue - minValue, 1);
   return (
     chartHeight -
     chartPadding -
@@ -117,20 +117,29 @@ interface UseChartHoverReturn {
  * );
  * ```
  */
+/**
+ * Type guard to check if window has native PointerEvent support
+ */
+function hasNativePointerEvent(win: Window): boolean {
+  return "PointerEvent" in win && typeof win.PointerEvent === "function";
+}
+
+/**
+ * Polyfill PointerEvent for browsers that don't support it natively
+ * React's synthetic events handle most cases, but this ensures compatibility
+ */
+if (typeof window !== "undefined" && !hasNativePointerEvent(window)) {
+  class PointerEventPolyfill extends MouseEvent {}
+
+  // Safely extend window with PointerEvent polyfill
+  (window as Window & { PointerEvent: typeof PointerEvent }).PointerEvent =
+    PointerEventPolyfill as typeof PointerEvent;
+}
+
 export function useChartHover<T>(
   data: T[],
   options: UseChartHoverOptions<T>
 ): UseChartHoverReturn {
-  if (
-    typeof window !== "undefined" &&
-    typeof window.PointerEvent === "undefined"
-  ) {
-    class PointerEventPolyfill extends MouseEvent {}
-
-    (window as unknown as { PointerEvent: typeof PointerEvent }).PointerEvent =
-      PointerEventPolyfill as unknown as typeof PointerEvent;
-  }
-
   const {
     chartType,
     chartWidth,

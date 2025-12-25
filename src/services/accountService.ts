@@ -4,7 +4,8 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
-import { httpUtils } from "@/lib/http-utils";
+import { httpUtils } from "@/lib/http";
+import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import {
   validateAccountTokens,
   validateAddWalletResponse,
@@ -22,8 +23,6 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "@/types/domain/user.types";
-
-import { createServiceCaller } from "../lib/createServiceCaller";
 
 /**
  * Account Service Error Details

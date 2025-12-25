@@ -3,7 +3,8 @@
  * Uses service-specific HTTP utilities for consistent error handling
  */
 
-import { buildAnalyticsQueryString } from "@/lib/queryStringUtils";
+import { buildAnalyticsQueryString } from "@/lib/analytics/queryStringUtils";
+import { httpUtils } from "@/lib/http";
 import {
   type DailyYieldReturnsResponse,
   type LandingPageResponse,
@@ -19,8 +20,6 @@ import {
 } from "@/schemas/api/analyticsSchemas";
 import { ActualRiskSummaryResponse } from "@/types/domain/risk";
 
-import { httpUtils } from "../lib/http-utils";
-
 // Note: Types are imported and re-exported above at line 36
 
 // Re-export types for external use
@@ -28,12 +27,9 @@ export type {
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
   /** @public */ PoolPerformanceResponse,
-  ProtocolYieldBreakdown,
   /** @public */ ProtocolYieldToday,
-  ProtocolYieldWindow,
   UnifiedDashboardResponse,
   YieldReturnsSummaryResponse,
-  YieldWindowSummary,
 } from "@/schemas/api/analyticsSchemas";
 
 // Direct re-export to avoid unused imports while keeping public API stable

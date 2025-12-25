@@ -1,16 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { httpUtils } from "@/lib/http-utils";
+import { httpUtils } from "@/lib/http";
 import * as accountService from "@/services/accountService";
 import type {
   AddWalletResponse,
   ConnectWalletResponse,
   UpdateEmailResponse,
   UserProfileResponse,
-} from "@/types/user.types";
+} from "@/types/domain/user.types";
 
 // Mock HTTP utilities
-vi.mock("@/lib/http-utils", () => ({
+vi.mock("@/lib/http", () => ({
   httpUtils: {
     accountApi: {
       get: vi.fn(),

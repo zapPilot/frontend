@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useOperationStateHandlers } from "@/hooks/useOperationState";
 import { useToast } from "@/hooks/useToast";
-import { handleWalletError } from "@/lib/walletUtils";
+import { handleWalletError } from "@/lib/validation/walletUtils";
 
 import {
   unsubscribeUserEmail,

@@ -2,8 +2,8 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
-import { formatAddress } from "@/lib/formatters";
-import type { WalletData } from "@/lib/walletUtils";
+import type { WalletData } from "@/lib/validation/walletUtils";
+import { formatAddress } from "@/utils/formatters";
 
 import type { EditingWallet, WalletOperations } from "../types/wallet.types";
 import { ModalBackdrop } from "./ModalBackdrop";

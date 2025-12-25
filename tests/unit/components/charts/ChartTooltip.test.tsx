@@ -32,7 +32,7 @@ describe("ChartTooltip", () => {
     const tooltip = screen.getByRole("tooltip");
     expect(tooltip).toBeInTheDocument();
     expect(tooltip).toHaveAttribute("data-chart-type", "performance");
-    expect(screen.getByText("Portfolio")).toBeInTheDocument();
+    expect(screen.getByText("Portfolio Value")).toBeInTheDocument();
     expect(screen.getByText("$10,000.00")).toBeInTheDocument();
   });
 

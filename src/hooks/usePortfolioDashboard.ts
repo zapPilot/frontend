@@ -25,6 +25,17 @@ import {
 } from "../services/analyticsService";
 
 /**
+ * Query options override for usePortfolioDashboard
+ * Allows customization of React Query behavior
+ */
+interface DashboardQueryOptions {
+  /** Override staleTime (default: 2 minutes) */
+  staleTime?: number;
+  /** Override refetchOnMount behavior */
+  refetchOnMount?: boolean | "always";
+}
+
+/**
  * Unified portfolio dashboard hook with React Query
  *
  * Fetches all dashboard analytics in a single optimized API call with:
@@ -34,6 +45,8 @@ import {
  * - Graceful degradation for partial failures
  *
  * @param userId - User identifier (required)
+ * @param params - Dashboard window parameters (trend_days, etc.)
+ * @param options - Query options override (staleTime, refetchOnMount)
  * @returns React Query result with dashboard data, loading, and error states
  *
  * @example
@@ -46,6 +59,13 @@ import {
  *
  * // With custom time windows
  * const { dashboard } = usePortfolioDashboard(userId, { trend_days: 180 });
+ *
+ * // Force refetch when period changes
+ * const { dashboard } = usePortfolioDashboard(
+ *   userId,
+ *   { trend_days: 30 },
+ *   { staleTime: 0, refetchOnMount: 'always' }
+ * );
  *
  * // Extracting specific sections
  * if (dashboard) {
@@ -65,7 +85,8 @@ import {
  */
 export function usePortfolioDashboard(
   userId: string | undefined,
-  params: DashboardWindowParams = {}
+  params: DashboardWindowParams = {},
+  options: DashboardQueryOptions = {}
 ): UseQueryResult<UnifiedDashboardResponse> & {
   dashboard: UnifiedDashboardResponse | undefined;
 } {
@@ -84,11 +105,14 @@ export function usePortfolioDashboard(
       // Safe: enabled condition ensures userId is non-null
       getPortfolioDashboard(userId!, params),
     enabled: !!userId,
-    // Cache configuration matching backend cache strategy
-    staleTime: 2 * 60 * 1000, // 2 minutes (matches backend HTTP cache)
+    // Cache configuration with overrides
+    staleTime: options.staleTime ?? 2 * 60 * 1000, // Default: 2 minutes (matches backend HTTP cache)
     gcTime: 12 * 60 * 60 * 1000, // 12 hours (matches backend server cache)
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
+    ...(options.refetchOnMount !== undefined && {
+      refetchOnMount: options.refetchOnMount,
+    }),
   });
 
   return {
