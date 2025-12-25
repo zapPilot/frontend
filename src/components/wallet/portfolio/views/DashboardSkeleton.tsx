@@ -16,6 +16,25 @@ import {
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
 
+interface SkeletonButtonProps {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+}
+
+/**
+ * Reusable skeleton button for loading states
+ */
+function SkeletonButton({ icon: Icon, label }: SkeletonButtonProps) {
+  return (
+    <button
+      disabled
+      className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed"
+    >
+      <Icon className="w-4 h-4" /> {label}
+    </button>
+  );
+}
+
 /**
  * Balance Card Skeleton
  * Shows real labels and disabled buttons, skeleton only for balance value
@@ -45,18 +64,8 @@ export function BalanceCardSkeleton() {
 
       {/* Real Buttons (disabled) */}
       <div className="grid grid-cols-2 gap-3">
-        <button
-          disabled
-          className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed"
-        >
-          <ArrowDownCircle className="w-4 h-4" /> Deposit
-        </button>
-        <button
-          disabled
-          className="flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg border bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed"
-        >
-          <ArrowUpCircle className="w-4 h-4" /> Withdraw
-        </button>
+        <SkeletonButton icon={ArrowDownCircle} label="Deposit" />
+        <SkeletonButton icon={ArrowUpCircle} label="Withdraw" />
       </div>
     </div>
   );
@@ -117,14 +126,8 @@ export function PortfolioCompositionSkeleton() {
           <h2 className="text-xl font-bold text-white mb-1">
             Portfolio Composition
           </h2>
-          <div className="text-sm text-gray-400">
-            <div className="flex gap-2 items-center">
-              <span className="text-sm text-gray-400 mr-2">Target:</span>
-              {/* Skeleton: Allocation chips */}
-              <div className="h-6 w-24 bg-gray-800/50 rounded-full animate-pulse" />
-              <div className="h-6 w-24 bg-gray-800/50 rounded-full animate-pulse" />
-            </div>
-          </div>
+          {/* Drift Indicator Skeleton */}
+          <div className="h-4 w-24 bg-gray-800/50 rounded animate-pulse" />
         </div>
         {/* Real Button (disabled) */}
         <GradientButton
@@ -152,8 +155,6 @@ export function PortfolioCompositionSkeleton() {
             <span>Stablecoins</span>
           </div>
         </div>
-        {/* Skeleton: Drift percentage */}
-        <div className="h-4 w-20 bg-gray-800/50 rounded animate-pulse" />
       </div>
     </div>
   );

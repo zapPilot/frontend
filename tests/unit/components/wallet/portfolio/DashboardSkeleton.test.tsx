@@ -106,9 +106,11 @@ describe("PortfolioCompositionSkeleton", () => {
     expect(screen.getByText("Portfolio Composition")).toBeInTheDocument();
   });
 
-  it("should render the 'Target:' label", () => {
-    render(<PortfolioCompositionSkeleton />);
-    expect(screen.getByText("Target:")).toBeInTheDocument();
+  it("should render drift skeleton in header", () => {
+    const { container } = render(<PortfolioCompositionSkeleton />);
+    // Drift skeleton is now in header area
+    const headerSkeletons = container.querySelectorAll(".animate-pulse");
+    expect(headerSkeletons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("should render disabled Rebalance button", () => {
@@ -127,11 +129,11 @@ describe("PortfolioCompositionSkeleton", () => {
     expect(screen.getByText("Stablecoins")).toBeInTheDocument();
   });
 
-  it("should have skeleton placeholders for allocation chips and drift", () => {
+  it("should have skeleton placeholders for bar and drift", () => {
     const { container } = render(<PortfolioCompositionSkeleton />);
     const skeletons = container.querySelectorAll(".animate-pulse");
-    // Should have skeletons for: 2 allocation chips, composition bar, drift value
-    expect(skeletons.length).toBeGreaterThanOrEqual(4);
+    // Should have skeletons for: drift indicator (1) + composition bar (1)
+    expect(skeletons.length).toBe(2);
   });
 
   it("should render colored dots for legend", () => {
