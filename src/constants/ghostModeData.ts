@@ -7,6 +7,34 @@
 
 import type { AllocationConstituent } from "@/adapters/walletPortfolioDataAdapter";
 
+/** Shared crypto asset definitions to avoid duplication */
+const PREVIEW_CRYPTO_ASSETS: AllocationConstituent[] = [
+  {
+    asset: "bitcoin",
+    symbol: "BTC",
+    name: "Bitcoin",
+    value: 35,
+    color: "#F7931A",
+  },
+  {
+    asset: "ethereum",
+    symbol: "ETH",
+    name: "Ethereum",
+    value: 20,
+    color: "#627EEA",
+  },
+];
+
+const PREVIEW_STABLE_ASSETS: AllocationConstituent[] = [
+  {
+    asset: "usdt",
+    symbol: "USDT",
+    name: "Tether",
+    value: 45,
+    color: "#26A17B",
+  },
+];
+
 /**
  * Preview data for Ghost Mode (unconnected users)
  * Shows realistic values to demonstrate dashboard capabilities
@@ -24,48 +52,10 @@ export const GHOST_MODE_PREVIEW = {
   currentAllocation: {
     crypto: 55,
     stable: 45,
-    simplifiedCrypto: [
-      {
-        asset: "bitcoin",
-        symbol: "BTC",
-        name: "Bitcoin",
-        value: 35,
-        color: "#F7931A",
-      },
-      {
-        asset: "ethereum",
-        symbol: "ETH",
-        name: "Ethereum",
-        value: 20,
-        color: "#627EEA",
-      },
-    ] as AllocationConstituent[],
+    simplifiedCrypto: PREVIEW_CRYPTO_ASSETS,
     constituents: {
-      crypto: [
-        {
-          asset: "bitcoin",
-          symbol: "BTC",
-          name: "Bitcoin",
-          value: 35,
-          color: "#F7931A",
-        },
-        {
-          asset: "ethereum",
-          symbol: "ETH",
-          name: "Ethereum",
-          value: 20,
-          color: "#627EEA",
-        },
-      ] as AllocationConstituent[],
-      stable: [
-        {
-          asset: "usdt",
-          symbol: "USDT",
-          name: "Tether",
-          value: 45,
-          color: "#26A17B",
-        },
-      ] as AllocationConstituent[],
+      crypto: PREVIEW_CRYPTO_ASSETS,
+      stable: PREVIEW_STABLE_ASSETS,
     },
   },
 

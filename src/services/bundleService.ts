@@ -20,19 +20,6 @@ interface BundleMetadata {
 
 const bundleLogger = logger.createContextLogger("BundleService");
 
-const resolveBaseUrl = (providedBaseUrl?: string): string => {
-  if (providedBaseUrl) {
-    return providedBaseUrl;
-  }
-
-  if (typeof window !== "undefined") {
-    return window.location.origin;
-  }
-
-  const envBase = process.env["NEXT_PUBLIC_SITE_URL"]?.trim();
-  return envBase ?? "";
-};
-
 /**
  * Get user information for a bundle
  */
@@ -56,14 +43,16 @@ export const getBundleUser = async (
  * Generate bundle URL for sharing
  * @param userId - User wallet address (required)
  * @param walletId - Specific wallet address (optional, V22 Phase 2A)
- * @param baseUrl - Base URL (optional, defaults to current origin)
+ * @param baseUrl - Base URL (optional, defaults to relative path for SSR consistency)
+ *
+ * Note: Returns relative path by default to avoid SSR hydration mismatch.
+ * Pass explicit baseUrl for absolute URLs (e.g., for sharing to external services).
  */
 export const generateBundleUrl = (
   userId: string,
   walletId?: string,
   baseUrl?: string
 ): string => {
-  const resolvedBaseUrl = resolveBaseUrl(baseUrl);
   const params = new URLSearchParams({ userId });
 
   if (walletId) {
@@ -71,7 +60,14 @@ export const generateBundleUrl = (
   }
 
   const path = `/bundle?${params.toString()}`;
-  return resolvedBaseUrl ? `${resolvedBaseUrl}${path}` : path;
+
+  // Only prefix with baseUrl if explicitly provided
+  // This avoids SSR hydration mismatch (server has no window.location)
+  if (baseUrl) {
+    return `${baseUrl}${path}`;
+  }
+
+  return path;
 };
 
 /**
