@@ -2,10 +2,8 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   generateBundleUrl,
-  getBundleMetadata,
   getBundleUser,
   isOwnBundle,
-  parseBundleUrl,
 } from "@/services/bundleService";
 
 // Mock dependencies
@@ -78,38 +76,6 @@ describe("bundleService", () => {
     });
   });
 
-  describe("parseBundleUrl", () => {
-    it("should extract userId from bundle URL", () => {
-      const result = parseBundleUrl("https://example.com/bundle?userId=0x123");
-
-      expect(result.userId).toBe("0x123");
-      expect(result.walletId).toBeNull();
-    });
-
-    it("should extract both userId and walletId", () => {
-      const result = parseBundleUrl(
-        "https://example.com/bundle?userId=0x123&walletId=0xWallet"
-      );
-
-      expect(result.userId).toBe("0x123");
-      expect(result.walletId).toBe("0xWallet");
-    });
-
-    it("should return nulls for invalid URL", () => {
-      const result = parseBundleUrl("not-a-valid-url");
-
-      expect(result.userId).toBeNull();
-      expect(result.walletId).toBeNull();
-    });
-
-    it("should return nulls for URL without required params", () => {
-      const result = parseBundleUrl("https://example.com/bundle");
-
-      expect(result.userId).toBeNull();
-      expect(result.walletId).toBeNull();
-    });
-  });
-
   describe("isOwnBundle", () => {
     it("should return true when bundle userId matches current user", () => {
       expect(isOwnBundle("0x123", "0x123")).toBe(true);
@@ -125,24 +91,6 @@ describe("bundleService", () => {
 
     it("should return false when current user is undefined", () => {
       expect(isOwnBundle("0x123", undefined)).toBe(false);
-    });
-  });
-
-  describe("getBundleMetadata", () => {
-    it("should return metadata with user info", async () => {
-      const result = await getBundleMetadata("0x123");
-
-      expect(result).not.toBeNull();
-      expect(result?.user.userId).toBe("0x123");
-      expect(result?.isPublic).toBe(true);
-      expect(result?.createdAt).toBeInstanceOf(Date);
-      expect(result?.updatedAt).toBeInstanceOf(Date);
-    });
-
-    it("should set isPublic to true by default", async () => {
-      const result = await getBundleMetadata("any-user");
-
-      expect(result?.isPublic).toBe(true);
     });
   });
 });

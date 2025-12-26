@@ -7,10 +7,8 @@
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-  validateAccountTokens,
   validateAddWalletResponse,
   validateConnectWalletResponse,
-  validateHealthCheckResponse,
   validateMessageResponse,
   validateUpdateEmailResponse,
   validateUserProfileResponse,
@@ -60,27 +58,6 @@ export class AccountServiceError extends Error {
       this.details = details;
     }
   }
-}
-
-/**
- * Internal token interface for getUserTokens endpoint
- */
-interface AccountToken {
-  id: string;
-  chain: string;
-  name: string;
-  symbol: string;
-  display_symbol: string;
-  optimized_symbol: string;
-  decimals: number;
-  logo_url: string;
-  protocol_id: string;
-  price: number;
-  is_verified: boolean;
-  is_core: boolean;
-  is_wallet: boolean;
-  time_at: number;
-  amount: number;
 }
 
 /**
@@ -153,7 +130,6 @@ const createAccountServiceError = (error: unknown): AccountServiceError => {
 };
 
 const accountApiClient = httpUtils.accountApi;
-const backendApiClient = httpUtils.backendApi;
 
 const callAccountApi = createServiceCaller(createAccountServiceError);
 
@@ -288,37 +264,4 @@ export const updateWalletLabel = async (
     )
   );
   return validateMessageResponse(response);
-};
-
-// Utility Functions
-
-/**
- * Health check for account service
- */
-export const checkAccountServiceHealth = async (): Promise<{
-  status: string;
-  timestamp: string;
-}> => {
-  const response = await callAccountApi(() =>
-    accountApiClient.get<{
-      status: string;
-      timestamp: string;
-    }>("/health")
-  );
-  return validateHealthCheckResponse(response);
-};
-
-/**
- * Get user tokens for a specific chain
- */
-export const getUserTokens = async (
-  accountAddress: string,
-  chainName: string
-): Promise<AccountToken[]> => {
-  const response = await callAccountApi(() =>
-    backendApiClient.get<AccountToken[]>(
-      `/user/${accountAddress}/${chainName}/tokens`
-    )
-  );
-  return validateAccountTokens(response);
 };
