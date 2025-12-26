@@ -18,9 +18,29 @@ import type {
   PerformanceChartData,
 } from "@/types/analytics";
 
+const toDateKey = (value?: string | null): string | null => {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match?.[1]) {
+    return match[1];
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString().slice(0, 10);
+};
+
 const buildDateRange = (values: { date?: string }[]) => ({
-  startDate: values[0]?.date ?? new Date().toISOString(),
-  endDate: values[values.length - 1]?.date ?? new Date().toISOString(),
+  startDate: toDateKey(values[0]?.date) ?? new Date().toISOString(),
+  endDate:
+    toDateKey(values[values.length - 1]?.date) ?? new Date().toISOString(),
 });
 
 // ============================================================================
@@ -69,13 +89,44 @@ export function transformToPerformanceChart(
 
   // Build BTC price map for lookup
   const btcPriceMap = new Map(
-    (btcPriceData ?? []).map(snap => [snap.date, snap.price_usd])
+    (btcPriceData ?? []).flatMap(snap => {
+      const dateKey = toDateKey(snap.date);
+      if (!dateKey) {
+        return [];
+      }
+      return [[dateKey, snap.price_usd] as const];
+    })
   );
 
-  // Get first portfolio value and BTC price for normalization
+  // Get first portfolio value
   const firstPortfolioValue = dailyValues[0]?.total_value_usd ?? 0;
-  const firstDate = dailyValues[0]?.date;
-  const firstBtcPrice = firstDate ? btcPriceMap.get(firstDate) : null;
+
+  // Find first available BTC price within portfolio date range
+  let firstBtcPrice: number | null = null;
+  let firstBtcDate: string | null = null;
+
+  for (const dailyValue of dailyValues) {
+    const dateKey = toDateKey(dailyValue.date);
+    if (dateKey) {
+      const btcPrice = btcPriceMap.get(dateKey);
+      if (btcPrice) {
+        firstBtcPrice = btcPrice;
+        firstBtcDate = dateKey;
+        break; // Use first available BTC price as baseline
+      }
+    }
+  }
+
+  // Adjust portfolio baseline to match BTC baseline date
+  let baselinePortfolioValue = firstPortfolioValue;
+  if (firstBtcDate) {
+    const baselineDaily = dailyValues.find(
+      d => toDateKey(d.date) === firstBtcDate
+    );
+    if (baselineDaily?.total_value_usd) {
+      baselinePortfolioValue = baselineDaily.total_value_usd;
+    }
+  }
 
   // Normalize to 0-100 scale (inverted Y-axis for SVG)
   const points = dailyValues.map((d, idx) => {
@@ -84,27 +135,34 @@ export function transformToPerformanceChart(
       range > 0 ? 100 - ((value - min) / range) * 100 : 50;
 
     // Calculate real BTC benchmark if data available
-    let btcEquivalentValue = value * 0.95; // Fallback to mock if no BTC data
-    if (firstBtcPrice && firstPortfolioValue > 0 && d.date) {
-      const currentBtcPrice = btcPriceMap.get(d.date);
+    const dateKey = toDateKey(d.date);
+    let btcEquivalentValue: number | null = null; // Only use real BTC data
+    if (firstBtcPrice && baselinePortfolioValue > 0 && dateKey) {
+      const currentBtcPrice = btcPriceMap.get(dateKey);
       if (currentBtcPrice) {
-        // What would initial portfolio value be worth if invested in BTC?
+        // What would baseline portfolio value be worth if invested in BTC?
         btcEquivalentValue =
-          (firstPortfolioValue / firstBtcPrice) * currentBtcPrice;
+          (baselinePortfolioValue / firstBtcPrice) * currentBtcPrice;
       }
+      // If currentBtcPrice is undefined, btcEquivalentValue remains null
     }
 
-    // Normalize BTC benchmark to same scale as portfolio
+    // Normalize BTC benchmark to same scale as portfolio (only if we have real data)
     const normalizedBTC =
-      range > 0 ? 100 - ((btcEquivalentValue - min) / range) * 100 : 50;
+      btcEquivalentValue !== null && range > 0
+        ? 100 - ((btcEquivalentValue - min) / range) * 100
+        : null; // Skip normalization if no data
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
       portfolio: normalizedPortfolio,
-      btc: Math.max(0, Math.min(100, normalizedBTC)), // Clamp to 0-100
-      date: d.date ?? new Date().toISOString(),
+      btc:
+        normalizedBTC !== null
+          ? Math.max(0, Math.min(100, normalizedBTC))
+          : null, // Clamp to 0-100 or null
+      date: dateKey ?? d.date ?? new Date().toISOString(),
       portfolioValue: value,
-      btcBenchmarkValue: btcEquivalentValue, // Add actual USD value for tooltip
+      btcBenchmarkValue: btcEquivalentValue, // null if data unavailable
     };
   });
 

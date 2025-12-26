@@ -25,16 +25,10 @@
 import { getMainnetChains, toThirdWebChains } from "./adapters";
 import { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
-export {
-  CHAIN_REGISTRY,
-  SUPPORTED_CHAINS,
-} from "./definitions";
+export { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
 
 // Adapter functions
-export {
-  getMainnetChains,
-  toThirdWebChains,
-} from "./adapters";
+export { getMainnetChains, toThirdWebChains } from "./adapters";
 
 /**
  * Convenience functions for common use cases

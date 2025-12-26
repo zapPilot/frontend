@@ -20,10 +20,10 @@ import { ChartGridLines, ChartSurface } from "./ChartUI";
 interface PerformanceChartDataPoint {
   x: number;
   portfolio: number;
-  btc: number;
+  btc: number | null; // Allow null for missing BTC data
   date: string;
   portfolioValue: number;
-  btcBenchmarkValue: number; // Actual BTC equivalent value in USD
+  btcBenchmarkValue: number | null; // Actual BTC equivalent value in USD, null if unavailable
 }
 
 /**
@@ -84,7 +84,7 @@ export const PerformanceChart = memo<PerformanceChartProps>(
         y,
         date: formatChartDate(point.date),
         value: point.portfolioValue,
-        benchmark: point.btcBenchmarkValue, // Use actual USD value for tooltip
+        benchmark: point.btcBenchmarkValue ?? undefined, // Convert null to undefined for tooltip
       }),
     });
 
@@ -94,7 +94,18 @@ export const PerformanceChart = memo<PerformanceChartProps>(
       width,
       point => (point.portfolio / 100) * height
     );
-    const btcPath = buildPath(data, width, point => (point.btc / 100) * height);
+
+    // Filter out null BTC values before building path
+    const btcPath = useMemo(() => {
+      // Filter to points with valid BTC data and narrow the type
+      const validPoints = data.filter(
+        (point): point is PerformanceChartDataPoint & { btc: number } =>
+          point.btc !== null
+      );
+      if (validPoints.length === 0) return null;
+
+      return buildPath(validPoints, width, point => (point.btc / 100) * height);
+    }, [data, width, height]);
 
     return (
       <div className="relative w-full h-64 overflow-hidden rounded-xl bg-gray-900/30 border border-gray-800 cursor-pointer hover:bg-gray-900/40 hover:border-gray-700/80 transition-all duration-200 group">
@@ -124,16 +135,18 @@ export const PerformanceChart = memo<PerformanceChartProps>(
             vectorEffect="non-scaling-stroke"
           />
 
-          {/* BTC Benchmark Line (dashed) */}
-          <path
-            d={`M ${btcPath}`}
-            fill="none"
-            stroke="#F7931A"
-            strokeWidth="1"
-            strokeDasharray="4 2"
-            vectorEffect="non-scaling-stroke"
-            opacity="0.6"
-          />
+          {/* BTC Benchmark Line (dashed) - only render if data available */}
+          {btcPath && (
+            <path
+              d={`M ${btcPath}`}
+              fill="none"
+              stroke="#F7931A"
+              strokeWidth="1"
+              strokeDasharray="4 2"
+              vectorEffect="non-scaling-stroke"
+              opacity="0.6"
+            />
+          )}
 
           {/* Hover indicator */}
           <ChartIndicator hoveredPoint={performanceHover.hoveredPoint} />
@@ -147,14 +160,30 @@ export const PerformanceChart = memo<PerformanceChartProps>(
         </div>
 
         {/* Legend */}
-        <div className="absolute top-3 right-3 flex gap-4 text-[10px] pointer-events-none">
-          <div className="flex items-center gap-1">
+        <div className="absolute top-3 right-3 flex gap-4 text-[10px]">
+          <div className="flex items-center gap-1 pointer-events-none">
             <div className="w-3 h-0.5 bg-purple-500 rounded" />
             <span className="text-gray-400">Portfolio</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-1 group pointer-events-auto cursor-help"
+            title="Shows what your initial portfolio value would be worth if invested 100% in Bitcoin. Example: $10,000 portfolio when BTC was $50,000, now BTC is $60,000 → benchmark value is $12,000"
+          >
             <div className="w-3 h-0.5 bg-orange-500 rounded opacity-60" />
-            <span className="text-gray-400">BTC</span>
+            <span className="text-gray-400 group-hover:text-orange-400 transition-colors">
+              BTC Benchmark
+            </span>
+            <svg
+              className="w-2.5 h-2.5 text-gray-500 group-hover:text-orange-400 transition-colors"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clipRule="evenodd"
+              />
+            </svg>
           </div>
         </div>
 
