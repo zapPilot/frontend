@@ -1,11 +1,12 @@
-export const CHAIN_LOGOS: Record<number, string> = {
+// Internal constants used by getChainLogo and getProtocolLogo
+const CHAIN_LOGOS: Record<number, string> = {
   42161: "/chains/arbitrum.svg",
   10: "/chains/optimism.svg",
   8453: "/chains/base.svg",
   1088: "/chains/metis.svg",
 };
 
-export const PROTOCOL_LOGOS: Record<string, string> = {
+const PROTOCOL_LOGOS: Record<string, string> = {
   gmx: "/protocols/gmx-v2.webp",
   hyperliquid: "/protocols/hyperliquid.webp",
   morpho: "/protocols/morpho.webp",

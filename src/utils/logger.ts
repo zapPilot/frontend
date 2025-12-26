@@ -251,12 +251,8 @@ class ContextLogger {
 export const logger = new Logger();
 
 // Convenience factory for ad-hoc context loggers
-export const createContextLogger = (context: string) =>
-  logger.createContextLogger(context);
-
 // Export context-aware loggers for common areas
 export const walletLogger = logger.createContextLogger("Wallet");
 
 // Export types and classes
-export { ContextLogger, Logger };
 export type { LogEntry };

@@ -52,17 +52,6 @@ export interface BaseChainConfig {
 }
 
 /**
- * Chain configuration
- */
-export interface ChainEnvironmentConfig {
-  /** Production chains */
-  mainnet: BaseChainConfig[];
-
-  /** All chains */
-  all: BaseChainConfig[];
-}
-
-/**
  * Chain adapter function types
  */
 export type ChainAdapter<T> = (config: BaseChainConfig) => T;

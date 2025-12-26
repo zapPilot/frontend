@@ -26,8 +26,6 @@ export {
 
 // Utils
 export {
-  validateAddress,
   validateEmail,
-  validateLabel,
   validateNewWallet,
 } from "./utils/validation";

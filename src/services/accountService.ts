@@ -5,7 +5,7 @@
  */
 
 import { httpUtils } from "@/lib/http";
-import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
+import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
   validateAccountTokens,
   validateAddWalletResponse,

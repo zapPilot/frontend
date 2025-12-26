@@ -5,8 +5,6 @@
  * @module lib/errors/errorFactory
  */
 
-import type { UnknownErrorInput } from "./errorContext";
-
 // =============================================================================
 // MESSAGE NORMALIZATION
 // =============================================================================
@@ -156,39 +154,4 @@ export function resolveErrorMessage(
     }
   }
   return fallback;
-}
-
-/**
- * Extract HTTP status code from unknown error object
- *
- * @param error - Unknown error object
- * @returns HTTP status code (defaults to 500)
- */
-export function extractStatusCode(error: unknown): number {
-  const errorObj = error as UnknownErrorInput;
-  return errorObj.status || errorObj.response?.status || 500;
-}
-
-/**
- * Extract error code from unknown error object
- *
- * @param error - Unknown error object
- * @returns Error code if available
- */
-export function extractErrorCode(error: unknown): string | undefined {
-  const errorObj = error as UnknownErrorInput;
-  return errorObj.code;
-}
-
-/**
- * Extract error details from unknown error object
- *
- * @param error - Unknown error object
- * @returns Error details if available
- */
-export function extractErrorDetails(
-  error: unknown
-): Record<string, unknown> | undefined {
-  const errorObj = error as UnknownErrorInput;
-  return errorObj.details;
 }

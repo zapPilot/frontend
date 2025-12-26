@@ -60,13 +60,6 @@ interface SkeletonProps extends BaseLoadingProps {
   spacing?: string;
 }
 
-interface LoadingWrapperProps {
-  isLoading: boolean;
-  loadingComponent?: React.ReactNode;
-  children: React.ReactNode;
-  className?: string;
-}
-
 // =============================================================================
 // CONSTANTS & STYLES
 // =============================================================================
@@ -309,7 +302,8 @@ export function CardSkeleton({
   );
 }
 
-export function LoadingCard({
+// Internal function used by LoadingState
+function LoadingCard({
   message,
   className = "",
   [DATA_TEST_ID_PROP]: testId = "loading-card",
@@ -449,113 +443,6 @@ const createCircularSkeletonComponent = (
 export const ChartSkeleton = createCircularSkeletonComponent("chart-skeleton");
 ChartSkeleton.displayName = "ChartSkeleton";
 
-export const PieChartSkeleton =
-  createCircularSkeletonComponent("pie-chart-loading");
-PieChartSkeleton.displayName = "PieChartSkeleton";
-
-export function ButtonSkeleton({
-  width = "120px",
-  height = 40,
-  className = "",
-  ariaLabel = "Fetching content",
-}: {
-  width?: string | number;
-  height?: number;
-  className?: string;
-  ariaLabel?: string;
-}) {
-  return (
-    <Skeleton
-      variant="rounded"
-      width={width}
-      height={height}
-      className={className}
-      data-testid="button-skeleton"
-      aria-label={ariaLabel}
-    />
-  );
-}
-
-interface BalanceSkeletonProps extends BaseLoadingProps {
-  size?: "small" | "default" | "large";
-}
-
-export function BalanceSkeleton({
-  size = "default",
-  className = "",
-  [DATA_TEST_ID_PROP]: testId = "balance-loading",
-  [ARIA_LABEL_PROP]: ariaLabel = "Loading balance",
-}: BalanceSkeletonProps) {
-  const heights = {
-    small: 24,
-    default: 32,
-    large: 48,
-  };
-
-  return (
-    <Skeleton
-      variant="text"
-      width={128}
-      height={heights[size]}
-      className={className}
-      data-testid={testId}
-      aria-label={ariaLabel}
-    />
-  );
-}
-
-// =============================================================================
-// LOADING WRAPPER
-// =============================================================================
-
-export function LoadingWrapper({
-  isLoading,
-  loadingComponent,
-  children,
-  className = "",
-}: LoadingWrapperProps) {
-  if (isLoading) {
-    return (
-      <div className={className}>
-        {loadingComponent ?? <Skeleton variant="text" />}
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-// =============================================================================
-// SPECIALIZED COMPONENTS
-// =============================================================================
-
-export function AssetCategorySkeleton({
-  className = "",
-}: {
-  className?: string;
-}) {
-  return (
-    <div className={`p-4 ${className}`}>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Skeleton variant="circular" width={16} height={16} />
-          <div className="space-y-2">
-            <Skeleton variant="rectangular" width={96} height={16} />
-            <Skeleton variant="rectangular" width={64} height={12} />
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <div className="text-right space-y-2">
-            <Skeleton variant="rectangular" width={80} height={16} />
-            <Skeleton variant="rectangular" width={48} height={12} />
-          </div>
-          <Skeleton variant="rectangular" width={20} height={20} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
 interface LoadingStateProps {
   variant?: LoadingVariant;
   size?: ComponentSize;
@@ -618,41 +505,6 @@ export function LoadingState({
 // TOKEN LIST SKELETON
 // =============================================================================
 
-interface TokenListSkeletonProps extends Pick<BaseLoadingProps, "className"> {
-  count?: number;
-  [DATA_TEST_ID_PROP]?: string;
-}
-
-/**
- * Loading skeleton for token list displays
- * Used in token selectors and similar token list UIs
- * Shows animated loading placeholders for token icon, name, and balance
- */
-export function TokenListSkeleton({
-  count = 3,
-  className = "",
-  [DATA_TEST_ID_PROP]: testId = "token-list-skeleton",
-}: TokenListSkeletonProps) {
-  return (
-    <div className={`space-y-1 p-2 ${className}`} data-testid={testId}>
-      {Array(count)
-        .fill(0)
-        .map((_, i) => (
-          <div key={i} className="flex items-center gap-3 py-2.5 px-3">
-            {/* Token icon skeleton */}
-            <div className="w-8 h-8 bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
-            {/* Token info skeleton */}
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="h-3.5 bg-gray-700 rounded animate-pulse w-16" />
-              <div className="h-3 bg-gray-700 rounded animate-pulse w-24" />
-            </div>
-            {/* Balance skeleton */}
-            <div className="flex flex-col items-end gap-1 flex-shrink-0">
-              <div className="h-3.5 bg-gray-700 rounded animate-pulse w-20" />
-              <div className="h-3 bg-gray-700 rounded animate-pulse w-16" />
-            </div>
-          </div>
-        ))}
-    </div>
-  );
-}
+// TokenListSkeleton, AssetCategorySkeleton, LoadingWrapper, BalanceSkeleton,
+// ButtonSkeleton, and PieChartSkeleton were removed as unused exports.
+// They can be recovered from git history if needed.

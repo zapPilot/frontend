@@ -4,7 +4,7 @@
  */
 
 import { httpUtils } from "@/lib/http";
-import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
+import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import { SwapToken } from "@/types/ui/swap";
 
 import { createIntentServiceError } from "../lib/errors";

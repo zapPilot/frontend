@@ -16,8 +16,5 @@ export {
 
 // Export factory utilities
 export {
-  extractErrorCode,
-  extractErrorDetails,
-  extractStatusCode,
   resolveErrorMessage,
 } from "./errorFactory";
