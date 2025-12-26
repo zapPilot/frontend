@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { AllocationConstituent } from "@/components/wallet/portfolio/components/AllocationBars";
 import { PortfolioLegend } from "@/components/wallet/portfolio/components/PortfolioLegend";
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 const mockCryptoAssets: AllocationConstituent[] = [
   {

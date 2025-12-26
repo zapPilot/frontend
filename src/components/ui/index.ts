@@ -1,16 +1,9 @@
 // Core UI components - only exports that are actively imported through this index
-export { AssetBadge } from "./AssetBadge";
-export { AsyncActionButton } from "./AsyncActionButton";
 export { BaseCard } from "./BaseCard";
 export { GradientButton } from "./GradientButton";
 
 // Modal system
-export {
-  Modal,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-} from "./modal";
+export { Modal, ModalContent, ModalFooter, ModalHeader } from "./modal";
 
 // Loading system - only actively used exports
 export {

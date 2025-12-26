@@ -6,6 +6,7 @@ import { memo, useCallback } from "react";
 
 import { BaseCard } from "@/components/ui";
 import { Skeleton } from "@/components/ui/LoadingSystem";
+import { ModalBackdrop } from "@/components/ui/modal";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
@@ -16,7 +17,6 @@ import { ConnectWalletButton } from "./components/ConnectWalletButton";
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
 import { EmailSubscription } from "./components/EmailSubscription";
-import { ModalBackdrop } from "./components/ModalBackdrop";
 import { WalletList } from "./components/WalletList";
 import { useDropdownMenu } from "./hooks/useDropdownMenu";
 import { useEmailSubscription } from "./hooks/useEmailSubscription";

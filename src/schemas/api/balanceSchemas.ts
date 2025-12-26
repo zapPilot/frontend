@@ -80,21 +80,6 @@ export const walletResponseDataSchema = z
   .catchall(z.unknown()); // Allow additional fields
 
 /**
- * Schema for normalized token balance (after processing)
- */
-export const normalizedTokenBalanceSchema = z.object({
-  address: z.string(),
-  symbol: z.string().optional(),
-  name: z.string().optional(),
-  decimals: z.number().nullable(),
-  rawBalance: z.string().optional(),
-  formattedBalance: z.number().optional(),
-  usdValue: z.number().optional(),
-  balance: z.number(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-});
-
-/**
  * Type inference from schemas
  * These types are automatically generated from the Zod schemas
  */
@@ -115,11 +100,4 @@ export function validateWalletResponseData(data: unknown): WalletResponseData {
     return {};
   }
   return walletResponseDataSchema.parse(data);
-}
-
-/**
- * Safe validation helper that returns a result object instead of throwing
- */
-export function safeValidateWalletResponse(data: unknown) {
-  return walletResponseDataSchema.safeParse(data);
 }

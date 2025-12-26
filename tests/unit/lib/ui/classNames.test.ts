@@ -1,12 +1,12 @@
 /**
  * classNames Utility Tests
  *
- * Tests for the cn and createClassNameBuilder utility functions
+ * Tests for the cn utility function
  */
 
 import { describe, expect, it } from "vitest";
 
-import { cn, createClassNameBuilder } from "@/lib/ui/classNames";
+import { cn } from "@/lib/ui/classNames";
 
 describe("cn", () => {
   it("joins multiple class names", () => {
@@ -43,31 +43,5 @@ describe("cn", () => {
 
   it("returns single class for one input", () => {
     expect(cn("single")).toBe("single");
-  });
-});
-
-describe("createClassNameBuilder", () => {
-  it("creates builder with base classes", () => {
-    const builder = createClassNameBuilder("base", "default");
-    expect(builder()).toBe("base default");
-  });
-
-  it("appends conditional classes", () => {
-    const builder = createClassNameBuilder("base");
-    expect(builder("additional", "extra")).toBe("base additional extra");
-  });
-
-  it("filters falsy conditional classes", () => {
-    const builder = createClassNameBuilder("base");
-    expect(builder("added", false, undefined, null)).toBe("base added");
-  });
-
-  it("works with conditional expressions", () => {
-    const builder = createClassNameBuilder("btn");
-    const isPrimary = true;
-    const isLarge = false;
-    expect(builder(isPrimary && "btn-primary", isLarge && "btn-lg")).toBe(
-      "btn btn-primary"
-    );
   });
 });

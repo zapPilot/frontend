@@ -5,16 +5,12 @@
  * - Complete data transformation
  * - Partial data handling
  * - Edge cases (empty portfolios, null values)
- * - Loading and error states
+ * - Regime allocation edge cases
  */
 
 import { describe, expect, it } from "vitest";
 
-import {
-  createWalletPortfolioErrorState,
-  createWalletPortfolioLoadingState,
-  transformToWalletPortfolioData,
-} from "@/adapters/walletPortfolioDataAdapter";
+import { transformToWalletPortfolioData } from "@/adapters/walletPortfolioDataAdapter";
 import type { LandingPageResponse } from "@/schemas/api/analyticsSchemas";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
@@ -489,28 +485,6 @@ describe("walletPortfolioAdapter", () => {
       expect(extremeGreedResult.currentRegime).toBe("eg");
       expect(extremeGreedResult.targetAllocation.crypto).toBe(30);
       expect(extremeGreedResult.targetAllocation.stable).toBe(70);
-    });
-  });
-
-  describe("createWalletPortfolioLoadingState", () => {
-    it("should create correct loading state", () => {
-      const loadingState = createWalletPortfolioLoadingState();
-
-      expect(loadingState.isLoading).toBe(true);
-      expect(loadingState.hasError).toBe(false);
-      expect(loadingState.balance).toBe(0);
-      expect(loadingState.currentRegime).toBe("n");
-      expect(loadingState.sentimentValue).toBe(50);
-    });
-  });
-
-  describe("createWalletPortfolioErrorState", () => {
-    it("should create correct error state", () => {
-      const errorState = createWalletPortfolioErrorState();
-
-      expect(errorState.isLoading).toBe(false);
-      expect(errorState.hasError).toBe(true);
-      expect(errorState.balance).toBe(0);
     });
   });
 });

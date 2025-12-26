@@ -21,6 +21,7 @@ import {
   transformToWalletPortfolioDataWithDirection,
   type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
+import type { LandingPageResponse } from "@/services/analyticsService";
 import {
   type RegimeHistoryData,
   useRegimeHistory,
@@ -43,13 +44,7 @@ import { useLandingPageData } from "./usePortfolioQuery";
  * Extract ROI changes from landing page data
  * Replicates logic from walletPortfolioDataAdapter
  */
-function extractROIChanges(landingData: {
-  portfolio_roi: {
-    windows?: Record<string, { value: number }>;
-    roi_7d?: { value: number };
-    roi_30d?: { value: number };
-  };
-}): {
+function extractROIChanges(landingData: LandingPageResponse): {
   change7d: number;
   change30d: number;
 } {
@@ -88,10 +83,8 @@ function countUniqueChains(poolDetails: { chain: string }[]): number {
 
 /**
  * Extract balance section data from landing response
- * Note: Uses 'any' for landing type since the actual landing response has complex nested types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractBalanceData(landing: any): BalanceData {
+function extractBalanceData(landing: LandingPageResponse): BalanceData {
   const roiChanges = extractROIChanges(landing);
 
   return {
@@ -104,10 +97,8 @@ function extractBalanceData(landing: any): BalanceData {
 
 /**
  * Extract composition section data from landing response
- * Note: Uses 'any' for landing type since the actual landing response has complex nested types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function extractCompositionData(landing: any): CompositionData {
+function extractCompositionData(landing: LandingPageResponse): CompositionData {
   const currentAllocation = calculateAllocation(landing);
 
   // Use imported utilities

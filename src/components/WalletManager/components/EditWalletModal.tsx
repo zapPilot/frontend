@@ -2,11 +2,11 @@ import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
+import { ModalBackdrop } from "@/components/ui/modal";
 import type { WalletData } from "@/lib/validation/walletUtils";
 import { formatAddress } from "@/utils/formatters";
 
 import type { EditingWallet, WalletOperations } from "../types/wallet.types";
-import { ModalBackdrop } from "./ModalBackdrop";
 
 interface EditWalletModalProps {
   editingWallet: EditingWallet | null;

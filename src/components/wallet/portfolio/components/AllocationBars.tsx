@@ -1,15 +1,6 @@
 import { motion } from "framer-motion";
 
-/**
- * Constituent asset type for allocation breakdown
- */
-export interface AllocationConstituent {
-  asset: string;
-  symbol: string;
-  name: string;
-  value: number;
-  color: string;
-}
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 interface AllocationBarsProps {
   cryptoAssets: AllocationConstituent[];

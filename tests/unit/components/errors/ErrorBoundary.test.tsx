@@ -1,11 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  ErrorBoundary,
-  useErrorHandler,
-  withErrorBoundary,
-} from "../../../../src/components/errors/ErrorBoundary";
+import { ErrorBoundary } from "../../../../src/components/errors/ErrorBoundary";
 
 // Mock child component that can throw errors
 function ProblematicComponent({
@@ -266,70 +262,6 @@ describe("ErrorBoundary", () => {
       expect(
         screen.queryByText("Oops! Something went wrong")
       ).not.toBeInTheDocument();
-    });
-  });
-
-  describe("withErrorBoundary HOC", () => {
-    it("should wrap component with error boundary", () => {
-      const WrappedComponent = withErrorBoundary(ProblematicComponent);
-
-      render(<WrappedComponent shouldThrow={false} />);
-
-      expect(screen.getByTestId("working-component")).toBeInTheDocument();
-    });
-
-    it("should catch errors in wrapped component", () => {
-      const WrappedComponent = withErrorBoundary(ProblematicComponent);
-
-      render(<WrappedComponent shouldThrow={true} />);
-
-      expect(
-        screen.getByText("Oops! Something went wrong")
-      ).toBeInTheDocument();
-    });
-
-    it("should pass through errorBoundaryProps", () => {
-      const onError = vi.fn();
-      const WrappedComponent = withErrorBoundary(ProblematicComponent, {
-        onError,
-      });
-
-      render(<WrappedComponent shouldThrow={true} />);
-
-      expect(onError).toHaveBeenCalled();
-    });
-
-    it("should set displayName correctly", () => {
-      const TestComponent = () => <div>Test</div>;
-      TestComponent.displayName = "TestComponent";
-
-      const WrappedComponent = withErrorBoundary(TestComponent);
-
-      expect(WrappedComponent.displayName).toBe(
-        "withErrorBoundary(TestComponent)"
-      );
-    });
-  });
-
-  describe("useErrorHandler Hook", () => {
-    it("should provide error handler function", () => {
-      function TestComponent() {
-        const handleError = useErrorHandler();
-
-        return (
-          <div data-testid="test-component">
-            {typeof handleError === "function"
-              ? "Handler available"
-              : "No handler"}
-          </div>
-        );
-      }
-
-      render(<TestComponent />);
-
-      expect(screen.getByTestId("test-component")).toHaveTextContent(
-        "Handler available"
-      );
     });
   });
 

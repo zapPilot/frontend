@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  formatCurrency,
-  formatNumber,
-  formatPercentage,
-} from "../../../src/utils/formatters";
+import { formatCurrency, formatNumber } from "../../../src/utils/formatters";
 
 describe("utils", () => {
   describe("formatCurrency", () => {
@@ -33,22 +29,6 @@ describe("utils", () => {
     it("should handle decimal places correctly", () => {
       expect(formatNumber(1.123456)).toBe("1.1235");
       expect(formatNumber(1.1)).toBe("1.1");
-    });
-  });
-
-  describe("formatPercentage", () => {
-    it("should format positive percentages with + sign", () => {
-      expect(formatPercentage(5.678)).toBe("+5.7%");
-      expect(formatPercentage(0.1)).toBe("+0.1%");
-    });
-
-    it("should format negative percentages without + sign", () => {
-      expect(formatPercentage(-3.456)).toBe("-3.5%");
-      expect(formatPercentage(-0.1)).toBe("-0.1%");
-    });
-
-    it("should format zero percentage with + sign", () => {
-      expect(formatPercentage(0)).toBe("+0.0%");
     });
   });
 });

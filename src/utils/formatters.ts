@@ -175,27 +175,6 @@ export function formatNumber(
 }
 
 // =============================================================================
-// PERCENTAGE FORMATTING
-// =============================================================================
-
-/**
- * Format percentage values with sign indicator
- *
- * @param value - The percentage value to format
- * @param decimals - Number of decimal places (default: 1)
- * @returns Formatted percentage string with + or - sign
- *
- * @example
- * formatPercentage(5.678) // "+5.7%"
- * formatPercentage(-3.456) // "-3.5%"
- * formatPercentage(0) // "+0.0%"
- */
-export function formatPercentage(value: number, decimals = 1): string {
-  const sign = value >= 0 ? "+" : "";
-  return `${sign}${value.toFixed(decimals)}%`;
-}
-
-// =============================================================================
 // ADDRESS & IDENTIFIER FORMATTING
 // =============================================================================
 

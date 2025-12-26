@@ -52,16 +52,6 @@ export const mockFormatters = {
   }),
 
   /**
-   * Mock implementation of formatPercentage.
-   */
-  formatPercentage: vi.fn(
-    (value: number, showPlusSign = true, decimals = 1) => {
-      const sign = value >= 0 && showPlusSign ? "+" : "";
-      return `${sign}${value.toFixed(decimals)}%`;
-    }
-  ),
-
-  /**
    * Mock implementation of formatTokenAmount.
    */
   formatTokenAmount: vi.fn((amount: number, symbol: string, decimals = 4) => {
@@ -156,10 +146,6 @@ export const mockFormatters = {
   ),
   formatNumericValue: vi.fn((amount: number, options: any = {}) =>
     mockFormatters.formatNumber(amount, options)
-  ),
-  formatPercentageValue: vi.fn(
-    (value: number, showPlusSign = true, decimals = 1) =>
-      mockFormatters.formatPercentage(value, showPlusSign, decimals)
   ),
 };
 
