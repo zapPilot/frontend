@@ -5,7 +5,7 @@
  * Creates an enticing preview of what their dashboard could look like.
  */
 
-import type { AllocationConstituent } from "@/adapters/walletPortfolioDataAdapter";
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /** Shared crypto asset definitions to avoid duplication */
 const PREVIEW_CRYPTO_ASSETS: AllocationConstituent[] = [

@@ -23,6 +23,31 @@ vi.mock("@/components/WalletManager/components/ConnectWalletButton", () => ({
 describe("GhostModeOverlay", () => {
   const testContent = <div data-testid="test-content">Test Content</div>;
 
+  describe("Snapshot Tests - UI Design Freeze", () => {
+    it("should match snapshot when disabled", () => {
+      const { container } = render(
+        <GhostModeOverlay enabled={false}>{testContent}</GhostModeOverlay>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it("should match snapshot when enabled with CTA", () => {
+      const { container } = render(
+        <GhostModeOverlay enabled={true}>{testContent}</GhostModeOverlay>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+
+    it("should match snapshot when enabled without CTA", () => {
+      const { container } = render(
+        <GhostModeOverlay enabled={true} showCTA={false}>
+          {testContent}
+        </GhostModeOverlay>
+      );
+      expect(container.firstChild).toMatchSnapshot();
+    });
+  });
+
   describe("when disabled", () => {
     it("renders children without blur or overlay", () => {
       render(

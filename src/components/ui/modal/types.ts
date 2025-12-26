@@ -23,20 +23,3 @@ export interface ModalFooterProps {
   children: React.ReactNode;
   className?: string;
 }
-
-export interface ModalInputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  variant?: "default" | "currency";
-}
-
-export interface ModalButtonGroupProps {
-  onCancel: () => void;
-  onConfirm: () => void;
-  cancelLabel?: string;
-  confirmLabel?: string;
-  confirmVariant?: "primary" | "success" | "danger";
-  confirmDisabled?: boolean;
-  isLoading?: boolean;
-}

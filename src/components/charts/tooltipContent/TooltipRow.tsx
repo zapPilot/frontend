@@ -7,7 +7,7 @@ import { formatters } from "@/utils/formatters";
 interface TooltipRowProps {
   label: string;
   labelColor?: string;
-  value: string | number;
+  value: string | number | undefined;
   valueColor?: string;
   format?: "currency" | "percent" | "text" | "currencyPrecise";
   precision?: number;
@@ -24,15 +24,17 @@ export function TooltipRow({
   prefix = "",
 }: TooltipRowProps) {
   const formattedValue =
-    typeof value === "number"
-      ? format === "currency"
-        ? formatters.currency(value)
-        : format === "currencyPrecise"
-          ? formatters.currencyPrecise(value)
-          : format === "percent"
-            ? formatters.percent(value, precision)
-            : String(value)
-      : value;
+    value === undefined
+      ? "N/A"
+      : typeof value === "number"
+        ? format === "currency"
+          ? formatters.currency(value)
+          : format === "currencyPrecise"
+            ? formatters.currencyPrecise(value)
+            : format === "percent"
+              ? formatters.percent(value, precision)
+              : String(value)
+        : value;
 
   return (
     <div className="flex items-center justify-between gap-3">

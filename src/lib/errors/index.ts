@@ -15,9 +15,4 @@ export {
 } from "./IntentServiceError";
 
 // Export factory utilities
-export {
-  extractErrorCode,
-  extractErrorDetails,
-  extractStatusCode,
-  resolveErrorMessage,
-} from "./errorFactory";
+export { resolveErrorMessage } from "./errorFactory";

@@ -29,6 +29,7 @@ const eslintConfig = [
       "playwright-report/**/*",
       "test-results/**/*",
       ".claude/**/*",
+      "**/__snapshots__/**",
     ],
   },
   // Base Next.js configs
@@ -266,7 +267,10 @@ const eslintConfig = [
       "@typescript-eslint/no-useless-constructor": "off",
 
       // Allow console in tests
-      "no-console": "off"
+      "no-console": "off",
+
+      // Allow undefined returns in async callbacks for tests
+      "unicorn/no-useless-undefined": "off"
     }
   },
   {

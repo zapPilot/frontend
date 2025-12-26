@@ -12,8 +12,9 @@ export type StrategyDirection = "fromLeft" | "fromRight" | "default";
  * - fromLeft: User coming from a lower regime (recovery/bull market)
  * - fromRight: User coming from a higher regime (correction/bear market)
  * - default: Single strategy regimes (EF, N, EG)
+ * Internal constant used by getStrategyTabLabel
  */
-export const STRATEGY_TAB_LABELS: Record<
+const STRATEGY_TAB_LABELS: Record<
   RegimeId,
   Partial<Record<StrategyDirection, string>>
 > = {

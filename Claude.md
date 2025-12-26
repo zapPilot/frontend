@@ -248,15 +248,17 @@ PortfolioAllocation/
 
 ```typescript
 // Business logic encapsulation
-export function usePortfolioData(userId: string) {
-  const query = usePortfolioQuery(userId);
-  const analytics = usePortfolioAPR(userId);
+export function usePortfolioDataProgressive(userId: string) {
+  const landing = useLandingPageData(userId);
+  const sentiment = useSentimentData();
+  const regimeHistory = useRegimeHistory();
 
   return {
-    portfolio: query.data,
-    apr: analytics.data,
-    isLoading: query.isLoading || analytics.isLoading,
-    error: query.error || analytics.error,
+    landing: landing.data,
+    sentiment: sentiment.data,
+    regimeHistory: regimeHistory.data,
+    isLoading: landing.isLoading,
+    error: landing.error,
   };
 }
 ```

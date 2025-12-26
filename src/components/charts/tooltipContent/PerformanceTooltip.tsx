@@ -8,11 +8,13 @@ import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";
 
 export function PerformanceTooltip({ data }: { data: PerformanceHoverData }) {
-  // Calculate relative performance if both values exist
-  const showRelativePerf = data.value && data.benchmark;
-  const relativePerf = showRelativePerf
-    ? ((data.value - data.benchmark) / data.benchmark) * 100
-    : null;
+  // Extract benchmark with proper null narrowing to avoid non-null assertions
+  const benchmark = data.benchmark;
+  // Calculate relative performance only if benchmark is defined (not undefined)
+  const relativePerf =
+    benchmark !== undefined
+      ? ((data.value - benchmark) / benchmark) * 100
+      : null;
 
   return (
     <TooltipWrapper date={data.date} spacing="tight">

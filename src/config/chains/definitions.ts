@@ -5,12 +5,13 @@
  * All other chain-related configurations should derive from these definitions.
  */
 
-import { BaseChainConfig, ChainEnvironmentConfig } from "./types";
+import { BaseChainConfig } from "./types";
 
 /**
  * Mainnet Chain Configurations
+ * Internal constant used by SUPPORTED_CHAINS and CHAIN_REGISTRY
  */
-export const MAINNET_CHAINS: BaseChainConfig[] = [
+const MAINNET_CHAINS: BaseChainConfig[] = [
   {
     id: 42161,
     name: "Arbitrum One",
@@ -116,14 +117,6 @@ export const MAINNET_CHAINS: BaseChainConfig[] = [
 ];
 
 /**
- * Chain configuration
- */
-export const CHAIN_CONFIG: ChainEnvironmentConfig = {
-  mainnet: MAINNET_CHAINS,
-  all: MAINNET_CHAINS,
-};
-
-/**
  * All supported chains
  */
 export const SUPPORTED_CHAINS = MAINNET_CHAINS.filter(
@@ -139,21 +132,4 @@ export const CHAIN_REGISTRY = MAINNET_CHAINS.reduce(
     return registry;
   },
   {} as Record<number, BaseChainConfig>
-);
-
-/**
- * Chain ID constants - Generated from MAINNET_CHAINS for consistency
- */
-export const CHAIN_IDS = {
-  ARBITRUM_ONE: 42161,
-  BASE: 8453,
-  OPTIMISM: 10,
-} as const;
-
-/**
- * Chain name mappings - Generated dynamically from MAINNET_CHAINS
- */
-export const CHAIN_NAMES = MAINNET_CHAINS.reduce(
-  (names, chain) => ({ ...names, [chain.id]: chain.name }),
-  {} as Record<number, string>
 );

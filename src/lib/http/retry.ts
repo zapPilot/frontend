@@ -6,7 +6,7 @@
 import { APIError } from "./errors";
 
 // Retry logic helper
-export function shouldRetry(error: unknown): boolean {
+function shouldRetry(error: unknown): boolean {
   // Don't retry client errors (4xx), retry on network errors, timeouts, and 5xx
   return !(
     error instanceof APIError &&

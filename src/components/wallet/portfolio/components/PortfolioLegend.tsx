@@ -1,6 +1,5 @@
 import { ASSET_COLORS } from "@/adapters/walletPortfolioDataAdapter";
-
-import type { AllocationConstituent } from "./AllocationBars";
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 interface LegendItemProps {
   label: string;

@@ -36,9 +36,8 @@ import type { MarketSentimentData } from "@/services/sentimentService";
 // (Ideally components should import from @/constants/assets directly, but this keeps backwards compat if needed)
 export { ASSET_COLORS } from "@/constants/assets";
 
-// Re-export AllocationConstituent from canonical source (allocationAdapter)
-// This eliminates the duplicate interface definition
-export type { AllocationConstituent } from "@/adapters/portfolio/allocationAdapter";
+// Re-export AllocationConstituent from canonical source (types)
+export type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /**
  * Wallet Portfolio Data Structure
@@ -297,54 +296,4 @@ export function createEmptyPortfolioState(
   };
 
   return applyRegimeHistoryFields(baseData, regimeHistoryData);
-}
-
-/**
- * Base state factory for creating placeholder states
- */
-function createBaseState(
-  overrides: Partial<WalletPortfolioData> = {}
-): WalletPortfolioData {
-  return {
-    balance: 0,
-    roi: 0,
-    roiChange7d: 0,
-    roiChange30d: 0,
-    sentimentValue: 50,
-    sentimentStatus: "Neutral",
-    sentimentQuote: "",
-    currentRegime: "n",
-    currentAllocation: {
-      crypto: 0,
-      stable: 0,
-      constituents: { crypto: [], stable: [] },
-      simplifiedCrypto: [],
-    },
-    targetAllocation: { crypto: 0, stable: 0 },
-    delta: 0,
-    positions: 0,
-    protocols: 0,
-    chains: 0,
-    isLoading: false,
-    hasError: false,
-    ...overrides,
-  };
-}
-
-/**
- * Creates a loading state placeholder
- */
-export function createWalletPortfolioLoadingState(): WalletPortfolioData {
-  return createBaseState({ isLoading: true });
-}
-
-/**
- * Creates an error state placeholder
- */
-export function createWalletPortfolioErrorState(): WalletPortfolioData {
-  return createBaseState({
-    sentimentValue: 0,
-    sentimentStatus: "Error",
-    hasError: true,
-  });
 }

@@ -50,7 +50,8 @@ interface SuccessBannerProps {
   extra?: ReactNode;
 }
 
-export function SuccessBanner({ message, tone, extra }: SuccessBannerProps) {
+// Internal function used by SubmittingState
+function SuccessBanner({ message, tone, extra }: SuccessBannerProps) {
   return (
     <div
       className={`mt-6 p-4 rounded-xl flex items-center gap-3 ${SUCCESS_TONE_STYLES[tone]}`}
@@ -99,7 +100,8 @@ interface AmountInputSectionProps {
   className?: string | undefined;
 }
 
-export function AmountInputSection({
+// Internal function used by TransactionFormActions
+function AmountInputSection({
   amount,
   onChange,
   usdPrice,
@@ -132,7 +134,8 @@ interface QuickPercentPillsProps {
   values?: number[];
 }
 
-export function QuickPercentPills({
+// Internal function used by TransactionFormActions
+function QuickPercentPills({
   onSelect,
   values = [0.25, 0.5, 0.75, 1],
 }: QuickPercentPillsProps) {
@@ -164,7 +167,8 @@ interface TransactionFormActionsProps {
   amountClassName?: string;
 }
 
-export function TransactionFormActions({
+// Internal function used by TransactionFormActionsWithForm
+function TransactionFormActions({
   amount,
   onAmountChange,
   usdPrice,

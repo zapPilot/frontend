@@ -15,10 +15,10 @@ export interface PerformanceChartData {
   points: {
     x: number;
     portfolio: number;
-    btc: number;
+    btc: number | null; // null when BTC data unavailable
     date: string; // ISO date string for each point
     portfolioValue: number; // Original USD value for tooltip
-    btcBenchmarkValue: number; // Actual BTC equivalent value in USD
+    btcBenchmarkValue: number | null; // Actual BTC equivalent value in USD, null if unavailable
   }[];
   /** ISO date string for chart start */
   startDate: string;

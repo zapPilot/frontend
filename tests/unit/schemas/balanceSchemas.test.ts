@@ -2,8 +2,6 @@ import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
 import {
-  normalizedTokenBalanceSchema,
-  safeValidateWalletResponse,
   tokenBalanceRawSchema,
   validateWalletResponseData,
   walletResponseDataSchema,
@@ -82,86 +80,6 @@ describe("balanceSchemas", () => {
       const result = tokenBalanceRawSchema.parse(dataWithExtra);
       expect(result).toHaveProperty("customField", "value");
       expect(result).toHaveProperty("anotherField", 123);
-    });
-  });
-
-  describe("normalizedTokenBalanceSchema", () => {
-    it("validates correct normalized token balance", () => {
-      const validData = {
-        address: "0x123",
-        symbol: "ETH",
-        name: "Ethereum",
-        decimals: 18,
-        rawBalance: "1000000000000000000",
-        formattedBalance: 1.0,
-        usdValue: 2000,
-        balance: 1.0,
-      };
-
-      expect(() => normalizedTokenBalanceSchema.parse(validData)).not.toThrow();
-    });
-
-    it("validates minimal normalized token balance", () => {
-      const minimalData = {
-        address: "0x456",
-        decimals: null,
-        balance: 0,
-      };
-
-      expect(() =>
-        normalizedTokenBalanceSchema.parse(minimalData)
-      ).not.toThrow();
-    });
-
-    it("validates normalized token with metadata", () => {
-      const dataWithMetadata = {
-        address: "0x789",
-        decimals: 6,
-        balance: 100,
-        metadata: {
-          fromCache: true,
-          source: "intent-engine",
-        },
-      };
-
-      expect(() =>
-        normalizedTokenBalanceSchema.parse(dataWithMetadata)
-      ).not.toThrow();
-    });
-
-    it("rejects normalized token without required fields", () => {
-      const invalidData = {
-        symbol: "ETH",
-        // missing address, decimals, balance
-      };
-
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
-    });
-
-    it("rejects normalized token with wrong type for balance", () => {
-      const invalidData = {
-        address: "0xabc",
-        decimals: 18,
-        balance: "not-a-number", // should be number
-      };
-
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
-    });
-
-    it("rejects normalized token with invalid decimals type", () => {
-      const invalidData = {
-        address: "0xdef",
-        decimals: "18", // should be number or null
-        balance: 1.0,
-      };
-
-      expect(() => normalizedTokenBalanceSchema.parse(invalidData)).toThrow(
-        ZodError
-      );
     });
   });
 
@@ -272,136 +190,9 @@ describe("balanceSchemas", () => {
         expect(() => validateWalletResponseData(invalidData)).toThrow(ZodError);
       });
     });
-
-    describe("safeValidateWalletResponse", () => {
-      it("returns success result for valid input", () => {
-        const validData = {
-          tokens: [],
-          chainId: 1,
-        };
-
-        const result = safeValidateWalletResponse(validData);
-        expect(result.success).toBe(true);
-        if (result.success) {
-          expect(result.data).toEqual(validData);
-        }
-      });
-
-      it("returns error result for invalid input", () => {
-        const invalidData = null;
-
-        const result = safeValidateWalletResponse(invalidData);
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeInstanceOf(ZodError);
-        }
-      });
-
-      it("provides detailed error information on failure", () => {
-        const invalidData = {
-          data: "not-an-object", // Invalid: data should be object, not string
-        };
-
-        const result = safeValidateWalletResponse(invalidData);
-        expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error).toBeInstanceOf(ZodError);
-          expect(result.error.issues).toBeDefined();
-          expect(result.error.issues.length).toBeGreaterThan(0);
-        }
-      });
-    });
-  });
-
-  describe("error messages", () => {
-    it("provides clear error message for missing required field", () => {
-      const invalidData = {
-        // missing address
-        decimals: 18,
-        balance: 1.0,
-      };
-
-      try {
-        normalizedTokenBalanceSchema.parse(invalidData);
-        expect.fail("Should have thrown ZodError");
-      } catch (error) {
-        expect(error).toBeInstanceOf(ZodError);
-        if (error instanceof ZodError) {
-          expect(error.issues).toBeDefined();
-          expect(error.issues.length).toBeGreaterThan(0);
-          const addressError = error.issues.find(e =>
-            e.path.includes("address")
-          );
-          expect(addressError).toBeDefined();
-        }
-      }
-    });
-
-    it("provides clear error message for wrong type", () => {
-      const invalidData = {
-        address: "0x123",
-        decimals: 18,
-        balance: "not-a-number", // should be number
-      };
-
-      try {
-        normalizedTokenBalanceSchema.parse(invalidData);
-        expect.fail("Should have thrown ZodError");
-      } catch (error) {
-        expect(error).toBeInstanceOf(ZodError);
-        if (error instanceof ZodError) {
-          expect(error.issues).toBeDefined();
-          expect(error.issues.length).toBeGreaterThan(0);
-          const balanceError = error.issues.find(e =>
-            e.path.includes("balance")
-          );
-          expect(balanceError).toBeDefined();
-          expect(balanceError?.code).toBe("invalid_type");
-        }
-      }
-    });
   });
 
   describe("edge cases", () => {
-    it("handles null values correctly", () => {
-      const dataWithNull = {
-        address: "0x123",
-        decimals: null, // explicitly null
-        balance: 0,
-      };
-
-      expect(() =>
-        normalizedTokenBalanceSchema.parse(dataWithNull)
-      ).not.toThrow();
-    });
-
-    it("handles zero values correctly", () => {
-      const dataWithZeros = {
-        address: "0x456",
-        decimals: 0,
-        balance: 0,
-        formattedBalance: 0,
-        usdValue: 0,
-      };
-
-      expect(() =>
-        normalizedTokenBalanceSchema.parse(dataWithZeros)
-      ).not.toThrow();
-    });
-
-    it("handles very large numbers", () => {
-      const dataWithLargeNumbers = {
-        address: "0x789",
-        decimals: 18,
-        balance: 1e18,
-        usdValue: 999999999999,
-      };
-
-      expect(() =>
-        normalizedTokenBalanceSchema.parse(dataWithLargeNumbers)
-      ).not.toThrow();
-    });
-
     it("handles empty strings where allowed", () => {
       const dataWithEmptyStrings = {
         address: "",

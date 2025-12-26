@@ -6,8 +6,7 @@ import {
   getRegimeAllocation,
   type Regime,
 } from "@/components/wallet/regime/regimeData";
-
-import type { AllocationConstituent } from "../AllocationBars";
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /**
  * Build target crypto assets from regime breakdown for empty state

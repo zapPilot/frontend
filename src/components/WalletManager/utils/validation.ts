@@ -4,8 +4,9 @@ import type { NewWallet, ValidationResult } from "../types/wallet.types";
 
 /**
  * Validate wallet address format
+ * Internal function used by validateNewWallet
  */
-export const validateAddress = (address: string): ValidationResult => {
+const validateAddress = (address: string): ValidationResult => {
   if (!address.trim()) {
     return {
       isValid: false,
@@ -26,8 +27,9 @@ export const validateAddress = (address: string): ValidationResult => {
 
 /**
  * Validate wallet label
+ * Internal function used by validateNewWallet
  */
-export const validateLabel = (label: string): ValidationResult => {
+const validateLabel = (label: string): ValidationResult => {
   if (!label.trim()) {
     return {
       isValid: false,

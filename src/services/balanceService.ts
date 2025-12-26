@@ -1,9 +1,9 @@
 import { httpUtils } from "@/lib/http";
+import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
   COMMON_FIELD_KEYS,
   pickStringField,
 } from "@/lib/utils/fieldNormalization";
-import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import { safeNumber } from "@/lib/validation/dataValidation";
 import { validateWalletResponseData } from "@/schemas/api/balanceSchemas";
 

@@ -11,8 +11,9 @@ import { BaseChainConfig, ChainAdapter, ChainListAdapter } from "./types";
 
 /**
  * Convert canonical chain config to ThirdWeb chain format
+ * Internal function used by toThirdWebChains
  */
-export const toThirdWebChain: ChainAdapter<ThirdWebChain> = config => {
+const toThirdWebChain: ChainAdapter<ThirdWebChain> = config => {
   return {
     id: config.id,
     name: config.name,
@@ -32,29 +33,8 @@ export const toThirdWebChains: ChainListAdapter<ThirdWebChain> = configs => {
 };
 
 /**
- * Get only supported chains from a list
- */
-export const getSupportedChains = (configs: BaseChainConfig[]) => {
-  return configs.filter(config => config.isSupported);
-};
-
-/**
  * Get only mainnet chains from a list
  */
 export const getMainnetChains = (configs: BaseChainConfig[]) => {
   return configs.filter(config => config.isSupported);
-};
-
-/**
- * Create chain selector for UI components
- */
-export const createChainSelector = (configs: BaseChainConfig[]) => {
-  return configs
-    .filter(config => config.isSupported)
-    .map(config => ({
-      id: config.id,
-      name: config.name,
-      symbol: config.symbol,
-      icon: config.iconUrl,
-    }));
 };

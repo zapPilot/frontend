@@ -13,8 +13,8 @@ import {
 } from "@/config/sentimentQuotes";
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { APIError, httpUtils } from "@/lib/http";
+import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import { queryKeys } from "@/lib/state/queryClient";
-import { createServiceCaller } from "@/lib/utils-moved/createServiceCaller";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,

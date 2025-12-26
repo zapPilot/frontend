@@ -1,16 +1,11 @@
 import { ASSET_COLORS } from "@/constants/assets";
 import type { LandingPageResponse } from "@/services/analyticsService";
+import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 /**
  * Constituent asset type for allocation breakdown
  */
-export interface AllocationConstituent {
-  asset: string;
-  symbol: string;
-  name: string;
-  value: number;
-  color: string;
-}
+export type { AllocationConstituent };
 
 /**
  * Simplified portfolio allocation structure
