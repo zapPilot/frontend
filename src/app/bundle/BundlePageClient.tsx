@@ -18,13 +18,19 @@ interface BundlePageClientProps {
 
 export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
   const router = useRouter();
-  const { userInfo, isConnected } = useUser();
+  const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
 
   // Redirect to user's bundle page after wallet connection (if currently on guest view)
   useEffect(() => {
+    // Don't attempt redirect while user data is loading
+    if (loading) {
+      return;
+    }
+
     if (
       isConnected &&
+      !loading &&
       userInfo?.userId &&
       !userId &&
       window.location.pathname === "/"
@@ -35,7 +41,7 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
       const newUrl = `/bundle?${queryString}`;
       router.replace(newUrl);
     }
-  }, [isConnected, userInfo?.userId, userId, router]);
+  }, [isConnected, loading, userInfo?.userId, userId, router]);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
