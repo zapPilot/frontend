@@ -1,0 +1,145 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
+<div>
+  <button
+    aria-label="Open search"
+    class="md:hidden p-2 text-gray-400 hover:text-white block "
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-search w-5 h-5"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="m21 21-4.34-4.34"
+      />
+      <circle
+        cx="11"
+        cy="11"
+        r="8"
+      />
+    </svg>
+  </button>
+  <form
+    class="relative items-center transition-all duration-300 
+          hidden md:flex h-10
+          md:w-64 
+          
+        "
+  >
+    <div
+      class="absolute inset-0 bg-gray-900/50 rounded-full border transition-colors border-gray-800 h-10"
+    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-search absolute w-4 h-4 text-gray-400 pointer-events-none left-3"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="m21 21-4.34-4.34"
+      />
+      <circle
+        cx="11"
+        cy="11"
+        r="8"
+      />
+    </svg>
+    <input
+      class="w-full bg-transparent border-none text-white text-sm placeholder-gray-500 focus:ring-0 z-10 pl-9 pr-8 h-10"
+      placeholder="Search address..."
+      type="text"
+      value=""
+    />
+  </form>
+</div>
+`;
+
+exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
+<div>
+  <button
+    aria-label="Open search"
+    class="md:hidden p-2 text-gray-400 hover:text-white block "
+    type="button"
+  >
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-search w-5 h-5"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="m21 21-4.34-4.34"
+      />
+      <circle
+        cx="11"
+        cy="11"
+        r="8"
+      />
+    </svg>
+  </button>
+  <form
+    class="relative items-center transition-all duration-300 
+          hidden md:flex h-10
+          md:w-64 
+          
+        "
+  >
+    <div
+      class="absolute inset-0 bg-gray-900/50 rounded-full border transition-colors border-gray-800 h-10"
+    />
+    <svg
+      aria-hidden="true"
+      class="lucide lucide-search absolute w-4 h-4 text-gray-400 pointer-events-none left-3"
+      fill="none"
+      height="24"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="m21 21-4.34-4.34"
+      />
+      <circle
+        cx="11"
+        cy="11"
+        r="8"
+      />
+    </svg>
+    <input
+      class="w-full bg-transparent border-none text-white text-sm placeholder-gray-500 focus:ring-0 z-10 pl-9 pr-8 h-10"
+      placeholder="Custom placeholder"
+      type="text"
+      value=""
+    />
+  </form>
+</div>
+`;

@@ -72,7 +72,6 @@ describe("PerformanceChart", () => {
     // Previously: Div > [Div(Line), Span(Text), SVG(Icon)]
     // Now: Div > [Div(Line), Span(Text)]
     // We expect NO svg element in the parent
-    // eslint-disable-next-line testing-library/no-node-access
     const svgIcon = parent?.querySelector("svg");
     expect(svgIcon).toBeNull();
   });

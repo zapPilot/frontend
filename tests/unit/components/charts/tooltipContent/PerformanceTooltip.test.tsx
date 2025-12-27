@@ -52,9 +52,7 @@ describe("PerformanceTooltip", () => {
   });
 
   it("handles missing benchmark gracefuly", () => {
-    render(
-      <PerformanceTooltip data={{ ...baseData, benchmark: undefined }} />
-    );
+    render(<PerformanceTooltip data={{ ...baseData, benchmark: undefined }} />);
 
     // Benchmark row should be hidden or show placeholder?
     // Implementation shows row if value passed, but here undefined.

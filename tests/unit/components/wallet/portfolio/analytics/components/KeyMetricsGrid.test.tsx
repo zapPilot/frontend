@@ -75,7 +75,7 @@ describe("KeyMetricsGrid", () => {
 
     // Values should not be shown
     expect(screen.queryByText("+12.5%")).not.toBeInTheDocument();
-    
+
     // Skeletons should be present (animate-pulse class)
     // We can't easily query by class without custom matcher or test-id on skeletons.
     // But we know BaseCard renders.

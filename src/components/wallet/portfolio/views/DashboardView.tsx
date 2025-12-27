@@ -14,7 +14,7 @@ import type { DashboardSections } from "@/types/portfolio-progressive";
 
 /** Layout styling constants */
 const STYLES = {
-  container: "animate-in fade-in duration-300",
+  container: "animate-in fade-in duration-300 space-y-8", // Added space-y-8 for spacing
   heroGrid: "grid grid-cols-1 md:grid-cols-2 gap-6",
 } as const;
 

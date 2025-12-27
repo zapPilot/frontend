@@ -54,6 +54,18 @@ export function WalletPortfolioPresenter({
     setIsSettingsOpen,
   } = usePortfolioModalState();
 
+  const handleSearch = (address: string) => {
+    const trimmedAddress = address.trim();
+    if (!trimmedAddress) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set("userId", trimmedAddress);
+    const queryString = params.toString();
+    window.location.assign(`/bundle${queryString ? `?${queryString}` : ""}`);
+  };
+
   /** Tab view mapping for cleaner conditional rendering */
   const TAB_VIEWS: Record<TabType, React.ReactNode> = {
     dashboard: (
@@ -64,6 +76,8 @@ export function WalletPortfolioPresenter({
         isEmptyState={isEmptyState}
         isLoading={isLoading}
         onOpenModal={openModal}
+        // onSearch is no longer passed to DashboardView for Empty State Hero,
+        // as we are using persistent nav search.
       />
     ),
     analytics: userId ? (
@@ -88,13 +102,15 @@ export function WalletPortfolioPresenter({
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onOpenSettings={openSettings}
+        onSearch={handleSearch}
+        showSearch={true}
       />
 
       {/* Main content */}
       <main className={LAYOUT.main}>
         <div className={LAYOUT.content}>{TAB_VIEWS[activeTab]}</div>
       </main>
-
+      
       {/* Footer */}
       <Footer
         className="bg-gray-950 border-gray-800/50"

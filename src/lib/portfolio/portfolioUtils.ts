@@ -23,7 +23,9 @@ export interface ROIChanges {
  * @param landingData - Landing page response from analytics API
  * @returns ROI changes for 7-day and 30-day periods
  */
-export function extractROIChanges(landingData: LandingPageResponse): ROIChanges {
+export function extractROIChanges(
+  landingData: LandingPageResponse
+): ROIChanges {
   const roiData = landingData.portfolio_roi;
 
   let change7d = 0;

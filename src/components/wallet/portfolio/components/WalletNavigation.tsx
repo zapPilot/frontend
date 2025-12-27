@@ -1,3 +1,4 @@
+import { WalletSearchNav } from "@/components/wallet/portfolio/components/search/WalletSearchNav";
 import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu";
 import { TABS, type TabType } from "@/types/portfolio";
 
@@ -24,6 +25,8 @@ interface WalletNavigationProps {
   setActiveTab: (tab: TabType) => void;
   onOpenWalletManager?: () => void;
   onOpenSettings: () => void;
+  onSearch?: (address: string) => void;
+  showSearch?: boolean;
 }
 
 export function WalletNavigation({
@@ -31,6 +34,8 @@ export function WalletNavigation({
   setActiveTab,
   onOpenWalletManager,
   onOpenSettings,
+  onSearch,
+  showSearch = false,
 }: WalletNavigationProps) {
   return (
     <nav className={STYLES.nav}>
@@ -43,23 +48,31 @@ export function WalletNavigation({
       </div>
 
       {/* Tab buttons */}
-      <div className={STYLES.tabContainer}>
-        {TABS.map(tab => (
-          <button
-            key={tab.id}
-            data-testid={`v22-tab-${tab.id}`}
-            onClick={() => setActiveTab(tab.id)}
-            role="button"
-            aria-label={`${tab.label} tab`}
-            className={getTabClassName(activeTab === tab.id)}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span className="hidden sm:inline">{tab.label}</span>
-          </button>
-        ))}
+      <div className="flex items-center gap-4">
+        {/* On mobile, if search is expanded, it covers this. That's handled in WalletSearchNav */}
+        <div className={STYLES.tabContainer}>
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              data-testid={`v22-tab-${tab.id}`}
+              onClick={() => setActiveTab(tab.id)}
+              role="button"
+              aria-label={`${tab.label} tab`}
+              className={getTabClassName(activeTab === tab.id)}
+            >
+              <tab.icon className="w-4 h-4" />
+              <span className="hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Persistent Search (Option B) - Renders here next to tabs */}
+        {showSearch && onSearch && (
+          <WalletSearchNav onSearch={onSearch} />
+        )}
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <WalletMenu
           {...(onOpenWalletManager && { onOpenWalletManager })}
           onOpenSettings={onOpenSettings}

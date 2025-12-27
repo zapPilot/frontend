@@ -30,7 +30,6 @@ vi.mock("../views/DashboardSkeleton", () => ({
   StrategyCardSkeleton: () => <div data-testid="skeleton" />,
 }));
 
-
 const mockData: WalletPortfolioDataWithDirection = {
   totalValueUsd: 10000,
   previousValueUsd: 9000,

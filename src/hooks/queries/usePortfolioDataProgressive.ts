@@ -13,34 +13,34 @@
 
 import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
 import {
-    getRegimeStrategyInfo,
-    getTargetAllocation,
+  getRegimeStrategyInfo,
+  getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import {
-    transformToWalletPortfolioDataWithDirection,
-    type WalletPortfolioDataWithDirection,
+  transformToWalletPortfolioDataWithDirection,
+  type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
 import {
-    countUniqueChains,
-    countUniqueProtocols,
-    extractROIChanges,
+  countUniqueChains,
+  countUniqueProtocols,
+  extractROIChanges,
 } from "@/lib/portfolio/portfolioUtils";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import {
-    type RegimeHistoryData,
-    useRegimeHistory,
+  type RegimeHistoryData,
+  useRegimeHistory,
 } from "@/services/regimeHistoryService";
 import {
-    type MarketSentimentData,
-    useSentimentData,
+  type MarketSentimentData,
+  useSentimentData,
 } from "@/services/sentimentService";
 import type {
-    BalanceData,
-    CompositionData,
-    DashboardProgressiveState,
-    SentimentData,
-    StrategyData,
+  BalanceData,
+  CompositionData,
+  DashboardProgressiveState,
+  SentimentData,
+  StrategyData,
 } from "@/types/portfolio-progressive";
 
 import { useLandingPageData } from "./usePortfolioQuery";
