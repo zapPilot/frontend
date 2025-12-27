@@ -5,18 +5,12 @@ import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCar
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
 import {
-  BalanceCardSkeleton,
-  PortfolioCompositionSkeleton,
+    BalanceCardSkeleton,
+    PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";
-import type {
-  BalanceData,
-  CompositionData,
-  SectionState,
-  SentimentData,
-  StrategyData,
-} from "@/types/portfolio-progressive";
+import type { DashboardSections } from "@/types/portfolio-progressive";
 
 /** Layout styling constants */
 const STYLES = {
@@ -28,12 +22,7 @@ interface DashboardViewProps {
   /** Unified data for components (backward compatible) */
   data: WalletPortfolioDataWithDirection;
   /** Section states for progressive loading */
-  sections: {
-    balance: SectionState<BalanceData>;
-    composition: SectionState<CompositionData>;
-    strategy: SectionState<StrategyData>;
-    sentiment: SectionState<SentimentData>;
-  };
+  sections: DashboardSections;
   currentRegime: Regime | undefined;
   isEmptyState: boolean;
   isLoading?: boolean;

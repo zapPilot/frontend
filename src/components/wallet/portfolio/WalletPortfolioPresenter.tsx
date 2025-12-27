@@ -12,13 +12,7 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import type { TabType } from "@/types/portfolio";
-import type {
-  BalanceData,
-  CompositionData,
-  SectionState,
-  SentimentData,
-  StrategyData,
-} from "@/types/portfolio-progressive";
+import type { DashboardSections } from "@/types/portfolio-progressive";
 
 /** Layout class constants for consistent styling */
 const LAYOUT = {
@@ -34,12 +28,7 @@ interface WalletPortfolioPresenterProps {
   isEmptyState?: boolean;
   isLoading?: boolean;
   /** Section states for progressive loading */
-  sections: {
-    balance: SectionState<BalanceData>;
-    composition: SectionState<CompositionData>;
-    strategy: SectionState<StrategyData>;
-    sentiment: SectionState<SentimentData>;
-  };
+  sections: DashboardSections;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
 }

@@ -4,7 +4,7 @@
  * Displays the 4 primary analytics metrics
  */
 
-import { Activity, ArrowDownRight, ArrowUpRight, Info } from "lucide-react";
+import { Activity, ArrowDownRight, ArrowUpRight } from "lucide-react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { KeyMetrics, MetricData } from "@/types/analytics";
@@ -48,17 +48,16 @@ export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({
           variant="glass"
           className="p-4 relative overflow-hidden group"
         >
-          <div className="flex justify-between items-start mb-2">
+          <div className="flex justify-between items-center mb-2">
             <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
               {labels[idx]}
-              <Info className="w-3 h-3 text-gray-600 cursor-help" />
             </span>
             {isLoading ? (
               // Skeleton: Trend indicator
               <div className="w-6 h-6 bg-gray-800/50 rounded animate-pulse" />
             ) : (
               <span
-                className={`p-1 rounded ${
+                className={`p-1 rounded flex items-center justify-center ${
                   metric.trend === "up"
                     ? "bg-green-500/10 text-green-400"
                     : metric.trend === "down"

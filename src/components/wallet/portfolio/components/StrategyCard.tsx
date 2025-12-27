@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Gauge, Info } from "lucide-react";
+import { ChevronDown, Gauge } from "lucide-react";
 import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
@@ -244,7 +244,6 @@ export function StrategyCard({
           <div>
             <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1 flex items-center gap-2">
               Current Strategy
-              <Info className="w-3 h-3" />
             </div>
             <div className="text-2xl font-bold text-white mb-1 flex items-center">
               {effectiveRegime ? (

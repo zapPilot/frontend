@@ -13,73 +13,37 @@
 
 import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import {
-  transformToWalletPortfolioDataWithDirection,
-  type WalletPortfolioDataWithDirection,
+    transformToWalletPortfolioDataWithDirection,
+    type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
+import {
+    countUniqueChains,
+    countUniqueProtocols,
+    extractROIChanges,
+} from "@/lib/portfolio/portfolioUtils";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import {
-  type RegimeHistoryData,
-  useRegimeHistory,
+    type RegimeHistoryData,
+    useRegimeHistory,
 } from "@/services/regimeHistoryService";
 import {
-  type MarketSentimentData,
-  useSentimentData,
+    type MarketSentimentData,
+    useSentimentData,
 } from "@/services/sentimentService";
 import type {
-  BalanceData,
-  CompositionData,
-  DashboardProgressiveState,
-  SentimentData,
-  StrategyData,
+    BalanceData,
+    CompositionData,
+    DashboardProgressiveState,
+    SentimentData,
+    StrategyData,
 } from "@/types/portfolio-progressive";
 
 import { useLandingPageData } from "./usePortfolioQuery";
-
-/**
- * Extract ROI changes from landing page data
- * Replicates logic from walletPortfolioDataAdapter
- */
-function extractROIChanges(landingData: LandingPageResponse): {
-  change7d: number;
-  change30d: number;
-} {
-  const roiData = landingData.portfolio_roi;
-
-  let change7d = 0;
-  let change30d = 0;
-
-  if (roiData.windows) {
-    change7d = roiData.windows["7d"]?.value ?? 0;
-    change30d = roiData.windows["30d"]?.value ?? 0;
-  } else {
-    // Fallback to legacy fields
-    change7d = roiData.roi_7d?.value ?? 0;
-    change30d = roiData.roi_30d?.value ?? 0;
-  }
-
-  return { change7d, change30d };
-}
-
-/**
- * Count unique protocols in pool details
- */
-function countUniqueProtocols(poolDetails: { protocol_id: string }[]): number {
-  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
-  return uniqueProtocols.size;
-}
-
-/**
- * Count unique chains in pool details
- */
-function countUniqueChains(poolDetails: { chain: string }[]): number {
-  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
-  return uniqueChains.size;
-}
 
 /**
  * Extract balance section data from landing response

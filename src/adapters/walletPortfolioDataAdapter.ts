@@ -11,22 +11,26 @@
  */
 
 import {
-  type AllocationConstituent,
-  calculateAllocation,
-  calculateDelta,
-} from "@/adapters/portfolio/allocationAdapter";
+    calculateAllocation,
+    calculateDelta,
+    type PortfolioAllocation} from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
+import {
+    countUniqueChains,
+    countUniqueProtocols,
+    extractROIChanges,
+} from "@/lib/portfolio/portfolioUtils";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -59,15 +63,7 @@ interface WalletPortfolioData {
   currentRegime: RegimeId;
 
   // Allocations
-  currentAllocation: {
-    crypto: number;
-    stable: number;
-    constituents: {
-      crypto: AllocationConstituent[];
-      stable: AllocationConstituent[];
-    };
-    simplifiedCrypto: AllocationConstituent[];
-  };
+  currentAllocation: PortfolioAllocation;
   targetAllocation: {
     crypto: number;
     stable: number;
@@ -160,30 +156,7 @@ export function transformToWalletPortfolioData(
   };
 }
 
-/**
- * Extracts ROI changes from landing page data
- */
-function extractROIChanges(landingData: LandingPageResponse): {
-  change7d: number;
-  change30d: number;
-} {
-  const roiData = landingData.portfolio_roi;
 
-  // Try to get from windows first
-  let change7d = 0;
-  let change30d = 0;
-
-  if (roiData.windows) {
-    change7d = roiData.windows["7d"]?.value ?? 0;
-    change30d = roiData.windows["30d"]?.value ?? 0;
-  } else {
-    // Fallback to legacy fields
-    change7d = roiData.roi_7d?.value ?? 0;
-    change30d = roiData.roi_30d?.value ?? 0;
-  }
-
-  return { change7d, change30d };
-}
 
 function applyRegimeHistoryFields(
   baseData: WalletPortfolioData,
@@ -195,26 +168,6 @@ function applyRegimeHistoryFields(
     ...baseData,
     ...strategyInfo,
   };
-}
-
-/**
- * Counts unique protocols in pool details
- */
-function countUniqueProtocols(
-  poolDetails: LandingPageResponse["pool_details"]
-): number {
-  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
-  return uniqueProtocols.size;
-}
-
-/**
- * Counts unique chains in pool details
- */
-function countUniqueChains(
-  poolDetails: LandingPageResponse["pool_details"]
-): number {
-  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
-  return uniqueChains.size;
 }
 
 /**

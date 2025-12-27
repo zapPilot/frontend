@@ -47,6 +47,9 @@ export function PerformanceTooltip({ data }: { data: PerformanceHoverData }) {
             prefix={relativePerf >= 0 ? "+" : ""}
           />
         )}
+        <div className="mt-2 text-[10px] text-gray-500 leading-tight">
+          Value if initial capital was held in BTC
+        </div>
       </div>
     </TooltipWrapper>
   );

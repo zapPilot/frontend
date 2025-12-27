@@ -66,6 +66,17 @@ export interface StrategyData {
 }
 
 /**
+ * Dashboard Sections State
+ * Shared type for section states used by presenter and view components
+ */
+export interface DashboardSections {
+  balance: SectionState<BalanceData>;
+  composition: SectionState<CompositionData>;
+  strategy: SectionState<StrategyData>;
+  sentiment: SectionState<SentimentData>;
+}
+
+/**
  * Full Progressive Dashboard State
  */
 export interface DashboardProgressiveState {
@@ -73,12 +84,7 @@ export interface DashboardProgressiveState {
   unifiedData: WalletPortfolioDataWithDirection | null;
 
   // Progressive sections
-  sections: {
-    balance: SectionState<BalanceData>;
-    composition: SectionState<CompositionData>;
-    strategy: SectionState<StrategyData>;
-    sentiment: SectionState<SentimentData>;
-  };
+  sections: DashboardSections;
 
   // Global states
   isLoading: boolean;
