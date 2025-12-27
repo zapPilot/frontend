@@ -290,7 +290,6 @@ export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
 /** @public */ export type ProtocolYieldToday = z.infer<
   typeof protocolYieldTodaySchema
 >;
-export type YieldWindowSummary = z.infer<typeof yieldWindowSummarySchema>;
 export type YieldReturnsSummaryResponse = z.infer<
   typeof yieldReturnsSummaryResponseSchema
 >;

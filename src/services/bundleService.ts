@@ -11,13 +11,6 @@ export interface BundleUser {
   avatar?: string;
 }
 
-interface BundleMetadata {
-  user: BundleUser;
-  isPublic: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 const bundleLogger = logger.createContextLogger("BundleService");
 
 /**
@@ -71,53 +64,9 @@ export const generateBundleUrl = (
 };
 
 /**
- * Parse bundle URL to extract userId and optional walletId
- * @param url - Bundle URL to parse
- * @returns Object with userId and walletId (both can be null if not found)
- */
-export const parseBundleUrl = (
-  url: string
-): {
-  userId: string | null;
-  walletId: string | null;
-} => {
-  try {
-    const urlObj = new URL(url);
-    return {
-      userId: urlObj.searchParams.get("userId"),
-      walletId: urlObj.searchParams.get("walletId"),
-    };
-  } catch {
-    return { userId: null, walletId: null };
-  }
-};
-
-/**
  * Check if current user owns the bundle
  */
 export const isOwnBundle = (
   bundleUserId: string,
   currentUserId?: string | null
 ): boolean => !!currentUserId && currentUserId === bundleUserId;
-
-/**
- * Get bundle metadata
- */
-export const getBundleMetadata = async (
-  userId: string
-): Promise<BundleMetadata | null> => {
-  try {
-    const user = await getBundleUser(userId);
-    if (!user) return null;
-
-    return {
-      user,
-      isPublic: true, // All bundles are public based on requirements
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-  } catch (error) {
-    bundleLogger.error("Failed to fetch bundle metadata:", error);
-    return null;
-  }
-};
