@@ -5,8 +5,8 @@ import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCar
 import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
 import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
 import {
-    BalanceCardSkeleton,
-    PortfolioCompositionSkeleton,
+  BalanceCardSkeleton,
+  PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";

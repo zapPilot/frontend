@@ -67,9 +67,7 @@ export function WalletNavigation({
         </div>
 
         {/* Persistent Search (Option B) - Renders here next to tabs */}
-        {showSearch && onSearch && (
-          <WalletSearchNav onSearch={onSearch} />
-        )}
+        {showSearch && onSearch && <WalletSearchNav onSearch={onSearch} />}
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">

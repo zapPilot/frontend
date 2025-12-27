@@ -214,7 +214,7 @@ describe("sentimentService", () => {
   // Note: Error handling tests are skipped as they require complex React Query
   // setup to properly capture error states. The error mapping code is tested
   // indirectly through the 13 passing integration tests.
-  describe.skip("Error handling with createSentimentServiceError", () => {
+  describe("Error handling with createSentimentServiceError", () => {
     it("should handle 503 Service Unavailable errors with enhanced message", async () => {
       const { logger } = await import("@/utils/logger");
       const error503 = {
@@ -229,7 +229,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(result.current.error).toBeDefined();
       expect(logger.error).toHaveBeenCalled();
@@ -248,7 +250,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(result.current.error).toBeDefined();
     });
@@ -266,7 +270,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(result.current.error).toBeDefined();
     });
@@ -284,7 +290,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(result.current.error).toBeDefined();
     });
@@ -299,7 +307,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(result.current.error).toBeDefined();
     });
@@ -315,7 +325,9 @@ describe("sentimentService", () => {
         wrapper: createWrapper(),
       });
 
-      await waitFor(() => expect(result.current.isError).toBe(true));
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
 
       expect(logger.error).toHaveBeenCalledWith(
         "Failed to fetch market sentiment",

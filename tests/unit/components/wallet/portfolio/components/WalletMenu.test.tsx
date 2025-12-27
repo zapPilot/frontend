@@ -48,7 +48,7 @@ describe("WalletMenu Component", () => {
 
   it("renders connect button in compact mode on mobile (hidden text)", () => {
     render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);
-    
+
     // The "Connect Wallet" text should be hidden on small screens
     // We check for the class 'hidden sm:inline' on the span
     const connectText = screen.getByText(WALLET_LABELS.CONNECT);

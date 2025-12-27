@@ -110,7 +110,7 @@ export function WalletPortfolioPresenter({
       <main className={LAYOUT.main}>
         <div className={LAYOUT.content}>{TAB_VIEWS[activeTab]}</div>
       </main>
-      
+
       {/* Footer */}
       <Footer
         className="bg-gray-950 border-gray-800/50"

@@ -4,13 +4,16 @@ import { describe, expect, it, vi } from "vitest";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
 
 // Mock child components to verify integration
-vi.mock("@/components/wallet/portfolio/components/search/WalletSearchNav", () => ({
-  WalletSearchNav: ({ onSearch }: { onSearch: (val: string) => void }) => (
-    <div data-testid="wallet-search-nav">
-      <button onClick={() => onSearch("mock-address")}>Search Mock</button>
-    </div>
-  ),
-}));
+vi.mock(
+  "@/components/wallet/portfolio/components/search/WalletSearchNav",
+  () => ({
+    WalletSearchNav: ({ onSearch }: { onSearch: (val: string) => void }) => (
+      <div data-testid="wallet-search-nav">
+        <button onClick={() => onSearch("mock-address")}>Search Mock</button>
+      </div>
+    ),
+  })
+);
 
 vi.mock("@/components/wallet/portfolio/components/WalletMenu", () => ({
   WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
@@ -45,9 +48,11 @@ describe("WalletNavigation Component", () => {
         showSearch={true}
       />
     );
-    
+
     // Check for gap-2 (mobile) and md:gap-4 (desktop) in the tabs container wrapper
-    const tabsWrapper = container.querySelector(".flex.items-center.gap-2.md\\:gap-4");
+    const tabsWrapper = container.querySelector(
+      ".flex.items-center.gap-2.md\\:gap-4"
+    );
     expect(tabsWrapper).toBeInTheDocument();
   });
 

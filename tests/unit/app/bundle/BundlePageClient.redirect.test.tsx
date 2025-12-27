@@ -73,6 +73,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should redirect to bundle page with userId parameter
@@ -93,6 +94,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should preserve referral param and add userId
@@ -114,6 +116,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should not redirect while loading
@@ -131,6 +134,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       expect(replaceMock).not.toHaveBeenCalled();
@@ -149,6 +153,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       await act(async () => {
         // userId prop is provided (viewing someone's bundle)
         render(<BundlePageClient userId="0xOTHER" />);
+        await Promise.resolve();
       });
 
       // Should not redirect (already on a bundle page)
@@ -165,6 +170,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="0xMYWALLET" />);
+        await Promise.resolve();
       });
 
       expect(replaceMock).not.toHaveBeenCalled();
@@ -182,6 +188,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       expect(replaceMock).not.toHaveBeenCalled();
@@ -199,6 +206,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should not redirect (pathname !== "/")
@@ -214,6 +222,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should not redirect (pathname is "/bundle", not "/")
@@ -231,6 +240,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // URLSearchParams should properly encode special characters
@@ -248,6 +258,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         render(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should preserve all existing params
@@ -268,7 +279,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       mockLoading = true;
 
       const { rerender } = await act(async () => {
-        return render(<BundlePageClient userId="" />);
+        const result = render(<BundlePageClient userId="" />);
+        await Promise.resolve();
+        return result;
       });
 
       // Should not redirect yet
@@ -280,6 +293,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         rerender(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should redirect after loading completes
@@ -295,7 +309,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       mockLoading = false;
 
       const { rerender } = await act(async () => {
-        return render(<BundlePageClient userId="" />);
+        const result = render(<BundlePageClient userId="" />);
+        await Promise.resolve();
+        return result;
       });
 
       expect(replaceMock).not.toHaveBeenCalled();
@@ -305,6 +321,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
       await act(async () => {
         rerender(<BundlePageClient userId="" />);
+        await Promise.resolve();
       });
 
       // Should redirect when userId is available
