@@ -35,6 +35,22 @@ describe("WalletNavigation Component", () => {
     expect(screen.getByTestId("wallet-search-nav")).toBeInTheDocument();
   });
 
+  it("renders with correct responsive spacing classes", () => {
+    const { container } = render(
+      <WalletNavigation
+        activeTab="dashboard"
+        setActiveTab={mockSetActiveTab}
+        onOpenSettings={mockOnOpenSettings}
+        onSearch={mockOnSearch}
+        showSearch={true}
+      />
+    );
+    
+    // Check for gap-2 (mobile) and md:gap-4 (desktop) in the tabs container wrapper
+    const tabsWrapper = container.querySelector(".flex.items-center.gap-2.md\\:gap-4");
+    expect(tabsWrapper).toBeInTheDocument();
+  });
+
   it("does not render search bar if showSearch is false", () => {
     render(
       <WalletNavigation

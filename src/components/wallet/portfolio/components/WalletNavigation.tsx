@@ -48,7 +48,7 @@ export function WalletNavigation({
       </div>
 
       {/* Tab buttons */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         {/* On mobile, if search is expanded, it covers this. That's handled in WalletSearchNav */}
         <div className={STYLES.tabContainer}>
           {TABS.map(tab => (

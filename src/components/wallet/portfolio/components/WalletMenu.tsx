@@ -149,17 +149,21 @@ export function WalletMenu({
           !isConnected ? handleConnectClick : () => setIsMenuOpen(!isMenuOpen)
         }
         disabled={isConnecting}
-        className={`h-10 px-4 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/20 hover:border-purple-500/40 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium text-gray-200 hover:text-white ${isConnecting ? "opacity-50 cursor-wait" : ""}`}
+        className={`h-10 px-2 md:px-4 bg-gray-800/50 hover:bg-gray-800 border border-purple-500/20 hover:border-purple-500/40 rounded-lg transition-all duration-200 flex items-center gap-2 text-sm font-medium text-gray-200 hover:text-white ${isConnecting ? "opacity-50 cursor-wait" : ""}`}
         aria-expanded={isMenuOpen}
         aria-haspopup="menu"
       >
         <Wallet className="w-4 h-4 text-purple-400" />
-        {!isConnected && <span>{WALLET_LABELS.CONNECT}</span>}
+        {!isConnected && (
+          <span className="hidden sm:inline">{WALLET_LABELS.CONNECT}</span>
+        )}
         {isConnected && account?.address && (
           <>
-            <span className="font-mono">{formatAddress(account.address)}</span>
+            <span className="font-mono hidden sm:inline">
+              {formatAddress(account.address)}
+            </span>
             {hasMultipleWallets && (
-              <span className="ml-1 px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-bold">
+              <span className="ml-1 px-1.5 py-0.5 bg-purple-500/20 text-purple-300 rounded text-xs font-bold hidden sm:inline">
                 {connectedWallets.length}
               </span>
             )}

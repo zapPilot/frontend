@@ -20,7 +20,7 @@ exports[`WalletNavigation Component > renders correctly with search bar (snapsho
       </span>
     </div>
     <div
-      class="flex items-center gap-4"
+      class="flex items-center gap-2 md:gap-4"
     >
       <div
         class="flex items-center gap-1 bg-gray-900/50 p-1 rounded-full border border-gray-800/50"
