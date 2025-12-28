@@ -7,8 +7,8 @@ import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPo
 import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 
 import {
-    MOCK_DATA,
-    MOCK_SCENARIOS,
+  MOCK_DATA,
+  MOCK_SCENARIOS,
 } from "../../../../fixtures/mockPortfolioData";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
@@ -120,6 +120,8 @@ vi.mock("@/components/wallet/portfolio/views/BacktestingView", () => ({
 vi.mock("@/components/wallet/portfolio/modals", () => ({
   DepositModal: ({ isOpen }: any) =>
     isOpen ? <div data-testid="deposit-modal">Deposit Modal</div> : null,
+  WithdrawModal: ({ isOpen }: any) =>
+    isOpen ? <div data-testid="withdraw-modal">Withdraw Modal</div> : null,
   RebalanceModal: ({ isOpen }: any) =>
     isOpen ? <div data-testid="rebalance-modal">Rebalance Modal</div> : null,
 }));

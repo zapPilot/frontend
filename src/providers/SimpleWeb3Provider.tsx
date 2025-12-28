@@ -1,7 +1,10 @@
 "use client";
 
 import { ReactNode } from "react";
-import { ThirdwebProvider } from "thirdweb/react";
+import { AutoConnect, ThirdwebProvider } from "thirdweb/react";
+
+import { DEFAULT_WALLETS } from "@/config/wallets";
+import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 interface SimpleWeb3ProviderProps {
   children: ReactNode;
@@ -14,5 +17,10 @@ interface SimpleWeb3ProviderProps {
  * based on the working implementation from all-weather-frontend
  */
 export function SimpleWeb3Provider({ children }: SimpleWeb3ProviderProps) {
-  return <ThirdwebProvider>{children}</ThirdwebProvider>;
+  return (
+    <ThirdwebProvider>
+      <AutoConnect client={THIRDWEB_CLIENT} wallets={DEFAULT_WALLETS} />
+      {children}
+    </ThirdwebProvider>
+  );
 }

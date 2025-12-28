@@ -3,8 +3,8 @@ import { SettingsModal } from "@/components/wallet/portfolio/components/Settings
 import {
   DepositModal,
   RebalanceModal,
+  WithdrawModal,
 } from "@/components/wallet/portfolio/modals";
-import { WithdrawModal } from "@/components/wallet/portfolio/modals/WithdrawModal";
 import type { ModalType } from "@/types/portfolio";
 
 interface PortfolioModalsProps {

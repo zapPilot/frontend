@@ -5,10 +5,10 @@ import { GRADIENTS } from "@/constants/design-system";
 import type { WalletData } from "@/lib/validation/walletUtils";
 
 import type {
-    MenuPosition,
-    NewWallet,
-    WalletMenuHandlers,
-    WalletOperations,
+  MenuPosition,
+  NewWallet,
+  WalletMenuHandlers,
+  WalletOperations,
 } from "../types/wallet.types";
 import { AddWalletForm } from "./AddWalletForm";
 import { WalletCard } from "./WalletCard";

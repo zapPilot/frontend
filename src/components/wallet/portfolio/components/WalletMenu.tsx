@@ -84,7 +84,6 @@ export function WalletMenu({
     setTimeout(() => setCopiedAddress(null), 2000);
   };
 
-
   const handleDisconnect = async () => {
     await disconnect();
     setIsMenuOpen(false);

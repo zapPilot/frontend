@@ -23,6 +23,22 @@ interface WalletCardProps {
   onCloseDropdown: () => void;
 }
 
+const OperationStatus = ({
+  isLoading,
+  label,
+}: {
+  isLoading?: boolean | undefined;
+  label: string;
+}) => {
+  if (!isLoading) return null;
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-400">
+      <LoadingSpinner size="sm" />
+      <span className="hidden sm:inline">{label}</span>
+    </div>
+  );
+};
+
 export const WalletCard = memo(
   ({
     wallet,
@@ -78,19 +94,14 @@ export const WalletCard = memo(
           </div>
 
           <div className="flex items-center gap-2">
-
-            {operations.editing[wallet.id]?.isLoading && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <LoadingSpinner size="sm" />
-                <span className="hidden sm:inline">Updating...</span>
-              </div>
-            )}
-            {operations.removing[wallet.id]?.isLoading && (
-              <div className="flex items-center gap-2 text-sm text-gray-400">
-                <LoadingSpinner size="sm" />
-                <span className="hidden sm:inline">Removing...</span>
-              </div>
-            )}
+            <OperationStatus
+              isLoading={operations.editing[wallet.id]?.isLoading}
+              label="Updating..."
+            />
+            <OperationStatus
+              isLoading={operations.removing[wallet.id]?.isLoading}
+              label="Removing..."
+            />
             <WalletActionMenu
               wallet={wallet}
               isOpen={openDropdown === wallet.id}
