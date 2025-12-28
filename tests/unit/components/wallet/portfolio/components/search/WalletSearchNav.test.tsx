@@ -27,11 +27,12 @@ describe("WalletSearchNav Component", () => {
   it("calls onSearch with trimmed input when submitted", () => {
     render(<WalletSearchNav onSearch={mockOnSearch} />);
 
+    const validAddress = "0x1234567890123456789012345678901234567890";
     const input = screen.getByPlaceholderText("Search address...");
-    fireEvent.change(input, { target: { value: "  0x123  " } });
+    fireEvent.change(input, { target: { value: `  ${validAddress}  ` } });
     fireEvent.submit(input);
 
-    expect(mockOnSearch).toHaveBeenCalledWith("0x123");
+    expect(mockOnSearch).toHaveBeenCalledWith(validAddress);
   });
 
   it("clears input when clear button is clicked", () => {
@@ -113,6 +114,210 @@ describe("WalletSearchNav Component", () => {
 
       fireEvent.blur(input);
       // No crash, state updates.
+    });
+  });
+
+  describe("Wallet Address Validation", () => {
+    beforeEach(() => {
+      mockOnSearch.mockClear();
+    });
+
+    it("shows error for empty address on submit", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.submit(input);
+
+      expect(
+        screen.getByText("Wallet address is required")
+      ).toBeInTheDocument();
+      expect(mockOnSearch).not.toHaveBeenCalled();
+    });
+
+    it("shows error for invalid address format", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.change(input, { target: { value: "invalid-address" } });
+      fireEvent.submit(input);
+
+      expect(
+        screen.getByText(
+          "Invalid wallet address. Must be a 42-character Ethereum address starting with 0x"
+        )
+      ).toBeInTheDocument();
+      expect(mockOnSearch).not.toHaveBeenCalled();
+    });
+
+    it("shows error for address without 0x prefix", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.change(input, {
+        target: { value: "1234567890123456789012345678901234567890" },
+      });
+      fireEvent.submit(input);
+
+      expect(
+        screen.getByText(
+          "Invalid wallet address. Must be a 42-character Ethereum address starting with 0x"
+        )
+      ).toBeInTheDocument();
+      expect(mockOnSearch).not.toHaveBeenCalled();
+    });
+
+    it("shows error for address with wrong length", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.change(input, { target: { value: "0x123" } });
+      fireEvent.submit(input);
+
+      expect(
+        screen.getByText(
+          "Invalid wallet address. Must be a 42-character Ethereum address starting with 0x"
+        )
+      ).toBeInTheDocument();
+      expect(mockOnSearch).not.toHaveBeenCalled();
+    });
+
+    it("clears error when user starts typing", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+
+      // Trigger an error first
+      fireEvent.submit(input);
+      expect(
+        screen.getByText("Wallet address is required")
+      ).toBeInTheDocument();
+
+      // Start typing
+      fireEvent.change(input, { target: { value: "0" } });
+
+      // Error should be cleared
+      expect(
+        screen.queryByText("Wallet address is required")
+      ).not.toBeInTheDocument();
+    });
+
+    it("accepts valid Ethereum address", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const validAddress = "0x1234567890123456789012345678901234567890";
+      const input = screen.getByPlaceholderText("Search address...");
+
+      fireEvent.change(input, { target: { value: validAddress } });
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).toHaveBeenCalledWith(validAddress);
+      expect(mockOnSearch).toHaveBeenCalledTimes(1);
+      expect(
+        screen.queryByText(
+          "Invalid wallet address. Must be a 42-character Ethereum address starting with 0x"
+        )
+      ).not.toBeInTheDocument();
+    });
+
+    it("accepts valid Ethereum address with uppercase letters", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const validAddress = "0xABCDEF1234567890ABCDEF1234567890ABCDEF12";
+      const input = screen.getByPlaceholderText("Search address...");
+
+      fireEvent.change(input, { target: { value: validAddress } });
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).toHaveBeenCalledWith(validAddress);
+      expect(mockOnSearch).toHaveBeenCalledTimes(1);
+    });
+
+    it("trims whitespace before validation", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const validAddress = "0x1234567890123456789012345678901234567890";
+      const input = screen.getByPlaceholderText("Search address...");
+
+      fireEvent.change(input, { target: { value: `  ${validAddress}  ` } });
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).toHaveBeenCalledWith(validAddress);
+      expect(mockOnSearch).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Error Display", () => {
+    it("displays inline error message", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.submit(input);
+
+      const errorDiv = screen
+        .getByText("Wallet address is required")
+        .closest("div");
+      expect(errorDiv).toHaveClass("bg-red-600/10");
+      expect(errorDiv).toHaveClass("border-red-600/20");
+    });
+
+    it("hides error message on successful validation", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const validAddress = "0x1234567890123456789012345678901234567890";
+      const input = screen.getByPlaceholderText("Search address...");
+
+      // First trigger an error
+      fireEvent.submit(input);
+      expect(
+        screen.getByText("Wallet address is required")
+      ).toBeInTheDocument();
+
+      // Then enter valid address and submit
+      fireEvent.change(input, { target: { value: validAddress } });
+      fireEvent.submit(input);
+
+      // Error should be gone
+      expect(
+        screen.queryByText("Wallet address is required")
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Navigation", () => {
+    beforeEach(() => {
+      mockOnSearch.mockClear();
+    });
+
+    it("calls onSearch with valid address", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const validAddress = "0x1234567890123456789012345678901234567890";
+      const input = screen.getByPlaceholderText("Search address...");
+
+      fireEvent.change(input, { target: { value: validAddress } });
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).toHaveBeenCalledWith(validAddress);
+      expect(mockOnSearch).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call onSearch with invalid address", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.change(input, { target: { value: "invalid" } });
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).not.toHaveBeenCalled();
+    });
+
+    it("does not call onSearch with empty address", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      fireEvent.submit(input);
+
+      expect(mockOnSearch).not.toHaveBeenCalled();
     });
   });
 });

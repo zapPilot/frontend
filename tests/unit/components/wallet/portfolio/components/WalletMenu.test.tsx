@@ -35,7 +35,8 @@ vi.mock("@/providers/WalletProvider", () => ({
 }));
 
 vi.mock("@/utils/formatters", () => ({
-  formatAddress: (addr: string) => `${addr.substring(0, 6)}...${addr.slice(-4)}`,
+  formatAddress: (addr: string) =>
+    `${addr.substring(0, 6)}...${addr.slice(-4)}`,
 }));
 
 // Mock child components
@@ -51,7 +52,11 @@ vi.mock("@/components/WalletManager/components/ConnectWalletButton", () => ({
 const mockClipboard = {
   writeText: vi.fn(() => Promise.resolve()),
 };
-Object.assign(navigator, { clipboard: mockClipboard });
+Object.defineProperty(navigator, "clipboard", {
+  value: mockClipboard,
+  writable: true,
+  configurable: true,
+});
 
 describe("WalletMenu Component", () => {
   const mockOnOpenSettings = vi.fn();
@@ -121,7 +126,9 @@ describe("WalletMenu Component", () => {
 
       fireEvent.click(button);
 
-      expect(screen.getByTestId("unified-wallet-menu-dropdown")).toBeInTheDocument();
+      expect(
+        screen.getByTestId("unified-wallet-menu-dropdown")
+      ).toBeInTheDocument();
     });
 
     it("does not show wallet count badge with single wallet", () => {
@@ -260,7 +267,6 @@ describe("WalletMenu Component", () => {
 
       expect(screen.getByText("Active Wallet")).toBeInTheDocument();
     });
-
 
     it("shows Disconnect All button for multiple wallets", () => {
       render(<WalletMenu onOpenSettings={mockOnOpenSettings} />);

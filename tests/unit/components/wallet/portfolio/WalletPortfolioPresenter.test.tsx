@@ -7,8 +7,8 @@ import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPo
 import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 
 import {
-  MOCK_DATA,
-  MOCK_SCENARIOS,
+    MOCK_DATA,
+    MOCK_SCENARIOS,
 } from "../../../../fixtures/mockPortfolioData";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
@@ -77,6 +77,18 @@ const createMockSections = (data: WalletPortfolioDataWithDirection) => ({
   },
 });
 
+// Mock Next.js router
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+  }),
+}));
+
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
   motion: {
@@ -128,6 +140,10 @@ vi.mock("@/components/WalletManager/WalletManager", () => ({
 
 vi.mock("@/components/Footer/Footer", () => ({
   Footer: () => <footer data-testid="footer">Footer</footer>,
+}));
+
+vi.mock("@/components/wallet/portfolio/components/WalletNavigation", () => ({
+  WalletNavigation: () => <nav data-testid="wallet-navigation">Navigation</nav>,
 }));
 
 describe("WalletPortfolioPresenter - Regime Highlighting", () => {
@@ -556,6 +572,30 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       expect(
         within(regimeSpectrum).getByText("Extreme Greed")
       ).toBeInTheDocument();
+    });
+  });
+  describe("Banner Placement", () => {
+    it("should render headerBanners after WalletNavigation for correct stacking", () => {
+      const mockData = MOCK_DATA;
+      const headerBanners = <div data-testid="mock-banner">Banner</div>;
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          headerBanners={headerBanners}
+        />
+      );
+
+      const navigation = screen.getByTestId("wallet-navigation");
+      const banner = screen.getByTestId("mock-banner");
+
+      // Verify DOM order using compareDocumentPosition
+      // 4 = DOCUMENT_POSITION_FOLLOWING (banner follows navigation)
+      expect(
+        navigation.compareDocumentPosition(banner) &
+          Node.DOCUMENT_POSITION_FOLLOWING
+      ).toBeTruthy();
     });
   });
 });

@@ -1,6 +1,8 @@
 import { Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { validateWalletAddress } from "@/lib/validation/walletUtils";
+
 interface WalletSearchNavProps {
   onSearch: (address: string) => void;
   placeholder?: string;
@@ -15,6 +17,7 @@ export function WalletSearchNav({
   const [address, setAddress] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false); // Mobile toggle state
+  const [validationError, setValidationError] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -25,10 +28,26 @@ export function WalletSearchNav({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (address.trim()) {
-      onSearch(address.trim());
-      setIsMobileExpanded(false); // Close on submit in mobile
+    const trimmedAddress = address.trim();
+
+    // Clear any previous errors
+    setValidationError("");
+
+    if (!trimmedAddress) {
+      setValidationError("Wallet address is required");
+      return;
     }
+
+    if (!validateWalletAddress(trimmedAddress)) {
+      setValidationError(
+        "Invalid wallet address. Must be a 42-character Ethereum address starting with 0x"
+      );
+      return;
+    }
+
+    // Valid address - proceed with search
+    onSearch(trimmedAddress);
+    setIsMobileExpanded(false); // Close on submit in mobile
   };
 
   return (
@@ -77,12 +96,17 @@ export function WalletSearchNav({
             ref={inputRef}
             type="text"
             value={address}
-            onChange={e => setAddress(e.target.value)}
+            onChange={e => {
+              setAddress(e.target.value);
+              if (validationError) {
+                setValidationError(""); // Clear error when user types
+              }
+            }}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
             className={`
-              w-full bg-transparent border-none text-white text-sm placeholder-gray-500 
+              w-full bg-transparent border-none text-white text-sm placeholder-gray-500
               focus:ring-0 focus:outline-none transition-all
               ${isMobileExpanded ? "pl-8 pr-10 h-full text-base" : "pl-9 pr-8 h-full"}
             `}
@@ -118,6 +142,13 @@ export function WalletSearchNav({
             </button>
           )}
         </div>
+
+        {/* Inline error display */}
+        {validationError && (
+          <div className="absolute top-full left-0 right-0 mt-1 p-2 bg-red-600/10 border border-red-600/20 rounded-lg">
+            <p className="text-xs text-red-300">{validationError}</p>
+          </div>
+        )}
       </form>
     </>
   );

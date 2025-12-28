@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
@@ -12,6 +13,7 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
+import { generateBundleUrl } from "@/services/bundleService";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -43,6 +45,7 @@ export function WalletPortfolioPresenter({
   headerBanners,
   footerOverlays,
 }: WalletPortfolioPresenterProps) {
+  const router = useRouter();
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
@@ -62,10 +65,11 @@ export function WalletPortfolioPresenter({
       return;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    params.set("userId", trimmedAddress);
-    const queryString = params.toString();
-    window.location.assign(`/bundle${queryString ? `?${queryString}` : ""}`);
+    // Use bundleService to generate URL
+    const bundleUrl = generateBundleUrl(trimmedAddress);
+
+    // Use Next.js router for client-side navigation (no full page reload)
+    router.push(bundleUrl);
   };
 
   /** Tab view mapping for cleaner conditional rendering */
@@ -96,9 +100,6 @@ export function WalletPortfolioPresenter({
 
   return (
     <div className={LAYOUT.container} data-testid="v22-dashboard">
-      {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}
-      {headerBanners}
-
       {/* Top navigation */}
       <WalletNavigation
         activeTab={activeTab}
@@ -108,6 +109,9 @@ export function WalletPortfolioPresenter({
         onSearch={handleSearch}
         showSearch={true}
       />
+
+      {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}
+      {headerBanners}
 
       {/* Main content */}
       <main className={LAYOUT.main}>
