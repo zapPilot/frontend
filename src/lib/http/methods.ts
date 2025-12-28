@@ -30,57 +30,36 @@ function requestWithMethod<T>(
   return httpRequest(url, requestConfig, transformer);
 }
 
-export function httpGet<T = unknown>(
-  endpoint: string,
-  config: Omit<HttpRequestConfig, "method" | "body"> = {},
-  transformer?: ResponseTransformer<T>
-): Promise<T> {
-  return requestWithMethod("GET", endpoint, config, transformer);
-}
+// --- Factory Functions ---
 
-/**
- * Convenience function for POST requests
- */
-export function httpPost<T = unknown>(
+type QueryFunction = <T = unknown>(
+  endpoint: string,
+  config?: Omit<HttpRequestConfig, "method" | "body">,
+  transformer?: ResponseTransformer<T>
+) => Promise<T>;
+
+type MutationFunction = <T = unknown>(
   endpoint: string,
   body?: unknown,
-  config: Omit<HttpRequestConfig, "method"> = {},
+  config?: Omit<HttpRequestConfig, "method">,
   transformer?: ResponseTransformer<T>
-): Promise<T> {
-  return requestWithMethod("POST", endpoint, config, transformer, body);
-}
+) => Promise<T>;
 
-/**
- * Convenience function for PUT requests
- */
-export function httpPut<T = unknown>(
-  endpoint: string,
-  body?: unknown,
-  config: Omit<HttpRequestConfig, "method"> = {},
-  transformer?: ResponseTransformer<T>
-): Promise<T> {
-  return requestWithMethod("PUT", endpoint, config, transformer, body);
-}
+const createQuery =
+  (method: "GET" | "DELETE"): QueryFunction =>
+  (endpoint, config = {}, transformer) =>
+    requestWithMethod(method, endpoint, config, transformer);
 
-/**
- * Convenience function for PATCH requests
- */
-export function httpPatch<T = unknown>(
-  endpoint: string,
-  body?: unknown,
-  config: Omit<HttpRequestConfig, "method"> = {},
-  transformer?: ResponseTransformer<T>
-): Promise<T> {
-  return requestWithMethod("PATCH", endpoint, config, transformer, body);
-}
+const createMutation =
+  (method: HttpRequestConfig["method"]): MutationFunction =>
+  (endpoint, body, config = {}, transformer) =>
+    requestWithMethod(method, endpoint, config, transformer, body);
 
-/**
- * Convenience function for DELETE requests
- */
-export function httpDelete<T = unknown>(
-  endpoint: string,
-  config: Omit<HttpRequestConfig, "method" | "body"> = {},
-  transformer?: ResponseTransformer<T>
-): Promise<T> {
-  return requestWithMethod("DELETE", endpoint, config, transformer);
-}
+// --- Exported Methods ---
+
+export const httpGet = createQuery("GET");
+export const httpDelete = createQuery("DELETE");
+
+export const httpPost = createMutation("POST");
+export const httpPut = createMutation("PUT");
+export const httpPatch = createMutation("PATCH");

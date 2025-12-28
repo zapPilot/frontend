@@ -256,7 +256,7 @@ const dailyYieldReturnSchema = z.object({
 });
 
 /**
- * Schema for daily yield period
+ * Schema for daily yield period - reuses period window schema
  */
 const dailyYieldPeriodSchema = periodWindowSchema;
 

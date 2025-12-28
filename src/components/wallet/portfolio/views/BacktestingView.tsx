@@ -16,6 +16,111 @@ import { useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
+// --- Helper Components ---
+
+interface MetricCardProps {
+  label: string;
+  value: string;
+  subtext?: string;
+  highlight?: boolean;
+  showLevBadge?: boolean;
+}
+
+const MetricCard = ({
+  label,
+  value,
+  subtext,
+  highlight,
+  showLevBadge,
+}: MetricCardProps) => (
+  <BaseCard
+    variant="glass"
+    className={`p-5 ${highlight ? "bg-green-500/5 border-green-500/20" : ""}`}
+  >
+    <div
+      className={`text-xs font-medium mb-1.5 flex items-center gap-1 ${highlight ? "text-green-400" : "text-gray-400"}`}
+    >
+      {label}
+      {showLevBadge && (
+        <span className="text-[9px] bg-green-500/20 px-1 rounded">LEV</span>
+      )}
+    </div>
+    <div className="text-3xl font-bold text-white tracking-tight">{value}</div>
+    {subtext && <div className="text-[11px] text-gray-400 mt-1">{subtext}</div>}
+  </BaseCard>
+);
+
+interface SelectionOption<T> {
+  value: T;
+  label: string;
+  icon?: React.ElementType;
+  activeColor?: string;
+}
+
+interface SelectionGroupProps<T extends string> {
+  label: string;
+  options: SelectionOption<T>[];
+  selectedValue: T;
+  onChange: (value: T) => void;
+  layout?: "grid" | "row";
+}
+
+const SelectionGroup = <T extends string>({
+  label,
+  options,
+  selectedValue,
+  onChange,
+  layout = "row",
+}: SelectionGroupProps<T>) => (
+  <div className="space-y-3">
+    <label className="text-xs text-gray-400 font-medium ml-1">{label}</label>
+    <div
+      className={
+        layout === "grid"
+          ? "grid grid-cols-2 gap-2 p-1 bg-gray-900/40 rounded-xl border border-gray-800"
+          : "flex bg-gray-900/50 rounded-lg p-1 border border-gray-800"
+      }
+    >
+      {options.map(option => {
+        const isActive = selectedValue === option.value;
+        if (layout === "grid") {
+          return (
+            <button
+              key={option.value}
+              onClick={() => onChange(option.value)}
+              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg text-xs font-medium transition-all ${
+                isActive
+                  ? "bg-gray-800 border border-gray-700 text-white shadow-sm"
+                  : "text-gray-500 hover:bg-gray-800/50 hover:text-gray-300"
+              }`}
+            >
+              {option.icon && (
+                <option.icon
+                  className={`w-4 h-4 ${isActive && option.activeColor ? option.activeColor : ""}`}
+                />
+              )}
+              {option.label}
+            </button>
+          );
+        }
+        return (
+          <button
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            className={`flex-1 py-1.5 text-[10px] font-medium rounded-md transition-all ${
+              isActive
+                ? "bg-gray-700 text-white shadow-sm"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  </div>
+);
+
 // Helper function to calculate chart bar heights (reduces cognitive complexity)
 const calculateBarHeight = (
   index: number,
@@ -50,59 +155,41 @@ const SimulationSummary = ({
   dcaFrequency: string;
 }) => (
   <div className="grid grid-cols-3 gap-4">
-    <BaseCard
-      variant="glass"
-      className="p-5 bg-green-500/5 border-green-500/20"
-    >
-      <div className="text-xs text-green-400 font-medium mb-1.5 flex items-center gap-1">
-        Total Return
-        {useLeverage && (
-          <span className="text-[9px] bg-green-500/20 px-1 rounded">LEV</span>
-        )}
-      </div>
-      <div className="text-3xl font-bold text-white tracking-tight">
-        {strategyType === "aggressive"
+    <MetricCard
+      label="Total Return"
+      value={
+        strategyType === "aggressive"
           ? useLeverage
             ? "+412.5%"
             : "+342.5%"
-          : "+125.4%"}
-      </div>
-      <div className="text-[11px] text-gray-400 mt-1">vs +180% Buy & Hold</div>
-    </BaseCard>
-    <BaseCard variant="glass" className="p-5">
-      <div className="text-xs text-gray-400 font-medium mb-1.5">
-        Max Drawdown
-      </div>
-      <div className="text-3xl font-bold text-white tracking-tight">
-        {strategyType === "aggressive"
+          : "+125.4%"
+      }
+      subtext="vs +180% Buy & Hold"
+      highlight
+      showLevBadge={useLeverage}
+    />
+    <MetricCard
+      label="Max Drawdown"
+      value={
+        strategyType === "aggressive"
           ? useLeverage
             ? "-22.4%"
             : "-18.2%"
-          : "-8.5%"}
-      </div>
-      <div className="text-[11px] text-gray-400 mt-1">vs -75% Buy & Hold</div>
-    </BaseCard>
-    <BaseCard variant="glass" className="p-5">
-      <div className="text-xs text-gray-400 font-medium mb-1.5">
-        Trades Executed
-      </div>
-      <div className="text-3xl font-bold text-white tracking-tight">
-        {dcaFrequency === "Daily"
+          : "-8.5%"
+      }
+      subtext="vs -75% Buy & Hold"
+    />
+    <MetricCard
+      label="Trades Executed"
+      value={
+        dcaFrequency === "Daily"
           ? "1,420"
           : dcaFrequency === "Weekly"
             ? "208"
-            : "48"}
-      </div>
-      <div className="text-[11px] text-gray-400 mt-1">
-        Avg{" "}
-        {dcaFrequency === "Daily"
-          ? "30"
-          : dcaFrequency === "Weekly"
-            ? "4"
-            : "1"}{" "}
-        per month
-      </div>
-    </BaseCard>
+            : "48"
+      }
+      subtext={`Avg ${dcaFrequency === "Daily" ? "30" : dcaFrequency === "Weekly" ? "4" : "1"} per month`}
+    />
   </div>
 );
 
@@ -170,39 +257,26 @@ export const BacktestingView = () => {
             </div>
 
             {/* Strategy Select */}
-            <div className="space-y-3">
-              <label className="text-xs text-gray-400 font-medium ml-1">
-                Strategy Profile
-              </label>
-              <div className="grid grid-cols-2 gap-2 p-1 bg-gray-900/40 rounded-xl border border-gray-800">
-                <button
-                  onClick={() => setStrategyType("conservative")}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg text-xs font-medium transition-all ${
-                    strategyType === "conservative"
-                      ? "bg-gray-800 border border-gray-700 text-white shadow-sm"
-                      : "text-gray-500 hover:bg-gray-800/50 hover:text-gray-300"
-                  }`}
-                >
-                  <Shield
-                    className={`w-4 h-4 ${strategyType === "conservative" ? "text-emerald-400" : ""}`}
-                  />
-                  Conservative
-                </button>
-                <button
-                  onClick={() => setStrategyType("aggressive")}
-                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg text-xs font-medium transition-all ${
-                    strategyType === "aggressive"
-                      ? "bg-gray-800 border border-gray-700 text-white shadow-sm"
-                      : "text-gray-500 hover:bg-gray-800/50 hover:text-gray-300"
-                  }`}
-                >
-                  <TrendingUp
-                    className={`w-4 h-4 ${strategyType === "aggressive" ? "text-blue-400" : ""}`}
-                  />
-                  Aggressive
-                </button>
-              </div>
-            </div>
+            <SelectionGroup
+              label="Strategy Profile"
+              layout="grid"
+              selectedValue={strategyType}
+              onChange={setStrategyType}
+              options={[
+                {
+                  value: "conservative",
+                  label: "Conservative",
+                  icon: Shield,
+                  activeColor: "text-emerald-400",
+                },
+                {
+                  value: "aggressive",
+                  label: "Aggressive",
+                  icon: TrendingUp,
+                  activeColor: "text-blue-400",
+                },
+              ]}
+            />
 
             {/* Leverage Toggle (Conditional) */}
             <AnimatePresence>
@@ -265,26 +339,17 @@ export const BacktestingView = () => {
             {/* Advanced Settings: DCA & Capital */}
             <div className="pt-2 border-t border-gray-800 space-y-4">
               {/* DCA Frequency */}
-              <div className="space-y-2">
-                <label className="text-xs text-gray-400 font-medium ml-1">
-                  DCA Frequency
-                </label>
-                <div className="flex bg-gray-900/50 rounded-lg p-1 border border-gray-800">
-                  {["Daily", "Weekly", "Monthly"].map(freq => (
-                    <button
-                      key={freq}
-                      onClick={() => setDcaFrequency(freq)}
-                      className={`flex-1 py-1.5 text-[10px] font-medium rounded-md transition-all ${
-                        dcaFrequency === freq
-                          ? "bg-gray-700 text-white shadow-sm"
-                          : "text-gray-500 hover:text-gray-300"
-                      }`}
-                    >
-                      {freq}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <SelectionGroup
+                label="DCA Frequency"
+                layout="row"
+                selectedValue={dcaFrequency}
+                onChange={setDcaFrequency}
+                options={[
+                  { value: "Daily", label: "Daily" },
+                  { value: "Weekly", label: "Weekly" },
+                  { value: "Monthly", label: "Monthly" },
+                ]}
+              />
 
               {/* Initial Capital */}
               <div className="space-y-2">
