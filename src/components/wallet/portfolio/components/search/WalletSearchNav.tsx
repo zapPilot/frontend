@@ -7,12 +7,14 @@ interface WalletSearchNavProps {
   onSearch: (address: string) => void;
   placeholder?: string;
   className?: string;
+  isSearching?: boolean;
 }
 
 export function WalletSearchNav({
   onSearch,
   placeholder = "Search address...",
   className = "",
+  isSearching = false,
 }: WalletSearchNavProps) {
   const [address, setAddress] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -84,13 +86,22 @@ export function WalletSearchNav({
           ${!isMobileExpanded && "bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all"}
         `}
         >
-          <Search
-            className={`
-            absolute w-4 h-4 pointer-events-none transition-colors duration-200
-            ${isMobileExpanded ? "left-0 text-gray-400" : "left-3"}
-            ${isFocused ? "text-purple-400" : "text-gray-500"}
-          `}
-          />
+          {isSearching ? (
+            <div
+              className={`
+              absolute w-4 h-4 animate-spin rounded-full border-2 border-purple-400 border-t-transparent
+              ${isMobileExpanded ? "left-0" : "left-3"}
+            `}
+            />
+          ) : (
+            <Search
+              className={`
+              absolute w-4 h-4 pointer-events-none transition-colors duration-200
+              ${isMobileExpanded ? "left-0 text-gray-400" : "left-3"}
+              ${isFocused ? "text-purple-400" : "text-gray-500"}
+            `}
+            />
+          )}
 
           <input
             ref={inputRef}
@@ -105,10 +116,12 @@ export function WalletSearchNav({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
+            disabled={isSearching}
             className={`
               w-full bg-transparent border-none text-white text-sm placeholder-gray-500
               focus:ring-0 focus:outline-none transition-all
               ${isMobileExpanded ? "pl-8 pr-10 h-full text-base" : "pl-9 pr-8 h-full"}
+              ${isSearching ? "opacity-50 cursor-not-allowed" : ""}
             `}
           />
 

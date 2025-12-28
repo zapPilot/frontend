@@ -13,6 +13,8 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
+import { useToast } from "@/hooks/useToast";
+import { connectWallet } from "@/services/accountService";
 import { generateBundleUrl } from "@/services/bundleService";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
@@ -46,9 +48,11 @@ export function WalletPortfolioPresenter({
   footerOverlays,
 }: WalletPortfolioPresenterProps) {
   const router = useRouter();
+  const { showToast } = useToast();
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const {
     activeModal,
@@ -59,17 +63,33 @@ export function WalletPortfolioPresenter({
     setIsSettingsOpen,
   } = usePortfolioModalState();
 
-  const handleSearch = (address: string) => {
+  const handleSearch = async (address: string) => {
     const trimmedAddress = address.trim();
     if (!trimmedAddress) {
       return;
     }
 
-    // Use bundleService to generate URL
-    const bundleUrl = generateBundleUrl(trimmedAddress);
+    try {
+      setIsSearching(true);
 
-    // Use Next.js router for client-side navigation (no full page reload)
-    router.push(bundleUrl);
+      // Convert wallet address to userId via backend
+      const { user_id: userId } = await connectWallet(trimmedAddress);
+
+      // Generate bundle URL with actual userId
+      const bundleUrl = generateBundleUrl(userId);
+
+      // Navigate with Next.js router
+      router.push(bundleUrl);
+    } catch {
+      showToast({
+        type: "error",
+        title: "Wallet Not Found",
+        message:
+          "Could not find a portfolio for this wallet address. Please check the address and try again.",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   /** Tab view mapping for cleaner conditional rendering */
@@ -108,6 +128,7 @@ export function WalletPortfolioPresenter({
         onOpenSettings={openSettings}
         onSearch={handleSearch}
         showSearch={true}
+        isSearching={isSearching}
       />
 
       {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}

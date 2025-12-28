@@ -48,9 +48,9 @@ exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
       <svg
         aria-hidden="true"
         class="lucide lucide-search 
-            absolute w-4 h-4 pointer-events-none transition-colors duration-200
-            left-3
-            text-gray-500"
+              absolute w-4 h-4 pointer-events-none transition-colors duration-200
+              left-3
+              text-gray-500"
         fill="none"
         height="24"
         stroke="currentColor"
@@ -75,6 +75,7 @@ exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
               w-full bg-transparent border-none text-white text-sm placeholder-gray-500
               focus:ring-0 focus:outline-none transition-all
               pl-9 pr-8 h-full
+              
             "
         placeholder="Search address..."
         type="text"
@@ -133,9 +134,9 @@ exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
       <svg
         aria-hidden="true"
         class="lucide lucide-search 
-            absolute w-4 h-4 pointer-events-none transition-colors duration-200
-            left-3
-            text-gray-500"
+              absolute w-4 h-4 pointer-events-none transition-colors duration-200
+              left-3
+              text-gray-500"
         fill="none"
         height="24"
         stroke="currentColor"
@@ -160,6 +161,7 @@ exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
               w-full bg-transparent border-none text-white text-sm placeholder-gray-500
               focus:ring-0 focus:outline-none transition-all
               pl-9 pr-8 h-full
+              
             "
         placeholder="Custom placeholder"
         type="text"
