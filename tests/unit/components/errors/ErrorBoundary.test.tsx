@@ -38,6 +38,8 @@ vi.mock("../../../../src/components/ui/BaseCard", () => ({
 }));
 
 describe("ErrorBoundary", () => {
+  const originalLocation = window.location;
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Suppress console.error for these tests
@@ -50,6 +52,10 @@ describe("ErrorBoundary", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
+    });
   });
 
   describe("Normal Operation", () => {

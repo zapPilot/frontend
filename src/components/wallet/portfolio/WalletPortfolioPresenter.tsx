@@ -11,6 +11,7 @@ import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/useP
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
+import { WalletManager } from "@/components/WalletManager";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -44,6 +45,7 @@ export function WalletPortfolioPresenter({
 }: WalletPortfolioPresenterProps) {
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
+  const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
   const {
     activeModal,
@@ -101,6 +103,7 @@ export function WalletPortfolioPresenter({
       <WalletNavigation
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        onOpenWalletManager={() => setIsWalletManagerOpen(true)}
         onOpenSettings={openSettings}
         onSearch={handleSearch}
         showSearch={true}
@@ -123,6 +126,13 @@ export function WalletPortfolioPresenter({
         data={data}
         isSettingsOpen={isSettingsOpen}
         setIsSettingsOpen={setIsSettingsOpen}
+      />
+
+      {/* Wallet Manager Modal */}
+      <WalletManager
+        isOpen={isWalletManagerOpen}
+        onClose={() => setIsWalletManagerOpen(false)}
+        {...(userId && { urlUserId: userId })}
       />
 
       {/* Footer overlays (Bundle-specific: QuickSwitchFAB) */}

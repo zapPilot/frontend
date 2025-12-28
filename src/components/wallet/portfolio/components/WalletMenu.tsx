@@ -111,8 +111,8 @@ export function WalletMenu({
           }}
           className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
         >
-          <Settings className="w-4 h-4 text-purple-400" />
-          Manage Wallets
+          <Wallet className="w-4 h-4 text-purple-400" />
+          View Bundles
         </button>
       )}
       <button
@@ -225,27 +225,12 @@ export function WalletMenu({
                     </button>
                   </div>
                   <div className="font-mono text-sm text-white">
-                    {account.address}
+                    {formatAddress(account.address)}
                   </div>
-                  {account.balance && (
-                    <div className="text-xs text-gray-500 mt-1">
-                      Balance: {account.balance} ETH
-                    </div>
-                  )}
                 </div>
 
                 {/* Menu Items */}
                 <div className="py-1">
-                  <button
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      // Navigate to bundle view (implementation pending)
-                    }}
-                    className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
-                  >
-                    <Wallet className="w-4 h-4 text-purple-400" />
-                    View My Bundle
-                  </button>
                   <MenuItems />
                 </div>
 

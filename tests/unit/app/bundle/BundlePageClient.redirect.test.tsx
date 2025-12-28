@@ -1,4 +1,4 @@
-import { act } from "@testing-library/react";
+import { act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BundlePageClient } from "@/app/bundle/BundlePageClient";
@@ -77,9 +77,11 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       });
 
       // Should redirect to bundle page with userId parameter
-      expect(replaceMock).toHaveBeenCalledWith(
-        "/bundle?userId=0x1234567890abcdef"
-      );
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/bundle?userId=0x1234567890abcdef"
+        );
+      });
       // May be called multiple times in dev mode due to React Strict Mode
       expect(replaceMock.mock.calls.length).toBeGreaterThanOrEqual(1);
     });
@@ -98,9 +100,11 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       });
 
       // Should preserve referral param and add userId
-      expect(replaceMock).toHaveBeenCalledWith(
-        "/bundle?referral=abc123&userId=0xUSER123"
-      );
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(
+          "/bundle?referral=abc123&userId=0xUSER123"
+        );
+      });
     });
   });
 
@@ -246,7 +250,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       // URLSearchParams should properly encode special characters
       const userId = "0xABCDEF+special%20chars";
       const expectedUrl = `/bundle?userId=${encodeURIComponent(userId)}`;
-      expect(replaceMock).toHaveBeenCalledWith(expectedUrl);
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith(expectedUrl);
+      });
     });
 
     it("should handle multiple query parameters correctly", async () => {
@@ -262,6 +268,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       });
 
       // Should preserve all existing params
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalled();
+      });
       const call = replaceMock.mock.calls[0][0];
       expect(call).toContain("foo=bar");
       expect(call).toContain("baz=qux");
@@ -297,7 +306,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       });
 
       // Should redirect after loading completes
-      expect(replaceMock).toHaveBeenCalledWith("/bundle?userId=0xNEWUSER");
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith("/bundle?userId=0xNEWUSER");
+      });
     });
 
     it("should redirect when userId becomes available while connected", async () => {
@@ -325,7 +336,9 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
       });
 
       // Should redirect when userId is available
-      expect(replaceMock).toHaveBeenCalledWith("/bundle?userId=0xNEWUSER");
+      await waitFor(() => {
+        expect(replaceMock).toHaveBeenCalledWith("/bundle?userId=0xNEWUSER");
+      });
     });
   });
 });
