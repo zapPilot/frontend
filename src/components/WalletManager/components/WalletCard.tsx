@@ -17,7 +17,6 @@ interface WalletCardProps {
   onCopyAddress: (address: string, walletId: string) => void;
   onEditWallet: (walletId: string, label: string) => void;
   onDeleteWallet: (walletId: string) => void;
-  onSwitchWallet?: (address: string) => void; // V22 Phase 2B
   openDropdown: string | null;
   menuPosition: { top: number; left: number } | null;
   onToggleDropdown: (walletId: string, element: HTMLElement) => void;
@@ -32,7 +31,6 @@ export const WalletCard = memo(
     onCopyAddress,
     onEditWallet,
     onDeleteWallet,
-    onSwitchWallet,
     openDropdown,
     menuPosition,
     onToggleDropdown,
@@ -80,17 +78,6 @@ export const WalletCard = memo(
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Switch Button (only for non-active wallets when owner) */}
-            {!wallet.isActive && isOwner && onSwitchWallet && (
-              <button
-                onClick={() => onSwitchWallet(wallet.address)}
-                className="px-3 py-1 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 text-xs font-bold rounded-lg transition-colors border border-purple-500/30"
-                aria-label={`Switch to wallet ${wallet.label || formatAddress(wallet.address)}`}
-              >
-                <span className="hidden sm:inline">Switch to this wallet</span>
-                <span className="sm:hidden">Switch</span>
-              </button>
-            )}
 
             {operations.editing[wallet.id]?.isLoading && (
               <div className="flex items-center gap-2 text-sm text-gray-400">

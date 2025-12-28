@@ -28,7 +28,6 @@ export function WalletMenu({
 }: WalletMenuProps) {
   const {
     connectedWallets,
-    switchActiveWallet,
     hasMultipleWallets,
     account,
     isConnected,
@@ -36,7 +35,6 @@ export function WalletMenu({
   } = useWalletProvider();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isSwitchingWallet, setIsSwitchingWallet] = useState(false);
   const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -86,14 +84,6 @@ export function WalletMenu({
     setTimeout(() => setCopiedAddress(null), 2000);
   };
 
-  const handleSwitchWallet = async (address: string) => {
-    setIsSwitchingWallet(true);
-    try {
-      await switchActiveWallet(address);
-    } finally {
-      setIsSwitchingWallet(false);
-    }
-  };
 
   const handleDisconnect = async () => {
     await disconnect();
@@ -277,20 +267,10 @@ export function WalletMenu({
                             )}
                           </button>
                         </div>
-                        {wallet.isActive ? (
+                        {wallet.isActive && (
                           <div className="text-xs text-purple-400 font-bold flex items-center gap-1">
                             Active Wallet
                           </div>
-                        ) : (
-                          <button
-                            onClick={() => handleSwitchWallet(wallet.address)}
-                            disabled={isSwitchingWallet}
-                            className="text-xs text-purple-400 hover:text-purple-300 font-medium disabled:opacity-50 disabled:cursor-wait transition-colors"
-                          >
-                            {isSwitchingWallet
-                              ? "Switching..."
-                              : "Switch to this wallet"}
-                          </button>
                         )}
                       </div>
                     ))}

@@ -10,10 +10,8 @@ import { ModalBackdrop } from "@/components/ui/modal";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
 import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
-import { useWalletProvider } from "@/providers/WalletProvider";
 import { logger } from "@/utils/logger";
 
-import { ConnectWalletButton } from "./components/ConnectWalletButton";
 import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
 import { EmailSubscription } from "./components/EmailSubscription";
@@ -30,7 +28,6 @@ const WalletManagerComponent = ({
   onEmailSubscribed,
 }: WalletManagerProps) => {
   const { userInfo, loading, error, isConnected, refetch } = useUser();
-  const { connectedWallets = [] } = useWalletProvider();
 
   // User identification logic
   const realUserId = userInfo?.userId; // Authenticated user (for operations)
@@ -183,7 +180,6 @@ const WalletManagerComponent = ({
               onCopyAddress={walletOperations.handleCopyAddress}
               onEditWallet={handleEditWallet}
               onDeleteWallet={walletOperations.handleDeleteWallet}
-              onSwitchWallet={walletOperations.handleSwitchWallet}
               onToggleDropdown={dropdownMenu.toggleDropdown}
               onCloseDropdown={dropdownMenu.closeDropdown}
               onWalletChange={handleWalletChange}
@@ -191,25 +187,6 @@ const WalletManagerComponent = ({
               onStartAdding={() => walletOperations.setIsAdding(true)}
               onCancelAdding={handleCancelAdding}
             />
-          )}
-
-          {/* Connect Web3 Wallet */}
-          {!loading && !walletOperations.isRefreshing && !error && isOwner && (
-            <div className="p-6 border-b border-gray-700/50">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-300">
-                  Connect Web3 Wallet
-                </h3>
-                <div className="text-xs text-gray-500">
-                  {connectedWallets.length} connected
-                </div>
-              </div>
-              <p className="text-xs text-gray-400 mb-4">
-                Connect additional wallets (MetaMask, Ambire, etc.) for active
-                use.
-              </p>
-              <ConnectWalletButton />
-            </div>
           )}
 
           {/* Email Subscription */}
