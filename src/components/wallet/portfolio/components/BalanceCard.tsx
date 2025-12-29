@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, ArrowUpRight } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
 import type { ModalType } from "@/types/portfolio";
 
@@ -7,10 +7,10 @@ import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
 
 /** BalanceCard styling constants */
 const STYLES = {
-  card: "bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 flex flex-col justify-center",
-  label: "text-xs text-gray-500 font-bold uppercase tracking-widest mb-2",
-  netWorthActive: "text-5xl font-bold tracking-tight mb-4 text-white",
-  netWorthEmpty: "text-5xl font-bold tracking-tight mb-4 text-gray-600",
+  card: "bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 flex flex-col justify-center",
+  label: "text-xs text-gray-500 font-bold uppercase tracking-widest mb-1",
+  netWorthActive: "text-4xl font-bold tracking-tight mb-2 text-white",
+  netWorthEmpty: "text-4xl font-bold tracking-tight mb-2 text-gray-600",
   buttonBase:
     "flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-colors border",
   buttonDisabled:
@@ -32,7 +32,6 @@ const getButtonClassName = (
 
 interface BalanceCardProps {
   balance: number;
-  roi: number;
   isEmptyState?: boolean;
   isLoading?: boolean;
   onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
@@ -41,7 +40,6 @@ interface BalanceCardProps {
 
 export function BalanceCard({
   balance,
-  roi,
   isEmptyState = false,
   isLoading = false,
   onOpenModal,
@@ -59,7 +57,7 @@ export function BalanceCard({
           <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
         )}
       </div>
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-4">
         <div className="flex-1">
           <div
             className={
@@ -72,28 +70,15 @@ export function BalanceCard({
 
           {/* Empty State Message */}
           {isEmptyState && (
-            <div className="text-sm text-gray-500 mb-3">
+            <div className="text-sm text-gray-500 mb-2">
               Connect your wallet to view your portfolio balance and performance
-            </div>
-          )}
-
-          {/* ROI Badge - Hidden when empty */}
-          {!isEmptyState && (
-            <div className="flex items-center gap-3">
-              <span
-                className="px-2 py-1 bg-green-500/10 text-green-400 text-xs font-bold rounded flex items-center gap-1"
-                data-testid="performance-change"
-              >
-                <ArrowUpRight className="w-3 h-3" /> {roi}%
-              </span>
-              <span className="text-xs text-gray-500">All Time Return</span>
             </div>
           )}
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <button
           data-testid="deposit-button"
           onClick={() => onOpenModal("deposit")}

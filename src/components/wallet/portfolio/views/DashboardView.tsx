@@ -45,7 +45,6 @@ export function DashboardView({
           <GhostModeOverlay enabled={true}>
             <BalanceCard
               balance={data.balance}
-              roi={data.roi}
               isEmptyState={isEmptyState}
               isLoading={false}
               onOpenModal={onOpenModal}
@@ -60,7 +59,6 @@ export function DashboardView({
             {() => (
               <BalanceCard
                 balance={data.balance}
-                roi={data.roi}
                 isEmptyState={isEmptyState}
                 isLoading={false}
                 onOpenModal={onOpenModal}

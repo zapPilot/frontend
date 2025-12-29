@@ -24,13 +24,13 @@ import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 /** StrategyCard styling constants */
 const STYLES = {
   cardBase:
-    "bg-gray-900/40 backdrop-blur-sm border rounded-2xl p-8 relative overflow-hidden group cursor-pointer transition-all duration-200",
+    "bg-gray-900/40 backdrop-blur-sm border rounded-2xl p-6 relative overflow-hidden group cursor-pointer transition-all duration-200",
   cardExpanded:
     "row-span-2 md:col-span-2 border-purple-500/30 shadow-lg shadow-purple-500/10",
   cardCollapsed:
     "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60",
   regimeBadge:
-    "w-20 h-20 rounded-2xl bg-gray-800 flex items-center justify-center text-3xl font-bold border border-gray-700 shadow-inner flex-shrink-0",
+    "w-16 h-16 rounded-xl bg-gray-800 flex items-center justify-center text-2xl font-bold border border-gray-700 shadow-inner flex-shrink-0",
   regimeButtonSelected:
     "bg-gray-800 border border-gray-600 shadow-lg scale-102 ring-1 ring-purple-500/50",
   regimeButtonUnselected: "opacity-60 hover:opacity-100 hover:bg-gray-800/50",
