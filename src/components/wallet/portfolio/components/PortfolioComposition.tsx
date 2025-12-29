@@ -1,6 +1,5 @@
-import { useMemo } from "react";
-
 import { Zap } from "lucide-react";
+import { useMemo } from "react";
 
 import {
   ASSET_COLORS,
@@ -54,10 +53,9 @@ export function PortfolioComposition({
   isLoading = false,
   onRebalance,
 }: PortfolioCompositionProps) {
-  // Early return for loading state
-  if (isLoading) {
-    return <PortfolioCompositionSkeleton />;
-  }
+  // ⚠️ HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS ⚠️
+  // Fetch marketcap-weighted allocation weights for BTC/ETH split
+  const { data: allocationWeights } = useAllocationWeights();
 
   // Determine target breakdown source
   // Priority: 1. Explicit prop (from progressive loading) 2. Derived from Regime 3. Fallback
@@ -70,23 +68,6 @@ export function PortfolioComposition({
       stable: breakdown.stable,
     };
   }
-
-  // If we still have no target (missing prop AND missing regime), we can't render meaningful bars
-  if (!target) {
-    return null;
-  }
-
-  // Determine which assets to display
-  // If we lack regime, we can't infer target-specific assets for empty state perfectly,
-  // but we can try to be robust.
-  // buildTargetCryptoAssets usually depends on regime. If missing, maybe fallback or use current assets.
-  const cryptoAssets =
-    isEmptyState && currentRegime
-      ? buildTargetCryptoAssets(currentRegime)
-      : buildRealCryptoAssets(data);
-
-  // Fetch marketcap-weighted allocation weights for BTC/ETH split
-  const { data: allocationWeights } = useAllocationWeights();
 
   // Build target assets array with marketcap-weighted BTC/ETH split
   const targetAssets = useMemo(() => {
@@ -113,6 +94,25 @@ export function PortfolioComposition({
       },
     ];
   }, [target, allocationWeights]);
+
+  // Early return for loading state
+  if (isLoading) {
+    return <PortfolioCompositionSkeleton />;
+  }
+
+  // If we still have no target (missing prop AND missing regime), we can't render meaningful bars
+  if (!target) {
+    return null;
+  }
+
+  // Determine which assets to display
+  // If we lack regime, we can't infer target-specific assets for empty state perfectly,
+  // but we can try to be robust.
+  // buildTargetCryptoAssets usually depends on regime. If missing, maybe fallback or use current assets.
+  const cryptoAssets =
+    isEmptyState && currentRegime
+      ? buildTargetCryptoAssets(currentRegime)
+      : buildRealCryptoAssets(data);
 
   const cryptoPercentage = isEmptyState
     ? target.crypto

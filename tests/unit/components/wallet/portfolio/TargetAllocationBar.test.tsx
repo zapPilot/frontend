@@ -2,6 +2,7 @@
  * TargetAllocationBar Component Tests
  *
  * Tests for the modular target allocation bar visualization.
+ * Default variant is 'legend' which shows labels below the bar.
  */
 
 import { render, screen } from "@testing-library/react";
@@ -16,7 +17,7 @@ describe("TargetAllocationBar", () => {
     { symbol: "Stables", percentage: 30, color: "#26A17B" },
   ];
 
-  describe("Rendering", () => {
+  describe("Rendering (Legend Variant - Default)", () => {
     it("renders the target allocation bar", () => {
       render(<TargetAllocationBar assets={mockAssets} />);
       expect(screen.getByTestId("target-allocation-bar")).toBeInTheDocument();
@@ -30,13 +31,13 @@ describe("TargetAllocationBar", () => {
       expect(screen.getByTestId("target-stables")).toBeInTheDocument();
     });
 
-    it("applies correct width percentages to segment wrappers", () => {
+    it("applies correct width percentages to segments", () => {
       render(<TargetAllocationBar assets={mockAssets} />);
 
-      // Width is on the parent wrapper (TargetTooltip), check via parentElement
-      const btcSegment = screen.getByTestId("target-btc").parentElement;
-      const ethSegment = screen.getByTestId("target-eth").parentElement;
-      const stablesSegment = screen.getByTestId("target-stables").parentElement;
+      // Legend variant puts width directly on segment element
+      const btcSegment = screen.getByTestId("target-btc");
+      const ethSegment = screen.getByTestId("target-eth");
+      const stablesSegment = screen.getByTestId("target-stables");
 
       expect(btcSegment).toHaveStyle({ width: "42%" });
       expect(ethSegment).toHaveStyle({ width: "28%" });
@@ -54,6 +55,15 @@ describe("TargetAllocationBar", () => {
       expect(ethSegment).toHaveStyle({ backgroundColor: "#627EEA" });
       expect(stablesSegment).toHaveStyle({ backgroundColor: "#26A17B" });
     });
+
+    it("renders legend labels below the bar", () => {
+      render(<TargetAllocationBar assets={mockAssets} />);
+
+      // Legend variant should show text labels
+      expect(screen.getByText("BTC")).toBeInTheDocument();
+      expect(screen.getByText("ETH")).toBeInTheDocument();
+      expect(screen.getByText("Stables")).toBeInTheDocument();
+    });
   });
 
   describe("Edge Cases", () => {
@@ -63,11 +73,13 @@ describe("TargetAllocationBar", () => {
     });
 
     it("renders single asset correctly", () => {
-      const singleAsset = [{ symbol: "BTC", percentage: 100, color: "#F7931A" }];
+      const singleAsset = [
+        { symbol: "BTC", percentage: 100, color: "#F7931A" },
+      ];
       render(<TargetAllocationBar assets={singleAsset} />);
 
       expect(screen.getByTestId("target-btc")).toBeInTheDocument();
-      expect(screen.getByTestId("target-btc").parentElement).toHaveStyle({ width: "100%" });
+      expect(screen.getByTestId("target-btc")).toHaveStyle({ width: "100%" });
     });
 
     it("handles small percentages", () => {
@@ -78,10 +90,23 @@ describe("TargetAllocationBar", () => {
       ];
       render(<TargetAllocationBar assets={smallAssets} />);
 
-      expect(screen.getByTestId("target-btc").parentElement).toHaveStyle({ width: "2%" });
-      expect(screen.getByTestId("target-eth").parentElement).toHaveStyle({ width: "1%" });
-      expect(screen.getByTestId("target-stables").parentElement).toHaveStyle({ width: "97%" });
+      expect(screen.getByTestId("target-btc")).toHaveStyle({ width: "2%" });
+      expect(screen.getByTestId("target-eth")).toHaveStyle({ width: "1%" });
+      expect(screen.getByTestId("target-stables")).toHaveStyle({
+        width: "97%",
+      });
+    });
+  });
+
+  describe("Variant Switching", () => {
+    it("renders tooltip variant", () => {
+      render(<TargetAllocationBar assets={mockAssets} variant="tooltip" />);
+      expect(screen.getByTestId("target-allocation-bar")).toBeInTheDocument();
+    });
+
+    it("renders expand variant", () => {
+      render(<TargetAllocationBar assets={mockAssets} variant="expand" />);
+      expect(screen.getByTestId("target-allocation-bar")).toBeInTheDocument();
     });
   });
 });
-

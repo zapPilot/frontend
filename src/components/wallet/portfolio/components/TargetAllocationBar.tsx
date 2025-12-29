@@ -2,8 +2,10 @@
  * TargetAllocationBar - Modular target allocation visualization
  *
  * Renders a bar showing target portfolio allocation split.
- * Supports dynamic assets for future-proof portfolio composition display.
- * Shows tooltips on hover with asset symbol and percentage.
+ * Supports 3 display variants:
+ * - 'tooltip': Shows percentage on hover tooltip (default)
+ * - 'legend': Shows inline labels below the bar
+ * - 'expand': Bar expands on hover to show labels
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -15,8 +17,12 @@ interface TargetAsset {
   color: string;
 }
 
+type TargetBarVariant = "tooltip" | "legend" | "expand";
+
 interface TargetAllocationBarProps {
   assets: TargetAsset[];
+  /** Display variant: 'tooltip' | 'legend' | 'expand' */
+  variant?: TargetBarVariant;
 }
 
 interface TooltipPosition {
@@ -26,8 +32,16 @@ interface TooltipPosition {
 }
 
 const STYLES = {
+  container: "flex flex-col gap-1",
   bar: "h-2 w-full rounded-full flex overflow-hidden opacity-40",
+  barExpand:
+    "h-2 w-full rounded-full flex overflow-hidden opacity-40 hover:h-6 hover:opacity-100 transition-all duration-200",
   segment: "h-full cursor-pointer transition-opacity hover:opacity-80",
+  segmentExpand:
+    "h-full flex items-center justify-center text-[8px] font-bold text-white/90 overflow-hidden transition-all duration-200",
+  legend: "flex gap-3 text-[10px] text-gray-400 mt-1",
+  legendItem: "flex items-center gap-1",
+  legendDot: "w-2 h-2 rounded-full",
 } as const;
 
 /**
@@ -144,21 +158,17 @@ function TargetTooltip({
       onMouseLeave={handleMouseLeave}
     >
       {children}
-      {isMounted && tooltipContent && createPortal(tooltipContent, document.body)}
+      {isMounted &&
+        tooltipContent &&
+        createPortal(tooltipContent, document.body)}
     </div>
   );
 }
 
 /**
- * Renders a horizontal bar split into segments based on asset percentages.
- * Each asset's width is proportional to its percentage of the total portfolio.
- * Hovering over a segment shows a tooltip with the asset name and percentage.
+ * Variant 1: Tooltip mode - shows popup on hover
  */
-export function TargetAllocationBar({ assets }: TargetAllocationBarProps) {
-  if (assets.length === 0) {
-    return null;
-  }
-
+function TooltipVariant({ assets }: { assets: TargetAsset[] }) {
   return (
     <div className={STYLES.bar} data-testid="target-allocation-bar">
       {assets.map(asset => (
@@ -179,3 +189,99 @@ export function TargetAllocationBar({ assets }: TargetAllocationBarProps) {
   );
 }
 
+/**
+ * Variant 2: Legend mode - shows labels below the bar
+ */
+function LegendVariant({ assets }: { assets: TargetAsset[] }) {
+  return (
+    <div className={STYLES.container} data-testid="target-allocation-bar">
+      <div className={STYLES.bar}>
+        {assets.map(asset => (
+          <div
+            key={asset.symbol}
+            data-testid={`target-${asset.symbol.toLowerCase()}`}
+            style={{
+              width: `${asset.percentage}%`,
+              backgroundColor: asset.color,
+            }}
+          />
+        ))}
+      </div>
+      <div className={STYLES.legend}>
+        {assets.map(asset => (
+          <div key={asset.symbol} className={STYLES.legendItem}>
+            <div
+              className={STYLES.legendDot}
+              style={{ backgroundColor: asset.color }}
+            />
+            <span style={{ color: asset.color }}>{asset.symbol}</span>
+            <span>{asset.percentage.toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Variant 3: Expand mode - bar grows on hover to show labels
+ */
+function ExpandVariant({ assets }: { assets: TargetAsset[] }) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div
+      className={`${STYLES.bar} ${isHovered ? "!h-6 !opacity-100" : ""} transition-all duration-200 cursor-pointer`}
+      data-testid="target-allocation-bar"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {assets.map(asset => (
+        <div
+          key={asset.symbol}
+          data-testid={`target-${asset.symbol.toLowerCase()}`}
+          className="h-full flex items-center justify-center overflow-hidden transition-all duration-200"
+          style={{
+            width: `${asset.percentage}%`,
+            backgroundColor: asset.color,
+          }}
+        >
+          {isHovered && asset.percentage >= 10 && (
+            <span className="text-[9px] font-bold text-white/90 whitespace-nowrap">
+              {asset.symbol} {asset.percentage.toFixed(0)}%
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Renders a horizontal bar split into segments based on asset percentages.
+ * Each asset's width is proportional to its percentage of the total portfolio.
+ *
+ * Variants:
+ * - 'tooltip': Hover shows floating popup with asset info
+ * - 'legend': Static labels displayed below the bar
+ * - 'expand': Bar grows on hover to reveal inline labels
+ */
+export function TargetAllocationBar({
+  assets,
+  variant = "legend",
+}: TargetAllocationBarProps) {
+  if (assets.length === 0) {
+    return null;
+  }
+
+  switch (variant) {
+    case "tooltip":
+      return <TooltipVariant assets={assets} />;
+    case "legend":
+      return <LegendVariant assets={assets} />;
+    case "expand":
+      return <ExpandVariant assets={assets} />;
+    default:
+      return <LegendVariant assets={assets} />;
+  }
+}
