@@ -93,7 +93,6 @@ vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
 
 const mockData = {
   balance: GHOST_MODE_PREVIEW.balance,
-  roi: GHOST_MODE_PREVIEW.roi,
   currentAllocation: GHOST_MODE_PREVIEW.currentAllocation,
   targetAllocation: { crypto: 60, stable: 40 },
   delta: GHOST_MODE_PREVIEW.delta,

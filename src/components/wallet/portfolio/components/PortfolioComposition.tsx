@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import { Zap } from "lucide-react";
 
 import {
@@ -10,10 +12,12 @@ import {
   type Regime,
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
+import { useAllocationWeights } from "@/hooks/queries/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
 import { AllocationBars } from "./AllocationBars";
 import { PortfolioLegend } from "./PortfolioLegend";
+import { TargetAllocationBar } from "./TargetAllocationBar";
 import {
   buildRealCryptoAssets,
   buildTargetCryptoAssets,
@@ -38,7 +42,6 @@ const STYLES = {
   allocationRow: "flex gap-2 items-center",
   barTrack:
     "relative w-full bg-gray-900/50 rounded-xl border border-gray-800 p-3 flex flex-col gap-1 overflow-hidden",
-  targetBar: "h-2 w-full rounded-full flex overflow-hidden opacity-40",
   barLabel: "text-[10px] text-gray-500 font-medium mb-1",
   actualBarsContainer: "h-20 w-full flex gap-1",
 } as const;
@@ -82,6 +85,35 @@ export function PortfolioComposition({
       ? buildTargetCryptoAssets(currentRegime)
       : buildRealCryptoAssets(data);
 
+  // Fetch marketcap-weighted allocation weights for BTC/ETH split
+  const { data: allocationWeights } = useAllocationWeights();
+
+  // Build target assets array with marketcap-weighted BTC/ETH split
+  const targetAssets = useMemo(() => {
+    if (!target) return [];
+
+    const btcWeight = allocationWeights?.btc_weight ?? 0.6;
+    const ethWeight = allocationWeights?.eth_weight ?? 0.4;
+
+    return [
+      {
+        symbol: "BTC",
+        percentage: target.crypto * btcWeight,
+        color: ASSET_COLORS.BTC,
+      },
+      {
+        symbol: "ETH",
+        percentage: target.crypto * ethWeight,
+        color: ASSET_COLORS.ETH,
+      },
+      {
+        symbol: "Stables",
+        percentage: target.stable,
+        color: ASSET_COLORS.USDT,
+      },
+    ];
+  }, [target, allocationWeights]);
+
   const cryptoPercentage = isEmptyState
     ? target.crypto
     : data.currentAllocation.crypto;
@@ -123,22 +155,9 @@ export function PortfolioComposition({
 
       {/* ALLOCATION BAR TRACK */}
       <div className={STYLES.barTrack}>
-        {/* Target Indicator Bar (Minimal Stack style) */}
+        {/* Target Indicator Bar - Dynamic marketcap-weighted BTC/ETH/Stables */}
         <div className={STYLES.barLabel}>Target Allocation</div>
-        <div className={STYLES.targetBar}>
-          <div
-            style={{
-              width: `${target.crypto}%`,
-              backgroundColor: ASSET_COLORS.BTC,
-            }}
-          />
-          <div
-            style={{
-              width: `${target.stable}%`,
-              backgroundColor: ASSET_COLORS.USDT,
-            }}
-          />
-        </div>
+        <TargetAllocationBar assets={targetAssets} />
 
         {/* ACTUAL BARS */}
         <div className={STYLES.barLabel}>Current Portfolio</div>

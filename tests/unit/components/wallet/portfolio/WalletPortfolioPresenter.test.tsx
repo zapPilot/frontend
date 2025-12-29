@@ -7,8 +7,8 @@ import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPo
 import { type RegimeId, regimes } from "@/components/wallet/regime/regimeData";
 
 import {
-  MOCK_DATA,
-  MOCK_SCENARIOS,
+    MOCK_DATA,
+    MOCK_SCENARIOS,
 } from "../../../../fixtures/mockPortfolioData";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
@@ -32,7 +32,6 @@ const createMockSections = (data: WalletPortfolioDataWithDirection) => ({
   balance: {
     data: {
       balance: data.balance,
-      roi: data.roi,
       roiChange7d: 0,
       roiChange30d: 0,
     },
@@ -155,6 +154,23 @@ vi.mock("@/components/Footer/Footer", () => ({
 
 vi.mock("@/components/wallet/portfolio/components/WalletNavigation", () => ({
   WalletNavigation: () => <nav data-testid="wallet-navigation">Navigation</nav>,
+}));
+
+// Mock useAllocationWeights to avoid QueryClient dependency
+vi.mock("@/hooks/queries/useAllocationWeights", () => ({
+  useAllocationWeights: vi.fn().mockReturnValue({
+    data: {
+      btc_weight: 0.6,
+      eth_weight: 0.4,
+      btc_market_cap: 1800000000000,
+      eth_market_cap: 400000000000,
+      timestamp: "2024-01-15T12:00:00Z",
+      is_fallback: false,
+      cached: false,
+    },
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 describe("WalletPortfolioPresenter - Regime Highlighting", () => {

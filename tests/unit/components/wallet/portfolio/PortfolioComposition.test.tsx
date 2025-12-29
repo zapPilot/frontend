@@ -62,6 +62,23 @@ vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
   ),
 }));
 
+// Mock useAllocationWeights to avoid QueryClient dependency
+vi.mock("@/hooks/queries/useAllocationWeights", () => ({
+  useAllocationWeights: vi.fn().mockReturnValue({
+    data: {
+      btc_weight: 0.6,
+      eth_weight: 0.4,
+      btc_market_cap: 1800000000000,
+      eth_market_cap: 400000000000,
+      timestamp: "2024-01-15T12:00:00Z",
+      is_fallback: false,
+      cached: false,
+    },
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 const mockData: WalletPortfolioDataWithDirection = {
   totalBalance: 10000,
   currentAllocation: {
