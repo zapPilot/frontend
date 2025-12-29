@@ -9,7 +9,11 @@ import {
   generateAnalyticsCSV,
   generateExportFilename,
 } from "@/lib/csvGenerator";
-import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
+import type {
+  AnalyticsData,
+  AnalyticsTimePeriod,
+  WalletFilter,
+} from "@/types/analytics";
 import type { ExportMetadata, ExportResult } from "@/types/export";
 
 // =============================================================================
@@ -78,25 +82,36 @@ export function validateExportData(data: AnalyticsData | null): boolean {
  * @param userId - User wallet address
  * @param data - Analytics data to export
  * @param timePeriod - Selected time period
+ * @param walletFilter - Optional wallet address filter (null = all wallets, string = specific wallet)
  * @returns Export result with success status and optional error
  *
  * @example
- * const result = await exportAnalyticsToCSV(
+ * // Bundle-level export (all wallets)
+ * const bundleResult = await exportAnalyticsToCSV(
  *   '0x1234...5678',
  *   analyticsData,
- *   '1Y'
+ *   { key: '1Y', days: 365, label: '1Y' }
  * );
  *
- * if (result.success) {
- *   console.log('Exported:', result.filename);
+ * // Wallet-specific export
+ * const walletResult = await exportAnalyticsToCSV(
+ *   '0x1234...5678',
+ *   analyticsData,
+ *   { key: '1Y', days: 365, label: '1Y' },
+ *   '0x5678...9ABC'
+ * );
+ *
+ * if (bundleResult.success) {
+ *   console.log('Exported:', bundleResult.filename);
  * } else {
- *   console.error('Export failed:', result.error);
+ *   console.error('Export failed:', bundleResult.error);
  * }
  */
 export async function exportAnalyticsToCSV(
   userId: string,
   data: AnalyticsData,
-  timePeriod: AnalyticsTimePeriod
+  timePeriod: AnalyticsTimePeriod,
+  walletFilter?: WalletFilter
 ): Promise<ExportResult> {
   try {
     // Validate user ID
@@ -121,13 +136,18 @@ export async function exportAnalyticsToCSV(
       timePeriod,
       data,
       timestamp: new Date(),
+      ...(walletFilter !== undefined && { walletFilter }), // Include wallet filter only if defined
     };
 
-    // Generate CSV content
+    // Generate CSV content (includes wallet filter info in header)
     const csvContent = generateAnalyticsCSV(metadata);
 
-    // Generate filename
-    const filename = generateExportFilename(userId, metadata.timestamp);
+    // Generate filename (includes wallet address if filtered)
+    const filename = generateExportFilename(
+      userId,
+      metadata.timestamp,
+      walletFilter
+    );
 
     // Trigger browser download
     downloadCSV(csvContent, filename);

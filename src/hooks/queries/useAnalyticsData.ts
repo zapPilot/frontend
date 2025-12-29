@@ -15,7 +15,11 @@ import {
   transformToPerformanceChart,
 } from "@/lib/analytics/transformers";
 import { getDailyYieldReturns } from "@/services/analyticsService";
-import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
+import type {
+  AnalyticsData,
+  AnalyticsTimePeriod,
+  WalletFilter,
+} from "@/types/analytics";
 
 import { usePortfolioDashboard } from "../usePortfolioDashboard";
 import { useBtcPriceQuery } from "./useBtcPriceQuery";
@@ -44,14 +48,19 @@ interface UseAnalyticsDataReturn {
  *
  * @param userId - User wallet address or ID
  * @param timePeriod - Selected time window for analytics
+ * @param walletFilter - Optional wallet address filter (null = bundle aggregation, string = specific wallet)
  * @returns Analytics data with loading/error states and refetch function
  *
  * @example
+ * // Bundle-level analytics (all wallets)
  * const { data, isLoading, error, refetch } = useAnalyticsData(userId, {
  *   key: '1Y',
  *   days: 365,
  *   label: '1Y'
  * });
+ *
+ * // Wallet-specific analytics
+ * const walletData = useAnalyticsData(userId, timePeriod, '0x1234...5678');
  *
  * if (isLoading) return <LoadingSkeleton />;
  * if (error) return <ErrorState error={error} onRetry={refetch} />;
@@ -61,7 +70,8 @@ interface UseAnalyticsDataReturn {
  */
 export function useAnalyticsData(
   userId: string | undefined,
-  timePeriod: AnalyticsTimePeriod
+  timePeriod: AnalyticsTimePeriod,
+  walletFilter?: WalletFilter
 ): UseAnalyticsDataReturn {
   // ============================================================================
   // PERIOD CHANGE DETECTION
@@ -86,10 +96,16 @@ export function useAnalyticsData(
       trend_days: timePeriod.days,
       drawdown_days: timePeriod.days,
       rolling_days: timePeriod.days,
+      ...(walletFilter && { wallet_address: walletFilter }), // Include wallet filter only if truthy
     },
     {
       // Force refetch when period changes to bypass staleTime cache
-      staleTime: periodChanged ? 0 : 2 * 60 * 1000,
+      // Wallet-specific data: 2min cache, Bundle data: 12hr cache
+      staleTime: periodChanged
+        ? 0
+        : walletFilter
+          ? 2 * 60 * 1000
+          : 12 * 60 * 60 * 1000,
       refetchOnMount: periodChanged ? "always" : false,
     }
   );
@@ -105,12 +121,16 @@ export function useAnalyticsData(
   // ============================================================================
 
   const monthlyPnLQuery = useQuery({
-    queryKey: ["dailyYield", userId, timePeriod.days],
+    queryKey: ["dailyYield", userId, timePeriod.days, walletFilter], // Include wallet filter in cache key
     queryFn: () => {
       if (!userId) {
         throw new Error("User ID is required");
       }
-      return getDailyYieldReturns(userId, timePeriod.days);
+      return getDailyYieldReturns(
+        userId,
+        timePeriod.days,
+        walletFilter ?? undefined
+      ); // Pass wallet filter to API, convert null to undefined
     },
     enabled: !!userId && !!dashboardQuery.data,
     staleTime: 5 * 60 * 1000, // 5 minutes (matches yield summary cache)

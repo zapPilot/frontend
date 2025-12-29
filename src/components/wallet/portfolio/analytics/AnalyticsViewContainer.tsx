@@ -7,14 +7,17 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
+import { useCurrentUser } from "@/hooks/queries/useUserQuery";
 import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 import type {
   AnalyticsData,
   AnalyticsTimePeriod,
   MetricData,
+  WalletFilter,
+  WalletOption,
 } from "@/types/analytics";
 
 import { AnalyticsView } from "./AnalyticsView";
@@ -84,9 +87,36 @@ export const AnalyticsViewContainer = ({
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  // Data fetching with period change detection
+  // NEW: Wallet filter state
+  const [selectedWallet, setSelectedWallet] = useState<WalletFilter>(null);
+
+  // Get available wallets from user query
+  const { userInfo } = useCurrentUser();
+  const availableWallets: WalletOption[] = useMemo(
+    () =>
+      userInfo?.additionalWallets.map(w => ({
+        address: w.wallet_address,
+        label: w.label,
+      })) || [],
+    [userInfo?.additionalWallets]
+  );
+
+  // Determine if wallet selector should be shown (hide for single-wallet users)
+  const showWalletSelector = availableWallets.length > 1;
+
+  // Auto-reset to "All Wallets" if selected wallet is removed from bundle
+  useEffect(() => {
+    if (
+      selectedWallet &&
+      !availableWallets.find(w => w.address === selectedWallet)
+    ) {
+      setSelectedWallet(null);
+    }
+  }, [availableWallets, selectedWallet]);
+
+  // Data fetching with period change detection and wallet filter
   const { data, isLoading, isMonthlyPnLLoading, error, refetch } =
-    useAnalyticsData(userId, selectedPeriod);
+    useAnalyticsData(userId, selectedPeriod, selectedWallet);
 
   // Handlers
   const handlePeriodChange = (period: AnalyticsTimePeriod) => {
@@ -95,6 +125,11 @@ export const AnalyticsViewContainer = ({
 
   const handleChartTabChange = (tab: "performance" | "drawdown") => {
     setActiveChartTab(tab);
+  };
+
+  // NEW: Handler for wallet filter change
+  const handleWalletChange = (wallet: WalletFilter) => {
+    setSelectedWallet(wallet);
   };
 
   const handleExport = async () => {
@@ -107,7 +142,13 @@ export const AnalyticsViewContainer = ({
     setExportError(null);
 
     try {
-      const result = await exportAnalyticsToCSV(userId, data, selectedPeriod);
+      // Pass wallet filter to export function
+      const result = await exportAnalyticsToCSV(
+        userId,
+        data,
+        selectedPeriod,
+        selectedWallet
+      );
       if (!result.success) {
         setExportError(result.error || "Export failed");
       }
@@ -139,6 +180,11 @@ export const AnalyticsViewContainer = ({
       isMonthlyPnLLoading={isMonthlyPnLLoading}
       isExporting={isExporting}
       exportError={exportError}
+      // NEW: Wallet filter props
+      selectedWallet={selectedWallet}
+      availableWallets={availableWallets}
+      onWalletChange={handleWalletChange}
+      showWalletSelector={showWalletSelector}
     />
   );
 };

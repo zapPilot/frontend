@@ -35,6 +35,8 @@ export interface DashboardWindowParams {
   allocation_days?: number;
   rolling_days?: number;
   metrics?: string[];
+  /** Optional wallet address filter - when provided, returns wallet-specific analytics instead of bundle aggregation */
+  wallet_address?: string;
 }
 
 /**
@@ -127,23 +129,33 @@ export const getPortfolioDashboard = async (
  *
  * @param userId - User identifier
  * @param days - Number of days to retrieve (default: 30)
+ * @param walletAddress - Optional wallet address filter for per-wallet analytics
  * @returns Daily yield returns with per-protocol breakdown
  *
  * @example
  * ```typescript
- * const dailyYield = await getDailyYieldReturns('user-123', 30);
+ * // Bundle-level data (all wallets)
+ * const bundleYield = await getDailyYieldReturns('user-123', 30);
+ *
+ * // Wallet-specific data
+ * const walletYield = await getDailyYieldReturns('user-123', 30, '0x1234...5678');
  *
  * // Access daily returns
- * dailyYield.daily_returns.forEach(entry => {
+ * bundleYield.daily_returns.forEach(entry => {
  *   console.log(`${entry.date}: ${entry.protocol_name} = $${entry.yield_return_usd}`);
  * });
  * ```
  */
 export const getDailyYieldReturns = async (
   userId: string,
-  days = 30
+  days = 30,
+  walletAddress?: string
 ): Promise<DailyYieldReturnsResponse> => {
-  const endpoint = `/api/v2/analytics/${userId}/yield/daily?days=${days}`;
+  const params = new URLSearchParams({ days: String(days) });
+  if (walletAddress) {
+    params.append("walletAddress", walletAddress);
+  }
+  const endpoint = `/api/v2/analytics/${userId}/yield/daily?${params}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateDailyYieldReturnsResponse(response);
 };

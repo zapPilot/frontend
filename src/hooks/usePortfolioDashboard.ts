@@ -100,6 +100,7 @@ export function usePortfolioDashboard(
       params.allocation_days,
       params.rolling_days,
       params.metrics,
+      params.wallet_address, // Distinguish wallet-specific vs bundle queries
     ],
     queryFn: () =>
       // Safe: enabled condition ensures userId is non-null

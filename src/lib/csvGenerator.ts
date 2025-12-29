@@ -5,6 +5,7 @@
  * Provides pure functions for generating CSV content from analytics data
  */
 
+import type { WalletFilter } from "@/types/analytics";
 import type { CsvGenerationOptions, ExportMetadata } from "@/types/export";
 import { formatAddress } from "@/utils/formatters";
 
@@ -86,7 +87,7 @@ export function formatCsvRow(
  * Build header section with report metadata
  */
 export function buildHeaderSection(metadata: ExportMetadata): string[] {
-  const { userId, timePeriod, data, timestamp } = metadata;
+  const { userId, timePeriod, data, timestamp, walletFilter } = metadata;
 
   const periodLabels: Record<string, string> = {
     "1M": "1M (30 days)",
@@ -100,10 +101,16 @@ export function buildHeaderSection(metadata: ExportMetadata): string[] {
   const startDate = data.performanceChart.startDate;
   const endDate = data.performanceChart.endDate;
 
+  // Determine wallet filter display
+  const walletFilterDisplay = walletFilter
+    ? `Specific Wallet (${formatAddress(walletFilter)})`
+    : "All Wallets (Bundle Aggregation)";
+
   return [
     "Portfolio Analytics Report",
     `Generated: ${timestamp.toISOString()}`,
     `User ID: ${userId}`,
+    `Wallet Filter: ${walletFilterDisplay}`,
     `Time Period: ${periodLabels[timePeriod.key] || timePeriod.label}`,
     `Period: ${startDate} to ${endDate}`,
     "",
@@ -349,20 +356,34 @@ export function generateAnalyticsCSV(
 /**
  * Generate export filename
  *
- * Format: portfolio-analytics-{shortened-address}-{YYYY-MM-DD}.csv
+ * Format: portfolio-analytics-{shortened-address}-{wallet-suffix}-{YYYY-MM-DD}.csv
  *
  * @param userId - User wallet address
  * @param date - Export date
+ * @param walletFilter - Optional wallet filter (null = bundle, string = specific wallet)
  * @returns Filename string
  *
  * @example
+ * // Bundle export
  * generateExportFilename('0x1234...5678', new Date('2025-01-17'))
- * // 'portfolio-analytics-0x1234...5678-2025-01-17.csv'
+ * // 'portfolio-analytics-0x1234...5678-bundle-2025-01-17.csv'
+ *
+ * // Wallet-specific export
+ * generateExportFilename('0x1234...5678', new Date('2025-01-17'), '0xAAA...BBB')
+ * // 'portfolio-analytics-0x1234...5678-0xAAA...BBB-2025-01-17.csv'
  */
-export function generateExportFilename(userId: string, date: Date): string {
+export function generateExportFilename(
+  userId: string,
+  date: Date,
+  walletFilter?: WalletFilter
+): string {
   const shortAddress = formatAddress(userId);
   const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
-  return `portfolio-analytics-${shortAddress}-${dateStr}.csv`;
+
+  // Add wallet suffix to filename
+  const walletSuffix = walletFilter ? formatAddress(walletFilter) : "bundle";
+
+  return `portfolio-analytics-${shortAddress}-${walletSuffix}-${dateStr}.csv`;
 }
 
 // =============================================================================

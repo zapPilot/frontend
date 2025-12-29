@@ -4,7 +4,11 @@
  * Type definitions for analytics export functionality
  */
 
-import type { AnalyticsData, AnalyticsTimePeriod } from "./analytics";
+import type {
+  AnalyticsData,
+  AnalyticsTimePeriod,
+  WalletFilter,
+} from "./analytics";
 
 /**
  * Metadata for export operations
@@ -18,6 +22,8 @@ export interface ExportMetadata {
   data: AnalyticsData;
   /** Timestamp when the export was generated */
   timestamp: Date;
+  /** Optional wallet filter (null = all wallets, string = specific wallet) */
+  walletFilter?: WalletFilter;
 }
 
 /**

@@ -28,6 +28,7 @@ const NUMERIC_PARAM_KEYS: readonly (keyof Omit<
  * Handles:
  * - Numeric parameters (converted to strings)
  * - Metrics array (joined with commas)
+ * - Wallet address filter
  * - Undefined values (skipped)
  *
  * @param params - Dashboard window parameters
@@ -61,6 +62,11 @@ export function buildAnalyticsQueryString(
   // Add metrics array if present
   if (params.metrics?.length) {
     query.set("metrics", params.metrics.join(","));
+  }
+
+  // Add wallet address filter if present
+  if (params.wallet_address) {
+    query.set("wallet_address", params.wallet_address);
   }
 
   const queryString = query.toString();

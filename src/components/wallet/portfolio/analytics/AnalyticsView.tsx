@@ -5,7 +5,12 @@
  * Receives all data and handlers via props
  */
 
-import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
+import type {
+  AnalyticsData,
+  AnalyticsTimePeriod,
+  WalletFilter,
+  WalletOption,
+} from "@/types/analytics";
 
 import { AdditionalMetricsGrid } from "./components/AdditionalMetricsGrid";
 import { AnalyticsHeader } from "./components/AnalyticsHeader";
@@ -37,6 +42,14 @@ interface AnalyticsViewProps {
   isExporting?: boolean;
   /** Export error message */
   exportError?: string | null;
+  /** Currently selected wallet filter */
+  selectedWallet: WalletFilter;
+  /** Available wallet options */
+  availableWallets: WalletOption[];
+  /** Wallet selection change handler */
+  onWalletChange: (wallet: WalletFilter) => void;
+  /** Whether to show wallet selector */
+  showWalletSelector: boolean;
 }
 
 /**
@@ -62,6 +75,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   isMonthlyPnLLoading = false,
   isExporting = false,
   exportError = null,
+  selectedWallet,
+  availableWallets,
+  onWalletChange,
+  showWalletSelector,
 }) => (
   <div className="space-y-6 animate-in fade-in duration-500">
     {/* Header */}
@@ -69,6 +86,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       onExport={onExport}
       isExporting={isExporting}
       exportError={exportError}
+      selectedWallet={selectedWallet}
+      availableWallets={availableWallets}
+      onWalletChange={onWalletChange}
+      showWalletSelector={showWalletSelector}
     />
 
     {/* Primary Chart Section with Tabs */}

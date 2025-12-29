@@ -27,6 +27,7 @@ describe("queryStringUtils", () => {
           allocation_days: undefined,
           rolling_days: undefined,
           metrics: undefined,
+          wallet_address: undefined,
         };
         const result = buildAnalyticsQueryString(params);
         expect(result).toBe("");
@@ -138,6 +139,38 @@ describe("queryStringUtils", () => {
         });
         expect(result).toBe("");
         expect(result).not.toContain("metrics");
+      });
+    });
+
+    describe("Wallet address filter", () => {
+      it("should include wallet_address when provided", () => {
+        const result = buildAnalyticsQueryString({
+          wallet_address: "0x1234567890abcdef1234567890abcdef12345678",
+        });
+        expect(result).toBe(
+          "?wallet_address=0x1234567890abcdef1234567890abcdef12345678"
+        );
+      });
+
+      it("should include wallet_address alongside other params", () => {
+        const result = buildAnalyticsQueryString({
+          trend_days: 30,
+          metrics: ["sharpe"],
+          wallet_address: "0x1234567890abcdef1234567890abcdef12345678",
+        });
+        expect(result).toContain("trend_days=30");
+        expect(result).toContain("metrics=sharpe");
+        expect(result).toContain(
+          "wallet_address=0x1234567890abcdef1234567890abcdef12345678"
+        );
+      });
+
+      it("should skip wallet_address when empty string is provided", () => {
+        const result = buildAnalyticsQueryString({
+          wallet_address: "",
+        });
+        expect(result).toBe("");
+        expect(result).not.toContain("wallet_address");
       });
     });
 
