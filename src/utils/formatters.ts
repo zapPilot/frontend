@@ -322,6 +322,7 @@ export function calculateDataFreshness(
       isCurrent: hoursSince <= 24,
     };
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error("Error calculating data freshness:", error);
     return {
       relativeTime: "Unknown",

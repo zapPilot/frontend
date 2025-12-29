@@ -1,16 +1,6 @@
 import { getBarStyle } from "@/constants/assets";
+
 import { AllocationLegend } from "./AllocationLegend";
-
-/**
- * TargetAllocationBar - Modular target allocation visualization
- *
- * Renders a bar showing target portfolio allocation split.
- * Supports 3 display variants:
- * - 'tooltip': Shows percentage on hover tooltip (default)
- * - 'legend': Shows inline labels below the bar
- * - 'expand': Bar expands on hover to show labels
- */
-
 
 interface TargetAsset {
   symbol: string;
@@ -25,14 +15,16 @@ interface TargetAllocationBarProps {
 const STYLES = {
   container: "flex flex-col gap-1",
   bar: "h-2 w-full rounded-full flex overflow-hidden",
-  segment: "h-full cursor-pointer transition-opacity hover:opacity-80",
 } as const;
 
-
 /**
- * Variant 2: Legend mode - shows labels below the bar
+ * TargetAllocationBar - Renders target portfolio allocation as a horizontal bar with legend
  */
-function LegendVariant({ assets }: { assets: TargetAsset[] }) {
+export function TargetAllocationBar({ assets }: TargetAllocationBarProps) {
+  if (assets.length === 0) {
+    return null;
+  }
+
   return (
     <div className={STYLES.container} data-testid="target-allocation-bar">
       <div className={STYLES.bar}>
@@ -51,22 +43,4 @@ function LegendVariant({ assets }: { assets: TargetAsset[] }) {
       <AllocationLegend items={assets} />
     </div>
   );
-}
-
-
-/**
- * Renders a horizontal bar split into segments based on asset percentages.
- * Each asset's width is proportional to its percentage of the total portfolio.
- *
- * Variants:
- * - 'legend': Static labels displayed below the bar
- */
-export function TargetAllocationBar({
-  assets
-}: TargetAllocationBarProps) {
-  if (assets.length === 0) {
-    return null;
-  }
-
-  return <LegendVariant assets={assets} />;
 }

@@ -237,9 +237,13 @@ describe("AllocationBars", () => {
         await waitFor(() => {
           // Tooltip should show the symbol and percentage
           // We look for text specifically inside the fixed position tooltip, distinct from legend
-          const tooltips = screen.getAllByText("BTC").filter(el => el.closest(".fixed"));
+          const tooltips = screen
+            .getAllByText("BTC")
+            .filter(el => el.closest(".fixed"));
           expect(tooltips.length).toBeGreaterThan(0);
-          const percentTooltips = screen.getAllByText("5.00%").filter(el => el.closest(".fixed"));
+          const percentTooltips = screen
+            .getAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
           expect(percentTooltips.length).toBeGreaterThan(0);
         });
       }
@@ -261,8 +265,10 @@ describe("AllocationBars", () => {
         // Show tooltip
         fireEvent.mouseEnter(tooltipWrapper);
         await waitFor(() => {
-           const tooltips = screen.getAllByText("BTC").filter(el => el.closest(".fixed"));
-           expect(tooltips.length).toBeGreaterThan(0);
+          const tooltips = screen
+            .getAllByText("BTC")
+            .filter(el => el.closest(".fixed"));
+          expect(tooltips.length).toBeGreaterThan(0);
         });
 
         // Hide tooltip
@@ -270,14 +276,16 @@ describe("AllocationBars", () => {
         await waitFor(() => {
           // After mouse leave, tooltip content should be hidden (visibility: hidden or removed)
           // Find all percentages that *could* be tooltip (inside fixed)
-          const potentialTooltips = screen.queryAllByText("5.00%").filter(el => el.closest(".fixed"));
-          
+          const potentialTooltips = screen
+            .queryAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
+
           if (potentialTooltips.length > 0) {
             // If exists, must be hidden
-            potentialTooltips.forEach(tooltip => {
-               const container = tooltip.closest(".fixed");
-               expect(container).toHaveStyle({ visibility: "hidden" });
-            });
+            for (const tooltip of potentialTooltips) {
+              const container = tooltip.closest(".fixed");
+              expect(container).toHaveStyle({ visibility: "hidden" });
+            }
           }
         });
       }
@@ -299,9 +307,13 @@ describe("AllocationBars", () => {
         fireEvent.mouseEnter(tooltipWrapper);
 
         await waitFor(() => {
-          const tooltips = screen.getAllByText("STABLES").filter(el => el.closest(".fixed"));
+          const tooltips = screen
+            .getAllByText("STABLES")
+            .filter(el => el.closest(".fixed"));
           expect(tooltips.length).toBeGreaterThan(0);
-          const percentTooltips = screen.getAllByText("5.00%").filter(el => el.closest(".fixed"));
+          const percentTooltips = screen
+            .getAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
           expect(percentTooltips.length).toBeGreaterThan(0);
         });
       }

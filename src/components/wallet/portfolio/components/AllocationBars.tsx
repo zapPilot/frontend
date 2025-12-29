@@ -3,13 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { ASSET_COLORS, getBarStyle } from "@/constants/assets";
-import { AllocationLegend } from "./AllocationLegend";
-
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
+
+import { AllocationLegend } from "./AllocationLegend";
 
 interface AllocationBarsProps {
   cryptoAssets: AllocationConstituent[];
-  cryptoPercentage: number;
   stablePercentage: number;
 }
 
@@ -166,30 +165,13 @@ function AllocationTooltip({
   );
 }
 
-/**
- * AllocationBars - Reusable visualization component for portfolio allocation
- *
- * Displays crypto and stable asset allocation as interactive animated bars.
- * Uses absolute portfolio percentages directly from API.
- *
- * For small allocations (< 8%), text is hidden and shown in a tooltip on hover.
- *
- * @param cryptoAssets - Array of crypto assets with symbols, absolute % values, and colors
- * @param cryptoPercentage - (deprecated, kept for compatibility) Total crypto allocation percentage
- * @param stablePercentage - Total stablecoins allocation percentage (0-100)
- */
-// ... imports
-
-/* ... existing Tooltip code ... */
-
 const STYLES = {
   container: "flex flex-col gap-1",
   barsContainer: "h-20 w-full flex gap-1",
 } as const;
 
 /**
- * AllocationBars - Reusable visualization component for portfolio allocation
- * ...
+ * AllocationBars - Displays crypto and stable allocation as interactive animated bars
  */
 export function AllocationBars({
   cryptoAssets,

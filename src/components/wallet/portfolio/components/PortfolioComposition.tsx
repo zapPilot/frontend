@@ -1,9 +1,7 @@
 import { Zap } from "lucide-react";
 import { useMemo } from "react";
 
-import {
-  type WalletPortfolioDataWithDirection,
-} from "@/adapters/walletPortfolioDataAdapter";
+import { type WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
 import {
   getRegimeAllocation,
@@ -92,14 +90,9 @@ export function PortfolioComposition({
       ? buildTargetCryptoAssets(currentRegime)
       : buildRealCryptoAssets(data);
 
-  const cryptoPercentage = isEmptyState
-    ? target.crypto
-    : data.currentAllocation.crypto;
   const stablePercentage = isEmptyState
     ? target.stable
     : data.currentAllocation.stable;
-
-
 
   return (
     <div className={STYLES.container} data-testid="composition-bar">
@@ -143,7 +136,6 @@ export function PortfolioComposition({
         <div className={STYLES.barLabel}>Current Portfolio</div>
         <AllocationBars
           cryptoAssets={cryptoAssets}
-          cryptoPercentage={cryptoPercentage}
           stablePercentage={stablePercentage}
         />
       </div>
