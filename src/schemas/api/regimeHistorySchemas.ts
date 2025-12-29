@@ -37,18 +37,15 @@ const directionTypeSchema = z.enum(["fromLeft", "fromRight", "default"]);
 /**
  * Duration information for time spent in current regime
  */
+/**
+ * Duration information for time spent in current regime
+ */
 const durationInfoSchema = z
   .object({
-    /** Number of milliseconds in current regime */
-    milliseconds: z.number().int().nonnegative(),
-    /** Number of seconds in current regime */
-    seconds: z.number().int().nonnegative(),
-    /** Number of minutes in current regime */
-    minutes: z.number().int().nonnegative(),
     /** Number of hours in current regime */
-    hours: z.number().int().nonnegative(),
+    hours: z.number().nonnegative(),
     /** Number of days in current regime */
-    days: z.number().int().nonnegative(),
+    days: z.number().nonnegative(),
     /** Human-readable duration string (e.g., "2 days, 5 hours") */
     human_readable: z.string(),
   })
@@ -61,13 +58,17 @@ const durationInfoSchema = z
  */
 const regimeTransitionSchema = z.object({
   /** Unique identifier for this transition record */
-  regime_id: z.string(),
-  /** The regime that this transition represents */
-  regime: regimeIdSchema,
+  id: z.string(),
+  /** The regime that this transition moved TO */
+  to_regime: regimeIdSchema,
+  /** The regime that this transition moved FROM (null for first record) */
+  from_regime: regimeIdSchema.nullable().optional(),
   /** ISO 8601 timestamp of when this regime was activated */
-  timestamp: z.string(),
+  transitioned_at: z.string(),
   /** Optional Fear & Greed Index value at time of transition (0-100) */
   sentiment_value: z.number().int().min(0).max(100).optional(),
+  /** Duration of the previous regime in hours */
+  duration_hours: z.number().nullable().optional(),
 });
 
 /**

@@ -14,7 +14,7 @@ import {
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
-import { getRegimeName, getStrategyMeta } from "@/lib/domain/strategySelector";
+import { getStrategyMeta } from "@/lib/domain/strategySelector";
 import type {
   SectionState,
   SentimentData,
@@ -261,32 +261,6 @@ export function StrategyCard({
                 <div className="w-48 h-4 bg-gray-700/50 rounded animate-pulse" />
               )}
             </div>
-
-            {/* Directional Strategy Indicator */}
-            {previousRegime && strategyDirection !== "default" && (
-              <div
-                className="flex items-center gap-2 text-xs mt-2"
-                aria-label={strategyMeta.ariaLabel}
-              >
-                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 rounded-md font-medium border border-purple-500/20">
-                  {strategyDirection === "fromLeft" ? "↗" : "↘"}{" "}
-                  {strategyMeta.description}
-                </span>
-                <span className="text-gray-500">
-                  from {getRegimeName(previousRegime)}
-                </span>
-              </div>
-            )}
-
-            {/* Regime Duration Badge */}
-            {regimeDuration?.human_readable && (
-              <div className="flex items-center gap-1.5 text-xs text-gray-500 mt-1">
-                <span className="opacity-60">In regime for</span>
-                <span className="font-mono text-gray-400">
-                  {regimeDuration.human_readable}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 

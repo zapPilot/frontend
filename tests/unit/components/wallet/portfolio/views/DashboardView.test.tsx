@@ -50,14 +50,17 @@ vi.mock("@/components/wallet/portfolio/components/BalanceCard", () => ({
   BalanceCard: ({
     balance,
     isEmptyState,
+    lastUpdated,
   }: {
     balance: number;
     isEmptyState: boolean;
+    lastUpdated?: string;
   }) => (
     <div
       data-testid="balance-card"
       data-balance={balance}
       data-empty={isEmptyState}
+      data-last-updated={lastUpdated}
     >
       Balance Card
     </div>
@@ -94,6 +97,7 @@ const mockData = {
   currentAllocation: GHOST_MODE_PREVIEW.currentAllocation,
   targetAllocation: { crypto: 60, stable: 40 },
   delta: GHOST_MODE_PREVIEW.delta,
+  lastUpdated: "2024-01-01T12:00:00Z",
 } as Parameters<typeof DashboardView>[0]["data"];
 
 const mockSections = {
@@ -153,7 +157,12 @@ describe("DashboardView Ghost Mode", () => {
         />
       );
 
-      expect(screen.getByTestId("balance-card")).toBeInTheDocument();
+      const balanceCard = screen.getByTestId("balance-card");
+      expect(balanceCard).toBeInTheDocument();
+      expect(balanceCard).toHaveAttribute(
+        "data-last-updated",
+        "2024-01-01T12:00:00Z"
+      );
     });
 
     it("renders PortfolioComposition directly (bypasses SectionWrapper)", () => {
