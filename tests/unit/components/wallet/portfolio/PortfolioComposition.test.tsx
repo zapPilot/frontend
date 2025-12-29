@@ -145,6 +145,22 @@ describe("PortfolioComposition", () => {
 
       expect(screen.getByTestId("rebalance-button")).toBeInTheDocument();
     });
+
+    it("renders allocation legend items", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      // Check for legend items (based on mockData symbols)
+      expect(screen.getAllByText("BTC")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("ETH")[0]).toBeInTheDocument();
+      // We expect multiple '40%' (BTC, Stables) and possibly from bars if rendered text
+      expect(screen.getAllByText("40%").length).toBeGreaterThanOrEqual(2);
+    });
   });
 
   describe("Drift Indicator", () => {

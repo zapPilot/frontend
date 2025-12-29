@@ -15,7 +15,7 @@ import { useAllocationWeights } from "@/hooks/queries/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
 import { AllocationBars } from "./AllocationBars";
-import { PortfolioLegend } from "./PortfolioLegend";
+import { AllocationLegend } from "./AllocationLegend";
 import { TargetAllocationBar } from "./TargetAllocationBar";
 import {
   buildRealCryptoAssets,
@@ -121,6 +121,24 @@ export function PortfolioComposition({
     ? target.stable
     : data.currentAllocation.stable;
 
+  const legendItems = useMemo(() => {
+    const items = cryptoAssets.map(asset => ({
+      symbol: asset.symbol,
+      percentage: asset.value,
+      color: asset.color,
+    }));
+
+    if (stablePercentage > 0) {
+      items.push({
+        symbol: "Stables",
+        percentage: stablePercentage,
+        color: ASSET_COLORS.USDT,
+      });
+    }
+
+    return items;
+  }, [cryptoAssets, stablePercentage]);
+
   return (
     <div className={STYLES.container} data-testid="composition-bar">
       <div className={STYLES.header}>
@@ -171,12 +189,7 @@ export function PortfolioComposition({
       </div>
 
       {/* Legend - Conditional rendering for empty state */}
-      <PortfolioLegend
-        isEmptyState={isEmptyState}
-        cryptoAssets={cryptoAssets}
-        stablePercentage={stablePercentage}
-        simplifiedCrypto={data.currentAllocation.simplifiedCrypto}
-      />
+      <AllocationLegend items={legendItems} className="mt-4 px-1" />
     </div>
   );
 }
