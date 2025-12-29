@@ -156,30 +156,3 @@ export interface WalletOption {
  * Types originally from PortfolioChart component module
  * Migrated to centralized types for reuse across analytics hooks
  */
-
-/**
- * ==========================================
- * Data Freshness Types
- * ==========================================
- */
-
-/**
- * Data freshness indicator state
- */
-export type DataFreshnessState = "fresh" | "stale" | "very-stale" | "unknown";
-
-/**
- * Data freshness information
- */
-export interface DataFreshnessInfo {
-  /** ISO timestamp of last data update */
-  lastUpdated: string | null;
-  /** Relative time string (e.g., "2 hours ago") */
-  relativeTime: string;
-  /** Freshness state classification */
-  state: DataFreshnessState;
-  /** Hours since last update */
-  hoursSince: number;
-  /** Whether data is current (< 24 hours old) */
-  isCurrent: boolean;
-}

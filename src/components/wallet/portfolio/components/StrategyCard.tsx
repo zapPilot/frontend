@@ -14,7 +14,6 @@ import {
 } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
-import { getStrategyMeta } from "@/lib/domain/strategySelector";
 import type {
   SectionState,
   SentimentData,
@@ -164,11 +163,6 @@ export function StrategyCard({
       : false;
 
   // Extract directional strategy metadata (safely handle missing fields)
-  const strategyDirection =
-    "strategyDirection" in data ? data.strategyDirection : "default";
-  const previousRegime = "previousRegime" in data ? data.previousRegime : null;
-  const regimeDuration = "regimeDuration" in data ? data.regimeDuration : null;
-  const strategyMeta = getStrategyMeta(strategyDirection);
 
   // Determine the active strategy to display
   const activeDirection = determineActiveDirection(
