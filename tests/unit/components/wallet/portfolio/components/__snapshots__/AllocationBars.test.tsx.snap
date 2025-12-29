@@ -3,61 +3,56 @@
 exports[`AllocationBars > Snapshot Tests > matches snapshot for large allocations 1`] = `
 <div>
   <div
-    class="h-full flex gap-1 transition-all duration-500 ease-out"
-    style="width: 70%;"
+    class="h-full"
+    style="width: 40%;"
   >
     <div
-      class="h-full"
-      style="flex: 40 1 0%;"
+      class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+      data-testid="composition-btc"
+      style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
+      whilehover="[object Object]"
     >
       <div
-        class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-        data-testid="composition-btc"
-        style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
-        whilehover="[object Object]"
+        class="absolute inset-0 flex flex-col items-center justify-center"
       >
-        <div
-          class="absolute inset-0 flex flex-col items-center justify-center"
+        <span
+          class="font-bold text-white text-lg"
         >
-          <span
-            class="font-bold text-white text-lg"
-          >
-            BTC
-          </span>
-          <span
-            class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            40.00
-            %
-          </span>
-        </div>
+          BTC
+        </span>
+        <span
+          class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          40.00
+          %
+        </span>
       </div>
     </div>
+  </div>
+  <div
+    class="h-full"
+    style="width: 30%;"
+  >
     <div
-      class="h-full"
-      style="flex: 30 1 0%;"
+      class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+      data-testid="composition-eth"
+      style="background-color: rgba(98, 126, 234, 0.125); border: 1px solid rgba(98, 126, 234, 0.314);"
+      whilehover="[object Object]"
     >
       <div
-        class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-        data-testid="composition-eth"
-        style="background-color: rgba(98, 126, 234, 0.125); border: 1px solid rgba(98, 126, 234, 0.314);"
-        whilehover="[object Object]"
+        class="absolute inset-0 flex flex-col items-center justify-center"
       >
-        <div
-          class="absolute inset-0 flex flex-col items-center justify-center"
+        <span
+          class="font-bold text-white text-lg"
         >
-          <span
-            class="font-bold text-white text-lg"
-          >
-            ETH
-          </span>
-          <span
-            class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            30.00
-            %
-          </span>
-        </div>
+          ETH
+        </span>
+        <span
+          class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          30.00
+          %
+        </span>
       </div>
     </div>
   </div>
@@ -93,50 +88,45 @@ exports[`AllocationBars > Snapshot Tests > matches snapshot for large allocation
 exports[`AllocationBars > Snapshot Tests > matches snapshot for mixed allocations 1`] = `
 <div>
   <div
-    class="h-full flex gap-1 transition-all duration-500 ease-out"
-    style="width: 45%;"
+    class="h-full"
+    style="width: 40%;"
   >
     <div
-      class="h-full"
-      style="flex: 40 1 0%;"
+      class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+      data-testid="composition-btc"
+      style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
+      whilehover="[object Object]"
+    >
+      <div
+        class="absolute inset-0 flex flex-col items-center justify-center"
+      >
+        <span
+          class="font-bold text-white text-lg"
+        >
+          BTC
+        </span>
+        <span
+          class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+        >
+          40.00
+          %
+        </span>
+      </div>
+    </div>
+  </div>
+  <div
+    class="h-full"
+    style="width: 5%;"
+  >
+    <div
+      class="relative h-full w-full"
     >
       <div
         class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-        data-testid="composition-btc"
-        style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
+        data-testid="composition-alt"
+        style="background-color: rgba(139, 92, 246, 0.125); border: 1px solid rgba(139, 92, 246, 0.314);"
         whilehover="[object Object]"
-      >
-        <div
-          class="absolute inset-0 flex flex-col items-center justify-center"
-        >
-          <span
-            class="font-bold text-white text-lg"
-          >
-            BTC
-          </span>
-          <span
-            class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            40.00
-            %
-          </span>
-        </div>
-      </div>
-    </div>
-    <div
-      class="h-full"
-      style="flex: 5 1 0%;"
-    >
-      <div
-        class="relative h-full w-full"
-      >
-        <div
-          class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-          data-testid="composition-alt"
-          style="background-color: rgba(139, 92, 246, 0.125); border: 1px solid rgba(139, 92, 246, 0.314);"
-          whilehover="[object Object]"
-        />
-      </div>
+      />
     </div>
   </div>
   <div
@@ -171,38 +161,33 @@ exports[`AllocationBars > Snapshot Tests > matches snapshot for mixed allocation
 exports[`AllocationBars > Snapshot Tests > matches snapshot for small allocations 1`] = `
 <div>
   <div
-    class="h-full flex gap-1 transition-all duration-500 ease-out"
-    style="width: 8%;"
+    class="h-full"
+    style="width: 5%;"
   >
     <div
-      class="h-full"
-      style="flex: 5 1 0%;"
+      class="relative h-full w-full"
     >
       <div
-        class="relative h-full w-full"
-      >
-        <div
-          class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-          data-testid="composition-btc"
-          style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
-          whilehover="[object Object]"
-        />
-      </div>
+        class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+        data-testid="composition-btc"
+        style="background-color: rgba(247, 147, 26, 0.125); border: 1px solid rgba(247, 147, 26, 0.314);"
+        whilehover="[object Object]"
+      />
     </div>
+  </div>
+  <div
+    class="h-full"
+    style="width: 3%;"
+  >
     <div
-      class="h-full"
-      style="flex: 3 1 0%;"
+      class="relative h-full w-full"
     >
       <div
-        class="relative h-full w-full"
-      >
-        <div
-          class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-          data-testid="composition-eth"
-          style="background-color: rgba(98, 126, 234, 0.125); border: 1px solid rgba(98, 126, 234, 0.314);"
-          whilehover="[object Object]"
-        />
-      </div>
+        class="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+        data-testid="composition-eth"
+        style="background-color: rgba(98, 126, 234, 0.125); border: 1px solid rgba(98, 126, 234, 0.314);"
+        whilehover="[object Object]"
+      />
     </div>
   </div>
   <div

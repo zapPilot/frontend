@@ -73,8 +73,8 @@ export function PortfolioComposition({
   const targetAssets = useMemo(() => {
     if (!target) return [];
 
-    const btcWeight = allocationWeights?.btc_weight ?? 0.6;
-    const ethWeight = allocationWeights?.eth_weight ?? 0.4;
+    const btcWeight = allocationWeights?.btc_weight ?? 0.8;
+    const ethWeight = allocationWeights?.eth_weight ?? 0.2;
 
     return [
       {

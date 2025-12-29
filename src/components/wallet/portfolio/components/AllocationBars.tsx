@@ -167,78 +167,68 @@ function AllocationTooltip({
  * AllocationBars - Reusable visualization component for portfolio allocation
  *
  * Displays crypto and stable asset allocation as interactive animated bars.
- * Used for both real portfolio data and target regime allocations in empty state.
+ * Uses absolute portfolio percentages directly from API.
  *
  * For small allocations (< 8%), text is hidden and shown in a tooltip on hover.
  *
- * @param cryptoAssets - Array of crypto assets with symbols, values, and colors
- * @param cryptoPercentage - Total crypto allocation percentage (0-100)
+ * @param cryptoAssets - Array of crypto assets with symbols, absolute % values, and colors
+ * @param cryptoPercentage - (deprecated, kept for compatibility) Total crypto allocation percentage
  * @param stablePercentage - Total stablecoins allocation percentage (0-100)
  */
 export function AllocationBars({
   cryptoAssets,
-  cryptoPercentage,
   stablePercentage,
 }: AllocationBarsProps) {
   return (
     <>
-      {/* Crypto Section */}
-      {cryptoAssets.length > 0 && (
-        <div
-          className="h-full flex gap-1 transition-all duration-500 ease-out"
-          style={{
-            width: `${cryptoPercentage}%`,
-          }}
-        >
-          {cryptoAssets.map(asset => {
-            const isSmall = asset.value < MIN_PERCENTAGE_FOR_LABEL;
+      {/* Crypto Section - Each asset bar uses its absolute percentage as width */}
+      {cryptoAssets.map(asset => {
+        const isSmall = asset.value < MIN_PERCENTAGE_FOR_LABEL;
 
-            const barContent = (
-              <motion.div
-                key={asset.symbol}
-                data-testid={`composition-${asset.symbol.toLowerCase()}`}
-                className="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-                style={{
-                  backgroundColor: `${asset.color}20`,
-                  border: `1px solid ${asset.color}50`,
-                }}
-                whileHover={{ scale: 1.02, y: -2 }}
-              >
-                {!isSmall && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-bold text-white text-lg">
-                      {asset.symbol}
-                    </span>
-                    <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                      {asset.value.toFixed(2)}%
-                    </span>
-                  </div>
-                )}
-              </motion.div>
-            );
-
-            return (
-              <div
-                key={asset.symbol}
-                className="h-full"
-                style={{ flex: asset.value }}
-              >
-                {isSmall ? (
-                  <AllocationTooltip
-                    label={asset.symbol}
-                    percentage={asset.value}
-                    color={asset.color}
-                  >
-                    {barContent}
-                  </AllocationTooltip>
-                ) : (
-                  barContent
-                )}
+        const barContent = (
+          <motion.div
+            key={asset.symbol}
+            data-testid={`composition-${asset.symbol.toLowerCase()}`}
+            className="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+            style={{
+              backgroundColor: `${asset.color}20`,
+              border: `1px solid ${asset.color}50`,
+            }}
+            whileHover={{ scale: 1.02, y: -2 }}
+          >
+            {!isSmall && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="font-bold text-white text-lg">
+                  {asset.symbol}
+                </span>
+                <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                  {asset.value.toFixed(2)}%
+                </span>
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+          </motion.div>
+        );
+
+        return (
+          <div
+            key={asset.symbol}
+            className="h-full"
+            style={{ width: `${asset.value}%` }}
+          >
+            {isSmall ? (
+              <AllocationTooltip
+                label={asset.symbol}
+                percentage={asset.value}
+                color={asset.color}
+              >
+                {barContent}
+              </AllocationTooltip>
+            ) : (
+              barContent
+            )}
+          </div>
+        );
+      })}
 
       {/* Stable Section - Only show if has value */}
       {stablePercentage > 0 &&

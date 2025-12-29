@@ -436,4 +436,86 @@ describe("AllocationBars", () => {
       expect(container).toMatchSnapshot();
     });
   });
+
+  describe("Absolute Portfolio Percentages", () => {
+    it("uses asset.value directly as width percentage for each bar", () => {
+      // These values represent absolute portfolio percentages from API
+      const absolutePercentAssets: AllocationConstituent[] = [
+        {
+          asset: "bitcoin",
+          symbol: "BTC",
+          name: "Bitcoin",
+          value: 37.25, // 37.25% of total portfolio
+          color: "#F7931A",
+        },
+        {
+          asset: "ethereum",
+          symbol: "ETH",
+          name: "Ethereum",
+          value: 17.07, // 17.07% of total portfolio
+          color: "#627EEA",
+        },
+        {
+          asset: "altcoins",
+          symbol: "ALT",
+          name: "Altcoins",
+          value: 10.06, // 10.06% of total portfolio
+          color: "#8B5CF6",
+        },
+      ];
+
+      render(
+        <AllocationBars
+          cryptoAssets={absolutePercentAssets}
+          cryptoPercentage={64.38} // Sum of crypto assets
+          stablePercentage={35.62}
+        />
+      );
+
+      // Each bar should have width set to its absolute percentage
+      const btcBar = screen.getByTestId("composition-btc").parentElement;
+      const ethBar = screen.getByTestId("composition-eth").parentElement;
+      const altBar = screen.getByTestId("composition-alt").parentElement;
+      const stablesBar = screen.getByTestId(
+        "composition-stables"
+      ).parentElement;
+
+      expect(btcBar).toHaveStyle({ width: "37.25%" });
+      expect(ethBar).toHaveStyle({ width: "17.07%" });
+      expect(altBar).toHaveStyle({ width: "10.06%" });
+      expect(stablesBar).toHaveStyle({ width: "35.62%" });
+    });
+
+    it("displays correct absolute percentage in bar labels", () => {
+      const absolutePercentAssets: AllocationConstituent[] = [
+        {
+          asset: "bitcoin",
+          symbol: "BTC",
+          name: "Bitcoin",
+          value: 37.25,
+          color: "#F7931A",
+        },
+        {
+          asset: "ethereum",
+          symbol: "ETH",
+          name: "Ethereum",
+          value: 17.07,
+          color: "#627EEA",
+        },
+      ];
+
+      render(
+        <AllocationBars
+          cryptoAssets={absolutePercentAssets}
+          cryptoPercentage={54.32}
+          stablePercentage={35.62}
+        />
+      );
+
+      // Percentages shown should match API values
+      expect(screen.getByText("37.25%")).toBeInTheDocument();
+      expect(screen.getByText("17.07%")).toBeInTheDocument();
+      expect(screen.getByText("35.62%")).toBeInTheDocument();
+    });
+  });
 });

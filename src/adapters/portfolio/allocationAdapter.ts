@@ -115,26 +115,27 @@ export function calculateAllocation(
   }
 
   // Create simplified crypto breakdown for composition bar
+  // Using absolute portfolio percentages directly from API
   const simplifiedCrypto: AllocationConstituent[] = [
     {
       symbol: "BTC",
       name: "Bitcoin",
       asset: "BTC",
-      value: btcValue > 0 ? (btcValue / totalCrypto) * 100 : 0,
+      value: allocation.btc.percentage_of_portfolio,
       color: ASSET_COLORS.BTC,
     },
     {
       symbol: "ETH",
       name: "Ethereum",
       asset: "ETH",
-      value: ethValue > 0 ? (ethValue / totalCrypto) * 100 : 0,
+      value: allocation.eth.percentage_of_portfolio,
       color: ASSET_COLORS.ETH,
     },
     {
       symbol: "ALT",
       name: "Altcoins",
       asset: "Others",
-      value: othersValue > 0 ? (othersValue / totalCrypto) * 100 : 0,
+      value: allocation.others.percentage_of_portfolio,
       color: ASSET_COLORS.ALT,
     },
   ].filter(c => c.value > 0);
