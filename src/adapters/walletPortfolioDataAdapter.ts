@@ -11,13 +11,13 @@
  */
 
 import {
-  calculateAllocation,
-  calculateDelta,
-  type PortfolioAllocation,
+    calculateAllocation,
+    calculateDelta,
+    type PortfolioAllocation,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
@@ -25,13 +25,13 @@ import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import {
-  countUniqueChains,
-  countUniqueProtocols,
-  extractROIChanges,
+    countUniqueChains,
+    countUniqueProtocols,
+    extractROIChanges,
 } from "@/lib/portfolio/portfolioUtils";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -75,6 +75,10 @@ interface WalletPortfolioData {
   positions: number;
   protocols: number;
   chains: number;
+
+  // Data freshness
+  /** ISO date string of last data update */
+  lastUpdated: string | null;
 
   // Loading states
   isLoading: boolean;
@@ -150,6 +154,9 @@ export function transformToWalletPortfolioData(
     positions: landingData.pool_details?.length ?? 0,
     protocols: countUniqueProtocols(landingData.pool_details ?? []),
     chains: countUniqueChains(landingData.pool_details ?? []),
+
+    // Data freshness
+    lastUpdated: landingData.last_updated,
 
     // Loading states
     isLoading: false,
@@ -241,6 +248,9 @@ export function createEmptyPortfolioState(
     positions: GHOST_MODE_PREVIEW.positions,
     protocols: GHOST_MODE_PREVIEW.protocols,
     chains: GHOST_MODE_PREVIEW.chains,
+
+    // Data freshness
+    lastUpdated: null,
 
     // States
     isLoading: false,

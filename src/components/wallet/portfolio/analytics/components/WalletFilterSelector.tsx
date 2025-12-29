@@ -6,8 +6,9 @@
  */
 
 import { Check, ChevronDown, Wallet } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
+import { useClickOutside } from "@/hooks/useClickOutside";
 import type { WalletFilter, WalletOption } from "@/types/analytics";
 import { formatAddress } from "@/utils/formatters";
 
@@ -66,33 +67,8 @@ export const WalletFilterSelector = ({
       formatAddress(selectedWallet)
     : "All Wallets";
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isOpen]);
+  // Close dropdown when clicking outside or pressing Escape
+  useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
 
   /**
    * Handle wallet selection

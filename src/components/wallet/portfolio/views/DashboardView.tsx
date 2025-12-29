@@ -1,4 +1,5 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
+import { DataFreshnessIndicator } from "@/components/shared/DataFreshnessIndicator";
 import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCard";
@@ -38,6 +39,13 @@ export function DashboardView({
 }: DashboardViewProps) {
   return (
     <div data-testid="dashboard-content" className={STYLES.container}>
+      {/* Data Freshness Indicator - Top of Dashboard */}
+      {!isEmptyState && data.lastUpdated && (
+        <div className="flex justify-end -mt-4 mb-2">
+          <DataFreshnessIndicator lastUpdated={data.lastUpdated} size="sm" />
+        </div>
+      )}
+
       {/* Hero Section: Balance + Expandable Strategy Card */}
       <div className={STYLES.heroGrid}>
         {/* Balance Card - Ghost Mode bypasses SectionWrapper to show preview data */}

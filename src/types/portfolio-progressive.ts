@@ -18,6 +18,8 @@ export interface BalanceData {
   roi: number;
   roiChange7d: number;
   roiChange30d: number;
+  /** ISO date string of last data update */
+  lastUpdated: string | null;
 }
 
 /**

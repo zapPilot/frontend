@@ -4,13 +4,15 @@
  * Tests for formatting utilities (currency, numbers, addresses, dates).
  */
 
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  calculateDataFreshness,
   formatAddress,
   formatChartDate,
   formatCurrency,
   formatNumber,
+  formatRelativeTime,
   formatters,
 } from "@/utils/formatters";
 
@@ -228,5 +230,154 @@ describe("formatters object", () => {
 
   it("should have number alias", () => {
     expect(formatters.number).toBe(formatNumber);
+  });
+
+  it("should have dataFreshness alias", () => {
+    expect(formatters.dataFreshness).toBe(calculateDataFreshness);
+  });
+
+  it("should have relativeTime alias", () => {
+    expect(formatters.relativeTime).toBe(formatRelativeTime);
+  });
+});
+
+describe("calculateDataFreshness", () => {
+  beforeEach(() => {
+    // Mock current time to 2025-12-29T12:00:00Z for consistent tests
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-12-29T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe("Fresh state (<24h)", () => {
+    it("should classify recent data as fresh", () => {
+      const yesterday = "2025-12-28T12:00:00Z";
+      const result = calculateDataFreshness(yesterday);
+
+      expect(result.state).toBe("fresh");
+      expect(result.isCurrent).toBe(true);
+      expect(result.hoursSince).toBe(24);
+    });
+
+    it("should show relative time for fresh data", () => {
+      const recentTime = "2025-12-29T10:00:00Z";
+      const result = calculateDataFreshness(recentTime);
+
+      expect(result.state).toBe("fresh");
+      expect(result.relativeTime).toContain("ago");
+    });
+  });
+
+  describe("Stale state (24-72h)", () => {
+    it("should classify 2-day-old data as stale", () => {
+      const twoDaysAgo = "2025-12-27T12:00:00Z";
+      const result = calculateDataFreshness(twoDaysAgo);
+
+      expect(result.state).toBe("stale");
+      expect(result.isCurrent).toBe(false);
+      expect(result.hoursSince).toBe(48);
+    });
+
+    it("should classify 3-day-old data as stale", () => {
+      const threeDaysAgo = "2025-12-26T12:00:00Z";
+      const result = calculateDataFreshness(threeDaysAgo);
+
+      expect(result.state).toBe("stale");
+    });
+  });
+
+  describe("Very stale state (>72h)", () => {
+    it("should classify 4-day-old data as very-stale", () => {
+      const fourDaysAgo = "2025-12-25T12:00:00Z";
+      const result = calculateDataFreshness(fourDaysAgo);
+
+      expect(result.state).toBe("very-stale");
+      expect(result.isCurrent).toBe(false);
+      expect(result.hoursSince).toBe(96);
+    });
+
+    it("should classify week-old data as very-stale", () => {
+      const weekAgo = "2025-12-22T12:00:00Z";
+      const result = calculateDataFreshness(weekAgo);
+
+      expect(result.state).toBe("very-stale");
+    });
+  });
+
+  describe("Unknown state", () => {
+    it("should handle null gracefully", () => {
+      const result = calculateDataFreshness(null);
+
+      expect(result.state).toBe("unknown");
+      expect(result.relativeTime).toBe("Unknown");
+      expect(result.hoursSince).toBe(Infinity);
+      expect(result.timestamp).toBe("");
+      expect(result.isCurrent).toBe(false);
+    });
+
+    it("should handle undefined gracefully", () => {
+      const result = calculateDataFreshness(undefined);
+
+      expect(result.state).toBe("unknown");
+      expect(result.relativeTime).toBe("Unknown");
+    });
+
+    it("should handle invalid date format", () => {
+      const result = calculateDataFreshness("invalid-date");
+
+      expect(result.state).toBe("unknown");
+      expect(result.timestamp).toBe("invalid-date");
+    });
+  });
+
+  describe("Edge cases", () => {
+    it("should handle date-only format (YYYY-MM-DD)", () => {
+      const dateOnly = "2025-12-28";
+      const result = calculateDataFreshness(dateOnly);
+
+      // Date-only format should parse successfully (state may vary by timezone)
+      expect(result.state).not.toBe("unknown");
+      expect(result.timestamp).toBe(dateOnly);
+      expect(result.relativeTime).toContain("ago");
+    });
+
+    it("should return correct hoursSince value", () => {
+      const sixHoursAgo = "2025-12-29T06:00:00Z";
+      const result = calculateDataFreshness(sixHoursAgo);
+
+      expect(result.hoursSince).toBe(6);
+      expect(result.state).toBe("fresh");
+    });
+  });
+});
+
+describe("formatRelativeTime", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2025-12-29T12:00:00Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("should format recent time correctly", () => {
+    const result = formatRelativeTime("2025-12-29T10:00:00Z");
+    expect(result).toContain("ago");
+  });
+
+  it("should return 'Unknown' for null", () => {
+    expect(formatRelativeTime(null)).toBe("Unknown");
+  });
+
+  it("should return 'Unknown' for undefined", () => {
+    expect(formatRelativeTime(undefined)).toBe("Unknown");
+  });
+
+  it("should return 'Unknown' for invalid date", () => {
+    expect(formatRelativeTime("invalid")).toBe("Unknown");
   });
 });

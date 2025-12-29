@@ -6,6 +6,7 @@
 
 import { AlertCircle, Download, Loader2, TrendingUp } from "lucide-react";
 
+import { DataFreshnessIndicator } from "@/components/shared/DataFreshnessIndicator";
 import type { WalletFilter, WalletOption } from "@/types/analytics";
 
 import { WalletFilterSelector } from "./WalletFilterSelector";
@@ -25,6 +26,8 @@ export interface AnalyticsHeaderProps {
   onWalletChange: (wallet: WalletFilter) => void;
   /** Whether to show wallet selector (hide for single-wallet users) */
   showWalletSelector: boolean;
+  /** ISO date string of last data update */
+  lastUpdated?: string | null;
 }
 
 /**
@@ -40,14 +43,21 @@ export const AnalyticsHeader = ({
   availableWallets,
   onWalletChange,
   showWalletSelector,
+  lastUpdated,
 }: AnalyticsHeaderProps) => (
   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
     {/* Title section */}
     <div>
-      <h2 className="text-xl font-bold text-white flex items-center gap-2">
-        <TrendingUp className="w-5 h-5 text-purple-400" />
-        Flight Recorder
-      </h2>
+      <div className="flex items-center gap-3">
+        <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-purple-400" />
+          Flight Recorder
+        </h2>
+        {/* Data Freshness Indicator */}
+        {lastUpdated && (
+          <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
+        )}
+      </div>
       <p className="text-sm text-gray-400">
         Performance analysis and historical regime data
       </p>

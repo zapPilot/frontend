@@ -56,6 +56,7 @@ function extractBalanceData(landing: LandingPageResponse): BalanceData {
     roi: landing.portfolio_roi?.recommended_yearly_roi ?? 0,
     roiChange7d: roiChanges.change7d,
     roiChange30d: roiChanges.change30d,
+    lastUpdated: landing.last_updated,
   };
 }
 
