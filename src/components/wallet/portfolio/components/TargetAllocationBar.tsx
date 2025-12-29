@@ -1,3 +1,4 @@
+import { getBarStyle } from "@/constants/assets";
 import { AllocationLegend } from "./AllocationLegend";
 
 /**
@@ -23,7 +24,7 @@ interface TargetAllocationBarProps {
 
 const STYLES = {
   container: "flex flex-col gap-1",
-  bar: "h-2 w-full rounded-full flex overflow-hidden opacity-40",
+  bar: "h-2 w-full rounded-full flex overflow-hidden",
   segment: "h-full cursor-pointer transition-opacity hover:opacity-80",
 } as const;
 
@@ -39,9 +40,10 @@ function LegendVariant({ assets }: { assets: TargetAsset[] }) {
           <div
             key={asset.symbol}
             data-testid={`target-${asset.symbol.toLowerCase()}`}
+            className="h-full"
             style={{
               width: `${asset.percentage}%`,
-              backgroundColor: asset.color,
+              ...getBarStyle(asset.color),
             }}
           />
         ))}

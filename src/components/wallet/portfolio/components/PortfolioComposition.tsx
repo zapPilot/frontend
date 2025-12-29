@@ -2,7 +2,6 @@ import { Zap } from "lucide-react";
 import { useMemo } from "react";
 
 import {
-  ASSET_COLORS,
   type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
@@ -15,10 +14,10 @@ import { useAllocationWeights } from "@/hooks/queries/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
 import { AllocationBars } from "./AllocationBars";
-import { AllocationLegend } from "./AllocationLegend";
 import { TargetAllocationBar } from "./TargetAllocationBar";
 import {
   buildRealCryptoAssets,
+  buildTargetAssetsWithWeights,
   buildTargetCryptoAssets,
 } from "./utils/portfolioCompositionHelpers";
 
@@ -42,7 +41,6 @@ const STYLES = {
   barTrack:
     "relative w-full bg-gray-900/50 rounded-xl border border-gray-800 p-3 flex flex-col gap-1 overflow-hidden",
   barLabel: "text-[10px] text-gray-500 font-medium mb-1",
-  actualBarsContainer: "h-20 w-full flex gap-1",
 } as const;
 
 export function PortfolioComposition({
@@ -72,27 +70,7 @@ export function PortfolioComposition({
   // Build target assets array with marketcap-weighted BTC/ETH split
   const targetAssets = useMemo(() => {
     if (!target) return [];
-
-    const btcWeight = allocationWeights?.btc_weight ?? 0.8;
-    const ethWeight = allocationWeights?.eth_weight ?? 0.2;
-
-    return [
-      {
-        symbol: "BTC",
-        percentage: target.crypto * btcWeight,
-        color: ASSET_COLORS.BTC,
-      },
-      {
-        symbol: "ETH",
-        percentage: target.crypto * ethWeight,
-        color: ASSET_COLORS.ETH,
-      },
-      {
-        symbol: "Stables",
-        percentage: target.stable,
-        color: ASSET_COLORS.USDT,
-      },
-    ];
+    return buildTargetAssetsWithWeights(target, allocationWeights);
   }, [target, allocationWeights]);
 
   // Early return for loading state
@@ -121,23 +99,7 @@ export function PortfolioComposition({
     ? target.stable
     : data.currentAllocation.stable;
 
-  const legendItems = useMemo(() => {
-    const items = cryptoAssets.map(asset => ({
-      symbol: asset.symbol,
-      percentage: asset.value,
-      color: asset.color,
-    }));
 
-    if (stablePercentage > 0) {
-      items.push({
-        symbol: "Stables",
-        percentage: stablePercentage,
-        color: ASSET_COLORS.USDT,
-      });
-    }
-
-    return items;
-  }, [cryptoAssets, stablePercentage]);
 
   return (
     <div className={STYLES.container} data-testid="composition-bar">
@@ -179,17 +141,12 @@ export function PortfolioComposition({
 
         {/* ACTUAL BARS */}
         <div className={STYLES.barLabel}>Current Portfolio</div>
-        <div className={STYLES.actualBarsContainer}>
-          <AllocationBars
-            cryptoAssets={cryptoAssets}
-            cryptoPercentage={cryptoPercentage}
-            stablePercentage={stablePercentage}
-          />
-        </div>
+        <AllocationBars
+          cryptoAssets={cryptoAssets}
+          cryptoPercentage={cryptoPercentage}
+          stablePercentage={stablePercentage}
+        />
       </div>
-
-      {/* Legend - Conditional rendering for empty state */}
-      <AllocationLegend items={legendItems} className="mt-4 px-1" />
     </div>
   );
 }

@@ -1,10 +1,10 @@
 import {
-  ASSET_COLORS,
-  type WalletPortfolioDataWithDirection,
+    ASSET_COLORS,
+    type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
 import {
-  getRegimeAllocation,
-  type Regime,
+    getRegimeAllocation,
+    type Regime,
 } from "@/components/wallet/regime/regimeData";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
@@ -56,4 +56,44 @@ export function buildRealCryptoAssets(
   data: WalletPortfolioDataWithDirection
 ): AllocationConstituent[] {
   return data.currentAllocation.simplifiedCrypto;
+}
+
+interface TargetAllocation {
+  crypto: number;
+  stable: number;
+}
+
+interface AllocationWeights {
+  btc_weight: number;
+  eth_weight: number;
+}
+
+/**
+ * Build target assets array with marketcap-weighted BTC/ETH split
+ * Used for the "Target Allocation" bar
+ */
+export function buildTargetAssetsWithWeights(
+  target: TargetAllocation,
+  weights: AllocationWeights | undefined
+): { symbol: string; percentage: number; color: string }[] {
+  const btcWeight = weights?.btc_weight ?? 0.8;
+  const ethWeight = weights?.eth_weight ?? 0.2;
+
+  return [
+    {
+      symbol: "BTC",
+      percentage: target.crypto * btcWeight,
+      color: ASSET_COLORS.BTC,
+    },
+    {
+      symbol: "ETH",
+      percentage: target.crypto * ethWeight,
+      color: ASSET_COLORS.ETH,
+    },
+    {
+      symbol: "Stables",
+      percentage: target.stable,
+      color: ASSET_COLORS.USDT,
+    },
+  ];
 }

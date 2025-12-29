@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+import { ASSET_COLORS, getBarStyle } from "@/constants/assets";
+import { AllocationLegend } from "./AllocationLegend";
 
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
@@ -175,101 +178,140 @@ function AllocationTooltip({
  * @param cryptoPercentage - (deprecated, kept for compatibility) Total crypto allocation percentage
  * @param stablePercentage - Total stablecoins allocation percentage (0-100)
  */
+// ... imports
+
+/* ... existing Tooltip code ... */
+
+const STYLES = {
+  container: "flex flex-col gap-1",
+  barsContainer: "h-20 w-full flex gap-1",
+} as const;
+
+/**
+ * AllocationBars - Reusable visualization component for portfolio allocation
+ * ...
+ */
 export function AllocationBars({
   cryptoAssets,
   stablePercentage,
 }: AllocationBarsProps) {
+  const legendItems = useMemo(() => {
+    const items = cryptoAssets.map(asset => ({
+      symbol: asset.symbol,
+      percentage: asset.value,
+      color: asset.color,
+    }));
+
+    if (stablePercentage > 0) {
+      items.push({
+        symbol: "Stables",
+        percentage: stablePercentage,
+        color: ASSET_COLORS.USDT,
+      });
+    }
+
+    return items;
+  }, [cryptoAssets, stablePercentage]);
+
   return (
-    <>
-      {/* Crypto Section - Each asset bar uses its absolute percentage as width */}
-      {cryptoAssets.map(asset => {
-        const isSmall = asset.value < MIN_PERCENTAGE_FOR_LABEL;
+    <div className={STYLES.container} data-testid="allocation-bars-container">
+      <div className={STYLES.barsContainer}>
+        {/* Crypto Section - Each asset bar uses its absolute percentage as width */}
+        {cryptoAssets.map(asset => {
+          const isSmall = asset.value < MIN_PERCENTAGE_FOR_LABEL;
 
-        const barContent = (
-          <motion.div
-            key={asset.symbol}
-            data-testid={`composition-${asset.symbol.toLowerCase()}`}
-            className="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
-            style={{
-              backgroundColor: `${asset.color}20`,
-              border: `1px solid ${asset.color}50`,
-            }}
-            whileHover={{ scale: 1.02, y: -2 }}
-          >
-            {!isSmall && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="font-bold text-white text-lg">
-                  {asset.symbol}
-                </span>
-                <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                  {asset.value.toFixed(2)}%
-                </span>
-              </div>
-            )}
-          </motion.div>
-        );
-
-        return (
-          <div
-            key={asset.symbol}
-            className="h-full"
-            style={{ width: `${asset.value}%` }}
-          >
-            {isSmall ? (
-              <AllocationTooltip
-                label={asset.symbol}
-                percentage={asset.value}
-                color={asset.color}
-              >
-                {barContent}
-              </AllocationTooltip>
-            ) : (
-              barContent
-            )}
-          </div>
-        );
-      })}
-
-      {/* Stable Section - Only show if has value */}
-      {stablePercentage > 0 &&
-        (() => {
-          const isSmall = stablePercentage < MIN_PERCENTAGE_FOR_LABEL;
-
-          const stableBarContent = (
+          const barContent = (
             <motion.div
-              data-testid="composition-stables"
-              className="h-full w-full rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center relative group cursor-pointer"
+              key={asset.symbol}
+              data-testid={`composition-${asset.symbol.toLowerCase()}`}
+              className="h-full w-full rounded-lg relative group overflow-hidden cursor-pointer"
+              style={getBarStyle(asset.color)}
               whileHover={{ scale: 1.02, y: -2 }}
             >
               {!isSmall && (
-                <div className="text-center">
-                  <span className="font-bold text-emerald-400 text-lg">
-                    STABLES
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="font-bold text-white text-lg">
+                    {asset.symbol}
                   </span>
-                  <div className="text-xs text-emerald-500/60 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
-                    {stablePercentage.toFixed(2)}%
-                  </div>
+                  <span className="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity">
+                    {asset.value.toFixed(2)}%
+                  </span>
                 </div>
               )}
             </motion.div>
           );
 
           return (
-            <div className="h-full" style={{ width: `${stablePercentage}%` }}>
+            <div
+              key={asset.symbol}
+              className="h-full"
+              style={{ width: `${asset.value}%` }}
+            >
               {isSmall ? (
                 <AllocationTooltip
-                  label="STABLES"
-                  percentage={stablePercentage}
-                  color="#10b981"
+                  label={asset.symbol}
+                  percentage={asset.value}
+                  color={asset.color}
                 >
-                  {stableBarContent}
+                  {barContent}
                 </AllocationTooltip>
               ) : (
-                stableBarContent
+                barContent
               )}
             </div>
           );
-        })()}
-    </>
+        })}
+
+        {/* Stable Section - Only show if has value */}
+        {stablePercentage > 0 &&
+          (() => {
+            const isSmall = stablePercentage < MIN_PERCENTAGE_FOR_LABEL;
+            const stableColor = ASSET_COLORS.USDT;
+
+            const stableBarContent = (
+              <motion.div
+                data-testid="composition-stables"
+                className="h-full w-full rounded-lg flex items-center justify-center relative group cursor-pointer"
+                style={getBarStyle(stableColor)}
+                whileHover={{ scale: 1.02, y: -2 }}
+              >
+                {!isSmall && (
+                  <div className="text-center">
+                    <span
+                      className="font-bold text-lg"
+                      style={{ color: stableColor }}
+                    >
+                      STABLES
+                    </span>
+                    <div
+                      className="text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{ color: `${stableColor}99` }}
+                    >
+                      {stablePercentage.toFixed(2)}%
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            );
+
+            return (
+              <div className="h-full" style={{ width: `${stablePercentage}%` }}>
+                {isSmall ? (
+                  <AllocationTooltip
+                    label="STABLES"
+                    percentage={stablePercentage}
+                    color={stableColor}
+                  >
+                    {stableBarContent}
+                  </AllocationTooltip>
+                ) : (
+                  stableBarContent
+                )}
+              </div>
+            );
+          })()}
+      </div>
+      <AllocationLegend items={legendItems} />
+    </div>
   );
 }
