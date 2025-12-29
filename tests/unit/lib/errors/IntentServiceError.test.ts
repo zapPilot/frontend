@@ -7,8 +7,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    createIntentServiceError,
-    IntentServiceError,
+  createIntentServiceError,
+  IntentServiceError,
 } from "@/lib/errors/IntentServiceError";
 
 describe("IntentServiceError", () => {
@@ -22,12 +22,9 @@ describe("IntentServiceError", () => {
     });
 
     it("should create error with code and details", () => {
-      const error = new IntentServiceError(
-        "Test",
-        500,
-        "INTENT_FAILED",
-        { txHash: "0x123" }
-      );
+      const error = new IntentServiceError("Test", 500, "INTENT_FAILED", {
+        txHash: "0x123",
+      });
       expect(error.code).toBe("INTENT_FAILED");
       expect(error.details).toEqual({ txHash: "0x123" });
     });

@@ -4,7 +4,13 @@
  * Tests for the toast notification context and hook
  */
 
-import { act, render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 

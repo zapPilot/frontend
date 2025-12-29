@@ -11,13 +11,13 @@
  */
 
 import {
-    calculateAllocation,
-    calculateDelta,
-    type PortfolioAllocation,
+  calculateAllocation,
+  calculateDelta,
+  type PortfolioAllocation,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-    getRegimeStrategyInfo,
-    getTargetAllocation,
+  getRegimeStrategyInfo,
+  getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
@@ -25,13 +25,13 @@ import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import {
-    countUniqueChains,
-    countUniqueProtocols,
-    extractROIChanges,
+  countUniqueChains,
+  countUniqueProtocols,
+  extractROIChanges,
 } from "@/lib/portfolio/portfolioUtils";
 import type {
-    DirectionType,
-    DurationInfo,
+  DirectionType,
+  DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";

@@ -50,7 +50,10 @@ describe("httpUtils service clients", () => {
       await httpUtils.analyticsEngine.get("/test", config);
       expect(mockHttpGet).toHaveBeenCalledWith(
         "/test",
-        expect.objectContaining({ baseURL: expect.any(String), headers: { "X-Custom": "value" } }),
+        expect.objectContaining({
+          baseURL: expect.any(String),
+          headers: { "X-Custom": "value" },
+        }),
         undefined
       );
     });
@@ -194,7 +197,12 @@ describe("httpUtils service clients", () => {
 
     it("should pass transformer to patch", async () => {
       const transformer = (data: unknown) => ({ transformed: data });
-      await httpUtils.analyticsEngine.patch("/test", {}, undefined, transformer);
+      await httpUtils.analyticsEngine.patch(
+        "/test",
+        {},
+        undefined,
+        transformer
+      );
       expect(mockHttpPatch).toHaveBeenCalledWith(
         "/test",
         {},

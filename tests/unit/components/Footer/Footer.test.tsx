@@ -30,7 +30,7 @@ describe("Footer", () => {
 
   it("should render social links", () => {
     render(<Footer />);
-    
+
     // Check for X (Twitter) link
     expect(screen.getAllByLabelText(/Visit our X/)).toHaveLength(2); // Mobile + Desktop
   });
@@ -38,9 +38,11 @@ describe("Footer", () => {
   it("should render copyright with current year", () => {
     render(<Footer />);
     const currentYear = new Date().getFullYear();
-    
+
     // Should appear twice (mobile + desktop layout)
-    const copyrightElements = screen.getAllByText(new RegExp(`© ${currentYear} Zap Pilot`));
+    const copyrightElements = screen.getAllByText(
+      new RegExp(`© ${currentYear} Zap Pilot`)
+    );
     expect(copyrightElements.length).toBeGreaterThan(0);
   });
 
@@ -67,7 +69,7 @@ describe("Footer", () => {
     it("should have correct link targets", () => {
       render(<Footer />);
       const links = screen.getAllByRole("link");
-      
+
       for (const link of links) {
         expect(link).toHaveAttribute("target", "_blank");
         expect(link).toHaveAttribute("rel", "noopener noreferrer");
@@ -76,8 +78,10 @@ describe("Footer", () => {
 
     it("should have all expected social platforms", () => {
       render(<Footer />);
-      
-      expect(screen.getAllByLabelText(/Visit our X \(Twitter\)/)).toHaveLength(2);
+
+      expect(screen.getAllByLabelText(/Visit our X \(Twitter\)/)).toHaveLength(
+        2
+      );
       expect(screen.getAllByLabelText(/Visit our GitHub/)).toHaveLength(2);
       expect(screen.getAllByLabelText(/Visit our Discord/)).toHaveLength(2);
       expect(screen.getAllByLabelText(/Visit our Farcaster/)).toHaveLength(2);
@@ -88,11 +92,13 @@ describe("Footer", () => {
   describe("Responsive Layout", () => {
     it("should have mobile and desktop layouts", () => {
       const { container } = render(<Footer />);
-      
+
       // Mobile layout (visible on small screens)
-      const mobileLayout = container.querySelector(".flex.flex-col.items-center.gap-4.md\\:hidden");
+      const mobileLayout = container.querySelector(
+        ".flex.flex-col.items-center.gap-4.md\\:hidden"
+      );
       expect(mobileLayout).toBeInTheDocument();
-      
+
       // Desktop layout (hidden on small, visible on md+)
       const desktopLayout = container.querySelector(".hidden.md\\:flex");
       expect(desktopLayout).toBeInTheDocument();

@@ -7,10 +7,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-    computeIsDifferentUser,
-    computeRedirectUrl,
-    computeShowEmailBanner,
-    computeShowQuickSwitch,
+  computeIsDifferentUser,
+  computeRedirectUrl,
+  computeShowEmailBanner,
+  computeShowQuickSwitch,
 } from "@/hooks/useBundlePage";
 
 describe("computeIsDifferentUser", () => {
@@ -59,7 +59,9 @@ describe("computeShowEmailBanner", () => {
   });
 
   it("should return false when email is already set", () => {
-    expect(computeShowEmailBanner(true, true, "test@example.com", false)).toBe(false);
+    expect(computeShowEmailBanner(true, true, "test@example.com", false)).toBe(
+      false
+    );
   });
 
   it("should return false when banner is dismissed", () => {
@@ -89,6 +91,8 @@ describe("computeRedirectUrl", () => {
   });
 
   it("should handle multiple query params", () => {
-    expect(computeRedirectUrl("?tab=analytics&view=chart")).toBe("/?tab=analytics&view=chart");
+    expect(computeRedirectUrl("?tab=analytics&view=chart")).toBe(
+      "/?tab=analytics&view=chart"
+    );
   });
 });

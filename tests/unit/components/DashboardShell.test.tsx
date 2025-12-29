@@ -35,7 +35,13 @@ vi.mock("@/adapters/walletPortfolioDataAdapter", () => ({
 }));
 
 vi.mock("@/components/wallet/portfolio/views/LoadingStates", () => ({
-  WalletPortfolioErrorState: ({ error, onRetry }: { error: Error; onRetry: () => void }) => (
+  WalletPortfolioErrorState: ({
+    error,
+    onRetry,
+  }: {
+    error: Error;
+    onRetry: () => void;
+  }) => (
     <div data-testid="error-state">
       <span>{error.message}</span>
       <button onClick={onRetry}>Retry</button>
@@ -59,10 +65,17 @@ vi.mock("@/components/wallet/portfolio/WalletPortfolioPresenter", () => ({
     headerBanners?: React.ReactNode;
     footerOverlays?: React.ReactNode;
   }) => (
-    <div data-testid="portfolio-presenter" data-user-id={userId} data-loading={isLoading} data-empty={isEmptyState}>
+    <div
+      data-testid="portfolio-presenter"
+      data-user-id={userId}
+      data-loading={isLoading}
+      data-empty={isEmptyState}
+    >
       {headerBanners && <div data-testid="header-banners">{headerBanners}</div>}
       <div data-testid="portfolio-content">Portfolio Content</div>
-      {footerOverlays && <div data-testid="footer-overlays">{footerOverlays}</div>}
+      {footerOverlays && (
+        <div data-testid="footer-overlays">{footerOverlays}</div>
+      )}
     </div>
   ),
 }));
@@ -90,21 +103,21 @@ describe("DashboardShell", () => {
 
   it("should render portfolio presenter with data", () => {
     render(<DashboardShell {...defaultProps} />);
-    
+
     expect(screen.getByTestId("portfolio-presenter")).toBeInTheDocument();
     expect(screen.getByTestId("portfolio-content")).toBeInTheDocument();
   });
 
   it("should pass userId to presenter", () => {
     render(<DashboardShell {...defaultProps} />);
-    
+
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-user-id", "user-123");
   });
 
   it("should set data attributes on container", () => {
     const { container } = render(<DashboardShell {...defaultProps} />);
-    
+
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveAttribute("data-bundle-user-id", "user-123");
     expect(wrapper).toHaveAttribute("data-bundle-owner", "own");
@@ -114,8 +127,10 @@ describe("DashboardShell", () => {
 
   it("should set visitor mode when not own bundle", () => {
     render(<DashboardShell {...defaultProps} isOwnBundle={false} />);
-    
-    const { container } = render(<DashboardShell {...defaultProps} isOwnBundle={false} />);
+
+    const { container } = render(
+      <DashboardShell {...defaultProps} isOwnBundle={false} />
+    );
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveAttribute("data-bundle-owner", "visitor");
   });
@@ -130,7 +145,7 @@ describe("DashboardShell", () => {
     });
 
     render(<DashboardShell {...defaultProps} />);
-    
+
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-loading", "true");
   });
@@ -146,7 +161,7 @@ describe("DashboardShell", () => {
     });
 
     render(<DashboardShell {...defaultProps} />);
-    
+
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.getByText("Failed to load portfolio")).toBeInTheDocument();
   });
@@ -161,31 +176,31 @@ describe("DashboardShell", () => {
     });
 
     render(<DashboardShell {...defaultProps} />);
-    
+
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-empty", "true");
   });
 
   it("should render header banners when provided", () => {
     render(
-      <DashboardShell 
-        {...defaultProps} 
+      <DashboardShell
+        {...defaultProps}
         headerBanners={<div>Header Banner Content</div>}
       />
     );
-    
+
     expect(screen.getByTestId("header-banners")).toBeInTheDocument();
     expect(screen.getByText("Header Banner Content")).toBeInTheDocument();
   });
 
   it("should render footer overlays when provided", () => {
     render(
-      <DashboardShell 
-        {...defaultProps} 
+      <DashboardShell
+        {...defaultProps}
         footerOverlays={<div>Footer Overlay Content</div>}
       />
     );
-    
+
     expect(screen.getByTestId("footer-overlays")).toBeInTheDocument();
     expect(screen.getByText("Footer Overlay Content")).toBeInTheDocument();
   });
@@ -194,7 +209,7 @@ describe("DashboardShell", () => {
     const { container } = render(
       <DashboardShell urlUserId="user-456" isOwnBundle={false} />
     );
-    
+
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveAttribute("data-bundle-user-name", "");
     expect(wrapper).toHaveAttribute("data-bundle-url", "");

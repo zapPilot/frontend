@@ -6,7 +6,10 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { getRegimeStrategyInfo, getTargetAllocation } from "@/adapters/portfolio/regimeAdapter";
+import {
+  getRegimeStrategyInfo,
+  getTargetAllocation,
+} from "@/adapters/portfolio/regimeAdapter";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 
 // Mock dependencies
@@ -18,7 +21,10 @@ vi.mock("@/components/wallet/regime/regimeData", () => ({
     { id: "quad4", name: "Quad 4" },
   ],
   getRegimeAllocation: vi.fn((regime: { id: string }) => {
-    const allocations: Record<string, { spot: number; lp: number; stable: number }> = {
+    const allocations: Record<
+      string,
+      { spot: number; lp: number; stable: number }
+    > = {
       quad1: { spot: 60, lp: 10, stable: 30 },
       quad2: { spot: 40, lp: 10, stable: 50 },
       quad3: { spot: 20, lp: 10, stable: 70 },
