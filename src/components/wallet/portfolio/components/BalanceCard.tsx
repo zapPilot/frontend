@@ -3,6 +3,7 @@ import { ArrowDownCircle, ArrowUpCircle, ArrowUpRight } from "lucide-react";
 import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../views/DashboardSkeleton";
+import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
 
 /** BalanceCard styling constants */
 const STYLES = {
@@ -35,6 +36,7 @@ interface BalanceCardProps {
   isEmptyState?: boolean;
   isLoading?: boolean;
   onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
+  lastUpdated?: string | null;
 }
 
 export function BalanceCard({
@@ -43,6 +45,7 @@ export function BalanceCard({
   isEmptyState = false,
   isLoading = false,
   onOpenModal,
+  lastUpdated,
 }: BalanceCardProps) {
   if (isLoading) {
     return <BalanceCardSkeleton />;
@@ -50,7 +53,12 @@ export function BalanceCard({
 
   return (
     <div className={STYLES.card}>
-      <div className={STYLES.label}>Net Worth</div>
+      <div className="flex items-center justify-between mb-2">
+        <div className={STYLES.label}>Net Worth</div>
+        {!isEmptyState && lastUpdated && (
+          <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
+        )}
+      </div>
       <div className="flex items-center gap-3 mb-6">
         <div className="flex-1">
           <div

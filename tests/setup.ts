@@ -167,6 +167,20 @@ Object.defineProperty(window, "scrollTo", {
 HTMLElement.prototype.setPointerCapture = vi.fn();
 HTMLElement.prototype.releasePointerCapture = vi.fn();
 
+// Mock getBoundingClientRect to return valid values in test environment
+// Fixes: TypeError: Cannot read properties of undefined (reading 'bottom')
+Element.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
+  top: 100,
+  left: 100,
+  bottom: 200,
+  right: 200,
+  width: 100,
+  height: 100,
+  x: 100,
+  y: 100,
+  toJSON: () => ({}),
+});
+
 interface DynamicOverride {
   matcher: string | RegExp;
   renderer: (props: any) => React.ReactElement | null;

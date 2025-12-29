@@ -199,6 +199,34 @@ describe("useAnalyticsData", () => {
           rolling_days: 30,
         },
         expect.objectContaining({
+          staleTime: 12 * 60 * 60 * 1000,
+          refetchOnMount: false,
+        })
+      );
+    });
+
+    it("should pass wallet filter to usePortfolioDashboard", () => {
+      renderHook(
+        () =>
+          useAnalyticsData(
+            "user-123",
+            defaultTimePeriod,
+            "0x1234567890abcdef1234567890abcdef12345678"
+          ),
+        {
+          wrapper: createWrapper(),
+        }
+      );
+
+      expect(mockUsePortfolioDashboard).toHaveBeenCalledWith(
+        "user-123",
+        {
+          trend_days: 30,
+          drawdown_days: 30,
+          rolling_days: 30,
+          wallet_address: "0x1234567890abcdef1234567890abcdef12345678",
+        },
+        expect.objectContaining({
           staleTime: 2 * 60 * 1000,
           refetchOnMount: false,
         })
@@ -304,7 +332,7 @@ describe("useAnalyticsData", () => {
         "user-123",
         expect.any(Object),
         expect.objectContaining({
-          staleTime: 2 * 60 * 1000,
+          staleTime: 12 * 60 * 60 * 1000,
           refetchOnMount: false,
         })
       );
@@ -329,7 +357,41 @@ describe("useAnalyticsData", () => {
 
       // Monthly PnL query should be enabled since dashboard has data
       await waitFor(() =>
-        expect(mockGetDailyYieldReturns).toHaveBeenCalledWith("user-123", 30)
+        expect(mockGetDailyYieldReturns).toHaveBeenCalledWith(
+          "user-123",
+          30,
+          undefined
+        )
+      );
+    });
+
+    it("should include wallet filter when fetching monthly PnL", async () => {
+      mockUsePortfolioDashboard.mockReturnValue({
+        data: mockDashboardData,
+        isLoading: false,
+        isFetching: false,
+        isSuccess: true,
+        isError: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      renderHook(
+        () =>
+          useAnalyticsData(
+            "user-123",
+            defaultTimePeriod,
+            "0x1234567890abcdef1234567890abcdef12345678"
+          ),
+        { wrapper: createWrapper() }
+      );
+
+      await waitFor(() =>
+        expect(mockGetDailyYieldReturns).toHaveBeenCalledWith(
+          "user-123",
+          30,
+          "0x1234567890abcdef1234567890abcdef12345678"
+        )
       );
     });
 

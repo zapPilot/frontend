@@ -7,7 +7,15 @@
  * @module utils/formatters
  */
 
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import utc from "dayjs/plugin/utc";
+
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
+
+// Initialize dayjs plugins
+dayjs.extend(relativeTime);
+dayjs.extend(utc);
 
 // =============================================================================
 // TYPES AND INTERFACES
@@ -231,6 +239,123 @@ export function formatChartDate(date: string | Date): string {
 }
 
 // =============================================================================
+// DATA FRESHNESS FORMATTING
+// =============================================================================
+
+/**
+ * Data freshness state classification
+ */
+export type FreshnessState = "fresh" | "stale" | "very-stale" | "unknown";
+
+/**
+ * Data freshness information
+ */
+export interface DataFreshness {
+  /** Relative time string (e.g., "2 hours ago") */
+  relativeTime: string;
+  /** Freshness state for UI styling */
+  state: FreshnessState;
+  /** Hours since last update */
+  hoursSince: number;
+  /** ISO timestamp of last update */
+  timestamp: string;
+  /** Whether data is current (< 24h) */
+  isCurrent: boolean;
+}
+
+/**
+ * Calculate data freshness from last_updated timestamp
+ *
+ * @param lastUpdated - ISO date string from API (YYYY-MM-DD format)
+ * @returns Data freshness information
+ *
+ * @example
+ * calculateDataFreshness('2025-12-28') // { relativeTime: '1 day ago', state: 'stale', ... }
+ */
+export function calculateDataFreshness(
+  lastUpdated: string | null | undefined
+): DataFreshness {
+  if (!lastUpdated) {
+    return {
+      relativeTime: "Unknown",
+      state: "unknown",
+      hoursSince: Infinity,
+      timestamp: "",
+      isCurrent: false,
+    };
+  }
+
+  try {
+    // Parse as UTC date
+    const updateTime = dayjs.utc(lastUpdated);
+    const now = dayjs.utc();
+
+    // Validate date
+    if (!updateTime.isValid()) {
+      return {
+        relativeTime: "Unknown",
+        state: "unknown",
+        hoursSince: Infinity,
+        timestamp: lastUpdated,
+        isCurrent: false,
+      };
+    }
+
+    const hoursSince = now.diff(updateTime, "hour", true);
+    const relativeTime = updateTime.fromNow(); // "2 hours ago"
+
+    // Determine freshness state (inclusive boundaries)
+    let state: FreshnessState;
+    if (hoursSince <= 24) {
+      state = "fresh"; // Purple-blue gradient (≤24h)
+    } else if (hoursSince <= 72) {
+      state = "stale"; // Amber warning (24-72h)
+    } else {
+      state = "very-stale"; // Red alert (>72h)
+    }
+
+    return {
+      relativeTime,
+      state,
+      hoursSince,
+      timestamp: lastUpdated,
+      isCurrent: hoursSince <= 24,
+    };
+  } catch (error) {
+    console.error("Error calculating data freshness:", error);
+    return {
+      relativeTime: "Unknown",
+      state: "unknown",
+      hoursSince: Infinity,
+      timestamp: lastUpdated,
+      isCurrent: false,
+    };
+  }
+}
+
+/**
+ * Format relative time with custom precision
+ *
+ * @example
+ * formatRelativeTime('2025-12-29T10:00:00Z') // "2 hours ago"
+ */
+export function formatRelativeTime(
+  dateString: string | null | undefined
+): string {
+  if (!dateString) return "Unknown";
+
+  try {
+    const date = dayjs.utc(dateString);
+    if (!date.isValid()) {
+      return "Unknown";
+    }
+    return date.fromNow();
+  } catch {
+    return "Unknown";
+  }
+}
+
+// =============================================================================
 // FORMATTERS OBJECT - UNIFIED API
 // =============================================================================
 
@@ -262,4 +387,10 @@ export const formatters = {
 
   /** Format numbers with locale */
   number: formatNumber,
+
+  /** Calculate data freshness */
+  dataFreshness: calculateDataFreshness,
+
+  /** Format relative time */
+  relativeTime: formatRelativeTime,
 } as const;

@@ -159,6 +159,28 @@ describe("usePortfolioDashboard", () => {
       );
     });
 
+    it("should pass wallet_address parameter", async () => {
+      mockGetPortfolioDashboard.mockResolvedValue({
+        _metadata: { timestamp: "", error_count: 0, errors: [] },
+      });
+
+      const params = {
+        trend_days: 30,
+        wallet_address: "0x1234567890abcdef1234567890abcdef12345678",
+      };
+
+      renderHook(() => usePortfolioDashboard("user-123", params), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() =>
+        expect(mockGetPortfolioDashboard).toHaveBeenCalledWith(
+          "user-123",
+          params
+        )
+      );
+    });
+
     it("should use empty object when no params provided", async () => {
       mockGetPortfolioDashboard.mockResolvedValue({
         _metadata: { timestamp: "", error_count: 0, errors: [] },
@@ -248,6 +270,48 @@ describe("usePortfolioDashboard", () => {
       await waitFor(() =>
         expect(mockGetPortfolioDashboard).toHaveBeenCalledWith("user-123", {
           trend_days: 90,
+        })
+      );
+
+      expect(mockGetPortfolioDashboard).toHaveBeenCalledTimes(2);
+    });
+
+    it("should create different cache entries for different wallet addresses", async () => {
+      mockGetPortfolioDashboard.mockResolvedValue({
+        _metadata: { timestamp: "", error_count: 0, errors: [] },
+      });
+
+      const wrapper = createWrapper();
+
+      renderHook(
+        () =>
+          usePortfolioDashboard("user-123", {
+            trend_days: 30,
+            wallet_address: "0x1111111111111111111111111111111111111111",
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() =>
+        expect(mockGetPortfolioDashboard).toHaveBeenCalledWith("user-123", {
+          trend_days: 30,
+          wallet_address: "0x1111111111111111111111111111111111111111",
+        })
+      );
+
+      renderHook(
+        () =>
+          usePortfolioDashboard("user-123", {
+            trend_days: 30,
+            wallet_address: "0x2222222222222222222222222222222222222222",
+          }),
+        { wrapper }
+      );
+
+      await waitFor(() =>
+        expect(mockGetPortfolioDashboard).toHaveBeenCalledWith("user-123", {
+          trend_days: 30,
+          wallet_address: "0x2222222222222222222222222222222222222222",
         })
       );
 

@@ -2,12 +2,13 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, LogOut, Plus, Settings, Wallet } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useConnectModal } from "thirdweb/react";
 
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { WALLET_LABELS } from "@/constants/wallet";
+import { useClickOutside } from "@/hooks/useClickOutside";
 import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { formatAddress } from "@/utils/formatters";
@@ -55,28 +56,7 @@ export function WalletMenu({
   };
 
   // Click outside and Escape key handler
-  useEffect(() => {
-    if (!isMenuOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsMenuOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleEscape);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [isMenuOpen]);
+  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
 
   const handleCopyAddress = async (address: string) => {
     await navigator.clipboard.writeText(address);

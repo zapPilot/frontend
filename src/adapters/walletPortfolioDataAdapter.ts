@@ -76,6 +76,10 @@ interface WalletPortfolioData {
   protocols: number;
   chains: number;
 
+  // Data freshness
+  /** ISO date string of last data update */
+  lastUpdated: string | null;
+
   // Loading states
   isLoading: boolean;
   hasError: boolean;
@@ -150,6 +154,9 @@ export function transformToWalletPortfolioData(
     positions: landingData.pool_details?.length ?? 0,
     protocols: countUniqueProtocols(landingData.pool_details ?? []),
     chains: countUniqueChains(landingData.pool_details ?? []),
+
+    // Data freshness
+    lastUpdated: landingData.last_updated,
 
     // Loading states
     isLoading: false,
@@ -241,6 +248,9 @@ export function createEmptyPortfolioState(
     positions: GHOST_MODE_PREVIEW.positions,
     protocols: GHOST_MODE_PREVIEW.protocols,
     chains: GHOST_MODE_PREVIEW.chains,
+
+    // Data freshness
+    lastUpdated: null,
 
     // States
     isLoading: false,

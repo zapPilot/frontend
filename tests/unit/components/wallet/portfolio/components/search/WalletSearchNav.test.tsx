@@ -283,6 +283,44 @@ describe("WalletSearchNav Component", () => {
     });
   });
 
+  describe("Loading State", () => {
+    it("disables input when isSearching is true", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} isSearching={true} />);
+
+      const input = screen.getByPlaceholderText(
+        "Search address..."
+      ) as HTMLInputElement;
+      expect(input).toBeDisabled();
+    });
+
+    it("shows loading spinner instead of search icon when isSearching is true", () => {
+      const { container } = render(
+        <WalletSearchNav onSearch={mockOnSearch} isSearching={true} />
+      );
+
+      // Loading spinner should be present (div with animate-spin class)
+      const spinner = container.querySelector(".animate-spin");
+      expect(spinner).toBeInTheDocument();
+    });
+
+    it("applies disabled styles when isSearching is true", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} isSearching={true} />);
+
+      const input = screen.getByPlaceholderText("Search address...");
+      expect(input).toHaveClass("opacity-50");
+      expect(input).toHaveClass("cursor-not-allowed");
+    });
+
+    it("enables input when isSearching is false", () => {
+      render(<WalletSearchNav onSearch={mockOnSearch} isSearching={false} />);
+
+      const input = screen.getByPlaceholderText(
+        "Search address..."
+      ) as HTMLInputElement;
+      expect(input).not.toBeDisabled();
+    });
+  });
+
   describe("Navigation", () => {
     beforeEach(() => {
       mockOnSearch.mockClear();

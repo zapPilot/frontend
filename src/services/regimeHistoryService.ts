@@ -123,8 +123,8 @@ function transformRegimeHistoryData(
   response: RegimeHistoryResponse
 ): RegimeHistoryData {
   return {
-    currentRegime: response.current.regime,
-    previousRegime: response.previous?.regime ?? null,
+    currentRegime: response.current.to_regime,
+    previousRegime: response.previous?.to_regime ?? null,
     direction: response.direction,
     duration: response.duration_in_current,
     transitions: response.transitions,

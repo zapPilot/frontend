@@ -31,24 +31,24 @@ vi.mock("@/utils/logger", () => ({
 }));
 
 // Test data - matches actual Zod schema structure
+// Test data - matches actual Zod schema structure
 const mockRegimeHistoryResponse: RegimeHistoryResponse = {
   current: {
-    regime_id: "550e8400-e29b-41d4-a716-446655440000",
-    regime: "n",
-    timestamp: "2025-12-12T10:30:00Z",
+    id: "550e8400-e29b-41d4-a716-446655440000",
+    to_regime: "n",
+    transitioned_at: "2025-12-12T10:30:00Z",
     sentiment_value: 48,
+    duration_hours: null,
   },
   previous: {
-    regime_id: "450e8400-e29b-41d4-a716-446655440000",
-    regime: "f",
-    timestamp: "2025-12-10T08:00:00Z",
+    id: "450e8400-e29b-41d4-a716-446655440000",
+    to_regime: "f",
+    transitioned_at: "2025-12-10T08:00:00Z",
     sentiment_value: 30,
+    duration_hours: null,
   },
   direction: "fromLeft",
   duration_in_current: {
-    milliseconds: 185400000,
-    seconds: 185400,
-    minutes: 3090,
     hours: 51,
     days: 2,
     human_readable: "2 days, 3 hours",
@@ -119,9 +119,6 @@ describe("regimeHistoryService", () => {
         expect(result.previousRegime).toBe("f");
         expect(result.direction).toBe("fromLeft");
         expect(result.duration).toEqual({
-          milliseconds: 185400000,
-          seconds: 185400,
-          minutes: 3090,
           hours: 51,
           days: 2,
           human_readable: "2 days, 3 hours",
@@ -207,8 +204,8 @@ describe("regimeHistoryService", () => {
       it("should throw on missing required fields", async () => {
         const incompleteResponse = {
           current: {
-            regime_id: "test",
-            // Missing required regime and timestamp fields
+            id: "test",
+            // Missing required to_regime and transitioned_at fields
           },
         };
 
@@ -387,7 +384,7 @@ describe("regimeHistoryService", () => {
           ...mockRegimeHistoryResponse,
           current: {
             ...mockRegimeHistoryResponse.current,
-            regime,
+            to_regime: regime,
           },
         };
 

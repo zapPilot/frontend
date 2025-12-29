@@ -127,6 +127,29 @@ export interface AnalyticsTimePeriod {
 }
 
 /**
+ * Wallet Filter Selection
+ *
+ * Type for wallet filtering in analytics views:
+ * - null = "All Wallets" (bundle aggregation, default)
+ * - string = specific wallet address (per-wallet analytics)
+ */
+export type WalletFilter = string | null;
+
+/**
+ * Wallet Option for Selector
+ *
+ * Individual wallet option for dropdown selector UI
+ */
+export interface WalletOption {
+  /** Wallet address (0x...) */
+  address: string;
+  /** Optional user-defined label for wallet */
+  label: string | null;
+  /** Whether this wallet is currently active/selected in UI */
+  isActive?: boolean;
+}
+
+/**
  * ==========================================
  * Portfolio Chart Analytics Types
  * ==========================================

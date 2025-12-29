@@ -196,9 +196,10 @@ describe("buildHeaderSection", () => {
     expect(lines[2]).toBe(
       "User ID: 0x1234567890abcdef1234567890abcdef12345678"
     );
-    expect(lines[3]).toBe("Time Period: 1Y (365 days)");
-    expect(lines[4]).toBe("Period: 2024-01-17 to 2025-01-17");
-    expect(lines[5]).toBe("");
+    expect(lines[3]).toBe("Wallet Filter: All Wallets (Bundle Aggregation)");
+    expect(lines[4]).toBe("Time Period: 1Y (365 days)");
+    expect(lines[5]).toBe("Period: 2024-01-17 to 2025-01-17");
+    expect(lines[6]).toBe("");
   });
 
   it("should format different time periods correctly", () => {
@@ -207,7 +208,7 @@ describe("buildHeaderSection", () => {
       timePeriod: { key: "3M", days: 90, label: "3 Months" },
     };
     const lines = buildHeaderSection(metadata);
-    expect(lines[3]).toBe("Time Period: 3M (90 days)");
+    expect(lines[4]).toBe("Time Period: 3M (90 days)");
   });
 });
 
@@ -407,12 +408,15 @@ describe("generateAnalyticsCSV", () => {
 
 describe("generateExportFilename", () => {
   it("should generate filename with shortened address and date", () => {
+    // Bundle export (no wallet filter)
     const filename = generateExportFilename(
       "0x1234567890abcdef1234567890abcdef12345678",
       new Date("2025-01-17T14:30:00.000Z")
     );
 
-    expect(filename).toBe("portfolio-analytics-0x1234...5678-2025-01-17.csv");
+    expect(filename).toBe(
+      "portfolio-analytics-0x1234...5678-bundle-2025-01-17.csv"
+    );
   });
 
   it("should use ISO date format (YYYY-MM-DD)", () => {
@@ -431,6 +435,30 @@ describe("generateExportFilename", () => {
     );
 
     expect(filename).toMatch(/\.csv$/);
+  });
+
+  it("should include wallet address suffix when wallet filter is provided", () => {
+    const filename = generateExportFilename(
+      "0x1234567890abcdef1234567890abcdef12345678",
+      new Date("2025-01-17T14:30:00.000Z"),
+      "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    );
+
+    expect(filename).toBe(
+      "portfolio-analytics-0x1234...5678-0xabcd...abcd-2025-01-17.csv"
+    );
+  });
+
+  it("should use 'bundle' suffix when wallet filter is null", () => {
+    const filename = generateExportFilename(
+      "0x1234567890abcdef1234567890abcdef12345678",
+      new Date("2025-01-17T14:30:00.000Z"),
+      null
+    );
+
+    expect(filename).toBe(
+      "portfolio-analytics-0x1234...5678-bundle-2025-01-17.csv"
+    );
   });
 });
 

@@ -49,6 +49,7 @@ export function DashboardView({
               isEmptyState={isEmptyState}
               isLoading={false}
               onOpenModal={onOpenModal}
+              lastUpdated={data.lastUpdated}
             />
           </GhostModeOverlay>
         ) : (
@@ -63,6 +64,7 @@ export function DashboardView({
                 isEmptyState={isEmptyState}
                 isLoading={false}
                 onOpenModal={onOpenModal}
+                lastUpdated={data.lastUpdated}
               />
             )}
           </SectionWrapper>

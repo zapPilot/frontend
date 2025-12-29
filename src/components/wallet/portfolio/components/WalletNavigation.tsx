@@ -27,6 +27,7 @@ interface WalletNavigationProps {
   onOpenSettings: () => void;
   onSearch?: (address: string) => void;
   showSearch?: boolean;
+  isSearching?: boolean;
 }
 
 export function WalletNavigation({
@@ -36,6 +37,7 @@ export function WalletNavigation({
   onOpenSettings,
   onSearch,
   showSearch = false,
+  isSearching = false,
 }: WalletNavigationProps) {
   return (
     <nav className={STYLES.nav}>
@@ -67,7 +69,9 @@ export function WalletNavigation({
         </div>
 
         {/* Persistent Search (Option B) - Renders here next to tabs */}
-        {showSearch && onSearch && <WalletSearchNav onSearch={onSearch} />}
+        {showSearch && onSearch && (
+          <WalletSearchNav onSearch={onSearch} isSearching={isSearching} />
+        )}
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
