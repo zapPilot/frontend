@@ -8,10 +8,7 @@ import {
   type Regime,
   regimes,
 } from "@/components/wallet/regime/regimeData";
-import {
-  getStrategyTabLabel,
-  type StrategyDirection,
-} from "@/components/wallet/regime/strategyLabels";
+import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import type {
@@ -20,6 +17,11 @@ import type {
 } from "@/types/portfolio-progressive";
 
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
+import {
+  RegimeSelector,
+  StrategyDirectionTabs,
+  StrategyAllocationDisplay,
+} from "./strategy";
 
 /** StrategyCard styling constants */
 const STYLES = {
@@ -31,16 +33,6 @@ const STYLES = {
     "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60",
   regimeBadge:
     "w-16 h-16 rounded-xl bg-gray-800 flex items-center justify-center text-2xl font-bold border border-gray-700 shadow-inner flex-shrink-0",
-  regimeButtonSelected:
-    "bg-gray-800 border border-gray-600 shadow-lg scale-102 ring-1 ring-purple-500/50",
-  regimeButtonUnselected: "opacity-60 hover:opacity-100 hover:bg-gray-800/50",
-  directionTabBase:
-    "px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer border",
-  directionTabUnselected:
-    "bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300",
-  allocationContainer:
-    "bg-gray-800/50 rounded-lg p-4 border border-gray-700 mt-4",
-  progressBarTrack: "w-full bg-gray-700 h-2 rounded-full overflow-hidden",
 } as const;
 
 /** Get card className based on expanded state */
@@ -277,102 +269,28 @@ export function StrategyCard({
           >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Left: Regime Spectrum */}
-              <div
-                data-testid="regime-spectrum"
-                data-interactive="true"
-                className="flex flex-col"
-              >
-                <h4 className="text-sm font-bold text-white mb-4">
-                  Market Cycle Position
-                </h4>
-                <div className="flex flex-col gap-2">
-                  {regimes.map(regime => {
-                    const isCurrent = effectiveRegime?.id === regime.id;
-                    const isSelected = displayRegime.id === regime.id;
-
-                    return (
-                      <button
-                        key={regime.id}
-                        onClick={e => {
-                          e.stopPropagation();
-                          setSelectedRegimeId(regime.id);
-                          setSelectedDirection(null);
-                        }}
-                        className={`flex items-center gap-3 p-2 rounded-lg transition-all w-full text-left cursor-pointer ${
-                          isSelected
-                            ? STYLES.regimeButtonSelected
-                            : STYLES.regimeButtonUnselected
-                        }`}
-                      >
-                        <div
-                          className={`w-3 h-3 rounded-full ${isCurrent ? "animate-pulse" : ""}`}
-                          style={{
-                            backgroundColor: regime.fillColor,
-                          }}
-                        />
-                        <span
-                          className={`text-sm font-bold ${isSelected ? "text-white" : "text-gray-400"}`}
-                        >
-                          {regime.label}
-                        </span>
-                        {isCurrent && (
-                          <span className="ml-auto text-xs font-mono text-gray-400">
-                            Current
-                          </span>
-                        )}
-                        {!isCurrent && isSelected && (
-                          <span className="ml-auto text-xs font-mono text-purple-400">
-                            Viewing
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+              <RegimeSelector
+                currentRegime={effectiveRegime}
+                selectedRegime={displayRegime}
+                onSelectRegime={regimeId => {
+                  setSelectedRegimeId(regimeId);
+                  setSelectedDirection(null);
+                }}
+                regimes={regimes}
+              />
 
               {/* Right: Strategy Explanation */}
               <div>
                 <h4 className="text-sm font-bold text-white mb-4 flex items-center justify-between">
                   <span>Why this allocation?</span>
                   {/* Strategy Tabs */}
-                  <div className="flex gap-2">
-                    {/* Only show tabs if we have multiple strategies (active choice) */}
-                    {(
-                      Object.keys(
-                        displayRegime.strategies
-                      ) as (keyof typeof displayRegime.strategies)[]
-                    ).filter(k => k !== "default").length > 0 && (
-                      <div className="flex gap-2 mb-2 overflow-x-auto">
-                        {(["fromLeft", "fromRight"] as const).map(direction => {
-                          if (!displayRegime.strategies[direction]) return null;
-
-                          const isSelected = activeDirection === direction;
-                          const label = getStrategyTabLabel(
-                            displayRegime.id,
-                            direction
-                          );
-
-                          return (
-                            <button
-                              key={direction}
-                              onClick={e => {
-                                e.stopPropagation();
-                                setSelectedDirection(direction);
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 cursor-pointer border ${
-                                isSelected
-                                  ? `bg-gradient-to-r ${displayRegime.visual.gradient} text-white border-transparent shadow-lg`
-                                  : "bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300"
-                              }`}
-                            >
-                              {label}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
+                  <StrategyDirectionTabs
+                    regime={displayRegime}
+                    activeDirection={activeDirection}
+                    onSelectDirection={direction => {
+                      setSelectedDirection(direction);
+                    }}
+                  />
                 </h4>
                 <div className="space-y-6 text-sm text-gray-400">
                   {/* Philosophy Quote */}
@@ -402,66 +320,12 @@ export function StrategyCard({
                   )}
 
                   {/* Allocation Bars */}
-                  {!activeStrategy?.useCase?.hideAllocationTarget && (
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 mt-4">
-                      {/* Spot Bar */}
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Target Spot</span>
-                        <span className="text-white font-bold">
-                          {targetAllocation.spot}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden mb-4">
-                        <div
-                          className="bg-purple-500 h-full"
-                          style={{
-                            width: `${targetAllocation.spot}%`,
-                          }}
-                        />
-                      </div>
-
-                      {/* LP Bar */}
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Target LP</span>
-                        <span className="text-blue-400 font-bold">
-                          {targetAllocation.lp}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden mb-4">
-                        <div
-                          className="bg-blue-500 h-full"
-                          style={{
-                            width: `${targetAllocation.lp}%`,
-                          }}
-                        />
-                      </div>
-
-                      {/* Stable Bar */}
-                      <div className="flex justify-between items-center mb-2">
-                        <span>Target Stable</span>
-                        <span className="text-emerald-400 font-bold">
-                          {targetAllocation.stable}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
-                        <div
-                          className="bg-emerald-500 h-full"
-                          style={{
-                            width: `${targetAllocation.stable}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {activeStrategy?.useCase?.hideAllocationTarget && (
-                    <div className="bg-blue-500/10 rounded-lg p-4 border border-blue-500/30 mt-4 flex items-center gap-3">
-                      <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                      <span className="text-blue-200 font-medium">
-                        Maintain current position
-                      </span>
-                    </div>
-                  )}
+                  <StrategyAllocationDisplay
+                    targetAllocation={targetAllocation}
+                    hideAllocationTarget={
+                      activeStrategy?.useCase?.hideAllocationTarget
+                    }
+                  />
                 </div>
               </div>
             </div>

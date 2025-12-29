@@ -12,10 +12,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http";
 
 import {
-  getLandingPagePortfolioData,
-  getPortfolioDashboard,
-  type LandingPageResponse,
-  type UnifiedDashboardResponse,
+    getLandingPagePortfolioData,
+    getPortfolioDashboard,
+    type LandingPageResponse,
+    type UnifiedDashboardResponse,
 } from "../../../src/services/analyticsService";
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
@@ -585,4 +585,133 @@ describe("analyticsService", () => {
       expect(result).toEqual(mockResponse);
     });
   });
+
+  describe("getDailyYieldReturns", () => {
+    const testUserId = "0xYieldUser";
+
+    // Helper to create schema-compliant mock response
+    const createMockYieldResponse = (overrides: Partial<{
+      user_id: string;
+      period_days: number;
+      daily_returns: Array<{
+        date: string;
+        protocol_name: string;
+        chain: string;
+        position_type?: string | null;
+        yield_return_usd: number;
+        tokens: Array<{
+          symbol: string;
+          amount_change: number;
+          current_price: number;
+          yield_return_usd: number;
+        }>;
+      }>;
+    }> = {}) => ({
+      user_id: overrides.user_id ?? testUserId,
+      period: {
+        start_date: "2025-11-29",
+        end_date: "2025-12-29",
+        days: overrides.period_days ?? 30,
+      },
+      daily_returns: overrides.daily_returns ?? [
+        {
+          date: "2025-12-29",
+          protocol_name: "Aave",
+          chain: "ethereum",
+          position_type: "lending",
+          yield_return_usd: 5.25,
+          tokens: [
+            {
+              symbol: "USDC",
+              amount_change: 5.25,
+              current_price: 1.0,
+              yield_return_usd: 5.25,
+            },
+          ],
+        },
+      ],
+    });
+
+    it("should fetch daily yield returns with default parameters", async () => {
+      const mockResponse = createMockYieldResponse();
+
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      // Import dynamically to test
+      const { getDailyYieldReturns } = await import(
+        "../../../src/services/analyticsService"
+      );
+      const result = await getDailyYieldReturns(testUserId);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v2/analytics/${testUserId}/yield/daily?days=30`
+      );
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("should fetch daily yield returns with custom days parameter", async () => {
+      const mockResponse = createMockYieldResponse({ period_days: 7, daily_returns: [] });
+
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      const { getDailyYieldReturns } = await import(
+        "../../../src/services/analyticsService"
+      );
+      const result = await getDailyYieldReturns(testUserId, 7);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v2/analytics/${testUserId}/yield/daily?days=7`
+      );
+      expect(result.period.days).toBe(7);
+    });
+
+    it("should fetch daily yield returns with wallet address filter", async () => {
+      const walletAddress = "0x1234567890abcdef1234567890abcdef12345678";
+      const mockResponse = createMockYieldResponse({
+        daily_returns: [
+          {
+            date: "2025-12-29",
+            protocol_name: "Compound",
+            chain: "ethereum",
+            position_type: "lending",
+            yield_return_usd: 3.5,
+            tokens: [
+              {
+                symbol: "DAI",
+                amount_change: 3.5,
+                current_price: 1.0,
+                yield_return_usd: 3.5,
+              },
+            ],
+          },
+        ],
+      });
+
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      const { getDailyYieldReturns } = await import(
+        "../../../src/services/analyticsService"
+      );
+      const result = await getDailyYieldReturns(testUserId, 30, walletAddress);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v2/analytics/${testUserId}/yield/daily?days=30&walletAddress=${walletAddress}`
+      );
+      expect(result.daily_returns).toHaveLength(1);
+    });
+
+    it("should propagate errors from HTTP layer", async () => {
+      const error = new Error("Failed to fetch yield data");
+      analyticsEngineGetSpy.mockRejectedValue(error);
+
+      const { getDailyYieldReturns } = await import(
+        "../../../src/services/analyticsService"
+      );
+
+      await expect(getDailyYieldReturns(testUserId)).rejects.toThrow(
+        "Failed to fetch yield data"
+      );
+    });
+  });
 });
+
