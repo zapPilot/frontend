@@ -19,6 +19,10 @@ vi.mock("lucide-react", () => ({
   ChevronDown: () => <div data-testid="icon-chevron-down" />,
   Gauge: () => <div data-testid="icon-gauge" />,
   Info: () => <div data-testid="icon-info" />, // This is what we want to ensure is ABSENT
+  // Icons used by DataFreshnessIndicator
+  Clock: () => <div data-testid="icon-clock" />,
+  AlertTriangle: () => <div data-testid="icon-alert-triangle" />,
+  AlertCircle: () => <div data-testid="icon-alert-circle" />,
   // Icons used by regimeData.ts
   TrendingDown: () => <div data-testid="icon-trending-down" />,
   TrendingUp: () => <div data-testid="icon-trending-up" />,

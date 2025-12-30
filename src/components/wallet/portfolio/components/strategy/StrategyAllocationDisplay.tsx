@@ -1,3 +1,5 @@
+import { ProgressBar } from "../shared";
+
 interface StrategyAllocationDisplayProps {
   targetAllocation: {
     spot: number;
@@ -10,7 +12,6 @@ interface StrategyAllocationDisplayProps {
 const STYLES = {
   allocationContainer:
     "bg-gray-800/50 rounded-lg p-4 border border-gray-700 mt-4",
-  progressBarTrack: "w-full bg-gray-700 h-2 rounded-full overflow-hidden",
 } as const;
 
 /**
@@ -40,49 +41,25 @@ export function StrategyAllocationDisplay({
 
   return (
     <div className={STYLES.allocationContainer}>
-      {/* Spot Bar */}
-      <div className="flex justify-between items-center mb-2">
-        <span>Target Spot</span>
-        <span className="text-white font-bold">{targetAllocation.spot}%</span>
-      </div>
-      <div className={`${STYLES.progressBarTrack} mb-4`}>
-        <div
-          className="bg-purple-500 h-full"
-          style={{
-            width: `${targetAllocation.spot}%`,
-          }}
-        />
-      </div>
+      <ProgressBar
+        label="Target Spot"
+        percentage={targetAllocation.spot}
+        color="purple-500"
+        className="mb-4"
+      />
 
-      {/* LP Bar */}
-      <div className="flex justify-between items-center mb-2">
-        <span>Target LP</span>
-        <span className="text-blue-400 font-bold">{targetAllocation.lp}%</span>
-      </div>
-      <div className={`${STYLES.progressBarTrack} mb-4`}>
-        <div
-          className="bg-blue-500 h-full"
-          style={{
-            width: `${targetAllocation.lp}%`,
-          }}
-        />
-      </div>
+      <ProgressBar
+        label="Target LP"
+        percentage={targetAllocation.lp}
+        color="blue-500"
+        className="mb-4"
+      />
 
-      {/* Stable Bar */}
-      <div className="flex justify-between items-center mb-2">
-        <span>Target Stable</span>
-        <span className="text-emerald-400 font-bold">
-          {targetAllocation.stable}%
-        </span>
-      </div>
-      <div className={STYLES.progressBarTrack}>
-        <div
-          className="bg-emerald-500 h-full"
-          style={{
-            width: `${targetAllocation.stable}%`,
-          }}
-        />
-      </div>
+      <ProgressBar
+        label="Target Stable"
+        percentage={targetAllocation.stable}
+        color="emerald-500"
+      />
     </div>
   );
 }
