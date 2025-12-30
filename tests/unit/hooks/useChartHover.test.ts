@@ -228,4 +228,127 @@ describe("useChartHover", () => {
 
     vi.unstubAllEnvs();
   });
+
+  it("should auto-hide after timeout when testAutoPopulate is true", () => {
+    vi.stubEnv("NODE_ENV", "test");
+
+    const { result } = renderHook(() =>
+      useChartHover(mockData, { ...defaultOptions, testAutoPopulate: true })
+    );
+
+    // Initial auto-populate
+    expect(result.current.hoveredPoint).not.toBeNull();
+
+    // Advance past auto-hide timeout (1000ms)
+    act(() => {
+      vi.advanceTimersByTime(1100);
+    });
+
+    expect(result.current.hoveredPoint).toBeNull();
+
+    vi.unstubAllEnvs();
+  });
+
+  it("should handle pointer move events", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+      pointerType: "mouse",
+      isPrimary: true,
+    } as unknown as React.PointerEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handlePointerMove(event);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+  });
+
+  it("should handle pointer down events", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 0,
+      clientY: 0,
+      currentTarget: mockSvg,
+      pointerType: "touch",
+      isPrimary: true,
+    } as unknown as React.PointerEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handlePointerDown(event);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.index).toBe(0);
+  });
+
+  it("should handle touch end events", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    // First set a hover point via touch
+    const touchEvent = {
+      touches: [{ clientX: 150, clientY: 100 }],
+      changedTouches: [],
+      currentTarget: mockSvg,
+      cancelable: true,
+      preventDefault: vi.fn(),
+    } as unknown as React.TouchEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleTouchMove(touchEvent);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+
+    // Now end touch
+    act(() => {
+      result.current.handleTouchEnd();
+    });
+
+    expect(result.current.hoveredPoint).toBeNull();
+  });
+
+  it("should clear auto-hide timer when hover is manually triggered", () => {
+    vi.stubEnv("NODE_ENV", "test");
+
+    const { result } = renderHook(() =>
+      useChartHover(mockData, { ...defaultOptions, testAutoPopulate: true })
+    );
+
+    // Initial auto-populate
+    expect(result.current.hoveredPoint).not.toBeNull();
+    const initialIndex = result.current.hoveredPoint?.index;
+
+    // Advance part of the auto-hide timeout
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
+    // Point should still be there
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.index).toBe(initialIndex);
+
+    // Advance past original auto-hide timeout
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+
+    // Should have auto-hidden
+    expect(result.current.hoveredPoint).toBeNull();
+
+    vi.unstubAllEnvs();
+  });
 });
