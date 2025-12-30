@@ -241,7 +241,7 @@ describe("Logger", () => {
     it("should respect maxLocalLogs limit", () => {
       logger.clearLogs();
       logger.setLevel(LogLevel.DEBUG);
-      
+
       // Default limit is 1000. logic: if (length > max) shift()
       // So if we log 1005 times, we should have 1000 logs, and the first 5 should be gone.
       for (let i = 0; i < 1005; i++) {
@@ -255,54 +255,65 @@ describe("Logger", () => {
     });
 
     it("should handle remote logging success", async () => {
-        const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({
-            ok: true,
-            json: async () => ({})
-        } as Response);
-        
-        logger.setRemoteLogging(true, "http://test-endpoint");
-        logger.setLevel(LogLevel.INFO); // Ensure we log
-        logger.info("Remote log test");
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      } as Response);
 
-        // Wait for async execution (void promise)
-        await new Promise(resolve => setTimeout(resolve, 10));
+      logger.setRemoteLogging(true, "https://test-endpoint");
+      logger.setLevel(LogLevel.INFO); // Ensure we log
+      logger.info("Remote log test");
 
-        expect(fetchSpy).toHaveBeenCalledWith("http://test-endpoint", expect.objectContaining({
-            method: "POST",
-            body: expect.stringContaining("Remote log test")
-        }));
+      // Wait for async execution (void promise)
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(fetchSpy).toHaveBeenCalledWith(
+        "https://test-endpoint",
+        expect.objectContaining({
+          method: "POST",
+          body: expect.stringContaining("Remote log test"),
+        })
+      );
     });
 
     it("should handle remote logging failure gracefully", async () => {
-        const fetchSpy = vi.spyOn(global, 'fetch').mockRejectedValue(new Error("Network Error"));
-        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockRejectedValue(new Error("Network Error"));
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {
+          // Suppress console.error during test
+        });
 
-        logger.setRemoteLogging(true, "http://test-endpoint");
-        logger.info("Remote fail test");
+      logger.setRemoteLogging(true, "https://test-endpoint");
+      logger.info("Remote fail test");
 
-        await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise(resolve => setTimeout(resolve, 10));
 
-        expect(fetchSpy).toHaveBeenCalled();
-        expect(consoleErrorSpy).toHaveBeenCalledWith(
-            "Failed to send log to remote endpoint:", 
-            expect.any(Error)
-        );
+      expect(fetchSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to send log to remote endpoint:",
+        expect.any(Error)
+      );
     });
 
     it("should not send remote log if endpoint not set", async () => {
-        const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValue({} as Response);
-        
-        logger.setRemoteLogging(true, undefined); 
-        logger.setRemoteLogging(false); // Disable it first to be sure? 
-        // Wait, setRemoteLogging(true, undefined) keeps previous enpoint?
-        // Source: if (endpoint) config.remoteEndpoint = endpoint;
-        // So we need to reset it. But we can't unset remoteEndpoint easily.
-        // Let's just disable remote logging.
-        logger.setRemoteLogging(false);
-        logger.info("Local only");
+      const fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockResolvedValue({} as Response);
 
-        await new Promise(resolve => setTimeout(resolve, 10));
-        expect(fetchSpy).not.toHaveBeenCalled();
+      logger.setRemoteLogging(true, undefined);
+      logger.setRemoteLogging(false); // Disable it first to be sure?
+      // Wait, setRemoteLogging(true, undefined) keeps previous enpoint?
+      // Source: if (endpoint) config.remoteEndpoint = endpoint;
+      // So we need to reset it. But we can't unset remoteEndpoint easily.
+      // Let's just disable remote logging.
+      logger.setRemoteLogging(false);
+      logger.info("Local only");
+
+      await new Promise(resolve => setTimeout(resolve, 10));
+      expect(fetchSpy).not.toHaveBeenCalled();
     });
   });
 });

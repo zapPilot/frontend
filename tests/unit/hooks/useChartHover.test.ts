@@ -428,7 +428,16 @@ describe("useChartHover", () => {
         bottom: 0,
         x: 0,
         y: 0,
-        toJSON: () => {},
+        toJSON: () => ({
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0,
+        }),
       }),
       createSVGPoint: mockSvg.createSVGPoint,
       getScreenCTM: undefined, // Force fallback which uses width
@@ -486,10 +495,8 @@ describe("useChartHover", () => {
       minValue: 100,
       maxValue: 100,
     };
-    
-    const { result } = renderHook(() =>
-      useChartHover(flatData, flatOptions)
-    );
+
+    const { result } = renderHook(() => useChartHover(flatData, flatOptions));
 
     const event = {
       clientX: 150,
