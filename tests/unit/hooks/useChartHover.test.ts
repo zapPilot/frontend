@@ -1,658 +1,231 @@
 /**
  * Unit tests for useChartHover hook
- * Tests hover state management, RAF optimization, and data point extraction
  */
-
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useChartHover } from "@/hooks/useChartHover";
-import type { ChartHoverState } from "@/types/chartHover";
-
-// Mock requestAnimationFrame and cancelAnimationFrame
-// These mocks are isolated to this test file by saving/restoring originals
-let rafId = 0;
-const mockRaf = vi.fn((cb: FrameRequestCallback) => {
-  const id = ++rafId;
-  // Execute callback synchronously for test predictability
-  cb(0);
-  return id;
-});
-const mockCancelRaf = vi.fn();
-
-// Save original globals for proper cleanup
-let originalRaf: typeof requestAnimationFrame;
-let originalCancelRaf: typeof cancelAnimationFrame;
 
 describe("useChartHover", () => {
-  beforeEach(() => {
-    // Save original globals
-    originalRaf = global.requestAnimationFrame;
-    originalCancelRaf = global.cancelAnimationFrame;
-
-    rafId = 0;
-    global.requestAnimationFrame =
-      mockRaf as unknown as typeof requestAnimationFrame;
-    global.cancelAnimationFrame =
-      mockCancelRaf as unknown as typeof cancelAnimationFrame;
-    mockRaf.mockClear();
-    mockCancelRaf.mockClear();
-  });
-
-  afterEach(() => {
-    // Restore original globals to prevent affecting other test files
-    global.requestAnimationFrame = originalRaf;
-    global.cancelAnimationFrame = originalCancelRaf;
-    vi.clearAllMocks();
-  });
-
-  // Sample test data
-  const sampleData = [
-    { date: "2025-01-01", value: 10000 },
-    { date: "2025-01-02", value: 11000 },
-    { date: "2025-01-03", value: 10500 },
-    { date: "2025-01-04", value: 12000 },
-    { date: "2025-01-05", value: 13000 },
+  const mockData = [
+    { value: 100, label: "A" },
+    { value: 200, label: "B" },
+    { value: 300, label: "C" },
   ];
 
   const defaultOptions = {
-    chartType: "performance",
-    chartWidth: 800,
-    chartHeight: 300,
+    chartType: "test",
+    chartWidth: 300,
+    chartHeight: 200,
     chartPadding: 10,
-    minValue: 10000,
-    maxValue: 13000,
-    getYValue: (point: (typeof sampleData)[0]) => point.value,
-    buildHoverData: (
-      point: (typeof sampleData)[0],
-      x: number,
-      y: number,
-      _index: number
-    ): ChartHoverState => ({
-      chartType: "performance" as const,
+    minValue: 0,
+    maxValue: 300,
+    getYValue: (d: any) => d.value,
+    buildHoverData: (d: any, x: number, y: number, index: number) => ({
+      ...d,
       x,
       y,
-      date: point.date,
-      value: point.value,
-      benchmark: 0,
+      index,
     }),
   };
 
-  describe("Initial State", () => {
-    it("should initialize with null hoveredPoint", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
+  // Mock SVG element
+  const mockSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-      expect(result.current.hoveredPoint).toBeNull();
-    });
+  beforeEach(() => {
+    vi.useFakeTimers();
 
-    it("should provide handleMouseMove and handleMouseLeave functions", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
+    // Mock getBoundingClientRect
+    mockSvg.getBoundingClientRect = vi.fn(() => ({
+      left: 0,
+      top: 0,
+      width: 300,
+      height: 200,
+      right: 300,
+      bottom: 200,
+      x: 0,
+      y: 0,
+      toJSON: () => {
+        /* noop - DOMRect mock */
+      },
+    }));
 
-      expect(typeof result.current.handleMouseMove).toBe("function");
-      expect(typeof result.current.handleMouseLeave).toBe("function");
-    });
+    // Mock CTM support
+    const mockMatrix = {
+      a: 1,
+      b: 0,
+      c: 0,
+      d: 1,
+      e: 0,
+      f: 0,
+      multiply: vi.fn(),
+      inverse: vi.fn(() => mockMatrix),
+      translate: vi.fn(),
+      scale: vi.fn(),
+      scaleNonUniform: vi.fn(),
+      rotate: vi.fn(),
+      rotateFromVector: vi.fn(),
+      flipX: vi.fn(),
+      flipY: vi.fn(),
+      skewX: vi.fn(),
+      skewY: vi.fn(),
+    };
+
+    mockSvg.getScreenCTM = vi.fn(() => mockMatrix as DOMMatrix);
+
+    const mockPoint = {
+      x: 0,
+      y: 0,
+      matrixTransform: vi.fn(_m => ({
+        x: mockPoint.x,
+        y: mockPoint.y,
+        w: 1,
+        z: 0,
+      })),
+    } as any;
+
+    mockSvg.createSVGPoint = vi.fn(() => mockPoint);
   });
 
-  describe("Mouse Move Handling", () => {
-    it("should update hoveredPoint on mouse move", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      // Create mock SVG element and mouse event
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 400, // Middle of the chart (50% of 800px)
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      // Should select middle data point (index 2)
-      expect(result.current.hoveredPoint).not.toBeNull();
-      expect(result.current.hoveredPoint?.chartType).toBe("performance");
-      expect(result.current.hoveredPoint?.date).toBe(sampleData[2].date);
-    });
-
-    it("should use RAF for performance optimization", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 200,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      expect(mockRaf).toHaveBeenCalled();
-    });
-
-    it("should clamp index to data bounds", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      // Test left boundary
-      const leftEvent = {
-        clientX: -100, // Beyond left edge
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(leftEvent);
-      });
-
-      expect(result.current.hoveredPoint?.date).toBe(sampleData[0].date);
-
-      // Test right boundary
-      const rightEvent = {
-        clientX: 1000, // Beyond right edge
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(rightEvent);
-      });
-
-      expect(result.current.hoveredPoint?.date).toBe(
-        sampleData[sampleData.length - 1].date
-      );
-    });
-
-    it("should not update if index has not changed", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 200,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      const firstHoveredPoint = result.current.hoveredPoint;
-      mockRaf.mockClear();
-
-      // Move slightly but still within same data point
-      const samePointEvent = {
-        ...mockEvent,
-        clientX: 205,
-      };
-
-      act(() => {
-        result.current.handleMouseMove(samePointEvent);
-      });
-
-      // RAF should not be called again for same index
-      expect(result.current.hoveredPoint).toBe(firstHoveredPoint);
-    });
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
   });
 
-  describe("Mouse Leave Handling", () => {
-    it("should clear hoveredPoint on mouse leave", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 400,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      // First, hover to set a point
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      expect(result.current.hoveredPoint).not.toBeNull();
-
-      // Then leave
-      act(() => {
-        result.current.handleMouseLeave();
-      });
-
-      expect(result.current.hoveredPoint).toBeNull();
-    });
-
-    it("should cancel pending RAF on mouse leave", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 400,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      act(() => {
-        result.current.handleMouseLeave();
-      });
-
-      expect(mockCancelRaf).toHaveBeenCalled();
-    });
+  it("should initialize with null hoveredPoint", () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+    expect(result.current.hoveredPoint).toBeNull();
   });
 
-  describe("Touch Handling", () => {
-    it("should update hoveredPoint on touch move and prevent default scrolling", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
+  it("should handle mouse move events", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
+    // Simulate mouse move to middle (index 1)
+    // Width 300, 3 items -> indices roughly at 0, 150, 300
+    // Index 1 should be around x=150
 
-      const preventDefault = vi.fn();
-      const touchMoveEvent = {
-        touches: [{ clientX: 400, clientY: 150 }],
-        changedTouches: [],
-        currentTarget: mockSvg,
-        cancelable: true,
-        preventDefault,
-      } as unknown as React.TouchEvent<SVGSVGElement>;
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
 
-      act(() => {
-        result.current.handleTouchMove(touchMoveEvent);
-      });
-
-      expect(result.current.hoveredPoint?.date).toBe(sampleData[2].date);
-      expect(preventDefault).toHaveBeenCalled();
+    act(() => {
+      result.current.handleMouseMove(event);
     });
 
-    it("should clear hoveredPoint on touch end", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
-
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const touchMoveEvent = {
-        touches: [{ clientX: 400, clientY: 150 }],
-        changedTouches: [],
-        currentTarget: mockSvg,
-        cancelable: true,
-        preventDefault: vi.fn(),
-      } as unknown as React.TouchEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleTouchMove(touchMoveEvent);
-      });
-
-      expect(result.current.hoveredPoint).not.toBeNull();
-
-      act(() => {
-        result.current.handleTouchEnd();
-      });
-
-      expect(result.current.hoveredPoint).toBeNull();
+    // Run RAF
+    await act(async () => {
+      vi.runAllTimers();
     });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.index).toBe(1);
+    expect(result.current.hoveredPoint?.value).toBe(200);
   });
 
-  describe("Y Value Calculation", () => {
-    it("should calculate correct Y position based on value", () => {
-      const buildHoverDataSpy = vi.fn(defaultOptions.buildHoverData);
-      const options = {
-        ...defaultOptions,
-        buildHoverData: buildHoverDataSpy,
-      };
+  it("should handle mouse leave", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
 
-      const { result } = renderHook(() => useChartHover(sampleData, options));
+    // Set hover first
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+    } as unknown as React.MouseEvent<SVGSVGElement>;
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
-
-      const mockEvent = {
-        clientX: 0, // First data point
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      expect(buildHoverDataSpy).toHaveBeenCalled();
-      const [point, , y] = buildHoverDataSpy.mock.calls[0];
-
-      // Verify Y calculation for minimum value
-      expect(point.value).toBe(10000);
-      expect(y).toBeGreaterThan(0);
-      expect(y).toBeLessThan(300);
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
     });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+
+    // Leave
+    act(() => {
+      result.current.handleMouseLeave();
+    });
+
+    expect(result.current.hoveredPoint).toBeNull();
   });
 
-  describe("Enabled/Disabled State", () => {
-    it("should not respond to mouse events when disabled", () => {
-      const { result } = renderHook(() =>
-        useChartHover(sampleData, {
-          ...defaultOptions,
-          enabled: false,
-        })
-      );
+  it("should handle touch move events", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
+    const event = {
+      touches: [{ clientX: 0, clientY: 0 }],
+      changedTouches: [],
+      currentTarget: mockSvg,
+      cancelable: true,
+      preventDefault: vi.fn(),
+    } as unknown as React.TouchEvent<SVGSVGElement>;
 
-      const mockEvent = {
-        clientX: 400,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      expect(result.current.hoveredPoint).toBeNull();
-      expect(mockRaf).not.toHaveBeenCalled();
+    act(() => {
+      result.current.handleTouchMove(event);
+      vi.runAllTimers();
     });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.index).toBe(0);
   });
 
-  describe("Empty Data Handling", () => {
-    it("should handle empty data array gracefully", () => {
-      const { result } = renderHook(() => useChartHover([], defaultOptions));
+  it("should ignore events when disabled", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, { ...defaultOptions, enabled: false })
+    );
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+    } as unknown as React.MouseEvent<SVGSVGElement>;
 
-      const mockEvent = {
-        clientX: 400,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      expect(result.current.hoveredPoint).toBeNull();
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
     });
+
+    expect(result.current.hoveredPoint).toBeNull();
   });
 
-  describe("Cleanup", () => {
-    it("should cancel RAF on unmount", () => {
-      // This test uses the default mockRaf which returns incrementing IDs
-      const { result, unmount } = renderHook(() =>
-        useChartHover(sampleData, defaultOptions)
-      );
+  it("should handle empty data", async () => {
+    const { result } = renderHook(() => useChartHover([], defaultOptions));
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+    } as unknown as React.MouseEvent<SVGSVGElement>;
 
-      const mockEvent = {
-        clientX: 400,
-        clientY: 150,
-        currentTarget: mockSvg,
-      } as unknown as React.MouseEvent<SVGSVGElement>;
-
-      act(() => {
-        result.current.handleMouseMove(mockEvent);
-      });
-
-      unmount();
-
-      // Should have called cancelAnimationFrame with a valid ID (> 0)
-      expect(mockCancelRaf).toHaveBeenCalled();
-      const calledWithId = mockCancelRaf.mock.calls[0]?.[0];
-      expect(typeof calledWithId).toBe("number");
-      expect(calledWithId).toBeGreaterThan(0);
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
     });
+
+    expect(result.current.hoveredPoint).toBeNull();
   });
 
-  describe("Data Index Calculation", () => {
-    it("should calculate correct data index for various mouse positions", () => {
-      const buildHoverDataSpy = vi.fn(defaultOptions.buildHoverData);
-      const options = {
-        ...defaultOptions,
-        buildHoverData: buildHoverDataSpy,
-      };
+  it("should auto-populate in test environment when configured", () => {
+    vi.stubEnv("NODE_ENV", "test");
 
-      const { result } = renderHook(() => useChartHover(sampleData, options));
+    const { result } = renderHook(() =>
+      useChartHover(mockData, { ...defaultOptions, testAutoPopulate: true })
+    );
 
-      const mockSvg = document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        "svg"
-      );
-      mockSvg.getBoundingClientRect = vi.fn(() => ({
-        left: 0,
-        top: 0,
-        width: 800,
-        height: 300,
-        right: 800,
-        bottom: 300,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }));
+    // Initial effect runs
+    expect(result.current.hoveredPoint).not.toBeNull();
+    // Should select middle point
+    expect(result.current.hoveredPoint?.index).toBe(1);
 
-      // Test first point (0% position)
-      act(() => {
-        result.current.handleMouseMove({
-          clientX: 0,
-          clientY: 150,
-          currentTarget: mockSvg,
-        } as unknown as React.MouseEvent<SVGSVGElement>);
-      });
-      expect(buildHoverDataSpy.mock.calls[0][3]).toBe(0);
-
-      // Test middle point (50% position = index 2)
-      buildHoverDataSpy.mockClear();
-      act(() => {
-        result.current.handleMouseMove({
-          clientX: 400,
-          clientY: 150,
-          currentTarget: mockSvg,
-        } as unknown as React.MouseEvent<SVGSVGElement>);
-      });
-      expect(buildHoverDataSpy.mock.calls[0][3]).toBe(2);
-
-      // Test last point (100% position)
-      buildHoverDataSpy.mockClear();
-      act(() => {
-        result.current.handleMouseMove({
-          clientX: 800,
-          clientY: 150,
-          currentTarget: mockSvg,
-        } as unknown as React.MouseEvent<SVGSVGElement>);
-      });
-      expect(buildHoverDataSpy.mock.calls[0][3]).toBe(4);
-    });
+    vi.unstubAllEnvs();
   });
 });

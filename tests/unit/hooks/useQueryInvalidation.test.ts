@@ -8,6 +8,8 @@
 import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { walletLogger } from "@/utils/logger";
+
 import { invalidateAndRefetch } from "../../../src/hooks/useQueryInvalidation";
 
 // Mock the logger
@@ -19,8 +21,6 @@ vi.mock("@/utils/logger", () => ({
     warn: vi.fn(),
   },
 }));
-
-import { walletLogger } from "@/utils/logger";
 
 describe("useQueryInvalidation", () => {
   let queryClient: QueryClient;
@@ -73,8 +73,11 @@ describe("useQueryInvalidation", () => {
       const mockRefetch = vi.fn().mockResolvedValue({});
 
       // Mock invalidateQueries to throw
-      const originalInvalidate = queryClient.invalidateQueries.bind(queryClient);
-      queryClient.invalidateQueries = vi.fn().mockRejectedValue(new Error("Invalidation failed"));
+      const originalInvalidate =
+        queryClient.invalidateQueries.bind(queryClient);
+      queryClient.invalidateQueries = vi
+        .fn()
+        .mockRejectedValue(new Error("Invalidation failed"));
 
       await invalidateAndRefetch({
         queryClient,
@@ -96,7 +99,9 @@ describe("useQueryInvalidation", () => {
 
     it("should handle refetch error gracefully", async () => {
       const queryKey = ["refetch-error-key"];
-      const mockRefetch = vi.fn().mockRejectedValue(new Error("Refetch failed"));
+      const mockRefetch = vi
+        .fn()
+        .mockRejectedValue(new Error("Refetch failed"));
 
       await invalidateAndRefetch({
         queryClient,
@@ -113,11 +118,16 @@ describe("useQueryInvalidation", () => {
 
     it("should handle both invalidation and refetch errors gracefully", async () => {
       const queryKey = ["both-error-key"];
-      const mockRefetch = vi.fn().mockRejectedValue(new Error("Refetch failed"));
+      const mockRefetch = vi
+        .fn()
+        .mockRejectedValue(new Error("Refetch failed"));
 
       // Mock invalidateQueries to throw
-      const originalInvalidate = queryClient.invalidateQueries.bind(queryClient);
-      queryClient.invalidateQueries = vi.fn().mockRejectedValue(new Error("Invalidation failed"));
+      const originalInvalidate =
+        queryClient.invalidateQueries.bind(queryClient);
+      queryClient.invalidateQueries = vi
+        .fn()
+        .mockRejectedValue(new Error("Invalidation failed"));
 
       await invalidateAndRefetch({
         queryClient,

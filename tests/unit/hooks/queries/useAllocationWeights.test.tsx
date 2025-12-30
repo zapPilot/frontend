@@ -12,8 +12,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as allocationService from "@/services/allocationService";
 
 import {
-    DEFAULT_ALLOCATION_WEIGHTS,
-    useAllocationWeights,
+  DEFAULT_ALLOCATION_WEIGHTS,
+  useAllocationWeights,
 } from "../../../../src/hooks/queries/useAllocationWeights";
 
 // Mock the allocation service
@@ -87,7 +87,10 @@ describe("useAllocationWeights", () => {
 
     it("should handle loading state", () => {
       vi.mocked(allocationService.getAllocationWeights).mockImplementation(
-        () => new Promise(() => {}) // Never resolves
+        () =>
+          new Promise(() => {
+            /* never resolves */
+          })
       );
 
       const { result } = renderHook(() => useAllocationWeights(), { wrapper });

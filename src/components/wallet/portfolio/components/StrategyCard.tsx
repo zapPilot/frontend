@@ -19,8 +19,8 @@ import type {
 import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
 import {
   RegimeSelector,
-  StrategyDirectionTabs,
   StrategyAllocationDisplay,
+  StrategyDirectionTabs,
 } from "./strategy";
 
 /** StrategyCard styling constants */

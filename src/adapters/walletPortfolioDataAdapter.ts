@@ -133,7 +133,7 @@ export function transformToWalletPortfolioData(
   return {
     // Portfolio metrics
     balance: landingData.net_portfolio_value ?? 0,
-    roi: landingData.portfolio_roi.recommended_yearly_roi,
+    roi: landingData.portfolio_roi?.recommended_yearly_roi ?? 0,
     roiChange7d: roiChanges.change7d,
     roiChange30d: roiChanges.change30d,
 

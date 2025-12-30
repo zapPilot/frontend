@@ -12,10 +12,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http";
 
 import {
-    getLandingPagePortfolioData,
-    getPortfolioDashboard,
-    type LandingPageResponse,
-    type UnifiedDashboardResponse,
+  getLandingPagePortfolioData,
+  getPortfolioDashboard,
+  type LandingPageResponse,
+  type UnifiedDashboardResponse,
 } from "../../../src/services/analyticsService";
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
@@ -590,23 +590,25 @@ describe("analyticsService", () => {
     const testUserId = "0xYieldUser";
 
     // Helper to create schema-compliant mock response
-    const createMockYieldResponse = (overrides: Partial<{
-      user_id: string;
-      period_days: number;
-      daily_returns: Array<{
-        date: string;
-        protocol_name: string;
-        chain: string;
-        position_type?: string | null;
-        yield_return_usd: number;
-        tokens: Array<{
-          symbol: string;
-          amount_change: number;
-          current_price: number;
+    const createMockYieldResponse = (
+      overrides: Partial<{
+        user_id: string;
+        period_days: number;
+        daily_returns: {
+          date: string;
+          protocol_name: string;
+          chain: string;
+          position_type?: string | null;
           yield_return_usd: number;
-        }>;
-      }>;
-    }> = {}) => ({
+          tokens: {
+            symbol: string;
+            amount_change: number;
+            current_price: number;
+            yield_return_usd: number;
+          }[];
+        }[];
+      }> = {}
+    ) => ({
       user_id: overrides.user_id ?? testUserId,
       period: {
         start_date: "2025-11-29",
@@ -650,7 +652,10 @@ describe("analyticsService", () => {
     });
 
     it("should fetch daily yield returns with custom days parameter", async () => {
-      const mockResponse = createMockYieldResponse({ period_days: 7, daily_returns: [] });
+      const mockResponse = createMockYieldResponse({
+        period_days: 7,
+        daily_returns: [],
+      });
 
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
@@ -714,4 +719,3 @@ describe("analyticsService", () => {
     });
   });
 });
-

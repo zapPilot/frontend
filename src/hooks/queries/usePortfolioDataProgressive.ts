@@ -48,7 +48,10 @@ import { useLandingPageData } from "./usePortfolioQuery";
 /**
  * Extract balance section data from landing response
  */
-function extractBalanceData(landing: LandingPageResponse): BalanceData {
+/**
+ * Extract balance section data from landing response
+ */
+export function extractBalanceData(landing: LandingPageResponse): BalanceData {
   const roiChanges = extractROIChanges(landing);
 
   return {
@@ -63,7 +66,12 @@ function extractBalanceData(landing: LandingPageResponse): BalanceData {
 /**
  * Extract composition section data from landing response
  */
-function extractCompositionData(landing: LandingPageResponse): CompositionData {
+/**
+ * Extract composition section data from landing response
+ */
+export function extractCompositionData(
+  landing: LandingPageResponse
+): CompositionData {
   const currentAllocation = calculateAllocation(landing);
 
   // Use imported utilities
@@ -85,7 +93,10 @@ function extractCompositionData(landing: LandingPageResponse): CompositionData {
 /**
  * Combine strategy data from all sources
  */
-function combineStrategyData(
+/**
+ * Combine strategy data from all sources
+ */
+export function combineStrategyData(
   landingData: unknown | undefined,
   sentimentData: MarketSentimentData | undefined,
   regimeHistoryData: RegimeHistoryData | undefined
@@ -120,7 +131,10 @@ function combineStrategyData(
 /**
  * Extract sentiment section data
  */
-function extractSentimentData(sentiment: {
+/**
+ * Extract sentiment section data
+ */
+export function extractSentimentData(sentiment: {
   value: number;
   status: string;
   quote: { quote: string };
