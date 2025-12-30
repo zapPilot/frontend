@@ -6,6 +6,7 @@ import {
   addWallet as addWalletToBundle,
   loadWallets as fetchWallets,
   removeWallet as removeWalletFromBundle,
+  updateWalletLabel,
 } from "@/components/WalletManager/services/WalletService";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/useToast";
@@ -185,5 +186,129 @@ describe("useWalletOperations", () => {
     });
 
     expect(result.current.editingWallet).toBeNull();
+  });
+  it("handleEditLabel updates label optimistically and calls API", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Old" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(updateWalletLabel).mockResolvedValue({ success: true });
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleEditLabel("w1", "New");
+    });
+
+    // Should update optimistically
+    expect(result.current.wallets[0].label).toBe("New");
+    expect(updateWalletLabel).toHaveBeenCalledWith("user-123", "0x123", "New");
+  });
+
+  it("handleEditLabel reverts optimistic update on API failure", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Old" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(updateWalletLabel).mockResolvedValue({
+      success: false,
+      error: "API Error",
+    });
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleEditLabel("w1", "New");
+    });
+
+    // Should revert
+    expect(result.current.wallets[0].label).toBe("Old");
+    expect(result.current.operations.editing.w1.error).toBe("API Error");
+  });
+
+  it("handleDeleteAccount calls deleteUser and handles success", async () => {
+    vi.mocked(useUser).mockReturnValue({
+      refetch: mockRefetch,
+      isConnected: false,
+    } as any);
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleDeleteAccount();
+    });
+
+    expect(result.current.isDeletingAccount).toBe(false);
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Account Deleted",
+        type: "success",
+      })
+    );
+  });
+
+  it("handleDeleteAccount attempts disconnect if connected", async () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleDeleteAccount();
+    });
+
+    expect(mockDisconnect).toHaveBeenCalled();
+  });
+
+  it("handleDeleteAccount handles disconnect failure gracefully", async () => {
+    mockDisconnect.mockRejectedValue(new Error("Disconnect error"));
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleDeleteAccount();
+    });
+
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Disconnect Wallet",
+        type: "warning",
+      })
+    );
+  });
+
+  it("auto-refreshes wallets when conditions met", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOwner: true, isOpen: true })
+    );
+
+    // Initial load
+    expect(fetchWallets).toHaveBeenCalledTimes(1);
+
+    // Advance time to trigger refresh
+    await act(async () => {
+      vi.advanceTimersByTime(30000); // 30s
+    });
+
+    expect(fetchWallets).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it("does not auto-refresh if not owner", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOwner: false, isOpen: true })
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
+
+    expect(fetchWallets).toHaveBeenCalledTimes(1); // Only initial load
+    vi.useRealTimers();
   });
 });
