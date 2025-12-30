@@ -2,7 +2,7 @@ import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
 import type { ModalType } from "@/types/portfolio";
 
-import { BalanceCardSkeleton } from "../views/DashboardSkeleton";
+import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
 
 /** BalanceCard styling constants */

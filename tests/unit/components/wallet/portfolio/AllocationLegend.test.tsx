@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { AllocationLegend } from "@/components/wallet/portfolio/components/AllocationLegend";
+import { AllocationLegend } from "@/components/wallet/portfolio/components/allocation/AllocationLegend";
 
 const mockItems = [
   {
@@ -28,7 +28,7 @@ describe("AllocationLegend", () => {
 
     expect(screen.getByText("BTC")).toBeInTheDocument();
     expect(screen.getByText("60%")).toBeInTheDocument();
-    
+
     expect(screen.getByText("ETH")).toBeInTheDocument();
     expect(screen.getByText("30%")).toBeInTheDocument();
 

@@ -16,12 +16,10 @@ import type {
   SentimentData,
 } from "@/types/portfolio-progressive";
 
-import { StrategyCardSkeleton } from "../views/DashboardSkeleton";
-import {
-  RegimeSelector,
-  StrategyAllocationDisplay,
-  StrategyDirectionTabs,
-} from "./strategy";
+import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";
+import { RegimeSelector } from "./RegimeSelector";
+import { StrategyAllocationDisplay } from "./StrategyAllocationDisplay";
+import { StrategyDirectionTabs } from "./StrategyDirectionTabs";
 
 /** StrategyCard styling constants */
 const STYLES = {

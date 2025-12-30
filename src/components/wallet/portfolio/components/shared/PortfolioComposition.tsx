@@ -10,14 +10,13 @@ import {
 import { GRADIENTS } from "@/constants/design-system";
 import { useAllocationWeights } from "@/hooks/queries/useAllocationWeights";
 
-import { PortfolioCompositionSkeleton } from "../views/DashboardSkeleton";
-import { AllocationBars } from "./AllocationBars";
-import { TargetAllocationBar } from "./TargetAllocationBar";
+import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
+import { AllocationBars, TargetAllocationBar } from "../allocation";
 import {
   buildRealCryptoAssets,
   buildTargetAssetsWithWeights,
   buildTargetCryptoAssets,
-} from "./utils/portfolioCompositionHelpers";
+} from "../utils/portfolioCompositionHelpers";
 
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;

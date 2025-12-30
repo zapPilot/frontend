@@ -3,7 +3,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu";
+import { WalletMenu } from "@/components/wallet/portfolio/components/navigation/WalletMenu";
 import { WALLET_LABELS } from "@/constants/wallet";
 
 // Mock providers and hooks

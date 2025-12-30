@@ -8,7 +8,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { TargetAllocationBar } from "@/components/wallet/portfolio/components/TargetAllocationBar";
+import { TargetAllocationBar } from "@/components/wallet/portfolio/components/allocation/TargetAllocationBar";
 
 describe("TargetAllocationBar", () => {
   const mockAssets = [

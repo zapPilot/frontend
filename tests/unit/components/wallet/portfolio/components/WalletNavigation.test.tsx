@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { WalletNavigation } from "@/components/wallet/portfolio/components/WalletNavigation";
+import { WalletNavigation } from "@/components/wallet/portfolio/components/navigation/WalletNavigation";
 
 // Mock child components to verify integration
 vi.mock(
-  "@/components/wallet/portfolio/components/search/WalletSearchNav",
+  "@/components/wallet/portfolio/components/navigation/search/WalletSearchNav",
   () => ({
     WalletSearchNav: ({ onSearch }: { onSearch: (val: string) => void }) => (
       <div data-testid="wallet-search-nav">
@@ -15,9 +15,12 @@ vi.mock(
   })
 );
 
-vi.mock("@/components/wallet/portfolio/components/WalletMenu", () => ({
-  WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
-}));
+vi.mock(
+  "@/components/wallet/portfolio/components/navigation/WalletMenu",
+  () => ({
+    WalletMenu: () => <div data-testid="wallet-menu">Wallet Menu</div>,
+  })
+);
 
 describe("WalletNavigation Component", () => {
   const mockSetActiveTab = vi.fn();

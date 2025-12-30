@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
+import { StrategyCard } from "@/components/wallet/portfolio/components/strategy/StrategyCard";
 // Import real regimes for testing
 import { regimes } from "@/components/wallet/regime/regimeData";
 

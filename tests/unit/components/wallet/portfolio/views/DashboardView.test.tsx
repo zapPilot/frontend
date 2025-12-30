@@ -46,7 +46,7 @@ vi.mock("@/components/shared/SectionWrapper", () => ({
   ),
 }));
 
-vi.mock("@/components/wallet/portfolio/components/BalanceCard", () => ({
+vi.mock("@/components/wallet/portfolio/components/shared", () => ({
   BalanceCard: ({
     balance,
     isEmptyState,
@@ -65,18 +65,12 @@ vi.mock("@/components/wallet/portfolio/components/BalanceCard", () => ({
       Balance Card
     </div>
   ),
+  PortfolioComposition: ({ isEmptyState }: { isEmptyState: boolean }) => (
+    <div data-testid="portfolio-composition" data-empty={isEmptyState}>
+      Portfolio Composition
+    </div>
+  ),
 }));
-
-vi.mock(
-  "@/components/wallet/portfolio/components/PortfolioComposition",
-  () => ({
-    PortfolioComposition: ({ isEmptyState }: { isEmptyState: boolean }) => (
-      <div data-testid="portfolio-composition" data-empty={isEmptyState}>
-        Portfolio Composition
-      </div>
-    ),
-  })
-);
 
 vi.mock("@/components/wallet/portfolio/components/StrategyCard", () => ({
   StrategyCard: ({ isEmptyState }: { isEmptyState: boolean }) => (
@@ -89,6 +83,21 @@ vi.mock("@/components/wallet/portfolio/components/StrategyCard", () => ({
 vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
   BalanceCardSkeleton: () => <div>Balance Skeleton</div>,
   PortfolioCompositionSkeleton: () => <div>Composition Skeleton</div>,
+}));
+
+// Mock useAllocationWeights to avoid QueryClient dependency
+vi.mock("@/hooks/queries/useAllocationWeights", () => ({
+  useAllocationWeights: vi.fn().mockReturnValue({
+    data: {
+      btc_weight: 0.6,
+      eth_weight: 0.4,
+      btc_market_cap: 1800000000000,
+      eth_market_cap: 400000000000,
+      is_fallback: false,
+    },
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 const mockData = {

@@ -1,4 +1,3 @@
-
 export interface AllocationLegendItem {
   symbol: string;
   percentage: number;
@@ -17,13 +16,19 @@ const STYLES = {
   legendDot: "w-2 h-2 rounded-full",
 } as const;
 
-export function AllocationLegend({ items, className = "" }: AllocationLegendProps) {
+export function AllocationLegend({
+  items,
+  className = "",
+}: AllocationLegendProps) {
   if (items.length === 0) {
     return null;
   }
 
   return (
-    <div className={`${STYLES.legend} ${className}`} data-testid="allocation-legend">
+    <div
+      className={`${STYLES.legend} ${className}`}
+      data-testid="allocation-legend"
+    >
       {items.map(item => (
         <div key={item.symbol} className={STYLES.legendItem}>
           <div

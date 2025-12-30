@@ -1,6 +1,7 @@
-import { WalletSearchNav } from "@/components/wallet/portfolio/components/search/WalletSearchNav";
-import { WalletMenu } from "@/components/wallet/portfolio/components/WalletMenu";
 import { TABS, type TabType } from "@/types/portfolio";
+
+import { WalletSearchNav } from "./search/WalletSearchNav";
+import { WalletMenu } from "./WalletMenu";
 
 /** Navigation styling constants */
 const STYLES = {

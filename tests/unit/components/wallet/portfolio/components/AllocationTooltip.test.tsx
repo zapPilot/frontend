@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { vi } from "vitest";
 
-import { AllocationTooltip } from "@/components/wallet/portfolio/components/AllocationTooltip";
+import { AllocationTooltip } from "@/components/wallet/portfolio/components/allocation/AllocationTooltip";
 
 // Mock createPortal to render in-place for testing
 vi.mock("react-dom", async () => {

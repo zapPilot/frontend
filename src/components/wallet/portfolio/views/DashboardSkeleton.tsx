@@ -17,7 +17,7 @@ import { GradientButton } from "@/components/ui";
 import { ASSET_COLORS } from "@/constants/assets";
 import { GRADIENTS } from "@/constants/design-system";
 
-import { AllocationLegend } from "../components/AllocationLegend";
+import { AllocationLegend } from "../components/allocation/AllocationLegend";
 
 interface SkeletonButtonProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -42,7 +42,12 @@ function SkeletonButton({ icon: Icon, label }: SkeletonButtonProps) {
 const SKELETON_LEGEND_ITEMS = [
   { symbol: "BTC", percentage: 0, color: ASSET_COLORS.BTC, label: "BTC" },
   { symbol: "ETH", percentage: 0, color: ASSET_COLORS.ETH, label: "ETH" },
-  { symbol: "Stables", percentage: 0, color: ASSET_COLORS.USDT, label: "Stables" },
+  {
+    symbol: "Stables",
+    percentage: 0,
+    color: ASSET_COLORS.USDT,
+    label: "Stables",
+  },
 ];
 
 /**
@@ -154,10 +159,7 @@ export function PortfolioCompositionSkeleton() {
       <div className="h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 animate-pulse" />
 
       {/* Reuse AllocationLegend with placeholder skeleton items */}
-      <AllocationLegend
-        items={SKELETON_LEGEND_ITEMS}
-        className="mt-4 px-1"
-      />
+      <AllocationLegend items={SKELETON_LEGEND_ITEMS} className="mt-4 px-1" />
     </div>
   );
 }

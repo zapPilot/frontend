@@ -1,11 +1,12 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import { SettingsModal } from "@/components/wallet/portfolio/components/SettingsModal";
 import {
   DepositModal,
   RebalanceModal,
   WithdrawModal,
 } from "@/components/wallet/portfolio/modals";
 import type { ModalType } from "@/types/portfolio";
+
+import { SettingsModal } from "./SettingsModal";
 
 interface PortfolioModalsProps {
   activeModal: ModalType | null;

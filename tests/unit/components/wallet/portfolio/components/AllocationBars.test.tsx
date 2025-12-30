@@ -11,7 +11,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AllocationBars } from "@/components/wallet/portfolio/components/AllocationBars";
+import { AllocationBars } from "@/components/wallet/portfolio/components/allocation/AllocationBars";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 // Mock framer-motion to avoid animation issues in tests

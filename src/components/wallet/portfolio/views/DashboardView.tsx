@@ -1,9 +1,11 @@
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
-import { BalanceCard } from "@/components/wallet/portfolio/components/BalanceCard";
-import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
-import { StrategyCard } from "@/components/wallet/portfolio/components/StrategyCard";
+import {
+  BalanceCard,
+  PortfolioComposition,
+} from "@/components/wallet/portfolio/components/shared";
+import { StrategyCard } from "@/components/wallet/portfolio/components/strategy";
 import {
   BalanceCardSkeleton,
   PortfolioCompositionSkeleton,

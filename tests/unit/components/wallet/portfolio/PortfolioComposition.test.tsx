@@ -11,7 +11,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
+import { PortfolioComposition } from "@/components/wallet/portfolio/components/shared/PortfolioComposition";
 
 // Mock getRegimeAllocation to avoid deep dependency chain
 vi.mock("@/components/wallet/regime/regimeData", () => ({
