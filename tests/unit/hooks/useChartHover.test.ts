@@ -351,4 +351,195 @@ describe("useChartHover", () => {
 
     vi.unstubAllEnvs();
   });
+
+  it("should handle single data point", async () => {
+    const singleData = [{ value: 100, label: "A" }];
+    const { result } = renderHook(() =>
+      useChartHover(singleData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    // With single point, it should always pick index 0
+    expect(result.current.hoveredPoint?.index).toBe(0);
+    // x should be center (chartWidth / 2)
+    expect(result.current.hoveredPoint?.x).toBe(150);
+  });
+
+  it("should handle missing getScreenCTM (fallback calculation)", async () => {
+    // Remove getScreenCTM from mock
+    const fallbackSvg = {
+      ...mockSvg,
+      getBoundingClientRect: mockSvg.getBoundingClientRect,
+      // createSVGPoint present but getScreenCTM missing triggers fallback
+      createSVGPoint: mockSvg.createSVGPoint,
+    } as unknown as SVGSVGElement;
+    // Explicitly delete/undefined it if needed, but casting above helps simulate the shape
+
+    // We need to inject this SVG into the event
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: {
+        ...fallbackSvg,
+        // Ensure getScreenCTM is undefined here to trigger fallback
+        getScreenCTM: undefined,
+      },
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    // Fallback logic uses clientX relative to rect
+    // rect left is 0, width 300. clientX 150 is 50%.
+    // 50% of 3 items (indices 0, 1, 2) is index 1.
+    expect(result.current.hoveredPoint?.index).toBe(1);
+  });
+
+  it("should handle zero dimensions gracefully", async () => {
+    // Mock zero rect
+    const zeroSvg = {
+      ...mockSvg,
+      getBoundingClientRect: () => ({
+        left: 0,
+        top: 0,
+        width: 0, // Zero width
+        height: 0, // Zero height
+        right: 0,
+        bottom: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => {},
+      }),
+      createSVGPoint: mockSvg.createSVGPoint,
+      getScreenCTM: undefined, // Force fallback which uses width
+    } as unknown as SVGSVGElement;
+
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 0,
+      clientY: 0,
+      currentTarget: zeroSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
+    });
+
+    // Should not crash, might select index 0 due to clamps
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.containerWidth).toBe(300); // Fallback to chartWidth
+  });
+
+  it("should handle missing touch objects", async () => {
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      touches: [], // Empty touches
+      changedTouches: [],
+      currentTarget: mockSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.TouchEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleTouchMove(event);
+      vi.runAllTimers();
+    });
+
+    // Should not update state
+    expect(result.current.hoveredPoint).toBeNull();
+  });
+
+  it("should handle flat line data (min === max)", async () => {
+    const flatData = [
+      { value: 100, label: "A" },
+      { value: 100, label: "B" },
+    ];
+    const flatOptions = {
+      ...defaultOptions,
+      minValue: 100,
+      maxValue: 100,
+    };
+    
+    const { result } = renderHook(() =>
+      useChartHover(flatData, flatOptions)
+    );
+
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: mockSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
+    });
+
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.value).toBe(100);
+  });
+
+  it("should fallback when matrixTransform returns non-finite values", async () => {
+    // Mock CTM but matrixTransform fails
+    const brokenMatrixSvg = {
+      ...mockSvg,
+      getScreenCTM: mockSvg.getScreenCTM,
+      createSVGPoint: vi.fn(() => ({
+        x: 0,
+        y: 0,
+        matrixTransform: vi.fn(() => ({
+          x: Infinity, // Invalid X
+          y: 0,
+        })),
+      })),
+    } as unknown as SVGSVGElement;
+
+    const { result } = renderHook(() =>
+      useChartHover(mockData, defaultOptions)
+    );
+
+    const event = {
+      clientX: 150,
+      clientY: 100,
+      currentTarget: brokenMatrixSvg,
+      preventDefault: vi.fn(),
+    } as unknown as React.MouseEvent<SVGSVGElement>;
+
+    act(() => {
+      result.current.handleMouseMove(event);
+      vi.runAllTimers();
+    });
+
+    // Should fallback to simple calculation
+    expect(result.current.hoveredPoint).not.toBeNull();
+    expect(result.current.hoveredPoint?.index).toBe(1);
+  });
 });

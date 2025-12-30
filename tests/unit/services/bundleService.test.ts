@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  generateBundleUrl,
-  getBundleUser,
-  isOwnBundle,
+    generateBundleUrl,
+    getBundleUser,
+    isOwnBundle,
 } from "@/services/bundleService";
 
 // Mock dependencies
@@ -32,11 +32,15 @@ describe("bundleService", () => {
       });
     });
 
-    it("should return basic user info for any userId", async () => {
-      const result = await getBundleUser("test-user-123");
+    it("should return null and log error when processing fails", async () => {
+      const { formatAddress } = await import("@/utils/formatters");
+      vi.mocked(formatAddress).mockImplementationOnce(() => {
+        throw new Error("Formatting error");
+      });
 
-      expect(result).not.toBeNull();
-      expect(result?.userId).toBe("test-user-123");
+      const result = await getBundleUser("0xError");
+      
+      expect(result).toBeNull();
     });
   });
 

@@ -13,10 +13,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http";
 import type { RegimeHistoryResponse } from "@/schemas/api/regimeHistorySchemas";
 import {
-  DEFAULT_REGIME_HISTORY,
-  fetchRegimeHistory,
-  useRegimeHistory,
+    DEFAULT_REGIME_HISTORY,
+    fetchRegimeHistory,
+    useRegimeHistory,
 } from "@/services/regimeHistoryService";
+import { logger } from "@/utils/logger";
 
 // Create spies
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
@@ -188,6 +189,39 @@ describe("regimeHistoryService", () => {
 
         await expect(fetchRegimeHistory()).rejects.toThrow(
           /temporarily unavailable/i
+        );
+      });
+
+      it("should throw APIError with 504 message on timeout", async () => {
+        const error = new Error("Gateway timeout");
+        Object.assign(error, { status: 504 });
+
+        analyticsEngineGetSpy.mockRejectedValue(error);
+
+        await expect(fetchRegimeHistory()).rejects.toThrow(
+          /timed out/i
+        );
+      });
+
+      it("should throw APIError with 502 message on invalid gateway", async () => {
+        const error = new Error("Bad gateway");
+        Object.assign(error, { status: 502 });
+
+        analyticsEngineGetSpy.mockRejectedValue(error);
+
+        await expect(fetchRegimeHistory()).rejects.toThrow(
+          /invalid regime data/i
+        );
+      });
+
+      it("should default to 500 status if missing in error", async () => {
+        const error = new Error("Generic error");
+        // No status property
+
+        analyticsEngineGetSpy.mockRejectedValue(error);
+
+        await expect(fetchRegimeHistory()).rejects.toThrow(
+          /unexpected error/i
         );
       });
 
@@ -363,6 +397,29 @@ describe("regimeHistoryService", () => {
         // Verify default data is returned (graceful degradation)
         expect(result.current.data).toEqual(DEFAULT_REGIME_HISTORY);
         expect(result.current.isError).toBe(false);
+      });
+
+      it("should handle non-Error object rejections gracefully", async () => {
+        // Mock API to fail with a string (not an Error object)
+        analyticsEngineGetSpy.mockRejectedValue("Some string error");
+
+        const { result } = renderHook(() => useRegimeHistory(), {
+          wrapper: createWrapper(),
+        });
+
+        await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+        // Should return defaults
+        expect(result.current.data).toEqual(DEFAULT_REGIME_HISTORY);
+        
+        // Verify logger was called with string representation
+        expect(logger.error).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to fetch regime history"),
+          expect.objectContaining({ 
+            error: expect.stringContaining("unexpected error"),
+            status: 500 
+          })
+        );
       });
     });
   });

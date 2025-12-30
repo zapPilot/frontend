@@ -103,5 +103,39 @@ describe("copyTextToClipboard", () => {
 
       expect(result).toBe(false);
     });
+
+    it("returns false when execCommand throws", async () => {
+      const mockTextArea = {
+        value: "",
+        setAttribute: vi.fn(),
+        style: {} as CSSStyleDeclaration,
+        select: vi.fn(),
+      };
+      const createElementMock = vi.fn().mockReturnValue(mockTextArea);
+      const appendChildMock = vi.fn();
+      const removeChildMock = vi.fn();
+      
+      // Mock execCommand to throw
+      const execCommandMock = vi.fn().mockImplementation(() => {
+        throw new Error("Command failed");
+      });
+
+      Object.defineProperty(global, "document", {
+        value: {
+          createElement: createElementMock,
+          body: {
+            appendChild: appendChildMock,
+            removeChild: removeChildMock,
+          },
+          execCommand: execCommandMock,
+        },
+        writable: true,
+      });
+
+      const result = await copyTextToClipboard("fallback text");
+
+      expect(result).toBe(false);
+      expect(execCommandMock).toHaveBeenCalledWith("copy");
+    });
   });
 });

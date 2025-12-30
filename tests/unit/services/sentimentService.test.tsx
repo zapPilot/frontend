@@ -336,6 +336,47 @@ describe("sentimentService", () => {
         })
       );
     });
+      it("should handle non-object errors", async () => {
+        vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue("String error");
+
+        const { useSentimentData } = sentimentService;
+        const { result } = renderHook(() => useSentimentData(), {
+          wrapper: createWrapper(),
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true), {
+          timeout: 3000,
+        });
+
+        expect(result.current.error).toBeDefined();
+        expect((result.current.error as any).message).toBe(
+          "An unexpected error occurred while fetching sentiment data."
+        );
+      });
+
+      it("should preserve error code and details", async () => {
+        const complexError = {
+          status: 400,
+          message: "Bad Request",
+          code: "INVALID_INPUT",
+          details: { field: "value" },
+        };
+
+        vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(complexError);
+
+        const { useSentimentData } = sentimentService;
+        const { result } = renderHook(() => useSentimentData(), {
+          wrapper: createWrapper(),
+        });
+
+        await waitFor(() => expect(result.current.isError).toBe(true), {
+          timeout: 3000,
+        });
+
+        const error = result.current.error as any;
+        expect(error.code).toBe("INVALID_INPUT");
+        expect(error.details).toEqual({ field: "value" });
+      });
   });
 
   describe("Data transformation", () => {
