@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { SettingsModal } from "@/components/wallet/portfolio/components/modals/SettingsModal";
+import { SettingsModal } from "@/components/wallet/portfolio/modals/SettingsModal";
 
 // Mock the modal components
 vi.mock("@/components/ui/modal", () => ({

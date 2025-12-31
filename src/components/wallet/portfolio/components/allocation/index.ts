@@ -1,4 +1,11 @@
 export { AllocationBars } from "./AllocationBars";
+export { AllocationBarTooltip } from "./AllocationBarTooltip";
 export { AllocationLegend } from "./AllocationLegend";
-export { AllocationTooltip } from "./AllocationTooltip";
 export { TargetAllocationBar } from "./TargetAllocationBar";
+
+/**
+ * @deprecated Use AllocationBarTooltip instead
+ *
+ * Renamed to avoid conflict with chart AllocationTooltip component.
+ */
+export { AllocationBarTooltip as AllocationTooltip } from "./AllocationBarTooltip";

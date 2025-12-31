@@ -132,6 +132,11 @@ vi.mock("@/components/wallet/portfolio/modals", () => ({
     isOpen ? <div data-testid="withdraw-modal">Withdraw Modal</div> : null,
   RebalanceModal: ({ isOpen }: any) =>
     isOpen ? <div data-testid="rebalance-modal">Rebalance Modal</div> : null,
+  PortfolioModals: () => (
+    <div data-testid="portfolio-modals">Portfolio Modals Container</div>
+  ),
+  SettingsModal: ({ isOpen }: any) =>
+    isOpen ? <div data-testid="settings-modal">Settings Modal</div> : null,
 }));
 
 vi.mock("@/components/wallet/portfolio/modals/WithdrawModal", () => ({

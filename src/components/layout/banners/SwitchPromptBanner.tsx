@@ -1,4 +1,4 @@
-import { StickyBannerShell } from "../shared/StickyBannerShell";
+import { StickyBannerShell } from "./StickyBannerShell";
 
 interface SwitchPromptBannerProps {
   show: boolean;

@@ -21,13 +21,13 @@ vi.mock("@/services/analyticsService", () => ({
 
 // Mock usePortfolioDashboard hook
 const mockUsePortfolioDashboard = vi.fn();
-vi.mock("@/hooks/usePortfolioDashboard", () => ({
+vi.mock("@/hooks/analytics/usePortfolioDashboard", () => ({
   usePortfolioDashboard: (...args: any[]) => mockUsePortfolioDashboard(...args),
 }));
 
 // Mock useBtcPriceQuery hook
 const mockUseBtcPriceQuery = vi.fn();
-vi.mock("@/hooks/queries/useBtcPriceQuery", () => ({
+vi.mock("@/hooks/queries/market/useBtcPriceQuery", () => ({
   useBtcPriceQuery: (...args: any[]) => mockUseBtcPriceQuery(...args),
 }));
 

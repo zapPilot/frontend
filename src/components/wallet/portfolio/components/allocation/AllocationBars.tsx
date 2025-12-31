@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { ASSET_COLORS, getBarStyle } from "@/constants/assets";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
+import { AllocationBarTooltip } from "./AllocationBarTooltip";
 import { AllocationLegend } from "./AllocationLegend";
-import { AllocationTooltip } from "./AllocationTooltip";
 
 interface AllocationBarsProps {
   cryptoAssets: AllocationConstituent[];
@@ -80,13 +80,13 @@ export function AllocationBars({
               style={{ width: `${asset.value}%` }}
             >
               {isSmall ? (
-                <AllocationTooltip
+                <AllocationBarTooltip
                   label={asset.symbol}
                   percentage={asset.value}
                   color={asset.color}
                 >
                   {barContent}
-                </AllocationTooltip>
+                </AllocationBarTooltip>
               ) : (
                 barContent
               )}
@@ -129,13 +129,13 @@ export function AllocationBars({
             return (
               <div className="h-full" style={{ width: `${stablePercentage}%` }}>
                 {isSmall ? (
-                  <AllocationTooltip
+                  <AllocationBarTooltip
                     label="STABLES"
                     percentage={stablePercentage}
                     color={stableColor}
                   >
                     {stableBarContent}
-                  </AllocationTooltip>
+                  </AllocationBarTooltip>
                 ) : (
                   stableBarContent
                 )}

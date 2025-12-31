@@ -1,21 +1,23 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { usePortfolioDataProgressive } from "@/hooks/queries/usePortfolioDataProgressive";
-import { useLandingPageData } from "@/hooks/queries/usePortfolioQuery";
-import { useRegimeHistory } from "@/services/regimeHistoryService";
-import { useSentimentData } from "@/services/sentimentService";
+import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfolioDataProgressive";
+import { useLandingPageData } from "@/hooks/queries/analytics/usePortfolioQuery";
+import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
+import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
 
 // Mock dependencies
-vi.mock("@/hooks/queries/usePortfolioQuery", () => ({
+vi.mock("@/hooks/queries/analytics/usePortfolioQuery", () => ({
   useLandingPageData: vi.fn(),
 }));
 
-vi.mock("@/services/regimeHistoryService", () => ({
+vi.mock("@/hooks/queries/market/useRegimeHistoryQuery", () => ({
   useRegimeHistory: vi.fn(),
 }));
 
-vi.mock("@/services/sentimentService", () => ({
+vi.mock("@/hooks/queries/market/useSentimentQuery", () => ({
   useSentimentData: vi.fn(),
 }));
 
@@ -40,6 +42,26 @@ vi.mock("@/adapters/portfolio/sentimentAdapter", () => ({
     value: 50,
   })),
 }));
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
+}
+
+function createWrapper() {
+  const queryClient = createTestQueryClient();
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = "TestWrapper";
+  return Wrapper;
+}
 
 describe("usePortfolioDataProgressive", () => {
   const mockLandingPageData = {
@@ -83,7 +105,9 @@ describe("usePortfolioDataProgressive", () => {
   });
 
   it("should return fully populated data structure", () => {
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.sections.balance.data?.balance).toBe(1000);
@@ -103,7 +127,9 @@ describe("usePortfolioDataProgressive", () => {
       error: null,
     } as any);
 
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
 
     // Check balance default
     expect(result.current.sections.balance.data?.balance).toBe(0);
@@ -120,7 +146,9 @@ describe("usePortfolioDataProgressive", () => {
     vi.mocked(useSentimentData).mockReturnValue({ isLoading: false } as any);
     vi.mocked(useRegimeHistory).mockReturnValue({ isLoading: false } as any);
 
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.isLoading).toBe(true);
     // Strategy depends on landing, so it should be loading
     expect(result.current.sections.strategy.isLoading).toBe(true);
@@ -131,7 +159,9 @@ describe("usePortfolioDataProgressive", () => {
       error: new Error("Fail"),
     } as any);
 
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
     expect(result.current.error).toEqual(new Error("Fail"));
   });
 
@@ -140,7 +170,9 @@ describe("usePortfolioDataProgressive", () => {
     vi.mocked(useSentimentData).mockReturnValue({ data: null } as any);
     vi.mocked(useRegimeHistory).mockReturnValue({ data: null } as any);
 
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
 
     expect(result.current.sections.balance.data).toBeNull();
     expect(result.current.sections.strategy.data).toBeNull();
@@ -162,7 +194,9 @@ describe("usePortfolioDataProgressive", () => {
       refetch: refetchRegime,
     } as any);
 
-    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"));
+    const { result } = renderHook(() => usePortfolioDataProgressive("0x123"), {
+      wrapper: createWrapper(),
+    });
 
     await result.current.refetch();
 

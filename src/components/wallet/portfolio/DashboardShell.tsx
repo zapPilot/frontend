@@ -5,9 +5,9 @@ import type { ReactNode } from "react";
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
+import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
+import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
 import { usePortfolioDataProgressive } from "@/hooks/queries/usePortfolioDataProgressive";
-import { useRegimeHistory } from "@/services/regimeHistoryService";
-import { useSentimentData } from "@/services/sentimentService";
 
 interface DashboardShellProps {
   urlUserId: string;

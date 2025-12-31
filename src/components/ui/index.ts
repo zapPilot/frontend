@@ -14,3 +14,6 @@ export {
   Skeleton,
   Spinner,
 } from "./LoadingSystem";
+
+// Progress indicators
+export { ProgressBar } from "./ProgressBar";

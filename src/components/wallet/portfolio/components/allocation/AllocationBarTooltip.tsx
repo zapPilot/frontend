@@ -26,7 +26,7 @@ interface TooltipPosition {
  * - Smooth show/hide transitions
  * - Automatic cleanup on unmount or data changes
  */
-export function AllocationTooltip({
+export function AllocationBarTooltip({
   label,
   percentage,
   color,

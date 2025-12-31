@@ -105,18 +105,18 @@ describe("useChainQuery", () => {
       expect(result.current.data).toEqual(mockChainData[0]);
     });
 
-    it("should return undefined for non-existent chainId", async () => {
+    it("should return null for non-existent chainId", async () => {
       mockGetChainById.mockResolvedValue(undefined);
 
       const { result } = renderHook(() => useChainQuery(999), {
         wrapper: createWrapper(),
       });
 
-      // Wait for query to complete - data will be undefined for non-existent chain
+      // Wait for query to complete - data will be null for non-existent chain (React Query v5 doesn't allow undefined)
       await waitFor(() => expect(result.current.isFetching).toBe(false));
 
       expect(mockGetChainById).toHaveBeenCalledWith(999);
-      expect(result.current.data).toBeUndefined();
+      expect(result.current.data).toBeNull();
     });
 
     it("should use chainId as part of query key", async () => {

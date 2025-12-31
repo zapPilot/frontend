@@ -5,23 +5,17 @@
  * Backend proxy caches data for 10 minutes to reduce load on external API.
  */
 
-import { useQuery } from "@tanstack/react-query";
-
 import {
   getQuoteForSentiment,
   type SentimentLabel,
 } from "@/config/sentimentQuotes";
-import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { APIError, httpUtils } from "@/lib/http";
+import { createErrorMapper } from "@/lib/http/createErrorMapper";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
-import { queryKeys } from "@/lib/state/queryClient";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
-import { logger } from "@/utils/logger";
-
-const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes
 
 /**
  * Frontend Data Model with quote integration
@@ -38,41 +32,20 @@ export interface MarketSentimentData {
 }
 
 /**
- * Error mapper for sentiment service
+ * Error mapper for sentiment service using standardized createErrorMapper utility
  * Transforms API errors into user-friendly error instances
  */
-const createSentimentServiceError = (error: unknown): APIError => {
-  const apiError =
-    error && typeof error === "object"
-      ? (error as {
-          status?: number;
-          message?: string;
-          code?: string;
-          details?: Record<string, unknown>;
-        })
-      : {};
-  const status = apiError.status || 500;
-  let message = apiError.message || "Failed to fetch market sentiment";
-
-  // Enhanced error messages based on status code
-  switch (status) {
-    case 503:
-      message =
-        "Market sentiment data is temporarily unavailable. Please try again later.";
-      break;
-    case 504:
-      message = "Request timed out while fetching market sentiment.";
-      break;
-    case 502:
-      message = "Invalid data received from sentiment provider.";
-      break;
-    case 500:
-      message = "An unexpected error occurred while fetching sentiment data.";
-      break;
-  }
-
-  return new APIError(message, status, apiError.code, apiError.details);
-};
+const createSentimentServiceError = createErrorMapper(
+  (message, status, code, details) =>
+    new APIError(message, status, code, details),
+  {
+    500: "An unexpected error occurred while fetching sentiment data.",
+    502: "Invalid data received from sentiment provider.",
+    503: "Market sentiment data is temporarily unavailable. Please try again later.",
+    504: "Request timed out while fetching market sentiment.",
+  },
+  "Failed to fetch market sentiment"
+);
 
 const callSentimentApi = createServiceCaller(createSentimentServiceError);
 
@@ -97,8 +70,10 @@ function transformSentimentData(
  *
  * Calls `/api/v2/market/sentiment` which proxies the Fear & Greed Index API
  * to avoid CORS issues. Backend handles caching and error handling.
+ *
+ * @returns Market sentiment data with quote
  */
-async function fetchMarketSentiment(): Promise<MarketSentimentData> {
+export async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   return callSentimentApi(async () => {
     const response = await httpUtils.analyticsEngine.get(
       "/api/v2/market/sentiment"
@@ -109,32 +84,14 @@ async function fetchMarketSentiment(): Promise<MarketSentimentData> {
   });
 }
 
+// ============================================================================
+// BACKWARD COMPATIBILITY
+// ============================================================================
+
 /**
- * React Query hook for market sentiment with caching and refetch strategy
+ * @deprecated Import from @/hooks/queries/market/useSentimentQuery instead
  *
- * - Frontend cache: 10 minutes (matches backend cache)
- * - Auto refetch: Every 10 minutes
- * - Retry: Once on failure
- * - Stale-while-revalidate: Backend handles via HTTP headers
+ * React hooks have been moved out of service files to maintain architectural
+ * purity. Service files should only contain pure async functions.
  */
-export function useSentimentData() {
-  return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
-    queryKey: queryKeys.sentiment.market(),
-    queryFn: async () => {
-      try {
-        return await fetchMarketSentiment();
-      } catch (error) {
-        logger.error("Failed to fetch market sentiment", {
-          error: error instanceof Error ? error.message : String(error),
-          status: error instanceof APIError ? error.status : undefined,
-        });
-        throw error;
-      }
-    },
-    staleTime: SENTIMENT_CACHE_MS,
-    gcTime: SENTIMENT_CACHE_MS * 3,
-    refetchInterval: SENTIMENT_CACHE_MS,
-    retry: 1,
-  });
-}
+export { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
