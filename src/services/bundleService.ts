@@ -1,9 +1,16 @@
 /**
  * Bundle Service - Handles bundle metadata and sharing functionality
+ *
+ * Architecture: Service layer for async API calls only
+ * Pure utilities moved to @/lib/bundle for better separation of concerns
  */
 
 import { formatAddress } from "@/utils/formatters";
 import { logger } from "@/utils/logger";
+
+// Re-export utilities from lib for backward compatibility
+// Prefer importing directly from @/lib/bundle in new code
+export { generateBundleUrl, isOwnBundle } from "@/lib/bundle/bundleUtils";
 
 export interface BundleUser {
   userId: string;
@@ -15,6 +22,11 @@ const bundleLogger = logger.createContextLogger("BundleService");
 
 /**
  * Get user information for a bundle
+ *
+ * Service function: Performs async API call to fetch user data
+ *
+ * @param userId - User wallet address
+ * @returns Promise resolving to user information or null on error
  */
 export const getBundleUser = async (
   userId: string
@@ -31,42 +43,3 @@ export const getBundleUser = async (
     return null;
   }
 };
-
-/**
- * Generate bundle URL for sharing
- * @param userId - User wallet address (required)
- * @param walletId - Specific wallet address (optional, V22 Phase 2A)
- * @param baseUrl - Base URL (optional, defaults to relative path for SSR consistency)
- *
- * Note: Returns relative path by default to avoid SSR hydration mismatch.
- * Pass explicit baseUrl for absolute URLs (e.g., for sharing to external services).
- */
-export const generateBundleUrl = (
-  userId: string,
-  walletId?: string,
-  baseUrl?: string
-): string => {
-  const params = new URLSearchParams({ userId });
-
-  if (walletId) {
-    params.set("walletId", walletId);
-  }
-
-  const path = `/bundle?${params.toString()}`;
-
-  // Only prefix with baseUrl if explicitly provided
-  // This avoids SSR hydration mismatch (server has no window.location)
-  if (baseUrl) {
-    return `${baseUrl}${path}`;
-  }
-
-  return path;
-};
-
-/**
- * Check if current user owns the bundle
- */
-export const isOwnBundle = (
-  bundleUserId: string,
-  currentUserId?: string | null
-): boolean => !!currentUserId && currentUserId === bundleUserId;

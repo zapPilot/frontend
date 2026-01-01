@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getChainById, getSupportedChains } from "@/services/chainService";
+import { getChainById, getSupportedChains } from "@/services/chainService.mock";
 
 describe("chainService", () => {
   beforeEach(() => {

@@ -4,6 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
@@ -22,42 +23,18 @@ import type {
   UserProfileResponse,
 } from "@/types/domain/user.types";
 
+// Re-export AccountServiceError for backward compatibility
+export { AccountServiceError };
+
 /**
  * Account Service Error Details
+ * Extended type for account-specific error context
  */
 interface AccountServiceErrorDetails {
   field?: string;
   value?: unknown;
   constraint?: string;
   [key: string]: unknown;
-}
-
-/**
- * AccountServiceError maintains the shape of API errors without depending on the
- * HTTP utilities module (which is frequently mocked in tests).
- * This keeps the constructor available even when http-utils is mocked.
- */
-export class AccountServiceError extends Error {
-  status: number;
-  code?: string;
-  details?: AccountServiceErrorDetails;
-
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: AccountServiceErrorDetails
-  ) {
-    super(message);
-    this.name = "AccountServiceError";
-    this.status = status;
-    if (code !== undefined) {
-      this.code = code;
-    }
-    if (details !== undefined) {
-      this.details = details;
-    }
-  }
 }
 
 /**

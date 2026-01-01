@@ -10,12 +10,12 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
 import { httpUtils } from "@/lib/http";
 import type { RegimeHistoryResponse } from "@/schemas/api/regimeHistorySchemas";
 import {
-    DEFAULT_REGIME_HISTORY,
-    fetchRegimeHistory,
-    useRegimeHistory,
+  DEFAULT_REGIME_HISTORY,
+  fetchRegimeHistory,
 } from "@/services/regimeHistoryService";
 import { logger } from "@/utils/logger";
 
@@ -198,9 +198,7 @@ describe("regimeHistoryService", () => {
 
         analyticsEngineGetSpy.mockRejectedValue(error);
 
-        await expect(fetchRegimeHistory()).rejects.toThrow(
-          /timed out/i
-        );
+        await expect(fetchRegimeHistory()).rejects.toThrow(/timed out/i);
       });
 
       it("should throw APIError with 502 message on invalid gateway", async () => {
@@ -220,9 +218,7 @@ describe("regimeHistoryService", () => {
 
         analyticsEngineGetSpy.mockRejectedValue(error);
 
-        await expect(fetchRegimeHistory()).rejects.toThrow(
-          /unexpected error/i
-        );
+        await expect(fetchRegimeHistory()).rejects.toThrow(/unexpected error/i);
       });
 
       it("should throw on validation error", async () => {
@@ -411,13 +407,13 @@ describe("regimeHistoryService", () => {
 
         // Should return defaults
         expect(result.current.data).toEqual(DEFAULT_REGIME_HISTORY);
-        
+
         // Verify logger was called with string representation
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("Failed to fetch regime history"),
-          expect.objectContaining({ 
+          expect.objectContaining({
             error: expect.stringContaining("unexpected error"),
-            status: 500 
+            status: 500,
           })
         );
       });

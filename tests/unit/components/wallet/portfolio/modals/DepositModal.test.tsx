@@ -13,6 +13,37 @@ vi.mock("@/providers/WalletProvider", () => ({
   }),
 }));
 
+// Mock useTransactionModalState hook that TransactionModalBase uses
+vi.mock(
+  "@/components/wallet/portfolio/modals/hooks/useTransactionModalState",
+  () => ({
+    useTransactionModalState: vi.fn(() => ({
+      form: {
+        formState: { isValid: true },
+        control: {},
+        setValue: vi.fn(),
+        handleSubmit: vi.fn(cb => () => cb()),
+      },
+      chainId: 1,
+      amount: "100",
+      transactionData: {
+        balanceQuery: { data: { balance: "1000" } },
+        selectedToken: { symbol: "USDC", usdPrice: 1 },
+        chainList: [
+          { chainId: 1, name: "Ethereum", symbol: "ETH" },
+          { chainId: 42161, name: "Arbitrum", symbol: "ETH" },
+        ],
+      },
+      statusState: { status: "idle" },
+      isSubmitDisabled: false,
+      handleSubmit: vi.fn(),
+      resetState: vi.fn(),
+      selectedChain: { chainId: 1, name: "Ethereum" },
+      isSubmitting: false,
+    })),
+  })
+);
+
 vi.mock("@/services", () => ({
   transactionService: {
     simulateDeposit: vi.fn(),
@@ -146,7 +177,7 @@ describe("DepositModal", () => {
   it("should display selected chain name", () => {
     render(<DepositModal isOpen={true} onClose={vi.fn()} />);
 
-    expect(screen.getByText(/Arbitrum/)).toBeInTheDocument();
+    expect(screen.getByText(/Ethereum/)).toBeInTheDocument();
   });
 
   it("should display selected token symbol", () => {

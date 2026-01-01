@@ -1,3 +1,15 @@
+/**
+ * ⚠️ MOCK SERVICE - SIMULATION ONLY ⚠️
+ *
+ * This service provides simulated transaction data for development and testing.
+ * - Does NOT make real blockchain transactions
+ * - Uses hardcoded token data and artificial delays
+ * - Returns simulated transaction hashes
+ *
+ * @see Phase 9 - Mock Service Clarity
+ * @future Replace with real transaction service when backend is ready
+ */
+
 import type {
   AllocationBreakdown,
   TransactionFormData,

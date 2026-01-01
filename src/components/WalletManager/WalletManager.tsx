@@ -16,6 +16,7 @@ import { DeleteAccountButton } from "./components/DeleteAccountButton";
 import { EditWalletModal } from "./components/EditWalletModal";
 import { EmailSubscription } from "./components/EmailSubscription";
 import { WalletList } from "./components/WalletList";
+import { WalletListProvider } from "./contexts/WalletListContext";
 import { useDropdownMenu } from "./hooks/useDropdownMenu";
 import { useEmailSubscription } from "./hooks/useEmailSubscription";
 import { useWalletOperations } from "./hooks/useWalletOperations";
@@ -168,13 +169,8 @@ const WalletManagerComponent = ({
 
           {/* Wallet List */}
           {!loading && !walletOperations.isRefreshing && !error && (
-            <WalletList
-              wallets={walletOperations.wallets}
+            <WalletListProvider
               operations={walletOperations.operations}
-              isOwner={!!isOwner}
-              isAdding={walletOperations.isAdding}
-              newWallet={walletOperations.newWallet}
-              validationError={walletOperations.validationError}
               openDropdown={dropdownMenu.openDropdown}
               menuPosition={dropdownMenu.menuPosition}
               onCopyAddress={walletOperations.handleCopyAddress}
@@ -182,11 +178,19 @@ const WalletManagerComponent = ({
               onDeleteWallet={walletOperations.handleDeleteWallet}
               onToggleDropdown={dropdownMenu.toggleDropdown}
               onCloseDropdown={dropdownMenu.closeDropdown}
-              onWalletChange={handleWalletChange}
-              onAddWallet={walletOperations.handleAddWallet}
-              onStartAdding={() => walletOperations.setIsAdding(true)}
-              onCancelAdding={handleCancelAdding}
-            />
+            >
+              <WalletList
+                wallets={walletOperations.wallets}
+                isOwner={!!isOwner}
+                isAdding={walletOperations.isAdding}
+                newWallet={walletOperations.newWallet}
+                validationError={walletOperations.validationError}
+                onWalletChange={handleWalletChange}
+                onAddWallet={walletOperations.handleAddWallet}
+                onStartAdding={() => walletOperations.setIsAdding(true)}
+                onCancelAdding={handleCancelAdding}
+              />
+            </WalletListProvider>
           )}
 
           {/* Email Subscription */}

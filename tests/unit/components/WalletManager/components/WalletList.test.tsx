@@ -9,6 +9,25 @@ import type {
 } from "@/components/WalletManager/types/wallet.types";
 import type { WalletData } from "@/lib/validation/walletUtils";
 
+// Mock useWalletList context hook
+vi.mock("@/components/WalletManager/contexts/WalletListContext", () => ({
+  useWalletList: () => ({
+    operations: {
+      adding: { isLoading: false, error: null },
+      removing: {},
+      editing: {},
+      subscribing: { isLoading: false, error: null },
+    },
+    openDropdown: null,
+    menuPosition: null,
+    onCopyAddress: vi.fn(),
+    onEditWallet: vi.fn(),
+    onDeleteWallet: vi.fn(),
+    onToggleDropdown: vi.fn(),
+    onCloseDropdown: vi.fn(),
+  }),
+}));
+
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
   Plus: () => <div data-testid="plus-icon">Plus Icon</div>,

@@ -4,24 +4,21 @@ import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
 import type { WalletData } from "@/lib/validation/walletUtils";
 
-import type {
-  MenuPosition,
-  NewWallet,
-  WalletMenuHandlers,
-  WalletOperations,
-} from "../types/wallet.types";
+import { useWalletList } from "../contexts/WalletListContext";
+import type { NewWallet } from "../types/wallet.types";
 import { AddWalletForm } from "./AddWalletForm";
 import { WalletCard } from "./WalletCard";
 
-interface WalletListProps extends WalletMenuHandlers {
+/**
+ * Props for WalletList component (reduced from 17 to 9)
+ * Operation handlers provided via WalletListContext
+ */
+interface WalletListProps {
   wallets: WalletData[];
-  operations: WalletOperations;
   isOwner: boolean;
   isAdding: boolean;
   newWallet: NewWallet;
   validationError: string | null;
-  openDropdown: string | null;
-  menuPosition: MenuPosition | null;
   onWalletChange: (wallet: Partial<NewWallet>) => void;
   onAddWallet: () => void;
   onStartAdding: () => void;
@@ -30,23 +27,26 @@ interface WalletListProps extends WalletMenuHandlers {
 
 export const WalletList = ({
   wallets,
-  operations,
   isOwner,
   isAdding,
   newWallet,
   validationError,
-  openDropdown,
-  menuPosition,
-  onCopyAddress,
-  onEditWallet,
-  onDeleteWallet,
-  onToggleDropdown,
-  onCloseDropdown,
   onWalletChange,
   onAddWallet,
   onStartAdding,
   onCancelAdding,
 }: WalletListProps) => {
+  // Get operation handlers from context (eliminates 8 props)
+  const {
+    operations,
+    openDropdown,
+    menuPosition,
+    onCopyAddress,
+    onEditWallet,
+    onDeleteWallet,
+    onToggleDropdown,
+    onCloseDropdown,
+  } = useWalletList();
   if (wallets.length === 0) {
     return (
       <div className="p-6 border-b border-gray-700/50">

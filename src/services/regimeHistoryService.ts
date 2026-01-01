@@ -124,14 +124,17 @@ export async function fetchRegimeHistory(
 }
 
 // ============================================================================
-// BACKWARD COMPATIBILITY
+// ARCHITECTURAL PURITY NOTE (Phase 12 - Deprecated Re-Export Cleanup)
 // ============================================================================
 
 /**
- * @deprecated Import from @/hooks/queries/market/useRegimeHistoryQuery instead
+ * useRegimeHistory hook removed from this file (Phase 12)
  *
- * React hooks have been moved out of service files to maintain architectural
- * purity. Service files should only contain pure async functions.
+ * React hooks should be imported from @/hooks/queries/market/useRegimeHistoryQuery
+ * Services should only export pure async functions, not React hooks.
+ *
+ * This maintains architectural separation:
+ * - Service layer: Pure async functions for API operations
+ * - Hook layer: React-specific logic and state management
  */
-export { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
 /* jscpd:ignore-end */

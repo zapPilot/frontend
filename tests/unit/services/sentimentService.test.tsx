@@ -10,6 +10,8 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { FC, PropsWithChildren } from "react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
+
 // Mock HTTP utilities
 const httpUtilsMock = vi.hoisted(() => ({
   httpUtils: {
@@ -76,13 +78,13 @@ vi.unmock("@/services/sentimentService");
 type SentimentServiceModule = typeof import("@/services/sentimentService");
 type HttpUtilsModule = typeof import("@/lib/http");
 
-let sentimentService: SentimentServiceModule;
+let _sentimentService: SentimentServiceModule;
 let httpUtils: HttpUtilsModule["httpUtils"];
 
 const loadModules = async () => {
   vi.resetModules();
   ({ httpUtils } = await import("@/lib/http"));
-  sentimentService = await import("@/services/sentimentService");
+  _sentimentService = await import("@/services/sentimentService");
 };
 
 // Create wrapper for React Query hooks
@@ -124,7 +126,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -148,7 +149,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -171,7 +171,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -198,7 +197,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -224,7 +222,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error503);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -245,7 +242,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error504);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -265,7 +261,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error502);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -285,7 +280,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error500);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -302,7 +296,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(genericError);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -320,7 +313,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -336,47 +328,47 @@ describe("sentimentService", () => {
         })
       );
     });
-      it("should handle non-object errors", async () => {
-        vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue("String error");
+    it("should handle non-object errors", async () => {
+      vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(
+        "String error"
+      );
 
-        const { useSentimentData } = sentimentService;
-        const { result } = renderHook(() => useSentimentData(), {
-          wrapper: createWrapper(),
-        });
-
-        await waitFor(() => expect(result.current.isError).toBe(true), {
-          timeout: 3000,
-        });
-
-        expect(result.current.error).toBeDefined();
-        expect((result.current.error as any).message).toBe(
-          "An unexpected error occurred while fetching sentiment data."
-        );
+      const { result } = renderHook(() => useSentimentData(), {
+        wrapper: createWrapper(),
       });
 
-      it("should preserve error code and details", async () => {
-        const complexError = {
-          status: 400,
-          message: "Bad Request",
-          code: "INVALID_INPUT",
-          details: { field: "value" },
-        };
-
-        vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(complexError);
-
-        const { useSentimentData } = sentimentService;
-        const { result } = renderHook(() => useSentimentData(), {
-          wrapper: createWrapper(),
-        });
-
-        await waitFor(() => expect(result.current.isError).toBe(true), {
-          timeout: 3000,
-        });
-
-        const error = result.current.error as any;
-        expect(error.code).toBe("INVALID_INPUT");
-        expect(error.details).toEqual({ field: "value" });
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
       });
+
+      expect(result.current.error).toBeDefined();
+      expect((result.current.error as any).message).toBe(
+        "An unexpected error occurred while fetching sentiment data."
+      );
+    });
+
+    it("should preserve error code and details", async () => {
+      const complexError = {
+        status: 400,
+        message: "Bad Request",
+        code: "INVALID_INPUT",
+        details: { field: "value" },
+      };
+
+      vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(complexError);
+
+      const { result } = renderHook(() => useSentimentData(), {
+        wrapper: createWrapper(),
+      });
+
+      await waitFor(() => expect(result.current.isError).toBe(true), {
+        timeout: 3000,
+      });
+
+      const error = result.current.error as any;
+      expect(error.code).toBe("INVALID_INPUT");
+      expect(error.details).toEqual({ field: "value" });
+    });
   });
 
   describe("Data transformation", () => {
@@ -391,7 +383,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -412,7 +403,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -434,7 +424,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -455,7 +444,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -482,7 +470,6 @@ describe("sentimentService", () => {
         extremeResponse
       );
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -501,7 +488,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockResolvedValue(zeroResponse);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -520,7 +506,6 @@ describe("sentimentService", () => {
 
       vi.mocked(httpUtils.analyticsEngine.get).mockResolvedValue(midResponse);
 
-      const { useSentimentData } = sentimentService;
       const { result } = renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });
@@ -554,7 +539,6 @@ describe("sentimentService", () => {
         mockApiResponse
       );
 
-      const { useSentimentData } = sentimentService;
       renderHook(() => useSentimentData(), {
         wrapper: createWrapper(),
       });

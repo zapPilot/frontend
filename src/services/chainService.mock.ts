@@ -1,3 +1,15 @@
+/**
+ * ⚠️ MOCK SERVICE - SIMULATION ONLY ⚠️
+ *
+ * This service provides simulated chain data for development and testing.
+ * - Does NOT connect to real chain data providers
+ * - Uses hardcoded chain configurations
+ * - Returns artificial delays to simulate network requests
+ *
+ * @see Phase 9 - Mock Service Clarity
+ * @future Replace with real chain service when backend is ready
+ */
+
 import type { ChainData } from "@/types/domain/transaction";
 
 const MOCK_CHAIN_DATA: ChainData[] = [
