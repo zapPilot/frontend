@@ -2,7 +2,8 @@
 
 import { createContext, ReactNode, useContext } from "react";
 
-import { useCurrentUser, type UserInfo } from "../hooks/queries/useUserQuery";
+import { useCurrentUser, type UserInfo } from "@/hooks/queries/wallet/useUserQuery";
+
 import { logger } from "../utils/logger";
 
 // Types are now imported from useUserQuery hook

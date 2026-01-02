@@ -12,6 +12,7 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 
 import { PORTFOLIO_CONFIG } from "../constants/portfolio";
+import { logger } from "./logger";
 
 // Initialize dayjs plugins
 dayjs.extend(relativeTime);
@@ -322,8 +323,7 @@ export function calculateDataFreshness(
       isCurrent: hoursSince <= 24,
     };
   } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error("Error calculating data freshness:", error);
+    logger.error("Error calculating data freshness", error, "formatters");
     return {
       relativeTime: "Unknown",
       state: "unknown",

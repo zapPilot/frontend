@@ -9,7 +9,7 @@ import {
   updateWalletLabel,
 } from "@/components/WalletManager/services/WalletService";
 import { useUser } from "@/contexts/UserContext";
-import { useToast } from "@/hooks/useToast";
+import { useToast } from "@/providers/ToastProvider";
 import { useWalletProvider } from "@/providers/WalletProvider";
 
 // Mock dependencies
@@ -17,7 +17,7 @@ vi.mock("@/contexts/UserContext", () => ({
   useUser: vi.fn(),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
+vi.mock("@/providers/ToastProvider", () => ({
   useToast: vi.fn(),
 }));
 
@@ -42,7 +42,7 @@ vi.mock("@/components/WalletManager/services/WalletService", () => ({
   updateWalletLabel: vi.fn(),
 }));
 
-vi.mock("@/hooks/useQueryInvalidation", () => ({
+vi.mock("@/hooks/utils/useQueryInvalidation", () => ({
   invalidateAndRefetch: vi.fn(),
 }));
 

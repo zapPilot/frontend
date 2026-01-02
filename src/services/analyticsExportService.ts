@@ -18,6 +18,7 @@ import type {
   WalletFilter,
 } from "@/types/analytics";
 import type { ExportMetadata, ExportResult } from "@/types/export";
+import { logger } from "@/utils/logger";
 
 // Re-export validation utility from lib for backward compatibility
 // Prefer importing directly from @/lib/analytics in new code
@@ -116,8 +117,7 @@ export async function exportAnalyticsToCSV(
     };
   } catch (error) {
     // Log error for debugging
-    // eslint-disable-next-line no-console
-    console.error("[analyticsExportService] Export failed:", error);
+    logger.error("Export failed", error, "analyticsExportService");
 
     return {
       success: false,

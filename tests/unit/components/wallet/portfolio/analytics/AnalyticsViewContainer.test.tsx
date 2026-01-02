@@ -6,8 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnalyticsViewContainer } from "@/components/wallet/portfolio/analytics/AnalyticsViewContainer";
-import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
-import { useCurrentUser } from "@/hooks/queries/useUserQuery";
+import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
+import { useCurrentUser } from "@/hooks/queries/wallet/useUserQuery";
 import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 
 // Mock child components
@@ -70,8 +70,8 @@ vi.mock(
 );
 
 // Mock hooks and services
-vi.mock("@/hooks/queries/useAnalyticsData");
-vi.mock("@/hooks/queries/useUserQuery");
+vi.mock("@/hooks/queries/analytics/useAnalyticsData");
+vi.mock("@/hooks/queries/wallet/useUserQuery");
 vi.mock("@/services/analyticsExportService");
 
 describe("AnalyticsViewContainer", () => {

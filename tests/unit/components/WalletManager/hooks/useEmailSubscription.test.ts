@@ -7,14 +7,14 @@ import {
   updateUserEmailSubscription,
 } from "@/components/WalletManager/services/WalletService";
 import { useUser } from "@/contexts/UserContext";
-import { useToast } from "@/hooks/useToast";
+import { useToast } from "@/providers/ToastProvider";
 
 // Mock dependencies
 vi.mock("@/contexts/UserContext", () => ({
   useUser: vi.fn(),
 }));
 
-vi.mock("@/hooks/useToast", () => ({
+vi.mock("@/providers/ToastProvider", () => ({
   useToast: vi.fn(),
 }));
 
@@ -24,7 +24,7 @@ vi.mock("@/components/WalletManager/services/WalletService", () => ({
 }));
 
 // Mock useOperationStateHandlers
-vi.mock("@/hooks/useOperationState", () => ({
+vi.mock("@/hooks/utils/useOperationState", () => ({
   useOperationStateHandlers: () => ({
     setLoading: vi.fn(),
     setSuccess: vi.fn(),

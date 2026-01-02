@@ -8,7 +8,7 @@ import { useConnectModal } from "thirdweb/react";
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
 import { DEFAULT_SUPPORTED_CHAINS, DEFAULT_WALLETS } from "@/config/wallets";
 import { WALLET_LABELS } from "@/constants/wallet";
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { formatAddress } from "@/utils/formatters";

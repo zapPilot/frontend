@@ -3,7 +3,7 @@
  * Provides builders for all chart types with proper TypeScript inference
  */
 
-import type { UseChartHoverOptions } from "@/hooks/useChartHover";
+import type { UseChartHoverOptions } from "@/hooks/ui/useChartHover";
 import type {
   AllocationHoverData,
   ChartHoverState,

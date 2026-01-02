@@ -8,7 +8,7 @@
 import { Check, ChevronDown, Wallet } from "lucide-react";
 import { useRef, useState } from "react";
 
-import { useClickOutside } from "@/hooks/useClickOutside";
+import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import type { WalletFilter, WalletOption } from "@/types/analytics";
 import { formatAddress } from "@/utils/formatters";
 

@@ -1,6 +1,5 @@
 import { useCallback, useState } from "react";
 
-import { useToast } from "@/hooks/useToast";
 import { useAccountDeletion } from "@/hooks/wallet/useAccountDeletion";
 import { useWalletLabels } from "@/hooks/wallet/useWalletLabels";
 import { useWalletList } from "@/hooks/wallet/useWalletList";
@@ -9,6 +8,7 @@ import {
   handleWalletError,
   type WalletData,
 } from "@/lib/validation/walletUtils";
+import { useToast } from "@/providers/ToastProvider";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { copyTextToClipboard } from "@/utils/clipboard";
 import { formatAddress } from "@/utils/formatters";

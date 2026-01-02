@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { UserProvider, useUser } from "../../../src/contexts/UserContext";
-import { useCurrentUser } from "../../../src/hooks/queries/useUserQuery";
+import { useCurrentUser } from "../../../src/hooks/queries/wallet/useUserQuery";
 import { logger } from "../../../src/utils/logger";
 import { render, screen, waitFor } from "../../test-utils";
 
@@ -13,7 +13,7 @@ vi.mock("@/contexts/UserContext", async () => {
 });
 
 // Mock dependencies
-vi.mock("../../../src/hooks/queries/useUserQuery", () => ({
+vi.mock("../../../src/hooks/queries/wallet/useUserQuery", () => ({
   useCurrentUser: vi.fn(),
 }));
 

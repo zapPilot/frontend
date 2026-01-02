@@ -7,9 +7,9 @@ import { LogViewer } from "@/components/debug/LogViewer";
 import { ErrorBoundary } from "@/components/errors/ErrorBoundary";
 import { GlobalErrorHandler } from "@/components/errors/GlobalErrorHandler";
 import { UserProvider } from "@/contexts/UserContext";
-import { ToastProvider } from "@/hooks/useToast";
 import { QueryProvider } from "@/providers/QueryProvider";
 import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
+import { ToastProvider } from "@/providers/ToastProvider";
 import { WalletProvider } from "@/providers/WalletProvider";
 
 const geistSans = Geist({

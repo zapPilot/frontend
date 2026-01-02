@@ -9,8 +9,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
-import { useCurrentUser } from "@/hooks/queries/useUserQuery";
+import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
+import { useCurrentUser } from "@/hooks/queries/wallet/useUserQuery";
 import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 import type {
   AnalyticsData,

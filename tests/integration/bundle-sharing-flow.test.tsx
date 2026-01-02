@@ -214,7 +214,7 @@ vi.mock("@/components/WalletManager", () => ({
 }));
 
 // Mock useBundlePage hook
-vi.mock("@/hooks/useBundlePage", () => ({
+vi.mock("@/hooks/bundle/useBundlePage", () => ({
   useBundlePage: (userId: string) => {
     const isOwnBundle = mockIsConnected && mockUserInfo?.userId === userId;
     // Banner always shows when viewing different user's bundle (no dismissal)

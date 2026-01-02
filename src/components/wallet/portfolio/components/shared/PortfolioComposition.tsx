@@ -8,7 +8,7 @@ import {
   type Regime,
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
-import { useAllocationWeights } from "@/hooks/queries/useAllocationWeights";
+import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
 import { AllocationBars, TargetAllocationBar } from "../allocation";

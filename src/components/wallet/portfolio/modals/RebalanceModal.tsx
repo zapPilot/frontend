@@ -13,7 +13,6 @@ import {
   TransactionActionButton,
   TransactionModalHeader,
 } from "./components/TransactionModalParts";
-import { useTransactionStatus } from "./hooks/useTransactionStatus";
 import { resolveActionLabel } from "./utils/actionLabelUtils";
 
 export function RebalanceModal({
@@ -24,7 +23,11 @@ export function RebalanceModal({
 }: RebalanceModalProps) {
   const { isConnected } = useWalletProvider();
   const [intensity] = useState(100);
-  const { status, setStatus, setResult, resetStatus } = useTransactionStatus();
+
+  // Status state (internalized from deleted useTransactionStatus)
+  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
+    "idle"
+  );
 
   const projected = useMemo(
     () =>
@@ -39,12 +42,11 @@ export function RebalanceModal({
   const handleSubmit = async () => {
     setStatus("submitting");
     try {
-      const response = await transactionService.simulateRebalance(
+      await transactionService.simulateRebalance(
         intensity,
         currentAllocation,
         targetAllocation
       );
-      setResult(response);
       setStatus("success");
     } catch {
       setStatus("idle");
@@ -52,7 +54,7 @@ export function RebalanceModal({
   };
 
   const resetState = () => {
-    resetStatus();
+    setStatus("idle");
     onClose();
   };
 

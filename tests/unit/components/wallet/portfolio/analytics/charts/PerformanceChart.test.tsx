@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { PerformanceChart } from "@/components/wallet/portfolio/analytics/charts/PerformanceChart";
 
 // Mock dependencies
-vi.mock("@/hooks/useChartHover", () => ({
+vi.mock("@/hooks/ui/useChartHover", () => ({
   useChartHover: () => ({
     hoveredPoint: null,
     onMouseMove: vi.fn(),

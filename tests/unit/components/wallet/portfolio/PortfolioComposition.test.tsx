@@ -63,7 +63,7 @@ vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
 }));
 
 // Mock useAllocationWeights to avoid QueryClient dependency
-vi.mock("@/hooks/queries/useAllocationWeights", () => ({
+vi.mock("@/hooks/queries/analytics/useAllocationWeights", () => ({
   useAllocationWeights: vi.fn().mockReturnValue({
     data: {
       btc_weight: 0.6,

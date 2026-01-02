@@ -1,20 +1,20 @@
 /**
  * Error Handling Module
  *
- * Centralized error handling with type definitions, base classes, and factory functions.
+ * Centralized error handling with unified error hierarchy and helper utilities.
  * @module lib/errors
  */
 
 // ============================================================================
-// NEW UNIFIED ERROR SYSTEM (Phase 7 - Error Handling Unification)
+// UNIFIED ERROR SYSTEM
 // ============================================================================
 
-// Unified service error hierarchy (preferred for new code)
+// Service error classes
 export {
   AccountServiceError,
   AnalyticsServiceError,
   BundleServiceError,
-  IntentServiceError as IntentError,
+  IntentServiceError,
   ServiceError,
 } from "./ServiceError";
 
@@ -23,21 +23,26 @@ export type { Result } from "./ServiceError";
 export { Err, Ok, OkVoid } from "./ServiceError";
 
 // ============================================================================
-// EXISTING ERROR SYSTEM (backward compatibility)
+// ERROR UTILITIES
 // ============================================================================
 
-// Export base error class
-export { BaseServiceError } from "./BaseServiceError";
-
-// Export service-specific error classes
+// Error helper functions (classification and factory)
 export {
+  createAccountServiceError,
+  createAnalyticsServiceError,
+  createBundleServiceError,
   createIntentServiceError,
-  IntentServiceError,
-} from "./IntentServiceError";
+  extractErrorCode,
+  extractStatusCode,
+  isClientError,
+  isRetryableError,
+  isServerError,
+  isServiceError,
+} from "./errorHelpers";
 
-// Export factory utilities
+// Legacy factory utilities (still used in some places)
 export { resolveErrorMessage } from "./errorFactory";
 
-// Export error handling utilities
+// Error handling utilities
 export type { ServiceResult } from "./errorHandling";
 export { wrapServiceCall } from "./errorHandling";

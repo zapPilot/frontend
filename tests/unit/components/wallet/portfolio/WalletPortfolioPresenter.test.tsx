@@ -89,7 +89,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // Mock useToast hook
-vi.mock("@/hooks/useToast", () => ({
+vi.mock("@/providers/ToastProvider", () => ({
   useToast: () => ({
     showToast: vi.fn(),
     hideToast: vi.fn(),
@@ -175,7 +175,7 @@ vi.mock("@/providers/WalletProvider", () => ({
 }));
 
 // Mock useAllocationWeights to avoid QueryClient dependency
-vi.mock("@/hooks/queries/useAllocationWeights", () => ({
+vi.mock("@/hooks/queries/analytics/useAllocationWeights", () => ({
   useAllocationWeights: vi.fn().mockReturnValue({
     data: {
       btc_weight: 0.6,

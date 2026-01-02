@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/LoadingSystem";
 import { ModalBackdrop } from "@/components/ui/modal";
 import { GRADIENTS } from "@/constants/design-system";
 import { useUser } from "@/contexts/UserContext";
-import { useAsyncRetryButton } from "@/hooks/useAsyncRetryButton";
+import { useAsyncRetryButton } from "@/hooks/ui/useAsyncRetryButton";
 import { logger } from "@/utils/logger";
 
 import { DeleteAccountButton } from "./components/DeleteAccountButton";

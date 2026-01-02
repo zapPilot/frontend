@@ -1,10 +1,10 @@
 /**
  * Unit tests for queryDefaults - React Query configuration utilities
  */
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { BaseServiceError } from "@/lib/errors";
+import { ServiceError } from "@/lib/errors";
 
 describe("queryDefaults", () => {
   describe("createQueryConfig", () => {
@@ -71,19 +71,17 @@ describe("queryDefaults", () => {
         expect(retry(0, clientError)).toBe(false);
       });
 
-      it("should skip retry for BaseServiceError client errors", () => {
+      it("should skip retry for ServiceError client errors", () => {
         const config = createQueryConfig();
         const retry = config.retry as (
           failureCount: number,
           error: unknown
         ) => boolean;
 
-        // Create mock BaseServiceError
-        const mockError = Object.create(BaseServiceError.prototype);
-        mockError.isClientError = vi.fn().mockReturnValue(true);
+        // Create ServiceError with 4xx status (client error)
+        const clientError = new ServiceError("Client error", 404, "NOT_FOUND");
 
-        expect(retry(0, mockError)).toBe(false);
-        expect(mockError.isClientError).toHaveBeenCalled();
+        expect(retry(0, clientError)).toBe(false);
       });
 
       it("should allow retry for non-client errors even with skipClientErrors", () => {

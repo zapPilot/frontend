@@ -1,10 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
+import type { UseFormReturn } from "react-hook-form";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import type {
+  ChainData,
   TransactionFormData,
   TransactionResult,
 } from "@/types/domain/transaction";
@@ -13,19 +15,19 @@ import {
   SubmittingState,
   TransactionModalHeader,
 } from "../components/TransactionModalParts";
-import { useTransactionModalState } from "../hooks/useTransactionModalState";
+import { useTransactionData } from "../hooks/useTransactionData";
+import { useTransactionForm } from "../hooks/useTransactionForm";
+import { useTransactionSubmission } from "../hooks/useTransactionSubmission";
 
 /**
  * State exposed to render prop children for custom modal content
  */
 export interface TransactionModalState {
-  form: ReturnType<typeof useTransactionModalState>["form"];
+  form: UseFormReturn<TransactionFormData>;
   chainId: number;
   amount: string;
-  transactionData: ReturnType<
-    typeof useTransactionModalState
-  >["transactionData"];
-  selectedChain: ReturnType<typeof useTransactionModalState>["selectedChain"];
+  transactionData: ReturnType<typeof useTransactionData>;
+  selectedChain: ChainData | null;
   isSubmitting: boolean;
   isSubmitDisabled: boolean;
   handleSubmit: () => Promise<void> | void;
@@ -76,27 +78,41 @@ export function TransactionModalBase({
 }: TransactionModalBaseProps) {
   const { isConnected } = useWalletProvider();
 
-  const modalState = useTransactionModalState({
-    isOpen,
-    isConnected,
-    onClose,
-    defaultChainId,
+  // 1. Form management
+  const form = useTransactionForm({
+    chainId: defaultChainId,
     ...(slippage !== undefined ? { slippage } : {}),
-    submitFn,
   });
 
-  const {
-    form,
+  // Watch form values for data fetching
+  const chainId = form.watch("chainId");
+  const tokenAddress = form.watch("tokenAddress");
+  const amount = form.watch("amount");
+
+  // 2. Data fetching (tokens, chains, balances)
+  const transactionData = useTransactionData({
+    isOpen,
     chainId,
+    tokenAddress,
     amount,
-    transactionData,
-    statusState,
-    isSubmitDisabled,
-    handleSubmit,
-    resetState,
-    selectedChain,
-    isSubmitting,
-  } = modalState;
+  });
+
+  // 3. Submission handling
+  const submission = useTransactionSubmission(
+    form,
+    isConnected,
+    transactionData.selectedToken,
+    submitFn,
+    onClose
+  );
+
+  // Derived state
+  const selectedChain = transactionData.selectedChain;
+  const isSubmitting = submission.isSubmitting;
+
+  const resetState = () => {
+    submission.resetState();
+  };
 
   const renderState: TransactionModalState = {
     form,
@@ -105,8 +121,8 @@ export function TransactionModalBase({
     transactionData,
     selectedChain,
     isSubmitting,
-    isSubmitDisabled,
-    handleSubmit,
+    isSubmitDisabled: submission.isSubmitDisabled,
+    handleSubmit: submission.handleSubmit,
   };
 
   return (
@@ -122,7 +138,7 @@ export function TransactionModalBase({
         <div className="p-6">
           {isSubmitting ? (
             <SubmittingState
-              isSuccess={statusState.status === "success"}
+              isSuccess={submission.status === "success"}
               {...(successMessage ? { successMessage } : {})}
               successTone={successTone}
               successExtra={successExtra}

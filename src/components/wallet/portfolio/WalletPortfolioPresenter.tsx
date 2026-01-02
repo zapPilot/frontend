@@ -13,7 +13,7 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
-import { useToast } from "@/hooks/useToast";
+import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services/accountService";
 import { generateBundleUrl } from "@/services/bundleService";
 import type { TabType } from "@/types/portfolio";

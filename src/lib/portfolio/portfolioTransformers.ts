@@ -72,6 +72,23 @@ export function extractCompositionData(
 }
 
 /**
+ * Type guard to validate landing data at runtime
+ *
+ * @param data - Unknown data to validate
+ * @returns True if data is valid LandingPageResponse
+ */
+export function isValidLandingData(
+  data: unknown
+): data is LandingPageResponse {
+  return (
+    data !== null &&
+    data !== undefined &&
+    typeof data === "object" &&
+    "total_value" in data
+  );
+}
+
+/**
  * Combine strategy data from all sources
  *
  * @param landingData - Landing page response (may be undefined during loading)
@@ -80,11 +97,11 @@ export function extractCompositionData(
  * @returns Combined strategy data or null if landing data unavailable
  */
 export function combineStrategyData(
-  landingData: unknown | undefined,
+  landingData: LandingPageResponse | undefined,
   sentimentData: MarketSentimentData | undefined,
   regimeHistoryData: RegimeHistoryData | undefined
 ): StrategyData | null {
-  if (!landingData) return null;
+  if (!isValidLandingData(landingData)) return null;
 
   // Process sentiment (with fallback to neutral if undefined)
   // If strict independent loading is required, this might be adjusted,

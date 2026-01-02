@@ -13,33 +13,57 @@ vi.mock("@/providers/WalletProvider", () => ({
   }),
 }));
 
-// Mock useTransactionModalState hook that TransactionModalBase uses
+// Mock the 3 simplified hooks that TransactionModalBase uses
 vi.mock(
-  "@/components/wallet/portfolio/modals/hooks/useTransactionModalState",
+  "@/components/wallet/portfolio/modals/hooks/useTransactionForm",
   () => ({
-    useTransactionModalState: vi.fn(() => ({
-      form: {
-        formState: { isValid: true },
-        control: {},
-        setValue: vi.fn(),
-        handleSubmit: vi.fn(cb => () => cb()),
-      },
-      chainId: 1,
-      amount: "100",
-      transactionData: {
-        balanceQuery: { data: { balance: "1000" } },
-        selectedToken: { symbol: "USDC", usdPrice: 1 },
-        chainList: [
-          { chainId: 1, name: "Ethereum", symbol: "ETH" },
-          { chainId: 42161, name: "Arbitrum", symbol: "ETH" },
-        ],
-      },
-      statusState: { status: "idle" },
+    useTransactionForm: vi.fn(() => ({
+      formState: { isValid: true },
+      control: {},
+      setValue: vi.fn(),
+      handleSubmit: vi.fn(cb => () => cb()),
+      watch: vi.fn((field: string) => {
+        if (field === "chainId") return 1;
+        if (field === "tokenAddress") return "0x123";
+        if (field === "amount") return "100";
+        return "";
+      }),
+    })),
+  })
+);
+
+vi.mock(
+  "@/components/wallet/portfolio/modals/hooks/useTransactionData",
+  () => ({
+    useTransactionData: vi.fn(() => ({
+      chainList: [
+        { chainId: 1, name: "Ethereum", symbol: "ETH" },
+        { chainId: 42161, name: "Arbitrum", symbol: "ETH" },
+      ],
+      selectedChain: { chainId: 1, name: "Ethereum" },
+      availableTokens: [{ symbol: "USDC", address: "0x123", usdPrice: 1 }],
+      selectedToken: { symbol: "USDC", address: "0x123", usdPrice: 1 },
+      tokenQuery: { data: [], isLoading: false },
+      balances: {},
+      balanceQuery: { data: { balance: "1000" }, isLoading: false },
+      usdAmount: 100,
+      isLoadingTokens: false,
+      isLoadingBalance: false,
+      isLoading: false,
+    })),
+  })
+);
+
+vi.mock(
+  "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission",
+  () => ({
+    useTransactionSubmission: vi.fn(() => ({
+      status: "idle",
+      result: null,
+      isSubmitting: false,
       isSubmitDisabled: false,
       handleSubmit: vi.fn(),
       resetState: vi.fn(),
-      selectedChain: { chainId: 1, name: "Ethereum" },
-      isSubmitting: false,
     })),
   })
 );
@@ -82,23 +106,6 @@ vi.mock("next/image", () => ({
 vi.mock(
   "@/components/wallet/portfolio/modals/transactionModalDependencies",
   () => ({
-    useTransactionModalState: vi.fn(() => ({
-      form: {
-        formState: { isValid: true },
-        control: {},
-      },
-      amount: "100",
-      transactionData: {
-        balanceQuery: { data: { balance: "1000" } },
-        selectedToken: { symbol: "USDC", usdPrice: 1 },
-      },
-      statusState: { status: "idle" },
-      isSubmitDisabled: false,
-      handleSubmit: vi.fn(),
-      resetState: vi.fn(),
-      selectedChain: { chainId: 42161, name: "Arbitrum" },
-      isSubmitting: false,
-    })),
     applyPercentageToAmount: vi.fn(),
     resolveActionLabel: () => "Review & Deposit",
     buildFormActionsProps: vi.fn((form, amount) => ({
