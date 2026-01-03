@@ -1,3 +1,4 @@
+/* c8 ignore file - Next.js root layout is not unit-testable */
 import "./globals.css";
 
 import type { Metadata, Viewport } from "next";
