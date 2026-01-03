@@ -7,7 +7,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AnalyticsViewContainer } from "@/components/wallet/portfolio/analytics/AnalyticsViewContainer";
 import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
-import { useCurrentUser } from "@/hooks/queries/wallet/useUserQuery";
+import {
+  useCurrentUser,
+  useUserById,
+} from "@/hooks/queries/wallet/useUserQuery";
 import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 
 // Mock child components
@@ -80,6 +83,7 @@ describe("AnalyticsViewContainer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    // Keep existing useCurrentUser mock for backward compatibility
     vi.mocked(useCurrentUser).mockReturnValue({
       userInfo: {
         additionalWallets: [
@@ -88,6 +92,33 @@ describe("AnalyticsViewContainer", () => {
         ],
       },
       isLoading: false,
+    } as any);
+
+    // Add useUserById mock for bundle owner data
+    vi.mocked(useUserById).mockReturnValue({
+      data: {
+        userId: "user-123",
+        email: "owner@example.com",
+        bundleWallets: ["0x123", "0x456"],
+        additionalWallets: [
+          {
+            wallet_address: "0x123",
+            label: "Wallet 1",
+            created_at: "2024-01-01",
+          },
+          {
+            wallet_address: "0x456",
+            label: "Wallet 2",
+            created_at: "2024-01-02",
+          },
+        ],
+        visibleWallets: ["0x123", "0x456"],
+        totalWallets: 2,
+        totalVisibleWallets: 2,
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
     } as any);
 
     vi.mocked(useAnalyticsData).mockReturnValue({
@@ -195,14 +226,27 @@ describe("AnalyticsViewContainer", () => {
     // Verify selection
     expect(screen.getByTestId("selected-wallet")).toHaveTextContent("0x123");
 
-    // Re-render with wallet removed
-    vi.mocked(useCurrentUser).mockReturnValue({
-      userInfo: {
+    // Re-render with wallet removed from bundle owner's wallets
+    vi.mocked(useUserById).mockReturnValue({
+      data: {
+        userId: "user-123",
+        email: "owner@example.com",
+        bundleWallets: ["0x456"],
         additionalWallets: [
           // "0x123" removed
-          { wallet_address: "0x456", label: "Wallet 2" },
+          {
+            wallet_address: "0x456",
+            label: "Wallet 2",
+            created_at: "2024-01-02",
+          },
         ],
+        visibleWallets: ["0x456"],
+        totalWallets: 1,
+        totalVisibleWallets: 1,
       },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
     } as any);
 
     rerender(<AnalyticsViewContainer userId="user-123" />);
@@ -245,5 +289,15 @@ describe("AnalyticsViewContainer", () => {
     expect(screen.getByTestId("export-error")).toHaveTextContent(
       "An unexpected error occurred"
     );
+  });
+
+  it("fetches bundle owner's wallets in visitor mode", () => {
+    render(<AnalyticsViewContainer userId="bundle-owner-123" />);
+
+    // Should call useUserById with bundle owner's ID from URL
+    expect(useUserById).toHaveBeenCalledWith("bundle-owner-123");
+
+    // Should render analytics view with bundle owner's data
+    expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
   });
 });

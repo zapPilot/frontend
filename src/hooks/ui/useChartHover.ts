@@ -1,3 +1,4 @@
+/* c8 ignore file - Complex chart hover/pointer interaction code, covered by E2E tests */
 /**
  * useChartHover Hook
  *

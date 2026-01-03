@@ -87,3 +87,54 @@ export function useCurrentUser() {
     error: (userQuery.error as Error | null)?.message || null,
   };
 }
+
+/**
+ * Hook to get user data by userId (for viewing bundle owner's data)
+ * This is used to fetch any user's profile without wallet connection
+ * Primarily for visitor mode to see bundle owner's wallets
+ *
+ * @param userId - The userId to fetch (bundle owner ID from URL)
+ * @returns Query result with user profile data
+ */
+export function useUserById(userId: string | null) {
+  return useQuery({
+    ...createQueryConfig({
+      dataType: "dynamic",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND"],
+      },
+    }),
+    queryKey: queryKeys.user.byId(userId || ""),
+    queryFn: async (): Promise<UserInfo> => {
+      if (!userId) {
+        throw new Error("No user ID provided");
+      }
+
+      // Fetch user profile directly by userId (no wallet connection needed)
+      const profileData: UserProfileResponse = await getUserProfile(userId);
+      const wallets = profileData.wallets || [];
+      const userEmail = profileData.user?.email || "";
+
+      // Derive fields compatible with UserInfo structure
+      const bundleWallets =
+        wallets.length > 0 ? wallets.map(w => w.wallet) : [];
+
+      const additionalWallets = wallets.map(w => ({
+        wallet_address: w.wallet,
+        label: w.label ?? null,
+        created_at: w.created_at,
+      }));
+
+      return {
+        userId,
+        email: userEmail,
+        bundleWallets,
+        additionalWallets,
+        visibleWallets: bundleWallets,
+        totalWallets: bundleWallets.length,
+        totalVisibleWallets: bundleWallets.length,
+      };
+    },
+    enabled: !!userId,
+  });
+}

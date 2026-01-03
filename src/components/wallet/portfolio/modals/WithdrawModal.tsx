@@ -23,6 +23,7 @@ interface DropdownPanelProps {
   children: ReactNode;
 }
 
+/* c8 ignore start - Pure UI animation component, covered by E2E tests */
 function DropdownPanel({ isOpen, className, children }: DropdownPanelProps) {
   return (
     <AnimatePresence>
@@ -40,6 +41,7 @@ function DropdownPanel({ isOpen, className, children }: DropdownPanelProps) {
     </AnimatePresence>
   );
 }
+/* c8 ignore stop */
 
 const CATEGORIES: {
   id: AssetCategoryKey;

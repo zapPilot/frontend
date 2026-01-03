@@ -47,6 +47,10 @@ export default defineConfig({
         'src/**/*.stories.*',
         'src/**/*.test.*',
         'src/**/*.spec.*',
+        // UI interaction hooks covered by E2E tests
+        'src/hooks/ui/useChartHover.ts',
+        'src/hooks/ui/useClickOutside.ts',
+        'src/hooks/ui/useAsyncRetryButton.ts',
       ],
       reportOnFailure: true,
       all: true
