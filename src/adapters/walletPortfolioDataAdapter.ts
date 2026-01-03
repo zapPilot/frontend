@@ -11,13 +11,13 @@
  */
 
 import {
-  calculateAllocation,
-  calculateDelta,
-  type PortfolioAllocation,
+    calculateAllocation,
+    calculateDelta,
+    type PortfolioAllocation,
 } from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
@@ -25,13 +25,11 @@ import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
 import {
-  countUniqueChains,
-  countUniqueProtocols,
-  extractROIChanges,
+    extractROIChanges
 } from "@/lib/portfolio/portfolioUtils";
 import type {
-  DirectionType,
-  DurationInfo,
+    DirectionType,
+    DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
@@ -151,12 +149,12 @@ export function transformToWalletPortfolioData(
     delta,
 
     // Portfolio details
-    positions: landingData.pool_details?.length ?? 0,
-    protocols: countUniqueProtocols(landingData.pool_details ?? []),
-    chains: countUniqueChains(landingData.pool_details ?? []),
+    positions: landingData.positions ?? 0,
+    protocols: landingData.protocols ?? 0,
+    chains: landingData.chains ?? 0,
 
     // Data freshness
-    lastUpdated: landingData.last_updated,
+    lastUpdated: landingData.last_updated ?? null,
 
     // Loading states
     isLoading: false,

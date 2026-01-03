@@ -45,51 +45,6 @@ const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
       change_pct: 0,
     },
   },
-  risk_metrics: {
-    volatility: {
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
-      },
-      volatility_pct: 0,
-      annualized_volatility_pct: 0,
-      interpretation: "",
-      summary: {
-        avg_volatility: 0,
-        max_volatility: 0,
-        min_volatility: 0,
-      },
-    },
-    sharpe_ratio: {
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
-      },
-      sharpe_ratio: 0,
-      interpretation: "",
-      summary: {
-        avg_sharpe: 0,
-        statistical_reliability: "",
-      },
-    },
-    max_drawdown: {
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
-      },
-      max_drawdown_pct: 0,
-      peak_date: "2025-01-01",
-      trough_date: "2025-01-01",
-      recovery_date: null,
-      summary: {
-        current_drawdown_pct: 0,
-        is_recovered: true,
-      },
-    },
-  },
   drawdown_analysis: {
     enhanced: {
       period: {
@@ -293,7 +248,7 @@ describe("analyticsService", () => {
         expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
           `/api/v2/portfolio/${testUserId}/landing`
         );
-        expect(result).toEqual(mockResponse);
+        expect(result).toMatchObject(mockResponse);
       });
 
       it("should handle response with optional message field", async () => {

@@ -7,23 +7,21 @@
 
 import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
 import {
-  getRegimeStrategyInfo,
-  getTargetAllocation,
+    getRegimeStrategyInfo,
+    getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import {
-  countUniqueChains,
-  countUniqueProtocols,
-  extractROIChanges,
+    extractROIChanges
 } from "@/lib/portfolio/portfolioUtils";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import { type RegimeHistoryData } from "@/services/regimeHistoryService";
 import { type MarketSentimentData } from "@/services/sentimentService";
 import type {
-  BalanceData,
-  CompositionData,
-  SentimentData,
-  StrategyData,
+    BalanceData,
+    CompositionData,
+    SentimentData,
+    StrategyData,
 } from "@/types/portfolio-progressive";
 
 /**
@@ -40,7 +38,7 @@ export function extractBalanceData(landing: LandingPageResponse): BalanceData {
     roi: landing.portfolio_roi?.recommended_yearly_roi ?? 0,
     roiChange7d: roiChanges.change7d,
     roiChange30d: roiChanges.change30d,
-    lastUpdated: landing.last_updated,
+    lastUpdated: landing.last_updated ?? null,
   };
 }
 
@@ -65,9 +63,9 @@ export function extractCompositionData(
     currentAllocation,
     targetAllocation,
     delta,
-    positions: landing.pool_details?.length ?? 0,
-    protocols: countUniqueProtocols(landing.pool_details ?? []),
-    chains: countUniqueChains(landing.pool_details ?? []),
+    positions: landing.positions ?? 0,
+    protocols: landing.protocols ?? 0,
+    chains: landing.chains ?? 0,
   };
 }
 

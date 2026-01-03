@@ -16,9 +16,7 @@ const NUMERIC_PARAM_KEYS: readonly (keyof Omit<
   "metrics"
 >)[] = [
   "trend_days",
-  "risk_days",
   "drawdown_days",
-  "allocation_days",
   "rolling_days",
 ] as const;
 

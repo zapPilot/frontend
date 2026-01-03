@@ -30,9 +30,7 @@ export type {
  */
 export interface DashboardWindowParams {
   trend_days?: number;
-  risk_days?: number;
   drawdown_days?: number;
-  allocation_days?: number;
   rolling_days?: number;
   metrics?: string[];
   /** Optional wallet address filter - when provided, returns wallet-specific analytics instead of bundle aggregation */
