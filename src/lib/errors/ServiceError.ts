@@ -21,65 +21,44 @@ export class ServiceError extends Error {
   }
 }
 
+type ServiceErrorConstructorArgs = ConstructorParameters<typeof ServiceError>;
+
+function createServiceErrorClass(name: string) {
+  return class extends ServiceError {
+    constructor(...args: ServiceErrorConstructorArgs) {
+      super(...args);
+      this.name = name;
+    }
+  };
+}
+
 /**
  * Account-specific service errors
  */
-export class AccountServiceError extends ServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: Record<string, unknown>
-  ) {
-    super(message, status, code, details);
-    this.name = "AccountServiceError";
-  }
-}
+export class AccountServiceError extends createServiceErrorClass(
+  "AccountServiceError"
+) {}
 
 /**
  * Analytics-specific service errors
  */
-export class AnalyticsServiceError extends ServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: Record<string, unknown>
-  ) {
-    super(message, status, code, details);
-    this.name = "AnalyticsServiceError";
-  }
-}
+export class AnalyticsServiceError extends createServiceErrorClass(
+  "AnalyticsServiceError"
+) {}
 
 /**
  * Intent-specific service errors (ZapIn, ZapOut, Optimize)
  */
-export class IntentServiceError extends ServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: Record<string, unknown>
-  ) {
-    super(message, status, code, details);
-    this.name = "IntentServiceError";
-  }
-}
+export class IntentServiceError extends createServiceErrorClass(
+  "IntentServiceError"
+) {}
 
 /**
  * Bundle-specific service errors
  */
-export class BundleServiceError extends ServiceError {
-  constructor(
-    message: string,
-    status: number,
-    code?: string,
-    details?: Record<string, unknown>
-  ) {
-    super(message, status, code, details);
-    this.name = "BundleServiceError";
-  }
-}
+export class BundleServiceError extends createServiceErrorClass(
+  "BundleServiceError"
+) {}
 
 /**
  * Result type for operations requiring explicit success/failure handling

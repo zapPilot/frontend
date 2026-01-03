@@ -153,16 +153,22 @@ export const updateUserEmail = async (
   return validateUpdateEmailResponse(response);
 };
 
+const deleteUserResource = async (
+  path: string
+): Promise<UpdateEmailResponse> => {
+  const response = await callAccountApi(() =>
+    accountApiClient.delete<UpdateEmailResponse>(path)
+  );
+  return validateUpdateEmailResponse(response);
+};
+
 /**
  * Remove user email (unsubscribe from email-based reports)
  */
 export const removeUserEmail = async (
   userId: string
 ): Promise<UpdateEmailResponse> => {
-  const response = await callAccountApi(() =>
-    accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}/email`)
-  );
-  return validateUpdateEmailResponse(response);
+  return deleteUserResource(`/users/${userId}/email`);
 };
 
 /**
@@ -172,10 +178,7 @@ export const removeUserEmail = async (
 export const deleteUser = async (
   userId: string
 ): Promise<UpdateEmailResponse> => {
-  const response = await callAccountApi(() =>
-    accountApiClient.delete<UpdateEmailResponse>(`/users/${userId}`)
-  );
-  return validateUpdateEmailResponse(response);
+  return deleteUserResource(`/users/${userId}`);
 };
 
 // Wallet Management Operations

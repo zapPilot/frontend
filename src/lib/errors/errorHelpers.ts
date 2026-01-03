@@ -25,18 +25,8 @@ import {
  * @returns True if error has 4xx status code
  */
 export function isClientError(error: unknown): boolean {
-  // Check ServiceError instances
-  if (isServiceError(error)) {
-    return error.status >= 400 && error.status < 500;
-  }
-
-  // Check plain objects with status property
-  if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status?: number }).status;
-    return typeof status === "number" && status >= 400 && status < 500;
-  }
-
-  return false;
+  const status = getErrorStatus(error);
+  return typeof status === "number" && status >= 400 && status < 500;
 }
 
 /**
@@ -46,16 +36,8 @@ export function isClientError(error: unknown): boolean {
  * @returns True if error has 5xx status code
  */
 export function isServerError(error: unknown): boolean {
-  if (isServiceError(error)) {
-    return error.status >= 500;
-  }
-
-  if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status?: number }).status;
-    return typeof status === "number" && status >= 500;
-  }
-
-  return false;
+  const status = getErrorStatus(error);
+  return typeof status === "number" && status >= 500;
 }
 
 /**
@@ -65,22 +47,11 @@ export function isServerError(error: unknown): boolean {
  * @returns True if error is retryable
  */
 export function isRetryableError(error: unknown): boolean {
-  if (isServiceError(error)) {
-    // Network errors and server errors are typically retryable
-    return (
-      error.status >= 500 || error.status === 429 || error.status === 408
-    );
-  }
-
-  if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status?: number }).status;
-    return (
-      typeof status === "number" &&
-      (status >= 500 || status === 429 || status === 408)
-    );
-  }
-
-  return false;
+  const status = getErrorStatus(error);
+  return (
+    typeof status === "number" &&
+    (status >= 500 || status === 429 || status === 408)
+  );
 }
 
 /**
@@ -97,13 +68,7 @@ export function isServiceError(error: unknown): error is ServiceError {
   );
 }
 
-/**
- * Extract status code from any error type
- *
- * @param error - Error object
- * @returns Status code or 500 as default
- */
-export function extractStatusCode(error: unknown): number {
+function getErrorStatus(error: unknown): number | undefined {
   if (isServiceError(error)) {
     return error.status;
   }
@@ -111,6 +76,21 @@ export function extractStatusCode(error: unknown): number {
   if (error && typeof error === "object" && "status" in error) {
     const status = (error as { status?: number }).status;
     if (typeof status === "number") return status;
+  }
+
+  return undefined;
+}
+
+/**
+ * Extract status code from any error type
+ *
+ * @param error - Error object
+ * @returns Status code or 500 as default
+ */
+export function extractStatusCode(error: unknown): number {
+  const directStatus = getErrorStatus(error);
+  if (typeof directStatus === "number") {
+    return directStatus;
   }
 
   if (
@@ -150,13 +130,14 @@ export function extractErrorCode(error: unknown): string | undefined {
 // Factory Functions
 // ============================================================================
 
-/**
- * Enhanced error messages for common intent engine errors
- *
- * @param error - Raw error from intent service
- * @returns Formatted IntentServiceError
- */
-export function createIntentServiceError(error: unknown): IntentServiceError {
+type ServiceErrorConstructor<T extends ServiceError> = new (
+  message: string,
+  status: number,
+  code?: string,
+  details?: Record<string, unknown>
+) => T;
+
+function buildErrorContext(error: unknown, fallbackMessage: string) {
   const status = extractStatusCode(error);
   const code = extractErrorCode(error);
 
@@ -166,13 +147,50 @@ export function createIntentServiceError(error: unknown): IntentServiceError {
     details?: Record<string, unknown>;
   };
 
-  let message = resolveErrorMessage(
-    "Intent service error",
+  const message = resolveErrorMessage(
+    fallbackMessage,
     errorObj.message,
     errorObj.response?.data,
     errorObj.details,
     errorObj
   );
+
+  return { status, code, errorObj, message };
+}
+
+function createServiceError<T extends ServiceError>(
+  ErrorClass: ServiceErrorConstructor<T>,
+  error: unknown,
+  fallbackMessage: string
+): T {
+  const { status, code, errorObj, message } = buildErrorContext(
+    error,
+    fallbackMessage
+  );
+
+  return new ErrorClass(
+    message,
+    status,
+    code,
+    errorObj.details as Record<string, unknown> | undefined
+  );
+}
+
+/**
+ * Enhanced error messages for common intent engine errors
+ *
+ * @param error - Raw error from intent service
+ * @returns Formatted IntentServiceError
+ */
+export function createIntentServiceError(error: unknown): IntentServiceError {
+  const {
+    status,
+    code,
+    errorObj,
+    message: resolvedMessage,
+  } = buildErrorContext(error, "Intent service error");
+
+  let message = resolvedMessage;
 
   const lowerMessage = message.toLowerCase();
 
@@ -217,29 +235,7 @@ export function createAccountServiceError(
   error: unknown,
   fallbackMessage = "Account service error"
 ): AccountServiceError {
-  const status = extractStatusCode(error);
-  const code = extractErrorCode(error);
-
-  const errorObj = error as {
-    message?: string;
-    response?: { data?: unknown };
-    details?: Record<string, unknown>;
-  };
-
-  const message = resolveErrorMessage(
-    fallbackMessage,
-    errorObj.message,
-    errorObj.response?.data,
-    errorObj.details,
-    errorObj
-  );
-
-  return new AccountServiceError(
-    message,
-    status,
-    code,
-    errorObj.details as Record<string, unknown> | undefined
-  );
+  return createServiceError(AccountServiceError, error, fallbackMessage);
 }
 
 /**
@@ -253,29 +249,7 @@ export function createAnalyticsServiceError(
   error: unknown,
   fallbackMessage = "Analytics service error"
 ): AnalyticsServiceError {
-  const status = extractStatusCode(error);
-  const code = extractErrorCode(error);
-
-  const errorObj = error as {
-    message?: string;
-    response?: { data?: unknown };
-    details?: Record<string, unknown>;
-  };
-
-  const message = resolveErrorMessage(
-    fallbackMessage,
-    errorObj.message,
-    errorObj.response?.data,
-    errorObj.details,
-    errorObj
-  );
-
-  return new AnalyticsServiceError(
-    message,
-    status,
-    code,
-    errorObj.details as Record<string, unknown> | undefined
-  );
+  return createServiceError(AnalyticsServiceError, error, fallbackMessage);
 }
 
 /**
@@ -289,27 +263,5 @@ export function createBundleServiceError(
   error: unknown,
   fallbackMessage = "Bundle service error"
 ): BundleServiceError {
-  const status = extractStatusCode(error);
-  const code = extractErrorCode(error);
-
-  const errorObj = error as {
-    message?: string;
-    response?: { data?: unknown };
-    details?: Record<string, unknown>;
-  };
-
-  const message = resolveErrorMessage(
-    fallbackMessage,
-    errorObj.message,
-    errorObj.response?.data,
-    errorObj.details,
-    errorObj
-  );
-
-  return new BundleServiceError(
-    message,
-    status,
-    code,
-    errorObj.details as Record<string, unknown> | undefined
-  );
+  return createServiceError(BundleServiceError, error, fallbackMessage);
 }

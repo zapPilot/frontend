@@ -1,7 +1,10 @@
 import { type Dispatch, type SetStateAction, useCallback } from "react";
 
 import { updateWalletLabel as updateWalletLabelRequest } from "@/components/WalletManager/services/WalletService";
-import type { EditingWallet } from "@/components/WalletManager/types/wallet.types";
+import type {
+  EditingWallet,
+  WalletOperationStateSetter,
+} from "@/components/WalletManager/types/wallet.types";
 import {
   handleWalletError,
   type WalletData,
@@ -12,11 +15,7 @@ interface UseWalletLabelsParams {
   wallets: WalletData[];
   setWallets: Dispatch<SetStateAction<WalletData[]>>;
   setEditingWallet: Dispatch<SetStateAction<EditingWallet | null>>;
-  setWalletOperationState: (
-    key: "removing" | "editing",
-    walletId: string,
-    state: { isLoading: boolean; error: string | null }
-  ) => void;
+  setWalletOperationState: WalletOperationStateSetter;
 }
 
 /**

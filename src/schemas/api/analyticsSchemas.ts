@@ -41,15 +41,20 @@ export const protocolYieldBreakdownSchema = z.object({
 });
 
 /**
+ * Schema for period window
+ */
+const periodWindowSchema = z.object({
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+});
+
+/**
  * Schema for yield window summary with IQR outlier detection
  */
 export const yieldWindowSummarySchema = z.object({
   user_id: z.string(),
-  period: z.object({
-    start_date: z.string(),
-    end_date: z.string(),
-    days: z.number(),
-  }),
+  period: periodWindowSchema,
   average_daily_yield_usd: z.number(),
   median_daily_yield_usd: z.number(),
   total_yield_usd: z.number(),
@@ -213,15 +218,6 @@ export const landingPageResponseSchema = z
 // ============================================================================
 // UNIFIED DASHBOARD SCHEMAS
 // ============================================================================
-
-/**
- * Schema for period window
- */
-const periodWindowSchema = z.object({
-  start_date: z.string(),
-  end_date: z.string(),
-  days: z.number(),
-});
 
 // Unified dashboard response
 // Unified dashboard validation is intentionally permissive because backend

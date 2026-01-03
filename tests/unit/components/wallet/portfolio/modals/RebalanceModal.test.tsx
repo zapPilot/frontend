@@ -4,7 +4,13 @@
  * Tests rebalance modal with allocation projection visualization
  */
 
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { RebalanceModal } from "@/components/wallet/portfolio/modals/RebalanceModal";
@@ -98,36 +104,29 @@ vi.mock(
       onClick: () => void;
       disabled: boolean;
     }) => (
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        data-testid="action-button"
-      >
+      <button onClick={onClick} disabled={disabled} data-testid="action-button">
         {label}
       </button>
     ),
   })
 );
 
-vi.mock(
-  "@/components/wallet/portfolio/modals/utils/actionLabelUtils",
-  () => ({
-    resolveActionLabel: ({
-      isConnected,
-      isReady,
-      readyLabel,
-      notReadyLabel,
-    }: {
-      isConnected: boolean;
-      isReady: boolean;
-      readyLabel: string;
-      notReadyLabel: string;
-    }) => {
-      if (!isConnected) return "Connect Wallet";
-      return isReady ? readyLabel : notReadyLabel;
-    },
-  })
-);
+vi.mock("@/components/wallet/portfolio/modals/utils/actionLabelUtils", () => ({
+  resolveActionLabel: ({
+    isConnected,
+    isReady,
+    readyLabel,
+    notReadyLabel,
+  }: {
+    isConnected: boolean;
+    isReady: boolean;
+    readyLabel: string;
+    notReadyLabel: string;
+  }) => {
+    if (!isConnected) return "Connect Wallet";
+    return isReady ? readyLabel : notReadyLabel;
+  },
+}));
 
 describe("RebalanceModal", () => {
   const defaultProps = {
@@ -169,7 +168,7 @@ describe("RebalanceModal", () => {
 
     // With intensity at 100, projected should equal target
     // Crypto: 50%, Stable: 50%
-    expect(screen.getByText("50")).toBeInTheDocument();
+    expect(screen.getAllByText("50").length).toBeGreaterThanOrEqual(2);
   });
 
   it("should render current and projected labels", () => {
@@ -218,23 +217,28 @@ describe("RebalanceModal", () => {
     render(<RebalanceModal {...defaultProps} />);
 
     const button = screen.getByTestId("action-button");
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
-    expect(simulateRebalanceSpy).toHaveBeenCalledWith(
-      100,
-      { crypto: 60, stable: 40 },
-      { crypto: 50, stable: 50 }
-    );
+    await waitFor(() => {
+      expect(simulateRebalanceSpy).toHaveBeenCalledWith(
+        100,
+        { crypto: 60, stable: 40 },
+        { crypto: 50, stable: 50 }
+      );
+    });
   });
 
   it("should show submitting state after submit", async () => {
     render(<RebalanceModal {...defaultProps} />);
 
     const button = screen.getByTestId("action-button");
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
-    // Component enters submitting state
-    expect(button).toBeInTheDocument();
+    expect(await screen.findByTestId("submitting-state")).toBeInTheDocument();
   });
 
   it("should call onClose when close button clicked", () => {
@@ -245,7 +249,7 @@ describe("RebalanceModal", () => {
     fireEvent.click(closeButton);
 
     // Close is called through resetState
-    expect(closeButton).toBeInTheDocument();
+    expect(onCloseMock).toHaveBeenCalledTimes(1);
   });
 
   it("should handle different allocation values", () => {
@@ -263,8 +267,8 @@ describe("RebalanceModal", () => {
     expect(screen.getByText("70")).toBeInTheDocument();
   });
 
-  it("should compute projected allocation correctly", () => {
-    const { transactionService } = require("@/services");
+  it("should compute projected allocation correctly", async () => {
+    const { transactionService } = await import("@/services");
     const computeSpy = vi.spyOn(
       transactionService,
       "computeProjectedAllocation"
@@ -299,7 +303,7 @@ describe("RebalanceModal", () => {
     fireEvent.click(closeButton);
 
     // Verify close button interaction
-    expect(closeButton).toBeInTheDocument();
+    expect(onCloseMock).toHaveBeenCalledTimes(1);
   });
 
   it("should handle transaction error gracefully", async () => {
@@ -311,10 +315,15 @@ describe("RebalanceModal", () => {
     render(<RebalanceModal {...defaultProps} />);
 
     const button = screen.getByTestId("action-button");
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     // Component should handle error and return to idle state
-    expect(button).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByTestId("action-button")).toBeInTheDocument();
+      expect(screen.queryByTestId("submitting-state")).not.toBeInTheDocument();
+    });
   });
 
   it("should display success message after successful rebalance", async () => {
@@ -327,9 +336,13 @@ describe("RebalanceModal", () => {
     render(<RebalanceModal {...defaultProps} />);
 
     const button = screen.getByTestId("action-button");
-    fireEvent.click(button);
+    await act(async () => {
+      fireEvent.click(button);
+    });
 
     // After success, submitting state is shown
-    expect(button).toBeInTheDocument();
+    expect(
+      await screen.findByText("Rebalance Successfully Executed!")
+    ).toBeInTheDocument();
   });
 });

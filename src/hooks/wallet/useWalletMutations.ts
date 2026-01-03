@@ -8,6 +8,7 @@ import {
 import type {
   NewWallet,
   WalletOperations,
+  WalletOperationStateSetter,
 } from "@/components/WalletManager/types/wallet.types";
 import { validateNewWallet } from "@/components/WalletManager/utils/validation";
 import { useUser } from "@/contexts/UserContext";
@@ -23,11 +24,7 @@ interface UseWalletMutationsParams {
   operations: WalletOperations;
   setOperations: Dispatch<SetStateAction<WalletOperations>>;
   setWallets: Dispatch<SetStateAction<WalletData[]>>;
-  setWalletOperationState: (
-    key: "removing" | "editing",
-    walletId: string,
-    state: { isLoading: boolean; error: string | null }
-  ) => void;
+  setWalletOperationState: WalletOperationStateSetter;
   loadWallets: () => Promise<void>;
 }
 

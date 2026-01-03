@@ -491,12 +491,15 @@ describe("Bundle Sharing Flow Integration Tests", () => {
 
       mockIsConnected = true;
       mockUserInfo = { userId: "0xOwner...888" };
+      mockConnectedWallet = "0xOwner...888";
 
       await act(async () => {
         render(<BundlePageClient userId="0xOwner...888" />);
       });
 
-      expect(screen.getByTestId("email-reminder-banner")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByTestId("email-reminder-banner")).toBeInTheDocument();
+      });
 
       // Dismiss banner
       const dismissButton = screen.getByTestId("dismiss-email-banner");
@@ -517,12 +520,17 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       mockIsWalletManagerOpen = true;
 
       const { rerender } = await act(async () => {
-        return render(<BundlePageClient userId="" />);
+        return render(<BundlePageClient userId="0xSomeUser" />);
       });
 
-      await waitFor(() => {
-        expect(screen.getByTestId("wallet-manager-modal")).toBeInTheDocument();
-      });
+      await waitFor(
+        () => {
+          expect(
+            screen.getByTestId("wallet-manager-modal")
+          ).toBeInTheDocument();
+        },
+        { timeout: 5000 }
+      );
 
       // Close wallet manager
       const closeButton = screen.getByTestId("close-wallet-manager");
@@ -530,9 +538,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
         await user.click(closeButton);
       });
 
-      // Re-render to reflect closed state
+      // Re-render to reflect closed state (mockIsWalletManagerOpen is now false)
       await act(async () => {
-        rerender(<BundlePageClient userId="" />);
+        rerender(<BundlePageClient userId="0xSomeUser" />);
       });
 
       // Wallet manager should be closed
@@ -551,8 +559,8 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       // Step 1: Start as disconnected visitor
       mockIsConnected = false;
 
-      await act(async () => {
-        render(<BundlePageClient userId="0xOwner...AAA" />);
+      const { rerender } = await act(async () => {
+        return render(<BundlePageClient userId="0xOwner...AAA" />);
       });
 
       expect(screen.getByTestId("dashboard-is-own-bundle")).toHaveTextContent(
@@ -567,9 +575,9 @@ describe("Bundle Sharing Flow Integration Tests", () => {
       mockUserInfo = { userId: "0xMyWallet...BBB" };
       mockConnectedWallet = "0xMyWallet...BBB";
 
-      // Re-render to reflect connected state
+      // Re-render to reflect connected state (use rerender, not render)
       await act(async () => {
-        render(<BundlePageClient userId="0xOwner...AAA" />);
+        rerender(<BundlePageClient userId="0xOwner...AAA" />);
       });
 
       // Now should show switch prompt (connected, viewing someone else's bundle)

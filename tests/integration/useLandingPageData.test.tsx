@@ -156,6 +156,13 @@ beforeEach(() => {
 });
 
 describe("useLandingPageData - APR Calculations", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(analyticsService.getYieldReturnsSummary).mockResolvedValue(
+      createMockYieldSummary()
+    );
+  });
+
   it("calculates weighted average APR correctly", async () => {
     const mockPools: PoolDetail[] = [
       {

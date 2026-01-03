@@ -1,20 +1,19 @@
 import { createContext, type PropsWithChildren, useContext } from "react";
 
-import type { MenuPosition, WalletOperations } from "../types/wallet.types";
+import type {
+  MenuPosition,
+  WalletMenuHandlers,
+  WalletOperations,
+} from "../types/wallet.types";
 
 /**
  * Context for WalletList component to reduce prop drilling
  * Provides operation handlers and UI state for wallet management
  */
-interface WalletListContextValue {
+interface WalletListContextValue extends WalletMenuHandlers {
   operations: WalletOperations;
   openDropdown: string | null;
   menuPosition: MenuPosition | null;
-  onCopyAddress: (address: string, walletId: string) => void;
-  onEditWallet: (walletId: string, label: string) => void;
-  onDeleteWallet: (walletId: string) => void;
-  onToggleDropdown: (walletId: string, element: HTMLElement) => void;
-  onCloseDropdown: () => void;
 }
 
 const WalletListContext = createContext<WalletListContextValue | null>(null);

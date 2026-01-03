@@ -9,6 +9,14 @@ import type { NewWallet } from "../types/wallet.types";
 import { AddWalletForm } from "./AddWalletForm";
 import { WalletCard } from "./WalletCard";
 
+const WalletListHeader = ({ count }: { count: number }) => (
+  <div className="flex items-center justify-between mb-4">
+    <h3 className="text-sm font-medium text-gray-300">
+      Bundled Wallets ({count})
+    </h3>
+  </div>
+);
+
 /**
  * Props for WalletList component (reduced from 17 to 9)
  * Operation handlers provided via WalletListContext
@@ -50,11 +58,7 @@ export const WalletList = ({
   if (wallets.length === 0) {
     return (
       <div className="p-6 border-b border-gray-700/50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-300">
-            Bundled Wallets (0)
-          </h3>
-        </div>
+        <WalletListHeader count={0} />
         <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
           <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-300 mb-4">
@@ -80,11 +84,7 @@ export const WalletList = ({
     <>
       {/* Wallets Display */}
       <div className="p-6 border-b border-gray-700/50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-medium text-gray-300">
-            Bundled Wallets ({wallets.length})
-          </h3>
-        </div>
+        <WalletListHeader count={wallets.length} />
 
         <div className="space-y-3">
           {wallets.map(wallet => (

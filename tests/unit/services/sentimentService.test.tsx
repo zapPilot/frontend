@@ -109,9 +109,8 @@ beforeAll(async () => {
 });
 
 describe("sentimentService", () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-    await loadModules();
   });
 
   describe("fetchMarketSentiment via useSentimentData hook", () => {

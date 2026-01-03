@@ -5,17 +5,14 @@
  */
 
 import { render, screen, waitFor } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { IntentVisualizer } from "@/components/wallet/portfolio/modals/visualizers/IntentVisualizer";
 
 // Mock getProtocolLogo
-vi.mock(
-  "@/components/wallet/portfolio/modals/utils/assetHelpers",
-  () => ({
-    getProtocolLogo: (id: string) => `/protocols/${id}.png`,
-  })
-);
+vi.mock("@/components/wallet/portfolio/modals/utils/assetHelpers", () => ({
+  getProtocolLogo: (id: string) => `/protocols/${id}.png`,
+}));
 
 describe("IntentVisualizer", () => {
   // Note: Only tests that advance timers need fake timers
@@ -60,45 +57,41 @@ describe("IntentVisualizer", () => {
   });
 
   it("should show progress over time", async () => {
-    vi.useFakeTimers();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      const { container } = render(<IntentVisualizer />);
 
-    render(<IntentVisualizer />);
+      // Initially all steps should be pending
+      const initialSteps = screen.getAllByText("Approve");
+      expect(initialSteps.length).toBe(3);
 
-    // Initially all steps should be pending
-    const initialSteps = screen.getAllByText("Approve");
-    expect(initialSteps.length).toBe(3);
+      const getProgressWidths = () =>
+        Array.from(container.querySelectorAll("div.h-full.bg-green-500")).map(
+          el => (el as HTMLElement).style.width
+        );
 
-    // Advance timers to trigger progress
-    vi.advanceTimersByTime(500);
-
-    // Progress should have started (at least one lane should have advanced)
-    await waitFor(() => {
-      const doneElements = screen.queryAllByText("DONE");
-      // Progress is happening but not all lanes are complete yet
-      expect(doneElements.length).toBeLessThan(3);
-    });
-
-    vi.clearAllTimers();
-    vi.useRealTimers();
+      await waitFor(() => {
+        expect(getProgressWidths().some(width => width !== "0%")).toBe(true);
+      });
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
   it("should show DONE when lane completes all steps", async () => {
-    vi.useFakeTimers();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      const fastLane = [{ id: "fast", name: "Fast Protocol", est: "1.0s" }];
+      const shortSteps = ["Step1"];
 
-    const fastLane = [{ id: "fast", name: "Fast Protocol", est: "1.0s" }];
-    const shortSteps = ["Step1"];
+      render(<IntentVisualizer lanes={fastLane} steps={shortSteps} />);
 
-    render(<IntentVisualizer lanes={fastLane} steps={shortSteps} />);
-
-    // Advance timers enough for lane to complete
-    vi.advanceTimersByTime(2000);
-
-    await waitFor(() => {
-      expect(screen.getByText("DONE")).toBeInTheDocument();
-    });
-
-    vi.clearAllTimers();
-    vi.useRealTimers();
+      await waitFor(() => {
+        expect(screen.getByText("DONE")).toBeInTheDocument();
+      });
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
   it("should render protocol images with correct alt text", () => {
@@ -141,38 +134,40 @@ describe("IntentVisualizer", () => {
 
   it("should cleanup timers on unmount", () => {
     vi.useFakeTimers();
+    try {
+      const { unmount } = render(<IntentVisualizer />);
 
-    const { unmount } = render(<IntentVisualizer />);
+      const timerCountBefore = vi.getTimerCount();
+      expect(timerCountBefore).toBeGreaterThan(0);
 
-    const timerCountBefore = vi.getTimerCount();
-    expect(timerCountBefore).toBeGreaterThan(0);
+      unmount();
 
-    unmount();
-
-    const timerCountAfter = vi.getTimerCount();
-    expect(timerCountAfter).toBe(0);
-
-    vi.useRealTimers();
+      const timerCountAfter = vi.getTimerCount();
+      expect(timerCountAfter).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("should reset progress when props change", () => {
     vi.useFakeTimers();
+    try {
+      const { rerender } = render(<IntentVisualizer />);
 
-    const { rerender } = render(<IntentVisualizer />);
+      // Advance time to create progress
+      vi.advanceTimersByTime(1000);
 
-    // Advance time to create progress
-    vi.advanceTimersByTime(1000);
+      // Change props (new lanes)
+      const newLanes = [{ id: "new", name: "New Lane", est: "1s" }];
+      rerender(<IntentVisualizer lanes={newLanes} />);
 
-    // Change props (new lanes)
-    const newLanes = [{ id: "new", name: "New Lane", est: "1s" }];
-    rerender(<IntentVisualizer lanes={newLanes} />);
-
-    // Progress should reset (new lane renders synchronously)
-    expect(screen.getByAltText("New Lane")).toBeInTheDocument();
-    expect(screen.queryByText("DONE")).not.toBeInTheDocument();
-
-    vi.clearAllTimers();
-    vi.useRealTimers();
+      // Progress should reset (new lane renders synchronously)
+      expect(screen.getByAltText("New Lane")).toBeInTheDocument();
+      expect(screen.queryByText("DONE")).not.toBeInTheDocument();
+    } finally {
+      vi.clearAllTimers();
+      vi.useRealTimers();
+    }
   });
 
   it("should handle single lane", () => {
@@ -200,25 +195,22 @@ describe("IntentVisualizer", () => {
   });
 
   it("should display check icon when lane completes", async () => {
-    vi.useFakeTimers();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      const fastLane = [{ id: "quick", name: "Quick", est: "0.5s" }];
+      const singleStep = ["Go"];
 
-    const fastLane = [{ id: "quick", name: "Quick", est: "0.5s" }];
-    const singleStep = ["Go"];
+      render(<IntentVisualizer lanes={fastLane} steps={singleStep} />);
 
-    render(<IntentVisualizer lanes={fastLane} steps={singleStep} />);
+      await waitFor(() => {
+        expect(screen.getByText("DONE")).toBeInTheDocument();
+      });
 
-    // Advance timers to complete the lane
-    vi.advanceTimersByTime(1500);
-
-    await waitFor(() => {
-      expect(screen.getByText("DONE")).toBeInTheDocument();
-    });
-
-    // Check icon should be present (it's in a div with specific classes)
-    const container = screen.getByText("DONE").closest("div");
-    expect(container).toBeInTheDocument();
-
-    vi.clearAllTimers();
-    vi.useRealTimers();
+      // Check icon should be present (it's in a div with specific classes)
+      const container = screen.getByText("DONE").closest("div");
+      expect(container).toBeInTheDocument();
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 });

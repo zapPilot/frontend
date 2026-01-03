@@ -329,7 +329,7 @@ describe("WithdrawModal", () => {
     const onCloseMock = vi.fn();
     render(<WithdrawModal isOpen={true} onClose={onCloseMock} />);
 
-    const closeButton = screen.getByTestId("close-button");
+    const closeButton = screen.getByRole("button", { name: /close/i });
     fireEvent.click(closeButton);
 
     // The actual close is handled by TransactionModalBase's resetState
@@ -352,12 +352,12 @@ describe("WithdrawModal", () => {
     expect(screen.getByTestId("modal")).toBeInTheDocument();
   });
 
-  it("should handle missing balance data gracefully", () => {
+  it("should handle missing balance data gracefully", async () => {
     // Override mock to return empty balances
-    vi.mocked(
-      require("@/components/wallet/portfolio/modals/hooks/useTransactionData")
-        .useTransactionData
-    ).mockReturnValue({
+    const { useTransactionData } = await import(
+      "@/components/wallet/portfolio/modals/hooks/useTransactionData"
+    );
+    vi.mocked(useTransactionData).mockReturnValue({
       chainList: [{ chainId: 1, name: "Ethereum", symbol: "ETH" }],
       selectedChain: { chainId: 1, name: "Ethereum" },
       tokenQuery: {

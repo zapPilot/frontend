@@ -5,10 +5,10 @@
  */
 
 import { act, renderHook } from "@testing-library/react";
+import { useState } from "react";
 import { describe, expect, it } from "vitest";
 
 import { useOperationStateHandlers } from "@/hooks/utils/useOperationState";
-import { useState } from "react";
 
 interface OperationState {
   isLoading: boolean;

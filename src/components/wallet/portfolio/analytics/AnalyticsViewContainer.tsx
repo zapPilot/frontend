@@ -101,8 +101,9 @@ export const AnalyticsViewContainer = ({
     [userInfo?.additionalWallets]
   );
 
-  // Determine if wallet selector should be shown (hide for single-wallet users)
-  const showWalletSelector = availableWallets.length > 1;
+  // Always show wallet selector (even for single-wallet users)
+  // This allows users to see which wallet is associated with the bundle
+  const showWalletSelector = true;
 
   // Auto-reset to "All Wallets" if selected wallet is removed from bundle
   useEffect(() => {
