@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
@@ -96,6 +96,17 @@ export function TransactionModalBase({
     tokenAddress,
     amount,
   });
+
+  // Auto-select first token when tokens load and no token is selected
+  useEffect(() => {
+    const tokens = transactionData.availableTokens;
+    const firstToken = tokens[0];
+    if (tokens.length > 0 && !tokenAddress && firstToken) {
+      form.setValue("tokenAddress", firstToken.address, {
+        shouldValidate: true,
+      });
+    }
+  }, [transactionData.availableTokens, tokenAddress, form]);
 
   // 3. Submission handling
   const submission = useTransactionSubmission(

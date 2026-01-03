@@ -133,10 +133,13 @@ export function WithdrawModal({
           modalDeps.applyPercentageToAmount(form, pct, max);
         };
 
+        // Destructure formState to ensure proper subscription to changes
+        const { isValid } = form.formState;
+
         const actionLabel = modalDeps.resolveActionLabel({
           isConnected: true, // Already validated in base
           hasSelection: Boolean(transactionData.selectedToken),
-          isReady: form.formState.isValid,
+          isReady: isValid,
           selectionLabel: "Select Asset",
           notReadyLabel: "Enter Amount",
           readyLabel: "Review & Withdraw",
@@ -150,8 +153,7 @@ export function WithdrawModal({
           actionLabel,
           isSubmitDisabled,
           "from-indigo-600 to-violet-600",
-          handleSubmit,
-          "relative z-0"
+          handleSubmit
         );
 
         return (
@@ -315,7 +317,9 @@ export function WithdrawModal({
               </div>
             </div>
 
-            <modalDeps.TransactionFormActionsWithForm {...formActionsProps} />
+            <div className="relative z-10">
+              <modalDeps.TransactionFormActionsWithForm {...formActionsProps} />
+            </div>
           </div>
         );
       }}

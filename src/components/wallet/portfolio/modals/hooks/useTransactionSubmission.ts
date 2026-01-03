@@ -32,11 +32,11 @@ export function useTransactionSubmission(
   );
   const [result, setResult] = useState<TransactionResult | null>(null);
 
+  // Destructure formState to ensure proper subscription to changes
+  const { isValid } = form.formState;
+
   const isSubmitDisabled =
-    status === "submitting" ||
-    !form.formState.isValid ||
-    !isConnected ||
-    !selectedToken;
+    status === "submitting" || !isValid || !isConnected || !selectedToken;
 
   const handleSubmit = form.handleSubmit(async values => {
     setStatus("submitting");

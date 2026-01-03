@@ -70,7 +70,7 @@ export const WalletActionMenu = memo((props: WalletActionMenuProps) => {
       {isOpen && menuPosition && (
         <Portal>
           <div
-            className={`w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOAST}`}
+            className={`w-48 bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-xl ${Z_INDEX.TOOLTIP}`}
             style={{
               position: "fixed",
               top: menuPosition.top,
