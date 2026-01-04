@@ -14,7 +14,10 @@ import {
 } from "lucide-react";
 
 import { GradientButton } from "@/components/ui";
+import { ASSET_COLORS } from "@/constants/assets";
 import { GRADIENTS } from "@/constants/design-system";
+
+import { AllocationLegend } from "../components/allocation/AllocationLegend";
 
 interface SkeletonButtonProps {
   icon: React.ComponentType<{ className?: string }>;
@@ -34,6 +37,18 @@ function SkeletonButton({ icon: Icon, label }: SkeletonButtonProps) {
     </button>
   );
 }
+
+/** Skeleton legend items with placeholder percentages using consistent ASSET_COLORS */
+const SKELETON_LEGEND_ITEMS = [
+  { symbol: "BTC", percentage: 0, color: ASSET_COLORS.BTC, label: "BTC" },
+  { symbol: "ETH", percentage: 0, color: ASSET_COLORS.ETH, label: "ETH" },
+  {
+    symbol: "Stables",
+    percentage: 0,
+    color: ASSET_COLORS.USDT,
+    label: "Stables",
+  },
+];
 
 /**
  * Balance Card Skeleton
@@ -143,19 +158,8 @@ export function PortfolioCompositionSkeleton() {
       {/* Skeleton: Composition Bar */}
       <div className="h-24 w-full bg-gray-900/50 rounded-xl border border-gray-800 animate-pulse" />
 
-      {/* Real Legend Labels + Skeleton Values */}
-      <div className="flex justify-between mt-4 px-1">
-        <div className="flex gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-orange-400" />
-            <span>Crypto</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Stablecoins</span>
-          </div>
-        </div>
-      </div>
+      {/* Reuse AllocationLegend with placeholder skeleton items */}
+      <AllocationLegend items={SKELETON_LEGEND_ITEMS} className="mt-4 px-1" />
     </div>
   );
 }

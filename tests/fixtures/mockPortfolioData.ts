@@ -80,7 +80,6 @@ const BASE_ALLOCATION = {
 export const MOCK_DATA: WalletPortfolioDataWithDirection = {
   // Portfolio metrics
   balance: 45230.5,
-  roi: 12.4,
   roiChange7d: 8.2,
   roiChange30d: 12.4,
 

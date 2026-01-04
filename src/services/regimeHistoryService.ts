@@ -9,12 +9,9 @@
  * Backend API: /api/v2/market/regime/history
  */
 
-import { useQuery } from "@tanstack/react-query";
-
-import { createQueryConfig } from "@/hooks/queries/queryDefaults";
 import { APIError, httpUtils } from "@/lib/http";
+import { createErrorMapper } from "@/lib/http/createErrorMapper";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
-import { queryKeys } from "@/lib/state/queryClient";
 import {
   type DirectionType,
   type DurationInfo,
@@ -23,9 +20,6 @@ import {
   type RegimeTransition,
   validateRegimeHistoryResponse,
 } from "@/schemas/api/regimeHistorySchemas";
-import { logger } from "@/utils/logger";
-
-const REGIME_HISTORY_CACHE_MS = 60 * 1000; // 60 seconds (aligned with sentiment)
 
 /**
  * Frontend Data Model for regime history with computed fields
@@ -70,47 +64,21 @@ export const DEFAULT_REGIME_HISTORY: RegimeHistoryData = {
 };
 
 /**
- * Error mapper for regime history service
+ * Error mapper for regime history service using standardized createErrorMapper utility
  * Transforms API errors into user-friendly error instances
  */
-const createRegimeHistoryServiceError = (error: unknown): APIError => {
-  const apiError =
-    error && typeof error === "object"
-      ? (error as {
-          status?: number;
-          message?: string;
-          code?: string;
-          details?: Record<string, unknown>;
-        })
-      : {};
-  const status = apiError.status || 500;
-  let message = apiError.message || "Failed to fetch regime history";
-
-  // Enhanced error messages based on status code
-  switch (status) {
-    case 503:
-      message =
-        "Regime history data is temporarily unavailable. Using default values.";
-      break;
-    case 504:
-      message =
-        "Request timed out while fetching regime history. Using default values.";
-      break;
-    case 502:
-      message = "Invalid regime data received. Using default values.";
-      break;
-    case 500:
-      message =
-        "An unexpected error occurred while fetching regime history. Using default values.";
-      break;
-    case 404:
-      message =
-        "Regime history endpoint not found. Using default values. (This is expected if backend v2 is not deployed)";
-      break;
-  }
-
-  return new APIError(message, status, apiError.code, apiError.details);
-};
+const createRegimeHistoryServiceError = createErrorMapper(
+  (message, status, code, details) =>
+    new APIError(message, status, code, details),
+  {
+    404: "Regime history endpoint not found. Using default values. (This is expected if backend v2 is not deployed)",
+    500: "An unexpected error occurred while fetching regime history. Using default values.",
+    502: "Invalid regime data received. Using default values.",
+    503: "Regime history data is temporarily unavailable. Using default values.",
+    504: "Request timed out while fetching regime history. Using default values.",
+  },
+  "Failed to fetch regime history"
+);
 
 const callRegimeHistoryApi = createServiceCaller(
   createRegimeHistoryServiceError
@@ -155,53 +123,18 @@ export async function fetchRegimeHistory(
   });
 }
 
-/**
- * React Query hook for regime history with caching and graceful error handling
- *
- * Configuration:
- * - Frontend cache: 60 seconds (aligned with sentiment data)
- * - Auto refetch: Every 60 seconds
- * - Retry: Once on failure
- * - Error handling: Never throws, returns DEFAULT_REGIME_HISTORY on error
- *
- * The hook is designed to fail gracefully - errors are logged but don't
- * disrupt the UI. Portfolio display continues with default neutral regime.
- *
- * @example
- * ```typescript
- * const { data, isLoading } = useRegimeHistory();
- *
- * // data is always defined, never null
- * // errors are handled silently
- * if (data.previousRegime) {
- *   // Show directional strategy
- * }
- * ```
- */
-export function useRegimeHistory() {
-  return useQuery({
-    ...createQueryConfig({ dataType: "dynamic" }),
-    queryKey: queryKeys.sentiment.regimeHistory(),
-    queryFn: async () => {
-      try {
-        return await fetchRegimeHistory(2);
-      } catch (error) {
-        // Log error for debugging but don't throw
-        logger.error("Failed to fetch regime history, using defaults", {
-          error: error instanceof Error ? error.message : String(error),
-          status: error instanceof APIError ? error.status : undefined,
-        });
+// ============================================================================
+// ARCHITECTURAL PURITY NOTE (Phase 12 - Deprecated Re-Export Cleanup)
+// ============================================================================
 
-        // Return default data instead of throwing
-        return DEFAULT_REGIME_HISTORY;
-      }
-    },
-    staleTime: REGIME_HISTORY_CACHE_MS,
-    gcTime: REGIME_HISTORY_CACHE_MS * 3,
-    refetchInterval: REGIME_HISTORY_CACHE_MS,
-    retry: 1,
-    // Critical: Return default data on error, never leave data undefined
-    placeholderData: DEFAULT_REGIME_HISTORY,
-  });
-}
+/**
+ * useRegimeHistory hook removed from this file (Phase 12)
+ *
+ * React hooks should be imported from @/hooks/queries/market/useRegimeHistoryQuery
+ * Services should only export pure async functions, not React hooks.
+ *
+ * This maintains architectural separation:
+ * - Service layer: Pure async functions for API operations
+ * - Hook layer: React-specific logic and state management
+ */
 /* jscpd:ignore-end */

@@ -7,20 +7,18 @@ import { fadeInUp, SMOOTH_TRANSITION } from "@/lib/ui/animationVariants";
 import type { WalletData } from "@/lib/validation/walletUtils";
 import { formatAddress } from "@/utils/formatters";
 
-import type { WalletOperations } from "../types/wallet.types";
+import type {
+  WalletMenuHandlers,
+  WalletOperations,
+} from "../types/wallet.types";
 import { WalletActionMenu } from "./WalletActionMenu";
 
-interface WalletCardProps {
+interface WalletCardProps extends WalletMenuHandlers {
   wallet: WalletData;
   operations: WalletOperations;
   isOwner: boolean;
-  onCopyAddress: (address: string, walletId: string) => void;
-  onEditWallet: (walletId: string, label: string) => void;
-  onDeleteWallet: (walletId: string) => void;
   openDropdown: string | null;
   menuPosition: { top: number; left: number } | null;
-  onToggleDropdown: (walletId: string, element: HTMLElement) => void;
-  onCloseDropdown: () => void;
 }
 
 const OperationStatus = ({

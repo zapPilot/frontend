@@ -15,3 +15,7 @@ export { httpGet, httpPost } from "./methods";
 
 // Service clients
 export { httpUtils } from "./service-clients";
+
+// Service utilities
+export { createErrorMapper } from "./createErrorMapper";
+export { createServiceCaller } from "./createServiceCaller";

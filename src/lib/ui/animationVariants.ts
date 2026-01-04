@@ -76,6 +76,20 @@ export const fadeInUp: Variants = {
   },
 };
 
+/**
+ * Simple fade in/out
+ *
+ * Use for:
+ * - Backdrops
+ * - Loading placeholders
+ * - Low-motion content swaps
+ */
+export const fadeInOut: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
 // fadeInDown removed - unused (2025-12-22)
 
 /**

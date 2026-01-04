@@ -24,11 +24,7 @@ import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
 import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
-import {
-  countUniqueChains,
-  countUniqueProtocols,
-  extractROIChanges,
-} from "@/lib/portfolio/portfolioUtils";
+import { extractROIChanges } from "@/lib/portfolio/portfolioUtils";
 import type {
   DirectionType,
   DurationInfo,
@@ -133,7 +129,7 @@ export function transformToWalletPortfolioData(
   return {
     // Portfolio metrics
     balance: landingData.net_portfolio_value ?? 0,
-    roi: landingData.portfolio_roi.recommended_yearly_roi,
+    roi: landingData.portfolio_roi?.recommended_yearly_roi ?? 0,
     roiChange7d: roiChanges.change7d,
     roiChange30d: roiChanges.change30d,
 
@@ -151,12 +147,12 @@ export function transformToWalletPortfolioData(
     delta,
 
     // Portfolio details
-    positions: landingData.pool_details?.length ?? 0,
-    protocols: countUniqueProtocols(landingData.pool_details ?? []),
-    chains: countUniqueChains(landingData.pool_details ?? []),
+    positions: landingData.positions ?? 0,
+    protocols: landingData.protocols ?? 0,
+    chains: landingData.chains ?? 0,
 
     // Data freshness
-    lastUpdated: landingData.last_updated,
+    lastUpdated: landingData.last_updated ?? null,
 
     // Loading states
     isLoading: false,

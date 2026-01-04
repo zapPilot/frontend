@@ -359,9 +359,11 @@ describe("exportAnalyticsToCSV", () => {
     expect(result.error).toContain("Failed to generate CSV file");
   });
 
-  it("should log errors to console", async () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
+  it("should log errors using logger", async () => {
+    // Import logger
+    const { logger } = await import("@/utils/logger");
+    const loggerErrorSpy = vi
+      .spyOn(logger, "error")
       // eslint-disable-next-line @typescript-eslint/no-empty-function
       .mockImplementation(() => {});
 
@@ -375,12 +377,13 @@ describe("exportAnalyticsToCSV", () => {
       { key: "1Y", days: 365, label: "1 Year" }
     );
 
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "[analyticsExportService] Export failed:",
-      expect.any(Error)
+    expect(loggerErrorSpy).toHaveBeenCalledWith(
+      "Export failed",
+      expect.any(Error),
+      "analyticsExportService"
     );
 
-    consoleErrorSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
   });
 
   it("should work with different time periods", async () => {

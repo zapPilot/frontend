@@ -7,7 +7,7 @@ import {
 } from "@testing-library/react";
 import { ReactElement, ReactNode } from "react";
 
-import { ToastProvider } from "../src/hooks/useToast";
+import { ToastProvider } from "../src/providers/ToastProvider";
 
 /**
  * Create a new QueryClient for each test to ensure test isolation

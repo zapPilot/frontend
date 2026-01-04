@@ -40,15 +40,22 @@ export interface TransactionToken extends SwapToken {
   popular?: boolean;
 }
 
-export interface AllocationBreakdown {
-  crypto: number;
-  stable: number;
-  simplifiedCrypto?:
-    | {
-        symbol: string;
-        name: string;
-        value: number;
-        color?: string;
-      }[]
-    | undefined;
-}
+// ============================================================================
+// ALLOCATION TYPES - Re-exported from consolidated module
+// ============================================================================
+
+/**
+ * @see {@link module:allocation} - Single source of truth for allocation types
+ */
+export type {
+  AllocationBreakdown,
+  RegimeAllocationBreakdown,
+} from "./allocation";
+export {
+  allocationBreakdownSchema,
+  regimeAllocationBreakdownSchema,
+  toRegimeAllocation,
+  toTransactionAllocation,
+  validateAllocationBreakdown,
+  validateRegimeAllocationBreakdown,
+} from "./allocation";

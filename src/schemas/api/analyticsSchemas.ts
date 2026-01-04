@@ -41,15 +41,20 @@ export const protocolYieldBreakdownSchema = z.object({
 });
 
 /**
+ * Schema for period window
+ */
+const periodWindowSchema = z.object({
+  start_date: z.string(),
+  end_date: z.string(),
+  days: z.number(),
+});
+
+/**
  * Schema for yield window summary with IQR outlier detection
  */
 export const yieldWindowSummarySchema = z.object({
   user_id: z.string(),
-  period: z.object({
-    start_date: z.string(),
-    end_date: z.string(),
-    days: z.number(),
-  }),
+  period: periodWindowSchema,
   average_daily_yield_usd: z.number(),
   median_daily_yield_usd: z.number(),
   total_yield_usd: z.number(),
@@ -134,35 +139,6 @@ const portfolioAllocationSchema = z.object({
 });
 
 /**
- * Schema for wallet token summary
- */
-const walletTokenSummarySchema = z.object({
-  total_value_usd: z.number(),
-  token_count: z.number(),
-  apr_30d: z.number().nullable().optional().default(0),
-});
-
-/**
- * Schema for category summary debt
- */
-const categorySummaryDebtSchema = z.object({
-  btc: z.number(),
-  eth: z.number(),
-  stablecoins: z.number(),
-  others: z.number(),
-});
-
-/**
- * Schema for APR coverage info
- */
-const aprCoverageSchema = z.object({
-  matched_pools: z.number(),
-  total_pools: z.number(),
-  coverage_percentage: z.number(),
-  matched_asset_value_usd: z.number(),
-});
-
-/**
  * Schema for pool detail - matches /api/v2/pools/{id}/performance response
  */
 const poolDetailSchema = z.object({
@@ -183,45 +159,54 @@ const poolDetailSchema = z.object({
  */
 export const landingPageResponseSchema = z
   .object({
-    total_assets_usd: z.number(),
-    total_debt_usd: z.number(),
-    total_net_usd: z.number(),
+    // Financials
+    total_assets_usd: z.number().optional(),
+    total_debt_usd: z.number().optional(),
+    total_net_usd: z.number().describe("Previously total_net_usd"),
     net_portfolio_value: z.number().nullable().optional().default(0),
-    weighted_apr: z.number().nullable().optional().default(0),
-    estimated_monthly_income: z.number().nullable().optional().default(0),
-    portfolio_roi: portfolioROISchema,
+
+    // Counts (New optimization)
+    positions: z.number().optional().default(0),
+    protocols: z.number().optional().default(0),
+    chains: z.number().optional().default(0),
+
+    // Allocation
     portfolio_allocation: portfolioAllocationSchema,
-    wallet_token_summary: walletTokenSummarySchema,
-    category_summary_debt: categorySummaryDebtSchema,
-    pool_details: z.array(poolDetailSchema).optional().default([]),
-    total_positions: z.number().optional().default(0),
-    protocols_count: z.number().optional().default(0),
-    chains_count: z.number().optional().default(0),
+
+    // ROI
+    portfolio_roi: portfolioROISchema.optional(),
+
+    // Legacy / Deprecated (Made optional or removed from strict requirement)
+    pool_details: z.array(z.any()).optional(), // Kept for cache compatibility
+    wallet_token_summary: z.any().optional(),
+    category_summary_debt: z.any().optional(),
+
+    // Metadata
     wallet_count: z.number().int().nonnegative().optional().default(0),
-    last_updated: z.string().nullable(),
-    apr_coverage: aprCoverageSchema.optional().default({
-      matched_pools: 0,
-      total_pools: 0,
-      coverage_percentage: 0,
-      matched_asset_value_usd: 0,
-    }),
+    last_updated: z.string().nullable().optional(),
     message: z.string().optional(),
-    yield_summary: yieldReturnsSummaryResponseSchema.optional(),
+
+    // Coverage
+    apr_coverage: z
+      .object({
+        matched_pools: z.number().default(0),
+        total_pools: z.number().default(0),
+        coverage_percentage: z.number().default(0),
+        matched_asset_value_usd: z.number().default(0),
+      })
+      .optional()
+      .default({
+        matched_pools: 0,
+        total_pools: 0,
+        coverage_percentage: 0,
+        matched_asset_value_usd: 0,
+      }),
   })
   .catchall(z.unknown());
 
 // ============================================================================
 // UNIFIED DASHBOARD SCHEMAS
 // ============================================================================
-
-/**
- * Schema for period window
- */
-const periodWindowSchema = z.object({
-  start_date: z.string(),
-  end_date: z.string(),
-  days: z.number(),
-});
 
 // Unified dashboard response
 // Unified dashboard validation is intentionally permissive because backend
@@ -358,7 +343,6 @@ export interface UnifiedDashboardResponse {
       } & Record<string, unknown>)
     | undefined;
   drawdown_analysis?: Record<string, unknown>;
-  risk_metrics?: Record<string, unknown>;
   _metadata?: Record<string, unknown>;
 }
 export type DailyYieldReturnsResponse = z.infer<

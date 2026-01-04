@@ -15,7 +15,7 @@ import type {
   PortfolioSwapAction,
   Protocol,
 } from "@/components/PortfolioAllocation/types";
-import type { UserInfo } from "@/hooks/queries/useUserQuery";
+import type { UserInfo } from "@/hooks/queries/wallet/useUserQuery";
 import type { InvestmentOpportunity } from "@/types/investment";
 import type { RiskLevel } from "@/types/risk";
 import type { SwapToken } from "@/types/swap";

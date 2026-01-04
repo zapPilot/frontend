@@ -99,7 +99,6 @@ describe("accountService", () => {
         user: {
           id: "user123",
           email: "test@example.com",
-          is_active: true,
           is_subscribed_to_reports: true,
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -140,7 +139,6 @@ describe("accountService", () => {
         user: {
           id: "user123",
           email: "test@example.com",
-          is_active: true,
           is_subscribed_to_reports: true,
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -497,6 +495,80 @@ describe("accountService", () => {
       await expect(
         accountService.updateWalletLabel("user123", "nonexistent", "Label")
       ).rejects.toThrow();
+    });
+  });
+
+  describe("Error handling edge cases", () => {
+    it("should transform 400 'wallet' error to friendly message", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 400,
+        message: "Invalid wallet parameter",
+      });
+
+      await expect(accountService.connectWallet("invalid")).rejects.toThrow(
+        "Invalid wallet address format. Must be a 42-character Ethereum address."
+      );
+    });
+
+    it("should transform 409 'wallet' error", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 409,
+        // Lowercase 'wallet' to hit the branch
+        message: "This wallet is taken",
+      });
+
+      await expect(
+        accountService.addWalletToBundle("u1", "w1")
+      ).rejects.toThrow("This wallet is already associated with an account.");
+    });
+
+    it("should transform 409 'email' error", async () => {
+      vi.mocked(httpUtils.accountApi.put).mockRejectedValue({
+        status: 409,
+        message: "email exists",
+      });
+
+      await expect(accountService.updateUserEmail("u1", "e1")).rejects.toThrow(
+        "This email address is already in use."
+      );
+    });
+
+    it("should preserve 409 'belongs to another user' message", async () => {
+      const msg =
+        "wallet already belongs to another user, please delete one of the accounts instead";
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 409,
+        message: msg,
+      });
+
+      await expect(
+        accountService.addWalletToBundle("u1", "w1")
+      ).rejects.toThrow(msg);
+    });
+
+    it("should transform 422 error", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 422,
+        message: "Whatever",
+      });
+
+      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
+        "Invalid request data. Please check your input and try again."
+      );
+    });
+
+    it("should handle non-object/string errors", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(
+        "Just a string error"
+      );
+
+      try {
+        await accountService.connectWallet("0x123");
+        expect.fail("Should have thrown");
+      } catch (e: any) {
+        expect(e.message).toBe("Account service error");
+        expect(e.status).toBe(500);
+      }
     });
   });
 

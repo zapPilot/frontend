@@ -1,5 +1,7 @@
 import { type LucideIcon, Pause, TrendingDown, TrendingUp } from "lucide-react";
 
+import type { RegimeAllocationBreakdown } from "@/types/domain/allocation";
+
 /**
  * Shared allocation states used across regime transitions.
  * Each state represents a unique portfolio composition in the flow.
@@ -11,7 +13,7 @@ const ALLOCATION_STATES = {
   HEAVY_SPOT: { spot: 70, lp: 0, stable: 30 },
   PROFIT_TAKEN: { spot: 0, lp: 30, stable: 70 },
   BALANCED_LP: { spot: 60, lp: 10, stable: 30 },
-} as const;
+} as const satisfies Record<string, RegimeAllocationBreakdown>;
 
 // Internal constant used by regime strategies
 const PHILOSOPHIES = {
@@ -39,12 +41,6 @@ const PHILOSOPHIES = {
 
 export type RegimeId = "ef" | "f" | "n" | "g" | "eg";
 
-interface AllocationBreakdown {
-  spot: number;
-  lp: number;
-  stable: number;
-}
-
 export interface RegimeStrategy {
   philosophy: string;
   author: string;
@@ -52,8 +48,8 @@ export interface RegimeStrategy {
     scenario: string;
     userIntent: string;
     zapAction: string;
-    allocationBefore: AllocationBreakdown;
-    allocationAfter: AllocationBreakdown;
+    allocationBefore: RegimeAllocationBreakdown;
+    allocationAfter: RegimeAllocationBreakdown;
     hideAllocationTarget?: boolean;
   };
 }

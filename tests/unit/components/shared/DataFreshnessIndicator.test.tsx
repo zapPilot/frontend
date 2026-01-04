@@ -8,7 +8,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DataFreshnessIndicator } from "@/components/wallet/portfolio/components/DataFreshnessIndicator";
+import { DataFreshnessIndicator } from "@/components/wallet/portfolio/components/shared/DataFreshnessIndicator";
 
 describe("DataFreshnessIndicator", () => {
   beforeEach(() => {

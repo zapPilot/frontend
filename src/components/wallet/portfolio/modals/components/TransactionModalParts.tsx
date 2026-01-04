@@ -29,7 +29,11 @@ export function TransactionModalHeader({
         {title}
       </h3>
       {!isSubmitting && (
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
+        <button
+          onClick={onClose}
+          className="text-gray-400 hover:text-white"
+          aria-label="Close"
+        >
           ✕
         </button>
       )}

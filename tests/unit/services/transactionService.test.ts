@@ -7,7 +7,7 @@ import {
   simulateDeposit,
   simulateRebalance,
   simulateWithdraw,
-} from "@/services/transactionService";
+} from "@/services/transactionService.mock";
 
 describe("transactionService", () => {
   beforeEach(() => {

@@ -7,7 +7,7 @@
 import { memo, useMemo } from "react";
 
 import { ChartIndicator, ChartTooltip } from "@/components/charts";
-import { useChartHover } from "@/hooks/useChartHover";
+import { useChartHover } from "@/hooks/ui/useChartHover";
 import type { PerformanceHoverData } from "@/types/ui/chartHover";
 import { formatChartDate } from "@/utils/formatters";
 

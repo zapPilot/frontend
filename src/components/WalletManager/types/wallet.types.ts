@@ -11,6 +11,12 @@ export interface OperationState {
   error: string | null;
 }
 
+export type WalletOperationStateSetter = (
+  key: "removing" | "editing",
+  walletId: string,
+  state: OperationState
+) => void;
+
 export interface WalletOperations {
   adding: OperationState;
   removing: Record<string, OperationState>;

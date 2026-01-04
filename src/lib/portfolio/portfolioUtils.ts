@@ -28,6 +28,10 @@ export function extractROIChanges(
 ): ROIChanges {
   const roiData = landingData.portfolio_roi;
 
+  if (!roiData) {
+    return { change7d: 0, change30d: 0 };
+  }
+
   let change7d = 0;
   let change30d = 0;
 

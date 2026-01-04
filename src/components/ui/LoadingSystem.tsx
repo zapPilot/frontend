@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import React from "react";
 
 import type {
@@ -37,6 +37,16 @@ const BASE_SKELETON_CLASS = "bg-gray-200 animate-pulse";
 const SR_ONLY_CLASS = "sr-only";
 const DEFAULT_SPINNER_LABEL = "Loading";
 const DEFAULT_SKELETON_LABEL = "Loading content";
+const PULSE_ANIMATION = {
+  initial: { opacity: 0.6 },
+  animate: { opacity: [0.6, 1, 0.6] },
+};
+const PULSE_EASE = [0.42, 0, 0.58, 1] as const;
+const PULSE_TRANSITION = {
+  duration: 1.5,
+  repeat: Infinity,
+  ease: PULSE_EASE,
+} satisfies Transition;
 
 interface BaseLoadingProps {
   className?: string;
@@ -247,12 +257,10 @@ export function Skeleton({
                   ? "75%"
                   : (style["width"] ?? "100%"),
             }}
-            initial={{ opacity: 0.6 }}
-            animate={{ opacity: [0.6, 1, 0.6] }}
+            initial={PULSE_ANIMATION.initial}
+            animate={PULSE_ANIMATION.animate}
             transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              ease: "easeInOut",
+              ...PULSE_TRANSITION,
               delay: index * 0.1,
             }}
           />
@@ -269,13 +277,9 @@ export function Skeleton({
       data-testid={testId}
       role="status"
       aria-label={ariaLabel}
-      initial={{ opacity: 0.6 }}
-      animate={{ opacity: [0.6, 1, 0.6] }}
-      transition={{
-        duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
+      initial={PULSE_ANIMATION.initial}
+      animate={PULSE_ANIMATION.animate}
+      transition={PULSE_TRANSITION}
       data-variant={variant}
       data-lines={lines}
     >

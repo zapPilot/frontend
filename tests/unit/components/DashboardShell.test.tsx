@@ -4,6 +4,7 @@
  * Tests for the main dashboard shell component
  */
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -15,15 +16,15 @@ const mockUsePortfolioDataProgressive = vi.fn();
 const mockUseSentimentData = vi.fn();
 const mockUseRegimeHistory = vi.fn();
 
-vi.mock("@/hooks/queries/usePortfolioDataProgressive", () => ({
+vi.mock("@/hooks/queries/analytics/usePortfolioDataProgressive", () => ({
   usePortfolioDataProgressive: () => mockUsePortfolioDataProgressive(),
 }));
 
-vi.mock("@/services/sentimentService", () => ({
+vi.mock("@/hooks/queries/market/useSentimentQuery", () => ({
   useSentimentData: () => mockUseSentimentData(),
 }));
 
-vi.mock("@/services/regimeHistoryService", () => ({
+vi.mock("@/hooks/queries/market/useRegimeHistoryQuery", () => ({
   useRegimeHistory: () => mockUseRegimeHistory(),
 }));
 
@@ -80,6 +81,26 @@ vi.mock("@/components/wallet/portfolio/WalletPortfolioPresenter", () => ({
   ),
 }));
 
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+    },
+  });
+}
+
+function createWrapper() {
+  const queryClient = createTestQueryClient();
+  const Wrapper = ({ children }: { children: React.ReactNode }) => (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+  Wrapper.displayName = "TestWrapper";
+  return Wrapper;
+}
+
 describe("DashboardShell", () => {
   const defaultProps = {
     urlUserId: "user-123",
@@ -102,21 +123,23 @@ describe("DashboardShell", () => {
   });
 
   it("should render portfolio presenter with data", () => {
-    render(<DashboardShell {...defaultProps} />);
+    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("portfolio-presenter")).toBeInTheDocument();
     expect(screen.getByTestId("portfolio-content")).toBeInTheDocument();
   });
 
   it("should pass userId to presenter", () => {
-    render(<DashboardShell {...defaultProps} />);
+    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
 
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-user-id", "user-123");
   });
 
   it("should set data attributes on container", () => {
-    const { container } = render(<DashboardShell {...defaultProps} />);
+    const { container } = render(<DashboardShell {...defaultProps} />, {
+      wrapper: createWrapper(),
+    });
 
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveAttribute("data-bundle-user-id", "user-123");
@@ -126,10 +149,9 @@ describe("DashboardShell", () => {
   });
 
   it("should set visitor mode when not own bundle", () => {
-    render(<DashboardShell {...defaultProps} isOwnBundle={false} />);
-
     const { container } = render(
-      <DashboardShell {...defaultProps} isOwnBundle={false} />
+      <DashboardShell {...defaultProps} isOwnBundle={false} />,
+      { wrapper: createWrapper() }
     );
     const wrapper = container.firstChild as HTMLElement;
     expect(wrapper).toHaveAttribute("data-bundle-owner", "visitor");
@@ -144,7 +166,7 @@ describe("DashboardShell", () => {
       refetch: vi.fn(),
     });
 
-    render(<DashboardShell {...defaultProps} />);
+    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
 
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-loading", "true");
@@ -160,7 +182,7 @@ describe("DashboardShell", () => {
       refetch: vi.fn(),
     });
 
-    render(<DashboardShell {...defaultProps} />);
+    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
 
     expect(screen.getByTestId("error-state")).toBeInTheDocument();
     expect(screen.getByText("Failed to load portfolio")).toBeInTheDocument();
@@ -175,7 +197,7 @@ describe("DashboardShell", () => {
       refetch: vi.fn(),
     });
 
-    render(<DashboardShell {...defaultProps} />);
+    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
 
     const presenter = screen.getByTestId("portfolio-presenter");
     expect(presenter).toHaveAttribute("data-empty", "true");
@@ -186,7 +208,8 @@ describe("DashboardShell", () => {
       <DashboardShell
         {...defaultProps}
         headerBanners={<div>Header Banner Content</div>}
-      />
+      />,
+      { wrapper: createWrapper() }
     );
 
     expect(screen.getByTestId("header-banners")).toBeInTheDocument();
@@ -198,7 +221,8 @@ describe("DashboardShell", () => {
       <DashboardShell
         {...defaultProps}
         footerOverlays={<div>Footer Overlay Content</div>}
-      />
+      />,
+      { wrapper: createWrapper() }
     );
 
     expect(screen.getByTestId("footer-overlays")).toBeInTheDocument();
@@ -207,7 +231,8 @@ describe("DashboardShell", () => {
 
   it("should handle missing optional props", () => {
     const { container } = render(
-      <DashboardShell urlUserId="user-456" isOwnBundle={false} />
+      <DashboardShell urlUserId="user-456" isOwnBundle={false} />,
+      { wrapper: createWrapper() }
     );
 
     const wrapper = container.firstChild as HTMLElement;

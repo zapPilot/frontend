@@ -32,7 +32,7 @@
  */
 
 import { CACHE_WINDOW } from "@/config/cacheWindow";
-import { BaseServiceError } from "@/lib/errors";
+import { isClientError } from "@/lib/errors/errorHelpers";
 
 /**
  * Data freshness profiles for different query types
@@ -62,26 +62,7 @@ const QUERY_TIMINGS = {
   realtime: HOURLY_ETL_TIMINGS,
 } as const;
 
-/**
- * Check if error is a client error (4xx status code)
- *
- * @param error - Error object to check
- * @returns True if error has 4xx status code
- */
-const isClientError = (error: unknown): boolean => {
-  // Check BaseServiceError (preferred)
-  if (error instanceof BaseServiceError) {
-    return error.isClientError();
-  }
-
-  // Check plain objects with status property
-  if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status?: number }).status;
-    return typeof status === "number" && status >= 400 && status < 500;
-  }
-
-  return false;
-};
+// isClientError is now imported from errorHelpers
 
 /**
  * Retry configuration options

@@ -9,7 +9,7 @@ import { DashboardShell } from "@/components/DashboardShell";
 import { EmailReminderBanner } from "@/components/EmailReminderBanner";
 import { WalletManager } from "@/components/WalletManager";
 import { useUser } from "@/contexts/UserContext";
-import { useBundlePage } from "@/hooks/useBundlePage";
+import { useBundlePage } from "@/hooks/bundle/useBundlePage";
 
 interface BundlePageClientProps {
   userId: string;

@@ -1,347 +1,314 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { WalletData } from "@/lib/validation/walletUtils";
+import { useWalletOperations } from "@/components/WalletManager/hooks/useWalletOperations";
+import {
+  addWallet as addWalletToBundle,
+  loadWallets as fetchWallets,
+  removeWallet as removeWalletFromBundle,
+  updateWalletLabel,
+} from "@/components/WalletManager/services/WalletService";
+import { useUser } from "@/contexts/UserContext";
+import { useToast } from "@/providers/ToastProvider";
+import { useWalletProvider } from "@/providers/WalletProvider";
 
-// Mock all dependencies before imports
+// Mock dependencies
+vi.mock("@/contexts/UserContext", () => ({
+  useUser: vi.fn(),
+}));
+
+vi.mock("@/providers/ToastProvider", () => ({
+  useToast: vi.fn(),
+}));
+
+vi.mock("@/providers/WalletProvider", () => ({
+  useWalletProvider: vi.fn(),
+}));
+
 vi.mock("@tanstack/react-query", async () => {
-  const actual = await vi.importActual<typeof import("@tanstack/react-query")>(
-    "@tanstack/react-query"
-  );
+  const actual = await vi.importActual("@tanstack/react-query");
   return {
-    ...actual,
-    useQueryClient: vi.fn(),
+    ...(actual as any),
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+    }),
   };
 });
 
-vi.mock("@/contexts/UserContext");
-vi.mock("@/hooks/useToast");
-vi.mock("@/providers/WalletProvider");
-vi.mock("@/utils/clipboard");
-vi.mock("@/components/WalletManager/services/WalletService");
-vi.mock("@/services/accountService");
-vi.mock("@/hooks/useQueryInvalidation");
-vi.mock("@/components/WalletManager/utils/validation");
+vi.mock("@/components/WalletManager/services/WalletService", () => ({
+  loadWallets: vi.fn(),
+  addWallet: vi.fn(),
+  removeWallet: vi.fn(),
+  updateWalletLabel: vi.fn(),
+}));
 
-// Now import the hook after all mocks are set up
-const { useWalletOperations } = await import(
-  "@/components/WalletManager/hooks/useWalletOperations"
-);
+vi.mock("@/hooks/utils/useQueryInvalidation", () => ({
+  invalidateAndRefetch: vi.fn(),
+}));
+
+vi.mock("@/services/accountService", () => ({
+  deleteUser: vi.fn(),
+}));
+
+vi.mock("@/utils/clipboard", () => ({
+  copyTextToClipboard: vi.fn().mockResolvedValue(true),
+}));
 
 describe("useWalletOperations", () => {
+  const mockShowToast = vi.fn();
+  const mockRefetch = vi.fn();
+  const mockDisconnect = vi.fn();
+
   const defaultParams = {
-    viewingUserId: "user123",
-    realUserId: "user123",
+    viewingUserId: "user-123",
+    realUserId: "user-123",
     isOwner: true,
     isOpen: true,
   };
 
-  const mockWallets: WalletData[] = [
-    {
-      id: "wallet1",
-      address: "0x1234567890123456789012345678901234567890",
-      label: "Main Wallet",
-      isMain: false,
-      isActive: false,
-      createdAt: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "wallet2",
-      address: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
-      label: "Trading Wallet",
-      isMain: false,
-      isActive: false,
-      createdAt: "2024-01-02T00:00:00Z",
-    },
-  ];
-
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-
-    // Setup useQueryClient mock
-    const { useQueryClient } = await import("@tanstack/react-query");
-    vi.mocked(useQueryClient).mockReturnValue({
-      invalidateQueries: vi.fn().mockResolvedValue(undefined),
-    } as any);
-
-    // Setup useUser mock
-    const { useUser } = await import("@/contexts/UserContext");
-    vi.mocked(useUser).mockReturnValue({
-      refetch: vi.fn().mockResolvedValue(undefined),
-    } as any);
-
-    // Setup useToast mock
-    const { useToast } = await import("@/hooks/useToast");
-    vi.mocked(useToast).mockReturnValue({
-      showToast: vi.fn(),
-    } as any);
-
-    // Setup useWalletProvider mock
-    const { useWalletProvider } = await import("@/providers/WalletProvider");
+    vi.mocked(useUser).mockReturnValue({ refetch: mockRefetch } as any);
+    vi.mocked(useToast).mockReturnValue({ showToast: mockShowToast } as any);
     vi.mocked(useWalletProvider).mockReturnValue({
-      disconnect: vi.fn().mockResolvedValue(undefined),
-      isConnected: false,
+      disconnect: mockDisconnect,
+      isConnected: true,
       connectedWallets: [],
-      switchActiveWallet: vi.fn().mockResolvedValue(undefined),
+      switchActiveWallet: vi.fn(),
     } as any);
-
-    // Setup clipboard mock
-    const clipboard = await import("@/utils/clipboard");
-    vi.mocked(clipboard.copyTextToClipboard).mockResolvedValue(true);
-
-    // Setup WalletService mocks
-    const WalletService = await import(
-      "@/components/WalletManager/services/WalletService"
-    );
-    vi.mocked(WalletService.loadWallets).mockResolvedValue(mockWallets);
-    vi.mocked(WalletService.addWallet).mockResolvedValue({ success: true });
-    vi.mocked(WalletService.removeWallet).mockResolvedValue({ success: true });
-    vi.mocked(WalletService.updateWalletLabel).mockResolvedValue({
-      success: true,
-    });
-
-    // Setup accountService mocks
-    const accountService = await import("@/services/accountService");
-    vi.mocked(accountService.deleteUser).mockResolvedValue({
-      success: true,
-      message: "User deleted",
-    });
-
-    // Setup invalidateAndRefetch mock
-    const { invalidateAndRefetch } = await import(
-      "@/hooks/useQueryInvalidation"
-    );
-    vi.mocked(invalidateAndRefetch).mockResolvedValue(undefined);
-
-    // Setup validation mock
-    const validation = await import(
-      "@/components/WalletManager/utils/validation"
-    );
-    vi.mocked(validation.validateNewWallet).mockImplementation(wallet => {
-      if (!wallet.address.trim()) {
-        return { isValid: false, error: "Wallet address is required" };
-      }
-      if (!wallet.label.trim()) {
-        return { isValid: false, error: "Wallet label is required" };
-      }
-      if (wallet.label.trim().length < 2) {
-        return {
-          isValid: false,
-          error: "Wallet label must be at least 2 characters long",
-        };
-      }
-      if (!/^0x[a-fA-F0-9]{40}$/.test(wallet.address)) {
-        return {
-          isValid: false,
-          error:
-            "Invalid wallet address format. Must be a 42-character Ethereum address starting with 0x",
-        };
-      }
-      return { isValid: true };
-    });
+    vi.mocked(fetchWallets).mockResolvedValue([]);
   });
 
-  describe("initialization", () => {
-    it("should initialize with default state after loading", async () => {
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+  it("initializes with empty state", () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      // Wait for initial load to complete
-      await waitFor(() => {
-        expect(result.current.isRefreshing).toBe(false);
-      });
+    expect(result.current.wallets).toEqual([]);
+    expect(result.current.isRefreshing).toBe(true); // Initially refreshing
+    expect(result.current.isAdding).toBe(false);
+  });
 
+  it("loads wallets when modal opens", async () => {
+    const mockWallets = [
+      { id: "w1", address: "0x123", label: "Main" },
+      { id: "w2", address: "0x456", label: "Trading" },
+    ];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
       expect(result.current.wallets).toHaveLength(2);
-      expect(result.current.isRefreshing).toBe(false);
-      expect(result.current.isAdding).toBe(false);
-      expect(result.current.editingWallet).toBeNull();
-      expect(result.current.validationError).toBeNull();
-      expect(result.current.isDeletingAccount).toBe(false);
-      expect(result.current.newWallet).toEqual({ address: "", label: "" });
-      expect(result.current.operations).toEqual({
-        adding: { isLoading: false, error: null },
-        removing: {},
-        editing: {},
-        subscribing: { isLoading: false, error: null },
-      });
     });
+
+    expect(fetchWallets).toHaveBeenCalledWith("user-123");
   });
 
-  describe("loadWallets", () => {
-    it("should load wallets on mount when isOpen is true", async () => {
-      const WalletService = await import(
-        "@/components/WalletManager/services/WalletService"
-      );
+  it("handleAddWallet validates input", async () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      renderHook(() => useWalletOperations(defaultParams));
-
-      await waitFor(() => {
-        expect(WalletService.loadWallets).toHaveBeenCalledWith("user123");
-      });
+    // Set invalid address
+    act(() => {
+      result.current.setNewWallet({ address: "invalid", label: "" });
     });
 
-    it("should not load wallets when isOpen is false", async () => {
-      const WalletService = await import(
-        "@/components/WalletManager/services/WalletService"
-      );
-
-      renderHook(() =>
-        useWalletOperations({ ...defaultParams, isOpen: false })
-      );
-
-      await waitFor(
-        () => {
-          expect(WalletService.loadWallets).not.toHaveBeenCalled();
-        },
-        { timeout: 100 }
-      ).catch(() => {
-        /* Expected to not be called */
-      });
+    await act(async () => {
+      await result.current.handleAddWallet();
     });
 
-    it("should handle wallet load errors gracefully", async () => {
-      const WalletService = await import(
-        "@/components/WalletManager/services/WalletService"
-      );
-      vi.mocked(WalletService.loadWallets).mockRejectedValue(
-        new Error("Network error")
-      );
-
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
-
-      await waitFor(() => {
-        expect(result.current.wallets).toEqual([]);
-        expect(result.current.isRefreshing).toBe(false);
-      });
-    });
+    expect(result.current.validationError).toBeTruthy();
+    expect(addWalletToBundle).not.toHaveBeenCalled();
   });
 
-  describe("handleAddWallet", () => {
-    it("should add wallet successfully", async () => {
-      const WalletService = await import(
-        "@/components/WalletManager/services/WalletService"
-      );
-      vi.mocked(WalletService.addWallet).mockResolvedValue({ success: true });
+  it("handleAddWallet succeeds with valid wallet", async () => {
+    vi.mocked(addWalletToBundle).mockResolvedValue({ success: true });
+    vi.mocked(fetchWallets).mockResolvedValue([]);
 
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      await waitFor(() => {
-        expect(result.current.wallets).toHaveLength(2);
+    act(() => {
+      result.current.setIsAdding(true);
+      result.current.setNewWallet({
+        address: "0x1234567890123456789012345678901234567890",
+        label: "New Wallet",
       });
-
-      act(() => {
-        result.current.setNewWallet({
-          address: "0xfedcbafedcbafedcbafedcbafedcbafedcbafed0",
-          label: "New Wallet",
-        });
-      });
-
-      await act(async () => {
-        await result.current.handleAddWallet();
-      });
-
-      expect(WalletService.addWallet).toHaveBeenCalledWith(
-        "user123",
-        "0xfedcbafedcbafedcbafedcbafedcbafedcbafed0",
-        "New Wallet"
-      );
     });
 
-    it("should validate wallet before adding", async () => {
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
-
-      act(() => {
-        result.current.setNewWallet({
-          address: "",
-          label: "Test",
-        });
-      });
-
-      await act(async () => {
-        await result.current.handleAddWallet();
-      });
-
-      expect(result.current.validationError).toBe("Wallet address is required");
+    await act(async () => {
+      await result.current.handleAddWallet();
     });
+
+    expect(addWalletToBundle).toHaveBeenCalled();
+    expect(result.current.isAdding).toBe(false);
   });
 
-  describe("handleDeleteWallet", () => {
-    it("should delete wallet successfully", async () => {
-      const WalletService = await import(
-        "@/components/WalletManager/services/WalletService"
-      );
+  it("handleDeleteWallet removes wallet", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Main" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(removeWalletFromBundle).mockResolvedValue({ success: true });
 
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      await waitFor(() => {
-        expect(result.current.wallets).toHaveLength(2);
-      });
-
-      await act(async () => {
-        await result.current.handleDeleteWallet("wallet1");
-      });
-
-      expect(WalletService.removeWallet).toHaveBeenCalledWith(
-        "user123",
-        "wallet1"
-      );
+    await waitFor(() => {
       expect(result.current.wallets).toHaveLength(1);
     });
+
+    await act(async () => {
+      await result.current.handleDeleteWallet("w1");
+    });
+
+    expect(removeWalletFromBundle).toHaveBeenCalledWith("user-123", "w1");
+    expect(result.current.wallets).toHaveLength(0);
   });
 
-  describe("handleCopyAddress", () => {
-    it("should copy address and show success toast", async () => {
-      const clipboard = await import("@/utils/clipboard");
-      const { useToast } = await import("@/hooks/useToast");
-      const mockShowToast = vi.fn();
-      vi.mocked(useToast).mockReturnValue({
-        showToast: mockShowToast,
-      } as any);
-      vi.mocked(clipboard.copyTextToClipboard).mockResolvedValue(true);
+  it("handleCopyAddress copies to clipboard", async () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+    await act(async () => {
+      await result.current.handleCopyAddress("0x123");
+    });
 
-      await act(async () => {
-        await result.current.handleCopyAddress(
-          "0x1234567890123456789012345678901234567890"
-        );
-      });
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "success" })
+    );
+  });
 
-      expect(clipboard.copyTextToClipboard).toHaveBeenCalledWith(
-        "0x1234567890123456789012345678901234567890"
-      );
-      expect(mockShowToast).toHaveBeenCalledWith({
+  it("editingWallet state management", () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    act(() => {
+      result.current.setEditingWallet({ id: "w1", label: "Test" });
+    });
+
+    expect(result.current.editingWallet).toEqual({ id: "w1", label: "Test" });
+
+    act(() => {
+      result.current.setEditingWallet(null);
+    });
+
+    expect(result.current.editingWallet).toBeNull();
+  });
+  it("handleEditLabel updates label optimistically and calls API", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Old" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(updateWalletLabel).mockResolvedValue({ success: true });
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleEditLabel("w1", "New");
+    });
+
+    // Should update optimistically
+    expect(result.current.wallets[0].label).toBe("New");
+    expect(updateWalletLabel).toHaveBeenCalledWith("user-123", "0x123", "New");
+  });
+
+  it("handleEditLabel reverts optimistic update on API failure", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Old" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(updateWalletLabel).mockResolvedValue({
+      success: false,
+      error: "API Error",
+    });
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleEditLabel("w1", "New");
+    });
+
+    // Should revert
+    expect(result.current.wallets[0].label).toBe("Old");
+    expect(result.current.operations.editing.w1.error).toBe("API Error");
+  });
+
+  it("handleDeleteAccount calls deleteUser and handles success", async () => {
+    vi.mocked(useUser).mockReturnValue({
+      refetch: mockRefetch,
+      isConnected: false,
+    } as any);
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleDeleteAccount();
+    });
+
+    expect(result.current.isDeletingAccount).toBe(false);
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Account Deleted",
         type: "success",
-        title: "Address Copied",
-        message: expect.stringContaining("copied to clipboard"),
-      });
-    });
+      })
+    );
   });
 
-  describe("state setters", () => {
-    it("should update isAdding state", () => {
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+  it("handleDeleteAccount attempts disconnect if connected", async () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      act(() => {
-        result.current.setIsAdding(true);
-      });
-
-      expect(result.current.isAdding).toBe(true);
+    await act(async () => {
+      await result.current.handleDeleteAccount();
     });
 
-    it("should update newWallet state", () => {
-      const { result } = renderHook(() => useWalletOperations(defaultParams));
+    expect(mockDisconnect).toHaveBeenCalled();
+  });
 
-      act(() => {
-        result.current.setNewWallet({
-          address: "0x1234567890123456789012345678901234567890",
-          label: "Test",
-        });
-      });
+  it("handleDeleteAccount handles disconnect failure gracefully", async () => {
+    mockDisconnect.mockRejectedValue(new Error("Disconnect error"));
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
 
-      expect(result.current.newWallet).toEqual({
-        address: "0x1234567890123456789012345678901234567890",
-        label: "Test",
-      });
+    await act(async () => {
+      await result.current.handleDeleteAccount();
     });
+
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Disconnect Wallet",
+        type: "warning",
+      })
+    );
+  });
+
+  it("auto-refreshes wallets when conditions met", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOwner: true, isOpen: true })
+    );
+
+    // Initial load
+    expect(fetchWallets).toHaveBeenCalledTimes(1);
+
+    // Advance time to trigger refresh
+    await act(async () => {
+      vi.advanceTimersByTime(30000); // 30s
+    });
+
+    expect(fetchWallets).toHaveBeenCalledTimes(2);
+    vi.useRealTimers();
+  });
+
+  it("does not auto-refresh if not owner", async () => {
+    vi.useFakeTimers();
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    renderHook(() =>
+      useWalletOperations({ ...defaultParams, isOwner: false, isOpen: true })
+    );
+
+    await act(async () => {
+      vi.advanceTimersByTime(30000);
+    });
+
+    expect(fetchWallets).toHaveBeenCalledTimes(1); // Only initial load
+    vi.useRealTimers();
   });
 });

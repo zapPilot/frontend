@@ -11,7 +11,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import { PortfolioComposition } from "@/components/wallet/portfolio/components/PortfolioComposition";
+import { PortfolioComposition } from "@/components/wallet/portfolio/components/shared/PortfolioComposition";
 
 // Mock getRegimeAllocation to avoid deep dependency chain
 vi.mock("@/components/wallet/regime/regimeData", () => ({
@@ -60,6 +60,23 @@ vi.mock("@/components/wallet/portfolio/views/DashboardSkeleton", () => ({
   PortfolioCompositionSkeleton: () => (
     <div data-testid="composition-skeleton">Loading...</div>
   ),
+}));
+
+// Mock useAllocationWeights to avoid QueryClient dependency
+vi.mock("@/hooks/queries/analytics/useAllocationWeights", () => ({
+  useAllocationWeights: vi.fn().mockReturnValue({
+    data: {
+      btc_weight: 0.6,
+      eth_weight: 0.4,
+      btc_market_cap: 1800000000000,
+      eth_market_cap: 400000000000,
+      timestamp: "2024-01-15T12:00:00Z",
+      is_fallback: false,
+      cached: false,
+    },
+    isLoading: false,
+    error: null,
+  }),
 }));
 
 const mockData: WalletPortfolioDataWithDirection = {
@@ -127,6 +144,22 @@ describe("PortfolioComposition", () => {
       );
 
       expect(screen.getByTestId("rebalance-button")).toBeInTheDocument();
+    });
+
+    it("renders allocation legend items", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      // Check for legend items (based on mockData symbols)
+      expect(screen.getAllByText("BTC")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("ETH")[0]).toBeInTheDocument();
+      // We expect multiple '40%' (BTC, Stables) and possibly from bars if rendered text
+      expect(screen.getAllByText("40%").length).toBeGreaterThanOrEqual(2);
     });
   });
 

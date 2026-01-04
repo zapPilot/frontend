@@ -11,7 +11,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AllocationBars } from "@/components/wallet/portfolio/components/AllocationBars";
+import { AllocationBars } from "@/components/wallet/portfolio/components/allocation/AllocationBars";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 
 // Mock framer-motion to avoid animation issues in tests
@@ -170,8 +170,8 @@ describe("AllocationBars", () => {
         />
       );
 
-      expect(screen.getByText("BTC")).toBeInTheDocument();
-      expect(screen.getByText("ETH")).toBeInTheDocument();
+      expect(screen.getAllByText("BTC").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("ETH").length).toBeGreaterThanOrEqual(1);
     });
 
     it("displays STABLES text for large stable allocation", () => {
@@ -183,7 +183,7 @@ describe("AllocationBars", () => {
         />
       );
 
-      expect(screen.getByText("STABLES")).toBeInTheDocument();
+      expect(screen.getAllByText("STABLES").length).toBeGreaterThanOrEqual(1);
     });
 
     it("displays percentage on hover for large allocations", () => {
@@ -197,8 +197,8 @@ describe("AllocationBars", () => {
 
       // Percentage text should be in the DOM but hidden (opacity-0)
       expect(screen.getByText("40.00%")).toBeInTheDocument();
-      // 30% appears twice: ETH (30%) and STABLES (30%)
-      expect(screen.getAllByText("30.00%")).toHaveLength(2);
+      // 30% appears for ETH and STABLES in both bars and legend
+      expect(screen.getAllByText("30.00%").length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -236,8 +236,15 @@ describe("AllocationBars", () => {
 
         await waitFor(() => {
           // Tooltip should show the symbol and percentage
-          expect(screen.getByText("BTC")).toBeInTheDocument();
-          expect(screen.getByText("5.00%")).toBeInTheDocument();
+          // We look for text specifically inside the fixed position tooltip, distinct from legend
+          const tooltips = screen
+            .getAllByText("BTC")
+            .filter(el => el.closest(".fixed"));
+          expect(tooltips.length).toBeGreaterThan(0);
+          const percentTooltips = screen
+            .getAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
+          expect(percentTooltips.length).toBeGreaterThan(0);
         });
       }
     });
@@ -258,19 +265,27 @@ describe("AllocationBars", () => {
         // Show tooltip
         fireEvent.mouseEnter(tooltipWrapper);
         await waitFor(() => {
-          expect(screen.getByText("BTC")).toBeInTheDocument();
+          const tooltips = screen
+            .getAllByText("BTC")
+            .filter(el => el.closest(".fixed"));
+          expect(tooltips.length).toBeGreaterThan(0);
         });
 
         // Hide tooltip
         fireEvent.mouseLeave(tooltipWrapper);
         await waitFor(() => {
-          // After mouse leave, tooltip content should be hidden
-          // Since we mock createPortal, we check visibility state
-          const tooltip = screen.queryByText("5.00%");
-          // Tooltip might still be in DOM but hidden
-          if (tooltip) {
-            const tooltipContainer = tooltip.closest(".fixed");
-            expect(tooltipContainer).toHaveStyle({ visibility: "hidden" });
+          // After mouse leave, tooltip content should be hidden (visibility: hidden or removed)
+          // Find all percentages that *could* be tooltip (inside fixed)
+          const potentialTooltips = screen
+            .queryAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
+
+          if (potentialTooltips.length > 0) {
+            // If exists, must be hidden
+            for (const tooltip of potentialTooltips) {
+              const container = tooltip.closest(".fixed");
+              expect(container).toHaveStyle({ visibility: "hidden" });
+            }
           }
         });
       }
@@ -292,8 +307,14 @@ describe("AllocationBars", () => {
         fireEvent.mouseEnter(tooltipWrapper);
 
         await waitFor(() => {
-          expect(screen.getByText("STABLES")).toBeInTheDocument();
-          expect(screen.getByText("5.00%")).toBeInTheDocument();
+          const tooltips = screen
+            .getAllByText("STABLES")
+            .filter(el => el.closest(".fixed"));
+          expect(tooltips.length).toBeGreaterThan(0);
+          const percentTooltips = screen
+            .getAllByText("5.00%")
+            .filter(el => el.closest(".fixed"));
+          expect(percentTooltips.length).toBeGreaterThan(0);
         });
       }
     });
@@ -309,8 +330,8 @@ describe("AllocationBars", () => {
         />
       );
 
-      // BTC (40%) should have inline text
-      expect(screen.getByText("BTC")).toBeInTheDocument();
+      // BTC (40%) should have inline text (plus legend)
+      expect(screen.getAllByText("BTC").length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText("40.00%")).toBeInTheDocument();
 
       // ALT (5%) should not have inline text (it will appear in tooltip on hover)
@@ -319,7 +340,7 @@ describe("AllocationBars", () => {
       expect(altInlineText).not.toBeInTheDocument();
 
       // STABLES should have inline text
-      expect(screen.getByText("STABLES")).toBeInTheDocument();
+      expect(screen.getAllByText("STABLES").length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -343,8 +364,8 @@ describe("AllocationBars", () => {
         />
       );
 
-      // At exactly 8%, should still show inline (>= 8 is the threshold)
-      expect(screen.getByText("BTC")).toBeInTheDocument();
+      // At exactly 8%, should still show inline (plus legend)
+      expect(screen.getAllByText("BTC").length).toBeGreaterThanOrEqual(1);
     });
 
     it("renders with 7.99% allocation (just under boundary)", () => {
@@ -392,7 +413,7 @@ describe("AllocationBars", () => {
       );
 
       expect(screen.getByTestId("composition-btc")).toBeInTheDocument();
-      expect(screen.getByText("BTC")).toBeInTheDocument();
+      expect(screen.getAllByText("BTC").length).toBeGreaterThanOrEqual(1);
       expect(
         screen.queryByTestId("composition-stables")
       ).not.toBeInTheDocument();
@@ -434,6 +455,88 @@ describe("AllocationBars", () => {
       );
 
       expect(container).toMatchSnapshot();
+    });
+  });
+
+  describe("Absolute Portfolio Percentages", () => {
+    it("uses asset.value directly as width percentage for each bar", () => {
+      // These values represent absolute portfolio percentages from API
+      const absolutePercentAssets: AllocationConstituent[] = [
+        {
+          asset: "bitcoin",
+          symbol: "BTC",
+          name: "Bitcoin",
+          value: 37.25, // 37.25% of total portfolio
+          color: "#F7931A",
+        },
+        {
+          asset: "ethereum",
+          symbol: "ETH",
+          name: "Ethereum",
+          value: 17.07, // 17.07% of total portfolio
+          color: "#627EEA",
+        },
+        {
+          asset: "altcoins",
+          symbol: "ALT",
+          name: "Altcoins",
+          value: 10.06, // 10.06% of total portfolio
+          color: "#8B5CF6",
+        },
+      ];
+
+      render(
+        <AllocationBars
+          cryptoAssets={absolutePercentAssets}
+          cryptoPercentage={64.38} // Sum of crypto assets
+          stablePercentage={35.62}
+        />
+      );
+
+      // Each bar should have width set to its absolute percentage
+      const btcBar = screen.getByTestId("composition-btc").parentElement;
+      const ethBar = screen.getByTestId("composition-eth").parentElement;
+      const altBar = screen.getByTestId("composition-alt").parentElement;
+      const stablesBar = screen.getByTestId(
+        "composition-stables"
+      ).parentElement;
+
+      expect(btcBar).toHaveStyle({ width: "37.25%" });
+      expect(ethBar).toHaveStyle({ width: "17.07%" });
+      expect(altBar).toHaveStyle({ width: "10.06%" });
+      expect(stablesBar).toHaveStyle({ width: "35.62%" });
+    });
+
+    it("displays correct absolute percentage in bar labels", () => {
+      const absolutePercentAssets: AllocationConstituent[] = [
+        {
+          asset: "bitcoin",
+          symbol: "BTC",
+          name: "Bitcoin",
+          value: 37.25,
+          color: "#F7931A",
+        },
+        {
+          asset: "ethereum",
+          symbol: "ETH",
+          name: "Ethereum",
+          value: 17.07,
+          color: "#627EEA",
+        },
+      ];
+
+      render(
+        <AllocationBars
+          cryptoAssets={absolutePercentAssets}
+          cryptoPercentage={54.32}
+          stablePercentage={35.62}
+        />
+      );
+
+      // Percentages shown should match API values (bars + legend)
+      expect(screen.getAllByText("37.25%").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("17.07%").length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText("35.62%").length).toBeGreaterThanOrEqual(1);
     });
   });
 });

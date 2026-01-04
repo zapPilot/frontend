@@ -1,43 +1,70 @@
+/**
+ * Transaction Submission Hook
+ *
+ * Handles form submission with status management:
+ * - Submit validation and execution
+ * - Status tracking (idle, submitting, success)
+ * - Result storage
+ * - State reset
+ *
+ * Simplified by internalizing status state (no separate useTransactionStatus hook).
+ */
+
+import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import type {
   TransactionFormData,
   TransactionResult,
+  TransactionToken,
 } from "@/types/domain/transaction";
-
-import { useTransactionStatus } from "./useTransactionStatus";
 
 export function useTransactionSubmission(
   form: UseFormReturn<TransactionFormData>,
   isConnected: boolean,
-  selectedToken: unknown,
+  selectedToken: TransactionToken | null,
   submitFn: (values: TransactionFormData) => Promise<TransactionResult>,
   onClose: () => void
 ) {
-  const statusState = useTransactionStatus();
+  // Status state (internalized from useTransactionStatus)
+  const [status, setStatus] = useState<"idle" | "submitting" | "success">(
+    "idle"
+  );
+  const [result, setResult] = useState<TransactionResult | null>(null);
+
+  // Destructure formState to ensure proper subscription to changes
+  const { isValid } = form.formState;
 
   const isSubmitDisabled =
-    statusState.status === "submitting" ||
-    !form.formState.isValid ||
-    !isConnected ||
-    !selectedToken;
+    status === "submitting" || !isValid || !isConnected || !selectedToken;
 
   const handleSubmit = form.handleSubmit(async values => {
-    statusState.setStatus("submitting");
+    setStatus("submitting");
     try {
       const response = await submitFn(values);
-      statusState.setResult(response);
-      statusState.setStatus("success");
+      setResult(response);
+      setStatus("success");
     } catch (error) {
-      statusState.setStatus("idle");
+      setStatus("idle");
       throw error;
     }
   });
 
   const resetState = () => {
-    statusState.resetStatus();
+    setStatus("idle");
+    setResult(null);
     onClose();
   };
 
-  return { statusState, isSubmitDisabled, handleSubmit, resetState } as const;
+  return {
+    // Status state
+    status,
+    result,
+    isSubmitting: status === "submitting" || status === "success",
+
+    // Submit controls
+    isSubmitDisabled,
+    handleSubmit,
+    resetState,
+  } as const;
 }

@@ -1,18 +1,48 @@
 /**
  * Error Handling Module
  *
- * Centralized error handling with type definitions, base classes, and factory functions.
+ * Centralized error handling with unified error hierarchy and helper utilities.
  * @module lib/errors
  */
 
-// Export base error class
-export { BaseServiceError } from "./BaseServiceError";
+// ============================================================================
+// UNIFIED ERROR SYSTEM
+// ============================================================================
 
-// Export service-specific error classes
+// Service error classes
 export {
-  createIntentServiceError,
+  AccountServiceError,
+  AnalyticsServiceError,
+  BundleServiceError,
   IntentServiceError,
-} from "./IntentServiceError";
+  ServiceError,
+} from "./ServiceError";
 
-// Export factory utilities
+// Result type for explicit success/failure handling
+export type { Result } from "./ServiceError";
+export { Err, Ok, OkVoid } from "./ServiceError";
+
+// ============================================================================
+// ERROR UTILITIES
+// ============================================================================
+
+// Error helper functions (classification and factory)
+export {
+  createAccountServiceError,
+  createAnalyticsServiceError,
+  createBundleServiceError,
+  createIntentServiceError,
+  extractErrorCode,
+  extractStatusCode,
+  isClientError,
+  isRetryableError,
+  isServerError,
+  isServiceError,
+} from "./errorHelpers";
+
+// Legacy factory utilities (still used in some places)
 export { resolveErrorMessage } from "./errorFactory";
+
+// Error handling utilities
+export type { ServiceResult } from "./errorHandling";
+export { wrapServiceCall } from "./errorHandling";

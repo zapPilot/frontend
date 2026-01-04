@@ -9,8 +9,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useAnalyticsData } from "@/hooks/queries/useAnalyticsData";
-import { useCurrentUser } from "@/hooks/queries/useUserQuery";
+import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
+import { useUserById } from "@/hooks/queries/wallet/useUserQuery";
 import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 import type {
   AnalyticsData,
@@ -90,19 +90,20 @@ export const AnalyticsViewContainer = ({
   // NEW: Wallet filter state
   const [selectedWallet, setSelectedWallet] = useState<WalletFilter>(null);
 
-  // Get available wallets from user query
-  const { userInfo } = useCurrentUser();
+  // Get available wallets from bundle owner's data (not connected user)
+  const { data: bundleOwnerInfo } = useUserById(userId);
   const availableWallets: WalletOption[] = useMemo(
     () =>
-      userInfo?.additionalWallets.map(w => ({
+      bundleOwnerInfo?.additionalWallets.map(w => ({
         address: w.wallet_address,
         label: w.label,
       })) || [],
-    [userInfo?.additionalWallets]
+    [bundleOwnerInfo?.additionalWallets]
   );
 
-  // Determine if wallet selector should be shown (hide for single-wallet users)
-  const showWalletSelector = availableWallets.length > 1;
+  // Always show wallet selector (even for single-wallet users)
+  // This allows users to see which wallet is associated with the bundle
+  const showWalletSelector = true;
 
   // Auto-reset to "All Wallets" if selected wallet is removed from bundle
   useEffect(() => {

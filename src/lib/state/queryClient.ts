@@ -41,6 +41,8 @@ export const queryKeys = {
     all: ["user"] as const,
     byWallet: (walletAddress: string) =>
       ["user", "by-wallet", walletAddress] as const,
+    /** Query key for user data by userId (for bundle owner data) */
+    byId: (userId: string) => ["user", "by-id", userId] as const,
     bundleWallets: (userId: string) =>
       ["user", "bundle-wallets", userId] as const,
     /** Query key for user's wallet list */

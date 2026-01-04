@@ -2,70 +2,105 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { PerformanceTooltip } from "@/components/charts/tooltipContent/PerformanceTooltip";
+import { TooltipWrapper } from "@/components/charts/tooltipContent/TooltipWrapper";
 import type { PerformanceHoverData } from "@/types/ui/chartHover";
 
-const baseData: PerformanceHoverData = {
-  chartType: "performance",
-  x: 100,
-  y: 100,
-  date: "2024-01-01",
-  value: 12000,
-  benchmark: 10000,
-};
-
-describe("PerformanceTooltip", () => {
-  it("renders portfolio value and benchmark", () => {
-    render(<PerformanceTooltip data={baseData} />);
-
-    expect(screen.getByText("Portfolio Value")).toBeInTheDocument();
-    expect(screen.getByText("$12,000.00")).toBeInTheDocument();
-    expect(screen.getByText("BTC Benchmark")).toBeInTheDocument();
-    expect(screen.getByText("$10,000.00")).toBeInTheDocument();
-  });
-
-  it("calculates relative performance correctly (positive)", () => {
-    // 12000 vs 10000 = +20%
-    render(<PerformanceTooltip data={baseData} />);
-
-    expect(screen.getByText("Relative")).toBeInTheDocument();
-    expect(screen.getByText("+20.0%")).toBeInTheDocument();
-  });
-
-  it("calculates relative performance correctly (negative)", () => {
-    // 8000 vs 10000 = -20%
+describe("TooltipWrapper", () => {
+  it("renders date and children", () => {
     render(
-      <PerformanceTooltip
-        data={{ ...baseData, value: 8000, benchmark: 10000 }}
-      />
+      <TooltipWrapper date="2024-01-15">
+        <div data-testid="child">Content</div>
+      </TooltipWrapper>
     );
 
+    expect(screen.getByText("2024-01-15")).toBeInTheDocument();
+    expect(screen.getByTestId("child")).toBeInTheDocument();
+  });
+
+  it("defaults to normal spacing", () => {
+    const { container } = render(
+      <TooltipWrapper date="2024-01-15">
+        <div>Content</div>
+      </TooltipWrapper>
+    );
+
+    expect(container.querySelector(".space-y-1\\.5")).toBeInTheDocument();
+  });
+
+  it("applies tight spacing when specified", () => {
+    const { container } = render(
+      <TooltipWrapper date="2024-01-15" spacing="tight">
+        <div>Content</div>
+      </TooltipWrapper>
+    );
+
+    expect(container.querySelector(".space-y-1")).toBeInTheDocument();
+  });
+});
+
+describe("PerformanceTooltip", () => {
+  it("renders portfolio value", () => {
+    const data: PerformanceHoverData = {
+      date: "2024-01-15",
+      value: 10000,
+      benchmark: 9000,
+    };
+
+    render(<PerformanceTooltip data={data} />);
+
+    expect(screen.getByText("Portfolio Value")).toBeInTheDocument();
+    expect(screen.getByText("BTC Benchmark")).toBeInTheDocument();
+  });
+
+  it("shows positive relative performance in green", () => {
+    const data: PerformanceHoverData = {
+      date: "2024-01-15",
+      value: 11000,
+      benchmark: 10000,
+    };
+
+    const { container } = render(<PerformanceTooltip data={data} />);
+
+    // Relative should be +10%
     expect(screen.getByText("Relative")).toBeInTheDocument();
-    expect(screen.getByText("-20.0%")).toBeInTheDocument();
+    const relativeValue = container.querySelector(".text-green-400");
+    expect(relativeValue).toBeInTheDocument();
   });
 
-  it("displays methodology explanation text", () => {
-    render(<PerformanceTooltip data={baseData} />);
+  it("shows negative relative performance in red", () => {
+    const data: PerformanceHoverData = {
+      date: "2024-01-15",
+      value: 9000,
+      benchmark: 10000,
+    };
 
-    expect(
-      screen.getByText("Value if initial capital was held in BTC")
-    ).toBeInTheDocument();
+    const { container } = render(<PerformanceTooltip data={data} />);
+
+    const relativeValue = container.querySelector(".text-red-400");
+    expect(relativeValue).toBeInTheDocument();
   });
 
-  it("handles missing benchmark gracefuly", () => {
-    render(<PerformanceTooltip data={{ ...baseData, benchmark: undefined }} />);
+  it("does not show relative when benchmark is undefined", () => {
+    const data: PerformanceHoverData = {
+      date: "2024-01-15",
+      value: 10000,
+      benchmark: undefined,
+    };
 
-    // Benchmark row should be hidden or show placeholder?
-    // Implementation shows row if value passed, but here undefined.
-    // Looking at source: value={data.benchmark}, if undefined passed to TooltipRow it might crash or render empty.
-    // PerformanceTooltip.tsx logic:
-    // const benchmark = data.benchmark;
-    // ...
-    // <TooltipRow value={data.benchmark} ... />
-    // We should check what TooltipRow does with undefined.
-    // But more importantly, check that "Relative" row is NOT shown.
+    render(<PerformanceTooltip data={data} />);
 
     expect(screen.queryByText("Relative")).not.toBeInTheDocument();
-    // Methodology text is static, so it should still be there
+  });
+
+  it("renders explanatory text", () => {
+    const data: PerformanceHoverData = {
+      date: "2024-01-15",
+      value: 10000,
+      benchmark: 9000,
+    };
+
+    render(<PerformanceTooltip data={data} />);
+
     expect(
       screen.getByText("Value if initial capital was held in BTC")
     ).toBeInTheDocument();

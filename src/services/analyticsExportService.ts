@@ -2,6 +2,9 @@
  * Analytics Export Service
  *
  * Service layer for exporting analytics data to various formats
+ *
+ * Architecture: Service layer for orchestrating export operations
+ * Pure validation utilities moved to @/lib/analytics for better separation
  */
 
 import {
@@ -15,60 +18,11 @@ import type {
   WalletFilter,
 } from "@/types/analytics";
 import type { ExportMetadata, ExportResult } from "@/types/export";
+import { logger } from "@/utils/logger";
 
-// =============================================================================
-// VALIDATION
-// =============================================================================
-
-/**
- * Validate analytics data for export
- *
- * Ensures data has minimum required fields for export
- *
- * @param data - Analytics data to validate
- * @returns True if data is valid and complete
- */
-export function validateExportData(data: AnalyticsData | null): boolean {
-  if (!data) return false;
-
-  // Check for required chart data
-  if (
-    !data.performanceChart?.points ||
-    data.performanceChart.points.length === 0
-  ) {
-    return false;
-  }
-
-  if (!data.drawdownChart?.points || data.drawdownChart.points.length === 0) {
-    return false;
-  }
-
-  // Check for required key metrics
-  if (!data.keyMetrics) {
-    return false;
-  }
-
-  const requiredMetrics = [
-    "timeWeightedReturn",
-    "maxDrawdown",
-    "sharpe",
-    "winRate",
-    "volatility",
-  ];
-
-  for (const metric of requiredMetrics) {
-    if (!data.keyMetrics[metric as keyof typeof data.keyMetrics]) {
-      return false;
-    }
-  }
-
-  // Monthly PnL is optional but check if exists
-  if (!data.monthlyPnL) {
-    return false;
-  }
-
-  return true;
-}
+// Re-export validation utility from lib for backward compatibility
+// Prefer importing directly from @/lib/analytics in new code
+export { validateExportData } from "@/lib/analytics/analyticsValidation";
 
 // =============================================================================
 // EXPORT FUNCTIONS
@@ -77,13 +31,13 @@ export function validateExportData(data: AnalyticsData | null): boolean {
 /**
  * Export analytics data to CSV format
  *
- * Validates data, generates CSV content, and triggers browser download
+ * Service function: Orchestrates validation, CSV generation, and browser download
  *
  * @param userId - User wallet address
  * @param data - Analytics data to export
  * @param timePeriod - Selected time period
  * @param walletFilter - Optional wallet address filter (null = all wallets, string = specific wallet)
- * @returns Export result with success status and optional error
+ * @returns Promise resolving to export result with success status and optional error
  *
  * @example
  * // Bundle-level export (all wallets)
@@ -114,6 +68,11 @@ export async function exportAnalyticsToCSV(
   walletFilter?: WalletFilter
 ): Promise<ExportResult> {
   try {
+    // Import validation utility dynamically to avoid circular dependencies
+    const { validateExportData } = await import(
+      "@/lib/analytics/analyticsValidation"
+    );
+
     // Validate user ID
     if (!userId || typeof userId !== "string" || userId.trim().length === 0) {
       return {
@@ -158,8 +117,7 @@ export async function exportAnalyticsToCSV(
     };
   } catch (error) {
     // Log error for debugging
-    // eslint-disable-next-line no-console
-    console.error("[analyticsExportService] Export failed:", error);
+    logger.error("Export failed", error, "analyticsExportService");
 
     return {
       success: false,

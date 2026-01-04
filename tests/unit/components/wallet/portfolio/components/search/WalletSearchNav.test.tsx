@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { WalletSearchNav } from "@/components/wallet/portfolio/components/search/WalletSearchNav";
+import { WalletSearchNav } from "@/components/wallet/portfolio/components/navigation/search/WalletSearchNav";
 
 describe("WalletSearchNav Component", () => {
   const mockOnSearch = vi.fn();

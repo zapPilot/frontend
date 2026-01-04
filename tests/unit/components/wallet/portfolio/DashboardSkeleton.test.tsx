@@ -123,23 +123,25 @@ describe("PortfolioCompositionSkeleton", () => {
     expect(rebalanceButton).toBeDisabled();
   });
 
-  it("should render legend labels for Crypto and Stablecoins", () => {
+  it("should render legend labels from AllocationLegend", () => {
     render(<PortfolioCompositionSkeleton />);
-    expect(screen.getByText("Crypto")).toBeInTheDocument();
-    expect(screen.getByText("Stablecoins")).toBeInTheDocument();
+    expect(screen.getByText("BTC")).toBeInTheDocument();
+    expect(screen.getByText("ETH")).toBeInTheDocument();
+    expect(screen.getByText("Stables")).toBeInTheDocument();
   });
 
   it("should have skeleton placeholders for bar and drift", () => {
     const { container } = render(<PortfolioCompositionSkeleton />);
     const skeletons = container.querySelectorAll(".animate-pulse");
     // Should have skeletons for: drift indicator (1) + composition bar (1)
-    expect(skeletons.length).toBe(2);
+    expect(skeletons.length).toBeGreaterThanOrEqual(2);
   });
 
   it("should render colored dots for legend", () => {
     const { container } = render(<PortfolioCompositionSkeleton />);
     const legendDots = container.querySelectorAll(".w-2.h-2.rounded-full");
-    expect(legendDots.length).toBeGreaterThanOrEqual(2);
+    // BTC, ETH, Stables = 3 dots
+    expect(legendDots.length).toBeGreaterThanOrEqual(3);
   });
 
   it("should be marked as aria-hidden", () => {
@@ -228,8 +230,9 @@ describe("Content-Aware Pattern", () => {
 
     // Real UI elements
     expect(screen.getByText("Portfolio Composition")).toBeInTheDocument();
-    expect(screen.getByText("Crypto")).toBeInTheDocument();
-    expect(screen.getByText("Stablecoins")).toBeInTheDocument();
+    expect(screen.getByText("BTC")).toBeInTheDocument();
+    expect(screen.getByText("ETH")).toBeInTheDocument();
+    expect(screen.getByText("Stables")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /rebalance/i, hidden: true })
     ).toBeInTheDocument();

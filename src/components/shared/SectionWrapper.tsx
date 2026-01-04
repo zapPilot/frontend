@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { fadeInOut } from "@/lib/ui/animationVariants";
 import type { SectionState } from "@/types/portfolio-progressive";
 
 interface SectionWrapperProps<T> {
@@ -53,9 +54,10 @@ export function SectionWrapper<T>({
       <div className={className}>
         <AnimatePresence mode="wait">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={fadeInOut}
+            initial="initial"
+            animate="animate"
+            exit="exit"
             transition={{ duration: 0.2 }}
           >
             {skeleton || (

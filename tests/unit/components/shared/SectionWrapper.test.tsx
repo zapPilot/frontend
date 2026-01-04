@@ -17,6 +17,7 @@ vi.mock("framer-motion", () => ({
         animate,
         exit,
         transition,
+        variants,
         ...props
       }: {
         children: React.ReactNode;
@@ -24,6 +25,7 @@ vi.mock("framer-motion", () => ({
         animate?: any;
         exit?: any;
         transition?: any;
+        variants?: any;
         [key: string]: any;
       }) => <div {...props}>{children}</div>
     ),
