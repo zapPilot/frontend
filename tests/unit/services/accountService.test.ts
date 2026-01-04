@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http";
 import * as accountService from "@/services/accountService";
 import type {
-    AddWalletResponse,
-    ConnectWalletResponse,
-    UpdateEmailResponse,
-    UserProfileResponse,
+  AddWalletResponse,
+  ConnectWalletResponse,
+  UpdateEmailResponse,
+  UserProfileResponse,
 } from "@/types/domain/user.types";
 
 // Mock HTTP utilities
@@ -99,7 +99,6 @@ describe("accountService", () => {
         user: {
           id: "user123",
           email: "test@example.com",
-          is_active: true,
           is_subscribed_to_reports: true,
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -140,7 +139,6 @@ describe("accountService", () => {
         user: {
           id: "user123",
           email: "test@example.com",
-          is_active: true,
           is_subscribed_to_reports: true,
           created_at: "2024-01-01T00:00:00Z",
         },
@@ -507,9 +505,7 @@ describe("accountService", () => {
         message: "Invalid wallet parameter",
       });
 
-      await expect(
-        accountService.connectWallet("invalid")
-      ).rejects.toThrow(
+      await expect(accountService.connectWallet("invalid")).rejects.toThrow(
         "Invalid wallet address format. Must be a 42-character Ethereum address."
       );
     });
@@ -532,13 +528,14 @@ describe("accountService", () => {
         message: "email exists",
       });
 
-      await expect(
-        accountService.updateUserEmail("u1", "e1")
-      ).rejects.toThrow("This email address is already in use.");
+      await expect(accountService.updateUserEmail("u1", "e1")).rejects.toThrow(
+        "This email address is already in use."
+      );
     });
 
     it("should preserve 409 'belongs to another user' message", async () => {
-      const msg = "wallet already belongs to another user, please delete one of the accounts instead";
+      const msg =
+        "wallet already belongs to another user, please delete one of the accounts instead";
       vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
         status: 409,
         message: msg,
@@ -555,15 +552,15 @@ describe("accountService", () => {
         message: "Whatever",
       });
 
-      await expect(
-        accountService.connectWallet("0x123")
-      ).rejects.toThrow(
+      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
         "Invalid request data. Please check your input and try again."
       );
     });
 
     it("should handle non-object/string errors", async () => {
-      vi.mocked(httpUtils.accountApi.post).mockRejectedValue("Just a string error");
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(
+        "Just a string error"
+      );
 
       try {
         await accountService.connectWallet("0x123");

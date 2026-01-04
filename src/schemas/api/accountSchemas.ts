@@ -18,7 +18,6 @@ export const userSchema = z.object({
   id: z.string(),
   // eslint-disable-next-line sonarjs/deprecation
   email: z.string().email().optional(),
-  is_active: z.boolean(),
   is_subscribed_to_reports: z.boolean(),
   created_at: z.string(),
 });

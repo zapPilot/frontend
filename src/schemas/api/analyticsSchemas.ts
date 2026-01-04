@@ -185,6 +185,22 @@ export const landingPageResponseSchema = z
     wallet_count: z.number().int().nonnegative().optional().default(0),
     last_updated: z.string().nullable().optional(),
     message: z.string().optional(),
+
+    // Coverage
+    apr_coverage: z
+      .object({
+        matched_pools: z.number().default(0),
+        total_pools: z.number().default(0),
+        coverage_percentage: z.number().default(0),
+        matched_asset_value_usd: z.number().default(0),
+      })
+      .optional()
+      .default({
+        matched_pools: 0,
+        total_pools: 0,
+        coverage_percentage: 0,
+        matched_asset_value_usd: 0,
+      }),
   })
   .catchall(z.unknown());
 

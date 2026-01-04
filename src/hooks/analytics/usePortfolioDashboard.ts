@@ -95,9 +95,7 @@ export function usePortfolioDashboard(
       "portfolio-dashboard",
       userId,
       params.trend_days,
-      params.risk_days,
       params.drawdown_days,
-      params.allocation_days,
       params.rolling_days,
       params.metrics,
       params.wallet_address, // Distinguish wallet-specific vs bundle queries

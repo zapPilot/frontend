@@ -107,9 +107,9 @@ describe("portfolioTransformers", () => {
         snapshot_id: "snap3",
       },
     ],
-    total_positions: 3,
-    protocols_count: 3,
-    chains_count: 2,
+    positions: 3,
+    protocols: 3,
+    chains: 2,
     wallet_count: 1,
     last_updated: "2025-01-03T12:00:00Z",
     apr_coverage: {
@@ -149,7 +149,13 @@ describe("portfolioTransformers", () => {
     });
 
     it("should handle empty pool_details", () => {
-      const response = { ...mockLandingResponse, pool_details: [] };
+      const response = {
+        ...mockLandingResponse,
+        pool_details: [],
+        positions: 0,
+        protocols: 0,
+        chains: 0,
+      };
       const result = extractCompositionData(response);
 
       expect(result.positions).toBe(0);

@@ -33,6 +33,8 @@ export interface DashboardWindowParams {
   drawdown_days?: number;
   rolling_days?: number;
   metrics?: string[];
+  risk_days?: number;
+  allocation_days?: number;
   /** Optional wallet address filter - when provided, returns wallet-specific analytics instead of bundle aggregation */
   wallet_address?: string;
 }

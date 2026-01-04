@@ -545,9 +545,9 @@ describe("analyticsSchemas", () => {
       const parsed = landingPageResponseSchema.parse(apiSample);
 
       expect(parsed.wallet_count).toBe(0);
-      expect(parsed.total_positions).toBe(0);
-      expect(parsed.protocols_count).toBe(0);
-      expect(parsed.chains_count).toBe(0);
+      expect(parsed.positions).toBe(0);
+      expect(parsed.protocols).toBe(0);
+      expect(parsed.chains).toBe(0);
       expect(parsed.apr_coverage.total_pools).toBe(0);
     });
   });
