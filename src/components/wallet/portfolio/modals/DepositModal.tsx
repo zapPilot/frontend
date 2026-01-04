@@ -48,6 +48,7 @@ export function DepositModal({
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
   const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isConnected } = useWalletProvider();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -100,7 +101,6 @@ export function DepositModal({
         const { isValid } = form.formState;
 
         const hasSelectedToken = Boolean(transactionData.selectedToken);
-        const { isConnected } = useWalletProvider();
         const actionLabel = modalDeps.resolveActionLabel({
           isConnected,
           hasSelection: hasSelectedToken,

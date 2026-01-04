@@ -79,6 +79,7 @@ export function WithdrawModal({
   const [isAssetDropdownOpen, setIsAssetDropdownOpen] = useState(false);
   const [isChainDropdownOpen, setIsChainDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const { isConnected } = useWalletProvider();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -139,8 +140,6 @@ export function WithdrawModal({
         // Destructure formState to ensure proper subscription to changes
         const { isValid } = form.formState;
 
-        const { isConnected } = useWalletProvider();
-            
         const actionLabel = modalDeps.resolveActionLabel({
           isConnected,
           hasSelection: Boolean(transactionData.selectedToken),
