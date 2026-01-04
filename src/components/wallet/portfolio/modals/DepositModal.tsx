@@ -7,6 +7,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { cn } from "@/lib/ui/classNames";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService as depositTransactionService } from "@/services";
 import type { DepositModalProps } from "@/types/ui/modals";
 
@@ -99,8 +100,9 @@ export function DepositModal({
         const { isValid } = form.formState;
 
         const hasSelectedToken = Boolean(transactionData.selectedToken);
+        const { isConnected } = useWalletProvider();
         const actionLabel = modalDeps.resolveActionLabel({
-          isConnected: true, // Already validated in base
+          isConnected,
           hasSelection: hasSelectedToken,
           isReady: isValid,
           selectionLabel: "Select Asset",

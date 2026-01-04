@@ -7,10 +7,12 @@ import { describe, expect, it, vi } from "vitest";
 import { DepositModal } from "@/components/wallet/portfolio/modals/DepositModal";
 
 // Mock all the dependencies
+const mockUseWalletProvider = vi.fn(() => ({
+  isConnected: true,
+}));
+
 vi.mock("@/providers/WalletProvider", () => ({
-  useWalletProvider: () => ({
-    isConnected: true,
-  }),
+  useWalletProvider: () => mockUseWalletProvider(),
 }));
 
 // Mock the 3 simplified hooks that TransactionModalBase uses
@@ -107,7 +109,7 @@ vi.mock(
   "@/components/wallet/portfolio/modals/transactionModalDependencies",
   () => ({
     applyPercentageToAmount: vi.fn(),
-    resolveActionLabel: () => "Review & Deposit",
+    resolveActionLabel: vi.fn().mockReturnValue("Review & Deposit"),
     buildFormActionsProps: vi.fn((form, amount) => ({
       form,
       amount,
@@ -205,5 +207,23 @@ describe("DepositModal", () => {
     );
 
     expect(screen.getByTestId("modal")).toBeInTheDocument();
+  });
+
+  it("should pass isConnected: false to resolveActionLabel when wallet is disconnected", async () => {
+    // Determine the imported mock to spy on it
+    const { resolveActionLabel } = await import(
+      "@/components/wallet/portfolio/modals/transactionModalDependencies"
+    );
+
+    mockUseWalletProvider.mockReturnValue({ isConnected: false });
+
+    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(resolveActionLabel).toHaveBeenCalledWith(
+      expect.objectContaining({ isConnected: false })
+    );
+
+    // Reset for other tests
+    mockUseWalletProvider.mockReturnValue({ isConnected: true });
   });
 });

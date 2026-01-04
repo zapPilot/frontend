@@ -11,6 +11,7 @@ import {
 } from "@/lib/domain/assetCategoryUtils";
 import { dropdownMenu } from "@/lib/ui/animationVariants";
 import { cn } from "@/lib/ui/classNames";
+import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
 import type { WithdrawModalProps } from "@/types/ui/modals";
 
@@ -138,8 +139,10 @@ export function WithdrawModal({
         // Destructure formState to ensure proper subscription to changes
         const { isValid } = form.formState;
 
+        const { isConnected } = useWalletProvider();
+            
         const actionLabel = modalDeps.resolveActionLabel({
-          isConnected: true, // Already validated in base
+          isConnected,
           hasSelection: Boolean(transactionData.selectedToken),
           isReady: isValid,
           selectionLabel: "Select Asset",

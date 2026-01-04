@@ -10,10 +10,12 @@ import { describe, expect, it, vi } from "vitest";
 import { WithdrawModal } from "@/components/wallet/portfolio/modals/WithdrawModal";
 
 // Mock dependencies
+const mockUseWalletProvider = vi.fn(() => ({
+  isConnected: true,
+}));
+
 vi.mock("@/providers/WalletProvider", () => ({
-  useWalletProvider: () => ({
-    isConnected: true,
-  }),
+  useWalletProvider: () => mockUseWalletProvider(),
 }));
 
 // Mock the 3 simplified hooks
@@ -164,7 +166,7 @@ vi.mock(
   "@/components/wallet/portfolio/modals/transactionModalDependencies",
   () => ({
     applyPercentageToAmount: vi.fn(),
-    resolveActionLabel: () => "Review & Withdraw",
+    resolveActionLabel: vi.fn().mockReturnValue("Review & Withdraw"),
     buildFormActionsProps: vi.fn((form, amount) => ({
       form,
       amount,
@@ -378,5 +380,21 @@ describe("WithdrawModal", () => {
 
     // Should render without crashing
     expect(screen.getByTestId("modal")).toBeInTheDocument();
+  });
+
+  it("should pass isConnected: false to resolveActionLabel when wallet is disconnected", async () => {
+    const { resolveActionLabel } = await import(
+      "@/components/wallet/portfolio/modals/transactionModalDependencies"
+    );
+
+    mockUseWalletProvider.mockReturnValue({ isConnected: false });
+
+    render(<WithdrawModal isOpen={true} onClose={vi.fn()} />);
+
+    expect(resolveActionLabel).toHaveBeenCalledWith(
+      expect.objectContaining({ isConnected: false })
+    );
+
+    mockUseWalletProvider.mockReturnValue({ isConnected: true });
   });
 });
