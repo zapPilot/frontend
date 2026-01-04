@@ -428,9 +428,62 @@ This project includes comprehensive AI agent configuration:
 - **Service Documentation**: `docs/SERVICES.md` for API integration patterns
 - **Layer Management**: `docs/LAYERING.md` for z-index and positioning standards
 
+### AI-Friendly Patterns
+
+#### Barrel Exports (Clean Imports)
+
+Use centralized imports for cleaner code:
+
+```typescript
+// ✅ Preferred - barrel imports
+import { connectWallet, getUserProfile } from "@/services";
+import { formatCurrency, logger } from "@/utils";
+import type { AnalyticsData, PortfolioAllocationData } from "@/types";
+
+// ❌ Avoid - deep imports
+import { connectWallet } from "@/services/accountService";
+import { formatCurrency } from "@/utils/formatters";
+```
+
+**Available Barrels:**
+
+| Path              | Contents                                  |
+| ----------------- | ----------------------------------------- |
+| `@/services`      | All API service functions + types         |
+| `@/types`         | Domain, UI, and analytics types           |
+| `@/utils`         | Formatters, logger, clipboard, math utils |
+| `@/hooks`         | All React hooks (queries, UI, wallet)     |
+| `@/adapters`      | Data transformation adapters              |
+| `@/components/ui` | Design system components                  |
+
+#### TSDoc Standards
+
+All exported functions include comprehensive TSDoc:
+
+````typescript
+/**
+ * Brief description of what the function does.
+ *
+ * @param paramName - Description of parameter
+ * @returns Description of return value
+ *
+ * @example
+ * ```typescript
+ * const result = await myFunction(param);
+ * ```
+ */
+````
+
+#### Testing Helpers
+
+- **Test Utils**: `tests/test-utils.tsx` - Provider wrappers for component tests
+- **Fixtures**: `tests/fixtures/` - Reusable test data
+- **Mocks**: `tests/mocks/` - Service mocks for isolated testing
+- **Helpers**: `tests/helpers/` - Common test utilities
+
 The codebase is designed with AI-friendly patterns, comprehensive documentation, and consistent
 conventions to facilitate automated development and maintenance.
 
 ---
 
-_Last updated: 2025-01-17 | Zap Pilot v0.1.0 | Next.js 15 + React 19 + TypeScript 5_
+_Last updated: 2026-01-04 | Zap Pilot v0.1.0 | Next.js 15 + React 19 + TypeScript 5_

@@ -1,7 +1,83 @@
 /**
- * Service Exports
- * @see Phase 9 - Mock Service Clarity
+ * Services Public API
+ *
+ * Centralized barrel export for all application services.
+ * Import services from this file for cleaner imports:
+ *
+ * @example
+ * ```typescript
+ * import { connectWallet, getUserProfile } from '@/services';
+ * import { getPortfolioDashboard } from '@/services';
+ * ```
  */
+
+// ============================================================================
+// PRODUCTION SERVICES
+// ============================================================================
+
+// Account & User Management
+export {
+  AccountServiceError,
+  addWalletToBundle,
+  connectWallet,
+  deleteUser,
+  getUserProfile,
+  getUserWallets,
+  removeUserEmail,
+  removeWalletFromBundle,
+  updateUserEmail,
+  updateWalletLabel,
+} from "./accountService";
+
+// Analytics & Portfolio Data
+export {
+  type DailyYieldReturnsResponse,
+  type DashboardWindowParams,
+  getDailyYieldReturns,
+  getLandingPagePortfolioData,
+  getPortfolioDashboard,
+  type LandingPageResponse,
+  type PoolDetail,
+  type UnifiedDashboardResponse,
+} from "./analyticsService";
+
+// Portfolio Allocation
+export {
+  type AllocationWeightsResponse,
+  getAllocationWeights,
+} from "./allocationService";
+
+// Bundle Sharing
+export {
+  type BundleUser,
+  generateBundleUrl,
+  getBundleUser,
+  isOwnBundle,
+} from "./bundleService";
+
+// Market Data
+export {
+  type BtcPriceHistoryResponse,
+  type BtcPriceSnapshot,
+  getBtcPriceHistory,
+} from "./btcPriceService";
+
+// Sentiment & Regime Analysis
+export {
+  DEFAULT_REGIME_HISTORY,
+  fetchRegimeHistory,
+  type RegimeHistoryData,
+} from "./regimeHistoryService";
+export {
+  fetchMarketSentiment,
+  type MarketSentimentData,
+} from "./sentimentService";
+
+// Analytics Export
+export {
+  exportAnalyticsToCSV,
+  validateExportData,
+} from "./analyticsExportService";
 
 // ============================================================================
 // MOCK SERVICES (Development/Testing Only)
