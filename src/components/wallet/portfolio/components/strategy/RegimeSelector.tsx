@@ -28,8 +28,14 @@ export function RegimeSelector({
   regimes,
 }: RegimeSelectorProps) {
   return (
-    <div data-testid="regime-spectrum" data-interactive="true" className="flex flex-col">
-      <h4 className="text-sm font-bold text-white mb-4">Market Cycle Position</h4>
+    <div
+      data-testid="regime-spectrum"
+      data-interactive="true"
+      className="flex flex-col"
+    >
+      <h4 className="text-sm font-bold text-white mb-4">
+        Market Cycle Position
+      </h4>
       <div className="flex flex-col gap-2">
         {regimes.map(regime => {
           const isCurrent = currentRegime?.id === regime.id;

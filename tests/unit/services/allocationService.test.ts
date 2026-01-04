@@ -9,8 +9,8 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
 import {
-    type AllocationWeightsResponse,
-    getAllocationWeights,
+  type AllocationWeightsResponse,
+  getAllocationWeights,
 } from "@/services/allocationService";
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");

@@ -1,10 +1,10 @@
 import {
-    ASSET_COLORS,
-    type WalletPortfolioDataWithDirection,
+  ASSET_COLORS,
+  type WalletPortfolioDataWithDirection,
 } from "@/adapters/walletPortfolioDataAdapter";
 import {
-    getRegimeAllocation,
-    type Regime,
+  getRegimeAllocation,
+  type Regime,
 } from "@/components/wallet/regime/regimeData";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
 

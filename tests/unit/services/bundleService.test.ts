@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-    generateBundleUrl,
-    getBundleUser,
-    isOwnBundle,
+  generateBundleUrl,
+  getBundleUser,
+  isOwnBundle,
 } from "@/services/bundleService";
 
 // Mock dependencies
@@ -39,7 +39,7 @@ describe("bundleService", () => {
       });
 
       const result = await getBundleUser("0xError");
-      
+
       expect(result).toBeNull();
     });
   });

@@ -114,7 +114,7 @@ describe("copyTextToClipboard", () => {
       const createElementMock = vi.fn().mockReturnValue(mockTextArea);
       const appendChildMock = vi.fn();
       const removeChildMock = vi.fn();
-      
+
       // Mock execCommand to throw
       const execCommandMock = vi.fn().mockImplementation(() => {
         throw new Error("Command failed");

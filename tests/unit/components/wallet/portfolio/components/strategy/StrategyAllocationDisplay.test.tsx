@@ -11,9 +11,7 @@ describe("StrategyAllocationDisplay", () => {
   };
 
   it("should render all allocation bars", () => {
-    render(
-      <StrategyAllocationDisplay targetAllocation={targetAllocation} />
-    );
+    render(<StrategyAllocationDisplay targetAllocation={targetAllocation} />);
 
     expect(screen.getByText("Target Spot")).toBeInTheDocument();
     expect(screen.getByText("Target LP")).toBeInTheDocument();
@@ -21,9 +19,7 @@ describe("StrategyAllocationDisplay", () => {
   });
 
   it("should display correct percentages", () => {
-    render(
-      <StrategyAllocationDisplay targetAllocation={targetAllocation} />
-    );
+    render(<StrategyAllocationDisplay targetAllocation={targetAllocation} />);
 
     expect(screen.getByText("40%")).toBeInTheDocument();
     expect(screen.getAllByText("30%")).toHaveLength(2); // LP and Stable both 30%
@@ -34,7 +30,9 @@ describe("StrategyAllocationDisplay", () => {
       <StrategyAllocationDisplay targetAllocation={targetAllocation} />
     );
 
-    const progressBars = container.querySelectorAll(".bg-purple-500, .bg-blue-500, .bg-emerald-500");
+    const progressBars = container.querySelectorAll(
+      ".bg-purple-500, .bg-blue-500, .bg-emerald-500"
+    );
 
     expect(progressBars[0]).toHaveStyle({ width: "40%" }); // Spot
     expect(progressBars[1]).toHaveStyle({ width: "30%" }); // LP

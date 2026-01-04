@@ -7,21 +7,19 @@
 
 import { calculateAllocation } from "@/adapters/portfolio/allocationAdapter";
 import {
-    getRegimeStrategyInfo,
-    getTargetAllocation,
+  getRegimeStrategyInfo,
+  getTargetAllocation,
 } from "@/adapters/portfolio/regimeAdapter";
 import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
-import {
-    extractROIChanges
-} from "@/lib/portfolio/portfolioUtils";
+import { extractROIChanges } from "@/lib/portfolio/portfolioUtils";
 import type { LandingPageResponse } from "@/services/analyticsService";
 import { type RegimeHistoryData } from "@/services/regimeHistoryService";
 import { type MarketSentimentData } from "@/services/sentimentService";
 import type {
-    BalanceData,
-    CompositionData,
-    SentimentData,
-    StrategyData,
+  BalanceData,
+  CompositionData,
+  SentimentData,
+  StrategyData,
 } from "@/types/portfolio-progressive";
 
 /**
@@ -75,9 +73,7 @@ export function extractCompositionData(
  * @param data - Unknown data to validate
  * @returns True if data is valid LandingPageResponse
  */
-export function isValidLandingData(
-  data: unknown
-): data is LandingPageResponse {
+export function isValidLandingData(data: unknown): data is LandingPageResponse {
   return (
     data !== null &&
     data !== undefined &&
