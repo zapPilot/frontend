@@ -38,7 +38,18 @@ export function DashboardShell({
   }
 
   // Determine if this is empty state (no real portfolio data, excluding loading)
-  const isEmptyState = !unifiedData && !isLoading;
+  const isEmptyState = (!unifiedData || ((unifiedData.assets?.length ?? 0) === 0 && (unifiedData.netWorth ?? 0) === 0)) && !isLoading;
+
+  console.log("DEBUG: DashboardShell state:", JSON.stringify({
+    hasUnifiedData: !!unifiedData,
+    isLoading,
+    isEmptyState,
+    urlUserId,
+    unifiedDataSummary: unifiedData ? {
+        netWorth: unifiedData.netWorth,
+        assetsCount: unifiedData.assets?.length
+    } : null
+  }, null, 2));
 
   // Use real data if available, otherwise create empty state with real sentiment
   const portfolioData =
@@ -60,6 +71,7 @@ export function DashboardShell({
         isLoading={isLoading}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}
+        onRefresh={refetch}
       />
     </div>
   );
