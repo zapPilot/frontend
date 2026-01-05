@@ -265,4 +265,62 @@ describe("PortfolioComposition", () => {
       expect(screen.getByText("Portfolio Composition")).toBeInTheDocument();
     });
   });
+
+  describe("Visitor Mode (isOwnBundle)", () => {
+    it("enables rebalance button when viewing own bundle", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          isEmptyState={false}
+          isOwnBundle={true}
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      expect(screen.getByTestId("rebalance-button")).not.toBeDisabled();
+    });
+
+    it("disables rebalance button when viewing another user's bundle", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          isEmptyState={false}
+          isOwnBundle={false}
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      expect(screen.getByTestId("rebalance-button")).toBeDisabled();
+    });
+
+    it("defaults isOwnBundle to true", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          isEmptyState={false}
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      // Without passing isOwnBundle, button should be enabled (default = true)
+      expect(screen.getByTestId("rebalance-button")).not.toBeDisabled();
+    });
+
+    it("disables button when both empty state AND visitor mode", () => {
+      render(
+        <PortfolioComposition
+          data={mockData}
+          currentRegime="Risk-On"
+          isEmptyState={true}
+          isOwnBundle={false}
+          onRebalance={mockOnRebalance}
+        />
+      );
+
+      expect(screen.getByTestId("rebalance-button")).toBeDisabled();
+    });
+  });
 });

@@ -33,6 +33,8 @@ const getButtonClassName = (
 interface BalanceCardProps {
   balance: number;
   isEmptyState?: boolean;
+  /** Whether user is viewing their own bundle (enables wallet actions) */
+  isOwnBundle?: boolean;
   isLoading?: boolean;
   onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
   lastUpdated?: string | null;
@@ -41,10 +43,14 @@ interface BalanceCardProps {
 export function BalanceCard({
   balance,
   isEmptyState = false,
+  isOwnBundle = true,
   isLoading = false,
   onOpenModal,
   lastUpdated,
 }: BalanceCardProps) {
+  // Disable buttons if empty state OR not own bundle (visitor mode)
+  const isActionsDisabled = isEmptyState || !isOwnBundle;
+
   if (isLoading) {
     return <BalanceCardSkeleton />;
   }
@@ -67,13 +73,6 @@ export function BalanceCard({
           >
             ${balance.toLocaleString()}
           </div>
-
-          {/* Empty State Message */}
-          {isEmptyState && (
-            <div className="text-sm text-gray-500 mb-2">
-              You&apos;re viewing another user&apos;s bundle.
-            </div>
-          )}
         </div>
       </div>
 
@@ -82,16 +81,18 @@ export function BalanceCard({
         <button
           data-testid="deposit-button"
           onClick={() => onOpenModal("deposit")}
-          disabled={isEmptyState}
-          className={getButtonClassName("deposit", isEmptyState)}
+          disabled={isActionsDisabled}
+          title={!isOwnBundle ? "Switch to your bundle to deposit" : undefined}
+          className={getButtonClassName("deposit", isActionsDisabled)}
         >
           <ArrowDownCircle className="w-4 h-4" /> Deposit
         </button>
         <button
           data-testid="withdraw-button"
           onClick={() => onOpenModal("withdraw")}
-          disabled={isEmptyState}
-          className={getButtonClassName("withdraw", isEmptyState)}
+          disabled={isActionsDisabled}
+          title={!isOwnBundle ? "Switch to your bundle to withdraw" : undefined}
+          className={getButtonClassName("withdraw", isActionsDisabled)}
         >
           <ArrowUpCircle className="w-4 h-4" /> Withdraw
         </button>

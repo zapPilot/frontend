@@ -34,6 +34,8 @@ const LAYOUT = {
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
   userId?: string;
+  /** Whether user is viewing their own bundle (enables wallet actions) */
+  isOwnBundle?: boolean;
   isEmptyState?: boolean;
   isLoading?: boolean;
   /** Section states for progressive loading */
@@ -46,6 +48,7 @@ interface WalletPortfolioPresenterProps {
 export function WalletPortfolioPresenter({
   data,
   userId,
+  isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
   sections,
@@ -93,24 +96,26 @@ export function WalletPortfolioPresenter({
 
   // Handle ETL auto-refresh
   useEffect(() => {
-    if (etlState.status === "completed") {
-      // Invalidate portfolio query cache to force fresh data
-      if (userId) {
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.portfolio.landingPage(userId),
-        });
-      }
-
-      // Trigger refetch
-      onRefresh?.();
-
-      // Delay reset to allow refetch to complete
-      const timer = setTimeout(() => {
-        resetEtl();
-      }, 1000);
-
-      return () => clearTimeout(timer);
+    if (etlState.status !== "completed") {
+      return;
     }
+
+    // Invalidate portfolio query cache to force fresh data
+    if (userId) {
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.portfolio.landingPage(userId),
+      });
+    }
+
+    // Trigger refetch
+    onRefresh?.();
+
+    // Delay reset to allow refetch to complete
+    const timer = setTimeout(() => {
+      resetEtl();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [etlState.status, onRefresh, resetEtl, userId, queryClient]);
 
   const {
@@ -166,6 +171,7 @@ export function WalletPortfolioPresenter({
         sections={sections}
         currentRegime={currentRegime}
         isEmptyState={isEmptyState}
+        isOwnBundle={isOwnBundle}
         isLoading={isLoading}
         onOpenModal={openModal}
         // onSearch is no longer passed to DashboardView for Empty State Hero,

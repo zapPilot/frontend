@@ -38,7 +38,8 @@ export function DashboardShell({
   }
 
   // Determine if this is empty state (no real portfolio data, excluding loading)
-  const isEmptyState = (!unifiedData || ((unifiedData.assets?.length ?? 0) === 0 && (unifiedData.netWorth ?? 0) === 0)) && !isLoading;
+  // Use balance and positions - the correct properties from WalletPortfolioDataWithDirection
+  const isEmptyState = (!unifiedData || ((unifiedData.positions ?? 0) === 0 && (unifiedData.balance ?? 0) === 0)) && !isLoading;
 
   console.log("DEBUG: DashboardShell state:", JSON.stringify({
     hasUnifiedData: !!unifiedData,
@@ -46,8 +47,8 @@ export function DashboardShell({
     isEmptyState,
     urlUserId,
     unifiedDataSummary: unifiedData ? {
-        netWorth: unifiedData.netWorth,
-        assetsCount: unifiedData.assets?.length
+        balance: unifiedData.balance,
+        positions: unifiedData.positions
     } : null
   }, null, 2));
 
@@ -67,6 +68,7 @@ export function DashboardShell({
         data={portfolioData}
         sections={sections}
         userId={urlUserId}
+        isOwnBundle={isOwnBundle}
         isEmptyState={isEmptyState}
         isLoading={isLoading}
         headerBanners={headerBanners}

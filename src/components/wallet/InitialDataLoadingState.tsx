@@ -17,7 +17,7 @@ export function InitialDataLoadingState({ status }: InitialDataLoadingStateProps
           Fetching Wallet Data
         </h3>
         <p className="text-gray-400">
-          This is the first time we've seen this wallet. We're fetching your
+          This is the first time we&apos;ve seen this wallet. We&apos;re fetching your
           on-chain positions and calculating metrics. This usually takes 10-20
           seconds.
         </p>

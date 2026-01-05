@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { type WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
 import {
-  getRegimeAllocation,
-  type Regime,
+    getRegimeAllocation,
+    type Regime,
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
 import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWeights";
@@ -13,9 +13,9 @@ import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWei
 import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
 import { AllocationBars, TargetAllocationBar } from "../allocation";
 import {
-  buildRealCryptoAssets,
-  buildTargetAssetsWithWeights,
-  buildTargetCryptoAssets,
+    buildRealCryptoAssets,
+    buildTargetAssetsWithWeights,
+    buildTargetCryptoAssets,
 } from "../utils/portfolioCompositionHelpers";
 
 interface PortfolioCompositionProps {
@@ -24,6 +24,8 @@ interface PortfolioCompositionProps {
   /** Optional target allocation to render without regime */
   targetAllocation?: { crypto: number; stable: number } | undefined;
   isEmptyState?: boolean;
+  /** Whether user is viewing their own bundle (enables wallet actions) */
+  isOwnBundle?: boolean;
   isLoading?: boolean;
   onRebalance: () => void;
 }
@@ -45,9 +47,12 @@ export function PortfolioComposition({
   currentRegime,
   targetAllocation,
   isEmptyState = false,
+  isOwnBundle = true,
   isLoading = false,
   onRebalance,
 }: PortfolioCompositionProps) {
+  // Disable actions if empty state OR not own bundle (visitor mode)
+  const isActionsDisabled = isEmptyState || !isOwnBundle;
   // ⚠️ HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS ⚠️
   // Fetch marketcap-weighted allocation weights for BTC/ETH split
   const { data: allocationWeights } = useAllocationWeights();
@@ -118,7 +123,7 @@ export function PortfolioComposition({
             icon={Zap}
             className="h-8 text-xs"
             onClick={onRebalance}
-            disabled={isEmptyState}
+            disabled={isActionsDisabled}
           >
             Rebalance
           </GradientButton>

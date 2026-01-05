@@ -4,13 +4,13 @@ import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfoli
 import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import {
-  BalanceCard,
-  PortfolioComposition,
+    BalanceCard,
+    PortfolioComposition,
 } from "@/components/wallet/portfolio/components/shared";
 import { StrategyCard } from "@/components/wallet/portfolio/components/strategy";
 import {
-  BalanceCardSkeleton,
-  PortfolioCompositionSkeleton,
+    BalanceCardSkeleton,
+    PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";
@@ -29,6 +29,8 @@ interface DashboardViewProps {
   sections: DashboardSections;
   currentRegime: Regime | undefined;
   isEmptyState: boolean;
+  /** Whether user is viewing their own bundle (enables wallet actions) */
+  isOwnBundle?: boolean;
   isLoading?: boolean;
   onOpenModal: (type: ModalType) => void;
 }
@@ -38,6 +40,7 @@ export function DashboardView({
   sections,
   currentRegime,
   isEmptyState,
+  isOwnBundle = true,
   onOpenModal,
 }: DashboardViewProps) {
   const searchParams = useSearchParams();
@@ -57,6 +60,7 @@ export function DashboardView({
             <BalanceCard
               balance={data.balance}
               isEmptyState={isEmptyState}
+              isOwnBundle={isOwnBundle}
               isLoading={false}
               onOpenModal={onOpenModal}
               lastUpdated={data.lastUpdated}
@@ -66,6 +70,7 @@ export function DashboardView({
           <BalanceCard
             balance={data.balance}
             isEmptyState={isEmptyState}
+            isOwnBundle={isOwnBundle}
             isLoading={false}
             onOpenModal={onOpenModal}
             lastUpdated={data.lastUpdated}
@@ -79,6 +84,7 @@ export function DashboardView({
               <BalanceCard
                 balance={data.balance}
                 isEmptyState={isEmptyState}
+                isOwnBundle={isOwnBundle}
                 isLoading={false}
                 onOpenModal={onOpenModal}
                 lastUpdated={data.lastUpdated}
@@ -109,6 +115,7 @@ export function DashboardView({
             currentRegime={currentRegime}
             targetAllocation={data.targetAllocation}
             isEmptyState={isEmptyState}
+            isOwnBundle={isOwnBundle}
             isLoading={false}
             onRebalance={() => onOpenModal("rebalance")}
           />
@@ -119,6 +126,7 @@ export function DashboardView({
           currentRegime={currentRegime}
           targetAllocation={data.targetAllocation}
           isEmptyState={isEmptyState}
+          isOwnBundle={isOwnBundle}
           isLoading={false}
           onRebalance={() => onOpenModal("rebalance")}
         />
@@ -133,6 +141,7 @@ export function DashboardView({
               currentRegime={currentRegime}
               targetAllocation={sections.composition.data?.targetAllocation}
               isEmptyState={isEmptyState}
+              isOwnBundle={isOwnBundle}
               isLoading={false}
               onRebalance={() => onOpenModal("rebalance")}
             />
