@@ -23,6 +23,24 @@
     ],
     "Notification": [
       {
+        "matcher": "permission_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/interactive-prompt.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/interactive-prompt.sh"
+          }
+        ]
+      },
+      {
         "hooks": [
           {
             "type": "command",
@@ -44,7 +62,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/notify.sh stop"
+            "command": "/usr/bin/shortcuts run 'Codex Done'"
           }
         ]
       }
