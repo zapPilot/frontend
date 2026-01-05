@@ -152,6 +152,20 @@ describe("regimeHistoryService", () => {
 
         expect(result.cached).toBe(true);
       });
+
+      it("should handle undefined cached field (default to false)", async () => {
+        // simulating API response missing the field
+        const responseUndefinedCached: RegimeHistoryResponse = {
+          ...mockRegimeHistoryResponse,
+        };
+        delete (responseUndefinedCached as any).cached;
+
+        analyticsEngineGetSpy.mockResolvedValue(responseUndefinedCached);
+
+        const result = await fetchRegimeHistory();
+
+        expect(result.cached).toBe(false);
+      });
     });
 
     describe("error handling", () => {

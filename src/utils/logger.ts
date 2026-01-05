@@ -28,7 +28,7 @@ interface LogEntry {
   error?: Error;
 }
 
-class Logger {
+export class Logger {
   private config: LogConfig;
   private localLogs: LogEntry[] = [];
 
