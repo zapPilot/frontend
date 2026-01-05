@@ -35,7 +35,7 @@ export const GRADIENTS = {
 // Layering (z-index) tokens for consistent stacking order
 export const Z_INDEX = {
   CONTENT: "z-10",
-  BANNER: "z-30", // beneath headers, above content
+  BANNER: "z-40", // same as headers, positioned below via top-16
   HEADER: "z-40",
   HEADER_MOBILE: "z-50",
   FAB: "z-40",

@@ -1,3 +1,5 @@
+import { useSearchParams } from "next/navigation";
+
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
@@ -38,12 +40,19 @@ export function DashboardView({
   isEmptyState,
   onOpenModal,
 }: DashboardViewProps) {
+  const searchParams = useSearchParams();
+  const urlUserId = searchParams.get("userId");
+
+  // Only enable ghost mode on root path (no userId param)
+  // Bundle URLs (/bundle?userId=xxx) are public - anyone can view without connecting wallet
+  const shouldShowGhostMode = !urlUserId;
+
   return (
     <div data-testid="dashboard-content" className={STYLES.container}>
       {/* Hero Section: Balance + Expandable Strategy Card */}
       <div className={STYLES.heroGrid}>
-        {/* Balance Card - Ghost Mode bypasses SectionWrapper to show preview data */}
-        {isEmptyState ? (
+        {/* Balance Card - Ghost Mode only on root path without wallet */}
+        {isEmptyState && shouldShowGhostMode ? (
           <GhostModeOverlay enabled={true}>
             <BalanceCard
               balance={data.balance}
@@ -53,6 +62,14 @@ export function DashboardView({
               lastUpdated={data.lastUpdated}
             />
           </GhostModeOverlay>
+        ) : isEmptyState ? (
+          <BalanceCard
+            balance={data.balance}
+            isEmptyState={isEmptyState}
+            isLoading={false}
+            onOpenModal={onOpenModal}
+            lastUpdated={data.lastUpdated}
+          />
         ) : (
           <SectionWrapper
             state={sections.balance}
@@ -84,8 +101,8 @@ export function DashboardView({
         />
       </div>
 
-      {/* Unified Composition Bar - Ghost Mode bypasses SectionWrapper */}
-      {isEmptyState ? (
+      {/* Unified Composition Bar - Ghost Mode only on root path without wallet */}
+      {isEmptyState && shouldShowGhostMode ? (
         <GhostModeOverlay enabled={true} showCTA={false}>
           <PortfolioComposition
             data={data}
@@ -96,6 +113,15 @@ export function DashboardView({
             onRebalance={() => onOpenModal("rebalance")}
           />
         </GhostModeOverlay>
+      ) : isEmptyState ? (
+        <PortfolioComposition
+          data={data}
+          currentRegime={currentRegime}
+          targetAllocation={data.targetAllocation}
+          isEmptyState={isEmptyState}
+          isLoading={false}
+          onRebalance={() => onOpenModal("rebalance")}
+        />
       ) : (
         <SectionWrapper
           state={sections.composition}

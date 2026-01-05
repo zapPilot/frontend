@@ -71,7 +71,7 @@ export function BalanceCard({
           {/* Empty State Message */}
           {isEmptyState && (
             <div className="text-sm text-gray-500 mb-2">
-              Connect your wallet to view your portfolio balance and performance
+              You&apos;re viewing another user&apos;s bundle.
             </div>
           )}
         </div>

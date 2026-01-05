@@ -68,7 +68,7 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
       <>
         <SwitchPromptBanner
           show={vm.switchPrompt.show}
-          onStay={vm.switchPrompt.onStay}
+          bundleUserName={vm.bundleUser?.displayName}
           onSwitch={vm.switchPrompt.onSwitch}
         />
         {vm.emailBanner.show && (
@@ -81,13 +81,14 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ),
     [
       vm.switchPrompt.show,
+      vm.bundleUser?.displayName,
       vm.emailBanner.show,
-      vm.switchPrompt.onStay,
       vm.switchPrompt.onSwitch,
       vm.emailBanner.onSubscribe,
       vm.emailBanner.onDismiss,
     ]
   );
+
 
   const walletManagerOverlay = useMemo(
     () => (
