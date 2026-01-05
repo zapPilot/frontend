@@ -37,7 +37,9 @@ interface WalletPortfolioPresenterProps {
   isOwnBundle?: boolean;
   isEmptyState?: boolean;
   isLoading?: boolean;
-  initialEtlJobId?: string;
+  initialEtlJobId?: string | undefined;
+  /** Whether this is a brand new user (from connectWallet response) */
+  isNewUser?: boolean | undefined;
   /** Section states for progressive loading */
   sections: DashboardSections;
   headerBanners?: React.ReactNode;
@@ -52,6 +54,7 @@ export function WalletPortfolioPresenter({
   isEmptyState = false,
   isLoading = false,
   initialEtlJobId,
+  isNewUser = false,
   sections,
   headerBanners,
   footerOverlays,
@@ -64,6 +67,7 @@ export function WalletPortfolioPresenter({
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [showNewWalletLoading, setShowNewWalletLoading] = useState(false);
 
   // ETL Polling for new wallets
   const {
@@ -73,6 +77,7 @@ export function WalletPortfolioPresenter({
     startPolling,
   } = useEtlJobPolling();
   const [hasTriggeredEtl, setHasTriggeredEtl] = useState(false);
+  const [isTriggeringEtl, setIsTriggeringEtl] = useState(false);
 
   useEffect(() => {
     if (!initialEtlJobId || etlState.jobId || hasTriggeredEtl) {
@@ -95,6 +100,7 @@ export function WalletPortfolioPresenter({
     ) {
       const initEtl = async () => {
         try {
+          setIsTriggeringEtl(true);
           const wallets = await getUserWallets(userId);
 
           if (wallets.length > 0) {
@@ -107,6 +113,8 @@ export function WalletPortfolioPresenter({
           }
         } catch {
           // Silent fail - will show empty state
+        } finally {
+          setIsTriggeringEtl(false);
         }
       };
       void initEtl();
@@ -166,23 +174,38 @@ export function WalletPortfolioPresenter({
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
 
-      const { user_id: userId, etl_job: etlJob } = response;
+      const { user_id: userId, etl_job: etlJob, is_new_user: isNewUser } = response;
 
       const searchParams = new URLSearchParams({ userId });
       if (etlJob?.job_id) {
         searchParams.set("etlJobId", etlJob.job_id);
       }
+      // Pass isNewUser flag so the bundle page knows to show loading state
+      if (isNewUser) {
+        searchParams.set("isNewUser", "true");
+      }
       const bundleUrl = `/bundle?${searchParams.toString()}`;
 
       // Navigate with Next.js router
       router.push(bundleUrl);
-    } catch {
-      showToast({
-        type: "error",
-        title: "Wallet Not Found",
-        message:
-          "Could not find a portfolio for this wallet address. Please check the address and try again.",
-      });
+    } catch (error) {
+      // More accurate error messaging based on error type
+      // connectWallet creates new users, so "Wallet Not Found" is misleading
+      const isValidationError =
+        error instanceof Error &&
+        (error.message.includes("Invalid wallet") ||
+          error.message.includes("42-character"));
+
+      if (isValidationError) {
+        showToast({
+          type: "error",
+          title: "Invalid Address",
+          message: "Please enter a valid 42-character Ethereum address.",
+        });
+      } else {
+        // For connection errors, show the loading state
+        setShowNewWalletLoading(true);
+      }
     } finally {
       setIsSearching(false);
     }
@@ -216,12 +239,35 @@ export function WalletPortfolioPresenter({
   };
 
   // Show loading state during ETL processing
+  // More resilient condition that handles:
+  // 1. Initial render when initialEtlJobId exists but polling hasn't started yet
+  // 2. Active polling (pending/processing status)
+  // 3. Empty state with triggered ETL
+  // 4. Empty state while triggering ETL (before job ID is returned)
+  // 5. Empty state that will trigger ETL (about to trigger)
+  // 6. New user flag from connectWallet response
   const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
-
-  if (
+  const isWaitingForInitialPoll = !!initialEtlJobId && !etlState.jobId;
+  const willTriggerEtl =
+    isEmptyState &&
+    userId &&
+    !hasTriggeredEtl &&
+    !isLoading &&
+    !initialEtlJobId &&
+    !etlState.jobId;
+  const shouldShowEtlLoading =
+    isNewUser ||
     etlState.isLoading ||
-    (isEmptyState && hasTriggeredEtl && isEtlInProgress)
-  ) {
+    isWaitingForInitialPoll ||
+    isTriggeringEtl ||
+    willTriggerEtl ||
+    (isEmptyState && hasTriggeredEtl && isEtlInProgress);
+
+  if (showNewWalletLoading) {
+    return <InitialDataLoadingState status="pending" />;
+  }
+
+  if (shouldShowEtlLoading) {
     return <InitialDataLoadingState status={etlState.status} />;
   }
 

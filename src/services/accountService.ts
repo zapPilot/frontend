@@ -8,19 +8,19 @@ import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-    validateAddWalletResponse,
-    validateConnectWalletResponse,
-    validateMessageResponse,
-    validateUpdateEmailResponse,
-    validateUserProfileResponse,
-    validateUserWallets,
+  validateAddWalletResponse,
+  validateConnectWalletResponse,
+  validateMessageResponse,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateUserWallets,
 } from "@/schemas/api/accountSchemas";
 import type {
-    AddWalletResponse,
-    ConnectWalletResponse,
-    UpdateEmailResponse,
-    UserCryptoWallet,
-    UserProfileResponse,
+  AddWalletResponse,
+  ConnectWalletResponse,
+  UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
 } from "@/types/domain/user.types";
 
 // Re-export AccountServiceError for backward compatibility

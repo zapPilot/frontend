@@ -15,12 +15,14 @@ interface BundlePageClientProps {
   userId: string;
   walletId?: string;
   etlJobId?: string;
+  isNewUser?: boolean;
 }
 
 export function BundlePageClient({
   userId,
   walletId,
   etlJobId,
+  isNewUser,
 }: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected, loading } = useUser();
@@ -137,6 +139,7 @@ export function BundlePageClient({
     <DashboardShell
       urlUserId={userId}
       initialEtlJobId={etlJobId}
+      isNewUser={isNewUser}
       isOwnBundle={vm.isOwnBundle}
       bundleUrl={vm.bundleUrl}
       headerBanners={headerBanners}
