@@ -22,6 +22,8 @@ export interface UserInfo {
   visibleWallets: string[];
   totalWallets: number;
   totalVisibleWallets: number;
+  isNewUser?: boolean;
+  etlJobId?: string | null;
 }
 
 // Hook to get user by wallet address
@@ -40,7 +42,9 @@ export function useUserByWallet(walletAddress: string | null) {
       }
 
       // Connect wallet to create/retrieve user (returns data directly or throws)
-      const { user_id: userId } = await connectWallet(walletAddress);
+      const connectResponse = await connectWallet(walletAddress);
+      const { user_id: userId, is_new_user: isNewUser, etl_job } =
+        connectResponse;
 
       // Fetch complete user profile once (includes wallets and email)
       const profileData: UserProfileResponse = await getUserProfile(userId);
@@ -65,6 +69,8 @@ export function useUserByWallet(walletAddress: string | null) {
         visibleWallets: bundleWallets,
         totalWallets: bundleWallets.length,
         totalVisibleWallets: bundleWallets.length,
+        isNewUser,
+        etlJobId: etl_job?.job_id ?? null,
       };
     },
     enabled: !!walletAddress, // Only run when wallet address is available

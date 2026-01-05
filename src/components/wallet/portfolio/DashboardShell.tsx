@@ -16,6 +16,7 @@ interface DashboardShellProps {
   bundleUrl?: string;
   headerBanners?: ReactNode;
   footerOverlays?: ReactNode;
+  initialEtlJobId?: string;
 }
 
 export function DashboardShell({
@@ -25,6 +26,7 @@ export function DashboardShell({
   bundleUrl,
   headerBanners,
   footerOverlays,
+  initialEtlJobId,
 }: DashboardShellProps) {
   const { unifiedData, sections, isLoading, error, refetch } =
     usePortfolioDataProgressive(urlUserId);
@@ -64,6 +66,7 @@ export function DashboardShell({
         isOwnBundle={isOwnBundle}
         isEmptyState={isEmptyState}
         isLoading={isLoading}
+        initialEtlJobId={initialEtlJobId}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}
         onRefresh={refetch}

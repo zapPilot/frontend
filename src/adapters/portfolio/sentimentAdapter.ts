@@ -1,6 +1,6 @@
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
-import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
+import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
 export interface SentimentInfo {
@@ -17,11 +17,12 @@ export function processSentimentData(
   sentimentData: MarketSentimentData | null
 ): SentimentInfo {
   const value = sentimentData?.value ?? 50;
-  const regime = getRegimeFromSentiment(value);
+  const status = sentimentData?.status ?? "Neutral";
+  const regime = getRegimeFromStatus(status);
 
   return {
     value,
-    status: sentimentData?.status ?? "Neutral",
+    status,
     quote: sentimentData?.quote?.quote ?? getDefaultQuoteForRegime(regime),
     regime,
   };

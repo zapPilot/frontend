@@ -64,4 +64,34 @@ export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
   return "eg"; // Extreme Greed: 76-100
 }
 
+/**
+ * Maps a sentiment status string to the corresponding market regime.
+ *
+ * @param status - The status string from the API (e.g. "Extreme Fear", "Neutral")
+ * @returns RegimeId corresponding to the status
+ */
+export function getRegimeFromStatus(status: string): RegimeId {
+  const normalizedStatus = status.toLowerCase().trim();
+  
+  switch (normalizedStatus) {
+    case "extreme fear":
+      return "ef";
+    case "fear":
+      return "f";
+    case "neutral":
+      return "n";
+    case "greed":
+      return "g";
+    case "extreme greed":
+      return "eg";
+    default:
+      logger.warn(
+        `Unknown sentiment status: "${status}". Defaulting to neutral regime.`,
+        { status },
+        "regimeMapper"
+      );
+      return "n";
+  }
+}
+
 // Unused exports removed: getRegimeLabelFromSentiment, isSentimentInRegime

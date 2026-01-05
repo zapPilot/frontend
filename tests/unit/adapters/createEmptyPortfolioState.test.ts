@@ -22,6 +22,7 @@ vi.mock("@/adapters/portfolio/regimeAdapter", () => ({
 
 vi.mock("@/lib/domain/regimeMapper", () => ({
   getRegimeFromSentiment: vi.fn().mockReturnValue("n"),
+  getRegimeFromStatus: vi.fn().mockReturnValue("n"),
 }));
 
 vi.mock("@/constants/regimes", () => ({

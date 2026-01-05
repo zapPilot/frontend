@@ -14,9 +14,14 @@ import { useBundlePage } from "@/hooks/bundle/useBundlePage";
 interface BundlePageClientProps {
   userId: string;
   walletId?: string;
+  etlJobId?: string;
 }
 
-export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
+export function BundlePageClient({
+  userId,
+  walletId,
+  etlJobId,
+}: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
@@ -37,11 +42,14 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ) {
       const searchParams = new URLSearchParams(window.location.search);
       searchParams.set("userId", userInfo.userId);
+      if (userInfo.etlJobId) {
+        searchParams.set("etlJobId", userInfo.etlJobId);
+      }
       const queryString = searchParams.toString();
       const newUrl = `/bundle?${queryString}`;
       router.replace(newUrl);
     }
-  }, [isConnected, loading, userInfo?.userId, userId, router]);
+  }, [isConnected, loading, userInfo?.userId, userInfo?.etlJobId, userId, router]);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
@@ -128,6 +136,7 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
   return (
     <DashboardShell
       urlUserId={userId}
+      initialEtlJobId={etlJobId}
       isOwnBundle={vm.isOwnBundle}
       bundleUrl={vm.bundleUrl}
       headerBanners={headerBanners}

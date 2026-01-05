@@ -42,6 +42,8 @@ export interface UseEtlJobPollingReturn {
   state: EtlJobPollingState;
   /** Trigger a new ETL job for a wallet */
   triggerEtl: (userId: string, walletAddress: string) => Promise<void>;
+  /** Start polling an existing ETL job */
+  startPolling: (jobId: string) => void;
   /** Reset the polling state */
   reset: () => void;
 }
@@ -125,6 +127,14 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     []
   );
 
+  const startPolling = useCallback((existingJobId: string) => {
+    if (!existingJobId) {
+      return;
+    }
+    setTriggerError(undefined);
+    setJobId(existingJobId);
+  }, []);
+
   // Reset polling state
   const reset = useCallback(() => {
     setJobId(null);
@@ -132,5 +142,5 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     queryClient.removeQueries({ queryKey: ETL_JOB_QUERY_KEY });
   }, [queryClient]);
 
-  return { state, triggerEtl, reset };
+  return { state, triggerEtl, startPolling, reset };
 }

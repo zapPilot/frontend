@@ -4,16 +4,16 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
-  getRegimeAllocation,
-  type Regime,
-  regimes,
+    getRegimeAllocation,
+    type Regime,
+    regimes,
 } from "@/components/wallet/regime/regimeData";
 import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
-import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
+import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
 import type {
-  SectionState,
-  SentimentData,
+    SectionState,
+    SentimentData,
 } from "@/types/portfolio-progressive";
 
 import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";
@@ -124,11 +124,10 @@ export function StrategyCard({
     return <StrategyCardSkeleton />;
   }
 
-  // Independent Sentiment Logic:
-  // If we have independent sentiment data but no explicit regime (because main data is loading),
+  // independent sentiment data but no explicit regime (because main data is loading),
   // we can derive the regime from the sentiment value to show the full card immediately.
   const derivedRegimeId = sentimentSection?.data
-    ? getRegimeFromSentiment(sentimentSection.data.value)
+    ? getRegimeFromStatus(sentimentSection.data.status)
     : undefined;
 
   const effectiveRegime =

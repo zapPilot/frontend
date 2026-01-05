@@ -19,7 +19,6 @@ import { queryKeys } from "@/hooks/queries";
 import { useEtlJobPolling } from "@/hooks/wallet";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet, getUserWallets } from "@/services/accountService";
-import { generateBundleUrl } from "@/services/bundleService";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -38,6 +37,7 @@ interface WalletPortfolioPresenterProps {
   isOwnBundle?: boolean;
   isEmptyState?: boolean;
   isLoading?: boolean;
+  initialEtlJobId?: string;
   /** Section states for progressive loading */
   sections: DashboardSections;
   headerBanners?: React.ReactNode;
@@ -51,6 +51,7 @@ export function WalletPortfolioPresenter({
   isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
+  initialEtlJobId,
   sections,
   headerBanners,
   footerOverlays,
@@ -65,12 +66,33 @@ export function WalletPortfolioPresenter({
   const [isSearching, setIsSearching] = useState(false);
 
   // ETL Polling for new wallets
-  const { state: etlState, triggerEtl, reset: resetEtl } = useEtlJobPolling();
+  const {
+    state: etlState,
+    triggerEtl,
+    reset: resetEtl,
+    startPolling,
+  } = useEtlJobPolling();
   const [hasTriggeredEtl, setHasTriggeredEtl] = useState(false);
+
+  useEffect(() => {
+    if (!initialEtlJobId || etlState.jobId || hasTriggeredEtl) {
+      return;
+    }
+
+    startPolling(initialEtlJobId);
+    setHasTriggeredEtl(true);
+  }, [etlState.jobId, hasTriggeredEtl, initialEtlJobId, startPolling]);
 
   // Trigger ETL if empty state and user exists
   useEffect(() => {
-    if (isEmptyState && userId && !hasTriggeredEtl && !isLoading) {
+    if (
+      isEmptyState &&
+      userId &&
+      !hasTriggeredEtl &&
+      !isLoading &&
+      !initialEtlJobId &&
+      !etlState.jobId
+    ) {
       const initEtl = async () => {
         try {
           const wallets = await getUserWallets(userId);
@@ -89,7 +111,15 @@ export function WalletPortfolioPresenter({
       };
       void initEtl();
     }
-  }, [isEmptyState, userId, hasTriggeredEtl, isLoading, triggerEtl]);
+  }, [
+    isEmptyState,
+    userId,
+    hasTriggeredEtl,
+    isLoading,
+    initialEtlJobId,
+    etlState.jobId,
+    triggerEtl,
+  ]);
 
   // Handle ETL auto-refresh
   useEffect(() => {
@@ -136,10 +166,13 @@ export function WalletPortfolioPresenter({
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
 
-      const { user_id: userId } = response;
+      const { user_id: userId, etl_job: etlJob } = response;
 
-      // Generate bundle URL with actual userId
-      const bundleUrl = generateBundleUrl(userId);
+      const searchParams = new URLSearchParams({ userId });
+      if (etlJob?.job_id) {
+        searchParams.set("etlJobId", etlJob.job_id);
+      }
+      const bundleUrl = `/bundle?${searchParams.toString()}`;
 
       // Navigate with Next.js router
       router.push(bundleUrl);
@@ -183,11 +216,11 @@ export function WalletPortfolioPresenter({
   };
 
   // Show loading state during ETL processing
+  const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
+
   if (
     etlState.isLoading ||
-    (isEmptyState &&
-      hasTriggeredEtl &&
-      ["pending", "processing"].includes(etlState.status))
+    (isEmptyState && hasTriggeredEtl && isEtlInProgress)
   ) {
     return <InitialDataLoadingState status={etlState.status} />;
   }
@@ -202,7 +235,7 @@ export function WalletPortfolioPresenter({
         onOpenSettings={openSettings}
         onSearch={handleSearch}
         showSearch={true}
-        isSearching={isSearching}
+        isSearching={isSearching || etlState.isLoading || isEtlInProgress}
       />
 
       {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}
