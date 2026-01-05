@@ -39,18 +39,11 @@ export function DashboardShell({
 
   // Determine if this is empty state (no real portfolio data, excluding loading)
   // Use balance and positions - the correct properties from WalletPortfolioDataWithDirection
-  const isEmptyState = (!unifiedData || ((unifiedData.positions ?? 0) === 0 && (unifiedData.balance ?? 0) === 0)) && !isLoading;
-
-  console.log("DEBUG: DashboardShell state:", JSON.stringify({
-    hasUnifiedData: !!unifiedData,
-    isLoading,
-    isEmptyState,
-    urlUserId,
-    unifiedDataSummary: unifiedData ? {
-        balance: unifiedData.balance,
-        positions: unifiedData.positions
-    } : null
-  }, null, 2));
+  const isEmptyState =
+    (!unifiedData ||
+      ((unifiedData.positions ?? 0) === 0 &&
+        (unifiedData.balance ?? 0) === 0)) &&
+    !isLoading;
 
   // Use real data if available, otherwise create empty state with real sentiment
   const portfolioData =

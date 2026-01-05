@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -10,6 +10,7 @@ import {
   MOCK_DATA,
   MOCK_SCENARIOS,
 } from "../../../../fixtures/mockPortfolioData";
+import { render } from "../../../../test-utils";
 
 const getDefaultStrategy = (regimeId: RegimeId) => {
   const regime = regimes.find(item => item.id === regimeId);
@@ -86,6 +87,7 @@ vi.mock("next/navigation", () => ({
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock useToast hook
@@ -95,6 +97,7 @@ vi.mock("@/providers/ToastProvider", () => ({
     hideToast: vi.fn(),
     toasts: [],
   }),
+  ToastProvider: ({ children }: any) => <>{children}</>,
 }));
 
 // Mock framer-motion to avoid animation issues in tests

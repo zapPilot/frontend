@@ -71,23 +71,20 @@ export function WalletPortfolioPresenter({
   // Trigger ETL if empty state and user exists
   useEffect(() => {
     if (isEmptyState && userId && !hasTriggeredEtl && !isLoading) {
-      console.log("DEBUG: Init ETL check for user:", userId);
       const initEtl = async () => {
         try {
           const wallets = await getUserWallets(userId);
-          console.log("DEBUG: User wallets:", wallets);
+
           if (wallets.length > 0) {
             // Trigger for primary wallet (first one)
             const wallet = wallets[0];
             if (wallet) {
-              console.log("DEBUG: Triggering ETL for:", wallet.wallet);
               await triggerEtl(userId, wallet.wallet);
               setHasTriggeredEtl(true);
             }
           }
-        } catch (error) {
+        } catch {
           // Silent fail - will show empty state
-          console.error("Failed to init ETL", error);
         }
       };
       void initEtl();
@@ -128,30 +125,25 @@ export function WalletPortfolioPresenter({
   } = usePortfolioModalState();
 
   const handleSearch = async (address: string) => {
-    console.log("DEBUG: handleSearch called with:", address);
     const trimmedAddress = address.trim();
     if (!trimmedAddress) {
-      console.log("DEBUG: Empty address");
       return;
     }
 
     try {
       setIsSearching(true);
-      console.log("DEBUG: Calling connectWallet...");
 
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
-      console.log("DEBUG: connectWallet response:", response);
+
       const { user_id: userId } = response;
 
       // Generate bundle URL with actual userId
       const bundleUrl = generateBundleUrl(userId);
-      console.log("DEBUG: Navigating to:", bundleUrl);
 
       // Navigate with Next.js router
       router.push(bundleUrl);
-    } catch (error) {
-      console.error("DEBUG: handleSearch error:", error);
+    } catch {
       showToast({
         type: "error",
         title: "Wallet Not Found",
