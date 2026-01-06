@@ -174,14 +174,14 @@ export function WalletPortfolioPresenter({
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
 
-      const { user_id: userId, etl_job: etlJob, is_new_user: isNewUser } = response;
+      const { user_id: searchedUserId, etl_job: etlJob, is_new_user: searchedIsNewUser } = response;
 
-      const searchParams = new URLSearchParams({ userId });
+      const searchParams = new URLSearchParams({ userId: searchedUserId });
       if (etlJob?.job_id) {
         searchParams.set("etlJobId", etlJob.job_id);
       }
       // Pass isNewUser flag so the bundle page knows to show loading state
-      if (isNewUser) {
+      if (searchedIsNewUser) {
         searchParams.set("isNewUser", "true");
       }
       const bundleUrl = `/bundle?${searchParams.toString()}`;
@@ -222,8 +222,6 @@ export function WalletPortfolioPresenter({
         isOwnBundle={isOwnBundle}
         isLoading={isLoading}
         onOpenModal={openModal}
-        // onSearch is no longer passed to DashboardView for Empty State Hero,
-        // as we are using persistent nav search.
       />
     ),
     analytics: userId ? (
@@ -238,23 +236,13 @@ export function WalletPortfolioPresenter({
     ),
   };
 
-  // Show loading state during ETL processing
-  // More resilient condition that handles:
-  // 1. Initial render when initialEtlJobId exists but polling hasn't started yet
-  // 2. Active polling (pending/processing status)
-  // 3. Empty state with triggered ETL
-  // 4. Empty state while triggering ETL (before job ID is returned)
-  // 5. Empty state that will trigger ETL (about to trigger)
-  // 6. New user flag from connectWallet response
+  // Determine if ETL loading screen should be shown
+  // Covers: initial poll waiting, active polling, triggering ETL, about to trigger, new user flag
   const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
   const isWaitingForInitialPoll = !!initialEtlJobId && !etlState.jobId;
   const willTriggerEtl =
-    isEmptyState &&
-    userId &&
-    !hasTriggeredEtl &&
-    !isLoading &&
-    !initialEtlJobId &&
-    !etlState.jobId;
+    isEmptyState && userId && !hasTriggeredEtl && !isLoading && !initialEtlJobId && !etlState.jobId;
+
   const shouldShowEtlLoading =
     isNewUser ||
     etlState.isLoading ||
