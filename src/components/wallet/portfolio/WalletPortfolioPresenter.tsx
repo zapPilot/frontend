@@ -55,13 +55,17 @@ export function WalletPortfolioPresenter({
   isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   initialEtlJobId: _initialEtlJobId,
-  isNewUser = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isNewUser: _isNewUser = false,
   etlState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onResetEtl: _onResetEtl,
   sections,
   headerBanners,
   footerOverlays,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onRefresh: _onRefresh,
 }: WalletPortfolioPresenterProps) {
   const router = useRouter();
@@ -156,12 +160,11 @@ export function WalletPortfolioPresenter({
   };
 
   // Determine if ETL loading screen should be shown
-  const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
+  const isEtlInProgress = ["pending", "processing", "completing"].includes(
+    etlState.status
+  );
 
-  const shouldShowEtlLoading =
-    (isNewUser && etlState.status !== "completed") ||
-    etlState.isLoading ||
-    isEtlInProgress;
+  const shouldShowEtlLoading = isEtlInProgress || etlState.isLoading;
 
   if (showNewWalletLoading) {
     return <InitialDataLoadingState status="pending" />;

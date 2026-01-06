@@ -39,7 +39,7 @@ import { useLandingPageData } from "./usePortfolioQuery";
  */
 export function usePortfolioDataProgressive(
   userId: string,
-  isEtlInProgress: boolean = false
+  isEtlInProgress = false
 ): DashboardProgressiveState {
   // Fetch data from independent sources
   const landingQuery = useLandingPageData(userId, isEtlInProgress);

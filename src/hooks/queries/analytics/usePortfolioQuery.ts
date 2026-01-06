@@ -55,7 +55,7 @@ function buildPortfolioQueryConfig<T>({
  */
 export function useLandingPageData(
   userId: string | null | undefined,
-  isEtlInProgress: boolean = false
+  isEtlInProgress = false
 ) {
   return useQuery(
     buildPortfolioQueryConfig<LandingPageResponse>({

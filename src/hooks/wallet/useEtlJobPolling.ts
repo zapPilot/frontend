@@ -27,7 +27,13 @@ export interface EtlJobPollingState {
   /** Current job ID being polled */
   jobId: string | null;
   /** Current job status */
-  status: "idle" | "pending" | "processing" | "completed" | "failed";
+  status:
+    | "idle"
+    | "pending"
+    | "processing"
+    | "completing"
+    | "completed"
+    | "failed";
   /** Error message if job failed */
   errorMessage: string | undefined;
   /** Whether the job is currently loading */
@@ -46,6 +52,8 @@ export interface UseEtlJobPollingReturn {
   startPolling: (jobId: string) => void;
   /** Reset the polling state */
   reset: () => void;
+  /** Complete the transition from 'completing' to 'idle' */
+  completeTransition: () => void;
 }
 
 const ETL_JOB_QUERY_KEY = ["etl-job-status"];
@@ -90,11 +98,21 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     });
 
   // Determine current state
+  // Map "completed" from API to "completing" to prevent premature query re-enablement
+  const deriveStatus = (): EtlJobPollingState["status"] => {
+    if (!jobId) return "idle";
+    if (!jobStatus) return "pending";
+
+    // Transition "completed" from API to "completing" internally
+    // This keeps queries disabled until completeTransition() is called
+    if (jobStatus.status === "completed") return "completing";
+
+    return jobStatus.status as EtlJobPollingState["status"];
+  };
+
   const state: EtlJobPollingState = {
     jobId,
-    status: jobId
-      ? (jobStatus?.status as EtlJobPollingState["status"]) || "pending"
-      : "idle",
+    status: deriveStatus(),
     errorMessage: triggerError || jobStatus?.error_message,
     isLoading: isPolling || (!!jobId && jobStatus?.status === "pending"),
   };
@@ -142,5 +160,11 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     queryClient.removeQueries({ queryKey: ETL_JOB_QUERY_KEY });
   }, [queryClient]);
 
-  return { state, triggerEtl, startPolling, reset };
+  // Complete the transition from 'completing' to 'idle'
+  // This should be called after data refetch completes in the parent component
+  const completeTransition = useCallback(() => {
+    reset();
+  }, [reset]);
+
+  return { state, triggerEtl, startPolling, reset, completeTransition };
 }

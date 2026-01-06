@@ -2,16 +2,15 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { type ReactNode, useEffect } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
+import { queryKeys } from "@/hooks/queries";
 import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfolioDataProgressive";
 import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
 import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
-import { queryKeys } from "@/hooks/queries";
 import { useEtlJobPolling } from "@/hooks/wallet";
 
 interface DashboardShellProps {
@@ -43,8 +42,11 @@ export function DashboardShell({
     state: etlState,
     reset: resetEtl,
     startPolling,
+    completeTransition,
   } = useEtlJobPolling();
-  const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
+  const isEtlInProgress = ["pending", "processing", "completing"].includes(
+    etlState.status
+  );
 
   // Portfolio data with ETL-aware queries
   const { unifiedData, sections, isLoading, error, refetch } =
@@ -58,34 +60,38 @@ export function DashboardShell({
   }, [initialEtlJobId, etlState.jobId, startPolling]);
 
   // Handle ETL completion auto-refresh
+  // When status transitions to "completing", coordinate cache invalidation and refetch
   useEffect(() => {
-    if (etlState.status !== "completed") {
+    if (etlState.status !== "completing") {
       return;
     }
 
-    // Invalidate portfolio query cache to force fresh data
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.portfolio.landingPage(urlUserId),
-    });
+    const handleCompletion = async () => {
+      // 1. Wait for cache invalidation to complete
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.portfolio.landingPage(urlUserId),
+      });
 
-    // Trigger refetch
-    refetch();
+      // 2. Trigger refetch and wait for it to complete
+      await refetch();
 
-    // Clean URL params
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("etlJobId") || url.searchParams.has("isNewUser")) {
-      url.searchParams.delete("etlJobId");
-      url.searchParams.delete("isNewUser");
-      router.replace(url.pathname + url.search, { scroll: false });
-    }
+      // 3. Clean URL params
+      const url = new URL(window.location.href);
+      if (
+        url.searchParams.has("etlJobId") ||
+        url.searchParams.has("isNewUser")
+      ) {
+        url.searchParams.delete("etlJobId");
+        url.searchParams.delete("isNewUser");
+        router.replace(url.pathname + url.search, { scroll: false });
+      }
 
-    // Delay reset to allow refetch to complete
-    const timer = setTimeout(() => {
-      resetEtl();
-    }, 1000);
+      // 4. Complete the transition (moves state from "completing" to "idle")
+      completeTransition();
+    };
 
-    return () => clearTimeout(timer);
-  }, [etlState.status, refetch, resetEtl, urlUserId, queryClient, router]);
+    void handleCompletion();
+  }, [etlState.status, refetch, completeTransition, urlUserId, queryClient, router]);
   const { data: sentimentData } = useSentimentData();
   const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = error instanceof Error ? error : null;
