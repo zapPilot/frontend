@@ -1,8 +1,7 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
@@ -15,10 +14,9 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
-import { queryKeys } from "@/hooks/queries";
-import { useEtlJobPolling } from "@/hooks/wallet";
+import type { EtlJobPollingState } from "@/hooks/wallet";
 import { useToast } from "@/providers/ToastProvider";
-import { connectWallet, getUserWallets } from "@/services/accountService";
+import { connectWallet } from "@/services/accountService";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -40,6 +38,10 @@ interface WalletPortfolioPresenterProps {
   initialEtlJobId?: string | undefined;
   /** Whether this is a brand new user (from connectWallet response) */
   isNewUser?: boolean | undefined;
+  /** ETL job polling state (from DashboardShell) */
+  etlState: EtlJobPollingState;
+  /** Reset ETL state after completion */
+  onResetEtl?: () => void;
   /** Section states for progressive loading */
   sections: DashboardSections;
   headerBanners?: React.ReactNode;
@@ -53,105 +55,22 @@ export function WalletPortfolioPresenter({
   isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
-  initialEtlJobId,
+  initialEtlJobId: _initialEtlJobId,
   isNewUser = false,
+  etlState,
+  onResetEtl: _onResetEtl,
   sections,
   headerBanners,
   footerOverlays,
-  onRefresh,
+  onRefresh: _onRefresh,
 }: WalletPortfolioPresenterProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const currentRegime = getRegimeById(data.currentRegime);
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showNewWalletLoading, setShowNewWalletLoading] = useState(false);
-
-  // ETL Polling for new wallets
-  const {
-    state: etlState,
-    triggerEtl,
-    reset: resetEtl,
-    startPolling,
-  } = useEtlJobPolling();
-  const [hasTriggeredEtl, setHasTriggeredEtl] = useState(false);
-  const [isTriggeringEtl, setIsTriggeringEtl] = useState(false);
-
-  useEffect(() => {
-    if (!initialEtlJobId || etlState.jobId || hasTriggeredEtl) {
-      return;
-    }
-
-    startPolling(initialEtlJobId);
-    setHasTriggeredEtl(true);
-  }, [etlState.jobId, hasTriggeredEtl, initialEtlJobId, startPolling]);
-
-  // Trigger ETL if empty state and user exists
-  useEffect(() => {
-    if (
-      isEmptyState &&
-      userId &&
-      !hasTriggeredEtl &&
-      !isLoading &&
-      !initialEtlJobId &&
-      !etlState.jobId
-    ) {
-      const initEtl = async () => {
-        try {
-          setIsTriggeringEtl(true);
-          const wallets = await getUserWallets(userId);
-
-          if (wallets.length > 0) {
-            // Trigger for primary wallet (first one)
-            const wallet = wallets[0];
-            if (wallet) {
-              await triggerEtl(userId, wallet.wallet);
-              setHasTriggeredEtl(true);
-            }
-          }
-        } catch {
-          // Silent fail - will show empty state
-        } finally {
-          setIsTriggeringEtl(false);
-        }
-      };
-      void initEtl();
-    }
-  }, [
-    isEmptyState,
-    userId,
-    hasTriggeredEtl,
-    isLoading,
-    initialEtlJobId,
-    etlState.jobId,
-    triggerEtl,
-  ]);
-
-  // Handle ETL auto-refresh
-  useEffect(() => {
-    if (etlState.status !== "completed") {
-      return;
-    }
-
-    // Invalidate portfolio query cache to force fresh data
-    if (userId) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.portfolio.landingPage(userId),
-      });
-    }
-
-    // Trigger refetch
-    onRefresh?.();
-
-    // Delay reset to allow refetch to complete
-    const timer = setTimeout(() => {
-      resetEtl();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [etlState.status, onRefresh, resetEtl, userId, queryClient]);
 
   const {
     activeModal,
@@ -237,19 +156,12 @@ export function WalletPortfolioPresenter({
   };
 
   // Determine if ETL loading screen should be shown
-  // Covers: initial poll waiting, active polling, triggering ETL, about to trigger, new user flag
   const isEtlInProgress = ["pending", "processing"].includes(etlState.status);
-  const isWaitingForInitialPoll = !!initialEtlJobId && !etlState.jobId;
-  const willTriggerEtl =
-    isEmptyState && userId && !hasTriggeredEtl && !isLoading && !initialEtlJobId && !etlState.jobId;
 
   const shouldShowEtlLoading =
-    isNewUser ||
+    (isNewUser && etlState.status !== "completed") ||
     etlState.isLoading ||
-    isWaitingForInitialPoll ||
-    isTriggeringEtl ||
-    willTriggerEtl ||
-    (isEmptyState && hasTriggeredEtl && isEtlInProgress);
+    isEtlInProgress;
 
   if (showNewWalletLoading) {
     return <InitialDataLoadingState status="pending" />;
