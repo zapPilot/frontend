@@ -245,3 +245,55 @@ export const updateWalletLabel = async (
   );
   return validateMessageResponse(response);
 };
+
+// ETL Job Operations
+
+/**
+ * ETL job response from trigger endpoint
+ */
+export interface EtlJobResponse {
+  job_id: string | null;
+  status: string;
+  message: string;
+  rate_limited?: boolean;
+}
+
+/**
+ * ETL job status response
+ */
+export interface EtlJobStatusResponse {
+  job_id: string;
+  status: string;
+  created_at: string;
+  completed_at?: string;
+  error_message?: string;
+}
+
+/**
+ * Trigger ETL data fetch for a wallet
+ * Used for on-the-fly portfolio data loading
+ */
+export const triggerWalletDataFetch = async (
+  userId: string,
+  walletAddress: string
+): Promise<EtlJobResponse> => {
+  const response = await callAccountApi(() =>
+    accountApiClient.post<EtlJobResponse>(
+      `/users/${userId}/wallets/${walletAddress}/fetch-data`
+    )
+  );
+  return response;
+};
+
+/**
+ * Get ETL job status by ID
+ * Used for polling job completion
+ */
+export const getEtlJobStatus = async (
+  jobId: string
+): Promise<EtlJobStatusResponse> => {
+  const response = await callAccountApi(() =>
+    accountApiClient.get<EtlJobStatusResponse>(`/users/etl/jobs/${jobId}`)
+  );
+  return response;
+};

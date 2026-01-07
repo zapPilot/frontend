@@ -34,13 +34,15 @@ import { useLandingPageData } from "./usePortfolioQuery";
  * Allows each dashboard section to render independently.
  *
  * @param userId - User wallet address or user ID
+ * @param isEtlInProgress - Whether ETL data fetch is currently in progress (disables landing query during ETL)
  * @returns Section states with loading/error information
  */
 export function usePortfolioDataProgressive(
-  userId: string
+  userId: string,
+  isEtlInProgress = false
 ): DashboardProgressiveState {
   // Fetch data from independent sources
-  const landingQuery = useLandingPageData(userId);
+  const landingQuery = useLandingPageData(userId, isEtlInProgress);
   const sentimentQuery = useSentimentData();
   const regimeQuery = useRegimeHistory();
 

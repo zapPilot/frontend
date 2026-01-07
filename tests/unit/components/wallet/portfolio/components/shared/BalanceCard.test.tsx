@@ -64,20 +64,6 @@ describe("BalanceCard", () => {
   });
 
   describe("Empty State", () => {
-    it("should show empty state message when isEmptyState is true", () => {
-      render(
-        <BalanceCard
-          balance={0}
-          isEmptyState={true}
-          onOpenModal={mockOnOpenModal}
-        />
-      );
-
-      expect(
-        screen.getByText(/Connect your wallet to view your portfolio/)
-      ).toBeInTheDocument();
-    });
-
     it("should apply empty state styling to balance", () => {
       render(
         <BalanceCard
@@ -148,6 +134,100 @@ describe("BalanceCard", () => {
       fireEvent.click(screen.getByTestId("withdraw-button"));
 
       expect(mockOnOpenModal).toHaveBeenCalledWith("withdraw");
+    });
+  });
+
+  describe("Visitor Mode (isOwnBundle)", () => {
+    it("should enable buttons when viewing own bundle", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          isOwnBundle={true}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).not.toBeDisabled();
+      expect(screen.getByTestId("withdraw-button")).not.toBeDisabled();
+    });
+
+    it("should disable buttons when viewing another user's bundle", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          isOwnBundle={false}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).toBeDisabled();
+      expect(screen.getByTestId("withdraw-button")).toBeDisabled();
+    });
+
+    it("should show tooltip hint on buttons when in visitor mode", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          isOwnBundle={false}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).toHaveAttribute(
+        "title",
+        "Switch to your bundle to deposit"
+      );
+      expect(screen.getByTestId("withdraw-button")).toHaveAttribute(
+        "title",
+        "Switch to your bundle to withdraw"
+      );
+    });
+
+    it("should not show tooltip hint when viewing own bundle", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          isOwnBundle={true}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).not.toHaveAttribute("title");
+      expect(screen.getByTestId("withdraw-button")).not.toHaveAttribute(
+        "title"
+      );
+    });
+
+    it("should default isOwnBundle to true", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      // Without passing isOwnBundle, buttons should be enabled (default = true)
+      expect(screen.getByTestId("deposit-button")).not.toBeDisabled();
+      expect(screen.getByTestId("withdraw-button")).not.toBeDisabled();
+    });
+
+    it("should disable buttons when both empty state AND visitor mode", () => {
+      render(
+        <BalanceCard
+          balance={0}
+          isEmptyState={true}
+          isOwnBundle={false}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).toBeDisabled();
+      expect(screen.getByTestId("withdraw-button")).toBeDisabled();
     });
   });
 

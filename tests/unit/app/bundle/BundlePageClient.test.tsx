@@ -1,5 +1,4 @@
 import { act, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BundlePageClient } from "@/app/bundle/BundlePageClient";
@@ -80,16 +79,17 @@ describe("BundlePageClient switch prompt", () => {
       render(<BundlePageClient userId="OWNER123" />);
     });
 
-    const switchBtn = await screen.findByTestId("switch-to-my-bundle");
+    const switchBtn = await screen.findByTestId("switch-button");
     expect(switchBtn).toBeInTheDocument();
+    expect(switchBtn).toHaveTextContent("Switch to mine");
 
-    // Click Stay (should be no-op, banner persists)
-    await act(async () => {
-      await userEvent.click(screen.getByText(/stay/i));
-    });
+    // Banner should be visible
+    expect(screen.getByTestId("switch-prompt-banner")).toBeInTheDocument();
 
-    // Banner should still be visible (no permanent dismissal)
-    expect(screen.queryByTestId("switch-to-my-bundle")).toBeInTheDocument();
+    // Verify no "Stay" button exists (simplified UX)
+    expect(screen.queryByText(/stay/i)).not.toBeInTheDocument();
+
+    // Ensure we haven't navigated away just by rendering
     expect(replaceMock).not.toHaveBeenCalled();
   });
 
@@ -102,7 +102,7 @@ describe("BundlePageClient switch prompt", () => {
       render(<BundlePageClient userId="OWNER123" />);
     });
 
-    expect(screen.queryByTestId("switch-to-my-bundle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("switch-button")).not.toBeInTheDocument();
     expect(replaceMock).not.toHaveBeenCalled();
   });
 });

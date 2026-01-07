@@ -14,12 +14,14 @@ interface PortfolioQueryOptions<T> {
   userId: string | null | undefined;
   queryKey: readonly unknown[];
   fetcher: (userId: string) => Promise<T>;
+  enabledOverride?: boolean;
 }
 
 function buildPortfolioQueryConfig<T>({
   userId,
   queryKey,
   fetcher,
+  enabledOverride,
 }: PortfolioQueryOptions<T>) {
   return {
     ...createQueryConfig({
@@ -36,7 +38,7 @@ function buildPortfolioQueryConfig<T>({
 
       return fetcher(userId);
     },
-    enabled: Boolean(userId),
+    enabled: enabledOverride !== undefined ? enabledOverride : Boolean(userId),
     refetchInterval: PORTFOLIO_REFETCH_INTERVAL,
   };
 }
@@ -47,8 +49,14 @@ function buildPortfolioQueryConfig<T>({
  * PERFORMANCE OPTIMIZATION: Fetches only the core portfolio data without yield summary.
  * This allows Balance, ROI, and PnL metrics to render immediately (~300ms) without
  * waiting for the slower yield calculations (~1500ms).
+ *
+ * @param userId - User wallet address or user ID
+ * @param isEtlInProgress - Whether ETL data fetch is currently in progress (disables query during ETL)
  */
-export function useLandingPageData(userId: string | null | undefined) {
+export function useLandingPageData(
+  userId: string | null | undefined,
+  isEtlInProgress = false
+) {
   return useQuery(
     buildPortfolioQueryConfig<LandingPageResponse>({
       userId,
@@ -56,6 +64,7 @@ export function useLandingPageData(userId: string | null | undefined) {
       fetcher: async resolvedUserId => {
         return getLandingPagePortfolioData(resolvedUserId);
       },
+      enabledOverride: Boolean(userId) && !isEtlInProgress,
     })
   );
 }

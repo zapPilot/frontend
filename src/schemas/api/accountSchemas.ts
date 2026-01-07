@@ -65,9 +65,17 @@ export const userSubscriptionSchema = z.object({
 /**
  * Schema for connect wallet response
  */
+export const etlJobResponseSchema = z.object({
+  job_id: z.string().nullable(),
+  status: z.string(),
+  message: z.string(),
+  rate_limited: z.boolean().optional(),
+});
+
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),
   is_new_user: z.boolean(),
+  etl_job: etlJobResponseSchema.optional(),
 });
 
 /**
@@ -144,6 +152,9 @@ export const messageResponseSchema = z.object({
 >;
 /** @public */ export type ConnectWalletResponse = z.infer<
   typeof connectWalletResponseSchema
+>;
+/** @public */ export type EtlJobResponse = z.infer<
+  typeof etlJobResponseSchema
 >;
 /** @public */ export type AddWalletResponse = z.infer<
   typeof addWalletResponseSchema

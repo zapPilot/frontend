@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
+import { InitialDataLoadingState } from "@/components/wallet/InitialDataLoadingState";
 import { AnalyticsView } from "@/components/wallet/portfolio/analytics";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/navigation";
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
@@ -13,9 +14,9 @@ import { BacktestingView } from "@/components/wallet/portfolio/views/Backtesting
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
+import type { EtlJobPollingState } from "@/hooks/wallet";
 import { useToast } from "@/providers/ToastProvider";
 import { connectWallet } from "@/services/accountService";
-import { generateBundleUrl } from "@/services/bundleService";
 import type { TabType } from "@/types/portfolio";
 import type { DashboardSections } from "@/types/portfolio-progressive";
 
@@ -30,22 +31,42 @@ const LAYOUT = {
 interface WalletPortfolioPresenterProps {
   data: WalletPortfolioDataWithDirection;
   userId?: string;
+  /** Whether user is viewing their own bundle (enables wallet actions) */
+  isOwnBundle?: boolean;
   isEmptyState?: boolean;
   isLoading?: boolean;
+  initialEtlJobId?: string | undefined;
+  /** Whether this is a brand new user (from connectWallet response) */
+  isNewUser?: boolean | undefined;
+  /** ETL job polling state (from DashboardShell) */
+  etlState: EtlJobPollingState;
+  /** Reset ETL state after completion */
+  onResetEtl?: () => void;
   /** Section states for progressive loading */
   sections: DashboardSections;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
+  onRefresh?: () => void;
 }
 
 export function WalletPortfolioPresenter({
   data,
   userId,
+  isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  initialEtlJobId: _initialEtlJobId,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  isNewUser: _isNewUser = false,
+  etlState,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onResetEtl: _onResetEtl,
   sections,
   headerBanners,
   footerOverlays,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onRefresh: _onRefresh,
 }: WalletPortfolioPresenterProps) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -53,6 +74,7 @@ export function WalletPortfolioPresenter({
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [showNewWalletLoading, setShowNewWalletLoading] = useState(false);
 
   const {
     activeModal,
@@ -73,20 +95,44 @@ export function WalletPortfolioPresenter({
       setIsSearching(true);
 
       // Convert wallet address to userId via backend
-      const { user_id: userId } = await connectWallet(trimmedAddress);
+      const response = await connectWallet(trimmedAddress);
 
-      // Generate bundle URL with actual userId
-      const bundleUrl = generateBundleUrl(userId);
+      const {
+        user_id: searchedUserId,
+        etl_job: etlJob,
+        is_new_user: searchedIsNewUser,
+      } = response;
+
+      const searchParams = new URLSearchParams({ userId: searchedUserId });
+      if (etlJob?.job_id) {
+        searchParams.set("etlJobId", etlJob.job_id);
+      }
+      // Pass isNewUser flag so the bundle page knows to show loading state
+      if (searchedIsNewUser) {
+        searchParams.set("isNewUser", "true");
+      }
+      const bundleUrl = `/bundle?${searchParams.toString()}`;
 
       // Navigate with Next.js router
       router.push(bundleUrl);
-    } catch {
-      showToast({
-        type: "error",
-        title: "Wallet Not Found",
-        message:
-          "Could not find a portfolio for this wallet address. Please check the address and try again.",
-      });
+    } catch (error) {
+      // More accurate error messaging based on error type
+      // connectWallet creates new users, so "Wallet Not Found" is misleading
+      const isValidationError =
+        error instanceof Error &&
+        (error.message.includes("Invalid wallet") ||
+          error.message.includes("42-character"));
+
+      if (isValidationError) {
+        showToast({
+          type: "error",
+          title: "Invalid Address",
+          message: "Please enter a valid 42-character Ethereum address.",
+        });
+      } else {
+        // For connection errors, show the loading state
+        setShowNewWalletLoading(true);
+      }
     } finally {
       setIsSearching(false);
     }
@@ -100,10 +146,9 @@ export function WalletPortfolioPresenter({
         sections={sections}
         currentRegime={currentRegime}
         isEmptyState={isEmptyState}
+        isOwnBundle={isOwnBundle}
         isLoading={isLoading}
         onOpenModal={openModal}
-        // onSearch is no longer passed to DashboardView for Empty State Hero,
-        // as we are using persistent nav search.
       />
     ),
     analytics: userId ? (
@@ -118,6 +163,21 @@ export function WalletPortfolioPresenter({
     ),
   };
 
+  // Determine if ETL loading screen should be shown
+  const isEtlInProgress = ["pending", "processing", "completing"].includes(
+    etlState.status
+  );
+
+  const shouldShowEtlLoading = isEtlInProgress || etlState.isLoading;
+
+  if (showNewWalletLoading) {
+    return <InitialDataLoadingState status="pending" />;
+  }
+
+  if (shouldShowEtlLoading) {
+    return <InitialDataLoadingState status={etlState.status} />;
+  }
+
   return (
     <div className={LAYOUT.container} data-testid="v22-dashboard">
       {/* Top navigation */}
@@ -128,7 +188,7 @@ export function WalletPortfolioPresenter({
         onOpenSettings={openSettings}
         onSearch={handleSearch}
         showSearch={true}
-        isSearching={isSearching}
+        isSearching={isSearching || etlState.isLoading || isEtlInProgress}
       />
 
       {/* Header banners (Bundle-specific: SwitchPrompt, EmailReminder) */}

@@ -486,5 +486,91 @@ describe("walletPortfolioAdapter", () => {
       expect(extremeGreedResult.targetAllocation.crypto).toBe(30);
       expect(extremeGreedResult.targetAllocation.stable).toBe(70);
     });
+
+    it("should decouple regime from value if status contradicts it", () => {
+      const baseLandingData: LandingPageResponse = {
+        total_assets_usd: 10000,
+        total_debt_usd: 0,
+        total_net_usd: 10000,
+        net_portfolio_value: 10000,
+        weighted_apr: 5,
+        estimated_monthly_income: 42,
+        portfolio_roi: {
+          recommended_roi: 5,
+          recommended_period: "365d",
+          recommended_yearly_roi: 5,
+          estimated_yearly_pnl_usd: 500,
+        },
+        portfolio_allocation: {
+          btc: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          eth: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          stablecoins: {
+            total_value: 10000,
+            percentage_of_portfolio: 100,
+            wallet_tokens_value: 10000,
+            other_sources_value: 0,
+          },
+        },
+        wallet_token_summary: {
+          total_value_usd: 10000,
+          token_count: 1,
+          apr_30d: null,
+        },
+        category_summary_debt: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
+        pool_details: [],
+        positions: 0,
+        protocols: 0,
+        chains: 0,
+        wallet_count: 0,
+        last_updated: null,
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
+      };
+
+      // Value: 90 (Extreme Greed range)
+      // Status: "Extreme Fear" (explicit override from backend)
+      const conflictingData: MarketSentimentData = {
+        value: 90,
+        status: "Extreme Fear",
+        timestamp: "2025-01-01T00:00:00Z",
+        quote: {
+          quote: "Trust the status, not the value",
+          author: "Backend",
+          sentiment: "Extreme Fear",
+        },
+      };
+
+      const result = transformToWalletPortfolioData(
+        baseLandingData,
+        conflictingData
+      );
+
+      // Should obey STATUS ("Extreme Fear" -> "ef"), ignoring VALUE (90 -> "eg")
+      expect(result.currentRegime).toBe("ef");
+      expect(result.sentimentStatus).toBe("Extreme Fear");
+      // Verify targets match Extreme Fear (70/30) not Extreme Greed (30/70)
+      expect(result.targetAllocation.crypto).toBe(70);
+      expect(result.targetAllocation.stable).toBe(30);
+    });
   });
 });

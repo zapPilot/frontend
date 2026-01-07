@@ -4,7 +4,8 @@
  * Tests for formatting utilities (currency, numbers, addresses, dates).
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import dayjs from "dayjs";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
   calculateDataFreshness,
@@ -15,6 +16,7 @@ import {
   formatRelativeTime,
   formatters,
 } from "@/utils/formatters";
+import { logger } from "@/utils/logger";
 
 describe("formatCurrency", () => {
   describe("Basic formatting", () => {
@@ -379,5 +381,39 @@ describe("formatRelativeTime", () => {
 
   it("should return 'Unknown' for invalid date", () => {
     expect(formatRelativeTime("invalid")).toBe("Unknown");
+  });
+});
+
+describe("Exception Handling in Time Functions", () => {
+  it("should catch errors in calculateDataFreshness", () => {
+    // @ts-expect-error - Mocking dayjs.utc involves type mismatch with spyOn
+    const utcSpy = vi.spyOn(dayjs, "utc").mockImplementation(() => {
+      throw new Error("Dayjs Error");
+    });
+    const loggerSpy = vi
+      .spyOn(logger, "error")
+      .mockImplementation(() => undefined);
+
+    const result = calculateDataFreshness("2024-01-01");
+
+    expect(result.state).toBe("unknown");
+    expect(loggerSpy).toHaveBeenCalledWith(
+      "Error calculating data freshness",
+      expect.any(Error),
+      "formatters"
+    );
+
+    utcSpy.mockRestore();
+  });
+
+  it("should catch errors in formatRelativeTime", () => {
+    // @ts-expect-error - Mocking dayjs.utc involves type mismatch with spyOn
+    const utcSpy = vi.spyOn(dayjs, "utc").mockImplementation(() => {
+      throw new Error("Dayjs Error");
+    });
+
+    expect(formatRelativeTime("2024-01-01")).toBe("Unknown");
+
+    utcSpy.mockRestore();
   });
 });

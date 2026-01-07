@@ -10,7 +10,10 @@
 
 import { describe, expect, it } from "vitest";
 
-import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
+import {
+  getRegimeFromSentiment,
+  getRegimeFromStatus,
+} from "@/lib/domain/regimeMapper";
 
 describe("regimeMapper", () => {
   describe("getRegimeFromSentiment", () => {
@@ -134,6 +137,30 @@ describe("regimeMapper", () => {
       expect(getRegimeFromSentiment(75)).toBe("g");
       expect(getRegimeFromSentiment(75.1)).toBe("eg");
       expect(getRegimeFromSentiment(76)).toBe("eg");
+    });
+  });
+  describe("getRegimeFromStatus", () => {
+    it("should return correct regime for standard status strings", () => {
+      expect(getRegimeFromStatus("Extreme Fear")).toBe("ef");
+      expect(getRegimeFromStatus("Fear")).toBe("f");
+      expect(getRegimeFromStatus("Neutral")).toBe("n");
+      expect(getRegimeFromStatus("Greed")).toBe("g");
+      expect(getRegimeFromStatus("Extreme Greed")).toBe("eg");
+    });
+
+    it("should be case insensitive", () => {
+      expect(getRegimeFromStatus("extreme fear")).toBe("ef");
+      expect(getRegimeFromStatus("NEUTRAL")).toBe("n");
+      expect(getRegimeFromStatus("Greed")).toBe("g");
+    });
+
+    it("should handle whitespace", () => {
+      expect(getRegimeFromStatus("  Fear  ")).toBe("f");
+    });
+
+    it("should return neutral (n) for unknown status", () => {
+      expect(getRegimeFromStatus("Unknown Status")).toBe("n");
+      expect(getRegimeFromStatus("")).toBe("n");
     });
   });
 });

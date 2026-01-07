@@ -23,7 +23,7 @@ import { processSentimentData } from "@/adapters/portfolio/sentimentAdapter";
 import type { RegimeId } from "@/components/wallet/regime/regimeData";
 import { GHOST_MODE_PREVIEW } from "@/constants/ghostModeData";
 import { getDefaultQuoteForRegime } from "@/constants/regimes";
-import { getRegimeFromSentiment } from "@/lib/domain/regimeMapper";
+import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
 import { extractROIChanges } from "@/lib/portfolio/portfolioUtils";
 import type {
   DirectionType,
@@ -207,7 +207,8 @@ export function createEmptyPortfolioState(
   regimeHistoryData: RegimeHistoryData | null
 ): WalletPortfolioDataWithDirection {
   const sentimentValue = sentimentData?.value ?? 50;
-  const currentRegime = getRegimeFromSentiment(sentimentValue);
+  const sentimentStatus = sentimentData?.status ?? "Neutral";
+  const currentRegime = getRegimeFromStatus(sentimentStatus);
   const targetAllocation = getTargetAllocation(currentRegime);
 
   // Use Ghost Mode preview data for enticing visual preview

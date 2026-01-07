@@ -245,9 +245,14 @@ export function useBundlePage(
     if (!userInfo?.userId) return;
     const params = new URLSearchParams(window.location.search);
     params.set("userId", userInfo.userId);
+    if (userInfo.etlJobId) {
+      params.set("etlJobId", userInfo.etlJobId);
+    } else {
+      params.delete("etlJobId");
+    }
     const queryString = params.toString();
     router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
-  }, [router, userInfo?.userId]);
+  }, [router, userInfo?.userId, userInfo?.etlJobId]);
 
   const handleStayHere = useCallback(() => {
     // No-op: Banner will persist, user can close temporarily but it will reappear on refresh

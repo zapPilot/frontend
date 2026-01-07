@@ -2,89 +2,295 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ChartTooltip } from "@/components/charts/ChartTooltip";
-import type { PerformanceHoverData } from "@/types/chartHover";
 
+// Mock framer-motion to avoid animation issues
 vi.mock("framer-motion", () => ({
   motion: {
-    div: vi.fn(({ children, ...props }) => <div {...props}>{children}</div>),
+    div: ({ children, style, ...props }: any) => (
+      <div style={style} {...props}>
+        {children}
+      </div>
+    ),
   },
 }));
 
-const baseHoverPoint: PerformanceHoverData = {
-  chartType: "performance",
-  date: "2025-02-01",
-  x: 640,
-  y: 60,
-  value: 10000,
-  benchmark: 9500,
-};
+// Mock sub-components to verify correct switching
+vi.mock("@/components/charts/tooltipContent", () => ({
+  PerformanceTooltip: () => (
+    <div data-testid="tooltip-content-performance">Performance</div>
+  ),
+  AllocationTooltip: () => (
+    <div data-testid="tooltip-content-allocation">Allocation</div>
+  ),
+  DrawdownTooltip: () => (
+    <div data-testid="tooltip-content-drawdown">Drawdown</div>
+  ),
+  SharpeTooltip: () => <div data-testid="tooltip-content-sharpe">Sharpe</div>,
+  VolatilityTooltip: () => (
+    <div data-testid="tooltip-content-volatility">Volatility</div>
+  ),
+  DailyYieldTooltip: () => <div data-testid="tooltip-content-yield">Yield</div>,
+}));
 
 describe("ChartTooltip", () => {
-  it("renders performance tooltip content with accessible role", () => {
-    render(
-      <ChartTooltip
-        hoveredPoint={baseHoverPoint}
-        chartWidth={800}
-        chartHeight={300}
-      />
-    );
+  const defaultProps = {
+    chartWidth: 800,
+    chartHeight: 300,
+  };
 
-    const tooltip = screen.getByRole("tooltip");
-    expect(tooltip).toBeInTheDocument();
-    expect(tooltip).toHaveAttribute("data-chart-type", "performance");
-    expect(screen.getByText("Portfolio Value")).toBeInTheDocument();
-    expect(screen.getByText("$10,000.00")).toBeInTheDocument();
+  it("should not render when hoveredPoint is null", () => {
+    const { container } = render(<ChartTooltip hoveredPoint={null} />);
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it("filters allocation categories below threshold", () => {
+  it("should render correct content for 'performance' chart", () => {
     render(
       <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
+    expect(
+      screen.getByTestId("tooltip-content-performance")
+    ).toBeInTheDocument();
+  });
+
+  it("should render correct content for 'asset-allocation' chart", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
         hoveredPoint={{
           chartType: "asset-allocation",
-          date: "2025-02-01",
-          x: 320,
-          y: 180,
-          btc: 48,
-          eth: 36,
-          stablecoin: 0.4,
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          btc: 50,
+          eth: 50,
+          stablecoin: 0,
           altcoin: 0,
         }}
-        chartWidth={800}
-        chartHeight={300}
       />
     );
-
-    expect(screen.getByText("BTC")).toBeInTheDocument();
-    expect(screen.getByText("ETH")).toBeInTheDocument();
-    expect(screen.queryByText("Stablecoin")).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("tooltip-content-allocation")
+    ).toBeInTheDocument();
   });
 
-  it("clamps tooltip position when hover is near top-right legend", () => {
+  it("should render correct content for 'drawdown-recovery' chart", () => {
     render(
       <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "drawdown-recovery",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: -10,
+        }}
+      />
+    );
+    expect(screen.getByTestId("tooltip-content-drawdown")).toBeInTheDocument();
+  });
+
+  it("should render correct content for 'sharpe' chart", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "sharpe",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: 2.5,
+        }}
+      />
+    );
+    expect(screen.getByTestId("tooltip-content-sharpe")).toBeInTheDocument();
+  });
+
+  it("should render correct content for 'volatility' chart", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
         hoveredPoint={{
           chartType: "volatility",
-          date: "2025-02-01",
-          x: 760,
-          y: 40,
-          volatility: 28,
-          riskLevel: "High",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: 15,
         }}
-        chartWidth={800}
-        chartHeight={300}
+      />
+    );
+    expect(
+      screen.getByTestId("tooltip-content-volatility")
+    ).toBeInTheDocument();
+  });
+
+  it("should render correct content for 'daily-yield' chart", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "daily-yield",
+          x: 100,
+          y: 100,
+          date: "2024-01-01",
+          value: 0.5,
+        }}
+      />
+    );
+    expect(screen.getByTestId("tooltip-content-yield")).toBeInTheDocument();
+  });
+
+  // Positioning Tests
+  // Default tooltip size mock: 180x120 (TOOLTIP_MIN_WIDTH/HEIGHT)
+
+  it("should position correctly in the middle (left aligned, top aligned)", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400, // Middle of 800
+          y: 200, // Safer Y to avoid top flip. pointerY=200. top=180. 180-120=60 > 12.
+          date: "2024-01-01",
+          value: 100,
+        }}
       />
     );
 
-    const tooltip = screen.getByRole("tooltip") as HTMLDivElement;
-    const left = parseFloat(tooltip.style.left);
-    const top = parseFloat(tooltip.style.top);
+    // pointerY = 200. top = 180. translateY = -100%.
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      left: "400px",
+      top: "180px",
+      transform: "translate(-50%, -100%)",
+    });
+  });
 
-    expect(left).toBeGreaterThanOrEqual(700);
-    expect(left).toBeLessThanOrEqual(788);
-    expect(tooltip.style.transform).toContain("-100%");
+  it("should clamp to left edge", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 10, // Near left edge
+          y: 200, // Safe Y
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
 
-    expect(top).toBeGreaterThanOrEqual(55);
-    expect(top).toBeLessThanOrEqual(80);
-    expect(screen.getByText(/High volatility warning/i)).toBeInTheDocument();
+    // pointerX = 10. left - halfWidth (90) < 12.
+    // left = 12. translateX = 0.
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      left: "12px",
+      transform: "translate(0, -100%)",
+    });
+  });
+
+  it("should clamp to right edge", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 790, // Near right edge
+          y: 200, // Safe Y
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
+
+    // pointerX = 790. left + 90 > 788. left = 788. translateX = -100%.
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      left: "788px",
+      transform: "translate(-100%, -100%)",
+    });
+  });
+
+  it("should flip to bottom if too close to top", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400,
+          y: 20, // Near top
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
+
+    // pointerY = 20. top = 0. 0 - 120 < 12. Flip.
+    // top = min(20+20, 300-12) = 40. translateY = 0.
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      top: "40px",
+      transform: "translate(-50%, 0)",
+    });
+  });
+
+  it("should avoid top legend for specific chart types", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400,
+          y: 60,
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
+
+    // Y=60. pointerY=60. top=40.
+    // Edge check: 40 - 120 = -80 < 12. FLIP.
+    // top = 80. translateY = 0.
+    // Since it flipped to 0, the Legend check (translateY === "-100%") is skipped.
+    // But result is correct: it avoids top area.
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      top: "80px",
+      transform: "translate(-50%, 0)",
+    });
+  });
+
+  it("should trigger legend avoidance when valid space exists but legend overlaps", () => {
+    render(
+      <ChartTooltip
+        {...defaultProps}
+        hoveredPoint={{
+          chartType: "performance",
+          x: 400,
+          y: 190,
+          date: "2024-01-01",
+          value: 100,
+        }}
+      />
+    );
+
+    // Y=190. top=170. translateY=-100%.
+    // Edge: 170-120=50 > 12. OK.
+    // Legend: 170 < 180 (60+120). True.
+    // Flip. top = max(190+20, 60) = 210. translateY = 0.
+
+    const tooltip = screen.getByTestId("chart-tooltip");
+    expect(tooltip).toHaveStyle({
+      top: "210px",
+      transform: "translate(-50%, 0)",
+    });
   });
 });

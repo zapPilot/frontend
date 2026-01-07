@@ -14,9 +14,16 @@ import { useBundlePage } from "@/hooks/bundle/useBundlePage";
 interface BundlePageClientProps {
   userId: string;
   walletId?: string;
+  etlJobId?: string;
+  isNewUser?: boolean;
 }
 
-export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
+export function BundlePageClient({
+  userId,
+  walletId,
+  etlJobId,
+  isNewUser,
+}: BundlePageClientProps) {
   const router = useRouter();
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
@@ -37,11 +44,21 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ) {
       const searchParams = new URLSearchParams(window.location.search);
       searchParams.set("userId", userInfo.userId);
+      if (userInfo.etlJobId) {
+        searchParams.set("etlJobId", userInfo.etlJobId);
+      }
       const queryString = searchParams.toString();
       const newUrl = `/bundle?${queryString}`;
       router.replace(newUrl);
     }
-  }, [isConnected, loading, userInfo?.userId, userId, router]);
+  }, [
+    isConnected,
+    loading,
+    userInfo?.userId,
+    userInfo?.etlJobId,
+    userId,
+    router,
+  ]);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
@@ -68,7 +85,7 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
       <>
         <SwitchPromptBanner
           show={vm.switchPrompt.show}
-          onStay={vm.switchPrompt.onStay}
+          bundleUserName={vm.bundleUser?.displayName}
           onSwitch={vm.switchPrompt.onSwitch}
         />
         {vm.emailBanner.show && (
@@ -81,8 +98,8 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
     ),
     [
       vm.switchPrompt.show,
+      vm.bundleUser?.displayName,
       vm.emailBanner.show,
-      vm.switchPrompt.onStay,
       vm.switchPrompt.onSwitch,
       vm.emailBanner.onSubscribe,
       vm.emailBanner.onDismiss,
@@ -127,6 +144,8 @@ export function BundlePageClient({ userId, walletId }: BundlePageClientProps) {
   return (
     <DashboardShell
       urlUserId={userId}
+      initialEtlJobId={etlJobId}
+      isNewUser={isNewUser}
       isOwnBundle={vm.isOwnBundle}
       bundleUrl={vm.bundleUrl}
       headerBanners={headerBanners}

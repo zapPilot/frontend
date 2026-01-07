@@ -6,7 +6,12 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { logger, LogLevel, walletLogger } from "@/utils/logger";
+import {
+  Logger as LoggerClass,
+  logger,
+  LogLevel,
+  walletLogger,
+} from "@/utils/logger";
 
 describe("Logger", () => {
   let consoleDebugSpy: ReturnType<typeof vi.spyOn>;
@@ -314,6 +319,56 @@ describe("Logger", () => {
 
       await new Promise(resolve => setTimeout(resolve, 10));
       expect(fetchSpy).not.toHaveBeenCalled();
+    });
+    it("should handle non-Error remote failure", async () => {
+      const _fetchSpy = vi
+        .spyOn(global, "fetch")
+        .mockRejectedValue("String Error");
+      const consoleErrorSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+
+      logger.setRemoteLogging(true, "https://remote");
+      logger.info("Test");
+      await new Promise(resolve => setTimeout(resolve, 10));
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to send log to remote endpoint:",
+        expect.objectContaining({
+          message: expect.stringContaining("String Error"),
+        })
+      );
+    });
+  });
+
+  describe("Environment Configuration", () => {
+    const originalEnv = process.env;
+
+    afterEach(() => {
+      process.env = originalEnv;
+    });
+
+    it("should configure for production", () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "false");
+
+      const prodLogger = new LoggerClass();
+      const config = prodLogger.getConfig();
+
+      expect(config.level).toBe(LogLevel.WARN);
+      expect(config.enableConsole).toBe(false);
+      expect(config.enableRemote).toBe(true);
+    });
+
+    it("should enable debug in production if flag set", () => {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.stubEnv("NEXT_PUBLIC_ENABLE_DEBUG_LOGGING", "true");
+
+      const debugProdLogger = new LoggerClass();
+      const config = debugProdLogger.getConfig();
+
+      expect(config.level).toBe(LogLevel.DEBUG);
+      expect(config.enableConsole).toBe(true);
     });
   });
 });
