@@ -4,7 +4,9 @@ interface InitialDataLoadingStateProps {
   status?: string;
 }
 
-export function InitialDataLoadingState({ status }: InitialDataLoadingStateProps) {
+export function InitialDataLoadingState({
+  status,
+}: InitialDataLoadingStateProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center p-8 space-y-6">
       <div className="relative">
@@ -17,9 +19,9 @@ export function InitialDataLoadingState({ status }: InitialDataLoadingStateProps
           Fetching Wallet Data
         </h3>
         <p className="text-gray-400">
-          This is the first time we&apos;ve seen this wallet. We&apos;re fetching your
-          on-chain positions and calculating metrics. This usually takes 10-20
-          seconds.
+          This is the first time we&apos;ve seen this wallet. We&apos;re
+          fetching your on-chain positions and calculating metrics. This usually
+          takes 2-5 minutes.
         </p>
       </div>
 
