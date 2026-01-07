@@ -588,4 +588,68 @@ describe("accountService", () => {
       expect(error.name).toBe("AccountServiceError");
     });
   });
+  describe("triggerWalletDataFetch", () => {
+    it("should trigger data fetch successfully", async () => {
+      const mockResponse = {
+        job_id: "job123",
+        status: "processing",
+        message: "Request accepted",
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+
+      const result = await accountService.triggerWalletDataFetch(
+        "user123",
+        "0x123"
+      );
+
+      expect(result).toEqual(mockResponse);
+      expect(httpUtils.accountApi.post).toHaveBeenCalledWith(
+        "/users/user123/wallets/0x123/fetch-data"
+      );
+    });
+
+    it("should handle error during trigger", async () => {
+      const mockError = {
+        status: 500,
+        message: "Internal server error",
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(mockError);
+
+      await expect(
+        accountService.triggerWalletDataFetch("user123", "0x123")
+      ).rejects.toThrow();
+    });
+  });
+
+  describe("getEtlJobStatus", () => {
+    it("should fetch job status successfully", async () => {
+      const mockResponse = {
+        job_id: "job123",
+        status: "completed",
+        created_at: "2024-01-01T00:00:00Z",
+      };
+
+      vi.mocked(httpUtils.accountApi.get).mockResolvedValue(mockResponse);
+
+      const result = await accountService.getEtlJobStatus("job123");
+
+      expect(result).toEqual(mockResponse);
+      expect(httpUtils.accountApi.get).toHaveBeenCalledWith(
+        "/users/etl/jobs/job123"
+      );
+    });
+
+    it("should handle job not found", async () => {
+      const mockError = {
+        status: 404,
+        message: "Job not found",
+      };
+
+      vi.mocked(httpUtils.accountApi.get).mockRejectedValue(mockError);
+
+      await expect(accountService.getEtlJobStatus("job123")).rejects.toThrow();
+    });
+  });
 });

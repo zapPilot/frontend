@@ -33,7 +33,7 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary', 'html'],
+      reporter: ['text', 'json-summary', 'html', 'lcov'],
       include: ['src/**/*.{js,ts,jsx,tsx}'],
       exclude: [
         'node_modules/',
