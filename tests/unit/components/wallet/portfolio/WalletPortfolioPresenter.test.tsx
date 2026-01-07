@@ -77,6 +77,15 @@ const createMockSections = (data: WalletPortfolioDataWithDirection) => ({
   },
 });
 
+// Default ETL state for tests that don't need specific ETL behavior
+// This provides the required etlState prop with idle (no ETL in progress) status
+const DEFAULT_ETL_STATE = {
+  jobId: null,
+  status: "idle" as const,
+  errorMessage: undefined,
+  isLoading: false,
+};
+
 // Mock Next.js router
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -204,6 +213,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -256,6 +266,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -287,6 +298,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -312,6 +324,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -337,6 +350,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -373,6 +387,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -407,6 +422,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -443,6 +459,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_SCENARIOS.extremeGreed}
           sections={createMockSections(MOCK_SCENARIOS.extremeGreed)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
       let strategyCard = screen.getByTestId("strategy-card");
@@ -455,6 +472,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_DATA}
           sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
       strategyCard = screen.getByTestId("strategy-card");
@@ -474,6 +492,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={neutralMockData}
           sections={createMockSections(neutralMockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
       strategyCard = screen.getByTestId("strategy-card");
@@ -486,6 +505,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_SCENARIOS.extremeFear}
           sections={createMockSections(MOCK_SCENARIOS.extremeFear)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
       strategyCard = screen.getByTestId("strategy-card");
@@ -501,6 +521,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -529,6 +550,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_SCENARIOS.extremeGreed}
           sections={createMockSections(MOCK_SCENARIOS.extremeGreed)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -544,6 +566,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_SCENARIOS.extremeFear}
           sections={createMockSections(MOCK_SCENARIOS.extremeFear)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -567,6 +590,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={neutralMockData}
           sections={createMockSections(neutralMockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -583,6 +607,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_DATA}
           sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -596,6 +621,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={MOCK_DATA}
           sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
@@ -631,6 +657,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
           headerBanners={headerBanners}
         />
       );
@@ -651,11 +678,244 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         <WalletPortfolioPresenter
           data={mockData}
           sections={createMockSections(mockData)}
+          etlState={DEFAULT_ETL_STATE}
         />
       );
 
       // Verify the component rendered successfully
       expect(container).toBeInTheDocument();
+    });
+  });
+
+  /**
+   * ETL Loading State Tests
+   * Tests for commit e5302a738a98bd7787e2cdec0610c11068c41fc1
+   * Verifies the "completing" intermediate state keeps loading screen visible
+   * to prevent continuous /landing API requests during ETL completion.
+   */
+  describe("ETL Loading State - Race Condition Fix", () => {
+    const defaultEtlState = {
+      jobId: null,
+      status: "idle" as const,
+      errorMessage: undefined,
+      isLoading: false,
+    };
+
+    it("should show loading screen when ETL status is 'pending'", () => {
+      const mockData = MOCK_DATA;
+      const etlState = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "pending" as const,
+        isLoading: true,
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      // Should show ETL loading state, not the dashboard
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+    });
+
+    it("should show loading screen when ETL status is 'processing'", () => {
+      const mockData = MOCK_DATA;
+      const etlState = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "processing" as const,
+        isLoading: true,
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      // Should show ETL loading state
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+    });
+
+    /**
+     * CRITICAL TEST: The key fix for the race condition.
+     * "completing" status should keep the loading screen visible
+     * until completeTransition() is called after cache invalidation.
+     */
+    it("should show loading screen when ETL status is 'completing'", () => {
+      const mockData = MOCK_DATA;
+      const etlState = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "completing" as const,
+        isLoading: false,
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      // Should show ETL loading state, NOT the dashboard
+      // This is the key test - "completing" must keep loading screen visible
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+    });
+
+    it("should show dashboard when ETL status is 'idle'", () => {
+      const mockData = MOCK_DATA;
+      const etlState = defaultEtlState;
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      // Should show the dashboard when ETL is idle
+      expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
+    });
+
+    it("should show dashboard when ETL status is 'failed'", () => {
+      const mockData = MOCK_DATA;
+      const etlState = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "failed" as const,
+        errorMessage: "ETL job failed",
+        isLoading: false,
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      // Failed ETL should show dashboard (not loading screen)
+      expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
+    });
+
+    it("should include 'completing' in isEtlInProgress check", () => {
+      // This tests the logic: ["pending", "processing", "completing"].includes(status)
+      const mockData = MOCK_DATA;
+
+      // Test all three statuses that should trigger loading screen
+      const inProgressStatuses = [
+        "pending",
+        "processing",
+        "completing",
+      ] as const;
+
+      for (const status of inProgressStatuses) {
+        const etlState = {
+          ...defaultEtlState,
+          jobId: "test-job",
+          status,
+          isLoading: status !== "completing",
+        };
+
+        const { unmount } = render(
+          <WalletPortfolioPresenter
+            data={mockData}
+            sections={createMockSections(mockData)}
+            etlState={etlState}
+          />
+        );
+
+        // All in-progress statuses should NOT show the dashboard
+        expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+        unmount();
+      }
+    });
+
+    it("should show loading when etlState.isLoading is true", () => {
+      const mockData = MOCK_DATA;
+      const etlState = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "idle" as const,
+        isLoading: true, // Just isLoading should trigger loading screen
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState}
+        />
+      );
+
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+    });
+
+    it("should correctly evaluate shouldShowEtlLoading with simplified logic", () => {
+      // Test the simplified logic: isEtlInProgress || etlState.isLoading
+      const mockData = MOCK_DATA;
+
+      // Case 1: isEtlInProgress true (completing status), isLoading false
+      const etlState1 = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "completing" as const,
+        isLoading: false,
+      };
+
+      const { unmount: unmount1 } = render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState1}
+        />
+      );
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+      unmount1();
+
+      // Case 2: isEtlInProgress false (idle), isLoading true
+      const etlState2 = {
+        ...defaultEtlState,
+        jobId: "test-job",
+        status: "idle" as const,
+        isLoading: true,
+      };
+
+      const { unmount: unmount2 } = render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState2}
+        />
+      );
+      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+      unmount2();
+
+      // Case 3: Both false - should show dashboard
+      const etlState3 = {
+        ...defaultEtlState,
+        status: "idle" as const,
+        isLoading: false,
+      };
+
+      render(
+        <WalletPortfolioPresenter
+          data={mockData}
+          sections={createMockSections(mockData)}
+          etlState={etlState3}
+        />
+      );
+      expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
     });
   });
 });

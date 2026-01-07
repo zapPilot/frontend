@@ -70,7 +70,11 @@ export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
  * @param status - The status string from the API (e.g. "Extreme Fear", "Neutral")
  * @returns RegimeId corresponding to the status
  */
-export function getRegimeFromStatus(status: string): RegimeId {
+export function getRegimeFromStatus(status?: string | null): RegimeId {
+  if (!status) {
+    return "n";
+  }
+
   const normalizedStatus = status.toLowerCase().trim();
   
   switch (normalizedStatus) {

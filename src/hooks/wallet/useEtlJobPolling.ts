@@ -11,7 +11,7 @@
  */
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
     type EtlJobResponse,
@@ -59,6 +59,13 @@ export interface UseEtlJobPollingReturn {
 const ETL_JOB_QUERY_KEY = ["etl-job-status"];
 const POLLING_INTERVAL = 3000; // 3 seconds
 
+const normalizeStatus = (
+  status: string
+): EtlJobPollingState["status"] =>
+  status === "completed"
+    ? "completing"
+    : (status as EtlJobPollingState["status"]);
+
 /**
  * Hook for polling ETL job status
  *
@@ -79,6 +86,9 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
   const queryClient = useQueryClient();
   const [jobId, setJobId] = useState<string | null>(null);
   const [triggerError, setTriggerError] = useState<string | undefined>();
+  const [latestStatus, setLatestStatus] = useState<
+    EtlJobPollingState["status"] | null
+  >(null);
 
   // Poll job status when we have a job ID
   const { data: jobStatus, isLoading: isPolling } =
@@ -97,17 +107,18 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
       staleTime: 0, // Always refetch
     });
 
+  useEffect(() => {
+    if (!jobStatus) return;
+    setLatestStatus(normalizeStatus(jobStatus.status));
+  }, [jobStatus]);
+
   // Determine current state
   // Map "completed" from API to "completing" to prevent premature query re-enablement
   const deriveStatus = (): EtlJobPollingState["status"] => {
     if (!jobId) return "idle";
-    if (!jobStatus) return "pending";
-
-    // Transition "completed" from API to "completing" internally
-    // This keeps queries disabled until completeTransition() is called
-    if (jobStatus.status === "completed") return "completing";
-
-    return jobStatus.status as EtlJobPollingState["status"];
+    if (jobStatus) return normalizeStatus(jobStatus.status);
+    if (latestStatus) return latestStatus;
+    return "pending";
   };
 
   const state: EtlJobPollingState = {
@@ -134,6 +145,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
         }
 
         if (response.job_id) {
+          setLatestStatus("pending");
           setJobId(response.job_id);
         }
       } catch (error) {
@@ -150,6 +162,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
       return;
     }
     setTriggerError(undefined);
+    setLatestStatus("pending");
     setJobId(existingJobId);
   }, []);
 
@@ -157,6 +170,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
   const reset = useCallback(() => {
     setJobId(null);
     setTriggerError(undefined);
+    setLatestStatus(null);
     queryClient.removeQueries({ queryKey: ETL_JOB_QUERY_KEY });
   }, [queryClient]);
 
