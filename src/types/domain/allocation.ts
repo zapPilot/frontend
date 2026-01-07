@@ -21,7 +21,7 @@ import { z } from "zod";
  * Used in: deposit, withdraw, rebalance operations
  * Split: crypto (BTC, ETH, etc.) vs. stablecoins (USDC, USDT)
  */
-const allocationBreakdownSchema = z.object({
+export const allocationBreakdownSchema = z.object({
   crypto: z.number().min(0).max(100),
   stable: z.number().min(0).max(100),
   simplifiedCrypto: z
@@ -45,7 +45,7 @@ const allocationBreakdownSchema = z.object({
  * Used in: regime transitions, strategy visualization
  * Split: spot crypto, liquidity pool positions, stablecoins
  */
-const regimeAllocationBreakdownSchema = z.object({
+export const regimeAllocationBreakdownSchema = z.object({
   spot: z.number().min(0).max(100),
   lp: z.number().min(0).max(100),
   stable: z.number().min(0).max(100),
@@ -73,14 +73,6 @@ export type RegimeAllocationBreakdown = z.infer<
 // CONVERSION UTILITIES
 // ============================================================================
 
-
-
-
-
 // ============================================================================
 // VALIDATION UTILITIES
 // ============================================================================
-
-
-
-

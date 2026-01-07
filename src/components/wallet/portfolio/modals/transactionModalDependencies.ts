@@ -6,11 +6,7 @@
  */
 
 export { CompactSelectorButton } from "./components/CompactSelectorButton";
-export {
-  
-  TransactionFormActionsWithForm,
-  
-} from "./components/TransactionModalParts";
+export { TransactionFormActionsWithForm } from "./components/TransactionModalParts";
 export { resolveActionLabel } from "./utils/actionLabelUtils";
 export { getChainLogo } from "./utils/assetHelpers";
 export {

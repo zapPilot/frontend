@@ -14,7 +14,10 @@ import { z } from "zod";
 /**
  * Schema for base user object
  */
-const userSchema = z.object({
+/**
+ * Schema for base user object
+ */
+export const userSchema = z.object({
   id: z.string(),
   // eslint-disable-next-line sonarjs/deprecation
   email: z.string().email().optional(),
@@ -25,7 +28,7 @@ const userSchema = z.object({
 /**
  * Schema for user crypto wallet
  */
-const userCryptoWalletSchema = z.object({
+export const userCryptoWalletSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   wallet: z.string(),
@@ -37,7 +40,7 @@ const userCryptoWalletSchema = z.object({
 /**
  * Schema for subscription plan
  */
-const planSchema = z.object({
+export const planSchema = z.object({
   code: z.string(),
   name: z.string(),
   tier: z.number(),
@@ -46,7 +49,7 @@ const planSchema = z.object({
 /**
  * Schema for user subscription
  */
-const userSubscriptionSchema = z.object({
+export const userSubscriptionSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   plan_code: z.string(),
@@ -56,6 +59,35 @@ const userSubscriptionSchema = z.object({
   is_canceled: z.boolean(),
   created_at: z.string(),
   plan: planSchema.optional(),
+});
+
+/**
+ * Schema for account token
+ */
+export const accountTokenSchema = z.object({
+  id: z.string(),
+  chain: z.string(),
+  name: z.string(),
+  symbol: z.string(),
+  display_symbol: z.string().optional().nullable(),
+  optimized_symbol: z.string().optional().nullable(),
+  decimals: z.number(),
+  logo_url: z.string().optional().nullable(),
+  protocol_id: z.string().optional().nullable(),
+  price: z.number(),
+  is_verified: z.boolean(),
+  is_core: z.boolean(),
+  is_wallet: z.boolean(),
+  time_at: z.number().optional().nullable(),
+  amount: z.number(),
+});
+
+/**
+ * Schema for health check response
+ */
+export const healthCheckResponseSchema = z.object({
+  status: z.string(),
+  timestamp: z.string(),
 });
 
 // ============================================================================
@@ -89,9 +121,6 @@ export const addWalletResponseSchema = z.object({
 /**
  * Schema for update email response
  */
-/**
- * Schema for update email response
- */
 export const updateEmailResponseSchema = z.object({
   success: z.boolean(),
   message: z.string(),
@@ -112,8 +141,6 @@ export const userProfileResponseSchema = z.object({
   wallets: z.array(userCryptoWalletSchema),
   subscription: userSubscriptionSchema.optional(),
 });
-
-
 
 // ============================================================================
 // TYPE EXPORTS
@@ -143,6 +170,10 @@ export const userProfileResponseSchema = z.object({
 >;
 /** @public */ export type MessageResponse = z.infer<
   typeof messageResponseSchema
+>;
+/** @public */ export type AccountToken = z.infer<typeof accountTokenSchema>;
+/** @public */ export type HealthCheckResponse = z.infer<
+  typeof healthCheckResponseSchema
 >;
 
 // ============================================================================
@@ -195,7 +226,13 @@ export function validateUserWallets(data: unknown): UserCryptoWallet[] {
   return z.array(userCryptoWalletSchema).parse(data);
 }
 
-
+/**
+ * Validates account tokens array from API
+ * Returns validated data or throws ZodError with detailed error messages
+ */
+export function validateAccountTokens(data: unknown): AccountToken[] {
+  return z.array(accountTokenSchema).parse(data);
+}
 
 /**
  * Validates message response from API
@@ -203,6 +240,16 @@ export function validateUserWallets(data: unknown): UserCryptoWallet[] {
  */
 export function validateMessageResponse(data: unknown): MessageResponse {
   return messageResponseSchema.parse(data);
+}
+
+/**
+ * Validates health check response from API
+ * Returns validated data or throws ZodError with detailed error messages
+ */
+export function validateHealthCheckResponse(
+  data: unknown
+): HealthCheckResponse {
+  return healthCheckResponseSchema.parse(data);
 }
 
 // safeValidateUserProfile removed (test-only usage)
