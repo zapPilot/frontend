@@ -9,16 +9,11 @@
   "ignore": ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}", "tests/**/*"],
   "ignoreExports": {
     "src/schemas/api/accountSchemas.ts": [
-      "User",
       "UserCryptoWallet",
-      "Plan",
-      "UserSubscription",
       "ConnectWalletResponse",
       "AddWalletResponse",
       "UpdateEmailResponse",
       "UserProfileResponse",
-      "AccountToken",
-      "HealthCheckResponse",
       "MessageResponse"
     ],
     "src/schemas/api/analyticsSchemas.ts": ["ProtocolYieldToday"],

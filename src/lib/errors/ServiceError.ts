@@ -98,25 +98,4 @@ export interface Result<T = void, E = ServiceError> {
  * @param data - The success value
  * @returns Result object with success=true and data
  */
-export function Ok<T>(data: T): Result<T, never> {
-  return { success: true, data };
-}
 
-/**
- * Create a successful result with no data (void)
- *
- * @returns Result object with success=true and no data
- */
-export function OkVoid(): Result<void, never> {
-  return { success: true };
-}
-
-/**
- * Create an error result
- *
- * @param error - The error that occurred
- * @returns Result object with success=false and error
- */
-export function Err<E extends ServiceError>(error: E): Result<never, E> {
-  return { success: false, error };
-}

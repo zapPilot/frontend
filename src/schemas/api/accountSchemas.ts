@@ -14,7 +14,7 @@ import { z } from "zod";
 /**
  * Schema for base user object
  */
-export const userSchema = z.object({
+const userSchema = z.object({
   id: z.string(),
   // eslint-disable-next-line sonarjs/deprecation
   email: z.string().email().optional(),
@@ -25,7 +25,7 @@ export const userSchema = z.object({
 /**
  * Schema for user crypto wallet
  */
-export const userCryptoWalletSchema = z.object({
+const userCryptoWalletSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   wallet: z.string(),
@@ -37,7 +37,7 @@ export const userCryptoWalletSchema = z.object({
 /**
  * Schema for subscription plan
  */
-export const planSchema = z.object({
+const planSchema = z.object({
   code: z.string(),
   name: z.string(),
   tier: z.number(),
@@ -46,7 +46,7 @@ export const planSchema = z.object({
 /**
  * Schema for user subscription
  */
-export const userSubscriptionSchema = z.object({
+const userSubscriptionSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   plan_code: z.string(),
@@ -65,7 +65,7 @@ export const userSubscriptionSchema = z.object({
 /**
  * Schema for connect wallet response
  */
-export const etlJobResponseSchema = z.object({
+const etlJobResponseSchema = z.object({
   job_id: z.string().nullable(),
   status: z.string(),
   message: z.string(),
@@ -89,8 +89,18 @@ export const addWalletResponseSchema = z.object({
 /**
  * Schema for update email response
  */
+/**
+ * Schema for update email response
+ */
 export const updateEmailResponseSchema = z.object({
   success: z.boolean(),
+  message: z.string(),
+});
+
+/**
+ * Schema for simple message response
+ */
+export const messageResponseSchema = z.object({
   message: z.string(),
 });
 
@@ -103,41 +113,7 @@ export const userProfileResponseSchema = z.object({
   subscription: userSubscriptionSchema.optional(),
 });
 
-/**
- * Schema for account token (from getUserTokens endpoint)
- */
-export const accountTokenSchema = z.object({
-  id: z.string(),
-  chain: z.string(),
-  name: z.string(),
-  symbol: z.string(),
-  display_symbol: z.string(),
-  optimized_symbol: z.string(),
-  decimals: z.number(),
-  logo_url: z.string(),
-  protocol_id: z.string(),
-  price: z.number(),
-  is_verified: z.boolean(),
-  is_core: z.boolean(),
-  is_wallet: z.boolean(),
-  time_at: z.number(),
-  amount: z.number(),
-});
 
-/**
- * Schema for health check response
- */
-export const healthCheckResponseSchema = z.object({
-  status: z.string(),
-  timestamp: z.string(),
-});
-
-/**
- * Schema for simple message response
- */
-export const messageResponseSchema = z.object({
-  message: z.string(),
-});
 
 // ============================================================================
 // TYPE EXPORTS
@@ -164,10 +140,6 @@ export const messageResponseSchema = z.object({
 >;
 /** @public */ export type UserProfileResponse = z.infer<
   typeof userProfileResponseSchema
->;
-/** @public */ export type AccountToken = z.infer<typeof accountTokenSchema>;
-/** @public */ export type HealthCheckResponse = z.infer<
-  typeof healthCheckResponseSchema
 >;
 /** @public */ export type MessageResponse = z.infer<
   typeof messageResponseSchema
@@ -216,14 +188,6 @@ export function validateUserProfileResponse(
 }
 
 /**
- * Validates account tokens array from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateAccountTokens(data: unknown): AccountToken[] {
-  return z.array(accountTokenSchema).parse(data);
-}
-
-/**
  * Validates user crypto wallets array from API
  * Returns validated data or throws ZodError with detailed error messages
  */
@@ -231,15 +195,7 @@ export function validateUserWallets(data: unknown): UserCryptoWallet[] {
   return z.array(userCryptoWalletSchema).parse(data);
 }
 
-/**
- * Validates health check response from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateHealthCheckResponse(
-  data: unknown
-): HealthCheckResponse {
-  return healthCheckResponseSchema.parse(data);
-}
+
 
 /**
  * Validates message response from API

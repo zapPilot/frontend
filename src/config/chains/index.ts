@@ -9,7 +9,7 @@ import { toThirdWebChains } from "./adapters";
 import { SUPPORTED_CHAINS } from "./definitions";
 
 // Canonical chain definitions
-export { CHAIN_REGISTRY, SUPPORTED_CHAINS } from "./definitions";
+export { SUPPORTED_CHAINS } from "./definitions";
 
 // Adapter functions
 export { getMainnetChains, toThirdWebChains } from "./adapters";
