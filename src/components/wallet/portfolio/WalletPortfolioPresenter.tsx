@@ -97,7 +97,11 @@ export function WalletPortfolioPresenter({
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
 
-      const { user_id: searchedUserId, etl_job: etlJob, is_new_user: searchedIsNewUser } = response;
+      const {
+        user_id: searchedUserId,
+        etl_job: etlJob,
+        is_new_user: searchedIsNewUser,
+      } = response;
 
       const searchParams = new URLSearchParams({ userId: searchedUserId });
       if (etlJob?.job_id) {

@@ -76,7 +76,7 @@ export function getRegimeFromStatus(status?: string | null): RegimeId {
   }
 
   const normalizedStatus = status.toLowerCase().trim();
-  
+
   switch (normalizedStatus) {
     case "extreme fear":
       return "ef";

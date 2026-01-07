@@ -153,7 +153,9 @@ export const messageResponseSchema = z.object({
 /** @public */ export type ConnectWalletResponse = z.infer<
   typeof connectWalletResponseSchema
 >;
-/** @public */ export type EtlJobResponse = z.infer<typeof etlJobResponseSchema>;
+/** @public */ export type EtlJobResponse = z.infer<
+  typeof etlJobResponseSchema
+>;
 /** @public */ export type AddWalletResponse = z.infer<
   typeof addWalletResponseSchema
 >;

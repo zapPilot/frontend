@@ -197,7 +197,9 @@ describe("BalanceCard", () => {
       );
 
       expect(screen.getByTestId("deposit-button")).not.toHaveAttribute("title");
-      expect(screen.getByTestId("withdraw-button")).not.toHaveAttribute("title");
+      expect(screen.getByTestId("withdraw-button")).not.toHaveAttribute(
+        "title"
+      );
     });
 
     it("should default isOwnBundle to true", () => {

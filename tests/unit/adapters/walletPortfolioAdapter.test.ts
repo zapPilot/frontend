@@ -502,12 +502,36 @@ describe("walletPortfolioAdapter", () => {
           estimated_yearly_pnl_usd: 500,
         },
         portfolio_allocation: {
-          btc: { total_value: 0, percentage_of_portfolio: 0, wallet_tokens_value: 0, other_sources_value: 0 },
-          eth: { total_value: 0, percentage_of_portfolio: 0, wallet_tokens_value: 0, other_sources_value: 0 },
-          others: { total_value: 0, percentage_of_portfolio: 0, wallet_tokens_value: 0, other_sources_value: 0 },
-          stablecoins: { total_value: 10000, percentage_of_portfolio: 100, wallet_tokens_value: 10000, other_sources_value: 0 },
+          btc: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          eth: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          others: {
+            total_value: 0,
+            percentage_of_portfolio: 0,
+            wallet_tokens_value: 0,
+            other_sources_value: 0,
+          },
+          stablecoins: {
+            total_value: 10000,
+            percentage_of_portfolio: 100,
+            wallet_tokens_value: 10000,
+            other_sources_value: 0,
+          },
         },
-        wallet_token_summary: { total_value_usd: 10000, token_count: 1, apr_30d: null },
+        wallet_token_summary: {
+          total_value_usd: 10000,
+          token_count: 1,
+          apr_30d: null,
+        },
         category_summary_debt: { btc: 0, eth: 0, stablecoins: 0, others: 0 },
         pool_details: [],
         positions: 0,
@@ -515,7 +539,12 @@ describe("walletPortfolioAdapter", () => {
         chains: 0,
         wallet_count: 0,
         last_updated: null,
-        apr_coverage: { matched_pools: 0, total_pools: 0, coverage_percentage: 0, matched_asset_value_usd: 0 },
+        apr_coverage: {
+          matched_pools: 0,
+          total_pools: 0,
+          coverage_percentage: 0,
+          matched_asset_value_usd: 0,
+        },
       };
 
       // Value: 90 (Extreme Greed range)
@@ -531,7 +560,10 @@ describe("walletPortfolioAdapter", () => {
         },
       };
 
-      const result = transformToWalletPortfolioData(baseLandingData, conflictingData);
+      const result = transformToWalletPortfolioData(
+        baseLandingData,
+        conflictingData
+      );
 
       // Should obey STATUS ("Extreme Fear" -> "ef"), ignoring VALUE (90 -> "eg")
       expect(result.currentRegime).toBe("ef");

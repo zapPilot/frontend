@@ -4,13 +4,13 @@ import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfoli
 import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import {
-    BalanceCard,
-    PortfolioComposition,
+  BalanceCard,
+  PortfolioComposition,
 } from "@/components/wallet/portfolio/components/shared";
 import { StrategyCard } from "@/components/wallet/portfolio/components/strategy";
 import {
-    BalanceCardSkeleton,
-    PortfolioCompositionSkeleton,
+  BalanceCardSkeleton,
+  PortfolioCompositionSkeleton,
 } from "@/components/wallet/portfolio/views/DashboardSkeleton";
 import type { Regime } from "@/components/wallet/regime/regimeData";
 import type { ModalType } from "@/types/portfolio";

@@ -51,7 +51,14 @@ export function BundlePageClient({
       const newUrl = `/bundle?${queryString}`;
       router.replace(newUrl);
     }
-  }, [isConnected, loading, userInfo?.userId, userInfo?.etlJobId, userId, router]);
+  }, [
+    isConnected,
+    loading,
+    userInfo?.userId,
+    userInfo?.etlJobId,
+    userId,
+    router,
+  ]);
 
   useEffect(() => {
     const sanitizeInlineScripts = () => {
@@ -98,7 +105,6 @@ export function BundlePageClient({
       vm.emailBanner.onDismiss,
     ]
   );
-
 
   const walletManagerOverlay = useMemo(
     () => (

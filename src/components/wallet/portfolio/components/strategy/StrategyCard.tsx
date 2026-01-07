@@ -4,16 +4,16 @@ import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
-    getRegimeAllocation,
-    type Regime,
-    regimes,
+  getRegimeAllocation,
+  type Regime,
+  regimes,
 } from "@/components/wallet/regime/regimeData";
 import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
 import type {
-    SectionState,
-    SentimentData,
+  SectionState,
+  SentimentData,
 } from "@/types/portfolio-progressive";
 
 import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";

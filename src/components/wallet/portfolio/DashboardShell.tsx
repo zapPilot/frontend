@@ -91,7 +91,14 @@ export function DashboardShell({
     };
 
     void handleCompletion();
-  }, [etlState.status, refetch, completeTransition, urlUserId, queryClient, router]);
+  }, [
+    etlState.status,
+    refetch,
+    completeTransition,
+    urlUserId,
+    queryClient,
+    router,
+  ]);
   const { data: sentimentData } = useSentimentData();
   const { data: regimeHistoryData } = useRegimeHistory();
   const safeError = error instanceof Error ? error : null;

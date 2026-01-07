@@ -4,8 +4,8 @@ import { useMemo } from "react";
 import { type WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
 import {
-    getRegimeAllocation,
-    type Regime,
+  getRegimeAllocation,
+  type Regime,
 } from "@/components/wallet/regime/regimeData";
 import { GRADIENTS } from "@/constants/design-system";
 import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWeights";
@@ -13,9 +13,9 @@ import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWei
 import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
 import { AllocationBars, TargetAllocationBar } from "../allocation";
 import {
-    buildRealCryptoAssets,
-    buildTargetAssetsWithWeights,
-    buildTargetCryptoAssets,
+  buildRealCryptoAssets,
+  buildTargetAssetsWithWeights,
+  buildTargetCryptoAssets,
 } from "../utils/portfolioCompositionHelpers";
 
 interface PortfolioCompositionProps {

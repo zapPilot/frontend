@@ -14,10 +14,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useState } from "react";
 
 import {
-    type EtlJobResponse,
-    type EtlJobStatusResponse,
-    getEtlJobStatus,
-    triggerWalletDataFetch,
+  type EtlJobResponse,
+  type EtlJobStatusResponse,
+  getEtlJobStatus,
+  triggerWalletDataFetch,
 } from "@/services/accountService";
 
 /**
@@ -59,9 +59,7 @@ export interface UseEtlJobPollingReturn {
 const ETL_JOB_QUERY_KEY = ["etl-job-status"];
 const POLLING_INTERVAL = 3000; // 3 seconds
 
-const normalizeStatus = (
-  status: string
-): EtlJobPollingState["status"] =>
+const normalizeStatus = (status: string): EtlJobPollingState["status"] =>
   status === "completed"
     ? "completing"
     : (status as EtlJobPollingState["status"]);
@@ -96,7 +94,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
       queryKey: [...ETL_JOB_QUERY_KEY, jobId],
       queryFn: () => getEtlJobStatus(jobId!),
       enabled: !!jobId,
-      refetchInterval: (query) => {
+      refetchInterval: query => {
         const data = query.state.data;
         // Stop polling when job is completed or failed
         if (data?.status === "completed" || data?.status === "failed") {

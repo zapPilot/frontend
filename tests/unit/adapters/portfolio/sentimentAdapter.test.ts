@@ -13,7 +13,7 @@ import type { MarketSentimentData } from "@/services/sentimentService";
 
 // Mock dependencies
 vi.mock("@/constants/regimes", () => ({
-  getDefaultQuoteForRegime: vi.fn((regime) => `Default quote for ${regime}`),
+  getDefaultQuoteForRegime: vi.fn(regime => `Default quote for ${regime}`),
 }));
 
 // We don't verify the internal implementation of getRegimeFromStatus here (that's in regimeMapper.test.ts)
@@ -35,8 +35,8 @@ describe("sentimentAdapter", () => {
         quote: {
           quote: "Test Quote",
           author: "Test Author",
-          sentiment: "Fear"
-        }
+          sentiment: "Fear",
+        },
       };
 
       const result = processSentimentData(mismatchedData);
@@ -65,8 +65,8 @@ describe("sentimentAdapter", () => {
         quote: {
           quote: "Custom Quote",
           author: "Author",
-          sentiment: "Extreme Fear"
-        }
+          sentiment: "Extreme Fear",
+        },
       };
 
       const result = processSentimentData(data);
@@ -78,7 +78,7 @@ describe("sentimentAdapter", () => {
         value: 10,
         status: "Extreme Fear",
         timestamp: "2025-01-01T00:00:00Z",
-        quote: undefined as any // Simulate missing quote structure
+        quote: undefined as any, // Simulate missing quote structure
       };
 
       const result = processSentimentData(data);
@@ -94,8 +94,8 @@ describe("sentimentAdapter", () => {
         quote: {
           quote: "Q",
           author: "A",
-          sentiment: "Extreme Greed"
-        }
+          sentiment: "Extreme Greed",
+        },
       };
 
       const result = processSentimentData(data);
