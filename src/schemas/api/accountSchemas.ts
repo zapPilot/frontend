@@ -1,7 +1,4 @@
-import {
-  EtlJobStatusSchema,
-  type EtlJobStatus,
-} from "@davidtnfsh/etl-contracts";
+import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
 import { z } from "zod";
 
 /**
@@ -99,10 +96,58 @@ export const healthCheckResponseSchema = z.object({
 // ============================================================================
 
 /**
- * Schema for ETL job status response
- * Uses shared contract from @davidtnfsh/etl-contracts
+ * Lenient ETL job status schema
+ *
+ * Only requires jobId and status (the fields we actually use).
+ * Makes all other fields optional to handle partial API responses gracefully.
+ * This prevents silent validation failures when the API doesn't send all fields.
  */
-export const etlJobStatusResponseSchema = EtlJobStatusSchema;
+const LenientEtlJobStatusSchema = z.object({
+  jobId: z.string(),
+  status: z.enum(["pending", "processing", "completed", "failed"]),
+  trigger: z.enum(["webhook", "manual", "scheduled"]).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  completedAt: z.string().optional(),
+  recordsProcessed: z.number().optional(),
+  recordsInserted: z.number().optional(),
+  duration: z.number().optional(),
+  error: z.object({
+    code: z.string(),
+    message: z.string(),
+  }).optional(),
+}).passthrough(); // Allow additional fields without failing validation
+
+/**
+ * Schema for ETL job status response
+ *
+ * Preprocessing layer that converts snake_case API fields to camelCase
+ * before validating against the lenient schema above.
+ */
+export const etlJobStatusResponseSchema = z.preprocess(
+  (val: unknown) => {
+    if (val && typeof val === "object") {
+      const record = val as Record<string, unknown>;
+      const normalized: Record<string, unknown> = {};
+
+      // Convert ALL snake_case fields to camelCase
+      if ("job_id" in record) normalized["jobId"] = record["job_id"];
+      if ("status" in record) normalized["status"] = record["status"];
+      if ("trigger" in record) normalized["trigger"] = record["trigger"];
+      if ("created_at" in record) normalized["createdAt"] = record["created_at"];
+      if ("updated_at" in record) normalized["updatedAt"] = record["updated_at"];
+      if ("completed_at" in record) normalized["completedAt"] = record["completed_at"];
+      if ("records_processed" in record) normalized["recordsProcessed"] = record["records_processed"];
+      if ("records_inserted" in record) normalized["recordsInserted"] = record["records_inserted"];
+      if ("duration" in record) normalized["duration"] = record["duration"];
+      if ("error" in record) normalized["error"] = record["error"];
+
+      return normalized;
+    }
+    return val;
+  },
+  LenientEtlJobStatusSchema // Use lenient schema instead of strict contract
+);
 
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),

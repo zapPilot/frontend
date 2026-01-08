@@ -149,7 +149,7 @@ describe("useEtlJobPolling", () => {
     it("should return 'failed' status when API returns failed", async () => {
       mockGetEtlJobStatus.mockResolvedValue({
         status: "failed",
-        error_message: "ETL processing failed",
+        error: { message: "ETL processing failed" },
       });
 
       const { result } = renderHook(() => useEtlJobPolling(), {

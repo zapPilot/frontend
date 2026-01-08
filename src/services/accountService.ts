@@ -4,28 +4,26 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
-import {
-  EtlJobStatusSchema,
-  type EtlJobStatus,
-} from "@davidtnfsh/etl-contracts";
+import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
 
 import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-    validateAddWalletResponse,
-    validateConnectWalletResponse,
-    validateMessageResponse,
-    validateUpdateEmailResponse,
-    validateUserProfileResponse,
-    validateUserWallets,
+  connectWalletResponseSchema,
+  etlJobStatusResponseSchema,
+  validateAddWalletResponse,
+  validateMessageResponse,
+  validateUpdateEmailResponse,
+  validateUserProfileResponse,
+  validateUserWallets,
 } from "@/schemas/api/accountSchemas";
 import type {
-    AddWalletResponse,
-    ConnectWalletResponse,
-    UpdateEmailResponse,
-    UserCryptoWallet,
-    UserProfileResponse,
+  AddWalletResponse,
+  ConnectWalletResponse,
+  UpdateEmailResponse,
+  UserCryptoWallet,
+  UserProfileResponse,
 } from "@/types/domain/user.types";
 
 // Re-export AccountServiceError for backward compatibility
@@ -128,7 +126,36 @@ export const connectWallet = async (
       wallet: walletAddress,
     })
   );
-  return validateConnectWalletResponse(response);
+
+  // DEBUG: Log raw response to see what API actually returns
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "🔍 Raw connect-wallet response:",
+      JSON.stringify(response, null, 2)
+    );
+  }
+
+  // Use safeParse to see validation details
+  const validationResult = connectWalletResponseSchema.safeParse(response);
+  if (!validationResult.success) {
+    console.error("❌ Validation failed:", validationResult.error.issues);
+    // Still throw to maintain error handling, but we've logged the details
+    throw new AccountServiceError(
+      "Connect wallet response validation failed",
+      500,
+      "VALIDATION_ERROR",
+      { issues: validationResult.error.issues }
+    );
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "✅ Validated response:",
+      JSON.stringify(validationResult.data, null, 2)
+    );
+  }
+
+  return validationResult.data as ConnectWalletResponse;
 };
 
 /**
@@ -296,5 +323,5 @@ export const getEtlJobStatus = async (
     accountApiClient.get<EtlJobStatus>(`/etl/jobs/${jobId}`)
   );
   // Validate response against contract schema
-  return EtlJobStatusSchema.parse(response);
+  return etlJobStatusResponseSchema.parse(response);
 };

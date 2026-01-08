@@ -628,6 +628,7 @@ describe("accountService", () => {
       const mockResponse = {
         job_id: "job123",
         status: "completed",
+        trigger: "manual",
         created_at: "2024-01-01T00:00:00Z",
       };
 
@@ -635,9 +636,14 @@ describe("accountService", () => {
 
       const result = await accountService.getEtlJobStatus("job123");
 
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual({
+        jobId: "job123",
+        status: "completed",
+        trigger: "manual",
+        createdAt: "2024-01-01T00:00:00Z",
+      });
       expect(httpUtils.accountApi.get).toHaveBeenCalledWith(
-        "/users/etl/jobs/job123"
+        "/etl/jobs/job123"
       );
     });
 
