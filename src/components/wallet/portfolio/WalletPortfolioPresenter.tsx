@@ -104,8 +104,8 @@ export function WalletPortfolioPresenter({
       } = response;
 
       const searchParams = new URLSearchParams({ userId: searchedUserId });
-      if (etlJob?.job_id) {
-        searchParams.set("etlJobId", etlJob.job_id);
+      if (etlJob?.jobId) {
+        searchParams.set("etlJobId", etlJob.jobId);
       }
       // Pass isNewUser flag so the bundle page knows to show loading state
       if (searchedIsNewUser) {

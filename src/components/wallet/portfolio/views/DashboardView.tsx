@@ -64,6 +64,7 @@ export function DashboardView({
               isLoading={false}
               onOpenModal={onOpenModal}
               lastUpdated={data.lastUpdated}
+              riskMetrics={data.riskMetrics}
             />
           </GhostModeOverlay>
         ) : isEmptyState ? (
@@ -74,6 +75,7 @@ export function DashboardView({
             isLoading={false}
             onOpenModal={onOpenModal}
             lastUpdated={data.lastUpdated}
+            riskMetrics={data.riskMetrics}
           />
         ) : (
           <SectionWrapper
@@ -88,6 +90,7 @@ export function DashboardView({
                 isLoading={false}
                 onOpenModal={onOpenModal}
                 lastUpdated={data.lastUpdated}
+                riskMetrics={data.riskMetrics}
               />
             )}
           </SectionWrapper>

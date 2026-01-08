@@ -4,23 +4,28 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
+import {
+  EtlJobStatusSchema,
+  type EtlJobStatus,
+} from "@davidtnfsh/etl-contracts";
+
 import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-  validateAddWalletResponse,
-  validateConnectWalletResponse,
-  validateMessageResponse,
-  validateUpdateEmailResponse,
-  validateUserProfileResponse,
-  validateUserWallets,
+    validateAddWalletResponse,
+    validateConnectWalletResponse,
+    validateMessageResponse,
+    validateUpdateEmailResponse,
+    validateUserProfileResponse,
+    validateUserWallets,
 } from "@/schemas/api/accountSchemas";
 import type {
-  AddWalletResponse,
-  ConnectWalletResponse,
-  UpdateEmailResponse,
-  UserCryptoWallet,
-  UserProfileResponse,
+    AddWalletResponse,
+    ConnectWalletResponse,
+    UpdateEmailResponse,
+    UserCryptoWallet,
+    UserProfileResponse,
 } from "@/types/domain/user.types";
 
 // Re-export AccountServiceError for backward compatibility
@@ -260,14 +265,9 @@ export interface EtlJobResponse {
 
 /**
  * ETL job status response
+ * Re-export from @davidtnfsh/etl-contracts for consistency
  */
-export interface EtlJobStatusResponse {
-  job_id: string;
-  status: string;
-  created_at: string;
-  completed_at?: string;
-  error_message?: string;
-}
+export type { EtlJobStatus } from "@davidtnfsh/etl-contracts";
 
 /**
  * Trigger ETL data fetch for a wallet
@@ -291,9 +291,10 @@ export const triggerWalletDataFetch = async (
  */
 export const getEtlJobStatus = async (
   jobId: string
-): Promise<EtlJobStatusResponse> => {
+): Promise<EtlJobStatus> => {
   const response = await callAccountApi(() =>
-    accountApiClient.get<EtlJobStatusResponse>(`/users/etl/jobs/${jobId}`)
+    accountApiClient.get<EtlJobStatus>(`/etl/jobs/${jobId}`)
   );
-  return response;
+  // Validate response against contract schema
+  return EtlJobStatusSchema.parse(response);
 };

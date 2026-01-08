@@ -155,6 +155,20 @@ const poolDetailSchema = z.object({
 });
 
 /**
+ * Risk Metrics Schema (MVP: Portfolio-Level)
+ */
+const riskMetricsSchema = z.object({
+  has_leverage: z.boolean(),
+  health_rate: z.number().positive(),
+  leverage_ratio: z.number().positive(),
+  collateral_value_usd: z.number().nonnegative(),
+  debt_value_usd: z.number().nonnegative(),
+  liquidation_threshold: z.number().positive(),
+  protocol_source: z.string(),
+  position_count: z.number().int().nonnegative(),
+});
+
+/**
  * Schema for landing page response
  */
 export const landingPageResponseSchema = z
@@ -201,6 +215,9 @@ export const landingPageResponseSchema = z
         coverage_percentage: 0,
         matched_asset_value_usd: 0,
       }),
+
+    // Risk Metrics (MVP: portfolio-level calculation)
+    risk_metrics: riskMetricsSchema.nullable().optional(),
   })
   .catchall(z.unknown());
 
@@ -279,6 +296,7 @@ export type YieldReturnsSummaryResponse = z.infer<
   typeof yieldReturnsSummaryResponseSchema
 >;
 export type LandingPageResponse = z.infer<typeof landingPageResponseSchema>;
+export type RiskMetrics = z.infer<typeof riskMetricsSchema>;
 export interface UnifiedDashboardResponse {
   user_id?: string;
   parameters?: Record<string, unknown>;

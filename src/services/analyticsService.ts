@@ -19,6 +19,7 @@ export type {
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
   PoolDetail,
+  RiskMetrics,
   UnifiedDashboardResponse,
 } from "@/schemas/api/analyticsSchemas";
 

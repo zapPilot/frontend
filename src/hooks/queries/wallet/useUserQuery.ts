@@ -73,7 +73,7 @@ export function useUserByWallet(walletAddress: string | null) {
         totalWallets: bundleWallets.length,
         totalVisibleWallets: bundleWallets.length,
         ...(isNewUser ? { isNewUser } : {}),
-        ...(etl_job?.job_id ? { etlJobId: etl_job.job_id } : {}),
+        ...(etl_job?.jobId ? { etlJobId: etl_job.jobId } : {}),
       };
     },
     enabled: !!walletAddress, // Only run when wallet address is available

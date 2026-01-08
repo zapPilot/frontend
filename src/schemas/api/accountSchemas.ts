@@ -1,3 +1,7 @@
+import {
+  EtlJobStatusSchema,
+  type EtlJobStatus,
+} from "@davidtnfsh/etl-contracts";
 import { z } from "zod";
 
 /**
@@ -95,19 +99,15 @@ export const healthCheckResponseSchema = z.object({
 // ============================================================================
 
 /**
- * Schema for connect wallet response
+ * Schema for ETL job status response
+ * Uses shared contract from @davidtnfsh/etl-contracts
  */
-const etlJobResponseSchema = z.object({
-  job_id: z.string().nullable(),
-  status: z.string(),
-  message: z.string(),
-  rate_limited: z.boolean().optional(),
-});
+export const etlJobStatusResponseSchema = EtlJobStatusSchema;
 
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),
   is_new_user: z.boolean(),
-  etl_job: etlJobResponseSchema.optional(),
+  etl_job: etlJobStatusResponseSchema.optional(),
 });
 
 /**
@@ -153,12 +153,17 @@ export const userProfileResponseSchema = z.object({
 /** @public */ export type UserCryptoWallet = z.infer<
   typeof userCryptoWalletSchema
 >;
-/** @public */ export type ConnectWalletResponse = z.infer<
-  typeof connectWalletResponseSchema
->;
-/** @public */ export type EtlJobResponse = z.infer<
-  typeof etlJobResponseSchema
->;
+
+/**
+ * ConnectWalletResponse type with explicit EtlJobStatus typing
+ * We manually define this instead of inferring from Zod because
+ * the external schema import causes type inference issues
+ */
+/** @public */ export interface ConnectWalletResponse {
+  user_id: string;
+  is_new_user: boolean;
+  etl_job?: EtlJobStatus;
+}
 /** @public */ export type AddWalletResponse = z.infer<
   typeof addWalletResponseSchema
 >;
@@ -176,6 +181,12 @@ export const userProfileResponseSchema = z.object({
   typeof healthCheckResponseSchema
 >;
 
+/**
+ * Re-export EtlJobStatus from etl-contracts for convenience
+ * This type is used in ConnectWalletResponse
+ */
+export type { EtlJobStatus };
+
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS
 // ============================================================================
@@ -187,7 +198,7 @@ export const userProfileResponseSchema = z.object({
 export function validateConnectWalletResponse(
   data: unknown
 ): ConnectWalletResponse {
-  return connectWalletResponseSchema.parse(data);
+  return connectWalletResponseSchema.parse(data) as ConnectWalletResponse;
 }
 
 /**
