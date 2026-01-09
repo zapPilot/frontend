@@ -33,7 +33,7 @@
     "deadcode:fix": "node scripts/run-deadcode.js fix",
     "deadcode:check": "node scripts/run-deadcode.js check",
     "deadcode:exports": "ts-prune -p tsconfig.tsprune.json",
-    "dup:check": "jscpd src --min-lines 3 --threshold 2.5 --reporters console,json",
+    "dup:check": "node scripts/run-dup-check.js",
     "dup:all": "npm run dup:check",
     "prepare": "husky"
   },

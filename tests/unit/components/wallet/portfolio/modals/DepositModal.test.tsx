@@ -104,55 +104,61 @@ vi.mock("next/image", () => ({
   ),
 }));
 
+const mockDropdownState = {
+  dropdownRef: { current: null },
+  isAssetDropdownOpen: false,
+  isChainDropdownOpen: false,
+  toggleAssetDropdown: vi.fn(),
+  toggleChainDropdown: vi.fn(),
+  closeDropdowns: vi.fn(),
+};
+
+const mockUseTransactionModalState = vi.fn(() => ({
+  isConnected: mockUseWalletProvider().isConnected,
+  dropdownState: mockDropdownState,
+}));
+
 // Mock the transaction modal dependencies
 vi.mock(
   "@/components/wallet/portfolio/modals/transactionModalDependencies",
   () => ({
-    applyPercentageToAmount: vi.fn(),
-    resolveActionLabel: vi.fn().mockReturnValue("Review & Deposit"),
-    buildFormActionsProps: vi.fn((form, amount) => ({
-      form,
-      amount,
+    buildModalFormState: vi.fn(() => ({
+      handlePercentage: vi.fn(),
+      isValid: true,
     })),
-    getChainLogo: () => "/chains/arbitrum.svg",
-    TransactionModalHeader: ({
-      title,
-      onClose,
+    resolveActionLabel: vi.fn().mockReturnValue("Review & Deposit"),
+    useTransactionModalState: () => mockUseTransactionModalState(),
+    TransactionModalContent: ({
+      modalState,
     }: {
-      title: string;
-      onClose: () => void;
+      modalState: {
+        selectedChain?: { name?: string };
+        transactionData?: { selectedToken?: { symbol?: string } };
+      };
     }) => (
-      <div data-testid="modal-header">
-        <span>{title}</span>
-        <button onClick={onClose} data-testid="close-button">
-          Close
+      <div data-testid="transaction-modal-content">
+        <button data-testid="selector-network" data-open="false">
+          {modalState.selectedChain?.name ?? "Network"}
         </button>
+        <button data-testid="selector-asset" data-open="false">
+          {modalState.transactionData?.selectedToken?.symbol ?? "Asset"}
+        </button>
+        <div data-testid="form-actions">Form Actions</div>
       </div>
     ),
-    CompactSelectorButton: ({
-      label,
-      value,
+    TokenOptionButton: ({
+      symbol,
+      balanceLabel,
     }: {
-      label: string;
-      value: string;
+      symbol: string;
+      balanceLabel: string;
     }) => (
-      <div data-testid={`selector-${label.toLowerCase()}`}>
-        {label}: {value}
+      <div data-testid="token-option">
+        {symbol} {balanceLabel}
       </div>
     ),
-    TransactionFormActionsWithForm: () => (
-      <div data-testid="form-actions">Form Actions</div>
-    ),
-    SubmittingState: ({
-      isSuccess,
-      successMessage,
-    }: {
-      isSuccess: boolean;
-      successMessage: string;
-    }) => (
-      <div data-testid="submitting-state">
-        {isSuccess ? successMessage : "Processing..."}
-      </div>
+    EmptyAssetsMessage: () => (
+      <div data-testid="empty-assets">No assets found.</div>
     ),
   })
 );
