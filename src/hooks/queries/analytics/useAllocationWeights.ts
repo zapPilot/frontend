@@ -1,12 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import {
-    getAllocationWeights
-} from "@/services/allocationService";
+import { getAllocationWeights } from "@/services/allocationService";
 
 import { createQueryConfig } from "../queryDefaults";
-
-
 
 /**
  * React Query hook for fetching marketcap-weighted allocation weights

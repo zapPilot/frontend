@@ -235,9 +235,7 @@ describe("accountSchemas", () => {
 
       expect(result.job_id).toBe("etl_1767881497530_1rw7jo");
       expect(result.status).toBe("pending");
-      expect(result.message).toBe(
-        "Wallet data fetch job queued successfully"
-      );
+      expect(result.message).toBe("Wallet data fetch job queued successfully");
       expect(result.rate_limited).toBe(false);
     });
 

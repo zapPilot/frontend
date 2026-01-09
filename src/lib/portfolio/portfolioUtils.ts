@@ -46,7 +46,3 @@ export function extractROIChanges(
 
   return { change7d, change30d };
 }
-
-
-
-

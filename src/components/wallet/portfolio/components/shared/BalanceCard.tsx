@@ -75,7 +75,9 @@ export function BalanceCard({
           <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
         )}
       </div>
-      <div className={`flex items-center gap-3 ${showHealthRate ? "mb-2" : "mb-4"}`}>
+      <div
+        className={`flex items-center gap-3 ${showHealthRate ? "mb-2" : "mb-4"}`}
+      >
         <div className="flex-1">
           <div
             className={

@@ -25,6 +25,7 @@ import type {
   UserCryptoWallet,
   UserProfileResponse,
 } from "@/types/domain/user.types";
+import { logger } from "@/utils/logger";
 
 // Re-export AccountServiceError for backward compatibility
 export { AccountServiceError };
@@ -129,7 +130,7 @@ export const connectWallet = async (
 
   // DEBUG: Log raw response to see what API actually returns
   if (process.env.NODE_ENV === "development") {
-    console.log(
+    logger.debug(
       "🔍 Raw connect-wallet response:",
       JSON.stringify(response, null, 2)
     );
@@ -138,7 +139,7 @@ export const connectWallet = async (
   // Use safeParse to see validation details
   const validationResult = connectWalletResponseSchema.safeParse(response);
   if (!validationResult.success) {
-    console.error("❌ Validation failed:", validationResult.error.issues);
+    logger.error("❌ Validation failed:", validationResult.error.issues);
     // Still throw to maintain error handling, but we've logged the details
     throw new AccountServiceError(
       "Connect wallet response validation failed",
@@ -149,7 +150,7 @@ export const connectWallet = async (
   }
 
   if (process.env.NODE_ENV === "development") {
-    console.log(
+    logger.debug(
       "✅ Validated response:",
       JSON.stringify(validationResult.data, null, 2)
     );
@@ -316,9 +317,7 @@ export const triggerWalletDataFetch = async (
  * Get ETL job status by ID
  * Used for polling job completion
  */
-export const getEtlJobStatus = async (
-  jobId: string
-): Promise<EtlJobStatus> => {
+export const getEtlJobStatus = async (jobId: string): Promise<EtlJobStatus> => {
   const response = await callAccountApi(() =>
     accountApiClient.get<EtlJobStatus>(`/etl/jobs/${jobId}`)
   );

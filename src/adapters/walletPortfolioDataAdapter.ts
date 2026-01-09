@@ -29,7 +29,10 @@ import type {
   DirectionType,
   DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
-import type { LandingPageResponse, RiskMetrics } from "@/services/analyticsService";
+import type {
+  LandingPageResponse,
+  RiskMetrics,
+} from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 

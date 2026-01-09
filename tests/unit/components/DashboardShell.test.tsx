@@ -140,7 +140,7 @@ describe("DashboardShell", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Ensure window.location is valid for URL constructor
     Object.defineProperty(window, "location", {
       value: new URL("http://localhost/bundle/user-123"),

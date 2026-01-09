@@ -106,6 +106,7 @@ export function DashboardShell({
     void handleCompletion();
   }, [
     etlState.status,
+    etlState.jobId,
     refetch,
     completeTransition,
     urlUserId,

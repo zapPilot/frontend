@@ -190,7 +190,9 @@ describe("accountService", () => {
       vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
 
       await expect(
-        accountService.connectWallet("0x1111111111111111111111111111111111111111")
+        accountService.connectWallet(
+          "0x1111111111111111111111111111111111111111"
+        )
       ).rejects.toThrow(accountService.AccountServiceError);
     });
   });
@@ -744,9 +746,7 @@ describe("accountService", () => {
         trigger: "manual",
         created_at: "2024-01-01T00:00:00Z",
       });
-      expect(httpUtils.accountApi.get).toHaveBeenCalledWith(
-        "/etl/jobs/job123"
-      );
+      expect(httpUtils.accountApi.get).toHaveBeenCalledWith("/etl/jobs/job123");
     });
 
     it("should handle job not found", async () => {

@@ -34,13 +34,11 @@ describe("useQueryInvalidation", () => {
     it("should handle invalidation errors gracefully", async () => {
       const queryClient = new QueryClient();
       const error = new Error("Invalidation failed");
-      for (const query of queryClient
-        .getQueryCache()
-        .findAll()) {
-          if (query.queryKey[0] === "wallet-portfolio") {
-            query.setState({ status: "error", error: new Error("Test error") });
-          }
+      for (const query of queryClient.getQueryCache().findAll()) {
+        if (query.queryKey[0] === "wallet-portfolio") {
+          query.setState({ status: "error", error: new Error("Test error") });
         }
+      }
       vi.spyOn(queryClient, "invalidateQueries").mockRejectedValue(error);
       const refetch = vi.fn().mockResolvedValue("data");
 

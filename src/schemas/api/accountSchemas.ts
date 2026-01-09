@@ -108,23 +108,28 @@ export const healthCheckResponseSchema = z.object({
  * - Matches the existing snake_case convention at the top level
  * - Future-proofs against new API fields
  */
-const LenientEtlJobStatusSchema = z.object({
-  job_id: z.string(),
-  status: z.enum(["pending", "processing", "completed", "failed"]),
-  trigger: z.enum(["webhook", "manual", "scheduled"]).optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  completed_at: z.string().optional(),
-  records_processed: z.number().optional(),
-  records_inserted: z.number().optional(),
-  duration: z.number().optional(),
-  message: z.string().optional(),
-  rate_limited: z.boolean().optional(),
-  error: z.object({
-    code: z.string(),
-    message: z.string(),
-  }).optional(),
-}).passthrough(); // Allow additional fields without failing validation
+const LenientEtlJobStatusSchema = z
+  .object({
+    job_id: z.string(),
+    status: z.enum(["pending", "processing", "completed", "failed"]),
+    trigger: z.enum(["webhook", "manual", "scheduled"]).optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+    completed_at: z.string().optional(),
+    records_processed: z.number().optional(),
+    records_inserted: z.number().optional(),
+    duration: z.number().optional(),
+    message: z.string().optional(),
+    rate_limited: z.boolean().optional(),
+    error: z
+      .object({
+        code: z.string(),
+        message: z.string(),
+      })
+      .optional(),
+  })
+  // eslint-disable-next-line sonarjs/deprecation
+  .passthrough(); // Allow additional fields without failing validation
 
 /**
  * Schema for ETL job status response

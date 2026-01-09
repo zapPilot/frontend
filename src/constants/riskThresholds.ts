@@ -13,7 +13,7 @@
  * - >1.0 = Safe (buffer above liquidation)
  * - <1.0 = Underwater (at risk of immediate liquidation)
  */
-export enum RiskLevel {
+enum RiskLevel {
   SAFE = "SAFE",
   MODERATE = "MODERATE",
   RISKY = "RISKY",

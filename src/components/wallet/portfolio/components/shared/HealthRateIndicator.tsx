@@ -59,9 +59,7 @@ export function HealthRateIndicator({
         }
       >
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-400">
-            Health Rate
-          </span>
+          <span className="text-xs font-medium text-gray-400">Health Rate</span>
           <button
             type="button"
             className="text-gray-500 hover:text-gray-400 transition-colors"
@@ -113,8 +111,8 @@ export function HealthRateIndicator({
                 Comfortable buffer
               </p>
               <p>
-                • <span className="text-orange-400">Risky (120-150%)</span>:
-                Low buffer
+                • <span className="text-orange-400">Risky (120-150%)</span>: Low
+                buffer
               </p>
               <p>
                 • <span className="text-red-400">Critical ({"<"} 120%)</span>:

@@ -122,5 +122,3 @@ const MAINNET_CHAINS: BaseChainConfig[] = [
 export const SUPPORTED_CHAINS = MAINNET_CHAINS.filter(
   chain => chain.isSupported
 );
-
-
