@@ -96,22 +96,30 @@ export const healthCheckResponseSchema = z.object({
 // ============================================================================
 
 /**
- * Lenient ETL job status schema
+ * Lenient ETL job status schema - accepts API's snake_case directly
  *
- * Only requires jobId and status (the fields we actually use).
+ * Only requires job_id and status (the fields we actually use).
  * Makes all other fields optional to handle partial API responses gracefully.
- * This prevents silent validation failures when the API doesn't send all fields.
+ * Uses passthrough() to handle future API additions without breaking validation.
+ *
+ * This schema accepts the API response as-is without transformation, which:
+ * - Prevents accidentally dropping fields (like message, rate_limited)
+ * - Simplifies the codebase (no transformation logic to maintain)
+ * - Matches the existing snake_case convention at the top level
+ * - Future-proofs against new API fields
  */
 const LenientEtlJobStatusSchema = z.object({
-  jobId: z.string(),
+  job_id: z.string(),
   status: z.enum(["pending", "processing", "completed", "failed"]),
   trigger: z.enum(["webhook", "manual", "scheduled"]).optional(),
-  createdAt: z.string().optional(),
-  updatedAt: z.string().optional(),
-  completedAt: z.string().optional(),
-  recordsProcessed: z.number().optional(),
-  recordsInserted: z.number().optional(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  completed_at: z.string().optional(),
+  records_processed: z.number().optional(),
+  records_inserted: z.number().optional(),
   duration: z.number().optional(),
+  message: z.string().optional(),
+  rate_limited: z.boolean().optional(),
   error: z.object({
     code: z.string(),
     message: z.string(),
@@ -121,33 +129,10 @@ const LenientEtlJobStatusSchema = z.object({
 /**
  * Schema for ETL job status response
  *
- * Preprocessing layer that converts snake_case API fields to camelCase
- * before validating against the lenient schema above.
+ * Accepts API's snake_case fields directly without transformation.
+ * No preprocessing needed - what the API sends is what we validate.
  */
-export const etlJobStatusResponseSchema = z.preprocess(
-  (val: unknown) => {
-    if (val && typeof val === "object") {
-      const record = val as Record<string, unknown>;
-      const normalized: Record<string, unknown> = {};
-
-      // Convert ALL snake_case fields to camelCase
-      if ("job_id" in record) normalized["jobId"] = record["job_id"];
-      if ("status" in record) normalized["status"] = record["status"];
-      if ("trigger" in record) normalized["trigger"] = record["trigger"];
-      if ("created_at" in record) normalized["createdAt"] = record["created_at"];
-      if ("updated_at" in record) normalized["updatedAt"] = record["updated_at"];
-      if ("completed_at" in record) normalized["completedAt"] = record["completed_at"];
-      if ("records_processed" in record) normalized["recordsProcessed"] = record["records_processed"];
-      if ("records_inserted" in record) normalized["recordsInserted"] = record["records_inserted"];
-      if ("duration" in record) normalized["duration"] = record["duration"];
-      if ("error" in record) normalized["error"] = record["error"];
-
-      return normalized;
-    }
-    return val;
-  },
-  LenientEtlJobStatusSchema // Use lenient schema instead of strict contract
-);
+export const etlJobStatusResponseSchema = LenientEtlJobStatusSchema;
 
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),
@@ -200,14 +185,32 @@ export const userProfileResponseSchema = z.object({
 >;
 
 /**
- * ConnectWalletResponse type with explicit EtlJobStatus typing
- * We manually define this instead of inferring from Zod because
- * the external schema import causes type inference issues
+ * ConnectWalletResponse type with snake_case etl_job field
+ * Matches the API's response structure directly without transformation
+ *
+ * Note: We use a custom etl_job structure instead of the imported EtlJobStatus
+ * because the API returns a subset of fields with snake_case naming.
  */
 /** @public */ export interface ConnectWalletResponse {
   user_id: string;
   is_new_user: boolean;
-  etl_job?: EtlJobStatus;
+  etl_job?: {
+    job_id: string;
+    status: "pending" | "processing" | "completed" | "failed";
+    message?: string;
+    rate_limited?: boolean;
+    trigger?: "webhook" | "manual" | "scheduled";
+    created_at?: string;
+    updated_at?: string;
+    completed_at?: string;
+    records_processed?: number;
+    records_inserted?: number;
+    duration?: number;
+    error?: {
+      code: string;
+      message: string;
+    };
+  };
 }
 /** @public */ export type AddWalletResponse = z.infer<
   typeof addWalletResponseSchema

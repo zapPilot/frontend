@@ -91,6 +91,108 @@ describe("accountService", () => {
         )
       ).rejects.toThrow();
     });
+
+    /**
+     * Comprehensive tests for ETL job handling with snake_case fields
+     * These tests prevent regression of the bug where message/rate_limited were dropped
+     */
+    it("should handle real API response with etl_job containing minimal fields", async () => {
+      // Real API response structure from connect-wallet endpoint
+      const mockResponse: ConnectWalletResponse = {
+        user_id: "12a5184b-ec53-4ab7-b42b-70cb063308b6",
+        is_new_user: true,
+        etl_job: {
+          job_id: "etl_1767881497530_1rw7jo",
+          status: "pending",
+          message: "Wallet data fetch job queued successfully",
+          rate_limited: false,
+        },
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+
+      const result = await accountService.connectWallet(
+        "0x1234567890123456789012345678901234567890"
+      );
+
+      // CRITICAL: etl_job should be present with snake_case fields
+      expect(result.etl_job).toBeDefined();
+      expect(result.etl_job?.job_id).toBe("etl_1767881497530_1rw7jo");
+      expect(result.etl_job?.status).toBe("pending");
+      expect(result.etl_job?.message).toBe(
+        "Wallet data fetch job queued successfully"
+      );
+      expect(result.etl_job?.rate_limited).toBe(false);
+    });
+
+    it("should handle response with etl_job containing all optional fields", async () => {
+      const mockResponse: ConnectWalletResponse = {
+        user_id: "user456",
+        is_new_user: false,
+        etl_job: {
+          job_id: "job-full",
+          status: "completed",
+          trigger: "webhook",
+          created_at: "2024-01-01T00:00:00Z",
+          completed_at: "2024-01-01T02:00:00Z",
+          records_processed: 100,
+          records_inserted: 95,
+          message: "Job completed successfully",
+        },
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+
+      const result = await accountService.connectWallet(
+        "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd"
+      );
+
+      expect(result.etl_job).toBeDefined();
+      expect(result.etl_job?.job_id).toBe("job-full");
+      expect(result.etl_job?.status).toBe("completed");
+      expect(result.etl_job?.trigger).toBe("webhook");
+      expect(result.etl_job?.created_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.etl_job?.completed_at).toBe("2024-01-01T02:00:00Z");
+      expect(result.etl_job?.records_processed).toBe(100);
+      expect(result.etl_job?.records_inserted).toBe(95);
+      expect(result.etl_job?.message).toBe("Job completed successfully");
+    });
+
+    it("should handle response without etl_job field (existing user)", async () => {
+      const mockResponse: ConnectWalletResponse = {
+        user_id: "user789",
+        is_new_user: false,
+        // No etl_job - existing user doesn't need data fetch
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+
+      const result = await accountService.connectWallet(
+        "0x9999999999999999999999999999999999999999"
+      );
+
+      expect(result.user_id).toBe("user789");
+      expect(result.is_new_user).toBe(false);
+      expect(result.etl_job).toBeUndefined();
+    });
+
+    it("should throw AccountServiceError when etl_job validation fails", async () => {
+      const mockResponse = {
+        user_id: "user999",
+        is_new_user: true,
+        etl_job: {
+          // Missing required job_id field - should fail validation
+          status: "pending",
+          message: "Test",
+        },
+      };
+
+      vi.mocked(httpUtils.accountApi.post).mockResolvedValue(mockResponse);
+
+      await expect(
+        accountService.connectWallet("0x1111111111111111111111111111111111111111")
+      ).rejects.toThrow(accountService.AccountServiceError);
+    });
   });
 
   describe("getUserProfile", () => {
@@ -637,10 +739,10 @@ describe("accountService", () => {
       const result = await accountService.getEtlJobStatus("job123");
 
       expect(result).toEqual({
-        jobId: "job123",
+        job_id: "job123",
         status: "completed",
         trigger: "manual",
-        createdAt: "2024-01-01T00:00:00Z",
+        created_at: "2024-01-01T00:00:00Z",
       });
       expect(httpUtils.accountApi.get).toHaveBeenCalledWith(
         "/etl/jobs/job123"
