@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
@@ -25,6 +25,7 @@ export function BundlePageClient({
   isNewUser,
 }: BundlePageClientProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
 
@@ -40,7 +41,7 @@ export function BundlePageClient({
       !loading &&
       userInfo?.userId &&
       !userId &&
-      window.location.pathname === "/"
+      pathname === "/"
     ) {
       const searchParams = new URLSearchParams(window.location.search);
       searchParams.set("userId", userInfo.userId);
@@ -58,6 +59,7 @@ export function BundlePageClient({
     userInfo?.etlJobId,
     userId,
     router,
+    pathname,
   ]);
 
   useEffect(() => {

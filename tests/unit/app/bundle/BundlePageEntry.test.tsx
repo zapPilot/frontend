@@ -13,6 +13,7 @@ const mockGet = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useSearchParams: mockUseSearchParams,
+  usePathname: () => "/bundle",
 }));
 
 // Mock BundlePageClient

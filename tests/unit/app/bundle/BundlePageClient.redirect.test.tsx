@@ -24,12 +24,14 @@ vi.mock("@/components/WalletManager", () => ({
 
 // Router mock
 const replaceMock = vi.fn();
+const pathnameMock = vi.fn().mockReturnValue("/");
 vi.mock("next/navigation", async () => {
   const actual =
     await vi.importActual<typeof import("next/navigation")>("next/navigation");
   return {
     ...actual,
     useRouter: () => ({ replace: replaceMock }),
+    usePathname: () => pathnameMock(),
   };
 });
 
@@ -54,6 +56,7 @@ vi.mock("@/contexts/UserContext", () => ({
 describe("BundlePageClient - Wallet Connection Redirect", () => {
   beforeEach(() => {
     replaceMock.mockReset();
+    pathnameMock.mockReturnValue("/");
     mockIsConnected = false;
     mockUserId = null;
     mockLoading = false;
@@ -63,6 +66,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
   describe("successful redirect scenarios", () => {
     it("should redirect to bundle page after wallet connection completes", async () => {
       // Start on home page
+      pathnameMock.mockReturnValue("/");
       window.history.pushState({}, "", "/");
 
       // Wallet is connected and user data is loaded
@@ -202,6 +206,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
   describe("no redirect scenarios - wrong pathname", () => {
     it("should NOT redirect if not on home page", async () => {
       // On some other page
+      pathnameMock.mockReturnValue("/about");
       window.history.pushState({}, "", "/about");
 
       mockIsConnected = true;
@@ -218,6 +223,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
     });
 
     it("should NOT redirect if on /bundle route without userId", async () => {
+      pathnameMock.mockReturnValue("/bundle");
       window.history.pushState({}, "", "/bundle");
 
       mockIsConnected = true;

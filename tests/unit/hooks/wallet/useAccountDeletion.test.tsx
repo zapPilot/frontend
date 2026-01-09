@@ -88,14 +88,14 @@ describe("useAccountDeletion", () => {
     hoisted.mockRefetch.mockResolvedValue(undefined);
     hoisted.mockIsConnected = true;
 
-    // Mock window.location.reload
-    Object.defineProperty(window, "location", {
-      value: { reload: vi.fn() },
-      writable: true,
+    vi.stubGlobal("location", {
+      ...window.location,
+      reload: vi.fn(),
     });
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.useRealTimers();
   });
 

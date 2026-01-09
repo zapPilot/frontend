@@ -18,6 +18,7 @@ import { logger } from "@/utils/logger";
 // Mock dependencies
 vi.mock("next/navigation", () => ({
   useRouter: vi.fn(),
+  usePathname: vi.fn(() => "/bundle"),
 }));
 
 vi.mock("@/contexts/UserContext", () => ({

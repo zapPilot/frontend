@@ -97,6 +97,7 @@ vi.mock("next/navigation", () => ({
     prefetch: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/bundle",
 }));
 
 // Mock useToast hook
