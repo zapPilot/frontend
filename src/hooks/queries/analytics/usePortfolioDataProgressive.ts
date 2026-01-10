@@ -51,7 +51,10 @@ export function usePortfolioDataProgressive(
   const balanceSection = createSectionState([landingQuery], extractBalanceData);
 
   // 2. Composition Section (Depends only on Landing, uses static sentiment fallback)
-  const compositionSection = createSectionState([landingQuery], extractCompositionData);
+  const compositionSection = createSectionState(
+    [landingQuery],
+    extractCompositionData
+  );
 
   // 3. Strategy Section (Depends on Landing + Sentiment + Regime)
   // Logic: Strategy needs landing data to exist basically.
@@ -63,7 +66,10 @@ export function usePortfolioDataProgressive(
   );
 
   // 4. Independent Sentiment Section (Depends only on Sentiment)
-  const sentimentSection = createSectionState([sentimentQuery], extractSentimentData);
+  const sentimentSection = createSectionState(
+    [sentimentQuery],
+    extractSentimentData
+  );
 
   // Legacy Unified Data (for backward compatibility)
   const unifiedData: WalletPortfolioDataWithDirection | null = landingQuery.data
