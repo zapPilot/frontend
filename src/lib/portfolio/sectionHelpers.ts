@@ -31,9 +31,27 @@ import type { SectionState } from "@/types/portfolio-progressive";
  * );
  * ```
  */
+interface QueryResult<TData> {
+  data: TData | undefined;
+  isLoading: boolean;
+  error: unknown;
+}
+
+export function createSectionState<TData, TOutput>(
+  queries: [QueryResult<TData>],
+  extractor: (data: TData) => TOutput | null
+): SectionState<TOutput>;
+export function createSectionState<TDataA, TDataB, TOutput>(
+  queries: [QueryResult<TDataA>, QueryResult<TDataB>],
+  extractor: (dataA: TDataA, dataB: TDataB) => TOutput | null
+): SectionState<TOutput>;
+export function createSectionState<TDataA, TDataB, TDataC, TOutput>(
+  queries: [QueryResult<TDataA>, QueryResult<TDataB>, QueryResult<TDataC>],
+  extractor: (dataA: TDataA, dataB: TDataB, dataC: TDataC) => TOutput | null
+): SectionState<TOutput>;
 export function createSectionState<TOutput>(
-  queries: Array<{ data?: unknown; isLoading: boolean; error: unknown }>,
-  extractor: (...args: any[]) => TOutput | null
+  queries: QueryResult<unknown>[],
+  extractor: (...args: unknown[]) => TOutput | null
 ): SectionState<TOutput> {
   const isLoading = queries.some(q => q.isLoading);
   const error = queries.find(q => q.error)?.error as Error | null;
@@ -42,9 +60,7 @@ export function createSectionState<TOutput>(
   // This matches the original pattern: landingQuery.data ? extractor(landingQuery.data) : null
   // Using != null to check both undefined and null (matches truthiness check)
   const allDataPresent = queries.every(q => q.data != null);
-  const data = allDataPresent
-    ? extractor(...queries.map(q => q.data))
-    : null;
+  const data = allDataPresent ? extractor(...queries.map(q => q.data)) : null;
 
   return { data, isLoading, error };
 }

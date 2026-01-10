@@ -1000,7 +1000,9 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       );
 
       // Should show loading state instead of dashboard
-      expect(screen.getByTestId("initial-loading-state")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Fetching Wallet Data" })
+      ).toBeInTheDocument();
       expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
     });
 
@@ -1048,7 +1050,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         { status: "idle" as const, shouldShowLoading: false },
       ];
 
-      etlStates.forEach(({ status, shouldShowLoading }) => {
+      for (const { status, shouldShowLoading } of etlStates) {
         const etlState = {
           jobId: shouldShowLoading ? "test-job-123" : null,
           status,
@@ -1065,15 +1067,19 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         );
 
         if (shouldShowLoading) {
-          expect(screen.getByTestId("initial-loading-state")).toBeInTheDocument();
+          expect(
+            screen.getByRole("heading", { name: "Fetching Wallet Data" })
+          ).toBeInTheDocument();
           expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
         } else {
-          expect(screen.queryByTestId("initial-loading-state")).not.toBeInTheDocument();
+          expect(
+            screen.queryByRole("heading", { name: "Fetching Wallet Data" })
+          ).not.toBeInTheDocument();
           expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
         }
 
         unmount();
-      });
+      }
     });
 
     /**

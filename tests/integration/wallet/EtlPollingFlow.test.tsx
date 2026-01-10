@@ -26,24 +26,23 @@
  * @see src/components/wallet/portfolio/WalletPortfolioPresenter.tsx - Search handler
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor, act } from "../../test-utils";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import userEvent from "@testing-library/user-event";
+import { QueryClient } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
-  createProgressiveEtlMock,
-  createConnectWalletMock,
-  advancePollingCycle,
-  POLLING_INTERVAL_MS,
-} from "../../helpers/etlMockHelpers";
-import {
-  NEW_USER_RESPONSE,
-  ETL_STATUS_PENDING,
-  ETL_STATUS_PROCESSING,
   ETL_STATUS_COMPLETED,
   ETL_STATUS_FAILED,
+  ETL_STATUS_PENDING,
+  ETL_STATUS_PROCESSING,
+  NEW_USER_RESPONSE,
   TEST_WALLET_ADDRESSES,
 } from "../../fixtures/mockEtlData";
+import {
+  advancePollingCycle,
+  createConnectWalletMock,
+  POLLING_INTERVAL_MS,
+} from "../../helpers/etlMockHelpers";
+import { act, render, screen } from "../../test-utils";
 
 // Note: This is a simplified integration test focusing on the ETL polling logic.
 // Full E2E tests with DashboardShell would require more complex setup.
@@ -52,7 +51,13 @@ import {
  * Mock ETL job polling hook that simulates the real useEtlJobPolling behavior.
  */
 function createMockEtlPollingHook() {
-  let status: "idle" | "pending" | "processing" | "completing" | "completed" | "failed" = "idle";
+  let status:
+    | "idle"
+    | "pending"
+    | "processing"
+    | "completing"
+    | "completed"
+    | "failed" = "idle";
   let jobId: string | null = null;
   let pollCount = 0;
 
@@ -79,7 +84,7 @@ function createMockEtlPollingHook() {
     get state() {
       return { status, jobId, errorMessage, isLoading: false };
     },
-    triggerEtl: vi.fn((userId: string, address: string) => {
+    triggerEtl: vi.fn((_userId: string, _address: string) => {
       jobId = "test-job-123";
       status = "pending";
       return Promise.resolve();
@@ -110,7 +115,10 @@ function createMockEtlPollingHook() {
 describe("ETL Polling Flow - Integration", () => {
   let queryClient: QueryClient;
   let mockConnectWallet: ReturnType<typeof vi.fn>;
-  let mockRouter: { push: ReturnType<typeof vi.fn>; replace: ReturnType<typeof vi.fn> };
+  let mockRouter: {
+    push: ReturnType<typeof vi.fn>;
+    replace: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     // Create fresh QueryClient for each test
@@ -206,7 +214,9 @@ describe("ETL Polling Flow - Integration", () => {
         await advancePollingCycle(1);
       });
 
-      let statusResult = await mockEtlHook.mockGetEtlStatus(response.etl_job!.job_id);
+      let statusResult = await mockEtlHook.mockGetEtlStatus(
+        response.etl_job!.job_id
+      );
       expect(statusResult.status).toBe("pending");
 
       // Second poll - should get "processing" status
@@ -214,7 +224,9 @@ describe("ETL Polling Flow - Integration", () => {
         await advancePollingCycle(1);
       });
 
-      statusResult = await mockEtlHook.mockGetEtlStatus(response.etl_job!.job_id);
+      statusResult = await mockEtlHook.mockGetEtlStatus(
+        response.etl_job!.job_id
+      );
       expect(statusResult.status).toBe("processing");
 
       // Third poll - should get "completed" status
@@ -222,7 +234,9 @@ describe("ETL Polling Flow - Integration", () => {
         await advancePollingCycle(1);
       });
 
-      statusResult = await mockEtlHook.mockGetEtlStatus(response.etl_job!.job_id);
+      statusResult = await mockEtlHook.mockGetEtlStatus(
+        response.etl_job!.job_id
+      );
       expect(statusResult.status).toBe("completed");
 
       // Verify polling occurred 3 times
@@ -231,7 +245,9 @@ describe("ETL Polling Flow - Integration", () => {
       // Step 6: On completion, trigger cache invalidation and refetch
       await act(async () => {
         queryClient.invalidateQueries({ queryKey: ["portfolio-landing-page"] });
-        await queryClient.refetchQueries({ queryKey: ["portfolio-landing-page"] });
+        await queryClient.refetchQueries({
+          queryKey: ["portfolio-landing-page"],
+        });
       });
 
       // Step 7: Clean URL parameters
@@ -292,7 +308,8 @@ describe("ETL Polling Flow - Integration", () => {
     });
 
     it("polls at 3-second intervals", async () => {
-      const mockGetEtlStatus = vi.fn()
+      const mockGetEtlStatus = vi
+        .fn()
         .mockResolvedValueOnce(ETL_STATUS_PENDING)
         .mockResolvedValueOnce(ETL_STATUS_PROCESSING)
         .mockResolvedValueOnce(ETL_STATUS_COMPLETED);
@@ -348,7 +365,8 @@ describe("ETL Polling Flow - Integration", () => {
     });
 
     it("stops polling when status is failed", async () => {
-      const mockGetEtlStatus = vi.fn()
+      const mockGetEtlStatus = vi
+        .fn()
         .mockResolvedValueOnce(ETL_STATUS_PENDING)
         .mockResolvedValueOnce(ETL_STATUS_FAILED);
 
@@ -415,7 +433,11 @@ describe("ETL Polling Flow - Integration", () => {
        */
 
       const renderLoadingState = (status: string) => {
-        const isEtlInProgress = ["pending", "processing", "completing"].includes(status);
+        const isEtlInProgress = [
+          "pending",
+          "processing",
+          "completing",
+        ].includes(status);
         return isEtlInProgress;
       };
 
@@ -508,7 +530,8 @@ describe("ETL Polling Flow - Integration", () => {
 
   describe("URL Parameter Cleanup", () => {
     it("removes etlJobId parameter after completion", () => {
-      const initialUrl = "/bundle?userId=user-123&etlJobId=job-456&isNewUser=true";
+      const initialUrl =
+        "/bundle?userId=user-123&etlJobId=job-456&isNewUser=true";
       const url = new URL(`http://localhost${initialUrl}`);
 
       // Remove ETL-related params
@@ -575,8 +598,6 @@ describe("ETL Polling Flow - Integration", () => {
        * until completeTransition() is manually called.
        */
 
-      let queriesEnabled = true;
-
       const checkQueriesEnabled = (status: string) => {
         // Queries should be DISABLED during these states
         const disablingStates = ["pending", "processing", "completing"];
@@ -595,7 +616,9 @@ describe("ETL Polling Flow - Integration", () => {
       const firstSearch = mockConnectWallet(TEST_WALLET_ADDRESSES.VALID_NEW);
 
       // Second search (cancels first)
-      const secondSearch = mockConnectWallet(TEST_WALLET_ADDRESSES.VALID_EXISTING);
+      const secondSearch = mockConnectWallet(
+        TEST_WALLET_ADDRESSES.VALID_EXISTING
+      );
 
       // Both should resolve independently
       await firstSearch;
@@ -635,7 +658,8 @@ describe("ETL Polling Flow - Integration", () => {
     });
 
     it("handles network interruptions during polling", async () => {
-      const mockGetEtlStatus = vi.fn()
+      const mockGetEtlStatus = vi
+        .fn()
         .mockResolvedValueOnce(ETL_STATUS_PENDING)
         .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce(ETL_STATUS_PROCESSING);

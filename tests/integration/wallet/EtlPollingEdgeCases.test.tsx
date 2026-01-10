@@ -15,21 +15,20 @@
  * @see tests/integration/wallet/EtlPollingFlow.test.tsx - Main flow tests
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { act } from "../../test-utils";
 import { QueryClient } from "@tanstack/react-query";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import {
-  createConnectWalletMock,
-  advancePollingCycle,
-} from "../../helpers/etlMockHelpers";
-import {
-  RATE_LIMITED_RESPONSE,
-  ETL_STATUS_PENDING,
   ETL_STATUS_PROCESSING,
-  ETL_STATUS_FAILED,
-  TEST_WALLET_ADDRESSES,
+  RATE_LIMITED_RESPONSE,
   TEST_JOB_IDS,
+  TEST_WALLET_ADDRESSES,
 } from "../../fixtures/mockEtlData";
+import {
+  advancePollingCycle,
+  createConnectWalletMock,
+} from "../../helpers/etlMockHelpers";
+import { act } from "../../test-utils";
 
 describe("ETL Polling - Edge Cases", () => {
   let queryClient: QueryClient;
@@ -71,7 +70,10 @@ describe("ETL Polling - Edge Cases", () => {
       const mockStartPolling = vi.fn();
       const mockTriggerEtl = vi.fn().mockResolvedValue(RATE_LIMITED_RESPONSE);
 
-      const result = await mockTriggerEtl("user-123", TEST_WALLET_ADDRESSES.VALID_NEW);
+      const result = await mockTriggerEtl(
+        "user-123",
+        TEST_WALLET_ADDRESSES.VALID_NEW
+      );
 
       if (result.rate_limited) {
         // Should NOT call startPolling
@@ -83,7 +85,8 @@ describe("ETL Polling - Edge Cases", () => {
     });
 
     it("allows retry after rate limit cooldown expires", async () => {
-      const mockTriggerEtl = vi.fn()
+      const mockTriggerEtl = vi
+        .fn()
         .mockResolvedValueOnce(RATE_LIMITED_RESPONSE)
         .mockResolvedValueOnce({
           job_id: TEST_JOB_IDS.PENDING,
@@ -92,7 +95,10 @@ describe("ETL Polling - Edge Cases", () => {
         });
 
       // First attempt - rate limited
-      const firstResult = await mockTriggerEtl("user-123", TEST_WALLET_ADDRESSES.VALID_NEW);
+      const firstResult = await mockTriggerEtl(
+        "user-123",
+        TEST_WALLET_ADDRESSES.VALID_NEW
+      );
       expect(firstResult.rate_limited).toBe(true);
 
       // Wait for cooldown (60 seconds)
@@ -101,7 +107,10 @@ describe("ETL Polling - Edge Cases", () => {
       });
 
       // Second attempt - should succeed
-      const secondResult = await mockTriggerEtl("user-123", TEST_WALLET_ADDRESSES.VALID_NEW);
+      const secondResult = await mockTriggerEtl(
+        "user-123",
+        TEST_WALLET_ADDRESSES.VALID_NEW
+      );
       expect(secondResult.rate_limited).toBe(false);
       expect(secondResult.job_id).toBeDefined();
     });
@@ -167,7 +176,11 @@ describe("ETL Polling - Edge Cases", () => {
       const processedJobs: string[] = [];
 
       // Simulate rapid job switching
-      for (const jobId of [TEST_JOB_IDS.PENDING, TEST_JOB_IDS.PROCESSING, TEST_JOB_IDS.COMPLETED]) {
+      for (const jobId of [
+        TEST_JOB_IDS.PENDING,
+        TEST_JOB_IDS.PROCESSING,
+        TEST_JOB_IDS.COMPLETED,
+      ]) {
         currentJobId = jobId;
         processedJobs.push(jobId);
       }
@@ -227,7 +240,9 @@ describe("ETL Polling - Edge Cases", () => {
       activeTimers.push(timer);
 
       // Cleanup
-      activeTimers.forEach(clearInterval);
+      for (const activeTimer of activeTimers) {
+        clearInterval(activeTimer);
+      }
 
       expect(activeTimers).toHaveLength(1);
       // In real scenario, timer would be cleared
@@ -435,7 +450,8 @@ describe("ETL Polling - Edge Cases", () => {
 
   describe("Error Recovery", () => {
     it("retries failed polling requests", async () => {
-      const mockGetEtlStatus = vi.fn()
+      const mockGetEtlStatus = vi
+        .fn()
         .mockRejectedValueOnce(new Error("Network error"))
         .mockResolvedValueOnce(ETL_STATUS_PROCESSING);
 
@@ -458,12 +474,14 @@ describe("ETL Polling - Edge Cases", () => {
       const MAX_RETRIES = 3;
       let retryCount = 0;
 
-      const mockGetEtlStatus = vi.fn().mockRejectedValue(new Error("Server error"));
+      const mockGetEtlStatus = vi
+        .fn()
+        .mockRejectedValue(new Error("Server error"));
 
       while (retryCount < MAX_RETRIES) {
         try {
           await mockGetEtlStatus("job-123");
-        } catch (error) {
+        } catch (_error) {
           retryCount++;
         }
       }
@@ -471,21 +489,29 @@ describe("ETL Polling - Edge Cases", () => {
       expect(retryCount).toBe(MAX_RETRIES);
 
       // After max retries, show error message
-      const errorMessage = "Unable to fetch wallet data. Please try again later.";
+      const errorMessage =
+        "Unable to fetch wallet data. Please try again later.";
       expect(errorMessage).toContain("try again");
     });
 
     it("allows manual retry after ETL failure", async () => {
-      const mockTriggerEtl = vi.fn()
+      const mockTriggerEtl = vi
+        .fn()
         .mockResolvedValueOnce({ status: "failed", error: "Data fetch failed" })
         .mockResolvedValueOnce({ status: "pending", job_id: "new-job-456" });
 
       // Initial attempt fails
-      const firstResult = await mockTriggerEtl("user-123", TEST_WALLET_ADDRESSES.VALID_NEW);
+      const firstResult = await mockTriggerEtl(
+        "user-123",
+        TEST_WALLET_ADDRESSES.VALID_NEW
+      );
       expect(firstResult.status).toBe("failed");
 
       // User clicks retry button
-      const retryResult = await mockTriggerEtl("user-123", TEST_WALLET_ADDRESSES.VALID_NEW);
+      const retryResult = await mockTriggerEtl(
+        "user-123",
+        TEST_WALLET_ADDRESSES.VALID_NEW
+      );
       expect(retryResult.status).toBe("pending");
       expect(retryResult.job_id).toBeDefined();
     });
@@ -493,7 +519,7 @@ describe("ETL Polling - Edge Cases", () => {
 
   describe("State Persistence", () => {
     it("preserves ETL state across route changes within app", async () => {
-      let etlState = {
+      const etlState = {
         jobId: TEST_JOB_IDS.PROCESSING,
         status: "processing" as const,
       };

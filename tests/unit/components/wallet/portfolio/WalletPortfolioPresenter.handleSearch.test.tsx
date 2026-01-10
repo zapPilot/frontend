@@ -20,21 +20,22 @@
  * @see src/components/wallet/portfolio/WalletPortfolioPresenter.tsx (lines 74-125)
  */
 
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, waitFor } from "../../../../test-utils";
 import userEvent from "@testing-library/user-event";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
 import { WalletPortfolioPresenter } from "@/components/wallet/portfolio/WalletPortfolioPresenter";
-import { MOCK_DATA, MOCK_SCENARIOS } from "../../../../fixtures/mockPortfolioData";
+
 import {
-  createConnectWalletMock,
+  EXISTING_USER_RESPONSE,
+  NEW_USER_RESPONSE,
+  TEST_WALLET_ADDRESSES,
+} from "../../../../fixtures/mockEtlData";
+import { MOCK_DATA } from "../../../../fixtures/mockPortfolioData";
+import {
   createMockRouter,
   createMockToast,
 } from "../../../../helpers/etlMockHelpers";
-import {
-  NEW_USER_RESPONSE,
-  EXISTING_USER_RESPONSE,
-  TEST_WALLET_ADDRESSES,
-} from "../../../../fixtures/mockEtlData";
+import { render, screen, waitFor } from "../../../../test-utils";
 
 // Mock dependencies
 const mockRouter = createMockRouter();
@@ -53,7 +54,9 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("@/providers/ToastProvider", () => ({
   useToast: () => mockToast,
-  ToastProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  ToastProvider: ({ children }: { children: React.ReactNode }) => (
+    <>{children}</>
+  ),
 }));
 
 // Mock child components to isolate handleSearch testing
@@ -75,7 +78,7 @@ vi.mock("@/components/wallet/portfolio/components/navigation", () => ({
       <input
         data-testid="search-input"
         placeholder="Search wallet"
-        onChange={(e) => {
+        onChange={e => {
           // Simulate search on Enter key
           if (e.target.value) {
             onSearch(e.target.value);
@@ -258,7 +261,9 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
 
         // Verify all required parameters
         expect(callArg).toContain(`userId=${NEW_USER_RESPONSE.user_id}`);
-        expect(callArg).toContain(`etlJobId=${NEW_USER_RESPONSE.etl_job?.job_id}`);
+        expect(callArg).toContain(
+          `etlJobId=${NEW_USER_RESPONSE.etl_job?.job_id}`
+        );
         expect(callArg).toContain("isNewUser=true");
       });
     });
@@ -317,7 +322,10 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
 
       // Make connectWallet resolve slowly so we can see loading state
       mockConnectWallet.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(NEW_USER_RESPONSE), 100))
+        () =>
+          new Promise(resolve =>
+            setTimeout(() => resolve(NEW_USER_RESPONSE), 100)
+          )
       );
 
       renderComponent();
@@ -346,7 +354,9 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
       });
 
       // Searching indicator should be gone
-      expect(screen.queryByTestId("searching-indicator")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("searching-indicator")
+      ).not.toBeInTheDocument();
     });
 
     it("hides searching indicator after error", async () => {
@@ -366,7 +376,9 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
       });
 
       // Searching indicator should be hidden after error
-      expect(screen.queryByTestId("searching-indicator")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("searching-indicator")
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -394,7 +406,9 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
     it("shows validation error for 42-character requirement", async () => {
       const user = userEvent.setup();
 
-      const validationError = new Error("Must be a 42-character Ethereum address");
+      const validationError = new Error(
+        "Must be a 42-character Ethereum address"
+      );
       mockConnectWallet.mockRejectedValue(validationError);
 
       renderComponent();
@@ -490,9 +504,7 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
     it("handles wallet conflict errors (409 status)", async () => {
       const user = userEvent.setup();
 
-      const conflictError = new Error(
-        "Wallet already belongs to another user"
-      );
+      const conflictError = new Error("Wallet already belongs to another user");
       (conflictError as any).status = 409;
       mockConnectWallet.mockRejectedValue(conflictError);
 
@@ -563,7 +575,10 @@ describe("WalletPortfolioPresenter - handleSearch", () => {
         const callArg = mockRouter.push.mock.calls[0][0];
 
         // Extract parameter names in order
-        const params = callArg.split("?")[1].split("&").map((p: string) => p.split("=")[0]);
+        const params = callArg
+          .split("?")[1]
+          .split("&")
+          .map((p: string) => p.split("=")[0]);
 
         expect(params).toEqual(
           expect.arrayContaining(["userId", "etlJobId", "isNewUser"])

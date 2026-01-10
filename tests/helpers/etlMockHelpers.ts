@@ -20,16 +20,18 @@
  */
 
 import { vi } from "vitest";
+
 import type { ConnectWalletResponse } from "@/schemas/api/accountSchemas";
+
 import {
-  NEW_USER_RESPONSE,
-  EXISTING_USER_RESPONSE,
-  ETL_STATUS_PENDING,
-  ETL_STATUS_PROCESSING,
   ETL_STATUS_COMPLETED,
   ETL_STATUS_FAILED,
-  VALIDATION_ERROR,
+  ETL_STATUS_PENDING,
+  ETL_STATUS_PROCESSING,
+  EXISTING_USER_RESPONSE,
   NETWORK_ERROR,
+  NEW_USER_RESPONSE,
+  VALIDATION_ERROR,
   WALLET_CONFLICT_ERROR,
 } from "../fixtures/mockEtlData";
 
@@ -146,7 +148,7 @@ export function createConnectWalletMock(
 
   if (shouldError) {
     return vi.fn(() => {
-      const error = new Error();
+      const error = new Error("Wallet connection failed");
 
       switch (errorType) {
         case "validation":
@@ -172,9 +174,7 @@ export function createConnectWalletMock(
   }
 
   return vi.fn(() => {
-    const baseResponse = isNewUser
-      ? NEW_USER_RESPONSE
-      : EXISTING_USER_RESPONSE;
+    const baseResponse = isNewUser ? NEW_USER_RESPONSE : EXISTING_USER_RESPONSE;
 
     const response: ConnectWalletResponse = {
       ...baseResponse,
@@ -225,8 +225,8 @@ export const POLLING_INTERVAL_MS = 3000;
  * ```
  */
 export async function advancePollingCycle(
-  times: number = 1,
-  interval: number = POLLING_INTERVAL_MS
+  times = 1,
+  interval = POLLING_INTERVAL_MS
 ): Promise<void> {
   for (let i = 0; i < times; i++) {
     await vi.advanceTimersByTimeAsync(interval);
@@ -293,11 +293,11 @@ export function createEtlJobStatusMock(statuses: EtlStatus[]) {
 export function resetEtlMocks(
   mocks: Record<string, ReturnType<typeof vi.fn>>
 ): void {
-  Object.values(mocks).forEach((mock) => {
+  for (const mock of Object.values(mocks)) {
     if (mock && typeof mock.mockReset === "function") {
       mock.mockReset();
     }
-  });
+  }
 }
 
 /**
@@ -365,5 +365,5 @@ export function createMockToast() {
  * ```
  */
 export async function flushPromises(): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise(resolve => setTimeout(resolve, 0));
 }

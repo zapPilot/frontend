@@ -14,17 +14,15 @@
  */
 
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "../../../test-utils";
+
 import { InitialDataLoadingState } from "@/components/wallet/InitialDataLoadingState";
+
+import { render, screen } from "../../../test-utils";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
   Loader2: (props: any) => (
-    <svg
-      data-testid="loader-icon"
-      className={props.className}
-      {...props}
-    />
+    <svg data-testid="loader-icon" className={props.className} {...props} />
   ),
 }));
 
@@ -52,7 +50,9 @@ describe("InitialDataLoadingState", () => {
       const { container } = render(<InitialDataLoadingState />);
 
       // Find the blur effect div (should be absolute positioned with blur)
-      const glowEffect = container.querySelector(".absolute.inset-0.bg-purple-500\\/20.blur-xl");
+      const glowEffect = container.querySelector(
+        ".absolute.inset-0.bg-purple-500\\/20.blur-xl"
+      );
       expect(glowEffect).toBeInTheDocument();
       expect(glowEffect).toHaveClass("rounded-full");
     });
@@ -114,7 +114,9 @@ describe("InitialDataLoadingState", () => {
     it("shows 'Fetching data from DeBank...' when status is 'processing'", () => {
       render(<InitialDataLoadingState status="processing" />);
 
-      expect(screen.getByText("Fetching data from DeBank...")).toBeInTheDocument();
+      expect(
+        screen.getByText("Fetching data from DeBank...")
+      ).toBeInTheDocument();
     });
 
     it("shows 'Finalizing...' when status is 'completed'", () => {
@@ -167,7 +169,7 @@ describe("InitialDataLoadingState", () => {
         "failed",
       ] as const;
 
-      statuses.forEach((status) => {
+      for (const status of statuses) {
         const { unmount } = render(<InitialDataLoadingState status={status} />);
 
         // Each status should render a badge with the purple theme
@@ -185,7 +187,7 @@ describe("InitialDataLoadingState", () => {
         expect(badge).toHaveClass("bg-purple-500/10");
 
         unmount();
-      });
+      }
     });
   });
 
@@ -230,7 +232,9 @@ describe("InitialDataLoadingState", () => {
     });
 
     it("maintains readable layout with appropriate spacing", () => {
-      const { container } = render(<InitialDataLoadingState status="processing" />);
+      const { container } = render(
+        <InitialDataLoadingState status="processing" />
+      );
 
       // Verify proper spacing between sections
       const contentWrapper = container.querySelector(".space-y-6");
@@ -247,7 +251,9 @@ describe("InitialDataLoadingState", () => {
 
   describe("Component Structure", () => {
     it("renders all sections in correct order", () => {
-      const { container } = render(<InitialDataLoadingState status="pending" />);
+      const { container } = render(
+        <InitialDataLoadingState status="pending" />
+      );
 
       const sections = container.querySelectorAll(".space-y-6 > *");
 
@@ -255,7 +261,9 @@ describe("InitialDataLoadingState", () => {
       expect(sections.length).toBe(3);
 
       // First section: spinner with glow effect
-      expect(sections[0].querySelector("[data-testid='loader-icon']")).toBeInTheDocument();
+      expect(
+        sections[0].querySelector("[data-testid='loader-icon']")
+      ).toBeInTheDocument();
 
       // Second section: heading and description
       expect(sections[1].querySelector("h3")).toBeInTheDocument();
@@ -266,22 +274,32 @@ describe("InitialDataLoadingState", () => {
     });
 
     it("maintains consistent styling across different statuses", () => {
-      const statuses = ["pending", "processing", "completed", "failed"] as const;
+      const statuses = [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+      ] as const;
 
-      statuses.forEach((status) => {
+      for (const status of statuses) {
         const { container, unmount } = render(
           <InitialDataLoadingState status={status} />
         );
 
         // All statuses should have the same root classes
         const root = container.firstChild as HTMLElement;
-        expect(root).toHaveClass("flex", "flex-col", "items-center", "justify-center");
+        expect(root).toHaveClass(
+          "flex",
+          "flex-col",
+          "items-center",
+          "justify-center"
+        );
         expect(root).toHaveClass("min-h-[400px]");
         expect(root).toHaveClass("text-center");
         expect(root).toHaveClass("p-8");
 
         unmount();
-      });
+      }
     });
   });
 });
