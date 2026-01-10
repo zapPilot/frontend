@@ -32,7 +32,6 @@ export function DashboardShell({
   headerBanners,
   footerOverlays,
   initialEtlJobId,
-  isNewUser,
 }: DashboardShellProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -40,7 +39,6 @@ export function DashboardShell({
   // ETL Polling for new wallets
   const {
     state: etlState,
-    reset: resetEtl,
     startPolling,
     completeTransition,
   } = useEtlJobPolling();
@@ -149,13 +147,9 @@ export function DashboardShell({
         isOwnBundle={isOwnBundle}
         isEmptyState={isEmptyState}
         isLoading={isLoading}
-        initialEtlJobId={initialEtlJobId}
-        isNewUser={isNewUser}
         etlState={etlState}
-        onResetEtl={resetEtl}
         headerBanners={headerBanners}
         footerOverlays={footerOverlays}
-        onRefresh={refetch}
       />
     </div>
   );

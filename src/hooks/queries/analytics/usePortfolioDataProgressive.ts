@@ -23,6 +23,7 @@ import {
   extractCompositionData,
   extractSentimentData,
 } from "@/lib/portfolio/portfolioTransformers";
+import { createSectionState } from "@/lib/portfolio/sectionHelpers";
 import type { DashboardProgressiveState } from "@/types/portfolio-progressive";
 
 import { useLandingPageData } from "./usePortfolioQuery";
@@ -47,46 +48,22 @@ export function usePortfolioDataProgressive(
   const regimeQuery = useRegimeHistory();
 
   // 1. Balance Section (Depends only on Landing)
-  const balanceSection = {
-    data: landingQuery.data ? extractBalanceData(landingQuery.data) : null,
-    isLoading: landingQuery.isLoading,
-    error: landingQuery.error as Error | null,
-  };
+  const balanceSection = createSectionState([landingQuery], extractBalanceData);
 
   // 2. Composition Section (Depends only on Landing, uses static sentiment fallback)
-  const compositionSection = {
-    data: landingQuery.data ? extractCompositionData(landingQuery.data) : null,
-    isLoading: landingQuery.isLoading,
-    error: landingQuery.error as Error | null,
-  };
+  const compositionSection = createSectionState([landingQuery], extractCompositionData);
 
   // 3. Strategy Section (Depends on Landing + Sentiment + Regime)
   // Logic: Strategy needs landing data to exist basically.
   // Sentiment and Regime are technically optional but usually preferred.
   // We'll mark it loading if landing is loading.
-  const strategySection = {
-    data: combineStrategyData(
-      landingQuery.data,
-      sentimentQuery.data,
-      regimeQuery.data
-    ),
-    isLoading:
-      landingQuery.isLoading ||
-      sentimentQuery.isLoading ||
-      regimeQuery.isLoading,
-    error: (landingQuery.error ||
-      sentimentQuery.error ||
-      regimeQuery.error) as Error | null,
-  };
+  const strategySection = createSectionState(
+    [landingQuery, sentimentQuery, regimeQuery],
+    combineStrategyData
+  );
 
   // 4. Independent Sentiment Section (Depends only on Sentiment)
-  const sentimentSection = {
-    data: sentimentQuery.data
-      ? extractSentimentData(sentimentQuery.data)
-      : null,
-    isLoading: sentimentQuery.isLoading,
-    error: sentimentQuery.error as Error | null,
-  };
+  const sentimentSection = createSectionState([sentimentQuery], extractSentimentData);
 
   // Legacy Unified Data (for backward compatibility)
   const unifiedData: WalletPortfolioDataWithDirection | null = landingQuery.data
