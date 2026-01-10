@@ -55,6 +55,8 @@ async function main() {
       }
       const isPortOrPerm =
         err.includes("failed to start server") ||
+        err.includes("was not able to start") ||
+        err.includes("unable to acquire lock") ||
         err.includes("listen eperm") ||
         err.includes("eaddrinuse") ||
         err.includes("operation not permitted");
