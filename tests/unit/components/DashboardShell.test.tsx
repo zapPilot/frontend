@@ -131,6 +131,7 @@ function createWrapper() {
 }
 
 describe("DashboardShell", () => {
+  const originalLocation = window.location;
   const defaultProps = {
     urlUserId: "user-123",
     isOwnBundle: true,
@@ -162,6 +163,13 @@ describe("DashboardShell", () => {
       status: "idle",
       errorMessage: undefined,
       isLoading: false,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, "location", {
+      value: originalLocation,
+      writable: true,
     });
   });
 

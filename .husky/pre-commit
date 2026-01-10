@@ -19,6 +19,7 @@ npm run dup:all            # ~3s  - Duplicate code detection (fails if >2.5%)
 
 # Phase 3: Comprehensive testing (60s+)
 echo "\n🧪 Phase 3: Testing"
-npm run test:safeall       # ~60s - Full test suite + coverage
+# npm run test:safeall       # ~60s - Full test suite + coverage
+CI=true npm run test:safeall
 
 echo "\n✅ All quality gates passed!"
