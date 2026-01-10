@@ -43,6 +43,7 @@ const replaceSpy = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceSpy }),
   useSearchParams: () => new URLSearchParams(""),
+  usePathname: () => window.location.pathname,
 }));
 
 describe("DashboardApp redirect to bundle", () => {

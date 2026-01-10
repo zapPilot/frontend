@@ -18,10 +18,6 @@ export {
   ServiceError,
 } from "./ServiceError";
 
-// Result type for explicit success/failure handling
-export type { Result } from "./ServiceError";
-export { Err, Ok, OkVoid } from "./ServiceError";
-
 // ============================================================================
 // ERROR UTILITIES
 // ============================================================================
@@ -37,7 +33,6 @@ export {
   isClientError,
   isRetryableError,
   isServerError,
-  isServiceError,
 } from "./errorHelpers";
 
 // Legacy factory utilities (still used in some places)

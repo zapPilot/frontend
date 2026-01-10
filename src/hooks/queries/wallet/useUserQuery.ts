@@ -26,15 +26,61 @@ export interface UserInfo {
   etlJobId?: string | null;
 }
 
+const baseUserQueryConfig = createQueryConfig({
+  dataType: "dynamic",
+  retryConfig: {
+    skipErrorMessages: ["USER_NOT_FOUND"],
+  },
+});
+
+interface BuildUserInfoInput {
+  userId: string;
+  profileData: UserProfileResponse;
+  fallbackWallet?: string | null;
+  isNewUser?: boolean;
+  etlJobId?: string | null;
+}
+
+function buildUserInfo({
+  userId,
+  profileData,
+  fallbackWallet,
+  isNewUser,
+  etlJobId,
+}: BuildUserInfoInput): UserInfo {
+  const wallets = profileData.wallets || [];
+  const userEmail = profileData.user?.email || "";
+
+  const bundleWallets =
+    wallets.length > 0
+      ? wallets.map(w => w.wallet)
+      : fallbackWallet
+        ? [fallbackWallet]
+        : [];
+
+  const additionalWallets = wallets.map(w => ({
+    wallet_address: w.wallet,
+    label: w.label ?? null,
+    created_at: w.created_at,
+  }));
+
+  return {
+    userId,
+    email: userEmail,
+    bundleWallets,
+    additionalWallets,
+    visibleWallets: bundleWallets,
+    totalWallets: bundleWallets.length,
+    totalVisibleWallets: bundleWallets.length,
+    ...(isNewUser ? { isNewUser } : {}),
+    ...(etlJobId ? { etlJobId } : {}),
+  };
+}
+
 // Hook to get user by wallet address
 export function useUserByWallet(walletAddress: string | null) {
   return useQuery({
-    ...createQueryConfig({
-      dataType: "dynamic",
-      retryConfig: {
-        skipErrorMessages: ["USER_NOT_FOUND"],
-      },
-    }),
+    ...baseUserQueryConfig,
     queryKey: queryKeys.user.byWallet(walletAddress || ""),
     queryFn: async (): Promise<UserInfo> => {
       if (!walletAddress) {
@@ -51,30 +97,14 @@ export function useUserByWallet(walletAddress: string | null) {
 
       // Fetch complete user profile once (includes wallets and email)
       const profileData: UserProfileResponse = await getUserProfile(userId);
-      const wallets = profileData.wallets || [];
-      const userEmail = profileData.user?.email || "";
 
-      // Derive fields compatible with previous structure
-      const bundleWallets =
-        wallets.length > 0 ? wallets.map(w => w.wallet) : [walletAddress];
-
-      const additionalWallets = wallets.map(w => ({
-        wallet_address: w.wallet,
-        label: w.label ?? null,
-        created_at: w.created_at,
-      }));
-
-      return {
+      return buildUserInfo({
         userId,
-        email: userEmail,
-        bundleWallets,
-        additionalWallets,
-        visibleWallets: bundleWallets,
-        totalWallets: bundleWallets.length,
-        totalVisibleWallets: bundleWallets.length,
-        ...(isNewUser ? { isNewUser } : {}),
-        ...(etl_job?.job_id ? { etlJobId: etl_job.job_id } : {}),
-      };
+        profileData,
+        fallbackWallet: walletAddress,
+        isNewUser,
+        etlJobId: etl_job?.job_id ?? null,
+      });
     },
     enabled: !!walletAddress, // Only run when wallet address is available
   });
@@ -107,12 +137,7 @@ export function useCurrentUser() {
  */
 export function useUserById(userId: string | null) {
   return useQuery({
-    ...createQueryConfig({
-      dataType: "dynamic",
-      retryConfig: {
-        skipErrorMessages: ["USER_NOT_FOUND"],
-      },
-    }),
+    ...baseUserQueryConfig,
     queryKey: queryKeys.user.byId(userId || ""),
     queryFn: async (): Promise<UserInfo> => {
       if (!userId) {
@@ -121,28 +146,8 @@ export function useUserById(userId: string | null) {
 
       // Fetch user profile directly by userId (no wallet connection needed)
       const profileData: UserProfileResponse = await getUserProfile(userId);
-      const wallets = profileData.wallets || [];
-      const userEmail = profileData.user?.email || "";
 
-      // Derive fields compatible with UserInfo structure
-      const bundleWallets =
-        wallets.length > 0 ? wallets.map(w => w.wallet) : [];
-
-      const additionalWallets = wallets.map(w => ({
-        wallet_address: w.wallet,
-        label: w.label ?? null,
-        created_at: w.created_at,
-      }));
-
-      return {
-        userId,
-        email: userEmail,
-        bundleWallets,
-        additionalWallets,
-        visibleWallets: bundleWallets,
-        totalWallets: bundleWallets.length,
-        totalVisibleWallets: bundleWallets.length,
-      };
+      return buildUserInfo({ userId, profileData });
     },
     enabled: !!userId,
   });

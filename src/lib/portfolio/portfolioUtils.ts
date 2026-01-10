@@ -46,27 +46,3 @@ export function extractROIChanges(
 
   return { change7d, change30d };
 }
-
-/**
- * Counts unique protocols in pool details
- *
- * @param poolDetails - Array of pool items with protocol_id field
- * @returns Number of unique protocols
- */
-export function countUniqueProtocols(
-  poolDetails: { protocol_id: string }[]
-): number {
-  const uniqueProtocols = new Set(poolDetails.map(pool => pool.protocol_id));
-  return uniqueProtocols.size;
-}
-
-/**
- * Counts unique chains in pool details
- *
- * @param poolDetails - Array of pool items with chain field
- * @returns Number of unique chains
- */
-export function countUniqueChains(poolDetails: { chain: string }[]): number {
-  const uniqueChains = new Set(poolDetails.map(pool => pool.chain));
-  return uniqueChains.size;
-}

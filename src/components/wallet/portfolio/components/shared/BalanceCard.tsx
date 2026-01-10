@@ -1,9 +1,11 @@
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
+import type { RiskMetrics } from "@/services/analyticsService";
 import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
+import { HealthRateIndicator } from "./HealthRateIndicator";
 
 /** BalanceCard styling constants */
 const STYLES = {
@@ -38,6 +40,10 @@ interface BalanceCardProps {
   isLoading?: boolean;
   onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
   lastUpdated?: string | null;
+  /** Risk metrics for leveraged positions (null if no leverage) */
+  riskMetrics?: RiskMetrics | null;
+  /** Optional handler for viewing detailed risk breakdown (future enhancement) */
+  onViewRiskDetails?: () => void;
 }
 
 export function BalanceCard({
@@ -47,9 +53,15 @@ export function BalanceCard({
   isLoading = false,
   onOpenModal,
   lastUpdated,
+  riskMetrics,
+  onViewRiskDetails,
 }: BalanceCardProps) {
   // Disable buttons if empty state OR not own bundle (visitor mode)
   const isActionsDisabled = isEmptyState || !isOwnBundle;
+
+  // Show health rate indicator if user has leverage and is not in empty state
+  const showHealthRate =
+    !isEmptyState && riskMetrics?.has_leverage && riskMetrics.health_rate;
 
   if (isLoading) {
     return <BalanceCardSkeleton />;
@@ -63,7 +75,9 @@ export function BalanceCard({
           <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
         )}
       </div>
-      <div className="flex items-center gap-3 mb-4">
+      <div
+        className={`flex items-center gap-3 ${showHealthRate ? "mb-2" : "mb-4"}`}
+      >
         <div className="flex-1">
           <div
             className={
@@ -75,6 +89,15 @@ export function BalanceCard({
           </div>
         </div>
       </div>
+
+      {/* Health Rate Indicator (conditional - only for leveraged positions) */}
+      {showHealthRate && (
+        <HealthRateIndicator
+          healthRate={riskMetrics.health_rate}
+          isOwnBundle={isOwnBundle}
+          {...(onViewRiskDetails ? { onClick: onViewRiskDetails } : {})}
+        />
+      )}
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-2">

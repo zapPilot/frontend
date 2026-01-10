@@ -60,7 +60,7 @@ export function isRetryableError(error: unknown): boolean {
  * @param error - Error to check
  * @returns True if error is ServiceError
  */
-export function isServiceError(error: unknown): error is ServiceError {
+function isServiceError(error: unknown): error is ServiceError {
   return (
     error instanceof Error &&
     "status" in error &&

@@ -126,6 +126,17 @@ Object.defineProperty(window, "scrollTo", {
   value: vi.fn(),
 });
 
+// Mock window.location.reload safely without breaking other properties
+if (typeof window !== "undefined") {
+  try {
+    if (typeof window.location.reload !== "function") {
+      (window.location as any).reload = vi.fn();
+    }
+  } catch (_err) {
+    // Fallback if location object is completely locked
+  }
+}
+
 // Mock PointerEvent for framer-motion
 (global as any).PointerEvent = class PointerEvent extends Event {
   pointerId: number;

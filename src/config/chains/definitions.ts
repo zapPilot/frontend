@@ -122,14 +122,3 @@ const MAINNET_CHAINS: BaseChainConfig[] = [
 export const SUPPORTED_CHAINS = MAINNET_CHAINS.filter(
   chain => chain.isSupported
 );
-
-/**
- * Chain registry for ID-based lookups
- */
-export const CHAIN_REGISTRY = MAINNET_CHAINS.reduce(
-  (registry, chain) => {
-    registry[chain.id] = chain;
-    return registry;
-  },
-  {} as Record<number, BaseChainConfig>
-);

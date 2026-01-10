@@ -51,11 +51,3 @@ export type {
   AllocationBreakdown,
   RegimeAllocationBreakdown,
 } from "./allocation";
-export {
-  allocationBreakdownSchema,
-  regimeAllocationBreakdownSchema,
-  toRegimeAllocation,
-  toTransactionAllocation,
-  validateAllocationBreakdown,
-  validateRegimeAllocationBreakdown,
-} from "./allocation";

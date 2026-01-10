@@ -40,6 +40,7 @@ vi.mock("next/navigation", async () => {
   return {
     ...actual,
     useRouter: () => ({ replace: replaceMock }),
+    usePathname: () => "/bundle",
   };
 });
 

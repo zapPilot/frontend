@@ -97,6 +97,7 @@ vi.mock("next/navigation", () => ({
     prefetch: vi.fn(),
   }),
   useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/bundle",
 }));
 
 // Mock useToast hook
@@ -170,7 +171,14 @@ vi.mock("@/components/Footer/Footer", () => ({
 }));
 
 vi.mock("@/components/wallet/portfolio/components/WalletNavigation", () => ({
-  WalletNavigation: () => <nav data-testid="wallet-navigation">Navigation</nav>,
+  WalletNavigation: ({ setActiveTab }: any) => (
+    <nav data-testid="wallet-navigation">
+      <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
+      <button onClick={() => setActiveTab("analytics")}>Analytics</button>
+      <button onClick={() => setActiveTab("backtesting")}>Backtesting</button>
+      <input data-testid="mock-search-input" placeholder="Search wallet..." />
+    </nav>
+  ),
 }));
 
 // Mock WalletProvider to prevent useWalletProvider error
@@ -916,6 +924,46 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         />
       );
       expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
+    });
+  });
+
+  describe("Navigation and Layout", () => {
+    it("navigates to analytics tab", async () => {
+      const user = userEvent.setup();
+      render(
+        <WalletPortfolioPresenter
+          data={{ ...MOCK_DATA }}
+          userId="user1"
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      // Verify Dashboard is active initially
+      expect(screen.getByTestId("v22-dashboard")).toBeInTheDocument();
+
+      // Switch to analytics
+      await user.click(screen.getByText("Analytics"));
+
+      // Verify analytics content is shown
+      expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
+    });
+
+    it("navigates to backtesting tab", async () => {
+      const user = userEvent.setup();
+      render(
+        <WalletPortfolioPresenter
+          data={MOCK_DATA}
+          sections={createMockSections(MOCK_DATA)}
+          etlState={DEFAULT_ETL_STATE}
+        />
+      );
+
+      // Switch to backtesting
+      await user.click(screen.getByText("Backtesting"));
+
+      // Verify backtesting content is shown
+      expect(screen.getByTestId("backtesting-view")).toBeInTheDocument();
     });
   });
 });

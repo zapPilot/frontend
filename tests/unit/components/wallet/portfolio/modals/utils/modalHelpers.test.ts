@@ -4,19 +4,21 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
-  applyPercentageToAmount,
   buildFormActionsProps,
+  buildModalFormState,
 } from "@/components/wallet/portfolio/modals/utils/modalHelpers";
 
 describe("modalHelpers", () => {
-  describe("applyPercentageToAmount", () => {
+  describe("buildModalFormState", () => {
     it("should set amount to percentage of maxAmount", () => {
       const mockSetValue = vi.fn();
       const mockForm = {
         setValue: mockSetValue,
+        formState: { isValid: true },
       } as any;
 
-      applyPercentageToAmount(mockForm, 0.5, 100);
+      const { handlePercentage } = buildModalFormState(mockForm, () => 100);
+      handlePercentage(0.5);
 
       expect(mockSetValue).toHaveBeenCalledWith("amount", "50.0000", {
         shouldValidate: true,
@@ -25,9 +27,13 @@ describe("modalHelpers", () => {
 
     it("should handle 100% correctly", () => {
       const mockSetValue = vi.fn();
-      const mockForm = { setValue: mockSetValue } as any;
+      const mockForm = {
+        setValue: mockSetValue,
+        formState: { isValid: true },
+      } as any;
 
-      applyPercentageToAmount(mockForm, 1, 500);
+      const { handlePercentage } = buildModalFormState(mockForm, () => 500);
+      handlePercentage(1);
 
       expect(mockSetValue).toHaveBeenCalledWith("amount", "500.0000", {
         shouldValidate: true,
@@ -36,9 +42,13 @@ describe("modalHelpers", () => {
 
     it("should handle 25% correctly", () => {
       const mockSetValue = vi.fn();
-      const mockForm = { setValue: mockSetValue } as any;
+      const mockForm = {
+        setValue: mockSetValue,
+        formState: { isValid: true },
+      } as any;
 
-      applyPercentageToAmount(mockForm, 0.25, 200);
+      const { handlePercentage } = buildModalFormState(mockForm, () => 200);
+      handlePercentage(0.25);
 
       expect(mockSetValue).toHaveBeenCalledWith("amount", "50.0000", {
         shouldValidate: true,
@@ -47,20 +57,38 @@ describe("modalHelpers", () => {
 
     it("should not set value when maxAmount is 0", () => {
       const mockSetValue = vi.fn();
-      const mockForm = { setValue: mockSetValue } as any;
+      const mockForm = {
+        setValue: mockSetValue,
+        formState: { isValid: true },
+      } as any;
 
-      applyPercentageToAmount(mockForm, 0.5, 0);
+      const { handlePercentage } = buildModalFormState(mockForm, () => 0);
+      handlePercentage(0.5);
 
       expect(mockSetValue).not.toHaveBeenCalled();
     });
 
     it("should not set value when maxAmount is negative", () => {
       const mockSetValue = vi.fn();
-      const mockForm = { setValue: mockSetValue } as any;
+      const mockForm = {
+        setValue: mockSetValue,
+        formState: { isValid: true },
+      } as any;
 
-      applyPercentageToAmount(mockForm, 0.5, -100);
+      const { handlePercentage } = buildModalFormState(mockForm, () => -100);
+      handlePercentage(0.5);
 
       expect(mockSetValue).not.toHaveBeenCalled();
+    });
+
+    it("should expose isValid from form state", () => {
+      const mockForm = {
+        setValue: vi.fn(),
+        formState: { isValid: false },
+      } as any;
+
+      const { isValid } = buildModalFormState(mockForm, () => 100);
+      expect(isValid).toBe(false);
     });
   });
 

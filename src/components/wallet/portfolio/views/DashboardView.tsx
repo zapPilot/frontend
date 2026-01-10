@@ -50,48 +50,81 @@ export function DashboardView({
   // Bundle URLs (/bundle?userId=xxx) are public - anyone can view without connecting wallet
   const shouldShowGhostMode = !urlUserId;
 
+  const balanceCard = (
+    <BalanceCard
+      balance={data.balance}
+      isEmptyState={isEmptyState}
+      isOwnBundle={isOwnBundle}
+      isLoading={false}
+      onOpenModal={onOpenModal}
+      lastUpdated={data.lastUpdated}
+      riskMetrics={data.riskMetrics}
+    />
+  );
+
+  const composition = (targetAllocation?: {
+    crypto: number;
+    stable: number;
+  }) => (
+    <PortfolioComposition
+      data={data}
+      currentRegime={currentRegime}
+      targetAllocation={targetAllocation}
+      isEmptyState={isEmptyState}
+      isOwnBundle={isOwnBundle}
+      isLoading={false}
+      onRebalance={() => onOpenModal("rebalance")}
+    />
+  );
+
+  const renderBalanceSection = () => {
+    if (isEmptyState && shouldShowGhostMode) {
+      return <GhostModeOverlay enabled={true}>{balanceCard}</GhostModeOverlay>;
+    }
+
+    if (isEmptyState) {
+      return balanceCard;
+    }
+
+    return (
+      <SectionWrapper
+        state={sections.balance}
+        skeleton={<BalanceCardSkeleton />}
+      >
+        {() => balanceCard}
+      </SectionWrapper>
+    );
+  };
+
+  const renderCompositionSection = () => {
+    if (isEmptyState && shouldShowGhostMode) {
+      return (
+        <GhostModeOverlay enabled={true} showCTA={false}>
+          {composition(data.targetAllocation)}
+        </GhostModeOverlay>
+      );
+    }
+
+    if (isEmptyState) {
+      return composition(data.targetAllocation);
+    }
+
+    return (
+      <SectionWrapper
+        state={sections.composition}
+        skeleton={<PortfolioCompositionSkeleton />}
+      >
+        {() => composition(sections.composition.data?.targetAllocation)}
+      </SectionWrapper>
+    );
+  };
+
   return (
     <div data-testid="dashboard-content" className={STYLES.container}>
       {/* Hero Section: Balance + Expandable Strategy Card */}
       <div className={STYLES.heroGrid}>
         {/* Balance Card - Ghost Mode only on root path without wallet */}
-        {isEmptyState && shouldShowGhostMode ? (
-          <GhostModeOverlay enabled={true}>
-            <BalanceCard
-              balance={data.balance}
-              isEmptyState={isEmptyState}
-              isOwnBundle={isOwnBundle}
-              isLoading={false}
-              onOpenModal={onOpenModal}
-              lastUpdated={data.lastUpdated}
-            />
-          </GhostModeOverlay>
-        ) : isEmptyState ? (
-          <BalanceCard
-            balance={data.balance}
-            isEmptyState={isEmptyState}
-            isOwnBundle={isOwnBundle}
-            isLoading={false}
-            onOpenModal={onOpenModal}
-            lastUpdated={data.lastUpdated}
-          />
-        ) : (
-          <SectionWrapper
-            state={sections.balance}
-            skeleton={<BalanceCardSkeleton />}
-          >
-            {() => (
-              <BalanceCard
-                balance={data.balance}
-                isEmptyState={isEmptyState}
-                isOwnBundle={isOwnBundle}
-                isLoading={false}
-                onOpenModal={onOpenModal}
-                lastUpdated={data.lastUpdated}
-              />
-            )}
-          </SectionWrapper>
-        )}
+        {renderBalanceSection()}
 
         {/* Strategy Card shows market data - no blur needed */}
         <StrategyCard
@@ -108,46 +141,7 @@ export function DashboardView({
       </div>
 
       {/* Unified Composition Bar - Ghost Mode only on root path without wallet */}
-      {isEmptyState && shouldShowGhostMode ? (
-        <GhostModeOverlay enabled={true} showCTA={false}>
-          <PortfolioComposition
-            data={data}
-            currentRegime={currentRegime}
-            targetAllocation={data.targetAllocation}
-            isEmptyState={isEmptyState}
-            isOwnBundle={isOwnBundle}
-            isLoading={false}
-            onRebalance={() => onOpenModal("rebalance")}
-          />
-        </GhostModeOverlay>
-      ) : isEmptyState ? (
-        <PortfolioComposition
-          data={data}
-          currentRegime={currentRegime}
-          targetAllocation={data.targetAllocation}
-          isEmptyState={isEmptyState}
-          isOwnBundle={isOwnBundle}
-          isLoading={false}
-          onRebalance={() => onOpenModal("rebalance")}
-        />
-      ) : (
-        <SectionWrapper
-          state={sections.composition}
-          skeleton={<PortfolioCompositionSkeleton />}
-        >
-          {() => (
-            <PortfolioComposition
-              data={data}
-              currentRegime={currentRegime}
-              targetAllocation={sections.composition.data?.targetAllocation}
-              isEmptyState={isEmptyState}
-              isOwnBundle={isOwnBundle}
-              isLoading={false}
-              onRebalance={() => onOpenModal("rebalance")}
-            />
-          )}
-        </SectionWrapper>
-      )}
+      {renderCompositionSection()}
     </div>
   );
 }

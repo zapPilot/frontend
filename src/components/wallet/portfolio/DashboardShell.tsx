@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
@@ -47,6 +47,7 @@ export function DashboardShell({
   const isEtlInProgress = ["pending", "processing", "completing"].includes(
     etlState.status
   );
+  const activeEtlJobIdRef = useRef<string | null>(null);
 
   // Portfolio data with ETL-aware queries
   const { unifiedData, sections, isLoading, error, refetch } =
@@ -54,19 +55,27 @@ export function DashboardShell({
 
   // Start polling when initialEtlJobId is provided
   useEffect(() => {
-    if (initialEtlJobId && !etlState.jobId) {
-      startPolling(initialEtlJobId);
+    if (!initialEtlJobId || initialEtlJobId === activeEtlJobIdRef.current) {
+      return;
     }
-  }, [initialEtlJobId, etlState.jobId, startPolling]);
+    activeEtlJobIdRef.current = initialEtlJobId;
+    startPolling(initialEtlJobId);
+  }, [initialEtlJobId, startPolling]);
+
+  useEffect(() => {
+    activeEtlJobIdRef.current = etlState.jobId;
+  }, [etlState.jobId]);
 
   // Handle ETL completion auto-refresh
   // When status transitions to "completing", coordinate cache invalidation and refetch
   useEffect(() => {
-    if (etlState.status !== "completing") {
+    if (etlState.status !== "completing" || !etlState.jobId) {
       return;
     }
 
     const handleCompletion = async () => {
+      const completingJobId = etlState.jobId;
+
       // 1. Wait for cache invalidation to complete
       await queryClient.invalidateQueries({
         queryKey: queryKeys.portfolio.landingPage(urlUserId),
@@ -76,11 +85,15 @@ export function DashboardShell({
       await refetch();
 
       // 3. Clean URL params
+      if (activeEtlJobIdRef.current !== completingJobId) {
+        return;
+      }
+
       const url = new URL(window.location.href);
-      if (
-        url.searchParams.has("etlJobId") ||
-        url.searchParams.has("isNewUser")
-      ) {
+      const urlJobId = url.searchParams.get("etlJobId");
+      const shouldClearParams =
+        urlJobId === completingJobId || url.searchParams.has("isNewUser");
+      if (shouldClearParams) {
         url.searchParams.delete("etlJobId");
         url.searchParams.delete("isNewUser");
         router.replace(url.pathname + url.search, { scroll: false });
@@ -93,6 +106,7 @@ export function DashboardShell({
     void handleCompletion();
   }, [
     etlState.status,
+    etlState.jobId,
     refetch,
     completeTransition,
     urlUserId,

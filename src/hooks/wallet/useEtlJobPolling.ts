@@ -15,7 +15,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import {
   type EtlJobResponse,
-  type EtlJobStatusResponse,
+  type EtlJobStatus,
   getEtlJobStatus,
   triggerWalletDataFetch,
 } from "@/services/accountService";
@@ -89,21 +89,20 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
   >(null);
 
   // Poll job status when we have a job ID
-  const { data: jobStatus, isLoading: isPolling } =
-    useQuery<EtlJobStatusResponse>({
-      queryKey: [...ETL_JOB_QUERY_KEY, jobId],
-      queryFn: () => getEtlJobStatus(jobId!),
-      enabled: !!jobId,
-      refetchInterval: query => {
-        const data = query.state.data;
-        // Stop polling when job is completed or failed
-        if (data?.status === "completed" || data?.status === "failed") {
-          return false;
-        }
-        return POLLING_INTERVAL;
-      },
-      staleTime: 0, // Always refetch
-    });
+  const { data: jobStatus, isLoading: isPolling } = useQuery<EtlJobStatus>({
+    queryKey: [...ETL_JOB_QUERY_KEY, jobId],
+    queryFn: () => getEtlJobStatus(jobId!),
+    enabled: !!jobId,
+    refetchInterval: query => {
+      const data = query.state.data;
+      // Stop polling when job is completed or failed
+      if (data?.status === "completed" || data?.status === "failed") {
+        return false;
+      }
+      return POLLING_INTERVAL;
+    },
+    staleTime: 0, // Always refetch
+  });
 
   useEffect(() => {
     if (!jobStatus) return;
@@ -122,7 +121,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
   const state: EtlJobPollingState = {
     jobId,
     status: deriveStatus(),
-    errorMessage: triggerError || jobStatus?.error_message,
+    errorMessage: triggerError || jobStatus?.error?.message,
     isLoading: isPolling || (!!jobId && jobStatus?.status === "pending"),
   };
 

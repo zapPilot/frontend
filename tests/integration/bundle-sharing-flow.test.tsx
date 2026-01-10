@@ -18,6 +18,7 @@ vi.mock("next/navigation", () => ({
     push: mockPush,
   }),
   useSearchParams: () => mockSearchParams,
+  usePathname: () => "/bundle",
 }));
 
 // Mock UserContext with controllable state

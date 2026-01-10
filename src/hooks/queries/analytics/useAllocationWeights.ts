@@ -1,24 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 
-import {
-  type AllocationWeightsResponse,
-  getAllocationWeights,
-} from "@/services/allocationService";
+import { getAllocationWeights } from "@/services/allocationService";
 
 import { createQueryConfig } from "../queryDefaults";
-
-/**
- * Default fallback weights if API unavailable or data missing
- */
-export const DEFAULT_ALLOCATION_WEIGHTS: AllocationWeightsResponse = {
-  btc_weight: 0.6,
-  eth_weight: 0.4,
-  btc_market_cap: null,
-  eth_market_cap: null,
-  timestamp: new Date().toISOString(),
-  is_fallback: true,
-  cached: false,
-};
 
 /**
  * React Query hook for fetching marketcap-weighted allocation weights

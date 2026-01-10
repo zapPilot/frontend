@@ -1,3 +1,4 @@
+import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
 import { z } from "zod";
 
 /**
@@ -11,6 +12,9 @@ import { z } from "zod";
 // USER SCHEMAS
 // ============================================================================
 
+/**
+ * Schema for base user object
+ */
 /**
  * Schema for base user object
  */
@@ -58,24 +62,87 @@ export const userSubscriptionSchema = z.object({
   plan: planSchema.optional(),
 });
 
+/**
+ * Schema for account token
+ */
+export const accountTokenSchema = z.object({
+  id: z.string(),
+  chain: z.string(),
+  name: z.string(),
+  symbol: z.string(),
+  display_symbol: z.string().optional().nullable(),
+  optimized_symbol: z.string().optional().nullable(),
+  decimals: z.number(),
+  logo_url: z.string().optional().nullable(),
+  protocol_id: z.string().optional().nullable(),
+  price: z.number(),
+  is_verified: z.boolean(),
+  is_core: z.boolean(),
+  is_wallet: z.boolean(),
+  time_at: z.number().optional().nullable(),
+  amount: z.number(),
+});
+
+/**
+ * Schema for health check response
+ */
+export const healthCheckResponseSchema = z.object({
+  status: z.string(),
+  timestamp: z.string(),
+});
+
 // ============================================================================
 // API RESPONSE SCHEMAS
 // ============================================================================
 
 /**
- * Schema for connect wallet response
+ * Lenient ETL job status schema - accepts API's snake_case directly
+ *
+ * Only requires job_id and status (the fields we actually use).
+ * Makes all other fields optional to handle partial API responses gracefully.
+ * Uses passthrough() to handle future API additions without breaking validation.
+ *
+ * This schema accepts the API response as-is without transformation, which:
+ * - Prevents accidentally dropping fields (like message, rate_limited)
+ * - Simplifies the codebase (no transformation logic to maintain)
+ * - Matches the existing snake_case convention at the top level
+ * - Future-proofs against new API fields
  */
-export const etlJobResponseSchema = z.object({
-  job_id: z.string().nullable(),
-  status: z.string(),
-  message: z.string(),
-  rate_limited: z.boolean().optional(),
-});
+const LenientEtlJobStatusSchema = z
+  .object({
+    job_id: z.string(),
+    status: z.enum(["pending", "processing", "completed", "failed"]),
+    trigger: z.enum(["webhook", "manual", "scheduled"]).optional(),
+    created_at: z.string().optional(),
+    updated_at: z.string().optional(),
+    completed_at: z.string().optional(),
+    records_processed: z.number().optional(),
+    records_inserted: z.number().optional(),
+    duration: z.number().optional(),
+    message: z.string().optional(),
+    rate_limited: z.boolean().optional(),
+    error: z
+      .object({
+        code: z.string(),
+        message: z.string(),
+      })
+      .optional(),
+  })
+  // eslint-disable-next-line sonarjs/deprecation
+  .passthrough(); // Allow additional fields without failing validation
+
+/**
+ * Schema for ETL job status response
+ *
+ * Accepts API's snake_case fields directly without transformation.
+ * No preprocessing needed - what the API sends is what we validate.
+ */
+export const etlJobStatusResponseSchema = LenientEtlJobStatusSchema;
 
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),
   is_new_user: z.boolean(),
-  etl_job: etlJobResponseSchema.optional(),
+  etl_job: etlJobStatusResponseSchema.optional(),
 });
 
 /**
@@ -95,48 +162,19 @@ export const updateEmailResponseSchema = z.object({
 });
 
 /**
+ * Schema for simple message response
+ */
+export const messageResponseSchema = z.object({
+  message: z.string(),
+});
+
+/**
  * Schema for user profile response
  */
 export const userProfileResponseSchema = z.object({
   user: userSchema,
   wallets: z.array(userCryptoWalletSchema),
   subscription: userSubscriptionSchema.optional(),
-});
-
-/**
- * Schema for account token (from getUserTokens endpoint)
- */
-export const accountTokenSchema = z.object({
-  id: z.string(),
-  chain: z.string(),
-  name: z.string(),
-  symbol: z.string(),
-  display_symbol: z.string(),
-  optimized_symbol: z.string(),
-  decimals: z.number(),
-  logo_url: z.string(),
-  protocol_id: z.string(),
-  price: z.number(),
-  is_verified: z.boolean(),
-  is_core: z.boolean(),
-  is_wallet: z.boolean(),
-  time_at: z.number(),
-  amount: z.number(),
-});
-
-/**
- * Schema for health check response
- */
-export const healthCheckResponseSchema = z.object({
-  status: z.string(),
-  timestamp: z.string(),
-});
-
-/**
- * Schema for simple message response
- */
-export const messageResponseSchema = z.object({
-  message: z.string(),
 });
 
 // ============================================================================
@@ -150,12 +188,35 @@ export const messageResponseSchema = z.object({
 /** @public */ export type UserCryptoWallet = z.infer<
   typeof userCryptoWalletSchema
 >;
-/** @public */ export type ConnectWalletResponse = z.infer<
-  typeof connectWalletResponseSchema
->;
-/** @public */ export type EtlJobResponse = z.infer<
-  typeof etlJobResponseSchema
->;
+
+/**
+ * ConnectWalletResponse type with snake_case etl_job field
+ * Matches the API's response structure directly without transformation
+ *
+ * Note: We use a custom etl_job structure instead of the imported EtlJobStatus
+ * because the API returns a subset of fields with snake_case naming.
+ */
+/** @public */ export interface ConnectWalletResponse {
+  user_id: string;
+  is_new_user: boolean;
+  etl_job?: {
+    job_id: string;
+    status: "pending" | "processing" | "completed" | "failed";
+    message?: string;
+    rate_limited?: boolean;
+    trigger?: "webhook" | "manual" | "scheduled";
+    created_at?: string;
+    updated_at?: string;
+    completed_at?: string;
+    records_processed?: number;
+    records_inserted?: number;
+    duration?: number;
+    error?: {
+      code: string;
+      message: string;
+    };
+  };
+}
 /** @public */ export type AddWalletResponse = z.infer<
   typeof addWalletResponseSchema
 >;
@@ -165,13 +226,19 @@ export const messageResponseSchema = z.object({
 /** @public */ export type UserProfileResponse = z.infer<
   typeof userProfileResponseSchema
 >;
+/** @public */ export type MessageResponse = z.infer<
+  typeof messageResponseSchema
+>;
 /** @public */ export type AccountToken = z.infer<typeof accountTokenSchema>;
 /** @public */ export type HealthCheckResponse = z.infer<
   typeof healthCheckResponseSchema
 >;
-/** @public */ export type MessageResponse = z.infer<
-  typeof messageResponseSchema
->;
+
+/**
+ * Re-export EtlJobStatus from etl-contracts for convenience
+ * This type is used in ConnectWalletResponse
+ */
+export type { EtlJobStatus };
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS
@@ -184,7 +251,7 @@ export const messageResponseSchema = z.object({
 export function validateConnectWalletResponse(
   data: unknown
 ): ConnectWalletResponse {
-  return connectWalletResponseSchema.parse(data);
+  return connectWalletResponseSchema.parse(data) as ConnectWalletResponse;
 }
 
 /**
@@ -216,6 +283,14 @@ export function validateUserProfileResponse(
 }
 
 /**
+ * Validates user crypto wallets array from API
+ * Returns validated data or throws ZodError with detailed error messages
+ */
+export function validateUserWallets(data: unknown): UserCryptoWallet[] {
+  return z.array(userCryptoWalletSchema).parse(data);
+}
+
+/**
  * Validates account tokens array from API
  * Returns validated data or throws ZodError with detailed error messages
  */
@@ -224,11 +299,11 @@ export function validateAccountTokens(data: unknown): AccountToken[] {
 }
 
 /**
- * Validates user crypto wallets array from API
+ * Validates message response from API
  * Returns validated data or throws ZodError with detailed error messages
  */
-export function validateUserWallets(data: unknown): UserCryptoWallet[] {
-  return z.array(userCryptoWalletSchema).parse(data);
+export function validateMessageResponse(data: unknown): MessageResponse {
+  return messageResponseSchema.parse(data);
 }
 
 /**
@@ -239,14 +314,6 @@ export function validateHealthCheckResponse(
   data: unknown
 ): HealthCheckResponse {
   return healthCheckResponseSchema.parse(data);
-}
-
-/**
- * Validates message response from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateMessageResponse(data: unknown): MessageResponse {
-  return messageResponseSchema.parse(data);
 }
 
 // safeValidateUserProfile removed (test-only usage)

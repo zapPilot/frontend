@@ -16,7 +16,7 @@ export const ASSET_COLORS = {
  * - BORDER: 50% opacity for bar border (subtle definition)
  * - Legend dots use 100% opacity for visibility at small sizes
  */
-export const BAR_OPACITY = {
+const BAR_OPACITY = {
   BACKGROUND: "66", // 40% opacity in hex
   BORDER: "80", // 50% opacity in hex
 } as const;

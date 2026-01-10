@@ -29,7 +29,10 @@ import type {
   DirectionType,
   DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
-import type { LandingPageResponse } from "@/services/analyticsService";
+import type {
+  LandingPageResponse,
+  RiskMetrics,
+} from "@/services/analyticsService";
 import type { RegimeHistoryData } from "@/services/regimeHistoryService";
 import type { MarketSentimentData } from "@/services/sentimentService";
 
@@ -71,6 +74,9 @@ interface WalletPortfolioData {
   positions: number;
   protocols: number;
   chains: number;
+
+  // Risk metrics (for leveraged positions)
+  riskMetrics: RiskMetrics | null;
 
   // Data freshness
   /** ISO date string of last data update */
@@ -150,6 +156,9 @@ export function transformToWalletPortfolioData(
     positions: landingData.positions ?? 0,
     protocols: landingData.protocols ?? 0,
     chains: landingData.chains ?? 0,
+
+    // Risk metrics
+    riskMetrics: landingData.risk_metrics ?? null,
 
     // Data freshness
     lastUpdated: landingData.last_updated ?? null,
@@ -245,6 +254,9 @@ export function createEmptyPortfolioState(
     positions: GHOST_MODE_PREVIEW.positions,
     protocols: GHOST_MODE_PREVIEW.protocols,
     chains: GHOST_MODE_PREVIEW.chains,
+
+    // Risk metrics - null for empty state (no leverage in preview)
+    riskMetrics: null,
 
     // Data freshness
     lastUpdated: null,

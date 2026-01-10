@@ -5,6 +5,7 @@ import {
   accountTokenSchema,
   addWalletResponseSchema,
   connectWalletResponseSchema,
+  etlJobStatusResponseSchema,
   healthCheckResponseSchema,
   messageResponseSchema,
   planSchema,
@@ -197,6 +198,130 @@ describe("accountSchemas", () => {
       };
 
       expect(() => connectWalletResponseSchema.parse(validData)).not.toThrow();
+    });
+  });
+
+  /**
+   * Comprehensive test suite for ETL job status schema with snake_case fields
+   * These tests prevent regression of the bug where preprocessing dropped message/rate_limited fields
+   */
+  describe("etlJobStatusResponseSchema - snake_case acceptance", () => {
+    it("should accept minimal API response with only job_id and status", () => {
+      const minimalResponse = {
+        job_id: "etl_1767881497530_1rw7jo",
+        status: "pending",
+        // No trigger, created_at, message, etc.
+      };
+
+      const result = etlJobStatusResponseSchema.parse(minimalResponse);
+
+      expect(result.job_id).toBe("etl_1767881497530_1rw7jo");
+      expect(result.status).toBe("pending");
+      expect(result.trigger).toBeUndefined();
+      expect(result.created_at).toBeUndefined();
+      expect(result.message).toBeUndefined();
+    });
+
+    it("should accept full real API response from connect-wallet endpoint", () => {
+      // Real API response structure
+      const realApiResponse = {
+        job_id: "etl_1767881497530_1rw7jo",
+        status: "pending",
+        message: "Wallet data fetch job queued successfully",
+        rate_limited: false,
+      };
+
+      const result = etlJobStatusResponseSchema.parse(realApiResponse);
+
+      expect(result.job_id).toBe("etl_1767881497530_1rw7jo");
+      expect(result.status).toBe("pending");
+      expect(result.message).toBe("Wallet data fetch job queued successfully");
+      expect(result.rate_limited).toBe(false);
+    });
+
+    it("should accept response with all optional fields", () => {
+      const fullResponse = {
+        job_id: "test-123",
+        status: "completed",
+        trigger: "webhook",
+        created_at: "2026-01-08T00:00:00Z",
+        updated_at: "2026-01-08T01:00:00Z",
+        completed_at: "2026-01-08T02:00:00Z",
+        records_processed: 100,
+        records_inserted: 95,
+        duration: 3600,
+        message: "Job completed successfully",
+        rate_limited: false,
+      };
+
+      const result = etlJobStatusResponseSchema.parse(fullResponse);
+
+      expect(result.job_id).toBe("test-123");
+      expect(result.status).toBe("completed");
+      expect(result.trigger).toBe("webhook");
+      expect(result.created_at).toBe("2026-01-08T00:00:00Z");
+      expect(result.records_processed).toBe(100);
+      expect(result.message).toBe("Job completed successfully");
+      expect(result.rate_limited).toBe(false);
+    });
+
+    it("should handle partial responses with some optional fields", () => {
+      const partialResponse = {
+        job_id: "partial-123",
+        status: "processing",
+        created_at: "2024-01-01T00:00:00Z",
+        message: "Processing...",
+        // No trigger, updated_at, records_processed, etc.
+      };
+
+      const result = etlJobStatusResponseSchema.parse(partialResponse);
+
+      expect(result.job_id).toBe("partial-123");
+      expect(result.status).toBe("processing");
+      expect(result.created_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.message).toBe("Processing...");
+      expect(result.trigger).toBeUndefined();
+      expect(result.records_processed).toBeUndefined();
+    });
+
+    it("should reject response missing required job_id field", () => {
+      const missingJobId = {
+        status: "pending",
+        message: "Test",
+      };
+
+      expect(() => etlJobStatusResponseSchema.parse(missingJobId)).toThrow(
+        ZodError
+      );
+    });
+
+    it("should reject response missing required status field", () => {
+      const missingStatus = {
+        job_id: "test-123",
+        message: "Test",
+      };
+
+      expect(() => etlJobStatusResponseSchema.parse(missingStatus)).toThrow(
+        ZodError
+      );
+    });
+
+    it("should handle extra fields not in schema due to passthrough", () => {
+      const responseWithExtraFields = {
+        job_id: "test-123",
+        status: "pending",
+        custom_field: "custom_value",
+        future_api_field: 42,
+      };
+
+      // Should not throw - passthrough allows extra fields
+      const result = etlJobStatusResponseSchema.parse(responseWithExtraFields);
+
+      expect(result.job_id).toBe("test-123");
+      expect(result.status).toBe("pending");
+      expect(() =>
+        etlJobStatusResponseSchema.parse(responseWithExtraFields)
+      ).not.toThrow();
     });
   });
 
