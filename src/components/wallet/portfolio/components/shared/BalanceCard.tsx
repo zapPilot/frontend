@@ -5,7 +5,8 @@ import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
-import { HealthRateIndicator } from "./HealthRateIndicator";
+import { HealthFactorPill } from "./HealthFactorPill";
+import { HealthWarningBanner } from "./HealthWarningBanner";
 
 /** BalanceCard styling constants */
 const STYLES = {
@@ -68,58 +69,73 @@ export function BalanceCard({
   }
 
   return (
-    <div className={STYLES.card}>
-      <div className="flex items-center justify-between mb-2">
-        <div className={STYLES.label}>Net Worth</div>
-        {!isEmptyState && lastUpdated && (
-          <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
-        )}
-      </div>
-      <div
-        className={`flex items-center gap-3 ${showHealthRate ? "mb-2" : "mb-4"}`}
-      >
-        <div className="flex-1">
-          <div
-            className={
-              isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive
-            }
-            data-testid="net-worth"
-          >
-            ${balance.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      {/* Health Rate Indicator (conditional - only for leveraged positions) */}
-      {showHealthRate && (
-        <HealthRateIndicator
-          healthRate={riskMetrics.health_rate}
-          isOwnBundle={isOwnBundle}
-          {...(onViewRiskDetails ? { onClick: onViewRiskDetails } : {})}
+    <>
+      {/* Mobile Critical State Warning Banner */}
+      {showHealthRate && riskMetrics && (
+        <HealthWarningBanner
+          riskMetrics={riskMetrics}
+          onViewDetails={onViewRiskDetails}
         />
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          data-testid="deposit-button"
-          onClick={() => onOpenModal("deposit")}
-          disabled={isActionsDisabled}
-          title={!isOwnBundle ? "Switch to your bundle to deposit" : undefined}
-          className={getButtonClassName("deposit", isActionsDisabled)}
-        >
-          <ArrowDownCircle className="w-4 h-4" /> Deposit
-        </button>
-        <button
-          data-testid="withdraw-button"
-          onClick={() => onOpenModal("withdraw")}
-          disabled={isActionsDisabled}
-          title={!isOwnBundle ? "Switch to your bundle to withdraw" : undefined}
-          className={getButtonClassName("withdraw", isActionsDisabled)}
-        >
-          <ArrowUpCircle className="w-4 h-4" /> Withdraw
-        </button>
+      <div className={STYLES.card}>
+        <div className="flex items-center justify-between mb-2">
+          <div className={STYLES.label}>Net Worth</div>
+          {!isEmptyState && lastUpdated && (
+            <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
+          )}
+        </div>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1">
+            <div
+              className={
+                isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive
+              }
+              data-testid="net-worth"
+            >
+              ${balance.toLocaleString()}
+            </div>
+          </div>
+        </div>
+
+        {/* Health Factor Pill (conditional - only for leveraged positions) */}
+        {showHealthRate && (
+          <div className="mb-4">
+            <HealthFactorPill
+              riskMetrics={riskMetrics}
+              isOwnBundle={isOwnBundle}
+              size="md"
+              {...(onViewRiskDetails && { onViewDetails: onViewRiskDetails })}
+            />
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            data-testid="deposit-button"
+            onClick={() => onOpenModal("deposit")}
+            disabled={isActionsDisabled}
+            title={
+              !isOwnBundle ? "Switch to your bundle to deposit" : undefined
+            }
+            className={getButtonClassName("deposit", isActionsDisabled)}
+          >
+            <ArrowDownCircle className="w-4 h-4" /> Deposit
+          </button>
+          <button
+            data-testid="withdraw-button"
+            onClick={() => onOpenModal("withdraw")}
+            disabled={isActionsDisabled}
+            title={
+              !isOwnBundle ? "Switch to your bundle to withdraw" : undefined
+            }
+            className={getButtonClassName("withdraw", isActionsDisabled)}
+          >
+            <ArrowUpCircle className="w-4 h-4" /> Withdraw
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -28,7 +28,7 @@ exports[`AllocationBars > Snapshot Tests > matches snapshot for large allocation
               BTC
             </span>
             <span
-              class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity text-gray-400"
             >
               40.00
               %
@@ -55,7 +55,7 @@ exports[`AllocationBars > Snapshot Tests > matches snapshot for large allocation
               ETH
             </span>
             <span
-              class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity text-gray-400"
             >
               30.00
               %
@@ -181,7 +181,7 @@ exports[`AllocationBars > Snapshot Tests > matches snapshot for mixed allocation
               BTC
             </span>
             <span
-              class="text-xs text-gray-400 font-mono opacity-0 group-hover:opacity-100 transition-opacity"
+              class="text-xs font-mono opacity-0 group-hover:opacity-100 transition-opacity text-gray-400"
             >
               40.00
               %

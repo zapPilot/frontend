@@ -17,6 +17,33 @@ const WalletListHeader = ({ count }: { count: number }) => (
   </div>
 );
 
+const WalletListEmptyState = ({
+  isOwner,
+  onStartAdding,
+}: {
+  isOwner: boolean;
+  onStartAdding: () => void;
+}) => (
+  <div className="p-6 border-b border-gray-700/50">
+    <WalletListHeader count={0} />
+    <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
+      <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+      <p className="text-gray-300 mb-4">
+        {isOwner ? "Add wallets to your bundle" : "No wallets in this bundle"}
+      </p>
+      {isOwner && (
+        <GradientButton
+          onClick={onStartAdding}
+          gradient={GRADIENTS.PRIMARY}
+          icon={Plus}
+        >
+          Add Your First Wallet
+        </GradientButton>
+      )}
+    </div>
+  </div>
+);
+
 /**
  * Props for WalletList component (reduced from 17 to 9)
  * Operation handlers provided via WalletListContext
@@ -57,26 +84,7 @@ export const WalletList = ({
   } = useWalletList();
   if (wallets.length === 0) {
     return (
-      <div className="p-6 border-b border-gray-700/50">
-        <WalletListHeader count={0} />
-        <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
-          <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-300 mb-4">
-            {isOwner
-              ? "Add wallets to your bundle"
-              : "No wallets in this bundle"}
-          </p>
-          {isOwner && (
-            <GradientButton
-              onClick={onStartAdding}
-              gradient={GRADIENTS.PRIMARY}
-              icon={Plus}
-            >
-              Add Your First Wallet
-            </GradientButton>
-          )}
-        </div>
-      </div>
+      <WalletListEmptyState isOwner={isOwner} onStartAdding={onStartAdding} />
     );
   }
 
