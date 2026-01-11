@@ -1,0 +1,165 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+
+import {
+    mapBorrowingStatusToRiskLevel,
+    RISK_COLORS,
+    RISK_LABELS,
+    RiskLevel,
+} from "@/constants/riskThresholds";
+import type { BorrowingSummary } from "@/services/analyticsService";
+
+interface BorrowingHealthPillProps {
+  summary: BorrowingSummary;
+  size?: "sm" | "md";
+}
+
+const SIZE_CONFIGS = {
+  sm: {
+    container: "px-2 py-1 text-xs gap-1.5",
+    dot: "w-2 h-2",
+  },
+  md: {
+    container: "px-3 py-1.5 text-sm gap-2",
+    dot: "w-2.5 h-2.5",
+  },
+} as const;
+
+/**
+ * Borrowing Health Pill
+ *
+ * A lightweight visual indicator for borrowing position health.
+ * Displays color-coded status and health rate.
+ */
+export function BorrowingHealthPill({
+  summary,
+  size = "md",
+}: BorrowingHealthPillProps) {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+
+  const { overall_status, worst_health_rate, critical_count, warning_count } =
+    summary;
+
+  const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
+  const config = RISK_COLORS[riskLevel];
+  const sizeConfig = SIZE_CONFIGS[size];
+  const label = RISK_LABELS[riskLevel];
+
+  // Only Pulse for Critical
+  const shouldPulse = riskLevel === RiskLevel.CRITICAL;
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Tooltip positioning logic (simplified from HealthFactorPill)
+  useEffect(() => {
+    if (!isHovered || !containerRef.current || !tooltipRef.current) return;
+
+    const updatePosition = () => {
+      const container = containerRef.current!;
+      const tooltip = tooltipRef.current!;
+      const cRect = container.getBoundingClientRect();
+      const tRect = tooltip.getBoundingClientRect();
+
+      let top = cRect.bottom + 8;
+      let left = cRect.left + cRect.width / 2 - tRect.width / 2;
+
+      // viewport checks
+      if (left < 16) left = 16;
+      if (left + tRect.width > window.innerWidth - 16)
+        left = window.innerWidth - tRect.width - 16;
+      if (top + tRect.height > window.innerHeight - 16)
+        top = cRect.top - tRect.height - 8;
+
+      setTooltipPosition({ top, left });
+    };
+
+    updatePosition();
+    window.addEventListener("scroll", updatePosition);
+    window.addEventListener("resize", updatePosition);
+    return () => {
+      window.removeEventListener("scroll", updatePosition);
+      window.removeEventListener("resize", updatePosition);
+    };
+  }, [isHovered]);
+
+  const tooltipContent = isHovered && isMounted && (
+    <div
+      ref={tooltipRef}
+      className="fixed z-50 pointer-events-none"
+      style={{ top: tooltipPosition.top, left: tooltipPosition.left }}
+    >
+      <motion.div
+        initial={{ opacity: 0, y: -4 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gray-900/95 backdrop-blur border border-gray-800 rounded-lg p-3 shadow-xl w-64"
+      >
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-bold text-gray-200">
+            Borrowing Health
+          </span>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded border ${config.bg} ${config.text} ${config.border}`}
+          >
+            {label}
+          </span>
+        </div>
+        <div className="text-xs text-gray-400 mb-2">
+          Your lowest health factor is{" "}
+          <strong className="text-white">
+            {worst_health_rate.toFixed(2)}
+          </strong>
+        </div>
+        {(critical_count > 0 || warning_count > 0) && (
+          <div className="flex gap-2 text-[10px]">
+            {critical_count > 0 && (
+              <span className="text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
+                {critical_count} Critical
+              </span>
+            )}
+            {warning_count > 0 && (
+              <span className="text-orange-400 bg-orange-500/10 px-1.5 py-0.5 rounded">
+                {warning_count} Risky
+              </span>
+            )}
+          </div>
+        )}
+      </motion.div>
+    </div>
+  );
+
+  return (
+    <>
+      <div
+        ref={containerRef}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`
+          inline-flex items-center rounded-full cursor-pointer transition-all border
+          ${sizeConfig.container}
+          ${config.bg} ${config.border}
+          hover:opacity-80
+        `}
+      >
+        <motion.div
+          className={`rounded-full ${sizeConfig.dot} ${config.dot}`}
+          animate={shouldPulse ? { opacity: [1, 0.5, 1] } : {}}
+          transition={{ duration: 2, repeat: Infinity }}
+        />
+        <span className={`font-medium ${config.text}`}>
+          <span className="opacity-75 mr-1">Borrowing:</span>
+          {worst_health_rate.toFixed(2)}
+        </span>
+      </div>
+      {isMounted && createPortal(tooltipContent, document.body)}
+    </>
+  );
+}

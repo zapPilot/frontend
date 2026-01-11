@@ -1,4 +1,7 @@
+"use client";
+
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { useState } from "react";
 
 import type {
   BorrowingSummary,
@@ -8,6 +11,8 @@ import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
 import { BorrowingAlertBanner } from "./BorrowingAlertBanner";
+import { BorrowingContextLine } from "./BorrowingContextLine";
+import { BorrowingHealthPill } from "./BorrowingHealthPill";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
 import { HealthFactorPill } from "./HealthFactorPill";
 import { HealthWarningBanner } from "./HealthWarningBanner";
@@ -74,23 +79,32 @@ export function BalanceCard({
   // Show borrowing alert if user has debt and is not in empty state
   const showBorrowingAlert = !isEmptyState && borrowingSummary?.has_debt;
 
+  // UI Variation Switcher State
+  const [uiVariant, setUiVariant] = useState<"pill" | "banner" | "line">("pill");
+
   if (isLoading) {
     return <BalanceCardSkeleton />;
   }
 
   return (
     <>
-      {/* Mobile Critical State Warning Banner */}
-      {/* Mobile Critical State Warning Banner (Leverage) */}
-      {showLeverageHealth && riskMetrics && (
-        <HealthWarningBanner
-          riskMetrics={riskMetrics}
-          onViewDetails={onViewRiskDetails}
-        />
-      )}
+      <div className="flex justify-end mb-2 gap-2">
+         {/* Dev Switcher */}
+         <div className="bg-gray-800 rounded p-1 flex text-[10px] gap-1">
+            {(["pill", "banner", "line"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setUiVariant(v)}
+                className={`px-2 py-0.5 rounded ${uiVariant === v ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-white'}`}
+              >
+                {v.toUpperCase()}
+              </button>
+            ))}
+         </div>
+      </div>
 
-      {/* Borrowing Alert Banner (Debt) - Shows on both Mobile & Desktop via component logic */}
-      {showBorrowingAlert && borrowingSummary && (
+      {/* Banner Variant (Top Position) */}
+      {uiVariant === "banner" && showBorrowingAlert && borrowingSummary && (
         <div className="mb-2">
           <BorrowingAlertBanner
             summary={borrowingSummary}
@@ -98,6 +112,16 @@ export function BalanceCard({
           />
         </div>
       )}
+
+      {/* Mobile Critical State Warning Banner (Leverage - Always Keep) */}
+      {showLeverageHealth && riskMetrics && (
+        <HealthWarningBanner
+          riskMetrics={riskMetrics}
+          onViewDetails={onViewRiskDetails}
+        />
+      )}
+
+
 
       <div className={STYLES.card}>
         <div className="flex items-center justify-between mb-2">
@@ -119,15 +143,29 @@ export function BalanceCard({
           </div>
         </div>
 
-        {/* Health Factor Pill (conditional - only for leveraged positions) */}
-        {showLeverageHealth && (
-          <div className="mb-4">
-            <HealthFactorPill
-              riskMetrics={riskMetrics}
-              isOwnBundle={isOwnBundle}
-              size="md"
-              {...(onViewRiskDetails && { onViewDetails: onViewRiskDetails })}
-            />
+        {/* Context Line Variant (Middle Position) */}
+        {uiVariant === "line" && showBorrowingAlert && borrowingSummary && (
+          <BorrowingContextLine
+            summary={borrowingSummary}
+            onViewDetails={onViewRiskDetails}
+          />
+        )}
+
+        {/* Risk Indicators Row (Leverage & Borrowing Pill) */}
+        {(showLeverageHealth || (uiVariant === "pill" && showBorrowingAlert)) && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {showLeverageHealth && (
+              <HealthFactorPill
+                riskMetrics={riskMetrics}
+                isOwnBundle={isOwnBundle}
+                size="md"
+                {...(onViewRiskDetails && { onViewDetails: onViewRiskDetails })}
+              />
+            )}
+            {/* Pill Variant */}
+            {uiVariant === "pill" && showBorrowingAlert && borrowingSummary && (
+              <BorrowingHealthPill summary={borrowingSummary} size="md" />
+            )}
           </div>
         )}
 
