@@ -30,6 +30,7 @@ import type {
   DurationInfo,
 } from "@/schemas/api/regimeHistorySchemas";
 import type {
+  BorrowingSummary,
   LandingPageResponse,
   RiskMetrics,
 } from "@/services/analyticsService";
@@ -77,6 +78,9 @@ interface WalletPortfolioData {
 
   // Risk metrics (for leveraged positions)
   riskMetrics: RiskMetrics | null;
+
+  // Borrowing summary (for debt positions)
+  borrowingSummary: BorrowingSummary | null;
 
   // Data freshness
   /** ISO date string of last data update */
@@ -159,6 +163,9 @@ export function transformToWalletPortfolioData(
 
     // Risk metrics
     riskMetrics: landingData.risk_metrics ?? null,
+
+    // Borrowing summary
+    borrowingSummary: landingData.borrowing_summary ?? null,
 
     // Data freshness
     lastUpdated: landingData.last_updated ?? null,
@@ -257,6 +264,9 @@ export function createEmptyPortfolioState(
 
     // Risk metrics - null for empty state (no leverage in preview)
     riskMetrics: null,
+
+    // Borrowing summary - null for empty state (no debt in preview)
+    borrowingSummary: null,
 
     // Data freshness
     lastUpdated: null,

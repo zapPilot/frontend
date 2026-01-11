@@ -1,9 +1,13 @@
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
-import type { RiskMetrics } from "@/services/analyticsService";
+import type {
+  BorrowingSummary,
+  RiskMetrics,
+} from "@/services/analyticsService";
 import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
+import { BorrowingAlertBanner } from "./BorrowingAlertBanner";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
 import { HealthFactorPill } from "./HealthFactorPill";
 import { HealthWarningBanner } from "./HealthWarningBanner";
@@ -43,6 +47,8 @@ interface BalanceCardProps {
   lastUpdated?: string | null;
   /** Risk metrics for leveraged positions (null if no leverage) */
   riskMetrics?: RiskMetrics | null;
+  /** Borrowing summary for debt positions (null if no debt) */
+  borrowingSummary?: BorrowingSummary | null;
   /** Optional handler for viewing detailed risk breakdown (future enhancement) */
   onViewRiskDetails?: () => void;
 }
@@ -55,14 +61,18 @@ export function BalanceCard({
   onOpenModal,
   lastUpdated,
   riskMetrics,
+  borrowingSummary,
   onViewRiskDetails,
 }: BalanceCardProps) {
   // Disable buttons if empty state OR not own bundle (visitor mode)
   const isActionsDisabled = isEmptyState || !isOwnBundle;
 
-  // Show health rate indicator if user has leverage and is not in empty state
-  const showHealthRate =
+  // Show health rate (leverage) if user has leverage and is not in empty state
+  const showLeverageHealth =
     !isEmptyState && riskMetrics?.has_leverage && riskMetrics.health_rate;
+
+  // Show borrowing alert if user has debt and is not in empty state
+  const showBorrowingAlert = !isEmptyState && borrowingSummary?.has_debt;
 
   if (isLoading) {
     return <BalanceCardSkeleton />;
@@ -71,11 +81,22 @@ export function BalanceCard({
   return (
     <>
       {/* Mobile Critical State Warning Banner */}
-      {showHealthRate && riskMetrics && (
+      {/* Mobile Critical State Warning Banner (Leverage) */}
+      {showLeverageHealth && riskMetrics && (
         <HealthWarningBanner
           riskMetrics={riskMetrics}
           onViewDetails={onViewRiskDetails}
         />
+      )}
+
+      {/* Borrowing Alert Banner (Debt) - Shows on both Mobile & Desktop via component logic */}
+      {showBorrowingAlert && borrowingSummary && (
+        <div className="mb-2">
+          <BorrowingAlertBanner
+            summary={borrowingSummary}
+            onViewDetails={onViewRiskDetails}
+          />
+        </div>
       )}
 
       <div className={STYLES.card}>
@@ -99,7 +120,7 @@ export function BalanceCard({
         </div>
 
         {/* Health Factor Pill (conditional - only for leveraged positions) */}
-        {showHealthRate && (
+        {showLeverageHealth && (
           <div className="mb-4">
             <HealthFactorPill
               riskMetrics={riskMetrics}

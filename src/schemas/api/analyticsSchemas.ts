@@ -169,6 +169,21 @@ const riskMetricsSchema = z.object({
 });
 
 /**
+ * Borrowing Summary Schema
+ *
+ * Pre-computed debt position health aggregation from backend.
+ * Provides quick overview of borrowing position health across all protocols.
+ */
+const borrowingSummarySchema = z.object({
+  has_debt: z.boolean(),
+  worst_health_rate: z.number().positive(),
+  overall_status: z.enum(["HEALTHY", "WARNING", "CRITICAL"]),
+  critical_count: z.number().int().nonnegative(),
+  warning_count: z.number().int().nonnegative(),
+  healthy_count: z.number().int().nonnegative(),
+});
+
+/**
  * Schema for landing page response
  */
 export const landingPageResponseSchema = z
@@ -218,6 +233,9 @@ export const landingPageResponseSchema = z
 
     // Risk Metrics (MVP: portfolio-level calculation)
     risk_metrics: riskMetricsSchema.nullable().optional(),
+
+    // Borrowing Summary (pre-computed debt health aggregation)
+    borrowing_summary: borrowingSummarySchema.nullable().optional(),
   })
   .catchall(z.unknown());
 
@@ -297,6 +315,7 @@ export type YieldReturnsSummaryResponse = z.infer<
 >;
 export type LandingPageResponse = z.infer<typeof landingPageResponseSchema>;
 export type RiskMetrics = z.infer<typeof riskMetricsSchema>;
+export type BorrowingSummary = z.infer<typeof borrowingSummarySchema>;
 export interface UnifiedDashboardResponse {
   user_id?: string;
   parameters?: Record<string, unknown>;

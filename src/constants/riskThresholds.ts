@@ -149,3 +149,34 @@ export function getRiskConfig(healthRate: number) {
     emoji: RISK_COLORS[level].emoji,
   };
 }
+
+/**
+ * Maps API borrowing_summary.overall_status to RiskLevel
+ *
+ * The backend provides pre-computed status strings. This function
+ * converts them to our internal RiskLevel enum for consistent styling.
+ *
+ * @param status - Overall status from borrowing_summary API response
+ * @returns Corresponding RiskLevel enum value
+ *
+ * @example
+ * ```typescript
+ * mapBorrowingStatusToRiskLevel("CRITICAL") // RiskLevel.CRITICAL
+ * mapBorrowingStatusToRiskLevel("WARNING")  // RiskLevel.RISKY
+ * mapBorrowingStatusToRiskLevel("HEALTHY")  // RiskLevel.SAFE
+ * ```
+ */
+export function mapBorrowingStatusToRiskLevel(
+  status: "HEALTHY" | "WARNING" | "CRITICAL"
+): RiskLevel {
+  switch (status) {
+    case "HEALTHY":
+      return RiskLevel.SAFE;
+    case "WARNING":
+      return RiskLevel.RISKY; // Map WARNING to RISKY for visual consistency
+    case "CRITICAL":
+      return RiskLevel.CRITICAL;
+    default:
+      return RiskLevel.MODERATE;
+  }
+}

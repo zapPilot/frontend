@@ -16,6 +16,7 @@ import {
 
 // Re-export types for external use
 export type {
+  BorrowingSummary,
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
   PoolDetail,

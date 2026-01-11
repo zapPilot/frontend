@@ -59,6 +59,7 @@ export function DashboardView({
       onOpenModal={onOpenModal}
       lastUpdated={data.lastUpdated}
       riskMetrics={data.riskMetrics}
+      borrowingSummary={data.borrowingSummary}
     />
   );
 
