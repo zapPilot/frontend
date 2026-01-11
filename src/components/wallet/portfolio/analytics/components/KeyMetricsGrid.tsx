@@ -5,9 +5,24 @@
  */
 
 import { Activity, ArrowDownRight, ArrowUpRight } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { KeyMetrics, MetricData } from "@/types/analytics";
+
+/** Trend icons mapped by trend direction for cleaner conditional rendering */
+const TREND_ICONS: Record<MetricData["trend"], ReactNode> = {
+  up: <ArrowUpRight className="w-3.5 h-3.5" />,
+  down: <ArrowDownRight className="w-3.5 h-3.5" />,
+  neutral: <Activity className="w-3.5 h-3.5" />,
+};
+
+/** Trend color classes mapped by trend direction */
+const TREND_COLORS: Record<MetricData["trend"], string> = {
+  up: "bg-green-500/10 text-green-400",
+  down: "bg-red-500/10 text-red-400",
+  neutral: "bg-gray-500/10 text-gray-400",
+};
 
 /**
  * Key Metrics Grid Props
@@ -57,21 +72,9 @@ export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({
               <div className="w-6 h-6 bg-gray-800/50 rounded animate-pulse" />
             ) : (
               <span
-                className={`p-1 rounded flex items-center justify-center ${
-                  metric.trend === "up"
-                    ? "bg-green-500/10 text-green-400"
-                    : metric.trend === "down"
-                      ? "bg-red-500/10 text-red-400"
-                      : "bg-gray-500/10 text-gray-400"
-                }`}
+                className={`p-1 rounded flex items-center justify-center ${TREND_COLORS[metric.trend]}`}
               >
-                {metric.trend === "up" ? (
-                  <ArrowUpRight className="w-3.5 h-3.5" />
-                ) : metric.trend === "down" ? (
-                  <ArrowDownRight className="w-3.5 h-3.5" />
-                ) : (
-                  <Activity className="w-3.5 h-3.5" />
-                )}
+                {TREND_ICONS[metric.trend]}
               </span>
             )}
           </div>

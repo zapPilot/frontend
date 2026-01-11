@@ -22,6 +22,13 @@ import { useEmailSubscription } from "./hooks/useEmailSubscription";
 import { useWalletOperations } from "./hooks/useWalletOperations";
 import type { WalletManagerProps } from "./types/wallet.types";
 
+/** Get wallet manager description based on connection and ownership state */
+function getWalletDescription(isConnected: boolean, isOwner: boolean): string {
+  if (!isConnected) return "No wallet connected";
+  if (isOwner) return "Manage your wallet bundle";
+  return "Viewing wallet bundle";
+}
+
 const WalletManagerComponent = ({
   isOpen,
   onClose,
@@ -115,11 +122,7 @@ const WalletManagerComponent = ({
                   id="wallet-manager-description"
                   className="text-sm text-gray-400"
                 >
-                  {!isConnected
-                    ? "No wallet connected"
-                    : isOwner
-                      ? "Manage your wallet bundle"
-                      : "Viewing wallet bundle"}
+                  {getWalletDescription(isConnected, !!isOwner)}
                 </p>
               </div>
             </div>
