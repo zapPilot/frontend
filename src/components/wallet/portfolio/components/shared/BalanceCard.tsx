@@ -53,6 +53,8 @@ interface BalanceCardProps {
   borrowingSummary?: BorrowingSummary | null;
   /** Optional handler for viewing detailed risk breakdown (future enhancement) */
   onViewRiskDetails?: () => void;
+  /** User ID for fetching detailed borrowing positions */
+  userId?: string | undefined;
 }
 
 export function BalanceCard({
@@ -65,6 +67,7 @@ export function BalanceCard({
   riskMetrics,
   borrowingSummary,
   onViewRiskDetails,
+  userId,
 }: BalanceCardProps) {
   // Disable buttons if empty state OR not own bundle (visitor mode)
   const isActionsDisabled = isEmptyState || !isOwnBundle;
@@ -127,8 +130,12 @@ export function BalanceCard({
                     })}
                   />
                 )}
-                {showBorrowingAlert && borrowingSummary && (
-                  <BorrowingHealthPill summary={borrowingSummary} size="sm" />
+                {showBorrowingAlert && borrowingSummary && userId && (
+                  <BorrowingHealthPill
+                    summary={borrowingSummary}
+                    userId={userId}
+                    size="sm"
+                  />
                 )}
               </>
             )}

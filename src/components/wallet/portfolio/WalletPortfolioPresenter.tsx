@@ -135,6 +135,7 @@ export function WalletPortfolioPresenter({
         isOwnBundle={isOwnBundle}
         isLoading={isLoading}
         onOpenModal={openModal}
+        userId={userId}
       />
     ),
     analytics: userId ? (

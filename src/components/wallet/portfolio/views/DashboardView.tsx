@@ -33,6 +33,8 @@ interface DashboardViewProps {
   isOwnBundle?: boolean;
   isLoading?: boolean;
   onOpenModal: (type: ModalType) => void;
+  /** User ID for fetching detailed borrowing positions */
+  userId?: string | undefined;
 }
 
 export function DashboardView({
@@ -42,6 +44,7 @@ export function DashboardView({
   isEmptyState,
   isOwnBundle = true,
   onOpenModal,
+  userId,
 }: DashboardViewProps) {
   const searchParams = useSearchParams();
   const urlUserId = searchParams.get("userId");
@@ -60,6 +63,7 @@ export function DashboardView({
       lastUpdated={data.lastUpdated}
       riskMetrics={data.riskMetrics}
       borrowingSummary={data.borrowingSummary}
+      userId={userId}
     />
   );
 
