@@ -7,7 +7,7 @@ import { createPortal } from "react-dom";
 import {
   mapBorrowingStatusToRiskLevel,
   RISK_COLORS,
-  RiskLevel
+  RiskLevel,
 } from "@/constants/riskThresholds";
 import { useBorrowingPositions } from "@/hooks/queries/analytics/useBorrowingPositions";
 import type { BorrowingSummary } from "@/services/analyticsService";

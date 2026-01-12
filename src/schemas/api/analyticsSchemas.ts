@@ -362,7 +362,6 @@ export type YieldReturnsSummaryResponse = z.infer<
 export type LandingPageResponse = z.infer<typeof landingPageResponseSchema>;
 export type RiskMetrics = z.infer<typeof riskMetricsSchema>;
 export type BorrowingSummary = z.infer<typeof borrowingSummarySchema>;
-export type TokenDetail = z.infer<typeof tokenDetailSchema>;
 export type BorrowingPosition = z.infer<typeof borrowingPositionSchema>;
 export type BorrowingPositionsResponse = z.infer<
   typeof borrowingPositionsResponseSchema

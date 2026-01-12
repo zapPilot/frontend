@@ -25,6 +25,7 @@ import {
 } from "@/lib/portfolio/portfolioTransformers";
 import { createSectionState } from "@/lib/portfolio/sectionHelpers";
 import type { DashboardProgressiveState } from "@/types/portfolio-progressive";
+import { logger } from "@/utils/logger";
 
 import { useLandingPageData } from "./usePortfolioQuery";
 
@@ -70,6 +71,25 @@ export function usePortfolioDataProgressive(
     [sentimentQuery],
     extractSentimentData
   );
+
+  // Debug logging for data fetching
+  logger.debug("[usePortfolioDataProgressive] Query States:", {
+    userId,
+    isEtlInProgress,
+    landingQuery: {
+      data: landingQuery.data ? "exists" : "null",
+      isLoading: landingQuery.isLoading,
+      error: landingQuery.error ? (landingQuery.error as Error).message : null,
+    },
+    sentimentQuery: {
+      data: sentimentQuery.data ? "exists" : "null",
+      isLoading: sentimentQuery.isLoading,
+    },
+    regimeQuery: {
+      data: regimeQuery.data ? "exists" : "null",
+      isLoading: regimeQuery.isLoading,
+    },
+  });
 
   // Legacy Unified Data (for backward compatibility)
   const unifiedData: WalletPortfolioDataWithDirection | null = landingQuery.data

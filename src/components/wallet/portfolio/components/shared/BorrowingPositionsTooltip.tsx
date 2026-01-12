@@ -10,6 +10,8 @@ import type {
   BorrowingSummary,
 } from "@/services/analyticsService";
 
+import { FinancialMetricRow } from "./FinancialMetricRow";
+
 interface BorrowingPositionsTooltipProps {
   /** Borrowing positions data */
   positions: BorrowingPosition[];
@@ -255,24 +257,20 @@ export function BorrowingPositionsTooltip({
 
       {/* Financial Summary Footer */}
       <div className="space-y-1">
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Total Collateral</span>
-          <span className="text-white font-medium">
-            ${totalCollateralUsd.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Total Debt</span>
-          <span className="text-white font-medium">
-            ${totalDebtUsd.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Worst Health Rate</span>
-          <span className={`font-medium ${riskConfig.text}`}>
-            {summary.worst_health_rate.toFixed(2)}
-          </span>
-        </div>
+        {[
+          {
+            label: "Total Collateral",
+            value: `$${totalCollateralUsd.toLocaleString()}`,
+          },
+          { label: "Total Debt", value: `$${totalDebtUsd.toLocaleString()}` },
+          {
+            label: "Worst Health Rate",
+            value: summary.worst_health_rate.toFixed(2),
+            valueClassName: `font-medium ${riskConfig.text}`,
+          },
+        ].map(metric => (
+          <FinancialMetricRow key={metric.label} {...metric} />
+        ))}
       </div>
     </div>
   );

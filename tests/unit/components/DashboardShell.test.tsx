@@ -240,8 +240,15 @@ describe("DashboardShell", () => {
   });
 
   it("should render empty state when no data and not loading", () => {
+    // Provide actual empty data (zero balance and positions) instead of null
     mockUsePortfolioDataProgressive.mockReturnValue({
-      unifiedData: null,
+      unifiedData: {
+        balance: 0,
+        positions: 0,
+        allocation: [],
+        sentiment: null,
+        regimeHistory: null,
+      } as any,
       sections: {},
       isLoading: false,
       error: null,

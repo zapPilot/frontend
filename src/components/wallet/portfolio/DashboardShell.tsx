@@ -12,6 +12,7 @@ import { usePortfolioDataProgressive } from "@/hooks/queries/analytics/usePortfo
 import { useRegimeHistory } from "@/hooks/queries/market/useRegimeHistoryQuery";
 import { useSentimentData } from "@/hooks/queries/market/useSentimentQuery";
 import { useEtlJobPolling } from "@/hooks/wallet";
+import { logger } from "@/utils/logger";
 
 interface DashboardShellProps {
   urlUserId: string;
@@ -120,12 +121,23 @@ export function DashboardShell({
     return <WalletPortfolioErrorState error={safeError} onRetry={refetch} />;
   }
 
+  // Debug logging for button disable issue
+  logger.debug("[DashboardShell] Debug State:", {
+    unifiedData: unifiedData ? "exists" : "null",
+    balance: unifiedData?.balance ?? "N/A",
+    positions: unifiedData?.positions ?? "N/A",
+    isLoading,
+    error: error ? error.message : null,
+  });
+
   // Determine if this is empty state (no real portfolio data, excluding loading)
   // Use balance and positions - the correct properties from WalletPortfolioDataWithDirection
+  // IMPORTANT: Only mark as empty if we have data AND that data shows zero balance
+  // If unifiedData is null (data not loaded yet), don't mark as empty to keep buttons enabled
   const isEmptyState =
-    (!unifiedData ||
-      ((unifiedData.positions ?? 0) === 0 &&
-        (unifiedData.balance ?? 0) === 0)) &&
+    unifiedData !== null && // Only evaluate if data exists
+    (unifiedData.positions ?? 0) === 0 &&
+    (unifiedData.balance ?? 0) === 0 &&
     !isLoading;
 
   // Use real data if available, otherwise create empty state with real sentiment

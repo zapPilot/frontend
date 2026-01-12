@@ -25,7 +25,6 @@ export type {
   LandingPageResponse,
   PoolDetail,
   RiskMetrics,
-  TokenDetail,
   UnifiedDashboardResponse,
 } from "@/schemas/api/analyticsSchemas";
 

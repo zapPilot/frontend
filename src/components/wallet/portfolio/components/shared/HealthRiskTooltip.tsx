@@ -7,6 +7,8 @@ import {
 } from "@/constants/riskThresholds";
 import type { RiskMetrics } from "@/services/analyticsService";
 
+import { FinancialMetricRow } from "./FinancialMetricRow";
+
 interface HealthRiskTooltipProps {
   /** Risk metrics from the analytics service */
   riskMetrics: RiskMetrics;
@@ -127,24 +129,19 @@ export function HealthRiskTooltip({
 
       {/* Financial Breakdown */}
       <div className="space-y-2 mb-3">
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Total Collateral</span>
-          <span className="font-medium text-white">
-            ${collateral_value_usd.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Total Debt</span>
-          <span className="font-medium text-white">
-            ${debt_value_usd.toLocaleString()}
-          </span>
-        </div>
-        <div className="flex justify-between text-xs">
-          <span className="text-gray-400">Leverage Ratio</span>
-          <span className="font-medium text-white">
-            {leverage_ratio.toFixed(2)}x
-          </span>
-        </div>
+        <FinancialMetricRow
+          label="Total Collateral"
+          value={`$${collateral_value_usd.toLocaleString()}`}
+        />
+        <FinancialMetricRow
+          label="Total Debt"
+          value={`$${debt_value_usd.toLocaleString()}`}
+        />
+        {/* Leverage ratio is unique to health risk breakdown */}
+        <FinancialMetricRow
+          label="Leverage Ratio"
+          value={`${leverage_ratio.toFixed(2)}x`}
+        />
       </div>
 
       {/* Divider */}
