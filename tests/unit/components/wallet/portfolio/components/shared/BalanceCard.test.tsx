@@ -117,6 +117,40 @@ describe("BalanceCard", () => {
       expect(screen.getByTestId("deposit-button")).not.toBeDisabled();
       expect(screen.getByTestId("withdraw-button")).not.toBeDisabled();
     });
+
+    it("should have cursor-pointer on enabled buttons", () => {
+      render(
+        <BalanceCard
+          balance={10000}
+          isEmptyState={false}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).toHaveClass(
+        "cursor-pointer"
+      );
+      expect(screen.getByTestId("withdraw-button")).toHaveClass(
+        "cursor-pointer"
+      );
+    });
+
+    it("should have cursor-not-allowed on disabled buttons", () => {
+      render(
+        <BalanceCard
+          balance={0}
+          isEmptyState={true}
+          onOpenModal={mockOnOpenModal}
+        />
+      );
+
+      expect(screen.getByTestId("deposit-button")).toHaveClass(
+        "cursor-not-allowed"
+      );
+      expect(screen.getByTestId("withdraw-button")).toHaveClass(
+        "cursor-not-allowed"
+      );
+    });
   });
 
   describe("Button Actions", () => {

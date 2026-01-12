@@ -16,117 +16,15 @@ import { useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
-// --- Helper Components ---
-
-interface MetricCardProps {
-  label: string;
-  value: string;
-  subtext?: string;
-  highlight?: boolean;
-  showLevBadge?: boolean;
-}
-
-const MetricCard = ({
-  label,
-  value,
-  subtext,
-  highlight,
-  showLevBadge,
-}: MetricCardProps) => (
-  <BaseCard
-    variant="glass"
-    className={`p-5 ${highlight ? "bg-green-500/5 border-green-500/20" : ""}`}
-  >
-    <div
-      className={`text-xs font-medium mb-1.5 flex items-center gap-1 ${highlight ? "text-green-400" : "text-gray-400"}`}
-    >
-      {label}
-      {showLevBadge && (
-        <span className="text-[9px] bg-green-500/20 px-1 rounded">LEV</span>
-      )}
-    </div>
-    <div className="text-3xl font-bold text-white tracking-tight">{value}</div>
-    {subtext && <div className="text-[11px] text-gray-400 mt-1">{subtext}</div>}
-  </BaseCard>
-);
-
-interface SelectionOption<T> {
-  value: T;
-  label: string;
-  icon?: React.ElementType;
-  activeColor?: string;
-}
-
-interface SelectionGroupProps<T extends string> {
-  label: string;
-  options: SelectionOption<T>[];
-  selectedValue: T;
-  onChange: (value: T) => void;
-  layout?: "grid" | "row";
-}
-
-const SelectionGroup = <T extends string>({
-  label,
-  options,
-  selectedValue,
-  onChange,
-  layout = "row",
-}: SelectionGroupProps<T>) => (
-  <div className="space-y-3">
-    <label className="text-xs text-gray-400 font-medium ml-1">{label}</label>
-    <div
-      className={
-        layout === "grid"
-          ? "grid grid-cols-2 gap-2 p-1 bg-gray-900/40 rounded-xl border border-gray-800"
-          : "flex bg-gray-900/50 rounded-lg p-1 border border-gray-800"
-      }
-    >
-      {options.map(option => {
-        const isActive = selectedValue === option.value;
-        if (layout === "grid") {
-          return (
-            <button
-              key={option.value}
-              onClick={() => onChange(option.value)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-lg text-xs font-medium transition-all ${
-                isActive
-                  ? "bg-gray-800 border border-gray-700 text-white shadow-sm"
-                  : "text-gray-500 hover:bg-gray-800/50 hover:text-gray-300"
-              }`}
-            >
-              {option.icon && (
-                <option.icon
-                  className={`w-4 h-4 ${isActive && option.activeColor ? option.activeColor : ""}`}
-                />
-              )}
-              {option.label}
-            </button>
-          );
-        }
-        return (
-          <button
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className={`flex-1 py-1.5 text-[10px] font-medium rounded-md transition-all ${
-              isActive
-                ? "bg-gray-700 text-white shadow-sm"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
-  </div>
-);
+import { SelectionGroup } from "./backtesting/SelectionGroup";
+import { SimulationSummary } from "./backtesting/SimulationSummary";
 
 // Helper function to calculate chart bar heights (reduces cognitive complexity)
-const calculateBarHeight = (
+function calculateBarHeight(
   index: number,
   strategyType: "conservative" | "aggressive",
   useLeverage: boolean
-): number => {
+): number {
   const baseTrend = index * 2;
   const volatility = Math.sin(index * 0.5) * 15;
   const strategyMultiplier = strategyType === "aggressive" ? 1.5 : 0.8;
@@ -142,56 +40,7 @@ const calculateBarHeight = (
         Math.random() * 10
     )
   );
-};
-
-// Extract summary cards to reduce complexity
-const SimulationSummary = ({
-  strategyType,
-  useLeverage,
-  dcaFrequency,
-}: {
-  strategyType: "conservative" | "aggressive";
-  useLeverage: boolean;
-  dcaFrequency: string;
-}) => (
-  <div className="grid grid-cols-3 gap-4">
-    <MetricCard
-      label="Total Return"
-      value={
-        strategyType === "aggressive"
-          ? useLeverage
-            ? "+412.5%"
-            : "+342.5%"
-          : "+125.4%"
-      }
-      subtext="vs +180% Buy & Hold"
-      highlight
-      showLevBadge={useLeverage}
-    />
-    <MetricCard
-      label="Max Drawdown"
-      value={
-        strategyType === "aggressive"
-          ? useLeverage
-            ? "-22.4%"
-            : "-18.2%"
-          : "-8.5%"
-      }
-      subtext="vs -75% Buy & Hold"
-    />
-    <MetricCard
-      label="Trades Executed"
-      value={
-        dcaFrequency === "Daily"
-          ? "1,420"
-          : dcaFrequency === "Weekly"
-            ? "208"
-            : "48"
-      }
-      subtext={`Avg ${dcaFrequency === "Daily" ? "30" : dcaFrequency === "Weekly" ? "4" : "1"} per month`}
-    />
-  </div>
-);
+}
 
 export const BacktestingView = () => {
   const [isSimulating, setIsSimulating] = useState(false);

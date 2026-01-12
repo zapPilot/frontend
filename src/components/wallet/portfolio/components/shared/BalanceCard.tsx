@@ -25,9 +25,9 @@ const STYLES = {
   buttonDisabled:
     "bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed",
   depositEnabled:
-    "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20",
+    "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20 cursor-pointer",
   withdrawEnabled:
-    "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20",
+    "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 cursor-pointer",
 } as const;
 
 /** Get button className based on action type and disabled state */
