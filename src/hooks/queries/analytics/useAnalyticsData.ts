@@ -8,6 +8,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef } from "react";
 
+import { getAnalyticsStaleTime } from "@/lib/analytics/cacheConfig";
 import {
   aggregateMonthlyPnL,
   calculateKeyMetrics,
@@ -101,11 +102,7 @@ export function useAnalyticsData(
     {
       // Force refetch when period changes to bypass staleTime cache
       // Wallet-specific data: 2min cache, Bundle data: 12hr cache
-      staleTime: periodChanged
-        ? 0
-        : walletFilter
-          ? 2 * 60 * 1000
-          : 12 * 60 * 60 * 1000,
+      staleTime: getAnalyticsStaleTime(periodChanged, walletFilter),
       refetchOnMount: periodChanged ? "always" : false,
     }
   );

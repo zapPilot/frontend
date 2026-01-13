@@ -20,7 +20,7 @@ interface DataFreshnessIndicatorProps {
   /** ISO date string from API (YYYY-MM-DD) */
   lastUpdated: string | null | undefined;
   /** Show full badge or icon-only on mobile (default: responsive) */
-  variant?: "responsive" | "full" | "icon-only";
+  variant?: "responsive" | "full" | "icon-only" | "text-only";
   /** Size variant */
   size?: "sm" | "md";
   /** Additional CSS classes */
@@ -78,9 +78,11 @@ export const DataFreshnessIndicator = memo(function DataFreshnessIndicator({
   const Icon = styles.Icon;
 
   // Base classes
+  const isTextOnly = variant === "text-only";
   const baseClasses = `
-    inline-flex items-center rounded-full border
-    ${styles.container}
+    inline-flex items-center rounded-full
+    ${isTextOnly ? "" : "border"}
+    ${isTextOnly ? "" : styles.container}
     ${sizeStyles.container}
     ${className}
   `;

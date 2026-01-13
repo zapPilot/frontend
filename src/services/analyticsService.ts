@@ -6,9 +6,11 @@
 import { buildAnalyticsQueryString } from "@/lib/analytics/queryStringUtils";
 import { httpUtils } from "@/lib/http";
 import {
+  type BorrowingPositionsResponse,
   type DailyYieldReturnsResponse,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
+  validateBorrowingPositionsResponse,
   validateDailyYieldReturnsResponse,
   validateLandingPageResponse,
   validateUnifiedDashboardResponse,
@@ -16,6 +18,9 @@ import {
 
 // Re-export types for external use
 export type {
+  BorrowingPosition,
+  BorrowingPositionsResponse,
+  BorrowingSummary,
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
   PoolDetail,
@@ -159,4 +164,38 @@ export const getDailyYieldReturns = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/daily?${params}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateDailyYieldReturnsResponse(response);
+};
+
+// ============================================================================
+// BORROWING POSITIONS ENDPOINT
+// ============================================================================
+
+/**
+ * Get detailed borrowing positions for a user with per-position risk metrics.
+ *
+ * Returns positions sorted by health rate (riskiest first) with detailed
+ * collateral and debt breakdowns per protocol and chain.
+ *
+ * @param userId - User UUID
+ * @returns Promise<BorrowingPositionsResponse>
+ * @throws APIError 404 if user has no borrowing positions
+ *
+ * @example
+ * ```typescript
+ * const positions = await getBorrowingPositions('user-123');
+ *
+ * // Access positions
+ * positions.positions.forEach(position => {
+ *   console.log(`${position.protocol_name} on ${position.chain}`);
+ *   console.log(`Health: ${position.health_rate} (${position.health_status})`);
+ *   console.log(`Debt: $${position.debt_usd}`);
+ * });
+ * ```
+ */
+export const getBorrowingPositions = async (
+  userId: string
+): Promise<BorrowingPositionsResponse> => {
+  const endpoint = `/api/v2/analytics/${userId}/borrowing/positions`;
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validateBorrowingPositionsResponse(response);
 };

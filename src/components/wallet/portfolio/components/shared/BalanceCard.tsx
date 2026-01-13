@@ -1,11 +1,18 @@
+"use client";
+
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 
-import type { RiskMetrics } from "@/services/analyticsService";
+import type {
+  BorrowingSummary,
+  RiskMetrics,
+} from "@/services/analyticsService";
 import type { ModalType } from "@/types/portfolio";
 
 import { BalanceCardSkeleton } from "../../views/DashboardSkeleton";
+import { BorrowingHealthPill } from "./BorrowingHealthPill";
 import { DataFreshnessIndicator } from "./DataFreshnessIndicator";
-import { HealthRateIndicator } from "./HealthRateIndicator";
+import { HealthFactorPill } from "./HealthFactorPill";
+import { HealthWarningBanner } from "./HealthWarningBanner";
 
 /** BalanceCard styling constants */
 const STYLES = {
@@ -18,9 +25,9 @@ const STYLES = {
   buttonDisabled:
     "bg-gray-800/30 text-gray-600 border-gray-800 cursor-not-allowed",
   depositEnabled:
-    "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20",
+    "bg-green-500/10 hover:bg-green-500/20 text-green-400 border-green-500/20 cursor-pointer",
   withdrawEnabled:
-    "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20",
+    "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 cursor-pointer",
 } as const;
 
 /** Get button className based on action type and disabled state */
@@ -42,8 +49,12 @@ interface BalanceCardProps {
   lastUpdated?: string | null;
   /** Risk metrics for leveraged positions (null if no leverage) */
   riskMetrics?: RiskMetrics | null;
+  /** Borrowing summary for debt positions (null if no debt) */
+  borrowingSummary?: BorrowingSummary | null;
   /** Optional handler for viewing detailed risk breakdown (future enhancement) */
   onViewRiskDetails?: () => void;
+  /** User ID for fetching detailed borrowing positions */
+  userId?: string | undefined;
 }
 
 export function BalanceCard({
@@ -54,72 +65,109 @@ export function BalanceCard({
   onOpenModal,
   lastUpdated,
   riskMetrics,
+  borrowingSummary,
   onViewRiskDetails,
+  userId,
 }: BalanceCardProps) {
   // Disable buttons if empty state OR not own bundle (visitor mode)
   const isActionsDisabled = isEmptyState || !isOwnBundle;
-
-  // Show health rate indicator if user has leverage and is not in empty state
-  const showHealthRate =
+  // Show health rate (leverage) if user has leverage and is not in empty state
+  const showLeverageHealth =
     !isEmptyState && riskMetrics?.has_leverage && riskMetrics.health_rate;
+
+  // Show borrowing alert if user has debt and is not in empty state
+  const showBorrowingAlert = !isEmptyState && borrowingSummary?.has_debt;
 
   if (isLoading) {
     return <BalanceCardSkeleton />;
   }
 
   return (
-    <div className={STYLES.card}>
-      <div className="flex items-center justify-between mb-2">
-        <div className={STYLES.label}>Net Worth</div>
-        {!isEmptyState && lastUpdated && (
-          <DataFreshnessIndicator lastUpdated={lastUpdated} size="sm" />
-        )}
-      </div>
-      <div
-        className={`flex items-center gap-3 ${showHealthRate ? "mb-2" : "mb-4"}`}
-      >
-        <div className="flex-1">
-          <div
-            className={
-              isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive
-            }
-            data-testid="net-worth"
-          >
-            ${balance.toLocaleString()}
-          </div>
-        </div>
-      </div>
-
-      {/* Health Rate Indicator (conditional - only for leveraged positions) */}
-      {showHealthRate && (
-        <HealthRateIndicator
-          healthRate={riskMetrics.health_rate}
-          isOwnBundle={isOwnBundle}
-          {...(onViewRiskDetails ? { onClick: onViewRiskDetails } : {})}
+    <>
+      {/* Mobile Critical State Warning Banner (Leverage - Always Keep) */}
+      {showLeverageHealth && riskMetrics && (
+        <HealthWarningBanner
+          riskMetrics={riskMetrics}
+          onViewDetails={onViewRiskDetails}
         />
       )}
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          data-testid="deposit-button"
-          onClick={() => onOpenModal("deposit")}
-          disabled={isActionsDisabled}
-          title={!isOwnBundle ? "Switch to your bundle to deposit" : undefined}
-          className={getButtonClassName("deposit", isActionsDisabled)}
-        >
-          <ArrowDownCircle className="w-4 h-4" /> Deposit
-        </button>
-        <button
-          data-testid="withdraw-button"
-          onClick={() => onOpenModal("withdraw")}
-          disabled={isActionsDisabled}
-          title={!isOwnBundle ? "Switch to your bundle to withdraw" : undefined}
-          className={getButtonClassName("withdraw", isActionsDisabled)}
-        >
-          <ArrowUpCircle className="w-4 h-4" /> Withdraw
-        </button>
+      <div className={STYLES.card}>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <div className={STYLES.label}>Net Worth</div>
+            <div
+              className={
+                isEmptyState ? STYLES.netWorthEmpty : STYLES.netWorthActive
+              }
+              data-testid="net-worth"
+            >
+              ${balance.toLocaleString()}
+            </div>
+          </div>
+
+          {/* Right Side Risk Column */}
+          <div className="flex flex-col items-end gap-1.5">
+            {!isEmptyState && lastUpdated && (
+              <div className="mb-1">
+                <DataFreshnessIndicator
+                  lastUpdated={lastUpdated}
+                  size="sm"
+                  variant="text-only"
+                  className="opacity-50"
+                />
+              </div>
+            )}
+            {(showLeverageHealth || showBorrowingAlert) && (
+              <>
+                {showLeverageHealth && (
+                  <HealthFactorPill
+                    riskMetrics={riskMetrics}
+                    isOwnBundle={isOwnBundle}
+                    size="sm"
+                    {...(onViewRiskDetails && {
+                      onViewDetails: onViewRiskDetails,
+                    })}
+                  />
+                )}
+                {showBorrowingAlert && borrowingSummary && userId && (
+                  <BorrowingHealthPill
+                    summary={borrowingSummary}
+                    userId={userId}
+                    size="sm"
+                  />
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            data-testid="deposit-button"
+            onClick={() => onOpenModal("deposit")}
+            disabled={isActionsDisabled}
+            title={
+              !isOwnBundle ? "Switch to your bundle to deposit" : undefined
+            }
+            className={getButtonClassName("deposit", isActionsDisabled)}
+          >
+            <ArrowDownCircle className="w-4 h-4" /> Deposit
+          </button>
+          <button
+            data-testid="withdraw-button"
+            onClick={() => onOpenModal("withdraw")}
+            disabled={isActionsDisabled}
+            title={
+              !isOwnBundle ? "Switch to your bundle to withdraw" : undefined
+            }
+            className={getButtonClassName("withdraw", isActionsDisabled)}
+          >
+            <ArrowUpCircle className="w-4 h-4" /> Withdraw
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

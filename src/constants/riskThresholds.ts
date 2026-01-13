@@ -13,7 +13,7 @@
  * - >1.0 = Safe (buffer above liquidation)
  * - <1.0 = Underwater (at risk of immediate liquidation)
  */
-enum RiskLevel {
+export enum RiskLevel {
   SAFE = "SAFE",
   MODERATE = "MODERATE",
   RISKY = "RISKY",
@@ -33,34 +33,54 @@ export const HEALTH_RATE_THRESHOLDS = {
 } as const;
 
 /**
- * Risk Level Color Scheme
+ * Risk Level Display Configuration
  *
- * Tailwind color classes for each risk level.
+ * Comprehensive display configuration for each risk level including:
+ * - Colors (Tailwind CSS classes)
+ * - Icons (multi-modal indicators for accessibility)
+ * - Animation patterns
+ * - ARIA labels
  */
 export const RISK_COLORS = {
   [RiskLevel.SAFE]: {
-    text: "text-green-400",
-    bg: "bg-green-500/10",
-    border: "border-green-500/30",
+    text: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    dot: "bg-emerald-500",
     emoji: "🟢",
+    icon: "✓",
+    pattern: "solid" as const,
+    ariaLabel: "Safe - Large safety buffer",
   },
   [RiskLevel.MODERATE]: {
-    text: "text-yellow-400",
-    bg: "bg-yellow-500/10",
-    border: "border-yellow-500/30",
+    text: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    dot: "bg-amber-500",
     emoji: "🟡",
+    icon: "⚠",
+    pattern: "solid" as const,
+    ariaLabel: "Warning - Moderate safety buffer",
   },
   [RiskLevel.RISKY]: {
-    text: "text-orange-400",
+    text: "text-orange-500",
     bg: "bg-orange-500/10",
-    border: "border-orange-500/30",
+    border: "border-orange-500/20",
+    dot: "bg-orange-500",
     emoji: "🟠",
+    icon: "!",
+    pattern: "pulse" as const,
+    ariaLabel: "Risky - Low safety buffer",
   },
   [RiskLevel.CRITICAL]: {
-    text: "text-red-400",
-    bg: "bg-red-500/10",
-    border: "border-red-500/30",
+    text: "text-rose-500",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/30 shadow-rose-500/20",
+    dot: "bg-rose-500",
     emoji: "🔴",
+    icon: "!!",
+    pattern: "pulse" as const,
+    ariaLabel: "Critical - Liquidation risk",
   },
 } as const;
 
@@ -128,4 +148,35 @@ export function getRiskConfig(healthRate: number) {
     label: RISK_LABELS[level],
     emoji: RISK_COLORS[level].emoji,
   };
+}
+
+/**
+ * Maps API borrowing_summary.overall_status to RiskLevel
+ *
+ * The backend provides pre-computed status strings. This function
+ * converts them to our internal RiskLevel enum for consistent styling.
+ *
+ * @param status - Overall status from borrowing_summary API response
+ * @returns Corresponding RiskLevel enum value
+ *
+ * @example
+ * ```typescript
+ * mapBorrowingStatusToRiskLevel("CRITICAL") // RiskLevel.CRITICAL
+ * mapBorrowingStatusToRiskLevel("WARNING")  // RiskLevel.RISKY
+ * mapBorrowingStatusToRiskLevel("HEALTHY")  // RiskLevel.SAFE
+ * ```
+ */
+export function mapBorrowingStatusToRiskLevel(
+  status: "HEALTHY" | "WARNING" | "CRITICAL"
+): RiskLevel {
+  switch (status) {
+    case "HEALTHY":
+      return RiskLevel.SAFE;
+    case "WARNING":
+      return RiskLevel.RISKY; // Map WARNING to RISKY for visual consistency
+    case "CRITICAL":
+      return RiskLevel.CRITICAL;
+    default:
+      return RiskLevel.MODERATE;
+  }
 }

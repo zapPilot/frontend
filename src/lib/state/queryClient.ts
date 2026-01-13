@@ -59,6 +59,8 @@ export const queryKeys = {
       ["portfolio", "landing-page", userId] as const,
     yieldSummary: (userId: string) =>
       ["portfolio", "yield-summary", userId] as const,
+    borrowingPositions: (userId: string) =>
+      ["portfolio", "borrowing-positions", userId] as const,
   },
 
   // Strategy-related queries

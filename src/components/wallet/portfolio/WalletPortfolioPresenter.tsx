@@ -35,18 +35,12 @@ interface WalletPortfolioPresenterProps {
   isOwnBundle?: boolean;
   isEmptyState?: boolean;
   isLoading?: boolean;
-  initialEtlJobId?: string | undefined;
-  /** Whether this is a brand new user (from connectWallet response) */
-  isNewUser?: boolean | undefined;
   /** ETL job polling state (from DashboardShell) */
   etlState: EtlJobPollingState;
-  /** Reset ETL state after completion */
-  onResetEtl?: () => void;
   /** Section states for progressive loading */
   sections: DashboardSections;
   headerBanners?: React.ReactNode;
   footerOverlays?: React.ReactNode;
-  onRefresh?: () => void;
 }
 
 export function WalletPortfolioPresenter({
@@ -55,18 +49,10 @@ export function WalletPortfolioPresenter({
   isOwnBundle = true,
   isEmptyState = false,
   isLoading = false,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initialEtlJobId: _initialEtlJobId,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isNewUser: _isNewUser = false,
   etlState,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onResetEtl: _onResetEtl,
   sections,
   headerBanners,
   footerOverlays,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onRefresh: _onRefresh,
 }: WalletPortfolioPresenterProps) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -149,6 +135,7 @@ export function WalletPortfolioPresenter({
         isOwnBundle={isOwnBundle}
         isLoading={isLoading}
         onOpenModal={openModal}
+        userId={userId}
       />
     ),
     analytics: userId ? (

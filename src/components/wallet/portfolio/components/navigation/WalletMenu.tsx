@@ -70,6 +70,35 @@ export function WalletMenu({
   };
 
   // Helper components to eliminate code duplication
+  const CopyButton = ({
+    address,
+    variant = "text",
+  }: {
+    address: string;
+    variant?: "text" | "icon-only";
+  }) => (
+    <button
+      onClick={() => handleCopyAddress(address)}
+      className={
+        variant === "text"
+          ? "text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
+          : "text-xs text-gray-400 hover:text-purple-300 transition-colors"
+      }
+    >
+      {copiedAddress === address ? (
+        <>
+          <Check className="w-3 h-3" />
+          {variant === "text" && "Copied"}
+        </>
+      ) : (
+        <>
+          <Copy className="w-3 h-3" />
+          {variant === "text" && "Copy"}
+        </>
+      )}
+    </button>
+  );
+
   const MenuItems = () => (
     <>
       {onOpenWalletManager && (
@@ -176,22 +205,7 @@ export function WalletMenu({
                     <span className="text-xs text-gray-400 uppercase tracking-wide">
                       Connected Wallet
                     </span>
-                    <button
-                      onClick={() => handleCopyAddress(account.address)}
-                      className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
-                    >
-                      {copiedAddress === account.address ? (
-                        <>
-                          <Check className="w-3 h-3" />
-                          Copied
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3 h-3" />
-                          Copy
-                        </>
-                      )}
-                    </button>
+                    <CopyButton address={account.address} variant="text" />
                   </div>
                   <div className="font-mono text-sm text-white">
                     {formatAddress(account.address)}
@@ -235,16 +249,10 @@ export function WalletMenu({
                               {formatAddress(wallet.address)}
                             </span>
                           </div>
-                          <button
-                            onClick={() => handleCopyAddress(wallet.address)}
-                            className="text-xs text-gray-400 hover:text-purple-300 transition-colors"
-                          >
-                            {copiedAddress === wallet.address ? (
-                              <Check className="w-3 h-3" />
-                            ) : (
-                              <Copy className="w-3 h-3" />
-                            )}
-                          </button>
+                          <CopyButton
+                            address={wallet.address}
+                            variant="icon-only"
+                          />
                         </div>
                         {wallet.isActive && (
                           <div className="text-xs text-purple-400 font-bold flex items-center gap-1">
