@@ -1508,4 +1508,180 @@ describe("analyticsSchemas", () => {
       });
     });
   });
+
+  describe("borrowingSummarySchema (via landingPageResponseSchema)", () => {
+    const baseValidLandingPage = {
+      total_net_usd: 1000,
+      portfolio_allocation: {
+        btc: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        eth: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        stablecoins: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+        others: {
+          total_value: 0,
+          percentage_of_portfolio: 0,
+          wallet_tokens_value: 0,
+          other_sources_value: 0,
+        },
+      },
+    };
+
+    it("accepts borrowing_summary with valid debt positions", () => {
+      const dataWithDebt = {
+        ...baseValidLandingPage,
+        borrowing_summary: {
+          has_debt: true,
+          worst_health_rate: 1.25,
+          overall_status: "HEALTHY",
+          critical_count: 0,
+          warning_count: 0,
+          healthy_count: 2,
+        },
+      };
+
+      expect(() => landingPageResponseSchema.parse(dataWithDebt)).not.toThrow();
+
+      const parsed = landingPageResponseSchema.parse(dataWithDebt);
+      expect(parsed.borrowing_summary?.has_debt).toBe(true);
+      expect(parsed.borrowing_summary?.worst_health_rate).toBe(1.25);
+      expect(parsed.borrowing_summary?.overall_status).toBe("HEALTHY");
+    });
+
+    it("accepts null worst_health_rate and overall_status when has_debt is false", () => {
+      const dataNoDebt = {
+        ...baseValidLandingPage,
+        borrowing_summary: {
+          has_debt: false,
+          worst_health_rate: null,
+          overall_status: null,
+          critical_count: 0,
+          warning_count: 0,
+          healthy_count: 0,
+        },
+      };
+
+      expect(() => landingPageResponseSchema.parse(dataNoDebt)).not.toThrow();
+
+      const parsed = landingPageResponseSchema.parse(dataNoDebt);
+      expect(parsed.borrowing_summary?.has_debt).toBe(false);
+      expect(parsed.borrowing_summary?.worst_health_rate).toBeNull();
+      expect(parsed.borrowing_summary?.overall_status).toBeNull();
+    });
+
+    it("accepts null borrowing_summary (user never had any positions)", () => {
+      const dataNullSummary = {
+        ...baseValidLandingPage,
+        borrowing_summary: null,
+      };
+
+      expect(() =>
+        landingPageResponseSchema.parse(dataNullSummary)
+      ).not.toThrow();
+
+      const parsed = landingPageResponseSchema.parse(dataNullSummary);
+      expect(parsed.borrowing_summary).toBeNull();
+    });
+
+    it("accepts missing borrowing_summary (optional field)", () => {
+      const dataNoSummary = {
+        ...baseValidLandingPage,
+        // borrowing_summary not provided
+      };
+
+      expect(() =>
+        landingPageResponseSchema.parse(dataNoSummary)
+      ).not.toThrow();
+
+      const parsed = landingPageResponseSchema.parse(dataNoSummary);
+      expect(parsed.borrowing_summary).toBeUndefined();
+    });
+
+    it("validates overall_status enum values", () => {
+      const validStatuses = ["HEALTHY", "WARNING", "CRITICAL"];
+
+      for (const status of validStatuses) {
+        const data = {
+          ...baseValidLandingPage,
+          borrowing_summary: {
+            has_debt: true,
+            worst_health_rate: 1.5,
+            overall_status: status,
+            critical_count: 0,
+            warning_count: 0,
+            healthy_count: 1,
+          },
+        };
+
+        expect(() => landingPageResponseSchema.parse(data)).not.toThrow();
+      }
+    });
+
+    it("rejects invalid overall_status value", () => {
+      const dataInvalidStatus = {
+        ...baseValidLandingPage,
+        borrowing_summary: {
+          has_debt: true,
+          worst_health_rate: 1.5,
+          overall_status: "INVALID_STATUS",
+          critical_count: 0,
+          warning_count: 0,
+          healthy_count: 1,
+        },
+      };
+
+      expect(() => landingPageResponseSchema.parse(dataInvalidStatus)).toThrow(
+        ZodError
+      );
+    });
+
+    it("rejects negative worst_health_rate", () => {
+      const dataNegativeHealth = {
+        ...baseValidLandingPage,
+        borrowing_summary: {
+          has_debt: true,
+          worst_health_rate: -1.0,
+          overall_status: "CRITICAL",
+          critical_count: 1,
+          warning_count: 0,
+          healthy_count: 0,
+        },
+      };
+
+      expect(() => landingPageResponseSchema.parse(dataNegativeHealth)).toThrow(
+        ZodError
+      );
+    });
+
+    it("rejects zero worst_health_rate (must be positive)", () => {
+      const dataZeroHealth = {
+        ...baseValidLandingPage,
+        borrowing_summary: {
+          has_debt: true,
+          worst_health_rate: 0,
+          overall_status: "CRITICAL",
+          critical_count: 1,
+          warning_count: 0,
+          healthy_count: 0,
+        },
+      };
+
+      expect(() => landingPageResponseSchema.parse(dataZeroHealth)).toThrow(
+        ZodError
+      );
+    });
+  });
 });

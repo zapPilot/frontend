@@ -54,12 +54,7 @@ export function BorrowingHealthPill({
 
   const { overall_status, worst_health_rate } = summary;
 
-  const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
-  const config = RISK_COLORS[riskLevel];
-  const sizeConfig = SIZE_CONFIGS[size];
-
-  // Only Pulse for Critical
-  const shouldPulse = riskLevel === RiskLevel.CRITICAL;
+  // Early return if no borrowing data (null values when has_debt is false)
 
   // Fetch positions on-demand when expanded
   const {
@@ -78,6 +73,18 @@ export function BorrowingHealthPill({
     containerRef,
     tooltipRef
   );
+
+  // Early return if no borrowing data (null values when has_debt is false)
+  if (overall_status === null || worst_health_rate === null) {
+    return null;
+  }
+
+  const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
+  const config = RISK_COLORS[riskLevel];
+  const sizeConfig = SIZE_CONFIGS[size];
+
+  // Only Pulse for Critical
+  const shouldPulse = riskLevel === RiskLevel.CRITICAL;
 
   // Expanded tooltip (shown on click)
   const expandedTooltip = isExpanded && isMounted && (

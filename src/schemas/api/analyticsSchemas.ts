@@ -176,8 +176,9 @@ const riskMetricsSchema = z.object({
  */
 const borrowingSummarySchema = z.object({
   has_debt: z.boolean(),
-  worst_health_rate: z.number().positive(),
-  overall_status: z.enum(["HEALTHY", "WARNING", "CRITICAL"]),
+  // worst_health_rate and overall_status are null when has_debt is false
+  worst_health_rate: z.number().positive().nullable(),
+  overall_status: z.enum(["HEALTHY", "WARNING", "CRITICAL"]).nullable(),
   critical_count: z.number().int().nonnegative(),
   warning_count: z.number().int().nonnegative(),
   healthy_count: z.number().int().nonnegative(),

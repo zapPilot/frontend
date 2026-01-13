@@ -11,6 +11,8 @@ import type {
 } from "@/services/analyticsService";
 
 import { FinancialMetricRow } from "./FinancialMetricRow";
+import { IconBadge } from "./IconBadge";
+import { TokenIconStack } from "./TokenIconStack";
 
 interface BorrowingPositionsTooltipProps {
   /** Borrowing positions data */
@@ -98,13 +100,21 @@ function PositionCard({ position }: { position: BorrowingPosition }) {
 
   return (
     <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
-      {/* Protocol Header */}
+      {/* Protocol Header with Icon */}
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-white">
-            {position.protocol_name}
-          </p>
-          <p className="text-xs text-gray-400 capitalize">{position.chain}</p>
+        <div className="flex items-center gap-2">
+          <IconBadge
+            src={`https://zap-assets-worker.davidtnfsh.workers.dev/projectPictures/${position.protocol_id.toLowerCase()}.webp`}
+            alt={`${position.protocol_name} logo`}
+            size="md" // 24px
+            fallback={{ type: "letter", content: position.protocol_name }}
+          />
+          <div>
+            <p className="text-sm font-medium text-white">
+              {position.protocol_name}
+            </p>
+            <p className="text-xs text-gray-400 capitalize">{position.chain}</p>
+          </div>
         </div>
         <span
           className={`
@@ -142,24 +152,25 @@ function PositionCard({ position }: { position: BorrowingPosition }) {
         </div>
       </div>
 
-      {/* Token Lists */}
+      {/* Token Lists with Icons */}
       {(position.collateral_tokens.length > 0 ||
         position.debt_tokens.length > 0) && (
-        <div className="pt-2 border-t border-gray-700 space-y-1">
+        <div className="pt-2 border-t border-gray-700 space-y-2">
           {position.collateral_tokens.length > 0 && (
-            <div className="text-xs">
-              <span className="text-gray-500">Collateral: </span>
-              <span className="text-gray-400">
-                {position.collateral_tokens.map(t => t.symbol).join(", ")}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 min-w-[60px]">
+                Collateral:
               </span>
+              <TokenIconStack
+                tokens={position.collateral_tokens}
+                maxVisible={3}
+              />
             </div>
           )}
           {position.debt_tokens.length > 0 && (
-            <div className="text-xs">
-              <span className="text-gray-500">Debt: </span>
-              <span className="text-gray-400">
-                {position.debt_tokens.map(t => t.symbol).join(", ")}
-              </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 min-w-[60px]">Debt:</span>
+              <TokenIconStack tokens={position.debt_tokens} maxVisible={3} />
             </div>
           )}
         </div>
@@ -210,8 +221,13 @@ export function BorrowingPositionsTooltip({
     return <TooltipError error={error} onRetry={onRetry} />;
   }
 
-  // Empty state
-  if (!positions || positions.length === 0) {
+  // Empty state - also handle null status (no debt positions)
+  if (
+    !positions ||
+    positions.length === 0 ||
+    summary.overall_status === null ||
+    summary.worst_health_rate === null
+  ) {
     return <TooltipEmpty />;
   }
 
