@@ -140,4 +140,75 @@ describe("GhostModeOverlay", () => {
       expect(screen.getByTestId("connect-wallet-button")).toBeInTheDocument();
     });
   });
+
+  /**
+   * Wallet Connection State Scenarios
+   *
+   * These tests document the expected behavior of GhostModeOverlay
+   * in different wallet connection states. The `enabled` prop should be:
+   * - true: when wallet disconnected (unifiedData === null) or empty portfolio
+   * - false: when wallet connected with portfolio data
+   *
+   * This is controlled by DashboardShell's isEmptyState calculation.
+   */
+  describe("Wallet State Scenarios (behavior documentation)", () => {
+    it("scenario: disconnected wallet should show blur + Connect CTA", () => {
+      // When wallet is disconnected, isEmptyState=true in DashboardShell
+      // So GhostModeOverlay receives enabled=true
+      render(
+        <GhostModeOverlay enabled={true} showCTA={true}>
+          {testContent}
+        </GhostModeOverlay>
+      );
+
+      expect(screen.getByText("Preview")).toBeInTheDocument();
+      expect(screen.getByTestId("connect-wallet-button")).toBeInTheDocument();
+      expect(screen.getByTestId("test-content")).toBeInTheDocument();
+    });
+
+    it("scenario: connected wallet with data should show content normally", () => {
+      // When wallet is connected with data, isEmptyState=false in DashboardShell
+      // So GhostModeOverlay receives enabled=false
+      render(
+        <GhostModeOverlay enabled={false} showCTA={true}>
+          {testContent}
+        </GhostModeOverlay>
+      );
+
+      expect(screen.queryByText("Preview")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("connect-wallet-button")
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("test-content")).toBeInTheDocument();
+    });
+
+    it("scenario: connected wallet with empty portfolio should show blur + CTA", () => {
+      // When wallet is connected but portfolio is empty, isEmptyState=true
+      render(
+        <GhostModeOverlay enabled={true} showCTA={true}>
+          {testContent}
+        </GhostModeOverlay>
+      );
+
+      expect(screen.getByText("Preview")).toBeInTheDocument();
+      expect(screen.getByTestId("connect-wallet-button")).toBeInTheDocument();
+    });
+
+    it("scenario: bundle URL viewing (visitor mode) should show blur without CTA", () => {
+      // When viewing someone else's bundle, showCTA=false to avoid duplicate CTAs
+      // isEmptyState=true for empty bundle, but no CTA since it's visitor mode
+      render(
+        <GhostModeOverlay enabled={true} showCTA={false}>
+          {testContent}
+        </GhostModeOverlay>
+      );
+
+      // Still blurred but no CTA
+      expect(screen.queryByText("Preview")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("connect-wallet-button")
+      ).not.toBeInTheDocument();
+      expect(screen.getByTestId("test-content")).toBeInTheDocument();
+    });
+  });
 });

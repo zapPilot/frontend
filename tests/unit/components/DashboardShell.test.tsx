@@ -239,26 +239,166 @@ describe("DashboardShell", () => {
     expect(screen.getByText("Failed to load portfolio")).toBeInTheDocument();
   });
 
-  it("should render empty state when no data and not loading", () => {
-    // Provide actual empty data (zero balance and positions) instead of null
-    mockUsePortfolioDataProgressive.mockReturnValue({
-      unifiedData: {
-        balance: 0,
-        positions: 0,
-        allocation: [],
-        sentiment: null,
-        regimeHistory: null,
-      } as any,
-      sections: {},
-      isLoading: false,
-      error: null,
-      refetch: vi.fn(),
+  /**
+   * isEmptyState Logic Tests
+   *
+   * The isEmptyState flag controls whether Ghost Mode Overlay shows.
+   * Bug fix: Previously, `unifiedData === null` (disconnected wallet) resulted in
+   * isEmptyState=false, breaking ghost mode for unconnected users.
+   *
+   * Correct logic: isEmptyState = !isLoading && (unifiedData === null || empty portfolio)
+   */
+  describe("isEmptyState calculation (Ghost Mode trigger)", () => {
+    it("should set isEmptyState=true when wallet disconnected (unifiedData is null)", () => {
+      // Wallet not connected = no user query = unifiedData is null
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: null,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "true");
     });
 
-    render(<DashboardShell {...defaultProps} />, { wrapper: createWrapper() });
+    it("should set isEmptyState=false when loading (even with null data)", () => {
+      // During loading, don't show ghost mode - show loading state instead
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: null,
+        sections: {},
+        isLoading: true,
+        error: null,
+        refetch: vi.fn(),
+      });
 
-    const presenter = screen.getByTestId("portfolio-presenter");
-    expect(presenter).toHaveAttribute("data-empty", "true");
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "false");
+      expect(presenter).toHaveAttribute("data-loading", "true");
+    });
+
+    it("should set isEmptyState=true when connected but portfolio is empty", () => {
+      // Wallet connected but user has zero balance and zero positions
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: {
+          balance: 0,
+          positions: 0,
+          allocation: [],
+          sentiment: null,
+          regimeHistory: null,
+        } as any,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "true");
+    });
+
+    it("should set isEmptyState=false when user has portfolio data", () => {
+      // Wallet connected with actual holdings
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: {
+          balance: 10000,
+          positions: 5,
+          allocation: [],
+          sentiment: null,
+          regimeHistory: null,
+        } as any,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "false");
+    });
+
+    it("should set isEmptyState=false when only balance exists (no positions)", () => {
+      // Edge case: balance exists but positions is 0
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: {
+          balance: 1000,
+          positions: 0,
+          allocation: [],
+        } as any,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "false");
+    });
+
+    it("should set isEmptyState=false when only positions exist (no balance)", () => {
+      // Edge case: positions exist but balance is 0
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: {
+          balance: 0,
+          positions: 3,
+          allocation: [],
+        } as any,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      expect(presenter).toHaveAttribute("data-empty", "false");
+    });
+
+    it("should handle undefined balance/positions gracefully", () => {
+      // Edge case: data exists but fields are undefined
+      mockUsePortfolioDataProgressive.mockReturnValue({
+        unifiedData: {
+          // balance and positions are undefined
+          allocation: [],
+        } as any,
+        sections: {},
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+      });
+
+      render(<DashboardShell {...defaultProps} />, {
+        wrapper: createWrapper(),
+      });
+
+      const presenter = screen.getByTestId("portfolio-presenter");
+      // With undefined treated as 0, this should be empty state
+      expect(presenter).toHaveAttribute("data-empty", "true");
+    });
   });
 
   it("should render header banners when provided", () => {

@@ -130,15 +130,14 @@ export function DashboardShell({
     error: error ? error.message : null,
   });
 
-  // Determine if this is empty state (no real portfolio data, excluding loading)
-  // Use balance and positions - the correct properties from WalletPortfolioDataWithDirection
-  // IMPORTANT: Only mark as empty if we have data AND that data shows zero balance
-  // If unifiedData is null (data not loaded yet), don't mark as empty to keep buttons enabled
+  // Determine if this is empty state (no real portfolio data)
+  // Ghost mode shows when loading complete AND (wallet disconnected OR empty portfolio)
+  // - unifiedData === null: wallet disconnected, no user to query
+  // - unifiedData with zero positions/balance: connected but empty portfolio
   const isEmptyState =
-    unifiedData !== null && // Only evaluate if data exists
-    (unifiedData.positions ?? 0) === 0 &&
-    (unifiedData.balance ?? 0) === 0 &&
-    !isLoading;
+    !isLoading &&
+    (unifiedData === null ||
+      ((unifiedData.positions ?? 0) === 0 && (unifiedData.balance ?? 0) === 0));
 
   // Use real data if available, otherwise create empty state with real sentiment
   const portfolioData =
