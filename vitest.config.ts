@@ -53,7 +53,22 @@ export default defineConfig({
         'src/hooks/ui/useAsyncRetryButton.ts',
       ],
       reportOnFailure: true,
-      all: true
+      all: true,
+      thresholds: {
+        global: {
+          statements: 90,
+          branches: 85,
+          functions: 90,
+          lines: 90,
+        },
+        // Per-file thresholds for critical paths
+        'src/components/wallet/portfolio/modals/ConnectWalletModal.tsx': {
+          branches: 80,
+        },
+        'src/adapters/walletPortfolioDataAdapter.ts': {
+          branches: 80,
+        },
+      },
     }
   },
   resolve: {

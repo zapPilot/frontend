@@ -68,6 +68,29 @@ export function BorrowingHealthPill({
     setIsMounted(true);
   }, []);
 
+  // Handle click outside to close
+  useEffect(() => {
+    if (!isExpanded) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const isOutside =
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        tooltipRef.current &&
+        !tooltipRef.current.contains(target);
+
+      if (isOutside) {
+        setIsExpanded(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isExpanded]);
+
   const tooltipPosition = useTooltipPosition(
     isExpanded,
     containerRef,

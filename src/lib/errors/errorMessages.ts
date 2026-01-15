@@ -150,8 +150,8 @@ function findMessagePattern(
   message: string | undefined,
   patterns: Record<string, string> | string
 ): string | null {
-  if (!message) return null;
   if (typeof patterns === "string") return patterns;
+  if (!message) return null;
 
   const lowerMessage = message.toLowerCase();
 
@@ -202,7 +202,7 @@ function findMessagePattern(
  * // Returns: "Database connection failed"
  * ```
  */
-function getErrorMessage(context: ErrorMessageContext): string {
+export function getErrorMessage(context: ErrorMessageContext): string {
   const { status, message, source = "unknown" } = context;
 
   // 1. Try service-specific pattern matching
