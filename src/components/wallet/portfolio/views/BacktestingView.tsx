@@ -1,11 +1,13 @@
 "use client";
 
 import { Activity, Play, RefreshCw, Zap } from "lucide-react";
+import { useEffect, useMemo } from "react";
 import {
   Area,
-  AreaChart,
   CartesianGrid,
+  ComposedChart,
   ResponsiveContainer,
+  Scatter,
   Tooltip,
   XAxis,
   YAxis,
@@ -31,6 +33,17 @@ export const BacktestingView = () => {
     isPending,
     error,
   } = useBacktestMutation();
+
+  const chartData = useMemo(() => {
+    if (!backtestData) return [];
+    return backtestData.history.map(point => ({
+      ...point,
+      buySignal:
+        point.regime_action === "buy_spot" ? point.regime_total_value : null,
+      sellSignal:
+        point.regime_action === "sell_spot" ? point.regime_total_value : null,
+    }));
+  }, [backtestData]);
 
   const handleRunBacktest = () => {
     mutate(DEFAULT_REQUEST);
@@ -158,7 +171,7 @@ export const BacktestingView = () => {
 
             <div className="flex-1 w-full pt-4 pr-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={backtestData.history}>
+                <ComposedChart data={chartData}>
                   <defs>
                     <linearGradient
                       id="colorRegime"
@@ -203,10 +216,17 @@ export const BacktestingView = () => {
                       fontSize: "12px",
                     }}
                     itemStyle={{ color: "#fff" }}
-                    formatter={(value: number | undefined) => [
-                      `$${(value ?? 0).toLocaleString()}`,
-                      "Value",
-                    ]}
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    formatter={(value: any, name: string, props: any) => {
+                      if (name === "Buy Action")
+                        return ["Aggressive Buy", "Action"];
+                      if (name === "Sell Action")
+                        return ["Defensive Sell", "Action"];
+                      if (typeof value === "number") {
+                        return [`$${value.toLocaleString()}`, "Value"];
+                      }
+                      return [value, name];
+                    }}
                     labelFormatter={label =>
                       new Date(label).toLocaleDateString()
                     }
@@ -229,7 +249,22 @@ export const BacktestingView = () => {
                     fill="transparent"
                     strokeWidth={2}
                   />
-                </AreaChart>
+
+                  <Scatter
+                    name="Buy Action"
+                    dataKey="buySignal"
+                    fill="#22c55e"
+                    shape="circle"
+                    legendType="none"
+                  />
+                  <Scatter
+                    name="Sell Action"
+                    dataKey="sellSignal"
+                    fill="#ef4444"
+                    shape="circle"
+                    legendType="none"
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </BaseCard>
