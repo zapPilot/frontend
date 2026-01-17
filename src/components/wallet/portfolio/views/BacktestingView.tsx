@@ -36,6 +36,11 @@ export const BacktestingView = () => {
     mutate(DEFAULT_REQUEST);
   };
 
+  useEffect(() => {
+    handleRunBacktest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}

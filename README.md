@@ -180,7 +180,6 @@ NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_project_id
 
 # API Endpoints
 NEXT_PUBLIC_API_BASE_URL=https://api.example.com
-NEXT_PUBLIC_DEBANK_API_URL=https://api.debank.com
 
 # Feature Flags
 NODE_ENV=development

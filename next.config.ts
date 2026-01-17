@@ -34,12 +34,6 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'static.debank.com',
-        port: '',
-        pathname: '/**',
-      },
     ],
   },
   output: 'export',
@@ -129,8 +123,6 @@ const nextConfig: NextConfig = {
                 : [
                     "connect-src 'self'",
                     // Core API endpoints (minimized)
-                    "https://api.debank.com",
-                    "https://static.debank.com", 
                     "https://zap-assets-worker.davidtnfsh.workers.dev",
                     // Web3 wallet connections (required)
                     "wss://relay.walletconnect.org",
