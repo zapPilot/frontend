@@ -1,10 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
+import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 
-// Mock framer-motion to avoid animation issues in tests
+// Mock framer-motion
 vi.mock("framer-motion", () => ({
   motion: {
     div: ({ children, className, ...props }: any) => (
@@ -16,128 +16,112 @@ vi.mock("framer-motion", () => ({
   AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
+// Mock useBacktestMutation
+vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
+  useBacktestMutation: vi.fn(),
+}));
+
+// Mock Recharts
+vi.mock("recharts", () => ({
+  ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
+  AreaChart: () => <div data-testid="area-chart" />,
+  Area: () => null,
+  CartesianGrid: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  Tooltip: () => null,
+}));
+
 describe("BacktestingView", () => {
+  const mockMutate = vi.fn();
+
+  const defaultMock = {
+    mutate: mockMutate,
+    data: null,
+    isPending: false,
+    error: null,
+  };
+
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.clearAllMocks();
+    vi.mocked(useBacktestMutation).mockReturnValue(defaultMock as any);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it("renders configuration panel and initial empty state", () => {
+  it("renders initial empty state", () => {
     render(<BacktestingView />);
 
-    expect(screen.getByText("Strategy Simulator")).toBeInTheDocument();
-    expect(screen.getByText("Configuration")).toBeInTheDocument();
-    expect(screen.getByText("Ready to Simulate")).toBeInTheDocument();
-
-    // Check default values
-    expect(screen.getByText("Aggressive")).toHaveClass("bg-gray-800"); // Active styling logic check might be fragile, but text exists
-    expect(screen.getByDisplayValue("10,000")).toBeInTheDocument();
+    expect(screen.getByText("DCA Strategy Comparison")).toBeInTheDocument();
+    expect(screen.getByText("Ready to Compare Strategies")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Run Backtest/i })
+    ).toBeInTheDocument();
   });
 
-  it("updates configuration state on user interaction", async () => {
-    const _user = userEvent.setup({ delay: null }); // usage with fake timers requires caution, using fireEvent for simplicity with fake timers sometimes better, but let's try
-
+  it("triggers backtest on button click", () => {
     render(<BacktestingView />);
 
-    // Change Strategy to Conservative
-    fireEvent.click(screen.getByText("Conservative"));
-    // Verify Leverage toggle disappears (it is only for Aggressive)
-    expect(screen.queryByText("Enable Smart Leverage")).not.toBeInTheDocument();
-
-    // Switch back to Aggressive
-    fireEvent.click(screen.getByText("Aggressive"));
-    expect(screen.getByText("Enable Smart Leverage")).toBeInTheDocument();
-
-    // Toggle Leverage
-    const _toggleBtn = screen.getByRole("button", { name: "" }); // The toggle button might be hard to find by role if no text.
-    // Finding by clicking the button inside the leverage section
-    // The button has onClick setUseLeverage.
-    // Let's use class check or closest button to text.
-    const _leverageSection = screen
-      .getByText("Enable Smart Leverage")
-      .closest("div");
-    // navigate up/down
-    // Actually, looking at code: button contains "Enable Smart Leverage" sibling?
-    // Code:
-    // <div ... flex items-center justify-between">
-    //   <div>...text...</div>
-    //   <button onClick...></button>
-    // </div>
-    // I can find the button relative to text.
-
-    // Simpler: Just update inputs that have labels.
-    // Initial Capital
-    const input = screen.getByDisplayValue("10,000");
-    fireEvent.change(input, { target: { value: "50,000" } });
-    expect(input).toHaveValue("50,000");
-
-    // Timeframe
-    fireEvent.click(screen.getByText("Bear Market 2022"));
-    // No easy way to check internal state without visual cues, but we assume it works if no error.
-  });
-
-  it("runs simulation and displays results", async () => {
-    render(<BacktestingView />);
-
-    const runButton = screen.getByText("Run Backtest");
+    const runButton = screen.getByRole("button", { name: /Run Backtest/i });
     fireEvent.click(runButton);
 
-    // Should show loading state
-    expect(screen.getByText("Running Simulation...")).toBeInTheDocument();
-    expect(runButton).toBeDisabled();
-
-    // Fast forward time
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-
-    // Should show results
-    expect(screen.getByText("Total Return")).toBeInTheDocument();
-    expect(screen.getByText("Portfolio Value Growth")).toBeInTheDocument();
-    expect(screen.queryByText("Running Simulation...")).not.toBeInTheDocument();
+    expect(mockMutate).toHaveBeenCalled();
   });
 
-  it("resets configuration to defaults", async () => {
+  it("shows loading state when pending", () => {
+    vi.mocked(useBacktestMutation).mockReturnValue({
+      ...defaultMock,
+      isPending: true,
+    } as any);
+
     render(<BacktestingView />);
 
-    // Change some settings
-    const input = screen.getByDisplayValue("10,000");
-    fireEvent.change(input, { target: { value: "999" } });
-    fireEvent.click(screen.getByText("Conservative"));
-
-    // Run simulation to show results
-    fireEvent.click(screen.getByText("Run Backtest"));
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-    expect(screen.getByText("Total Return")).toBeInTheDocument();
-
-    // Click Reset
-    const resetButton = screen.getByText("Reset");
-    fireEvent.click(resetButton);
-
-    // Verify defaults
-    expect(screen.getByDisplayValue("10,000")).toBeInTheDocument();
-    // Results should be hidden
-    expect(screen.queryByText("Total Return")).not.toBeInTheDocument();
-    expect(screen.getByText("Ready to Simulate")).toBeInTheDocument();
-
-    // Strategy should be aggressive (check if Conservative is NOT active/styled, or just check logic)
-    // The component defaults to 'aggressive'.
+    expect(screen.getByText("Running...")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Running.../i })).toBeDisabled();
   });
 
-  it("updates bar charts in result view", async () => {
-    render(<BacktestingView />);
-    fireEvent.click(screen.getByText("Run Backtest"));
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
+  it("displays error message", () => {
+    const error = new Error("Test API Error");
+    vi.mocked(useBacktestMutation).mockReturnValue({
+      ...defaultMock,
+      error,
+    } as any);
 
-    // Check if charts are rendered
-    const bars = screen.getAllByTestId("motion-div");
-    expect(bars.length).toBeGreaterThan(0);
+    render(<BacktestingView />);
+
+    expect(screen.getByText("Test API Error")).toBeInTheDocument();
+  });
+
+  it("displays results when data is present", () => {
+    const mockData = {
+      summary: {
+        regime_roi_percent: 15.5,
+        normal_roi_percent: 5.2,
+        regime_final_value: 12000,
+        normal_final_value: 10500,
+        total_days: 90,
+        regime_trade_count: 5,
+        sharpe_ratio: 1.2,
+        max_drawdown: 10,
+        winning_trades: 3,
+        losing_trades: 2,
+      },
+      history: [],
+    };
+
+    vi.mocked(useBacktestMutation).mockReturnValue({
+      ...defaultMock,
+      data: mockData,
+    } as any);
+
+    render(<BacktestingView />);
+
+    expect(screen.getByText("Regime Strategy ROI")).toBeInTheDocument();
+    expect(screen.getByText("15.5%")).toBeInTheDocument();
+    expect(screen.getByText("vs +5.2% Normal DCA")).toBeInTheDocument();
+
+    expect(screen.getByText("Final Value")).toBeInTheDocument();
+    // Locale string matching might be tricky, checking simplified partial
+    expect(screen.getByText("$12,000")).toBeInTheDocument();
+
+    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
   });
 });

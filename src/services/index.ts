@@ -79,6 +79,9 @@ export {
   validateExportData,
 } from "./analyticsExportService";
 
+// Backtesting
+export { runBacktest } from "./backtestingService";
+
 // ============================================================================
 // MOCK SERVICES (Development/Testing Only)
 // ============================================================================

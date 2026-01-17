@@ -5,7 +5,6 @@ interface MetricCardProps {
   value: string;
   subtext?: string;
   highlight?: boolean;
-  showLevBadge?: boolean;
 }
 
 export function MetricCard({
@@ -13,7 +12,6 @@ export function MetricCard({
   value,
   subtext,
   highlight,
-  showLevBadge,
 }: MetricCardProps) {
   return (
     <BaseCard
@@ -24,9 +22,6 @@ export function MetricCard({
         className={`text-xs font-medium mb-1.5 flex items-center gap-1 ${highlight ? "text-green-400" : "text-gray-400"}`}
       >
         {label}
-        {showLevBadge && (
-          <span className="text-[9px] bg-green-500/20 px-1 rounded">LEV</span>
-        )}
       </div>
       <div className="text-3xl font-bold text-white tracking-tight">
         {value}

@@ -39,16 +39,21 @@ vi.mock("../../../src/contexts/UserContext", () => ({
 }));
 
 // Spy on router.replace
-const replaceSpy = vi.fn();
+const hoisted = vi.hoisted(() => ({
+  replaceSpy: vi.fn(),
+  pathname: "/",
+}));
+
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace: replaceSpy }),
+  useRouter: () => ({ replace: hoisted.replaceSpy }),
   useSearchParams: () => new URLSearchParams(""),
-  usePathname: () => window.location.pathname,
+  usePathname: () => hoisted.pathname,
 }));
 
 describe("DashboardApp redirect to bundle", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    hoisted.pathname = "/";
     // Default: connected with userId
     mockUser = {
       userInfo: { userId: "user-abc" },
@@ -62,24 +67,23 @@ describe("DashboardApp redirect to bundle", () => {
 
   it("does not redirect when not connected", async () => {
     mockUser.isConnected = false;
-    window.history.pushState({}, "", "/");
 
     await act(async () => {
       render(<DashboardApp />);
       await Promise.resolve();
     });
 
-    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(hoisted.replaceSpy).not.toHaveBeenCalled();
   });
 
   it("does not redirect when not on root path", async () => {
-    window.history.pushState({}, "", "/some/other/path");
+    hoisted.pathname = "/some/other/path";
 
     await act(async () => {
       render(<DashboardApp />);
       await Promise.resolve();
     });
 
-    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(hoisted.replaceSpy).not.toHaveBeenCalled();
   });
 });
