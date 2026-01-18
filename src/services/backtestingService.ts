@@ -1,7 +1,11 @@
 import { APIError, httpUtils } from "@/lib/http";
 import { createErrorMapper } from "@/lib/http/createErrorMapper";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
-import { BacktestRequest, BacktestResponse } from "@/types/backtesting";
+import {
+  BacktestRequest,
+  BacktestResponse,
+  BacktestTimelinePoint,
+} from "@/types/backtesting";
 
 const createBacktestingServiceError = createErrorMapper(
   (message, status, code, details) =>
@@ -19,15 +23,161 @@ const createBacktestingServiceError = createErrorMapper(
 const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
 
 /**
+ * Maximum number of data points to keep in the timeline for chart rendering.
+ * Reduces browser RAM usage while preserving important signal events.
+ */
+const MAX_CHART_POINTS = 90;
+
+/**
+ * Sample timeline data while preserving critical points.
+ *
+ * Always preserves:
+ * - First and last points
+ * - All points with trading events (buy_spot, sell_spot, buy_lp, sell_lp)
+ *
+ * Samples remaining points evenly to fill up to maxPoints.
+ *
+ * @param timeline - Full timeline array from API
+ * @param maxPoints - Maximum number of points to return (default: MAX_CHART_POINTS)
+ * @returns Sampled timeline array
+ */
+function sampleTimelineData(
+  timeline: BacktestTimelinePoint[],
+  maxPoints: number = MAX_CHART_POINTS
+): BacktestTimelinePoint[] {
+  // If already within limit, return as-is
+  if (timeline.length <= maxPoints) {
+    return timeline;
+  }
+
+  // Track indices of critical points that must be preserved
+  const criticalIndices = new Set<number>();
+
+  // Always keep first and last points
+  criticalIndices.add(0);
+  criticalIndices.add(timeline.length - 1);
+
+  // Keep all points with trading events (signals)
+  timeline.forEach((point, index) => {
+    const event = point.strategies.smart_dca.event;
+    if (event && event !== null) {
+      criticalIndices.add(index);
+    }
+  });
+
+  const criticalIndicesArray = Array.from(criticalIndices).sort(
+    (a, b) => a - b
+  );
+
+  // If we have too many critical points, sample them evenly
+  if (criticalIndicesArray.length >= maxPoints) {
+    const criticalPoints = criticalIndicesArray
+      .map(i => timeline[i])
+      .filter((p): p is BacktestTimelinePoint => p !== undefined);
+    return sampleEvenlyIndices(criticalPoints, maxPoints);
+  }
+
+  // Calculate remaining slots for non-critical points
+  const remainingSlots = maxPoints - criticalIndicesArray.length;
+
+  // Get all non-critical indices
+  const nonCriticalIndices: number[] = [];
+  for (let i = 0; i < timeline.length; i++) {
+    if (!criticalIndices.has(i)) {
+      nonCriticalIndices.push(i);
+    }
+  }
+
+  // Sample non-critical points evenly
+  const nonCriticalPoints = nonCriticalIndices
+    .map(i => timeline[i])
+    .filter((p): p is BacktestTimelinePoint => p !== undefined);
+  const sampledNonCritical = sampleEvenlyIndices(
+    nonCriticalPoints,
+    remainingSlots
+  );
+
+  // Get indices of sampled non-critical points
+  const sampledNonCriticalIndices = new Set<number>();
+  sampledNonCritical.forEach(point => {
+    const index = timeline.findIndex(
+      p =>
+        p &&
+        p.date === point.date &&
+        p.price === point.price &&
+        p.sentiment === point.sentiment
+    );
+    if (index !== -1) {
+      sampledNonCriticalIndices.add(index);
+    }
+  });
+
+  // Combine critical and sampled non-critical indices, then sort
+  const allIndices = [
+    ...criticalIndicesArray,
+    ...Array.from(sampledNonCriticalIndices),
+  ].sort((a, b) => a - b);
+
+  return allIndices
+    .map(i => timeline[i])
+    .filter((p): p is BacktestTimelinePoint => p !== undefined);
+}
+
+/**
+ * Sample an array of points evenly to a target size.
+ *
+ * @param points - Array of points to sample
+ * @param targetSize - Target number of points
+ * @returns Sampled array
+ */
+function sampleEvenlyIndices<T>(points: T[], targetSize: number): T[] {
+  if (points.length <= targetSize) {
+    return points;
+  }
+
+  if (targetSize === 0) {
+    return [];
+  }
+
+  if (targetSize === 1) {
+    const middleIndex = Math.floor(points.length / 2);
+    const point = points[middleIndex];
+    return point !== undefined ? [point] : [];
+  }
+
+  const step = (points.length - 1) / (targetSize - 1);
+  const sampled: T[] = [];
+
+  for (let i = 0; i < targetSize; i++) {
+    const index = Math.round(i * step);
+    const point = points[index];
+    if (point !== undefined) {
+      sampled.push(point);
+    }
+  }
+
+  return sampled;
+}
+
+/**
  * Run the DCA comparison backtest.
+ *
+ * Automatically samples the timeline data to reduce browser RAM usage
+ * while preserving important trading signals (buy/sell events).
  */
 export async function runBacktest(
   request: BacktestRequest
 ): Promise<BacktestResponse> {
-  return callBacktestingApi(() =>
+  const response = await callBacktestingApi(() =>
     httpUtils.analyticsEngine.post<BacktestResponse>(
       "/api/v2/backtesting/dca-comparison",
       request
     )
   );
+
+  // Sample timeline data to reduce memory usage while preserving signals
+  return {
+    ...response,
+    timeline: sampleTimelineData(response.timeline),
+  };
 }

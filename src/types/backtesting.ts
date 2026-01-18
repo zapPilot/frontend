@@ -4,43 +4,67 @@ export interface BacktestRequest {
   end_date?: string; // YYYY-MM-DD
   initial_capital: number;
   dca_amount: number;
+  days?: number;
 }
 
-export interface BacktestPoint {
+export interface BacktestStrategySummary {
+  strategy_id: string;
+  display_name: string;
+  total_invested: number;
+  final_value: number;
+  roi_percent: number;
+  trade_count: number;
+  max_drawdown_percent: number | null;
+  parameters: Record<string, unknown>;
+}
+
+export interface BacktestStrategyMetrics {
+  regime?: string | null;
+  spot_balance?: number;
+  lp_balance?: number;
+  stable_balance?: number;
+  allocation?: {
+    spot: number;
+    lp: number;
+    stable: number;
+  };
+  effective_exposure?: number;
+  target_reached?: boolean;
+}
+
+export type BacktestEvent =
+  | "buy"
+  | "sell"
+  | "buy_spot"
+  | "sell_spot"
+  | "buy_lp"
+  | "sell_lp"
+  | null;
+
+export interface BacktestStrategyTimeline {
+  portfolio_value: number;
+  capital_invested: number;
+  holdings_value: number;
+  available_capital: number;
+  roi_percent: number;
+  event: BacktestEvent;
+  metrics: BacktestStrategyMetrics | Record<string, never>;
+}
+
+export interface BacktestStrategySet<T> {
+  dca_classic: T;
+  smart_dca: T;
+}
+
+export interface BacktestTimelinePoint {
   date: string;
   price: number;
   sentiment: number | null;
   sentiment_label: string | null;
-
-  // Normal DCA
-  normal_invested: number;
-  normal_holdings: number;
-  normal_value: number;
-
-  // Regime Strategy
-  regime_spot_balance: number;
-  regime_stable_balance: number;
-  regime_lp_balance: number;
-  regime_total_value: number;
-  regime_allocation_spot_pct: number;
-  regime_allocation_stable_pct: number;
-  regime_allocation_lp_pct: number;
-  regime_effective_exposure: number;
-  regime_action?: "buy_spot" | "sell_spot" | null;
-}
-
-export interface BacktestSummary {
-  total_days: number;
-  normal_total_invested: number;
-  normal_final_value: number;
-  normal_roi_percent: number;
-  regime_initial_capital: number;
-  regime_final_value: number;
-  regime_roi_percent: number;
-  regime_trade_count: number;
+  strategies: BacktestStrategySet<BacktestStrategyTimeline>;
 }
 
 export interface BacktestResponse {
-  summary: BacktestSummary;
-  history: BacktestPoint[];
+  strategies: BacktestStrategySet<BacktestStrategySummary>;
+  timeline: BacktestTimelinePoint[];
 }

@@ -23,6 +23,7 @@ const DEFAULT_REQUEST: BacktestRequest = {
   token_symbol: "BTC",
   initial_capital: 10000,
   dca_amount: 100,
+  days: 500,
   // No start_date/end_date = backend defaults to last 90 days
 };
 
@@ -36,17 +37,43 @@ export const BacktestingView = () => {
 
   const chartData = useMemo(() => {
     if (!backtestData) return [];
-    return backtestData.history.map(point => ({
-      ...point,
-      // Compute true Normal DCA value including undeployed capital
-      normal_total_value:
-        point.normal_value + (point.normal_remaining_capital ?? 0),
-      buySignal:
-        point.regime_action === "buy_spot" ? point.regime_total_value : null,
-      sellSignal:
-        point.regime_action === "sell_spot" ? point.regime_total_value : null,
-    }));
+    return backtestData.timeline.map(point => {
+      const smartDca = point.strategies.smart_dca;
+      const dcaClassic = point.strategies.dca_classic;
+
+      return {
+        ...point,
+        normal_total_value: dcaClassic.portfolio_value,
+        regime_total_value: smartDca.portfolio_value,
+        buySpotSignal:
+          smartDca.event === "buy_spot" ? smartDca.portfolio_value : null,
+        sellSpotSignal:
+          smartDca.event === "sell_spot" ? smartDca.portfolio_value : null,
+        buyLpSignal:
+          smartDca.event === "buy_lp" ? smartDca.portfolio_value : null,
+        sellLpSignal:
+          smartDca.event === "sell_lp" ? smartDca.portfolio_value : null,
+      };
+    });
   }, [backtestData]);
+
+  const summary = useMemo(() => {
+    if (!backtestData) return null;
+    return {
+      smartDca: backtestData.strategies.smart_dca,
+      dcaClassic: backtestData.strategies.dca_classic,
+      totalDays: backtestData.timeline.length,
+    };
+  }, [backtestData]);
+
+  const smartDcaSummary = summary?.smartDca;
+  const dcaClassicSummary = summary?.dcaClassic;
+  const smartRoi = smartDcaSummary?.roi_percent ?? 0;
+  const normalRoi = dcaClassicSummary?.roi_percent ?? 0;
+  const smartFinalValue = smartDcaSummary?.final_value ?? 0;
+  const normalFinalValue = dcaClassicSummary?.final_value ?? 0;
+  const tradeCount = smartDcaSummary?.trade_count ?? 0;
+  const totalDays = summary?.totalDays ?? 0;
 
   const handleRunBacktest = () => {
     mutate(DEFAULT_REQUEST);
@@ -122,19 +149,34 @@ export const BacktestingView = () => {
           <div className="grid grid-cols-3 gap-4">
             <MetricCard
               label="Regime Strategy ROI"
-              value={`${backtestData.summary.regime_roi_percent.toFixed(1)}%`}
-              subtext={`vs ${backtestData.summary.normal_roi_percent > 0 ? "+" : ""}${backtestData.summary.normal_roi_percent.toFixed(1)}% Normal DCA`}
+              value={`${smartRoi.toFixed(1)}%`}
+              subtext={`vs ${normalRoi > 0 ? "+" : ""}${normalRoi.toFixed(1)}% Normal DCA`}
               highlight
             />
             <MetricCard
               label="Final Value"
-              value={`$${backtestData.summary.regime_final_value.toLocaleString(
+              value={`$${smartFinalValue.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}`}
+              subtext={`vs $${normalFinalValue.toLocaleString(undefined, {
+                maximumFractionDigits: 0,
+              })}`}
+            />
+            <MetricCard
+              label="Trades Executed"
+              value={tradeCount.toString()}
+              subtext={`${totalDays} days simulated`}
+            />
+
+            <MetricCard
+              label="Final Value"
+              value={`$${summary?.smartDca.final_value.toLocaleString(
                 undefined,
                 {
                   maximumFractionDigits: 0,
                 }
               )}`}
-              subtext={`vs $${backtestData.summary.normal_final_value.toLocaleString(
+              subtext={`vs $${summary?.dcaClassic.final_value.toLocaleString(
                 undefined,
                 {
                   maximumFractionDigits: 0,
@@ -143,8 +185,8 @@ export const BacktestingView = () => {
             />
             <MetricCard
               label="Trades Executed"
-              value={backtestData.summary.regime_trade_count.toString()}
-              subtext={`${backtestData.summary.total_days} days simulated`}
+              value={summary?.smartDca.trade_count.toString() ?? "0"}
+              subtext={`${summary?.totalDays ?? 0} days simulated`}
             />
           </div>
 
@@ -160,7 +202,7 @@ export const BacktestingView = () => {
                   (Last 90 Days)
                 </span>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Regime Strategy
@@ -168,6 +210,22 @@ export const BacktestingView = () => {
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <div className="w-2 h-2 rounded-full bg-gray-600" />
                   Normal DCA
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  Buy Spot
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-green-600" />
+                  Sell Spot
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  Buy LP
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  Sell LP
                 </div>
               </div>
             </div>
@@ -221,18 +279,32 @@ export const BacktestingView = () => {
                     itemStyle={{ color: "#fff" }}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     formatter={(value: any, name: any) => {
-                      if (name === "Buy Action")
-                        return ["Aggressive Buy", "Action"];
-                      if (name === "Sell Action")
-                        return ["Defensive Sell", "Action"];
+                      if (
+                        ["Buy Spot", "Sell Spot", "Buy LP", "Sell LP"].includes(
+                          name
+                        )
+                      ) {
+                        return value ? [name, "Signal"] : [null, name];
+                      }
                       if (typeof value === "number") {
                         return [`$${value.toLocaleString()}`, name];
                       }
                       return [value, name];
                     }}
-                    labelFormatter={label =>
-                      new Date(label).toLocaleDateString()
-                    }
+                    labelFormatter={(label, payload) => {
+                      const dateStr = new Date(label).toLocaleDateString();
+                      if (payload && payload.length > 0) {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const data = payload?.[0]?.payload as any;
+                        if (data?.sentiment_label) {
+                          const sentiment =
+                            data.sentiment_label.charAt(0).toUpperCase() +
+                            data.sentiment_label.slice(1);
+                          return `${dateStr} (${sentiment})`;
+                        }
+                      }
+                      return dateStr;
+                    }}
                   />
                   <Area
                     type="monotone"
@@ -254,15 +326,29 @@ export const BacktestingView = () => {
                   />
 
                   <Scatter
-                    name="Buy Action"
-                    dataKey="buySignal"
+                    name="Buy Spot"
+                    dataKey="buySpotSignal"
                     fill="#22c55e"
                     shape="circle"
                     legendType="none"
                   />
                   <Scatter
-                    name="Sell Action"
-                    dataKey="sellSignal"
+                    name="Sell Spot"
+                    dataKey="sellSpotSignal"
+                    fill="#16a34a"
+                    shape="circle"
+                    legendType="none"
+                  />
+                  <Scatter
+                    name="Buy LP"
+                    dataKey="buyLpSignal"
+                    fill="#f97316"
+                    shape="circle"
+                    legendType="none"
+                  />
+                  <Scatter
+                    name="Sell LP"
+                    dataKey="sellLpSignal"
                     fill="#ef4444"
                     shape="circle"
                     legendType="none"
