@@ -24,8 +24,9 @@ vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
 // Mock Recharts
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  AreaChart: () => <div data-testid="area-chart" />,
+  ComposedChart: () => <div data-testid="composed-chart" />,
   Area: () => null,
+  Scatter: () => null,
   CartesianGrid: () => null,
   XAxis: () => null,
   YAxis: () => null,
@@ -122,6 +123,6 @@ describe("BacktestingView", () => {
     // Locale string matching might be tricky, checking simplified partial
     expect(screen.getByText("$12,000")).toBeInTheDocument();
 
-    expect(screen.getByTestId("area-chart")).toBeInTheDocument();
+    expect(screen.getByTestId("composed-chart")).toBeInTheDocument();
   });
 });

@@ -38,6 +38,9 @@ export const BacktestingView = () => {
     if (!backtestData) return [];
     return backtestData.history.map(point => ({
       ...point,
+      // Compute true Normal DCA value including undeployed capital
+      normal_total_value:
+        point.normal_value + (point.normal_remaining_capital ?? 0),
       buySignal:
         point.regime_action === "buy_spot" ? point.regime_total_value : null,
       sellSignal:
@@ -217,13 +220,13 @@ export const BacktestingView = () => {
                     }}
                     itemStyle={{ color: "#fff" }}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={(value: any, name: string, props: any) => {
+                    formatter={(value: any, name: any) => {
                       if (name === "Buy Action")
                         return ["Aggressive Buy", "Action"];
                       if (name === "Sell Action")
                         return ["Defensive Sell", "Action"];
                       if (typeof value === "number") {
-                        return [`$${value.toLocaleString()}`, "Value"];
+                        return [`$${value.toLocaleString()}`, name];
                       }
                       return [value, name];
                     }}
@@ -242,7 +245,7 @@ export const BacktestingView = () => {
                   />
                   <Area
                     type="monotone"
-                    dataKey="normal_value"
+                    dataKey="normal_total_value"
                     name="Normal DCA"
                     stroke="#4b5563"
                     strokeDasharray="4 4"

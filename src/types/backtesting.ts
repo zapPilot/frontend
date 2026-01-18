@@ -26,6 +26,7 @@ export interface BacktestPoint {
   regime_allocation_stable_pct: number;
   regime_allocation_lp_pct: number;
   regime_effective_exposure: number;
+  regime_action?: "buy_spot" | "sell_spot" | null;
 }
 
 export interface BacktestSummary {
