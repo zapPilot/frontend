@@ -2,9 +2,12 @@ export interface BacktestRequest {
   token_symbol: string;
   start_date?: string; // YYYY-MM-DD
   end_date?: string; // YYYY-MM-DD
-  initial_capital: number;
-  dca_amount: number;
+  total_capital: number; // Total starting capital (split 50% BTC, 50% stables)
   days?: number;
+  rebalance_step_count?: number; // Number of steps to reach target allocation (default: 10)
+  rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 3)
+  action_regimes?: string[]; // Regimes that trigger capital deployment
+  use_equal_capital_pool?: boolean; // Whether to use Equal Capital Pool model (default: true)
 }
 
 export interface BacktestStrategySummary {

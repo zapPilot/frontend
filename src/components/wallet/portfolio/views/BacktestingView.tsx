@@ -1,7 +1,7 @@
 "use client";
 
-import { Activity, Play, RefreshCw, Zap } from "lucide-react";
-import { useEffect, useMemo } from "react";
+import { Activity, ChevronDown, ChevronUp, Play, RefreshCw, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -21,13 +21,270 @@ import { MetricCard } from "./backtesting/MetricCard";
 
 const DEFAULT_REQUEST: BacktestRequest = {
   token_symbol: "BTC",
-  initial_capital: 10000,
-  dca_amount: 100,
+  total_capital: 10000, // Split 50% BTC, 50% stables
   days: 500,
+  rebalance_step_count: 5,
+  rebalance_interval_days: 2,
   // No start_date/end_date = backend defaults to last 90 days
 };
 
+const VALID_REGIMES = [
+  "extreme_fear",
+  "fear",
+  "neutral",
+  "greed",
+  "extreme_greed",
+] as const;
+
+/**
+ * Calculate percentage ratios from constituent absolute values.
+ * Returns percentages for spot, stable, and lp components.
+ */
+export const calculatePercentages = (constituents: {
+  spot: number;
+  stable: number;
+  lp: number;
+}): { spot: number; stable: number; lp: number } => {
+  const total = constituents.spot + constituents.stable + constituents.lp;
+  if (total === 0) return { spot: 0, stable: 0, lp: 0 };
+  return {
+    spot: (constituents.spot / total) * 100,
+    stable: (constituents.stable / total) * 100,
+    lp: (constituents.lp / total) * 100,
+  };
+};
+
+/**
+ * Custom Tooltip component that renders date label only once
+ * and properly formats all chart data entries.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any[];
+  label?: string | number;
+}) => {
+
+  if (!active || !payload || payload.length === 0) return null;
+
+  const dateStr = new Date(String(label)).toLocaleDateString();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const firstPayload = payload[0]?.payload as any;
+  const sentiment = firstPayload?.sentiment_label;
+
+  const sentimentStr = sentiment
+    ? ` (${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)})`
+    : "";
+
+  // Extract portfolio constituent data from both strategies
+  const smartDca = firstPayload?.strategies?.smart_dca;
+  const dcaClassic = firstPayload?.strategies?.dca_classic;
+  const smartConstituents = smartDca?.portfolio_constituant;
+  const classicConstituents = dcaClassic?.portfolio_constituant;
+
+  // Calculate percentages if constituents exist
+  const smartPercentages = smartConstituents
+    ? calculatePercentages(smartConstituents)
+    : null;
+  const classicPercentages = classicConstituents
+    ? calculatePercentages(classicConstituents)
+    : null;
+
+  return (
+    <div
+      className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg"
+      style={{
+        backgroundColor: "#111827",
+        borderColor: "#374151",
+        borderRadius: "0.5rem",
+      }}
+    >
+      <div className="text-xs font-medium text-white mb-2">
+        {dateStr}
+        {sentimentStr}
+      </div>
+      <div className="space-y-1">
+        {payload.map((entry: any, index: number) => {
+          if (!entry) return null;
+
+          const name = entry.name || "";
+          const value = entry.value;
+
+          // Handle signal entries (Buy Spot, Sell Spot, Buy LP, Sell LP)
+          if (
+            ["Buy Spot", "Sell Spot", "Buy LP", "Sell LP"].includes(name)
+          ) {
+            if (value) {
+              return (
+                <div
+                  key={index}
+                  className="text-xs"
+                  style={{ color: entry.color || "#fff" }}
+                >
+                  {name}: Signal
+                </div>
+              );
+            }
+            return null;
+          }
+
+          // Handle value entries (Regime Strategy, Normal DCA)
+          if (typeof value === "number") {
+            return (
+              <div
+                key={index}
+                className="text-xs"
+                style={{ color: entry.color || "#fff" }}
+              >
+                {name}: ${value.toLocaleString()}
+              </div>
+            );
+          }
+
+          return null;
+        })}
+      </div>
+
+      {/* Portfolio Constituent Ratios */}
+      {(smartPercentages || classicPercentages) && (
+        <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
+          {/* Stacked Bar Component */}
+          {classicPercentages && (
+            <div className="space-y-1">
+              <div className="text-[10px] text-gray-400 font-medium">
+                Normal DCA
+              </div>
+              <div className="flex h-3 rounded overflow-hidden relative">
+                {classicPercentages.spot > 0 && (
+                  <div
+                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(classicPercentages.spot, 0.5)}%`,
+                    }}
+                  >
+                    {classicPercentages.spot > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {classicPercentages.spot.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+                {classicPercentages.stable > 0 && (
+                  <div
+                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(classicPercentages.stable, 0.5)}%`,
+                    }}
+                  >
+                    {classicPercentages.stable > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {classicPercentages.stable.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+                {classicPercentages.lp > 0 && (
+                  <div
+                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(classicPercentages.lp, 0.5)}%`,
+                    }}
+                  >
+                    {classicPercentages.lp > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {classicPercentages.lp.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 text-[8px] text-gray-500">
+                <span>
+                  Spot: {classicPercentages.spot.toFixed(1)}%
+                </span>
+                <span>
+                  Stable: {classicPercentages.stable.toFixed(1)}%
+                </span>
+                <span>LP: {classicPercentages.lp.toFixed(1)}%</span>
+              </div>
+            </div>
+          )}
+
+          {smartPercentages && (
+            <div className="space-y-1">
+              <div className="text-[10px] text-gray-400 font-medium">
+                Regime Strategy
+              </div>
+              <div className="flex h-3 rounded overflow-hidden relative">
+                {smartPercentages.spot > 0 && (
+                  <div
+                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(smartPercentages.spot, 0.5)}%`,
+                    }}
+                  >
+                    {smartPercentages.spot > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {smartPercentages.spot.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+                {smartPercentages.stable > 0 && (
+                  <div
+                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(smartPercentages.stable, 0.5)}%`,
+                    }}
+                  >
+                    {smartPercentages.stable > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {smartPercentages.stable.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+                {smartPercentages.lp > 0 && (
+                  <div
+                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
+                    style={{
+                      width: `${Math.max(smartPercentages.lp, 0.5)}%`,
+                    }}
+                  >
+                    {smartPercentages.lp > 8 && (
+                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                        {smartPercentages.lp.toFixed(0)}%
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2 text-[8px] text-gray-500">
+                <span>
+                  Spot: {smartPercentages.spot.toFixed(1)}%
+                </span>
+                <span>
+                  Stable: {smartPercentages.stable.toFixed(1)}%
+                </span>
+                <span>LP: {smartPercentages.lp.toFixed(1)}%</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
 export const BacktestingView = () => {
+  const [params, setParams] = useState<BacktestRequest>(DEFAULT_REQUEST);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
   const {
     mutate,
     data: backtestData,
@@ -57,6 +314,35 @@ export const BacktestingView = () => {
     });
   }, [backtestData]);
 
+  const yAxisDomain = useMemo(() => {
+    if (!chartData || chartData.length === 0) return [0, 1000];
+
+    const allValues: number[] = [];
+    chartData.forEach(point => {
+      if (point.regime_total_value != null)
+        allValues.push(point.regime_total_value);
+      if (point.normal_total_value != null)
+        allValues.push(point.normal_total_value);
+      if (point.buySpotSignal != null) allValues.push(point.buySpotSignal);
+      if (point.sellSpotSignal != null) allValues.push(point.sellSpotSignal);
+      if (point.buyLpSignal != null) allValues.push(point.buyLpSignal);
+      if (point.sellLpSignal != null) allValues.push(point.sellLpSignal);
+    });
+
+    if (allValues.length === 0) return [0, 1000];
+
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const range = max - min;
+
+    // Add 5% padding on each side
+    const padding = range * 0.05;
+    const lowerBound = Math.max(0, min - padding);
+    const upperBound = max + padding;
+
+    return [lowerBound, upperBound];
+  }, [chartData]);
+
   const summary = useMemo(() => {
     if (!backtestData) return null;
     return {
@@ -76,7 +362,26 @@ export const BacktestingView = () => {
   const totalDays = summary?.totalDays ?? 0;
 
   const handleRunBacktest = () => {
-    mutate(DEFAULT_REQUEST);
+    mutate(params);
+  };
+
+  const handleResetParams = () => {
+    setParams(DEFAULT_REQUEST);
+  };
+
+  const updateParam = <K extends keyof BacktestRequest>(
+    key: K,
+    value: BacktestRequest[K]
+  ) => {
+    setParams(prev => ({ ...prev, [key]: value }));
+  };
+
+  const toggleRegime = (regime: string) => {
+    const current = params.action_regimes || [];
+    const updated = current.includes(regime)
+      ? current.filter(r => r !== regime)
+      : [...current, regime];
+    updateParam("action_regimes", updated.length > 0 ? updated : undefined);
   };
 
   useEffect(() => {
@@ -127,6 +432,254 @@ export const BacktestingView = () => {
           </div>
         </BaseCard>
       )}
+
+      {/* Parameter Controls */}
+      <BaseCard variant="glass" className="p-4">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold text-white">
+              Backtest Parameters
+            </h3>
+            <button
+              onClick={handleResetParams}
+              className="text-xs text-gray-400 hover:text-white transition-colors"
+            >
+              Reset to Defaults
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Token Symbol */}
+            <div className="space-y-1">
+              <label
+                htmlFor="token_symbol"
+                className="text-xs font-medium text-gray-400"
+              >
+                Token Symbol
+              </label>
+              <select
+                id="token_symbol"
+                value={params.token_symbol}
+                onChange={e => updateParam("token_symbol", e.target.value)}
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="BTC">BTC</option>
+                <option value="ETH">ETH</option>
+                <option value="USDC">USDC</option>
+                <option value="USDT">USDT</option>
+              </select>
+            </div>
+
+            {/* Total Capital */}
+            <div className="space-y-1">
+              <label
+                htmlFor="total_capital"
+                className="text-xs font-medium text-gray-400"
+              >
+                Total Capital ($)
+              </label>
+              <input
+                id="total_capital"
+                type="number"
+                min="1"
+                step="100"
+                value={params.total_capital}
+                onChange={e =>
+                  updateParam("total_capital", parseFloat(e.target.value) || 0)
+                }
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Days */}
+            <div className="space-y-1">
+              <label htmlFor="days" className="text-xs font-medium text-gray-400">
+                Days (optional)
+              </label>
+              <input
+                id="days"
+                type="number"
+                min="1"
+                max="1000"
+                value={params.days || ""}
+                onChange={e =>
+                  updateParam(
+                    "days",
+                    e.target.value ? parseInt(e.target.value, 10) : undefined
+                  )
+                }
+                placeholder="Leave empty for date range"
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
+              />
+            </div>
+
+            {/* Start Date */}
+            <div className="space-y-1">
+              <label
+                htmlFor="start_date"
+                className="text-xs font-medium text-gray-400"
+              >
+                Start Date (optional)
+              </label>
+              <input
+                id="start_date"
+                type="date"
+                value={params.start_date || ""}
+                onChange={e =>
+                  updateParam(
+                    "start_date",
+                    e.target.value || undefined
+                  )
+                }
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-1">
+              <label
+                htmlFor="end_date"
+                className="text-xs font-medium text-gray-400"
+              >
+                End Date (optional)
+              </label>
+              <input
+                id="end_date"
+                type="date"
+                value={params.end_date || ""}
+                onChange={e =>
+                  updateParam(
+                    "end_date",
+                    e.target.value || undefined
+                  )
+                }
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Rebalance Step Count */}
+            <div className="space-y-1">
+              <label
+                htmlFor="rebalance_step_count"
+                className="text-xs font-medium text-gray-400"
+              >
+                Rebalance Step Count
+              </label>
+              <input
+                id="rebalance_step_count"
+                type="number"
+                min="1"
+                max="50"
+                value={params.rebalance_step_count || ""}
+                onChange={e =>
+                  updateParam(
+                    "rebalance_step_count",
+                    e.target.value
+                      ? parseInt(e.target.value, 10)
+                      : undefined
+                  )
+                }
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Rebalance Interval Days */}
+            <div className="space-y-1">
+              <label
+                htmlFor="rebalance_interval_days"
+                className="text-xs font-medium text-gray-400"
+              >
+                Rebalance Interval (days)
+              </label>
+              <input
+                id="rebalance_interval_days"
+                type="number"
+                min="0"
+                max="30"
+                value={params.rebalance_interval_days ?? ""}
+                onChange={e => {
+                  const value = e.target.value;
+                  updateParam(
+                    "rebalance_interval_days",
+                    value === "" ? undefined : parseInt(value, 10)
+                  );
+                }}
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Advanced Parameters */}
+          <div className="border-t border-gray-800 pt-4">
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+            >
+              {showAdvanced ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+              Advanced Parameters
+            </button>
+
+            {showAdvanced && (
+              <div className="mt-4 space-y-4">
+                {/* Action Regimes */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-400">
+                    Action Regimes (trigger capital deployment)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {VALID_REGIMES.map(regime => {
+                      const isSelected =
+                        params.action_regimes?.includes(regime) ?? false;
+                      return (
+                        <button
+                          key={regime}
+                          type="button"
+                          onClick={() => toggleRegime(regime)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-900/50 text-gray-400 hover:bg-gray-800 hover:text-white"
+                          }`}
+                        >
+                          {regime.replace("_", " ")}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    Leave empty to use backend defaults: extreme_fear, fear,
+                    greed, extreme_greed (neutral excluded)
+                  </p>
+                </div>
+
+                {/* Use Equal Capital Pool */}
+                <div className="flex items-center gap-3">
+                  <input
+                    id="use_equal_capital_pool"
+                    type="checkbox"
+                    checked={params.use_equal_capital_pool ?? true}
+                    onChange={e =>
+                      updateParam("use_equal_capital_pool", e.target.checked)
+                    }
+                    className="w-4 h-4 rounded border-gray-700 bg-gray-900 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                  />
+                  <label
+                    htmlFor="use_equal_capital_pool"
+                    className="text-xs font-medium text-gray-400"
+                  >
+                    Use Equal Capital Pool (both strategies start with same
+                    capital split 50% BTC, 50% stables)
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </BaseCard>
 
       {/* Results Area */}
       {!backtestData ? (
@@ -216,15 +769,15 @@ export const BacktestingView = () => {
                   Buy Spot
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-green-600" />
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
                   Sell Spot
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
                   Buy LP
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
                   Sell LP
                 </div>
               </div>
@@ -264,48 +817,13 @@ export const BacktestingView = () => {
                     }
                   />
                   <YAxis
+                    domain={yAxisDomain}
                     tick={{ fontSize: 10, fill: "#6b7280" }}
                     tickLine={false}
                     axisLine={false}
                     tickFormatter={value => `$${(value / 1000).toFixed(0)}k`}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "#111827",
-                      borderColor: "#374151",
-                      borderRadius: "0.5rem",
-                      fontSize: "12px",
-                    }}
-                    itemStyle={{ color: "#fff" }}
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    formatter={(value: any, name: any) => {
-                      if (
-                        ["Buy Spot", "Sell Spot", "Buy LP", "Sell LP"].includes(
-                          name
-                        )
-                      ) {
-                        return value ? [name, "Signal"] : [null, name];
-                      }
-                      if (typeof value === "number") {
-                        return [`$${value.toLocaleString()}`, name];
-                      }
-                      return [value, name];
-                    }}
-                    labelFormatter={(label, payload) => {
-                      const dateStr = new Date(label).toLocaleDateString();
-                      if (payload && payload.length > 0) {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const data = payload?.[0]?.payload as any;
-                        if (data?.sentiment_label) {
-                          const sentiment =
-                            data.sentiment_label.charAt(0).toUpperCase() +
-                            data.sentiment_label.slice(1);
-                          return `${dateStr} (${sentiment})`;
-                        }
-                      }
-                      return dateStr;
-                    }}
-                  />
+                  <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
                     dataKey="regime_total_value"
@@ -335,21 +853,21 @@ export const BacktestingView = () => {
                   <Scatter
                     name="Sell Spot"
                     dataKey="sellSpotSignal"
-                    fill="#16a34a"
+                    fill="#ef4444"
                     shape="circle"
                     legendType="none"
                   />
                   <Scatter
                     name="Buy LP"
                     dataKey="buyLpSignal"
-                    fill="#f97316"
+                    fill="#3b82f6"
                     shape="circle"
                     legendType="none"
                   />
                   <Scatter
                     name="Sell LP"
                     dataKey="sellLpSignal"
-                    fill="#ef4444"
+                    fill="#d946ef"
                     shape="circle"
                     legendType="none"
                   />
