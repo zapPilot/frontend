@@ -6,6 +6,7 @@ import {
   Area,
   CartesianGrid,
   ComposedChart,
+  Line,
   ResponsiveContainer,
   Scatter,
   Tooltip,
@@ -20,6 +21,7 @@ import {
   BacktestEndpointMode,
   SimpleBacktestRequest,
 } from "@/types/backtesting";
+import { formatCurrency } from "@/utils";
 
 import { MetricCard } from "./backtesting/MetricCard";
 
@@ -85,6 +87,9 @@ export const CustomTooltip = ({
     ? ` (${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)})`
     : "";
 
+  // Extract token price with fallback handling
+  const tokenPrice = firstPayload?.token_price?.btc ?? firstPayload?.price;
+
   // Extract portfolio constituent data from both strategies
   const smartDca = firstPayload?.strategies?.smart_dca;
   const dcaClassic = firstPayload?.strategies?.dca_classic;
@@ -112,6 +117,14 @@ export const CustomTooltip = ({
         {dateStr}
         {sentimentStr}
       </div>
+      {tokenPrice != null && (
+        <div className="text-xs text-gray-400 mb-2">
+          BTC Price: {formatCurrency(tokenPrice, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })}
+        </div>
+      )}
       <div className="space-y-1">
         {payload.map((entry: any, index: number) => {
           if (!entry) return null;
@@ -824,7 +837,7 @@ export const BacktestingView = () => {
           {/* Chart */}
           <BaseCard
             variant="glass"
-            className="p-1 h-[400px] relative overflow-hidden flex flex-col"
+            className="p-1 h-[500px] relative overflow-hidden flex flex-col"
           >
             <div className="p-4 border-b border-gray-800/50 bg-gray-900/30 flex justify-between items-center">
               <div className="text-sm font-medium text-white flex items-center gap-2">
@@ -841,6 +854,10 @@ export const BacktestingView = () => {
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <div className="w-2 h-2 rounded-full bg-gray-600" />
                   Normal DCA
+                </div>
+                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <div className="w-2 h-2 rounded-full bg-purple-500" />
+                  Sentiment
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <div className="w-2 h-2 rounded-full bg-green-500" />
@@ -901,6 +918,25 @@ export const BacktestingView = () => {
                     axisLine={false}
                     tickFormatter={value => `$${(value / 1000).toFixed(0)}k`}
                   />
+                  {/* Secondary Y-axis for Sentiment */}
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 4]}
+                    tick={{ fontSize: 10, fill: "#a855f7" }}
+                    tickLine={false}
+                    axisLine={false}
+                    label={{
+                      value: "Sentiment",
+                      angle: 90,
+                      position: "insideRight",
+                      style: { fontSize: 10, fill: "#a855f7" },
+                    }}
+                    tickFormatter={(value: number) => {
+                      const labels = ["Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"];
+                      return labels[value] || String(value);
+                    }}
+                  />
                   <Tooltip content={<CustomTooltip />} />
                   <Area
                     type="monotone"
@@ -919,6 +955,19 @@ export const BacktestingView = () => {
                     strokeDasharray="4 4"
                     fill="transparent"
                     strokeWidth={2}
+                  />
+
+                  {/* Sentiment Line */}
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="sentiment"
+                    name="Sentiment"
+                    stroke="#a855f7"
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={true}
+                    strokeOpacity={0.8}
                   />
 
                   <Scatter
