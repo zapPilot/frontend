@@ -5,6 +5,7 @@ import {
   BacktestRequest,
   BacktestResponse,
   BacktestTimelinePoint,
+  SimpleBacktestRequest,
 } from "@/types/backtesting";
 
 const createBacktestingServiceError = createErrorMapper(
@@ -171,6 +172,33 @@ export async function runBacktest(
   const response = await callBacktestingApi(() =>
     httpUtils.analyticsEngine.post<BacktestResponse>(
       "/api/v2/backtesting/dca-comparison",
+      request
+    )
+  );
+
+  // Sample timeline data to reduce memory usage while preserving signals
+  return {
+    ...response,
+    timeline: sampleTimelineData(response.timeline),
+  };
+}
+
+/**
+ * Run the simplified DCA comparison backtest.
+ *
+ * Uses the simplified endpoint which hardcodes:
+ * - action_regimes=['extreme_fear','extreme_greed']
+ * - use_equal_capital_pool=True
+ *
+ * Automatically samples the timeline data to reduce browser RAM usage
+ * while preserving important trading signals (buy/sell events).
+ */
+export async function runSimpleBacktest(
+  request: SimpleBacktestRequest
+): Promise<BacktestResponse> {
+  const response = await callBacktestingApi(() =>
+    httpUtils.analyticsEngine.post<BacktestResponse>(
+      "/api/v2/backtesting/dca-comparison-simple",
       request
     )
   );
