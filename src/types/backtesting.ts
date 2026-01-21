@@ -8,6 +8,7 @@ export interface BacktestRequest {
   rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 3)
   action_regimes?: string[]; // Regimes that trigger capital deployment
   use_equal_capital_pool?: boolean; // Whether to use Equal Capital Pool model (default: true)
+  drift_threshold?: number; // Optional drift threshold parameter used by backend to control rebalancing sensitivity (see analytics-engine backtesting docs for units and defaults)
 }
 
 export interface SimpleBacktestRequest {
@@ -18,6 +19,7 @@ export interface SimpleBacktestRequest {
   total_capital: number; // Total starting capital (split 50% BTC, 50% stables)
   rebalance_step_count?: number; // Number of steps to reach target allocation via decay (default: 10)
   rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 1)
+  drift_threshold?: number; // Optional drift threshold parameter; only respected if supported by the selected backend backtesting endpoint
   // Note: action_regimes and use_equal_capital_pool are hardcoded in the backend
   // action_regimes=['extreme_fear','extreme_greed']
   // use_equal_capital_pool=True

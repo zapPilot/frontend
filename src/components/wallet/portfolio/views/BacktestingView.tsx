@@ -17,8 +17,8 @@ import {
 import { BaseCard } from "@/components/ui/BaseCard";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 import {
-  BacktestRequest,
   BacktestEndpointMode,
+  BacktestRequest,
   SimpleBacktestRequest,
 } from "@/types/backtesting";
 import { formatCurrency } from "@/utils";
@@ -29,8 +29,9 @@ const DEFAULT_REQUEST: BacktestRequest = {
   token_symbol: "BTC",
   total_capital: 10000, // Split 50% BTC, 50% stables
   days: 500,
-  rebalance_step_count: 5,
+  rebalance_step_count: 20,
   rebalance_interval_days: 2,
+  drift_threshold: 0.25
   // No start_date/end_date = backend defaults to last 90 days
 };
 
@@ -404,6 +405,9 @@ export const BacktestingView = () => {
       if (params.rebalance_interval_days !== undefined) {
         simpleRequest.rebalance_interval_days = params.rebalance_interval_days;
       }
+      if (params.drift_threshold !== undefined) {
+        simpleRequest.drift_threshold = params.drift_threshold;
+      }
       
       mutate({ request: simpleRequest, endpointMode: "simple" });
     } else {
@@ -679,6 +683,35 @@ export const BacktestingView = () => {
                 }}
                 className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+            </div>
+
+            {/* Drift Threshold */}
+            <div className="space-y-1">
+              <label
+                htmlFor="drift_threshold"
+                className="text-xs font-medium text-gray-400"
+              >
+                Drift Threshold
+              </label>
+              <input
+                id="drift_threshold"
+                type="number"
+                min="0.01"
+                max="1"
+                step="0.01"
+                value={params.drift_threshold ?? ""}
+                onChange={e => {
+                  const value = e.target.value;
+                  updateParam(
+                    "drift_threshold",
+                    value === "" ? undefined : Number(value)
+                  );
+                }}
+                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-[10px] text-gray-500">
+                Minimum portfolio drift required to trigger a rebalance. Example: 0.05 = 5%.
+              </p>
             </div>
           </div>
 
