@@ -80,9 +80,15 @@ export function ComparisonMetricCard({
       if (highlightMode === "highest") {
         return b.value - a.value; // Descending for highest
       }
-      // For "lowest" mode: lower is better, so sort ascending (lowest value first)
-      // This works correctly for both positive (0.15 < 0.20) and negative (-5 > -10) values
-      return a.value - b.value;
+      // For "lowest" mode: lower is better
+      // For negative values (drawdown): less negative is better, so descending (b - a) puts best first
+      // For positive values (volatility, beta): lower is better, so ascending (a - b) puts best first
+      // Check if values are negative to determine sort direction
+      const allNegative = validMetrics.every(m => m.value < 0);
+      if (allNegative) {
+        return b.value - a.value; // Descending for negatives (less negative = better)
+      }
+      return a.value - b.value; // Ascending for positives (lower = better)
     });
   }, [metrics, highlightMode]);
 

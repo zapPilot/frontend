@@ -12,21 +12,6 @@ export interface BacktestRequest {
   additional_strategies?: string[]; // Additional strategies to run (e.g., ["momentum", "mean_reversion", "sentiment_dca"])
 }
 
-export interface SimpleBacktestRequest {
-  token_symbol: string;
-  start_date?: string; // YYYY-MM-DD
-  end_date?: string; // YYYY-MM-DD
-  days?: number;
-  total_capital: number; // Total starting capital (split 50% BTC, 50% stables)
-  rebalance_step_count?: number; // Number of steps to reach target allocation via decay (default: 10)
-  rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 1)
-  drift_threshold?: number; // Optional drift threshold parameter; only respected if supported by the selected backend backtesting endpoint
-  // Note: action_regimes and use_equal_capital_pool are hardcoded in the backend
-  // action_regimes=['extreme_fear','extreme_greed']
-  // use_equal_capital_pool=True
-}
-
-export type BacktestEndpointMode = "full" | "simple";
 
 export interface BacktestStrategySummary {
   strategy_id: string;

@@ -16,11 +16,7 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
-import {
-  BacktestEndpointMode,
-  BacktestRequest,
-  SimpleBacktestRequest,
-} from "@/types/backtesting";
+import type { BacktestRequest } from "@/types/backtesting";
 import { formatCurrency } from "@/utils";
 
 import { ComparisonMetricCard, StrategyMetric } from "./backtesting/ComparisonMetricCard";
@@ -355,8 +351,6 @@ export const CustomTooltip = ({
 export const BacktestingView = () => {
   const [params, setParams] = useState<BacktestRequest>(DEFAULT_REQUEST);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [endpointMode, setEndpointMode] =
-    useState<BacktestEndpointMode>("full");
 
   const {
     mutate,
@@ -524,37 +518,7 @@ export const BacktestingView = () => {
   }, [params.days, actualDays]);
 
   const handleRunBacktest = () => {
-    if (endpointMode === "simple") {
-      // Convert BacktestRequest to SimpleBacktestRequest
-      // Only include properties that are defined to satisfy exactOptionalPropertyTypes
-      const simpleRequest: SimpleBacktestRequest = {
-        token_symbol: params.token_symbol,
-        total_capital: params.total_capital,
-      };
-      
-      if (params.start_date !== undefined) {
-        simpleRequest.start_date = params.start_date;
-      }
-      if (params.end_date !== undefined) {
-        simpleRequest.end_date = params.end_date;
-      }
-      if (params.days !== undefined) {
-        simpleRequest.days = params.days;
-      }
-      if (params.rebalance_step_count !== undefined) {
-        simpleRequest.rebalance_step_count = params.rebalance_step_count;
-      }
-      if (params.rebalance_interval_days !== undefined) {
-        simpleRequest.rebalance_interval_days = params.rebalance_interval_days;
-      }
-      if (params.drift_threshold !== undefined) {
-        simpleRequest.drift_threshold = params.drift_threshold;
-      }
-      
-      mutate({ request: simpleRequest, endpointMode: "simple" });
-    } else {
-      mutate({ request: params, endpointMode: "full" });
-    }
+    mutate(params);
   };
 
   const handleResetParams = () => {
@@ -603,31 +567,6 @@ export const BacktestingView = () => {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {/* Endpoint Mode Toggle */}
-          <div className="flex items-center gap-2 bg-gray-900/50 border border-gray-800 rounded-lg p-1">
-            <button
-              type="button"
-              onClick={() => setEndpointMode("full")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                endpointMode === "full"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`}
-            >
-              Full
-            </button>
-            <button
-              type="button"
-              onClick={() => setEndpointMode("simple")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                endpointMode === "simple"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white hover:bg-gray-800"
-              }`}
-            >
-              Simple
-            </button>
-          </div>
           <button
             onClick={handleRunBacktest}
             disabled={isPending}
@@ -865,10 +804,9 @@ export const BacktestingView = () => {
             </div>
           </div>
 
-          {/* Advanced Parameters - Only show in full mode */}
-          {endpointMode === "full" && (
-            <div className="border-t border-gray-800 pt-4">
-              <button
+          {/* Advanced Parameters */}
+          <div className="border-t border-gray-800 pt-4">
+            <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
                 className="flex items-center gap-2 text-xs font-medium text-gray-400 hover:text-white transition-colors"
               >
@@ -964,24 +902,7 @@ export const BacktestingView = () => {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Simple Mode Info */}
-          {endpointMode === "simple" && (
-            <div className="border-t border-gray-800 pt-4">
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                <p className="text-xs text-blue-400 font-medium mb-1">
-                  Simple Mode Active
-                </p>
-                <p className="text-xs text-gray-400">
-                  Simple mode hardcodes: Action Regimes = [extreme_fear,
-                  extreme_greed] and Use Equal Capital Pool = true. Only acts
-                  on extreme market conditions.
-                </p>
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </BaseCard>
 

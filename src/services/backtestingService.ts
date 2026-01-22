@@ -5,40 +5,7 @@ import {
   BacktestRequest,
   BacktestResponse,
   BacktestTimelinePoint,
-  SimpleBacktestRequest,
 } from "@/types/backtesting";
-
-/**
- * Convert a full BacktestRequest to a SimpleBacktestRequest.
- * Only includes properties that are supported by the simple endpoint.
- */
-export function convertToSimpleRequest(params: BacktestRequest): SimpleBacktestRequest {
-  const simpleRequest: SimpleBacktestRequest = {
-    token_symbol: params.token_symbol,
-    total_capital: params.total_capital,
-  };
-
-  if (params.start_date !== undefined) {
-    simpleRequest.start_date = params.start_date;
-  }
-  if (params.end_date !== undefined) {
-    simpleRequest.end_date = params.end_date;
-  }
-  if (params.days !== undefined) {
-    simpleRequest.days = params.days;
-  }
-  if (params.rebalance_step_count !== undefined) {
-    simpleRequest.rebalance_step_count = params.rebalance_step_count;
-  }
-  if (params.rebalance_interval_days !== undefined) {
-    simpleRequest.rebalance_interval_days = params.rebalance_interval_days;
-  }
-  if (params.drift_threshold !== undefined) {
-    simpleRequest.drift_threshold = params.drift_threshold;
-  }
-
-  return simpleRequest;
-}
 
 const createBacktestingServiceError = createErrorMapper(
   (message, status, code, details) =>
@@ -56,43 +23,51 @@ const createBacktestingServiceError = createErrorMapper(
 const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
 
 /**
- * Maximum number of data points to keep in the timeline for chart rendering.
- * Reduces browser RAM usage while preserving important signal events.
+ * Minimum number of data points to keep in the timeline for chart rendering.
+ * Ensures sufficient data density for meaningful chart visualization.
  */
-const MAX_CHART_POINTS = 90;
+const MIN_CHART_POINTS = 90;
 
 /**
- * Sample timeline data while preserving critical points.
+ * Maximum number of data points to allow in the timeline.
+ * Allows dynamic expansion for event-heavy timelines while maintaining performance.
+ */
+const MAX_CHART_POINTS = 200;
+
+/**
+ * Sample timeline data while preserving ALL critical points (trading events).
  *
  * Always preserves:
  * - First and last points
- * - All points with trading events (buy_spot, sell_spot, buy_lp, sell_lp)
+ * - ALL points with trading events (buy_spot, sell_spot, buy_lp, sell_lp)
  *
- * Samples remaining points evenly to fill up to maxPoints.
+ * Dynamically expands the point limit to fit all events, then samples
+ * non-critical points evenly to fill remaining slots.
  *
  * @param timeline - Full timeline array from API
- * @param maxPoints - Maximum number of points to return (default: MAX_CHART_POINTS)
- * @returns Sampled timeline array
+ * @param minPoints - Minimum number of points to return (default: MIN_CHART_POINTS)
+ * @returns Sampled timeline array with ALL trading events preserved
  */
 function sampleTimelineData(
-  timeline: BacktestTimelinePoint[],
-  maxPoints: number = MAX_CHART_POINTS
+  timeline: BacktestTimelinePoint[] | undefined,
+  minPoints: number = MIN_CHART_POINTS
 ): BacktestTimelinePoint[] {
-  // If already within limit, return as-is
-  if (timeline.length <= maxPoints) {
+  // Handle undefined or empty timelines gracefully
+  if (!timeline || timeline.length === 0) {
+    return [];
+  }
+
+  if (timeline.length <= minPoints) {
     return timeline;
   }
 
   // Track indices of critical points that must be preserved
   const criticalIndices = new Set<number>();
-
-  // Always keep first and last points
   criticalIndices.add(0);
   criticalIndices.add(timeline.length - 1);
 
   // Keep all points with trading events (signals) from any strategy
   for (const [index, point] of timeline.entries()) {
-    // Check events across all strategies (supports dynamic strategy keys)
     const hasEvent = Object.values(point.strategies).some(
       strategy => strategy.event && strategy.event !== null
     );
@@ -101,20 +76,29 @@ function sampleTimelineData(
     }
   }
 
-  const criticalIndicesArray = Array.from(criticalIndices).sort(
-    (a, b) => a - b
+  // Dynamically expand limit to fit ALL events + padding for chart continuity
+  const eventPadding = 20;
+  const effectiveMax = Math.min(
+    MAX_CHART_POINTS,
+    Math.max(minPoints, criticalIndices.size + eventPadding)
   );
 
-  // If we have too many critical points, sample them evenly
-  if (criticalIndicesArray.length >= maxPoints) {
-    const criticalPoints = criticalIndicesArray
-      .map(i => timeline[i])
-      .filter((p): p is BacktestTimelinePoint => p !== undefined);
-    return sampleEvenlyIndices(criticalPoints, maxPoints);
+  if (timeline.length <= effectiveMax) {
+    return timeline;
   }
 
+  const criticalIndicesArray = Array.from(criticalIndices).sort((a, b) => a - b);
+
+  // KEY FIX: Never resample critical points - always preserve ALL events
   // Calculate remaining slots for non-critical points
-  const remainingSlots = maxPoints - criticalIndicesArray.length;
+  const remainingSlots = effectiveMax - criticalIndicesArray.length;
+
+  if (remainingSlots <= 0) {
+    // If all slots needed for events, just return events in order
+    return criticalIndicesArray
+      .map(i => timeline[i])
+      .filter((p): p is BacktestTimelinePoint => p !== undefined);
+  }
 
   // Get all non-critical indices
   const nonCriticalIndices: number[] = [];
@@ -128,12 +112,9 @@ function sampleTimelineData(
   const nonCriticalPoints = nonCriticalIndices
     .map(i => timeline[i])
     .filter((p): p is BacktestTimelinePoint => p !== undefined);
-  const sampledNonCritical = sampleEvenlyIndices(
-    nonCriticalPoints,
-    remainingSlots
-  );
+  const sampledNonCritical = sampleEvenlyIndices(nonCriticalPoints, remainingSlots);
 
-  // Get indices of sampled non-critical points
+  // Map sampled non-critical back to indices
   const sampledNonCriticalIndices = new Set<number>();
   for (const point of sampledNonCritical) {
     const index = timeline.findIndex(
@@ -148,11 +129,10 @@ function sampleTimelineData(
     }
   }
 
-  // Combine critical and sampled non-critical indices, then sort
-  const allIndices = [
-    ...criticalIndicesArray,
-    ...Array.from(sampledNonCriticalIndices),
-  ].sort((a, b) => a - b);
+  // Combine and sort
+  const allIndices = [...criticalIndicesArray, ...Array.from(sampledNonCriticalIndices)].sort(
+    (a, b) => a - b
+  );
 
   return allIndices
     .map(i => timeline[i])
@@ -207,33 +187,6 @@ export async function runBacktest(
   const response = await callBacktestingApi(() =>
     httpUtils.analyticsEngine.post<BacktestResponse>(
       "/api/v2/backtesting/dca-comparison",
-      request
-    )
-  );
-
-  // Sample timeline data to reduce memory usage while preserving signals
-  return {
-    ...response,
-    timeline: sampleTimelineData(response.timeline),
-  };
-}
-
-/**
- * Run the simplified DCA comparison backtest.
- *
- * Uses the simplified endpoint which hardcodes:
- * - action_regimes=['extreme_fear','extreme_greed']
- * - use_equal_capital_pool=True
- *
- * Automatically samples the timeline data to reduce browser RAM usage
- * while preserving important trading signals (buy/sell events).
- */
-export async function runSimpleBacktest(
-  request: SimpleBacktestRequest
-): Promise<BacktestResponse> {
-  const response = await callBacktestingApi(() =>
-    httpUtils.analyticsEngine.post<BacktestResponse>(
-      "/api/v2/backtesting/dca-comparison-simple",
       request
     )
   );

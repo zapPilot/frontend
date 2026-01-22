@@ -227,7 +227,7 @@ describe("BacktestingView", () => {
       sentiment?: string | null;
       smartConstituents?: { spot: number; stable: number; lp: number } | null;
       classicConstituents?: { spot: number; stable: number; lp: number } | null;
-      chartEntries?: Array<{ name: string; value: number | null; color?: string }>;
+      chartEntries?: { name: string; value: number | null; color?: string }[];
     }) => {
       const {
         label = "2024-01-01",
