@@ -32,21 +32,22 @@ const MIN_CHART_POINTS = 90;
  * Maximum number of data points to allow in the timeline.
  * Allows dynamic expansion for event-heavy timelines while maintaining performance.
  */
-const MAX_CHART_POINTS = 200;
+const MAX_CHART_POINTS = 150;
 
 /**
- * Sample timeline data while preserving ALL critical points (trading events).
+ * Sample timeline data while preserving critical smart_dca trading events.
  *
  * Always preserves:
  * - First and last points
- * - ALL points with trading events (buy_spot, sell_spot, buy_lp, sell_lp)
+ * - Points where smart_dca has trading events (buy_spot, sell_spot, buy_lp, sell_lp)
  *
- * Dynamically expands the point limit to fit all events, then samples
+ * Other strategies' events may be sampled for RAM optimization.
+ * Dynamically expands the point limit to fit smart_dca events, then samples
  * non-critical points evenly to fill remaining slots.
  *
  * @param timeline - Full timeline array from API
  * @param minPoints - Minimum number of points to return (default: MIN_CHART_POINTS)
- * @returns Sampled timeline array with ALL trading events preserved
+ * @returns Sampled timeline array with smart_dca trading events preserved
  */
 function sampleTimelineData(
   timeline: BacktestTimelinePoint[] | undefined,
@@ -66,12 +67,11 @@ function sampleTimelineData(
   criticalIndices.add(0);
   criticalIndices.add(timeline.length - 1);
 
-  // Keep all points with trading events (signals) from any strategy
+  // Only preserve points where smart_dca has trading events
+  // Other strategies' events are optional - they get sampled with the rest
   for (const [index, point] of timeline.entries()) {
-    const hasEvent = Object.values(point.strategies).some(
-      strategy => strategy.event && strategy.event !== null
-    );
-    if (hasEvent) {
+    const smartDcaStrategy = point.strategies["smart_dca"];
+    if (smartDcaStrategy?.event && smartDcaStrategy.event !== null) {
       criticalIndices.add(index);
     }
   }
