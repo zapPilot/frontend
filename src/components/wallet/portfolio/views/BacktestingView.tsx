@@ -44,6 +44,42 @@ const VALID_REGIMES = [
 ] as const;
 
 /**
+ * Available additional strategies from the backtesting registry.
+ * These are beyond the default dca_classic and smart_dca strategies.
+ */
+const AVAILABLE_STRATEGIES = [
+  "momentum",
+  "mean_reversion",
+  "trend_following",
+  "sentiment_dca",
+] as const;
+
+/**
+ * Display names for strategy IDs.
+ * Used for human-readable labels in the UI.
+ */
+const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
+  dca_classic: "Normal DCA",
+  smart_dca: "Regime Strategy",
+  momentum: "Momentum",
+  mean_reversion: "Mean Reversion",
+  trend_following: "Trend Following",
+  sentiment_dca: "Sentiment DCA",
+};
+
+/**
+ * Colors for each strategy line in the chart.
+ */
+const STRATEGY_COLORS: Record<string, string> = {
+  dca_classic: "#4b5563",  // gray-600
+  smart_dca: "#3b82f6",    // blue-500
+  momentum: "#10b981",     // emerald-500
+  mean_reversion: "#f59e0b", // amber-500
+  trend_following: "#8b5cf6", // violet-500
+  sentiment_dca: "#ec4899",  // pink-500
+};
+
+/**
  * Calculate percentage ratios from constituent absolute values.
  * Returns percentages for spot, stable, and lp components.
  */
@@ -312,41 +348,64 @@ export const BacktestingView = () => {
     error,
   } = useBacktestMutation();
 
+  // Get all strategy IDs from the response
+  const strategyIds = useMemo(() => {
+    if (!backtestData) return ["dca_classic", "smart_dca"];
+    return Object.keys(backtestData.strategies);
+  }, [backtestData]);
+
   const chartData = useMemo(() => {
     if (!backtestData) return [];
     return backtestData.timeline.map(point => {
-      const smartDca = point.strategies.smart_dca;
-      const dcaClassic = point.strategies.dca_classic;
-
-      return {
+      // Build dynamic data object with all strategy values
+      const data: Record<string, unknown> = {
         ...point,
-        normal_total_value: dcaClassic.portfolio_value,
-        regime_total_value: smartDca.portfolio_value,
-        buySpotSignal:
-          smartDca.event === "buy_spot" ? smartDca.portfolio_value : null,
-        sellSpotSignal:
-          smartDca.event === "sell_spot" ? smartDca.portfolio_value : null,
-        buyLpSignal:
-          smartDca.event === "buy_lp" ? smartDca.portfolio_value : null,
-        sellLpSignal:
-          smartDca.event === "sell_lp" ? smartDca.portfolio_value : null,
       };
+
+      // Add portfolio value for each strategy
+      for (const strategyId of strategyIds) {
+        const strategy = point.strategies[strategyId];
+        if (strategy) {
+          data[`${strategyId}_value`] = strategy.portfolio_value;
+        }
+      }
+
+      // Legacy fields for backward compatibility (used by existing signal markers)
+      const smartDca = point.strategies["smart_dca"];
+      if (smartDca) {
+        data["normal_total_value"] = point.strategies["dca_classic"]?.portfolio_value ?? 0;
+        data["regime_total_value"] = smartDca.portfolio_value;
+        data["buySpotSignal"] = smartDca.event === "buy_spot" ? smartDca.portfolio_value : null;
+        data["sellSpotSignal"] = smartDca.event === "sell_spot" ? smartDca.portfolio_value : null;
+        data["buyLpSignal"] = smartDca.event === "buy_lp" ? smartDca.portfolio_value : null;
+        data["sellLpSignal"] = smartDca.event === "sell_lp" ? smartDca.portfolio_value : null;
+      }
+
+      return data;
     });
-  }, [backtestData]);
+  }, [backtestData, strategyIds]);
 
   const yAxisDomain = useMemo(() => {
     if (!chartData || chartData.length === 0) return [0, 1000];
 
     const allValues: number[] = [];
     chartData.forEach(point => {
-      if (point.regime_total_value != null)
-        allValues.push(point.regime_total_value);
-      if (point.normal_total_value != null)
-        allValues.push(point.normal_total_value);
-      if (point.buySpotSignal != null) allValues.push(point.buySpotSignal);
-      if (point.sellSpotSignal != null) allValues.push(point.sellSpotSignal);
-      if (point.buyLpSignal != null) allValues.push(point.buyLpSignal);
-      if (point.sellLpSignal != null) allValues.push(point.sellLpSignal);
+      // Collect values from all strategies dynamically
+      for (const strategyId of strategyIds) {
+        const value = point[`${strategyId}_value`];
+        if (typeof value === "number" && value != null) {
+          allValues.push(value);
+        }
+      }
+      // Also include signal values for proper domain calculation
+      const buySpot = point["buySpotSignal"] as number | null;
+      const sellSpot = point["sellSpotSignal"] as number | null;
+      const buyLp = point["buyLpSignal"] as number | null;
+      const sellLp = point["sellLpSignal"] as number | null;
+      if (buySpot != null) allValues.push(buySpot);
+      if (sellSpot != null) allValues.push(sellSpot);
+      if (buyLp != null) allValues.push(buyLp);
+      if (sellLp != null) allValues.push(sellLp);
     });
 
     if (allValues.length === 0) return [0, 1000];
@@ -361,25 +420,37 @@ export const BacktestingView = () => {
     const upperBound = max + padding;
 
     return [lowerBound, upperBound];
-  }, [chartData]);
+  }, [chartData, strategyIds]);
 
   const summary = useMemo(() => {
     if (!backtestData) return null;
     return {
-      smartDca: backtestData.strategies.smart_dca,
-      dcaClassic: backtestData.strategies.dca_classic,
+      strategies: backtestData.strategies,
       totalDays: backtestData.timeline.length,
     };
   }, [backtestData]);
 
-  const smartDcaSummary = summary?.smartDca;
-  const dcaClassicSummary = summary?.dcaClassic;
-  const smartRoi = smartDcaSummary?.roi_percent ?? 0;
-  const normalRoi = dcaClassicSummary?.roi_percent ?? 0;
-  const smartFinalValue = smartDcaSummary?.final_value ?? 0;
-  const normalFinalValue = dcaClassicSummary?.final_value ?? 0;
-  const tradeCount = smartDcaSummary?.trade_count ?? 0;
+  // All strategies sorted: dca_classic first, smart_dca second, then others alphabetically
+  const sortedStrategyIds = useMemo(() => {
+    const coreStrategies = ["dca_classic", "smart_dca"];
+    const additionalStrategies = strategyIds
+      .filter(id => !coreStrategies.includes(id))
+      .sort();
+    return [...coreStrategies.filter(id => strategyIds.includes(id)), ...additionalStrategies];
+  }, [strategyIds]);
+
   const totalDays = summary?.totalDays ?? 0;
+
+  // Format days display: show requested with availability note when different
+  const daysDisplay = useMemo(() => {
+    if (params.days) {
+      if (params.days !== totalDays) {
+        return `${params.days} days requested (${totalDays} available)`;
+      }
+      return `${params.days} days simulated`;
+    }
+    return `${totalDays} days simulated`;
+  }, [params.days, totalDays]);
 
   const handleRunBacktest = () => {
     if (endpointMode === "simple") {
@@ -432,6 +503,14 @@ export const BacktestingView = () => {
       ? current.filter(r => r !== regime)
       : [...current, regime];
     updateParam("action_regimes", updated.length > 0 ? updated : undefined);
+  };
+
+  const toggleStrategy = (strategy: string) => {
+    const current = params.additional_strategies || [];
+    const updated = current.includes(strategy)
+      ? current.filter(s => s !== strategy)
+      : [...current, strategy];
+    updateParam("additional_strategies", updated.length > 0 ? updated : undefined);
   };
 
   useEffect(() => {
@@ -763,6 +842,36 @@ export const BacktestingView = () => {
                     </p>
                   </div>
 
+                  {/* Additional Strategies */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-gray-400">
+                      Additional Strategies
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {AVAILABLE_STRATEGIES.map(strategy => {
+                        const isSelected =
+                          params.additional_strategies?.includes(strategy) ?? false;
+                        return (
+                          <button
+                            key={strategy}
+                            type="button"
+                            onClick={() => toggleStrategy(strategy)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                              isSelected
+                                ? "bg-purple-600 text-white"
+                                : "bg-gray-900/50 text-gray-400 hover:bg-gray-800 hover:text-white"
+                            }`}
+                          >
+                            {STRATEGY_DISPLAY_NAMES[strategy] || strategy.replace("_", " ")}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      Select additional strategies to compare against the core DCA strategies
+                    </p>
+                  </div>
+
                   {/* Use Equal Capital Pool */}
                   <div className="flex items-center gap-3">
                     <input
@@ -822,48 +931,35 @@ export const BacktestingView = () => {
         </div>
       ) : (
         <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-3 gap-4">
-            <MetricCard
-              label="Regime Strategy ROI"
-              value={`${smartRoi.toFixed(1)}%`}
-              subtext={`vs ${normalRoi > 0 ? "+" : ""}${normalRoi.toFixed(1)}% Normal DCA`}
-              highlight
-            />
-            <MetricCard
-              label="Final Value"
-              value={`$${smartFinalValue.toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-              })}`}
-              subtext={`vs $${normalFinalValue.toLocaleString(undefined, {
-                maximumFractionDigits: 0,
-              })}`}
-            />
-            <MetricCard
-              label="Trades Executed"
-              value={tradeCount.toString()}
-              subtext={`${totalDays} days simulated`}
-            />
+          {/* Summary Cards - Dynamic rendering for all strategies */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {sortedStrategyIds.map((strategyId) => {
+              const strategySummary = summary?.strategies[strategyId];
+              if (!strategySummary) return null;
 
+              const displayName = STRATEGY_DISPLAY_NAMES[strategyId] || strategyId.replace(/_/g, " ");
+              const roi = strategySummary.roi_percent ?? 0;
+              const finalValue = strategySummary.final_value ?? 0;
+              const trades = strategySummary.trade_count ?? 0;
+
+              // Highlight the smart_dca (Regime Strategy) as the featured strategy
+              const isHighlighted = strategyId === "smart_dca";
+
+              return (
+                <MetricCard
+                  key={strategyId}
+                  label={`${displayName} ROI`}
+                  value={`${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`}
+                  subtext={`$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} | ${trades} trades`}
+                  highlight={isHighlighted}
+                />
+              );
+            })}
+            {/* Overall stats card */}
             <MetricCard
-              label="Final Value"
-              value={`$${summary?.smartDca.final_value.toLocaleString(
-                undefined,
-                {
-                  maximumFractionDigits: 0,
-                }
-              )}`}
-              subtext={`vs $${summary?.dcaClassic.final_value.toLocaleString(
-                undefined,
-                {
-                  maximumFractionDigits: 0,
-                }
-              )}`}
-            />
-            <MetricCard
-              label="Trades Executed"
-              value={summary?.smartDca.trade_count.toString() ?? "0"}
-              subtext={`${summary?.totalDays ?? 0} days simulated`}
+              label="Simulation Period"
+              value={`${totalDays} days`}
+              subtext={daysDisplay}
             />
           </div>
 
@@ -876,18 +972,25 @@ export const BacktestingView = () => {
               <div className="text-sm font-medium text-white flex items-center gap-2">
                 Portfolio Value Growth
                 <span className="text-xs font-normal text-gray-500">
-                  (Last 90 Days)
+                  ({totalDays} Days)
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
-                  Regime Strategy
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-gray-600" />
-                  Normal DCA
-                </div>
+                {/* Dynamic strategy legends */}
+                {sortedStrategyIds.map(strategyId => {
+                  const displayName = STRATEGY_DISPLAY_NAMES[strategyId] || strategyId.replace(/_/g, " ");
+                  const color = STRATEGY_COLORS[strategyId] || "#6b7280";
+                  return (
+                    <div key={strategyId} className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                      <div
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: color }}
+                      />
+                      {displayName}
+                    </div>
+                  );
+                })}
+                {/* Fixed legends for signals and sentiment */}
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <div className="w-2 h-2 rounded-full bg-purple-500" />
                   Sentiment
@@ -901,7 +1004,7 @@ export const BacktestingView = () => {
                   Sell Spot
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <div className="w-2 h-2 rounded-full bg-cyan-500" />
                   Buy LP
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
@@ -915,16 +1018,23 @@ export const BacktestingView = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData}>
                   <defs>
-                    <linearGradient
-                      id="colorRegime"
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
+                    {/* Dynamic gradients for each strategy */}
+                    {sortedStrategyIds.map(strategyId => {
+                      const color = STRATEGY_COLORS[strategyId] || "#6b7280";
+                      return (
+                        <linearGradient
+                          key={`gradient-${strategyId}`}
+                          id={`color-${strategyId}`}
+                          x1="0"
+                          y1="0"
+                          x2="0"
+                          y2="1"
+                        >
+                          <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={color} stopOpacity={0} />
+                        </linearGradient>
+                      );
+                    })}
                   </defs>
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -971,24 +1081,29 @@ export const BacktestingView = () => {
                     }}
                   />
                   <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="regime_total_value"
-                    name="Regime Strategy"
-                    stroke="#3b82f6"
-                    fillOpacity={1}
-                    fill="url(#colorRegime)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="normal_total_value"
-                    name="Normal DCA"
-                    stroke="#4b5563"
-                    strokeDasharray="4 4"
-                    fill="transparent"
-                    strokeWidth={2}
-                  />
+
+                  {/* Dynamic strategy lines */}
+                  {sortedStrategyIds.map((strategyId) => {
+                    const color = STRATEGY_COLORS[strategyId] || "#6b7280";
+                    const displayName = STRATEGY_DISPLAY_NAMES[strategyId] || strategyId.replace(/_/g, " ");
+                    // First strategy (smart_dca if present) gets filled area, others get lines
+                    const isMainStrategy = strategyId === "smart_dca";
+                    const isDcaClassic = strategyId === "dca_classic";
+
+                    return (
+                      <Area
+                        key={strategyId}
+                        type="monotone"
+                        dataKey={`${strategyId}_value`}
+                        name={displayName}
+                        stroke={color}
+                        fillOpacity={isMainStrategy ? 1 : 0}
+                        fill={isMainStrategy ? `url(#color-${strategyId})` : "transparent"}
+                        strokeWidth={2}
+                        strokeDasharray={isDcaClassic ? "4 4" : undefined}
+                      />
+                    );
+                  })}
 
                   {/* Sentiment Line */}
                   <Line

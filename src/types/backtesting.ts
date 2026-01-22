@@ -9,6 +9,7 @@ export interface BacktestRequest {
   action_regimes?: string[]; // Regimes that trigger capital deployment
   use_equal_capital_pool?: boolean; // Whether to use Equal Capital Pool model (default: true)
   drift_threshold?: number; // Optional drift threshold parameter used by backend to control rebalancing sensitivity (see analytics-engine backtesting docs for units and defaults)
+  additional_strategies?: string[]; // Additional strategies to run (e.g., ["momentum", "mean_reversion", "sentiment_dca"])
 }
 
 export interface SimpleBacktestRequest {
@@ -71,10 +72,12 @@ export interface BacktestStrategyTimeline {
   metrics: BacktestStrategyMetrics | Record<string, never>;
 }
 
-export interface BacktestStrategySet<T> {
-  dca_classic: T;
-  smart_dca: T;
-}
+/**
+ * Dynamic strategy set supporting any number of strategies.
+ * Keys are strategy IDs (e.g., "dca_classic", "smart_dca", "momentum", "sentiment_dca").
+ * Always includes at least "dca_classic" and "smart_dca" (the core comparison strategies).
+ */
+export type BacktestStrategySet<T> = Record<string, T>;
 
 export interface BacktestTimelinePoint {
   date: string;

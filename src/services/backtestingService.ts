@@ -8,6 +8,38 @@ import {
   SimpleBacktestRequest,
 } from "@/types/backtesting";
 
+/**
+ * Convert a full BacktestRequest to a SimpleBacktestRequest.
+ * Only includes properties that are supported by the simple endpoint.
+ */
+export function convertToSimpleRequest(params: BacktestRequest): SimpleBacktestRequest {
+  const simpleRequest: SimpleBacktestRequest = {
+    token_symbol: params.token_symbol,
+    total_capital: params.total_capital,
+  };
+
+  if (params.start_date !== undefined) {
+    simpleRequest.start_date = params.start_date;
+  }
+  if (params.end_date !== undefined) {
+    simpleRequest.end_date = params.end_date;
+  }
+  if (params.days !== undefined) {
+    simpleRequest.days = params.days;
+  }
+  if (params.rebalance_step_count !== undefined) {
+    simpleRequest.rebalance_step_count = params.rebalance_step_count;
+  }
+  if (params.rebalance_interval_days !== undefined) {
+    simpleRequest.rebalance_interval_days = params.rebalance_interval_days;
+  }
+  if (params.drift_threshold !== undefined) {
+    simpleRequest.drift_threshold = params.drift_threshold;
+  }
+
+  return simpleRequest;
+}
+
 const createBacktestingServiceError = createErrorMapper(
   (message, status, code, details) =>
     new APIError(message, status, code, details),
@@ -58,10 +90,13 @@ function sampleTimelineData(
   criticalIndices.add(0);
   criticalIndices.add(timeline.length - 1);
 
-  // Keep all points with trading events (signals)
+  // Keep all points with trading events (signals) from any strategy
   timeline.forEach((point, index) => {
-    const event = point.strategies.smart_dca.event;
-    if (event && event !== null) {
+    // Check events across all strategies (supports dynamic strategy keys)
+    const hasEvent = Object.values(point.strategies).some(
+      strategy => strategy.event && strategy.event !== null
+    );
+    if (hasEvent) {
       criticalIndices.add(index);
     }
   });
