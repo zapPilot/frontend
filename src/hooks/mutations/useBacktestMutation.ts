@@ -5,8 +5,8 @@ import {
   runSimpleBacktest,
 } from "@/services/backtestingService";
 import {
-  BacktestRequest,
   BacktestEndpointMode,
+  BacktestRequest,
   SimpleBacktestRequest,
 } from "@/types/backtesting";
 

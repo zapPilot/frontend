@@ -91,7 +91,7 @@ function sampleTimelineData(
   criticalIndices.add(timeline.length - 1);
 
   // Keep all points with trading events (signals) from any strategy
-  timeline.forEach((point, index) => {
+  for (const [index, point] of timeline.entries()) {
     // Check events across all strategies (supports dynamic strategy keys)
     const hasEvent = Object.values(point.strategies).some(
       strategy => strategy.event && strategy.event !== null
@@ -99,7 +99,7 @@ function sampleTimelineData(
     if (hasEvent) {
       criticalIndices.add(index);
     }
-  });
+  }
 
   const criticalIndicesArray = Array.from(criticalIndices).sort(
     (a, b) => a - b
@@ -135,7 +135,7 @@ function sampleTimelineData(
 
   // Get indices of sampled non-critical points
   const sampledNonCriticalIndices = new Set<number>();
-  sampledNonCritical.forEach(point => {
+  for (const point of sampledNonCritical) {
     const index = timeline.findIndex(
       p =>
         p &&
@@ -146,7 +146,7 @@ function sampleTimelineData(
     if (index !== -1) {
       sampledNonCriticalIndices.add(index);
     }
-  });
+  }
 
   // Combine critical and sampled non-critical indices, then sort
   const allIndices = [

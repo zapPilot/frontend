@@ -23,6 +23,7 @@ import {
 } from "@/types/backtesting";
 import { formatCurrency } from "@/utils";
 
+import { ComparisonMetricCard, StrategyMetric } from "./backtesting/ComparisonMetricCard";
 import { MetricCard } from "./backtesting/MetricCard";
 
 const DEFAULT_REQUEST: BacktestRequest = {
@@ -100,8 +101,8 @@ export const calculatePercentages = (constituents: {
 /**
  * Custom Tooltip component that renders date label only once
  * and properly formats all chart data entries.
+ * Shows which strategies triggered trading signals.
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CustomTooltip = ({
   active,
   payload,
@@ -127,6 +128,9 @@ export const CustomTooltip = ({
   // Extract token price with fallback handling
   const tokenPrice = firstPayload?.token_price?.btc ?? firstPayload?.price;
 
+  // Extract event strategies mapping (which strategies triggered each event)
+  const eventStrategies = firstPayload?.eventStrategies as Record<string, string[]> | undefined;
+
   // Extract portfolio constituent data from both strategies
   const smartDca = firstPayload?.strategies?.smart_dca;
   const dcaClassic = firstPayload?.strategies?.dca_classic;
@@ -140,6 +144,14 @@ export const CustomTooltip = ({
   const classicPercentages = classicConstituents
     ? calculatePercentages(classicConstituents)
     : null;
+
+  // Map signal names to event keys
+  const signalToEventKey: Record<string, string> = {
+    "Buy Spot": "buy_spot",
+    "Sell Spot": "sell_spot",
+    "Buy LP": "buy_lp",
+    "Sell LP": "sell_lp",
+  };
 
   return (
     <div
@@ -170,24 +182,29 @@ export const CustomTooltip = ({
           const value = entry.value;
 
           // Handle signal entries (Buy Spot, Sell Spot, Buy LP, Sell LP)
-          if (
-            ["Buy Spot", "Sell Spot", "Buy LP", "Sell LP"].includes(name)
-          ) {
+          if (signalToEventKey[name]) {
             if (value) {
+              // Get strategies that triggered this event
+              const eventKey = signalToEventKey[name];
+              const strategies = eventStrategies?.[eventKey] || [];
+              const strategiesStr = strategies.length > 0
+                ? ` (${strategies.join(", ")})`
+                : "";
+
               return (
                 <div
                   key={index}
                   className="text-xs"
                   style={{ color: entry.color || "#fff" }}
                 >
-                  {name}: Signal
+                  {name}{strategiesStr}
                 </div>
               );
             }
             return null;
           }
 
-          // Handle value entries (Regime Strategy, Normal DCA)
+          // Handle value entries (Regime Strategy, Normal DCA, etc.)
           if (typeof value === "number") {
             return (
               <div
@@ -370,16 +387,57 @@ export const BacktestingView = () => {
         }
       }
 
-      // Legacy fields for backward compatibility (used by existing signal markers)
-      const smartDca = point.strategies["smart_dca"];
-      if (smartDca) {
-        data["normal_total_value"] = point.strategies["dca_classic"]?.portfolio_value ?? 0;
-        data["regime_total_value"] = smartDca.portfolio_value;
-        data["buySpotSignal"] = smartDca.event === "buy_spot" ? smartDca.portfolio_value : null;
-        data["sellSpotSignal"] = smartDca.event === "sell_spot" ? smartDca.portfolio_value : null;
-        data["buyLpSignal"] = smartDca.event === "buy_lp" ? smartDca.portfolio_value : null;
-        data["sellLpSignal"] = smartDca.event === "sell_lp" ? smartDca.portfolio_value : null;
+      // Extract events from ALL strategies except dca_classic
+      // Aggregate signals by event type for chart markers
+      let buySpotSignal: number | null = null;
+      let sellSpotSignal: number | null = null;
+      let buyLpSignal: number | null = null;
+      let sellLpSignal: number | null = null;
+
+      // Track which strategies triggered events for tooltip
+      const eventStrategies: Record<string, string[]> = {
+        buy_spot: [],
+        sell_spot: [],
+        buy_lp: [],
+        sell_lp: [],
+      };
+
+      for (const strategyId of strategyIds) {
+        if (strategyId === "dca_classic") continue; // Skip baseline strategy (no trading signals)
+
+        const strategy = point.strategies[strategyId];
+        if (strategy?.event) {
+          const displayName = STRATEGY_DISPLAY_NAMES[strategyId] || strategyId.replace(/_/g, " ");
+
+          switch (strategy.event) {
+            case "buy_spot":
+              buySpotSignal = strategy.portfolio_value;
+              eventStrategies["buy_spot"]?.push(displayName);
+              break;
+            case "sell_spot":
+              sellSpotSignal = strategy.portfolio_value;
+              eventStrategies["sell_spot"]?.push(displayName);
+              break;
+            case "buy_lp":
+              buyLpSignal = strategy.portfolio_value;
+              eventStrategies["buy_lp"]?.push(displayName);
+              break;
+            case "sell_lp":
+              sellLpSignal = strategy.portfolio_value;
+              eventStrategies["sell_lp"]?.push(displayName);
+              break;
+          }
+        }
       }
+
+      // Signal markers for chart (aggregated across strategies)
+      data["buySpotSignal"] = buySpotSignal;
+      data["sellSpotSignal"] = sellSpotSignal;
+      data["buyLpSignal"] = buyLpSignal;
+      data["sellLpSignal"] = sellLpSignal;
+
+      // Store which strategies triggered each event (for tooltip display)
+      data["eventStrategies"] = eventStrategies;
 
       return data;
     });
@@ -389,7 +447,7 @@ export const BacktestingView = () => {
     if (!chartData || chartData.length === 0) return [0, 1000];
 
     const allValues: number[] = [];
-    chartData.forEach(point => {
+    for (const point of chartData) {
       // Collect values from all strategies dynamically
       for (const strategyId of strategyIds) {
         const value = point[`${strategyId}_value`];
@@ -406,7 +464,7 @@ export const BacktestingView = () => {
       if (sellSpot != null) allValues.push(sellSpot);
       if (buyLp != null) allValues.push(buyLp);
       if (sellLp != null) allValues.push(sellLp);
-    });
+    }
 
     if (allValues.length === 0) return [0, 1000];
 
@@ -426,8 +484,23 @@ export const BacktestingView = () => {
     if (!backtestData) return null;
     return {
       strategies: backtestData.strategies,
-      totalDays: backtestData.timeline.length,
     };
+  }, [backtestData]);
+
+  /**
+   * Calculate actual simulation period from the date range in timeline.
+   * The timeline array is sampled (max ~90 points), but the dates represent
+   * the actual simulation period which may span many more days.
+   */
+  const actualDays = useMemo(() => {
+    if (!backtestData || backtestData.timeline.length < 2) return 0;
+    const firstPoint = backtestData.timeline[0];
+    const lastPoint = backtestData.timeline[backtestData.timeline.length - 1];
+    if (!firstPoint || !lastPoint) return 0;
+    const firstDate = new Date(firstPoint.date);
+    const lastDate = new Date(lastPoint.date);
+    const diffTime = Math.abs(lastDate.getTime() - firstDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both endpoints
   }, [backtestData]);
 
   // All strategies sorted: dca_classic first, smart_dca second, then others alphabetically
@@ -435,22 +508,20 @@ export const BacktestingView = () => {
     const coreStrategies = ["dca_classic", "smart_dca"];
     const additionalStrategies = strategyIds
       .filter(id => !coreStrategies.includes(id))
-      .sort();
+      .sort((a, b) => a.localeCompare(b));
     return [...coreStrategies.filter(id => strategyIds.includes(id)), ...additionalStrategies];
   }, [strategyIds]);
-
-  const totalDays = summary?.totalDays ?? 0;
 
   // Format days display: show requested with availability note when different
   const daysDisplay = useMemo(() => {
     if (params.days) {
-      if (params.days !== totalDays) {
-        return `${params.days} days requested (${totalDays} available)`;
+      if (params.days !== actualDays && actualDays > 0) {
+        return `${params.days} days requested (${actualDays} available)`;
       }
-      return `${params.days} days simulated`;
+      return `${actualDays} days simulated`;
     }
-    return `${totalDays} days simulated`;
-  }, [params.days, totalDays]);
+    return `${actualDays} days simulated`;
+  }, [params.days, actualDays]);
 
   const handleRunBacktest = () => {
     if (endpointMode === "simple") {
@@ -931,36 +1002,175 @@ export const BacktestingView = () => {
         </div>
       ) : (
         <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-          {/* Summary Cards - Dynamic rendering for all strategies */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Comparison Metric Cards - Multi-strategy performance comparison */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* ROI Comparison */}
+            <ComparisonMetricCard
+              label="ROI"
+              unit="%"
+              highlightMode="highest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const roi = strategySummary?.roi_percent ?? null;
+                return {
+                  strategyId,
+                  value: roi,
+                  formatted: roi !== null
+                    ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
+                    : "N/A",
+                };
+              })}
+            />
+
+            {/* Final Value Comparison */}
+            <ComparisonMetricCard
+              label="Final Value"
+              unit="$"
+              highlightMode="highest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const finalValue = strategySummary?.final_value ?? null;
+                return {
+                  strategyId,
+                  value: finalValue,
+                  formatted: finalValue !== null
+                    ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                    : "N/A",
+                };
+              })}
+            />
+
+            {/* Max Drawdown Comparison */}
+            <ComparisonMetricCard
+              label="Max Drawdown"
+              unit="%"
+              highlightMode="lowest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const maxDrawdown = strategySummary?.max_drawdown_percent ?? null;
+                return {
+                  strategyId,
+                  value: maxDrawdown,
+                  formatted: maxDrawdown !== null
+                    ? `${maxDrawdown.toFixed(1)}%`
+                    : "N/A",
+                };
+              })}
+            />
+
+            {/* Simulation Period - Keep as simple MetricCard */}
+            <MetricCard
+              label="Simulation Period"
+              value={`${actualDays} days`}
+              subtext={daysDisplay}
+            />
+          </div>
+
+          {/* Row 2: Risk-Adjusted Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {/* Sharpe Ratio */}
+            <ComparisonMetricCard
+              label="Sharpe Ratio"
+              highlightMode="highest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const value = strategySummary?.sharpe_ratio ?? null;
+                return {
+                  strategyId,
+                  value,
+                  formatted: value !== null ? value.toFixed(2) : "N/A",
+                };
+              })}
+            />
+
+            {/* Sortino Ratio */}
+            <ComparisonMetricCard
+              label="Sortino Ratio"
+              highlightMode="highest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const value = strategySummary?.sortino_ratio ?? null;
+                return {
+                  strategyId,
+                  value,
+                  formatted: value !== null ? value.toFixed(2) : "N/A",
+                };
+              })}
+            />
+
+            {/* Calmar Ratio */}
+            <ComparisonMetricCard
+              label="Calmar Ratio"
+              highlightMode="highest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const value = strategySummary?.calmar_ratio ?? null;
+                return {
+                  strategyId,
+                  value,
+                  formatted: value !== null ? value.toFixed(2) : "N/A",
+                };
+              })}
+            />
+
+            {/* Volatility */}
+            <ComparisonMetricCard
+              label="Volatility"
+              unit="%"
+              highlightMode="lowest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const value = strategySummary?.volatility ?? null;
+                return {
+                  strategyId,
+                  value,
+                  formatted: value !== null ? `${(value * 100).toFixed(1)}%` : "N/A",
+                };
+              })}
+            />
+
+            {/* Beta */}
+            <ComparisonMetricCard
+              label="Beta"
+              highlightMode="lowest"
+              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+                const strategySummary = summary?.strategies[strategyId];
+                const value = strategySummary?.beta ?? null;
+                return {
+                  strategyId,
+                  value,
+                  formatted: value !== null ? value.toFixed(2) : "N/A",
+                };
+              })}
+            />
+          </div>
+
+          {/* Trade Count Summary - Secondary row */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
             {sortedStrategyIds.map((strategyId) => {
               const strategySummary = summary?.strategies[strategyId];
               if (!strategySummary) return null;
 
               const displayName = STRATEGY_DISPLAY_NAMES[strategyId] || strategyId.replace(/_/g, " ");
-              const roi = strategySummary.roi_percent ?? 0;
-              const finalValue = strategySummary.final_value ?? 0;
               const trades = strategySummary.trade_count ?? 0;
-
-              // Highlight the smart_dca (Regime Strategy) as the featured strategy
-              const isHighlighted = strategyId === "smart_dca";
+              const color = STRATEGY_COLORS[strategyId] || "#6b7280";
 
               return (
-                <MetricCard
+                <div
                   key={strategyId}
-                  label={`${displayName} ROI`}
-                  value={`${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`}
-                  subtext={`$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} | ${trades} trades`}
-                  highlight={isHighlighted}
-                />
+                  className="bg-gray-900/50 border border-gray-800 rounded-lg p-3 flex items-center gap-2"
+                >
+                  <div
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-xs text-gray-400 truncate">{displayName}</div>
+                    <div className="text-sm font-medium text-white">{trades} trades</div>
+                  </div>
+                </div>
               );
             })}
-            {/* Overall stats card */}
-            <MetricCard
-              label="Simulation Period"
-              value={`${totalDays} days`}
-              subtext={daysDisplay}
-            />
           </div>
 
           {/* Chart */}
@@ -972,7 +1182,7 @@ export const BacktestingView = () => {
               <div className="text-sm font-medium text-white flex items-center gap-2">
                 Portfolio Value Growth
                 <span className="text-xs font-normal text-gray-500">
-                  ({totalDays} Days)
+                  ({actualDays} Days)
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">

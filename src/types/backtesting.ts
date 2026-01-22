@@ -37,6 +37,12 @@ export interface BacktestStrategySummary {
   trade_count: number;
   max_drawdown_percent: number | null;
   parameters: Record<string, unknown>;
+  // Risk-adjusted return metrics
+  sharpe_ratio?: number | null;
+  sortino_ratio?: number | null;
+  calmar_ratio?: number | null;
+  volatility?: number | null;
+  beta?: number | null;
 }
 
 export interface BacktestStrategyMetrics {

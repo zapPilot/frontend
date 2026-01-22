@@ -1,8 +1,9 @@
 import { useQueries } from "@tanstack/react-query";
+
 import {
+  convertToSimpleRequest,
   runBacktest,
   runSimpleBacktest,
-  convertToSimpleRequest,
 } from "@/services/backtestingService";
 import type { BacktestRequest, BacktestResponse } from "@/types/backtesting";
 
@@ -29,7 +30,7 @@ import type { BacktestRequest, BacktestResponse } from "@/types/backtesting";
  */
 export function useDualBacktestQuery(
   params: BacktestRequest,
-  enabled: boolean = true
+  enabled = true
 ) {
   const queries = useQueries({
     queries: [
