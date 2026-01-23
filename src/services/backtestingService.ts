@@ -26,13 +26,13 @@ const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
  * Minimum number of data points to keep in the timeline for chart rendering.
  * Ensures sufficient data density for meaningful chart visualization.
  */
-const MIN_CHART_POINTS = 90;
+export const MIN_CHART_POINTS = 90;
 
 /**
  * Maximum number of data points to allow in the timeline.
  * Allows dynamic expansion for event-heavy timelines while maintaining performance.
  */
-const MAX_CHART_POINTS = 150;
+export const MAX_CHART_POINTS = 150;
 
 /**
  * Sample timeline data while preserving critical smart_dca trading events.
@@ -71,7 +71,7 @@ function sampleTimelineData(
   // Other strategies' events are optional - they get sampled with the rest
   for (const [index, point] of timeline.entries()) {
     const smartDcaStrategy = point.strategies["smart_dca"];
-    if (smartDcaStrategy?.event && smartDcaStrategy.event !== null) {
+    if (smartDcaStrategy?.event) {
       criticalIndices.add(index);
     }
   }
@@ -87,7 +87,9 @@ function sampleTimelineData(
     return timeline;
   }
 
-  const criticalIndicesArray = Array.from(criticalIndices).sort((a, b) => a - b);
+  const criticalIndicesArray = Array.from(criticalIndices).sort(
+    (a, b) => a - b
+  );
 
   // KEY FIX: Never resample critical points - always preserve ALL events
   // Calculate remaining slots for non-critical points
@@ -112,7 +114,10 @@ function sampleTimelineData(
   const nonCriticalPoints = nonCriticalIndices
     .map(i => timeline[i])
     .filter((p): p is BacktestTimelinePoint => p !== undefined);
-  const sampledNonCritical = sampleEvenlyIndices(nonCriticalPoints, remainingSlots);
+  const sampledNonCritical = sampleEvenlyIndices(
+    nonCriticalPoints,
+    remainingSlots
+  );
 
   // Map sampled non-critical back to indices
   const sampledNonCriticalIndices = new Set<number>();
@@ -130,9 +135,10 @@ function sampleTimelineData(
   }
 
   // Combine and sort
-  const allIndices = [...criticalIndicesArray, ...Array.from(sampledNonCriticalIndices)].sort(
-    (a, b) => a - b
-  );
+  const allIndices = [
+    ...criticalIndicesArray,
+    ...Array.from(sampledNonCriticalIndices),
+  ].sort((a, b) => a - b);
 
   return allIndices
     .map(i => timeline[i])
@@ -181,6 +187,12 @@ function sampleEvenlyIndices<T>(points: T[], targetSize: number): T[] {
  * Automatically samples the timeline data to reduce browser RAM usage
  * while preserving important trading signals (buy/sell events).
  */
+/**
+ * Export sampleTimelineData for testing purposes.
+ * @internal - Not part of the public API
+ */
+export { sampleTimelineData as _sampleTimelineData };
+
 export async function runBacktest(
   request: BacktestRequest
 ): Promise<BacktestResponse> {
