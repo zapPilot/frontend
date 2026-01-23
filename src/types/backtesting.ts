@@ -1,3 +1,28 @@
+/**
+ * Target allocation percentages for a specific market regime.
+ * Percentages should sum to 100.
+ */
+export interface RegimeAllocation {
+  spot: number; // 0-100%
+  lp: number; // 0-100%
+  stable: number; // 0-100%
+}
+
+/**
+ * Complete allocation configuration set with a unique identifier.
+ * Defines target allocations for each market regime.
+ */
+export interface AllocationConfig {
+  id: string; // Unique identifier for this config (e.g., "aggressive", "conservative")
+  name: string; // Display name (e.g., "Aggressive Growth")
+  description?: string; // Optional description
+  extreme_fear: RegimeAllocation;
+  fear: RegimeAllocation;
+  neutral: RegimeAllocation;
+  greed: RegimeAllocation;
+  extreme_greed: RegimeAllocation;
+}
+
 export interface BacktestRequest {
   token_symbol: string;
   start_date?: string; // YYYY-MM-DD
@@ -6,12 +31,14 @@ export interface BacktestRequest {
   days?: number;
   rebalance_step_count?: number; // Number of steps to reach target allocation (default: 10)
   rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 3)
-  action_regimes?: string[]; // Regimes that trigger capital deployment
-  use_equal_capital_pool?: boolean; // Whether to use Equal Capital Pool model (default: true)
   drift_threshold?: number; // Optional drift threshold parameter used by backend to control rebalancing sensitivity (see analytics-engine backtesting docs for units and defaults)
-  additional_strategies?: string[]; // Additional strategies to run (e.g., ["momentum", "mean_reversion", "sentiment_dca"])
+  /**
+   * NEW: Array of allocation configurations to test.
+   * Backend will create a separate strategy variant for each configuration.
+   * Strategy IDs will be: `smart_dca_${config.id}`
+   */
+  allocation_configs?: AllocationConfig[];
 }
-
 
 export interface BacktestStrategySummary {
   strategy_id: string;
