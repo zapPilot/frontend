@@ -38,38 +38,48 @@ export function BacktestParamForm({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <label htmlFor="token_symbol" className={labelClass}>
-              Token Symbol
-            </label>
-            <select
-              id="token_symbol"
-              value={params.token_symbol}
-              onChange={e => onUpdate("token_symbol", e.target.value)}
-              className={inputClass}
-            >
-              <option value="BTC">BTC</option>
-              <option value="ETH">ETH</option>
-              <option value="USDC">USDC</option>
-              <option value="USDT">USDT</option>
-            </select>
-          </div>
-
-          <div className="space-y-1">
-            <label htmlFor="total_capital" className={labelClass}>
-              Total Capital ($)
-            </label>
-            <input
-              id="total_capital"
-              type="number"
-              min={1}
-              step={100}
-              value={params.total_capital}
-              onChange={e =>
-                onUpdate("total_capital", parseFloat(e.target.value) || 0)
-              }
-              className={inputClass}
-            />
+          <div className="space-y-2">
+            <label className={labelClass}>Strategies to Compare</label>
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={params.strategies?.includes("smart_dca") ?? true}
+                  onChange={e => {
+                    const current = params.strategies ?? ["smart_dca"];
+                    const updated: ("smart_dca" | "simple_regime")[] = e.target.checked
+                      ? ([...new Set([...current, "smart_dca"])] as (
+                          | "smart_dca"
+                          | "simple_regime")[])
+                      : (current.filter(
+                          s => s !== "smart_dca"
+                        ) as ("smart_dca" | "simple_regime")[]);
+                    onUpdate("strategies", updated);
+                  }}
+                  className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+                Smart DCA (Regime-based with multi-step rebalancing)
+              </label>
+              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={params.strategies?.includes("simple_regime") ?? false}
+                  onChange={e => {
+                    const current = params.strategies ?? ["smart_dca"];
+                    const updated: ("smart_dca" | "simple_regime")[] = e.target.checked
+                      ? ([...new Set([...current, "simple_regime"])] as (
+                          | "smart_dca"
+                          | "simple_regime")[])
+                      : (current.filter(
+                          s => s !== "simple_regime"
+                        ) as ("smart_dca" | "simple_regime")[]);
+                    onUpdate("strategies", updated);
+                  }}
+                  className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
+                />
+                Simple Regime (Pattern-based with single-day rebalancing)
+              </label>
+            </div>
           </div>
 
           <div className="space-y-1">

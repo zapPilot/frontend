@@ -2,9 +2,9 @@ import { APIError, httpUtils } from "@/lib/http";
 import { createErrorMapper } from "@/lib/http/createErrorMapper";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-  BacktestRequest,
-  BacktestResponse,
-  BacktestTimelinePoint,
+    BacktestRequest,
+    BacktestResponse,
+    BacktestTimelinePoint,
 } from "@/types/backtesting";
 
 const createBacktestingServiceError = createErrorMapper(
@@ -35,19 +35,18 @@ export const MIN_CHART_POINTS = 90;
 export const MAX_CHART_POINTS = 150;
 
 /**
- * Sample timeline data while preserving critical smart_dca trading events.
+ * Sample timeline data while preserving critical trading events.
  *
  * Always preserves:
  * - First and last points
- * - Points where smart_dca has trading events (buy_spot, sell_spot, buy_lp, sell_lp)
+ * - Points where any non-dca_classic strategy has trading events (buy_spot, sell_spot, buy_lp, sell_lp)
  *
- * Other strategies' events may be sampled for RAM optimization.
- * Dynamically expands the point limit to fit smart_dca events, then samples
+ * Dynamically expands the point limit to fit all strategy events, then samples
  * non-critical points evenly to fill remaining slots.
  *
  * @param timeline - Full timeline array from API
  * @param minPoints - Minimum number of points to return (default: MIN_CHART_POINTS)
- * @returns Sampled timeline array with smart_dca trading events preserved
+ * @returns Sampled timeline array with trading events preserved
  */
 function sampleTimelineData(
   timeline: BacktestTimelinePoint[] | undefined,
@@ -67,12 +66,13 @@ function sampleTimelineData(
   criticalIndices.add(0);
   criticalIndices.add(timeline.length - 1);
 
-  // Only preserve points where smart_dca has trading events
-  // Other strategies' events are optional - they get sampled with the rest
+  // Preserve events from ALL strategies except dca_classic (baseline)
   for (const [index, point] of timeline.entries()) {
-    const smartDcaStrategy = point.strategies["smart_dca"];
-    if (smartDcaStrategy?.event) {
-      criticalIndices.add(index);
+    for (const [strategyId, strategy] of Object.entries(point.strategies)) {
+      if (strategyId !== "dca_classic" && strategy?.event) {
+        criticalIndices.add(index);
+        break;
+      }
     }
   }
 

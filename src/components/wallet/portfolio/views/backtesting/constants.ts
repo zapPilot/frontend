@@ -7,6 +7,7 @@ export const DEFAULT_REQUEST: BacktestRequest = {
   rebalance_step_count: 20,
   rebalance_interval_days: 2,
   drift_threshold: 0.25,
+  strategies: ["smart_dca"],
 };
 
 /**
@@ -16,6 +17,7 @@ export const DEFAULT_REQUEST: BacktestRequest = {
 export const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
   dca_classic: "Normal DCA",
   smart_dca: "Regime Strategy",
+  simple_regime: "Simple Regime",
   momentum: "Momentum",
   mean_reversion: "Mean Reversion",
   trend_following: "Trend Following",
@@ -28,6 +30,7 @@ export const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
 export const STRATEGY_COLORS: Record<string, string> = {
   dca_classic: "#4b5563",
   smart_dca: "#3b82f6",
+  simple_regime: "#06b6d4",
   momentum: "#10b981",
   mean_reversion: "#f59e0b",
   trend_following: "#8b5cf6",

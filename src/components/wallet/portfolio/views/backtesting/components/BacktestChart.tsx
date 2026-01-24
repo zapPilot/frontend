@@ -14,7 +14,10 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
-import { BacktestTooltip } from "./BacktestTooltip";
+import {
+  BacktestTooltip,
+  type BacktestTooltipProps,
+} from "./BacktestTooltip";
 
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
@@ -159,7 +162,20 @@ export function BacktestChart({
                 return labels[value] ?? String(value);
               }}
             />
-            <Tooltip content={<BacktestTooltip />} />
+            <Tooltip
+              content={({ active, payload, label }) => {
+                const props: BacktestTooltipProps = {
+                  active,
+                  sortedStrategyIds,
+                };
+                if (payload != null)
+                  props.payload = [...payload] as NonNullable<
+                    BacktestTooltipProps["payload"]
+                  >;
+                if (label != null) props.label = label;
+                return <BacktestTooltip {...props} />;
+              }}
+            />
 
             {sortedStrategyIds.map(strategyId => {
               const color = getStrategyColor(strategyId);

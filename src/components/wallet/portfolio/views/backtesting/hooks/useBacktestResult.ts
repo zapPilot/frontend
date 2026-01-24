@@ -1,7 +1,8 @@
 "use client";
 
-import type { BacktestResponse } from "@/types/backtesting";
 import { useMemo } from "react";
+
+import type { BacktestResponse } from "@/types/backtesting";
 
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
@@ -47,6 +48,7 @@ export function useBacktestResult(
         sell_lp: [],
       };
 
+      // Collect events from ALL strategies except dca_classic (baseline)
       for (const strategyId of strategyIds) {
         if (strategyId === "dca_classic") continue;
         const strategy = point.strategies[strategyId];

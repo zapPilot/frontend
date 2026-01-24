@@ -32,6 +32,7 @@ export interface BacktestRequest {
   rebalance_step_count?: number; // Number of steps to reach target allocation (default: 10)
   rebalance_interval_days?: number; // Minimum days between rebalancing trades (default: 3)
   drift_threshold?: number; // Optional drift threshold parameter used by backend to control rebalancing sensitivity (see analytics-engine backtesting docs for units and defaults)
+  strategies?: ("smart_dca" | "simple_regime")[]; // Array of strategies to compare: smart_dca (multi-step) or simple_regime (pattern-based)
   /**
    * NEW: Array of allocation configurations to test.
    * Backend will create a separate strategy variant for each configuration.

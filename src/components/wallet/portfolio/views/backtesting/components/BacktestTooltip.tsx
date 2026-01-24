@@ -2,7 +2,11 @@
 
 import { formatCurrency } from "@/utils";
 
-import { calculatePercentages } from "../utils/strategyDisplay";
+import {
+  calculatePercentages,
+  getStrategyColor,
+  getStrategyDisplayName,
+} from "../utils/strategyDisplay";
 
 const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
   "Buy Spot": "buy_spot",
@@ -15,6 +19,80 @@ export interface BacktestTooltipProps {
   active?: boolean;
   payload?: Array<{ name?: string; value?: number; color?: string; payload?: Record<string, unknown> }>;
   label?: string | number;
+  /** Strategy IDs in chart legend order. If provided, allocation bars use this order. */
+  sortedStrategyIds?: string[];
+}
+
+function AllocationBar({
+  displayName,
+  percentages,
+  strategyId,
+}: {
+  displayName: string;
+  percentages: { spot: number; stable: number; lp: number };
+  strategyId?: string;
+}) {
+  const hasAny = percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+  if (!hasAny) return null;
+
+  const color = strategyId != null ? getStrategyColor(strategyId) : undefined;
+
+  return (
+    <div className="space-y-1">
+      <div className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
+        {color != null && (
+          <div
+            className="w-2 h-2 rounded-full shrink-0"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        {displayName}
+      </div>
+      <div className="flex h-3 rounded overflow-hidden relative">
+        {percentages.spot > 0 && (
+          <div
+            className="bg-blue-500 flex items-center justify-center min-w-[2px]"
+            style={{ width: `${Math.max(percentages.spot, 0.5)}%` }}
+          >
+            {percentages.spot > 8 && (
+              <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                {percentages.spot.toFixed(0)}%
+              </span>
+            )}
+          </div>
+        )}
+        {percentages.stable > 0 && (
+          <div
+            className="bg-gray-500 flex items-center justify-center min-w-[2px]"
+            style={{ width: `${Math.max(percentages.stable, 0.5)}%` }}
+          >
+            {percentages.stable > 8 && (
+              <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                {percentages.stable.toFixed(0)}%
+              </span>
+            )}
+          </div>
+        )}
+        {percentages.lp > 0 && (
+          <div
+            className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
+            style={{ width: `${Math.max(percentages.lp, 0.5)}%` }}
+          >
+            {percentages.lp > 8 && (
+              <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                {percentages.lp.toFixed(0)}%
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="flex gap-2 text-[8px] text-gray-500">
+        <span>Spot: {percentages.spot.toFixed(1)}%</span>
+        <span>Stable: {percentages.stable.toFixed(1)}%</span>
+        <span>LP: {percentages.lp.toFixed(1)}%</span>
+      </div>
+    </div>
+  );
 }
 
 /**
@@ -26,6 +104,7 @@ export function BacktestTooltip({
   active,
   payload,
   label,
+  sortedStrategyIds,
 }: BacktestTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
@@ -48,17 +127,32 @@ export function BacktestTooltip({
     string,
     { portfolio_constituant?: { spot: number; lp: number; stable: number } }
   > | undefined;
-  const smartDca = strategies?.["smart_dca"];
-  const dcaClassic = strategies?.["dca_classic"];
-  const smartConstituents = smartDca?.portfolio_constituant;
-  const classicConstituents = dcaClassic?.portfolio_constituant;
 
-  const smartPercentages = smartConstituents
-    ? calculatePercentages(smartConstituents)
-    : null;
-  const classicPercentages = classicConstituents
-    ? calculatePercentages(classicConstituents)
-    : null;
+  const orderedIds = (() => {
+    const keys = Object.keys(strategies ?? {});
+    if (!sortedStrategyIds?.length) return keys;
+    const fromSorted = sortedStrategyIds.filter(id => strategies?.[id]);
+    const rest = keys.filter(id => !fromSorted.includes(id));
+    return [...fromSorted, ...rest];
+  })();
+
+  const allocationBlocks = orderedIds
+    .map(id => {
+      const s = strategies?.[id];
+      const constituents = s?.portfolio_constituant;
+      if (!constituents) return null;
+      const percentages = calculatePercentages(constituents);
+      const hasAny = percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+      if (!hasAny) return null;
+      return {
+        id,
+        displayName: getStrategyDisplayName(id),
+        percentages,
+      };
+    })
+    .filter((b): b is NonNullable<typeof b> => b != null);
+
+  const showAllocation = allocationBlocks.length > 0;
 
   return (
     <div
@@ -126,121 +220,16 @@ export function BacktestTooltip({
         })}
       </div>
 
-      {(smartPercentages || classicPercentages) && (
+      {showAllocation && (
         <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
-          {classicPercentages && (
-            <div className="space-y-1">
-              <div className="text-[10px] text-gray-400 font-medium">
-                Normal DCA
-              </div>
-              <div className="flex h-3 rounded overflow-hidden relative">
-                {classicPercentages.spot > 0 && (
-                  <div
-                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.spot, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.spot > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.spot.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {classicPercentages.stable > 0 && (
-                  <div
-                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.stable, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.stable > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.stable.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {classicPercentages.lp > 0 && (
-                  <div
-                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.lp, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.lp > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.lp.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 text-[8px] text-gray-500">
-                <span>Spot: {classicPercentages.spot.toFixed(1)}%</span>
-                <span>Stable: {classicPercentages.stable.toFixed(1)}%</span>
-                <span>LP: {classicPercentages.lp.toFixed(1)}%</span>
-              </div>
-            </div>
-          )}
-
-          {smartPercentages && (
-            <div className="space-y-1">
-              <div className="text-[10px] text-gray-400 font-medium">
-                Regime Strategy
-              </div>
-              <div className="flex h-3 rounded overflow-hidden relative">
-                {smartPercentages.spot > 0 && (
-                  <div
-                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.spot, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.spot > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.spot.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {smartPercentages.stable > 0 && (
-                  <div
-                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.stable, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.stable > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.stable.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {smartPercentages.lp > 0 && (
-                  <div
-                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.lp, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.lp > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.lp.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 text-[8px] text-gray-500">
-                <span>Spot: {smartPercentages.spot.toFixed(1)}%</span>
-                <span>Stable: {smartPercentages.stable.toFixed(1)}%</span>
-                <span>LP: {smartPercentages.lp.toFixed(1)}%</span>
-              </div>
-            </div>
-          )}
+          {allocationBlocks.map(({ id, displayName, percentages }) => (
+            <AllocationBar
+              key={id}
+              displayName={displayName}
+              percentages={percentages}
+              strategyId={id}
+            />
+          ))}
         </div>
       )}
     </div>
