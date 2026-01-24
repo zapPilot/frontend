@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
 import type { BacktestResponse } from "@/types/backtesting";
+import { useMemo } from "react";
 
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 

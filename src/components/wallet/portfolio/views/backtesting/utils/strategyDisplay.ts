@@ -1,8 +1,8 @@
 import {
-  ALLOCATION_STRATEGY_COLORS,
-  getAllocationStrategyDisplayName,
-  STRATEGY_COLORS,
-  STRATEGY_DISPLAY_NAMES,
+    ALLOCATION_STRATEGY_COLORS,
+    getAllocationStrategyDisplayName,
+    STRATEGY_COLORS,
+    STRATEGY_DISPLAY_NAMES,
 } from "../constants";
 
 export function getStrategyDisplayName(strategyId: string): string {

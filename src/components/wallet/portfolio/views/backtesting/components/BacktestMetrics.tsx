@@ -3,8 +3,8 @@
 import type { BacktestStrategySummary } from "@/types/backtesting";
 
 import {
-  ComparisonMetricCard,
-  type StrategyMetric,
+    ComparisonMetricCard,
+    type StrategyMetric,
 } from "../ComparisonMetricCard";
 import { MetricCard } from "../MetricCard";
 

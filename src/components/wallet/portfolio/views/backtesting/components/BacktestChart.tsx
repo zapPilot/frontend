@@ -1,15 +1,15 @@
 "use client";
 
 import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ResponsiveContainer,
-  Scatter,
-  Tooltip,
-  XAxis,
-  YAxis,
+    Area,
+    CartesianGrid,
+    ComposedChart,
+    Line,
+    ResponsiveContainer,
+    Scatter,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from "recharts";
 
 import { BaseCard } from "@/components/ui/BaseCard";

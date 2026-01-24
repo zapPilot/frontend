@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
 import type { AllocationConfig, BacktestRequest } from "@/types/backtesting";
+import { useCallback, useState } from "react";
 
 import { DEFAULT_REQUEST } from "../constants";
 

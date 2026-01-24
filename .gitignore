@@ -76,3 +76,4 @@ jscpd-report.json
 .pre-commit.log
 deadcode-analysis.json
 *.txt
+.sisyphus/

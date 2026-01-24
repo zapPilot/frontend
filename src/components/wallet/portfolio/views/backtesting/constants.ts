@@ -35,6 +35,7 @@ export const STRATEGY_COLORS: Record<string, string> = {
 };
 
 export {
-  ALLOCATION_STRATEGY_COLORS,
-  getAllocationStrategyDisplayName,
+    ALLOCATION_STRATEGY_COLORS,
+    getAllocationStrategyDisplayName
 } from "./presetAllocations";
+

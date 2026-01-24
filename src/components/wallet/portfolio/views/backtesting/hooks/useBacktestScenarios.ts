@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
 import { runBacktest } from "@/services/backtestingService";
 import type {
-  BacktestRequest,
-  BacktestResponse,
+    BacktestRequest,
+    BacktestResponse,
 } from "@/types/backtesting";
+import { useCallback, useState } from "react";
 
 export interface Scenario {
   id: string;
