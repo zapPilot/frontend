@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, Play, RefreshCw, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
@@ -10,18 +10,11 @@ import { AllocationConfigSelector } from "./backtesting/components/AllocationCon
 import { BacktestChart } from "./backtesting/components/BacktestChart";
 import { BacktestMetrics } from "./backtesting/components/BacktestMetrics";
 import { BacktestParamForm } from "./backtesting/components/BacktestParamForm";
-import { ScenarioChartCard } from "./backtesting/components/ScenarioChartCard";
-import { ScenarioList } from "./backtesting/components/ScenarioList";
 import { useBacktestParams } from "./backtesting/hooks/useBacktestParams";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
-import { useBacktestScenarios } from "./backtesting/hooks/useBacktestScenarios";
 import { getStrategyColor, getStrategyDisplayName } from "./backtesting/utils/strategyDisplay";
 
-type Mode = "single" | "scenarios";
-
 export function BacktestingView() {
-  const [mode, setMode] = useState<Mode>("single");
-
   const {
     params,
     updateParam,
@@ -42,27 +35,14 @@ export function BacktestingView() {
     daysDisplay,
   } = useBacktestResult(backtestData ?? null, params.days);
 
-  const {
-    scenarios,
-    results,
-    runStatus,
-    addScenario,
-    removeScenario,
-    runAll,
-  } = useBacktestScenarios();
-
   const handleRunBacktest = () => mutate(params);
 
   useEffect(() => {
-    if (mode === "single") {
-      handleRunBacktest();
-    }
+    handleRunBacktest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const isSingle = mode === "single";
-  const showSingleResults = isSingle && backtestData != null;
-  const showScenarioResults = !isSingle && results.size > 0;
+  const showSingleResults = backtestData != null;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -76,54 +56,26 @@ export function BacktestingView() {
             Compare Normal DCA vs Regime-Based Strategy performance
           </p>
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex rounded-lg bg-gray-900/80 p-1 border border-gray-800">
-            <button
-              type="button"
-              onClick={() => setMode("single")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                isSingle
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Single run
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("scenarios")}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                !isSingle
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-400 hover:text-white"
-              }`}
-            >
-              Scenarios
-            </button>
-          </div>
-          {isSingle ? (
-            <button
-              onClick={handleRunBacktest}
-              disabled={isPending}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
-            >
-              {isPending ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Running...
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
-                  Run Backtest
-                </>
-              )}
-            </button>
-          ) : null}
-        </div>
+        <button
+          onClick={handleRunBacktest}
+          disabled={isPending}
+          className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
+        >
+          {isPending ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              Running...
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+              Run Backtest
+            </>
+          )}
+        </button>
       </div>
 
-      {error && isSingle && (
+      {error && (
         <BaseCard
           variant="glass"
           className="p-4 bg-red-500/5 border-red-500/20"
@@ -153,18 +105,7 @@ export function BacktestingView() {
         onShowCustomBuilder={setShowCustomBuilder}
       />
 
-      {!isSingle && (
-        <ScenarioList
-          scenarios={scenarios}
-          currentRequest={params}
-          runStatus={runStatus}
-          onAdd={addScenario}
-          onRemove={removeScenario}
-          onRunAll={runAll}
-        />
-      )}
-
-      {isSingle && !backtestData && (
+      {!backtestData && (
         <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
           <div className="relative">
             <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
@@ -201,37 +142,6 @@ export function BacktestingView() {
         </div>
       )}
 
-      {showScenarioResults && (
-        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-          {scenarios.map(s => {
-            const response = results.get(s.id);
-            if (!response) return null;
-            return (
-              <ScenarioChartCard
-                key={s.id}
-                scenarioId={s.id}
-                label={s.label}
-                response={response}
-                {...(s.request.days != null
-                  ? { requestedDays: s.request.days }
-                  : {})}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {!isSingle && scenarios.length > 0 && results.size === 0 && runStatus === "idle" && (
-        <p className="text-sm text-gray-500 text-center py-8">
-          Add scenarios above, then click &quot;Run all&quot; to compare.
-        </p>
-      )}
-
-      {!isSingle && scenarios.length === 0 && (
-        <p className="text-sm text-gray-500 text-center py-8">
-          Switch to Scenarios mode, then add scenarios from current params.
-        </p>
-      )}
     </div>
   );
 }

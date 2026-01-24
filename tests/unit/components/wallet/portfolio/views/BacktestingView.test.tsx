@@ -1,11 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  BacktestingView,
-  calculatePercentages,
-  CustomTooltip,
-} from "@/components/wallet/portfolio/views/BacktestingView";
+import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
+import { BacktestTooltip } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTooltip";
+import { calculatePercentages } from "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 
 // Mock framer-motion
@@ -28,9 +26,10 @@ vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
 // Mock Recharts
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  ComposedChart: () => <div data-testid="composed-chart" />,
+  ComposedChart: ({ children }: any) => <div data-testid="composed-chart">{children}</div>,
   Area: () => null,
   Scatter: () => null,
+  Line: () => null,
   CartesianGrid: () => null,
   XAxis: () => null,
   YAxis: () => null,
@@ -56,7 +55,6 @@ describe("BacktestingView", () => {
     render(<BacktestingView />);
 
     expect(screen.getByText("DCA Strategy Comparison")).toBeInTheDocument();
-    expect(screen.getByText("Ready to Compare Strategies")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Run Backtest/i })
     ).toBeInTheDocument();
@@ -97,19 +95,40 @@ describe("BacktestingView", () => {
 
   it("displays results when data is present", () => {
     const mockData = {
-      summary: {
-        regime_roi_percent: 15.5,
-        normal_roi_percent: 5.2,
-        regime_final_value: 12000,
-        normal_final_value: 10500,
-        total_days: 90,
-        regime_trade_count: 5,
-        sharpe_ratio: 1.2,
-        max_drawdown: 10,
-        winning_trades: 3,
-        losing_trades: 2,
+      strategies: {
+        dca_classic: {
+          strategy_id: "dca_classic",
+          display_name: "Normal DCA",
+          roi_percent: 5.2,
+          final_value: 10500,
+          total_invested: 10000,
+          trade_count: 0,
+          max_drawdown_percent: 5,
+          parameters: {},
+        },
+        smart_dca: {
+          strategy_id: "smart_dca",
+          display_name: "Regime Strategy",
+          roi_percent: 15.5,
+          final_value: 12000,
+          total_invested: 10000,
+          trade_count: 5,
+          max_drawdown_percent: 10,
+          parameters: {},
+        },
       },
-      history: [],
+      timeline: [
+        {
+          date: "2024-01-01",
+          price: 40000,
+          sentiment: 50,
+          sentiment_label: "neutral",
+          strategies: {
+            dca_classic: { portfolio_value: 10000 },
+            smart_dca: { portfolio_value: 10000 },
+          },
+        },
+      ],
     };
 
     vi.mocked(useBacktestMutation).mockReturnValue({
@@ -119,14 +138,13 @@ describe("BacktestingView", () => {
 
     render(<BacktestingView />);
 
-    expect(screen.getByText("Regime Strategy ROI")).toBeInTheDocument();
-    expect(screen.getByText("15.5%")).toBeInTheDocument();
-    expect(screen.getByText("vs +5.2% Normal DCA")).toBeInTheDocument();
+    expect(screen.getByText("ROI")).toBeInTheDocument();
+    expect(screen.getByText("+15.5%")).toBeInTheDocument();
+    expect(screen.getByText("+5.2%")).toBeInTheDocument();
 
-    expect(screen.getByText("Final Value")).toBeInTheDocument();
-    // Locale string matching might be tricky, checking simplified partial
+    expect(screen.getAllByText("Final Value")[0]).toBeInTheDocument();
+    
     expect(screen.getByText("$12,000")).toBeInTheDocument();
-
     expect(screen.getByTestId("composed-chart")).toBeInTheDocument();
   });
 
@@ -273,7 +291,7 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 90, stable: 10, lp: 0 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       expect(screen.getByText("Normal DCA")).toBeInTheDocument();
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
@@ -287,7 +305,7 @@ describe("BacktestingView", () => {
         classicConstituents: null,
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
       expect(screen.queryByText("Normal DCA")).not.toBeInTheDocument();
@@ -299,7 +317,7 @@ describe("BacktestingView", () => {
         classicConstituents: null,
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       expect(screen.queryByText("Normal DCA")).not.toBeInTheDocument();
       expect(screen.queryByText("Regime Strategy")).not.toBeInTheDocument();
@@ -310,7 +328,7 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 100, stable: 0, lp: 0 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       // Should show percentages text even if some are 0%
       expect(screen.getByText(/Spot: 100\.0%/)).toBeInTheDocument();
@@ -323,7 +341,7 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 50, stable: 30, lp: 20 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       expect(screen.getByText(/Spot: 50\.0%/)).toBeInTheDocument();
       expect(screen.getByText(/Stable: 30\.0%/)).toBeInTheDocument();
@@ -339,7 +357,7 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       // Should show portfolio values
       expect(screen.getByText(/Regime Strategy: \$10,000/)).toBeInTheDocument();
@@ -358,9 +376,9 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
-      expect(screen.getByText("Buy Spot: Signal")).toBeInTheDocument();
+      expect(screen.getByText("Buy Spot")).toBeInTheDocument();
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
     });
 
@@ -370,7 +388,7 @@ describe("BacktestingView", () => {
       });
 
       const { container } = render(
-        <CustomTooltip active={false} payload={payload} label={label} />
+        <BacktestTooltip active={false} payload={payload} label={label} />
       );
 
       expect(container.firstChild).toBeNull();
@@ -382,7 +400,7 @@ describe("BacktestingView", () => {
       });
 
       const { container } = render(
-        <CustomTooltip active={true} payload={[]} label={label} />
+        <BacktestTooltip active={true} payload={[]} label={label} />
       );
 
       expect(container.firstChild).toBeNull();
@@ -394,9 +412,121 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<CustomTooltip active={active} payload={payload} label={label} />);
+      render(<BacktestTooltip active={active} payload={payload} label={label} />);
 
       expect(screen.getByText(/(Greed)/)).toBeInTheDocument();
+    });
+  });
+
+  describe("Parameter Controls", () => {
+    it("updates token symbol parameter", () => {
+      render(<BacktestingView />);
+
+      const select = screen.getByLabelText(/Token Symbol/i);
+      fireEvent.change(select, { target: { value: "ETH" } });
+
+      expect(select).toHaveValue("ETH");
+    });
+
+    it("updates total capital parameter", () => {
+      render(<BacktestingView />);
+
+      const input = screen.getByLabelText(/Total Capital/i);
+      fireEvent.change(input, { target: { value: "20000" } });
+
+      expect(input).toHaveValue(20000);
+    });
+
+    it("resets parameters to defaults", () => {
+      render(<BacktestingView />);
+
+      const input = screen.getByLabelText(/Total Capital/i);
+      fireEvent.change(input, { target: { value: "20000" } });
+      expect(input).toHaveValue(20000);
+
+      const resetButton = screen.getByText(/Reset to Defaults/i);
+      fireEvent.click(resetButton);
+
+      expect(input).toHaveValue(10000); // DEFAULT_REQUEST.total_capital
+    });
+  });
+
+  describe("Utility Logic", () => {
+    it("calculates actualDays correctly from timeline", () => {
+      const mockData = {
+        strategies: { dca_classic: {}, smart_dca: {} },
+        timeline: [
+          { date: "2024-01-01", strategies: {} },
+          { date: "2024-01-10", strategies: {} },
+        ],
+      };
+
+      vi.mocked(useBacktestMutation).mockReturnValue({
+        ...defaultMock,
+        data: mockData,
+      } as any);
+
+      render(<BacktestingView />);
+
+      // Default is 500 days requested, and we have 10 available
+      expect(
+        screen.getByText(/500 days requested \(10 available\)/i)
+      ).toBeInTheDocument();
+    });
+
+    it("shows availability note when requested days differ from actual", () => {
+      const mockData = {
+        strategies: { dca_classic: {}, smart_dca: {} },
+        timeline: [
+          { date: "2024-01-01", strategies: {} },
+          { date: "2024-01-05", strategies: {} },
+        ],
+      };
+
+      vi.mocked(useBacktestMutation).mockReturnValue({
+        ...defaultMock,
+        data: mockData,
+      } as any);
+
+      render(<BacktestingView />);
+
+      // Default is 500 days requested, but only 5 available
+      expect(
+        screen.getByText(/500 days requested \(5 available\)/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe("Strategy Sorting", () => {
+    it("sorts core strategies first then others alphabetically", () => {
+      const mockData = {
+        strategies: {
+          zeta: { strategy_id: "zeta", display_name: "Zeta", roi_percent: 1, final_value: 1, parameters: {} },
+          alpha: { strategy_id: "alpha", display_name: "Alpha", roi_percent: 1, final_value: 1, parameters: {} },
+          dca_classic: { strategy_id: "dca_classic", display_name: "Normal DCA", roi_percent: 1, final_value: 1, parameters: {} },
+          smart_dca: { strategy_id: "smart_dca", display_name: "Regime Strategy", roi_percent: 1, final_value: 1, parameters: {} },
+        },
+        timeline: [],
+      };
+
+      vi.mocked(useBacktestMutation).mockReturnValue({
+        ...defaultMock,
+        data: mockData,
+      } as any);
+
+      render(<BacktestingView />);
+
+      // The legends in the chart area should show strategies in sorted order
+      const legends = screen.getAllByText(/Normal DCA|Regime Strategy|alpha|zeta/i);
+      
+      const chartLegendItems = legends.filter(el => 
+        el.closest('.flex.flex-wrap.gap-2') // This is the chart legend container
+      );
+
+      expect(chartLegendItems[0]).toHaveTextContent(/Normal DCA/i);
+      expect(chartLegendItems[1]).toHaveTextContent(/Regime Strategy/i);
+      expect(chartLegendItems[2]).toHaveTextContent(/alpha/i);
+      expect(chartLegendItems[3]).toHaveTextContent(/zeta/i);
     });
   });
 });
