@@ -3,30 +3,7 @@ import { useMemo } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
-/**
- * Strategy colors for consistent visual identification.
- * Matches STRATEGY_COLORS in BacktestingView.
- */
-const STRATEGY_COLORS: Record<string, string> = {
-  dca_classic: "#4b5563",  // gray-600
-  smart_dca: "#3b82f6",    // blue-500
-  momentum: "#10b981",     // emerald-500
-  mean_reversion: "#f59e0b", // amber-500
-  trend_following: "#8b5cf6", // violet-500
-  sentiment_dca: "#ec4899",  // pink-500
-};
-
-/**
- * Display names for strategy IDs.
- */
-const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
-  dca_classic: "Normal DCA",
-  smart_dca: "Regime Strategy",
-  momentum: "Momentum",
-  mean_reversion: "Mean Reversion",
-  trend_following: "Trend Following",
-  sentiment_dca: "Sentiment DCA",
-};
+import { getStrategyColor, getStrategyDisplayName } from "./utils/strategyDisplay";
 
 export interface StrategyMetric {
   strategyId: string;
@@ -140,7 +117,9 @@ export function ComparisonMetricCard({
           className="h-full rounded-full transition-all duration-500"
           style={{
             width: `${barWidths[0] ?? 0}%`,
-            backgroundColor: sortedMetrics[0] ? STRATEGY_COLORS[sortedMetrics[0].strategyId] ?? "#3b82f6" : "#3b82f6",
+            backgroundColor: sortedMetrics[0]
+              ? getStrategyColor(sortedMetrics[0].strategyId)
+              : "#3b82f6",
           }}
         />
       </div>
@@ -149,8 +128,8 @@ export function ComparisonMetricCard({
       <div className="space-y-2">
         {sortedMetrics.map((metric, index) => {
           const isBest = index === bestIndex;
-          const color = STRATEGY_COLORS[metric.strategyId] || "#6b7280";
-          const displayName = STRATEGY_DISPLAY_NAMES[metric.strategyId] || metric.strategyId.replace(/_/g, " ");
+          const color = getStrategyColor(metric.strategyId);
+          const displayName = getStrategyDisplayName(metric.strategyId);
 
           return (
             <div

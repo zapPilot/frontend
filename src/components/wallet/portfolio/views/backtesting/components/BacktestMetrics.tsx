@@ -1,0 +1,212 @@
+"use client";
+
+import type { BacktestStrategySummary } from "@/types/backtesting";
+
+import {
+  ComparisonMetricCard,
+  type StrategyMetric,
+} from "../ComparisonMetricCard";
+import { MetricCard } from "../MetricCard";
+
+export interface BacktestMetricsSummary {
+  strategies: Record<string, BacktestStrategySummary>;
+}
+
+export interface BacktestMetricsProps {
+  summary: BacktestMetricsSummary | null;
+  sortedStrategyIds: string[];
+  actualDays: number;
+  daysDisplay: string;
+  getStrategyDisplayName: (id: string) => string;
+  getStrategyColor: (id: string) => string;
+}
+
+export function BacktestMetrics({
+  summary,
+  sortedStrategyIds,
+  actualDays,
+  daysDisplay,
+  getStrategyDisplayName,
+  getStrategyColor,
+}: BacktestMetricsProps) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <ComparisonMetricCard
+          label="ROI"
+          unit="%"
+          highlightMode="highest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const roi = strategySummary?.roi_percent ?? null;
+              return {
+                strategyId,
+                value: roi,
+                formatted:
+                  roi !== null
+                    ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
+                    : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Final Value"
+          unit="$"
+          highlightMode="highest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const finalValue = strategySummary?.final_value ?? null;
+              return {
+                strategyId,
+                value: finalValue,
+                formatted:
+                  finalValue !== null
+                    ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                    : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Max Drawdown"
+          unit="%"
+          highlightMode="lowest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const maxDrawdown =
+                strategySummary?.max_drawdown_percent ?? null;
+              return {
+                strategyId,
+                value: maxDrawdown,
+                formatted:
+                  maxDrawdown !== null
+                    ? `${maxDrawdown.toFixed(1)}%`
+                    : "N/A",
+              };
+            }
+          )}
+        />
+        <MetricCard
+          label="Simulation Period"
+          value={`${actualDays} days`}
+          subtext={daysDisplay}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <ComparisonMetricCard
+          label="Sharpe Ratio"
+          highlightMode="highest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const value = strategySummary?.sharpe_ratio ?? null;
+              return {
+                strategyId,
+                value,
+                formatted: value !== null ? value.toFixed(2) : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Sortino Ratio"
+          highlightMode="highest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const value = strategySummary?.sortino_ratio ?? null;
+              return {
+                strategyId,
+                value,
+                formatted: value !== null ? value.toFixed(2) : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Calmar Ratio"
+          highlightMode="highest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const value = strategySummary?.calmar_ratio ?? null;
+              return {
+                strategyId,
+                value,
+                formatted: value !== null ? value.toFixed(2) : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Volatility"
+          unit="%"
+          highlightMode="lowest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const value = strategySummary?.volatility ?? null;
+              return {
+                strategyId,
+                value,
+                formatted:
+                  value !== null ? `${(value * 100).toFixed(1)}%` : "N/A",
+              };
+            }
+          )}
+        />
+        <ComparisonMetricCard
+          label="Beta"
+          highlightMode="lowest"
+          metrics={sortedStrategyIds.map(
+            (strategyId): StrategyMetric => {
+              const strategySummary = summary?.strategies[strategyId];
+              const value = strategySummary?.beta ?? null;
+              return {
+                strategyId,
+                value,
+                formatted: value !== null ? value.toFixed(2) : "N/A",
+              };
+            }
+          )}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        {sortedStrategyIds.map(strategyId => {
+          const strategySummary = summary?.strategies[strategyId];
+          if (!strategySummary) return null;
+
+          const displayName = getStrategyDisplayName(strategyId);
+          const trades = strategySummary.trade_count ?? 0;
+          const color = getStrategyColor(strategyId);
+
+          return (
+            <div
+              key={strategyId}
+              className="bg-gray-900/50 border border-gray-800 rounded-lg p-3 flex items-center gap-2"
+            >
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: color }}
+              />
+              <div className="min-w-0">
+                <div className="text-xs text-gray-400 truncate">
+                  {displayName}
+                </div>
+                <div className="text-sm font-medium text-white">
+                  {trades} trades
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

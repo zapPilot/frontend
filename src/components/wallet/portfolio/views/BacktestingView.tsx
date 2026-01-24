@@ -1,585 +1,72 @@
 "use client";
 
-import { Activity, CheckCircle, Play, RefreshCw, Zap } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Area,
-  CartesianGrid,
-  ComposedChart,
-  Line,
-  ResponsiveContainer,
-  Scatter,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Activity, Play, RefreshCw, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
-import type {
-  AllocationConfig,
-  BacktestRequest,
-  RegimeAllocation,
-} from "@/types/backtesting";
-import { formatCurrency } from "@/utils";
 
-import {
-  ComparisonMetricCard,
-  StrategyMetric,
-} from "./backtesting/ComparisonMetricCard";
-import { CustomAllocationBuilder } from "./backtesting/CustomAllocationBuilder";
-import { MetricCard } from "./backtesting/MetricCard";
-import {
-  ALLOCATION_STRATEGY_COLORS,
-  getAllocationStrategyDisplayName,
-  PRESET_ALLOCATIONS,
-} from "./backtesting/presetAllocations";
+import { AllocationConfigSelector } from "./backtesting/components/AllocationConfigSelector";
+import { BacktestChart } from "./backtesting/components/BacktestChart";
+import { BacktestMetrics } from "./backtesting/components/BacktestMetrics";
+import { BacktestParamForm } from "./backtesting/components/BacktestParamForm";
+import { ScenarioChartCard } from "./backtesting/components/ScenarioChartCard";
+import { ScenarioList } from "./backtesting/components/ScenarioList";
+import { useBacktestParams } from "./backtesting/hooks/useBacktestParams";
+import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
+import { useBacktestScenarios } from "./backtesting/hooks/useBacktestScenarios";
+import { getStrategyColor, getStrategyDisplayName } from "./backtesting/utils/strategyDisplay";
 
-const DEFAULT_REQUEST: BacktestRequest = {
-  token_symbol: "BTC",
-  total_capital: 10000,
-  days: 500,
-  rebalance_step_count: 20,
-  rebalance_interval_days: 2,
-  drift_threshold: 0.25,
-};
+type Mode = "single" | "scenarios";
 
-/**
- * Display names for strategy IDs.
- * Used for human-readable labels in the UI.
- */
-const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
-  dca_classic: "Normal DCA",
-  smart_dca: "Regime Strategy",
-  momentum: "Momentum",
-  mean_reversion: "Mean Reversion",
-  trend_following: "Trend Following",
-  sentiment_dca: "Sentiment DCA",
-};
-
-const STRATEGY_COLORS: Record<string, string> = {
-  dca_classic: "#4b5563",
-  smart_dca: "#3b82f6",
-  momentum: "#10b981",
-  mean_reversion: "#f59e0b",
-  trend_following: "#8b5cf6",
-  sentiment_dca: "#ec4899",
-};
-
-const getStrategyDisplayName = (strategyId: string): string => {
-  if (STRATEGY_DISPLAY_NAMES[strategyId]) {
-    return STRATEGY_DISPLAY_NAMES[strategyId];
-  }
-
-  if (strategyId.startsWith("smart_dca_")) {
-    const configId = strategyId.replace("smart_dca_", "");
-    return getAllocationStrategyDisplayName(configId);
-  }
-
-  return strategyId.replace(/_/g, " ");
-};
-
-const getStrategyColor = (strategyId: string): string => {
-  if (STRATEGY_COLORS[strategyId]) {
-    return STRATEGY_COLORS[strategyId];
-  }
-
-  if (ALLOCATION_STRATEGY_COLORS[strategyId]) {
-    return ALLOCATION_STRATEGY_COLORS[strategyId];
-  }
-
-  const fallbackColors = [
-    "#8b5cf6",
-    "#ec4899",
-    "#f97316",
-    "#84cc16",
-    "#14b8a6",
-    "#6366f1",
-    "#f43f5e",
-    "#eab308",
-  ];
-
-  let hash = 0;
-  for (let i = 0; i < strategyId.length; i++) {
-    hash = strategyId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  return fallbackColors[Math.abs(hash) % fallbackColors.length] || "#6b7280";
-};
-
-/**
- * Calculate percentage ratios from constituent absolute values.
- * Returns percentages for spot, stable, and lp components.
- */
-export const calculatePercentages = (constituents: {
-  spot: number;
-  stable: number;
-  lp: number;
-}): { spot: number; stable: number; lp: number } => {
-  const total = constituents.spot + constituents.stable + constituents.lp;
-  if (total === 0) return { spot: 0, stable: 0, lp: 0 };
-  return {
-    spot: (constituents.spot / total) * 100,
-    stable: (constituents.stable / total) * 100,
-    lp: (constituents.lp / total) * 100,
-  };
-};
-
-/**
- * Custom Tooltip component that renders date label only once
- * and properly formats all chart data entries.
- * Shows which strategies triggered trading signals.
- */
-export const CustomTooltip = ({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: any[];
-  label?: string | number;
-}) => {
-  if (!active || !payload || payload.length === 0) return null;
-
-  const dateStr = new Date(String(label)).toLocaleDateString();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const firstPayload = payload[0]?.payload as any;
-  const sentiment = firstPayload?.sentiment_label;
-
-  const sentimentStr = sentiment
-    ? ` (${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)})`
-    : "";
-
-  // Extract token price with fallback handling
-  const tokenPrice = firstPayload?.token_price?.btc ?? firstPayload?.price;
-
-  // Extract event strategies mapping (which strategies triggered each event)
-  const eventStrategies = firstPayload?.eventStrategies as
-    | Record<string, string[]>
-    | undefined;
-
-  // Extract portfolio constituent data from both strategies
-  const smartDca = firstPayload?.strategies?.smart_dca;
-  const dcaClassic = firstPayload?.strategies?.dca_classic;
-  const smartConstituents = smartDca?.portfolio_constituant;
-  const classicConstituents = dcaClassic?.portfolio_constituant;
-
-  // Calculate percentages if constituents exist
-  const smartPercentages = smartConstituents
-    ? calculatePercentages(smartConstituents)
-    : null;
-  const classicPercentages = classicConstituents
-    ? calculatePercentages(classicConstituents)
-    : null;
-
-  // Map signal names to event keys
-  const signalToEventKey: Record<string, string> = {
-    "Buy Spot": "buy_spot",
-    "Sell Spot": "sell_spot",
-    "Buy LP": "buy_lp",
-    "Sell LP": "sell_lp",
-  };
-
-  return (
-    <div
-      className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg"
-      style={{
-        backgroundColor: "#111827",
-        borderColor: "#374151",
-        borderRadius: "0.5rem",
-      }}
-    >
-      <div className="text-xs font-medium text-white mb-2">
-        {dateStr}
-        {sentimentStr}
-      </div>
-      {tokenPrice != null && (
-        <div className="text-xs text-gray-400 mb-2">
-          BTC Price:{" "}
-          {formatCurrency(tokenPrice, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </div>
-      )}
-      <div className="space-y-1">
-        {payload.map((entry: any, index: number) => {
-          if (!entry) return null;
-
-          const name = entry.name || "";
-          const value = entry.value;
-
-          // Handle signal entries (Buy Spot, Sell Spot, Buy LP, Sell LP)
-          if (signalToEventKey[name]) {
-            if (value) {
-              // Get strategies that triggered this event
-              const eventKey = signalToEventKey[name];
-              const strategies = eventStrategies?.[eventKey] || [];
-              const strategiesStr =
-                strategies.length > 0 ? ` (${strategies.join(", ")})` : "";
-
-              return (
-                <div
-                  key={index}
-                  className="text-xs"
-                  style={{ color: entry.color || "#fff" }}
-                >
-                  {name}
-                  {strategiesStr}
-                </div>
-              );
-            }
-            return null;
-          }
-
-          // Handle value entries (Regime Strategy, Normal DCA, etc.)
-          if (typeof value === "number") {
-            return (
-              <div
-                key={index}
-                className="text-xs"
-                style={{ color: entry.color || "#fff" }}
-              >
-                {name}: ${value.toLocaleString()}
-              </div>
-            );
-          }
-
-          return null;
-        })}
-      </div>
-
-      {/* Portfolio Constituent Ratios */}
-      {(smartPercentages || classicPercentages) && (
-        <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
-          {/* Stacked Bar Component */}
-          {classicPercentages && (
-            <div className="space-y-1">
-              <div className="text-[10px] text-gray-400 font-medium">
-                Normal DCA
-              </div>
-              <div className="flex h-3 rounded overflow-hidden relative">
-                {classicPercentages.spot > 0 && (
-                  <div
-                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.spot, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.spot > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.spot.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {classicPercentages.stable > 0 && (
-                  <div
-                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.stable, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.stable > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.stable.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {classicPercentages.lp > 0 && (
-                  <div
-                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(classicPercentages.lp, 0.5)}%`,
-                    }}
-                  >
-                    {classicPercentages.lp > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {classicPercentages.lp.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 text-[8px] text-gray-500">
-                <span>Spot: {classicPercentages.spot.toFixed(1)}%</span>
-                <span>Stable: {classicPercentages.stable.toFixed(1)}%</span>
-                <span>LP: {classicPercentages.lp.toFixed(1)}%</span>
-              </div>
-            </div>
-          )}
-
-          {smartPercentages && (
-            <div className="space-y-1">
-              <div className="text-[10px] text-gray-400 font-medium">
-                Regime Strategy
-              </div>
-              <div className="flex h-3 rounded overflow-hidden relative">
-                {smartPercentages.spot > 0 && (
-                  <div
-                    className="bg-blue-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.spot, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.spot > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.spot.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {smartPercentages.stable > 0 && (
-                  <div
-                    className="bg-gray-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.stable, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.stable > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.stable.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-                {smartPercentages.lp > 0 && (
-                  <div
-                    className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
-                    style={{
-                      width: `${Math.max(smartPercentages.lp, 0.5)}%`,
-                    }}
-                  >
-                    {smartPercentages.lp > 8 && (
-                      <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                        {smartPercentages.lp.toFixed(0)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2 text-[8px] text-gray-500">
-                <span>Spot: {smartPercentages.spot.toFixed(1)}%</span>
-                <span>Stable: {smartPercentages.stable.toFixed(1)}%</span>
-                <span>LP: {smartPercentages.lp.toFixed(1)}%</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const BacktestingView = () => {
-  const [params, setParams] = useState<BacktestRequest>(DEFAULT_REQUEST);
-  const [showCustomBuilder, setShowCustomBuilder] = useState(false);
+export function BacktestingView() {
+  const [mode, setMode] = useState<Mode>("single");
 
   const {
-    mutate,
-    data: backtestData,
-    isPending,
-    error,
-  } = useBacktestMutation();
+    params,
+    updateParam,
+    resetParams,
+    toggleAllocationConfig,
+    showCustomBuilder,
+    setShowCustomBuilder,
+  } = useBacktestParams();
 
-  // Get all strategy IDs from the response
-  const strategyIds = useMemo(() => {
-    if (!backtestData) return ["dca_classic", "smart_dca"];
-    return Object.keys(backtestData.strategies);
-  }, [backtestData]);
+  const { mutate, data: backtestData, isPending, error } = useBacktestMutation();
 
-  const chartData = useMemo(() => {
-    if (!backtestData) return [];
-    return backtestData.timeline.map(point => {
-      // Build dynamic data object with all strategy values
-      const data: Record<string, unknown> = {
-        ...point,
-      };
+  const {
+    chartData,
+    yAxisDomain,
+    summary,
+    sortedStrategyIds,
+    actualDays,
+    daysDisplay,
+  } = useBacktestResult(backtestData ?? null, params.days);
 
-      // Add portfolio value for each strategy
-      for (const strategyId of strategyIds) {
-        const strategy = point.strategies[strategyId];
-        if (strategy) {
-          data[`${strategyId}_value`] = strategy.portfolio_value;
-        }
-      }
+  const {
+    scenarios,
+    results,
+    runStatus,
+    addScenario,
+    removeScenario,
+    runAll,
+  } = useBacktestScenarios();
 
-      // Extract events from ALL strategies except dca_classic
-      // Aggregate signals by event type for chart markers
-      let buySpotSignal: number | null = null;
-      let sellSpotSignal: number | null = null;
-      let buyLpSignal: number | null = null;
-      let sellLpSignal: number | null = null;
-
-      // Track which strategies triggered events for tooltip
-      const eventStrategies: Record<string, string[]> = {
-        buy_spot: [],
-        sell_spot: [],
-        buy_lp: [],
-        sell_lp: [],
-      };
-
-      for (const strategyId of strategyIds) {
-        if (strategyId === "dca_classic") continue; // Skip baseline strategy (no trading signals)
-
-        const strategy = point.strategies[strategyId];
-        if (strategy?.event) {
-          const displayName = getStrategyDisplayName(strategyId);
-
-          switch (strategy.event) {
-            case "buy_spot":
-              buySpotSignal = strategy.portfolio_value;
-              eventStrategies["buy_spot"]?.push(displayName);
-              break;
-            case "sell_spot":
-              sellSpotSignal = strategy.portfolio_value;
-              eventStrategies["sell_spot"]?.push(displayName);
-              break;
-            case "buy_lp":
-              buyLpSignal = strategy.portfolio_value;
-              eventStrategies["buy_lp"]?.push(displayName);
-              break;
-            case "sell_lp":
-              sellLpSignal = strategy.portfolio_value;
-              eventStrategies["sell_lp"]?.push(displayName);
-              break;
-          }
-        }
-      }
-
-      // Signal markers for chart (aggregated across strategies)
-      data["buySpotSignal"] = buySpotSignal;
-      data["sellSpotSignal"] = sellSpotSignal;
-      data["buyLpSignal"] = buyLpSignal;
-      data["sellLpSignal"] = sellLpSignal;
-
-      // Store which strategies triggered each event (for tooltip display)
-      data["eventStrategies"] = eventStrategies;
-
-      return data;
-    });
-  }, [backtestData, strategyIds]);
-
-  const yAxisDomain = useMemo(() => {
-    if (!chartData || chartData.length === 0) return [0, 1000];
-
-    const allValues: number[] = [];
-    for (const point of chartData) {
-      // Collect values from all strategies dynamically
-      for (const strategyId of strategyIds) {
-        const value = point[`${strategyId}_value`];
-        if (typeof value === "number" && value != null) {
-          allValues.push(value);
-        }
-      }
-      // Also include signal values for proper domain calculation
-      const buySpot = point["buySpotSignal"] as number | null;
-      const sellSpot = point["sellSpotSignal"] as number | null;
-      const buyLp = point["buyLpSignal"] as number | null;
-      const sellLp = point["sellLpSignal"] as number | null;
-      if (buySpot != null) allValues.push(buySpot);
-      if (sellSpot != null) allValues.push(sellSpot);
-      if (buyLp != null) allValues.push(buyLp);
-      if (sellLp != null) allValues.push(sellLp);
-    }
-
-    if (allValues.length === 0) return [0, 1000];
-
-    const min = Math.min(...allValues);
-    const max = Math.max(...allValues);
-    const range = max - min;
-
-    // Add 5% padding on each side
-    const padding = range * 0.05;
-    const lowerBound = Math.max(0, min - padding);
-    const upperBound = max + padding;
-
-    return [lowerBound, upperBound];
-  }, [chartData, strategyIds]);
-
-  const summary = useMemo(() => {
-    if (!backtestData) return null;
-    return {
-      strategies: backtestData.strategies,
-    };
-  }, [backtestData]);
-
-  /**
-   * Calculate actual simulation period from the date range in timeline.
-   * The timeline array is sampled (max ~90 points), but the dates represent
-   * the actual simulation period which may span many more days.
-   */
-  const actualDays = useMemo(() => {
-    if (!backtestData || backtestData.timeline.length < 2) return 0;
-    const firstPoint = backtestData.timeline[0];
-    const lastPoint = backtestData.timeline[backtestData.timeline.length - 1];
-    if (!firstPoint || !lastPoint) return 0;
-    const firstDate = new Date(firstPoint.date);
-    const lastDate = new Date(lastPoint.date);
-    const diffTime = Math.abs(lastDate.getTime() - firstDate.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; // +1 to include both endpoints
-  }, [backtestData]);
-
-  // All strategies sorted: dca_classic first, smart_dca second, then others alphabetically
-  const sortedStrategyIds = useMemo(() => {
-    const coreStrategies = ["dca_classic", "smart_dca"];
-    const additionalStrategies = strategyIds
-      .filter(id => !coreStrategies.includes(id))
-      .sort((a, b) => a.localeCompare(b));
-    return [
-      ...coreStrategies.filter(id => strategyIds.includes(id)),
-      ...additionalStrategies,
-    ];
-  }, [strategyIds]);
-
-  // Format days display: show requested with availability note when different
-  const daysDisplay = useMemo(() => {
-    if (params.days) {
-      if (params.days !== actualDays && actualDays > 0) {
-        return `${params.days} days requested (${actualDays} available)`;
-      }
-      return `${actualDays} days simulated`;
-    }
-    return `${actualDays} days simulated`;
-  }, [params.days, actualDays]);
-
-  const handleRunBacktest = () => {
-    mutate(params);
-  };
-
-  const handleResetParams = () => {
-    setParams(DEFAULT_REQUEST);
-  };
-
-  const updateParam = <K extends keyof BacktestRequest>(
-    key: K,
-    value: BacktestRequest[K]
-  ) => {
-    setParams(prev => ({ ...prev, [key]: value }));
-  };
-
-  const toggleAllocationConfig = (config: AllocationConfig) => {
-    const current = params.allocation_configs || [];
-    const exists = current.some(c => c.id === config.id);
-
-    const updated = exists
-      ? current.filter(c => c.id !== config.id)
-      : [...current, config];
-
-    updateParam("allocation_configs", updated.length > 0 ? updated : undefined);
-  };
+  const handleRunBacktest = () => mutate(params);
 
   useEffect(() => {
-    handleRunBacktest();
+    if (mode === "single") {
+      handleRunBacktest();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const isSingle = mode === "single";
+  const showSingleResults = isSingle && backtestData != null;
+  const showScenarioResults = !isSingle && results.size > 0;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Activity className="w-5 h-5 text-blue-400" />
@@ -589,29 +76,54 @@ export const BacktestingView = () => {
             Compare Normal DCA vs Regime-Based Strategy performance
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleRunBacktest}
-            disabled={isPending}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
-          >
-            {isPending ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                Running...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
-                Run Backtest
-              </>
-            )}
-          </button>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex rounded-lg bg-gray-900/80 p-1 border border-gray-800">
+            <button
+              type="button"
+              onClick={() => setMode("single")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                isSingle
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Single run
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("scenarios")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                !isSingle
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-400 hover:text-white"
+              }`}
+            >
+              Scenarios
+            </button>
+          </div>
+          {isSingle ? (
+            <button
+              onClick={handleRunBacktest}
+              disabled={isPending}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
+            >
+              {isPending ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Running...
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
+                  Run Backtest
+                </>
+              )}
+            </button>
+          ) : null}
         </div>
       </div>
 
-      {/* Error Display */}
-      {error && (
+      {error && isSingle && (
         <BaseCard
           variant="glass"
           className="p-4 bg-red-500/5 border-red-500/20"
@@ -622,338 +134,37 @@ export const BacktestingView = () => {
         </BaseCard>
       )}
 
-      {/* Parameter Controls */}
-      <BaseCard variant="glass" className="p-4">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-sm font-semibold text-white">
-              Backtest Parameters
-            </h3>
-            <button
-              onClick={handleResetParams}
-              className="text-xs text-gray-400 hover:text-white transition-colors"
-            >
-              Reset to Defaults
-            </button>
-          </div>
+      <BacktestParamForm
+        params={params}
+        onUpdate={updateParam}
+        onReset={resetParams}
+      />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Token Symbol */}
-            <div className="space-y-1">
-              <label
-                htmlFor="token_symbol"
-                className="text-xs font-medium text-gray-400"
-              >
-                Token Symbol
-              </label>
-              <select
-                id="token_symbol"
-                value={params.token_symbol}
-                onChange={e => updateParam("token_symbol", e.target.value)}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="BTC">BTC</option>
-                <option value="ETH">ETH</option>
-                <option value="USDC">USDC</option>
-                <option value="USDT">USDT</option>
-              </select>
-            </div>
+      <AllocationConfigSelector
+        allocationConfigs={params.allocation_configs}
+        onToggle={toggleAllocationConfig}
+        onAddCustom={config =>
+          updateParam("allocation_configs", [
+            ...(params.allocation_configs ?? []),
+            config,
+          ])
+        }
+        showCustomBuilder={showCustomBuilder}
+        onShowCustomBuilder={setShowCustomBuilder}
+      />
 
-            {/* Total Capital */}
-            <div className="space-y-1">
-              <label
-                htmlFor="total_capital"
-                className="text-xs font-medium text-gray-400"
-              >
-                Total Capital ($)
-              </label>
-              <input
-                id="total_capital"
-                type="number"
-                min="1"
-                step="100"
-                value={params.total_capital}
-                onChange={e =>
-                  updateParam("total_capital", parseFloat(e.target.value) || 0)
-                }
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
+      {!isSingle && (
+        <ScenarioList
+          scenarios={scenarios}
+          currentRequest={params}
+          runStatus={runStatus}
+          onAdd={addScenario}
+          onRemove={removeScenario}
+          onRunAll={runAll}
+        />
+      )}
 
-            {/* Days */}
-            <div className="space-y-1">
-              <label
-                htmlFor="days"
-                className="text-xs font-medium text-gray-400"
-              >
-                Days (optional)
-              </label>
-              <input
-                id="days"
-                type="number"
-                min="1"
-                max="1000"
-                value={params.days || ""}
-                onChange={e =>
-                  updateParam(
-                    "days",
-                    e.target.value ? parseInt(e.target.value, 10) : undefined
-                  )
-                }
-                placeholder="Leave empty for date range"
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-600"
-              />
-            </div>
-
-            {/* Start Date */}
-            <div className="space-y-1">
-              <label
-                htmlFor="start_date"
-                className="text-xs font-medium text-gray-400"
-              >
-                Start Date (optional)
-              </label>
-              <input
-                id="start_date"
-                type="date"
-                value={params.start_date || ""}
-                onChange={e =>
-                  updateParam("start_date", e.target.value || undefined)
-                }
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* End Date */}
-            <div className="space-y-1">
-              <label
-                htmlFor="end_date"
-                className="text-xs font-medium text-gray-400"
-              >
-                End Date (optional)
-              </label>
-              <input
-                id="end_date"
-                type="date"
-                value={params.end_date || ""}
-                onChange={e =>
-                  updateParam("end_date", e.target.value || undefined)
-                }
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Rebalance Step Count */}
-            <div className="space-y-1">
-              <label
-                htmlFor="rebalance_step_count"
-                className="text-xs font-medium text-gray-400"
-              >
-                Rebalance Step Count
-              </label>
-              <input
-                id="rebalance_step_count"
-                type="number"
-                min="1"
-                max="50"
-                value={params.rebalance_step_count || ""}
-                onChange={e =>
-                  updateParam(
-                    "rebalance_step_count",
-                    e.target.value ? parseInt(e.target.value, 10) : undefined
-                  )
-                }
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Rebalance Interval Days */}
-            <div className="space-y-1">
-              <label
-                htmlFor="rebalance_interval_days"
-                className="text-xs font-medium text-gray-400"
-              >
-                Rebalance Interval (days)
-              </label>
-              <input
-                id="rebalance_interval_days"
-                type="number"
-                min="0"
-                max="30"
-                value={params.rebalance_interval_days ?? ""}
-                onChange={e => {
-                  const value = e.target.value;
-                  updateParam(
-                    "rebalance_interval_days",
-                    value === "" ? undefined : parseInt(value, 10)
-                  );
-                }}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Drift Threshold */}
-            <div className="space-y-1">
-              <label
-                htmlFor="drift_threshold"
-                className="text-xs font-medium text-gray-400"
-              >
-                Drift Threshold
-              </label>
-              <input
-                id="drift_threshold"
-                type="number"
-                min="0.01"
-                max="1"
-                step="0.01"
-                value={params.drift_threshold ?? ""}
-                onChange={e => {
-                  const value = e.target.value;
-                  updateParam(
-                    "drift_threshold",
-                    value === "" ? undefined : Number(value)
-                  );
-                }}
-                className="w-full px-3 py-2 bg-gray-900/50 border border-gray-800 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-              <p className="text-[10px] text-gray-500">
-                Minimum portfolio drift required to trigger a rebalance.
-                Example: 0.05 = 5%.
-              </p>
-            </div>
-          </div>
-        </div>
-      </BaseCard>
-
-      {/* Allocation Configuration Selection */}
-      <BaseCard variant="glass" className="p-4">
-        <div className="space-y-2">
-          <label className="text-xs font-medium text-gray-400">
-            Allocation Strategies to Test
-          </label>
-          <p className="text-[10px] text-gray-500 mb-3">
-            Select one or more allocation configurations to compare performance.
-            Each configuration defines target spot/LP/stable percentages for
-            different market regimes.
-          </p>
-          {params.allocation_configs &&
-            params.allocation_configs.length > 5 && (
-              <div className="px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-xs text-yellow-400">
-                <strong>Note:</strong> More than 5 configurations may reduce
-                chart readability.
-              </div>
-            )}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {PRESET_ALLOCATIONS.map(config => {
-              const isSelected =
-                params.allocation_configs?.some(c => c.id === config.id) ??
-                false;
-              return (
-                <button
-                  key={config.id}
-                  type="button"
-                  onClick={() => toggleAllocationConfig(config)}
-                  className={`p-4 rounded-lg text-left transition-all ${
-                    isSelected
-                      ? "bg-blue-600/20 border-2 border-blue-500"
-                      : "bg-gray-900/50 border border-gray-800 hover:bg-gray-800 hover:border-gray-700"
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="text-sm font-semibold text-white">
-                      {config.name}
-                    </h4>
-                    {isSelected && (
-                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    {config.description}
-                  </p>
-
-                  <div className="mt-3 space-y-1">
-                    {(
-                      [
-                        "extreme_fear",
-                        "fear",
-                        "greed",
-                        "extreme_greed",
-                      ] as const
-                    ).map(regime => {
-                      const allocation = config[regime] as RegimeAllocation;
-                      return (
-                        <div key={regime} className="text-[9px]">
-                          <div className="text-gray-500 mb-0.5 capitalize">
-                            {regime.replace(/_/g, " ")}
-                          </div>
-                          <div className="flex h-1.5 rounded overflow-hidden">
-                            <div
-                              className="bg-blue-400"
-                              style={{ width: `${allocation.spot}%` }}
-                            />
-                            <div
-                              className="bg-cyan-400"
-                              style={{ width: `${allocation.lp}%` }}
-                            />
-                            <div
-                              className="bg-gray-400"
-                              style={{ width: `${allocation.stable}%` }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex items-center gap-4 mt-3 text-[10px] text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-blue-400" />
-              Spot
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-cyan-400" />
-              LP
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-gray-400" />
-              Stable
-            </div>
-          </div>
-
-          <div className="mt-6 pt-6 border-t border-gray-800">
-            {!showCustomBuilder ? (
-              <button
-                type="button"
-                onClick={() => setShowCustomBuilder(true)}
-                className="w-full px-4 py-3 bg-blue-600/20 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition-colors text-sm text-blue-400 font-medium"
-              >
-                + Create Custom Allocation Strategy
-              </button>
-            ) : (
-              <CustomAllocationBuilder
-                onAdd={config => {
-                  setParams(prev => ({
-                    ...prev,
-                    allocation_configs: [
-                      ...(prev.allocation_configs || []),
-                      config,
-                    ],
-                  }));
-                  setShowCustomBuilder(false);
-                }}
-                onCancel={() => setShowCustomBuilder(false)}
-              />
-            )}
-          </div>
-        </div>
-      </BaseCard>
-
-      {/* Results Area */}
-      {!backtestData ? (
+      {isSingle && !backtestData && (
         <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
           <div className="relative">
             <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
@@ -967,396 +178,60 @@ export const BacktestingView = () => {
             strategy compares to normal DCA over the last 90 days.
           </p>
         </div>
-      ) : (
+      )}
+
+      {showSingleResults && (
         <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-          {/* Comparison Metric Cards - Multi-strategy performance comparison */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* ROI Comparison */}
-            <ComparisonMetricCard
-              label="ROI"
-              unit="%"
-              highlightMode="highest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const roi = strategySummary?.roi_percent ?? null;
-                return {
-                  strategyId,
-                  value: roi,
-                  formatted:
-                    roi !== null
-                      ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
-                      : "N/A",
-                };
-              })}
-            />
-
-            {/* Final Value Comparison */}
-            <ComparisonMetricCard
-              label="Final Value"
-              unit="$"
-              highlightMode="highest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const finalValue = strategySummary?.final_value ?? null;
-                return {
-                  strategyId,
-                  value: finalValue,
-                  formatted:
-                    finalValue !== null
-                      ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-                      : "N/A",
-                };
-              })}
-            />
-
-            {/* Max Drawdown Comparison */}
-            <ComparisonMetricCard
-              label="Max Drawdown"
-              unit="%"
-              highlightMode="lowest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const maxDrawdown =
-                  strategySummary?.max_drawdown_percent ?? null;
-                return {
-                  strategyId,
-                  value: maxDrawdown,
-                  formatted:
-                    maxDrawdown !== null ? `${maxDrawdown.toFixed(1)}%` : "N/A",
-                };
-              })}
-            />
-
-            {/* Simulation Period - Keep as simple MetricCard */}
-            <MetricCard
-              label="Simulation Period"
-              value={`${actualDays} days`}
-              subtext={daysDisplay}
-            />
-          </div>
-
-          {/* Row 2: Risk-Adjusted Metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {/* Sharpe Ratio */}
-            <ComparisonMetricCard
-              label="Sharpe Ratio"
-              highlightMode="highest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const value = strategySummary?.sharpe_ratio ?? null;
-                return {
-                  strategyId,
-                  value,
-                  formatted: value !== null ? value.toFixed(2) : "N/A",
-                };
-              })}
-            />
-
-            {/* Sortino Ratio */}
-            <ComparisonMetricCard
-              label="Sortino Ratio"
-              highlightMode="highest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const value = strategySummary?.sortino_ratio ?? null;
-                return {
-                  strategyId,
-                  value,
-                  formatted: value !== null ? value.toFixed(2) : "N/A",
-                };
-              })}
-            />
-
-            {/* Calmar Ratio */}
-            <ComparisonMetricCard
-              label="Calmar Ratio"
-              highlightMode="highest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const value = strategySummary?.calmar_ratio ?? null;
-                return {
-                  strategyId,
-                  value,
-                  formatted: value !== null ? value.toFixed(2) : "N/A",
-                };
-              })}
-            />
-
-            {/* Volatility */}
-            <ComparisonMetricCard
-              label="Volatility"
-              unit="%"
-              highlightMode="lowest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const value = strategySummary?.volatility ?? null;
-                return {
-                  strategyId,
-                  value,
-                  formatted:
-                    value !== null ? `${(value * 100).toFixed(1)}%` : "N/A",
-                };
-              })}
-            />
-
-            {/* Beta */}
-            <ComparisonMetricCard
-              label="Beta"
-              highlightMode="lowest"
-              metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-                const strategySummary = summary?.strategies[strategyId];
-                const value = strategySummary?.beta ?? null;
-                return {
-                  strategyId,
-                  value,
-                  formatted: value !== null ? value.toFixed(2) : "N/A",
-                };
-              })}
-            />
-          </div>
-
-          {/* Trade Count Summary - Secondary row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {sortedStrategyIds.map(strategyId => {
-              const strategySummary = summary?.strategies[strategyId];
-              if (!strategySummary) return null;
-
-              const displayName = getStrategyDisplayName(strategyId);
-              const trades = strategySummary.trade_count ?? 0;
-              const color = getStrategyColor(strategyId);
-
-              return (
-                <div
-                  key={strategyId}
-                  className="bg-gray-900/50 border border-gray-800 rounded-lg p-3 flex items-center gap-2"
-                >
-                  <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                  />
-                  <div className="min-w-0">
-                    <div className="text-xs text-gray-400 truncate">
-                      {displayName}
-                    </div>
-                    <div className="text-sm font-medium text-white">
-                      {trades} trades
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Chart */}
-          <BaseCard
-            variant="glass"
-            className="p-1 h-[500px] relative overflow-hidden flex flex-col"
-          >
-            <div className="p-4 border-b border-gray-800/50 bg-gray-900/30 flex justify-between items-center">
-              <div className="text-sm font-medium text-white flex items-center gap-2">
-                Portfolio Value Growth
-                <span className="text-xs font-normal text-gray-500">
-                  ({actualDays} Days)
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {/* Dynamic strategy legends */}
-                {sortedStrategyIds.map(strategyId => {
-                  const displayName = getStrategyDisplayName(strategyId);
-                  const color = getStrategyColor(strategyId);
-                  return (
-                    <div
-                      key={strategyId}
-                      className="flex items-center gap-1.5 text-[10px] text-gray-400"
-                    >
-                      <div
-                        className="w-2 h-2 rounded-full"
-                        style={{ backgroundColor: color }}
-                      />
-                      {displayName}
-                    </div>
-                  );
-                })}
-                {/* Fixed legends for signals and sentiment */}
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-purple-500" />
-                  Sentiment
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
-                  Buy Spot
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-red-500" />
-                  Sell Spot
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500" />
-                  Buy LP
-                </div>
-                <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                  <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
-                  Sell LP
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 w-full pt-4 pr-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={chartData}>
-                  <defs>
-                    {/* Dynamic gradients for each strategy */}
-                    {sortedStrategyIds.map(strategyId => {
-                      const color = getStrategyColor(strategyId);
-                      return (
-                        <linearGradient
-                          key={`gradient-${strategyId}`}
-                          id={`color-${strategyId}`}
-                          x1="0"
-                          y1="0"
-                          x2="0"
-                          y2="1"
-                        >
-                          <stop
-                            offset="5%"
-                            stopColor={color}
-                            stopOpacity={0.3}
-                          />
-                          <stop
-                            offset="95%"
-                            stopColor={color}
-                            stopOpacity={0}
-                          />
-                        </linearGradient>
-                      );
-                    })}
-                  </defs>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="rgba(255,255,255,0.05)"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 10, fill: "#6b7280" }}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={30}
-                    tickFormatter={value =>
-                      new Date(value).toLocaleDateString(undefined, {
-                        month: "short",
-                        year: "2-digit",
-                      })
-                    }
-                  />
-                  <YAxis
-                    domain={yAxisDomain}
-                    tick={{ fontSize: 10, fill: "#6b7280" }}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={value => `$${(value / 1000).toFixed(0)}k`}
-                  />
-                  {/* Secondary Y-axis for Sentiment */}
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    domain={[0, 4]}
-                    tick={{ fontSize: 10, fill: "#a855f7" }}
-                    tickLine={false}
-                    axisLine={false}
-                    label={{
-                      value: "Sentiment",
-                      angle: 90,
-                      position: "insideRight",
-                      style: { fontSize: 10, fill: "#a855f7" },
-                    }}
-                    tickFormatter={(value: number) => {
-                      const labels = [
-                        "Extreme Fear",
-                        "Fear",
-                        "Neutral",
-                        "Greed",
-                        "Extreme Greed",
-                      ];
-                      return labels[value] || String(value);
-                    }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-
-                  {/* Dynamic strategy lines */}
-                  {sortedStrategyIds.map(strategyId => {
-                    const color = getStrategyColor(strategyId);
-                    const displayName = getStrategyDisplayName(strategyId);
-                    // First strategy (smart_dca if present) gets filled area, others get lines
-                    const isMainStrategy = strategyId === "smart_dca";
-                    const isDcaClassic = strategyId === "dca_classic";
-
-                    return (
-                      <Area
-                        key={strategyId}
-                        type="monotone"
-                        dataKey={`${strategyId}_value`}
-                        name={displayName}
-                        stroke={color}
-                        fillOpacity={isMainStrategy ? 1 : 0}
-                        fill={
-                          isMainStrategy
-                            ? `url(#color-${strategyId})`
-                            : "transparent"
-                        }
-                        strokeWidth={2}
-                        strokeDasharray={isDcaClassic ? "4 4" : undefined}
-                      />
-                    );
-                  })}
-
-                  {/* Sentiment Line */}
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="sentiment"
-                    name="Sentiment"
-                    stroke="#a855f7"
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls={true}
-                    strokeOpacity={0.8}
-                  />
-
-                  <Scatter
-                    name="Buy Spot"
-                    dataKey="buySpotSignal"
-                    fill="#22c55e"
-                    shape="circle"
-                    legendType="none"
-                  />
-                  <Scatter
-                    name="Sell Spot"
-                    dataKey="sellSpotSignal"
-                    fill="#ef4444"
-                    shape="circle"
-                    legendType="none"
-                  />
-                  <Scatter
-                    name="Buy LP"
-                    dataKey="buyLpSignal"
-                    fill="#3b82f6"
-                    shape="circle"
-                    legendType="none"
-                  />
-                  <Scatter
-                    name="Sell LP"
-                    dataKey="sellLpSignal"
-                    fill="#d946ef"
-                    shape="circle"
-                    legendType="none"
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          </BaseCard>
+          <BacktestMetrics
+            summary={summary}
+            sortedStrategyIds={sortedStrategyIds}
+            actualDays={actualDays}
+            daysDisplay={daysDisplay}
+            getStrategyDisplayName={getStrategyDisplayName}
+            getStrategyColor={getStrategyColor}
+          />
+          <BacktestChart
+            chartData={chartData}
+            sortedStrategyIds={sortedStrategyIds}
+            yAxisDomain={yAxisDomain}
+            actualDays={actualDays}
+            getStrategyDisplayName={getStrategyDisplayName}
+            getStrategyColor={getStrategyColor}
+          />
         </div>
+      )}
+
+      {showScenarioResults && (
+        <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+          {scenarios.map(s => {
+            const response = results.get(s.id);
+            if (!response) return null;
+            return (
+              <ScenarioChartCard
+                key={s.id}
+                scenarioId={s.id}
+                label={s.label}
+                response={response}
+                {...(s.request.days != null
+                  ? { requestedDays: s.request.days }
+                  : {})}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {!isSingle && scenarios.length > 0 && results.size === 0 && runStatus === "idle" && (
+        <p className="text-sm text-gray-500 text-center py-8">
+          Add scenarios above, then click &quot;Run all&quot; to compare.
+        </p>
+      )}
+
+      {!isSingle && scenarios.length === 0 && (
+        <p className="text-sm text-gray-500 text-center py-8">
+          Switch to Scenarios mode, then add scenarios from current params.
+        </p>
       )}
     </div>
   );
-};
+}
