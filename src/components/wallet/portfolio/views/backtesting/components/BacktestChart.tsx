@@ -1,15 +1,15 @@
 "use client";
 
 import {
-    Area,
-    CartesianGrid,
-    ComposedChart,
-    Line,
-    ResponsiveContainer,
-    Scatter,
-    Tooltip,
-    XAxis,
-    YAxis,
+  Area,
+  CartesianGrid,
+  ComposedChart,
+  Line,
+  ResponsiveContainer,
+  Scatter,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
 
 import { BaseCard } from "@/components/ui/BaseCard";
@@ -208,10 +208,10 @@ export function BacktestChart({
               dataKey="sentiment"
               name="Sentiment"
               stroke="#a855f7"
-              strokeWidth={2}
+              strokeWidth={1}
               dot={false}
               connectNulls={true}
-              strokeOpacity={0.8}
+              strokeOpacity={0.4}
             />
 
             <Scatter

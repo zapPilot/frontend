@@ -419,35 +419,35 @@ describe("BacktestingView", () => {
   });
 
   describe("Parameter Controls", () => {
-    it("updates token symbol parameter", () => {
+    it("updates strategy parameter", () => {
       render(<BacktestingView />);
 
-      const select = screen.getByLabelText(/Token Symbol/i);
-      fireEvent.change(select, { target: { value: "ETH" } });
+      const select = screen.getByLabelText(/Strategy Type/i);
+      fireEvent.change(select, { target: { value: "simple_regime" } });
 
-      expect(select).toHaveValue("ETH");
+      expect(select).toHaveValue("simple_regime");
     });
 
-    it("updates total capital parameter", () => {
+    it("updates days parameter", () => {
       render(<BacktestingView />);
 
-      const input = screen.getByLabelText(/Total Capital/i);
-      fireEvent.change(input, { target: { value: "20000" } });
+      const input = screen.getByLabelText(/Days \(optional\)/i);
+      fireEvent.change(input, { target: { value: "100" } });
 
-      expect(input).toHaveValue(20000);
+      expect(input).toHaveValue(100);
     });
 
     it("resets parameters to defaults", () => {
       render(<BacktestingView />);
 
-      const input = screen.getByLabelText(/Total Capital/i);
-      fireEvent.change(input, { target: { value: "20000" } });
-      expect(input).toHaveValue(20000);
+      const select = screen.getByLabelText(/Strategy Type/i);
+      fireEvent.change(select, { target: { value: "simple_regime" } });
+      expect(select).toHaveValue("simple_regime");
 
       const resetButton = screen.getByText(/Reset to Defaults/i);
       fireEvent.click(resetButton);
 
-      expect(input).toHaveValue(10000); // DEFAULT_REQUEST.total_capital
+      expect(select).toHaveValue("smart_dca"); // DEFAULT_REQUEST.strategy
     });
   });
 

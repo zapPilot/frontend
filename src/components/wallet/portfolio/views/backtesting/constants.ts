@@ -6,7 +6,7 @@ export const DEFAULT_REQUEST: BacktestRequest = {
   days: 500,
   rebalance_step_count: 20,
   rebalance_interval_days: 2,
-  drift_threshold: 0.25,
+  drift_threshold: 0.05,
   strategies: ["smart_dca"],
 };
 
@@ -38,7 +38,7 @@ export const STRATEGY_COLORS: Record<string, string> = {
 };
 
 export {
-    ALLOCATION_STRATEGY_COLORS,
-    getAllocationStrategyDisplayName
+  ALLOCATION_STRATEGY_COLORS,
+  getAllocationStrategyDisplayName
 } from "./presetAllocations";
 
