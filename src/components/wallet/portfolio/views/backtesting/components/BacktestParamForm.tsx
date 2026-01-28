@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { BacktestRequest } from "@/types/backtesting";
 
@@ -8,12 +10,125 @@ const inputClass =
 const inputPlaceholderClass = `${inputClass} placeholder:text-gray-600`;
 const labelClass = "text-xs font-medium text-gray-400";
 
+type StrategyId = "smart_dca" | "simple_regime";
+type ParamUpdater = <K extends keyof BacktestRequest>(
+  key: K,
+  value: BacktestRequest[K]
+) => void;
+
+function StrategyCheckbox({
+  id,
+  label,
+  defaultChecked,
+  params,
+  onUpdate,
+}: {
+  id: StrategyId;
+  label: string;
+  defaultChecked: boolean;
+  params: BacktestRequest;
+  onUpdate: ParamUpdater;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
+      <input
+        type="checkbox"
+        checked={params.strategies?.includes(id) ?? defaultChecked}
+        onChange={e => {
+          const current = params.strategies ?? ["smart_dca"];
+          const updated: StrategyId[] = e.target.checked
+            ? ([...new Set([...current, id])] as StrategyId[])
+            : (current.filter(s => s !== id) as StrategyId[]);
+          onUpdate("strategies", updated);
+        }}
+        className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
+      />
+      {label}
+    </label>
+  );
+}
+
+function LabeledInput({
+  id,
+  label,
+  children,
+}: {
+  id: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="space-y-1">
+      <label htmlFor={id} className={labelClass}>
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+function DateParam({
+  id,
+  label,
+  value,
+  onUpdate,
+}: {
+  id: "start_date" | "end_date";
+  label: string;
+  value: string | undefined;
+  onUpdate: ParamUpdater;
+}) {
+  return (
+    <LabeledInput id={id} label={label}>
+      <input
+        id={id}
+        type="date"
+        value={value ?? ""}
+        onChange={e => onUpdate(id, e.target.value || undefined)}
+        className={inputClass}
+      />
+    </LabeledInput>
+  );
+}
+
+function NumberParam({
+  id,
+  label,
+  value,
+  min,
+  max,
+  onUpdate,
+}: {
+  id: "rebalance_step_count" | "rebalance_interval_days";
+  label: string;
+  value: number | undefined;
+  min: number;
+  max: number;
+  onUpdate: ParamUpdater;
+}) {
+  return (
+    <LabeledInput id={id} label={label}>
+      <input
+        id={id}
+        type="number"
+        min={min}
+        max={max}
+        value={value ?? ""}
+        onChange={e =>
+          onUpdate(
+            id,
+            e.target.value ? parseInt(e.target.value, 10) : undefined
+          )
+        }
+        className={inputClass}
+      />
+    </LabeledInput>
+  );
+}
+
 export interface BacktestParamFormProps {
   params: BacktestRequest;
-  onUpdate: <K extends keyof BacktestRequest>(
-    key: K,
-    value: BacktestRequest[K]
-  ) => void;
+  onUpdate: ParamUpdater;
   onReset: () => void;
 }
 
@@ -41,44 +156,20 @@ export function BacktestParamForm({
           <div className="space-y-2">
             <label className={labelClass}>Strategies to Compare</label>
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={params.strategies?.includes("smart_dca") ?? true}
-                  onChange={e => {
-                    const current = params.strategies ?? ["smart_dca"];
-                    const updated: ("smart_dca" | "simple_regime")[] = e.target.checked
-                      ? ([...new Set([...current, "smart_dca"])] as (
-                          | "smart_dca"
-                          | "simple_regime")[])
-                      : (current.filter(
-                          s => s !== "smart_dca"
-                        ) as ("smart_dca" | "simple_regime")[]);
-                    onUpdate("strategies", updated);
-                  }}
-                  className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                />
-                Smart DCA (Regime-based with multi-step rebalancing)
-              </label>
-              <label className="flex items-center gap-2 text-sm text-gray-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={params.strategies?.includes("simple_regime") ?? false}
-                  onChange={e => {
-                    const current = params.strategies ?? ["smart_dca"];
-                    const updated: ("smart_dca" | "simple_regime")[] = e.target.checked
-                      ? ([...new Set([...current, "simple_regime"])] as (
-                          | "smart_dca"
-                          | "simple_regime")[])
-                      : (current.filter(
-                          s => s !== "simple_regime"
-                        ) as ("smart_dca" | "simple_regime")[]);
-                    onUpdate("strategies", updated);
-                  }}
-                  className="rounded bg-gray-800 border-gray-700 text-blue-500 focus:ring-2 focus:ring-blue-500"
-                />
-                Simple Regime (Pattern-based with single-day rebalancing)
-              </label>
+              <StrategyCheckbox
+                id="smart_dca"
+                label="Smart DCA (Regime-based with multi-step rebalancing)"
+                defaultChecked={true}
+                params={params}
+                onUpdate={onUpdate}
+              />
+              <StrategyCheckbox
+                id="simple_regime"
+                label="Simple Regime (Pattern-based with single-day rebalancing)"
+                defaultChecked={false}
+                params={params}
+                onUpdate={onUpdate}
+              />
             </div>
           </div>
 
@@ -103,74 +194,37 @@ export function BacktestParamForm({
             />
           </div>
 
-          <div className="space-y-1">
-            <label htmlFor="start_date" className={labelClass}>
-              Start Date (optional)
-            </label>
-            <input
-              id="start_date"
-              type="date"
-              value={params.start_date ?? ""}
-              onChange={e =>
-                onUpdate("start_date", e.target.value || undefined)
-              }
-              className={inputClass}
-            />
-          </div>
+          <DateParam
+            id="start_date"
+            label="Start Date (optional)"
+            value={params.start_date}
+            onUpdate={onUpdate}
+          />
 
-          <div className="space-y-1">
-            <label htmlFor="end_date" className={labelClass}>
-              End Date (optional)
-            </label>
-            <input
-              id="end_date"
-              type="date"
-              value={params.end_date ?? ""}
-              onChange={e => onUpdate("end_date", e.target.value || undefined)}
-              className={inputClass}
-            />
-          </div>
+          <DateParam
+            id="end_date"
+            label="End Date (optional)"
+            value={params.end_date}
+            onUpdate={onUpdate}
+          />
 
-          <div className="space-y-1">
-            <label htmlFor="rebalance_step_count" className={labelClass}>
-              Rebalance Step Count
-            </label>
-            <input
-              id="rebalance_step_count"
-              type="number"
-              min={1}
-              max={50}
-              value={params.rebalance_step_count ?? ""}
-              onChange={e =>
-                onUpdate(
-                  "rebalance_step_count",
-                  e.target.value ? parseInt(e.target.value, 10) : undefined
-                )
-              }
-              className={inputClass}
-            />
-          </div>
+          <NumberParam
+            id="rebalance_step_count"
+            label="Rebalance Step Count"
+            value={params.rebalance_step_count}
+            min={1}
+            max={50}
+            onUpdate={onUpdate}
+          />
 
-          <div className="space-y-1">
-            <label htmlFor="rebalance_interval_days" className={labelClass}>
-              Rebalance Interval (days)
-            </label>
-            <input
-              id="rebalance_interval_days"
-              type="number"
-              min={0}
-              max={30}
-              value={params.rebalance_interval_days ?? ""}
-              onChange={e => {
-                const value = e.target.value;
-                onUpdate(
-                  "rebalance_interval_days",
-                  value === "" ? undefined : parseInt(value, 10)
-                );
-              }}
-              className={inputClass}
-            />
-          </div>
+          <NumberParam
+            id="rebalance_interval_days"
+            label="Rebalance Interval (days)"
+            value={params.rebalance_interval_days}
+            min={0}
+            max={30}
+            onUpdate={onUpdate}
+          />
 
           <div className="space-y-1">
             <label htmlFor="drift_threshold" className={labelClass}>

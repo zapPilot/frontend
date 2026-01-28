@@ -2,9 +2,9 @@ import { APIError, httpUtils } from "@/lib/http";
 import { createErrorMapper } from "@/lib/http/createErrorMapper";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
-    BacktestRequest,
-    BacktestResponse,
-    BacktestTimelinePoint,
+  BacktestRequest,
+  BacktestResponse,
+  BacktestTimelinePoint,
 } from "@/types/backtesting";
 
 const createBacktestingServiceError = createErrorMapper(
@@ -186,6 +186,12 @@ function sampleEvenlyIndices<T>(points: T[], targetSize: number): T[] {
  *
  * Automatically samples the timeline data to reduce browser RAM usage
  * while preserving important trading signals (buy/sell events).
+ *
+ * Uses a custom 10-minute timeout to accommodate complex backtesting
+ * calculations that may involve:
+ * - Multiple allocation strategies
+ * - Extended historical data ranges (90+ days)
+ * - High computational load on the analytics server
  */
 /**
  * Export sampleTimelineData for testing purposes.
@@ -199,7 +205,10 @@ export async function runBacktest(
   const response = await callBacktestingApi(() =>
     httpUtils.analyticsEngine.post<BacktestResponse>(
       "/api/v2/backtesting/dca-comparison",
-      request
+      request,
+      {
+        timeout: 600000, // 10 minutes (20x default timeout for complex backtests)
+      }
     )
   );
 

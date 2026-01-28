@@ -3,8 +3,8 @@
 import type { BacktestStrategySummary } from "@/types/backtesting";
 
 import {
-    ComparisonMetricCard,
-    type StrategyMetric,
+  ComparisonMetricCard,
+  type StrategyMetric,
 } from "../ComparisonMetricCard";
 import { MetricCard } from "../MetricCard";
 
@@ -19,6 +19,23 @@ export interface BacktestMetricsProps {
   daysDisplay: string;
   getStrategyDisplayName: (id: string) => string;
   getStrategyColor: (id: string) => string;
+}
+
+function buildMetrics(
+  key: keyof BacktestStrategySummary,
+  strategyIds: string[],
+  strategies: BacktestMetricsSummary["strategies"] | undefined,
+  format: (value: number) => string
+): StrategyMetric[] {
+  return strategyIds.map((strategyId): StrategyMetric => {
+    const raw = strategies?.[strategyId]?.[key];
+    const value = typeof raw === "number" ? raw : null;
+    return {
+      strategyId,
+      value,
+      formatted: value !== null ? format(value) : "N/A",
+    };
+  });
 }
 
 export function BacktestMetrics({
@@ -36,58 +53,45 @@ export function BacktestMetrics({
           label="ROI"
           unit="%"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const roi = strategySummary?.roi_percent ?? null;
-              return {
-                strategyId,
-                value: roi,
-                formatted:
-                  roi !== null
-                    ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
-                    : "N/A",
-              };
-            }
-          )}
+          metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+            const strategySummary = summary?.strategies[strategyId];
+            const roi = strategySummary?.roi_percent ?? null;
+            return {
+              strategyId,
+              value: roi,
+              formatted:
+                roi !== null
+                  ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
+                  : "N/A",
+            };
+          })}
         />
         <ComparisonMetricCard
           label="Final Value"
           unit="$"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const finalValue = strategySummary?.final_value ?? null;
-              return {
-                strategyId,
-                value: finalValue,
-                formatted:
-                  finalValue !== null
-                    ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-                    : "N/A",
-              };
-            }
-          )}
+          metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
+            const strategySummary = summary?.strategies[strategyId];
+            const finalValue = strategySummary?.final_value ?? null;
+            return {
+              strategyId,
+              value: finalValue,
+              formatted:
+                finalValue !== null
+                  ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+                  : "N/A",
+            };
+          })}
         />
         <ComparisonMetricCard
           label="Max Drawdown"
           unit="%"
           highlightMode="lowest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const maxDrawdown =
-                strategySummary?.max_drawdown_percent ?? null;
-              return {
-                strategyId,
-                value: maxDrawdown,
-                formatted:
-                  maxDrawdown !== null
-                    ? `${maxDrawdown.toFixed(1)}%`
-                    : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "max_drawdown_percent",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => `${v.toFixed(1)}%`
           )}
         />
         <MetricCard
@@ -101,78 +105,52 @@ export function BacktestMetrics({
         <ComparisonMetricCard
           label="Sharpe Ratio"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const value = strategySummary?.sharpe_ratio ?? null;
-              return {
-                strategyId,
-                value,
-                formatted: value !== null ? value.toFixed(2) : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "sharpe_ratio",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => v.toFixed(2)
           )}
         />
         <ComparisonMetricCard
           label="Sortino Ratio"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const value = strategySummary?.sortino_ratio ?? null;
-              return {
-                strategyId,
-                value,
-                formatted: value !== null ? value.toFixed(2) : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "sortino_ratio",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => v.toFixed(2)
           )}
         />
         <ComparisonMetricCard
           label="Calmar Ratio"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const value = strategySummary?.calmar_ratio ?? null;
-              return {
-                strategyId,
-                value,
-                formatted: value !== null ? value.toFixed(2) : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "calmar_ratio",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => v.toFixed(2)
           )}
         />
         <ComparisonMetricCard
           label="Volatility"
           unit="%"
           highlightMode="lowest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const value = strategySummary?.volatility ?? null;
-              return {
-                strategyId,
-                value,
-                formatted:
-                  value !== null ? `${(value * 100).toFixed(1)}%` : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "volatility",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => `${(v * 100).toFixed(1)}%`
           )}
         />
         <ComparisonMetricCard
           label="Beta"
           highlightMode="lowest"
-          metrics={sortedStrategyIds.map(
-            (strategyId): StrategyMetric => {
-              const strategySummary = summary?.strategies[strategyId];
-              const value = strategySummary?.beta ?? null;
-              return {
-                strategyId,
-                value,
-                formatted: value !== null ? value.toFixed(2) : "N/A",
-              };
-            }
+          metrics={buildMetrics(
+            "beta",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => v.toFixed(2)
           )}
         />
       </div>

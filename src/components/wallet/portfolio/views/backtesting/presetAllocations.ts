@@ -16,26 +16,30 @@ export const validateAllocationConfig = (config: AllocationConfig): boolean => {
   return true;
 };
 
+const SHARED_FEAR: RegimeAllocation = { spot: 20, lp: 35, stable: 45 };
+const SHARED_NEUTRAL: RegimeAllocation = { spot: 50, lp: 0, stable: 50 };
+const SHARED_EXTREME_GREED: RegimeAllocation = { spot: 0, lp: 45, stable: 55 };
+
 export const PRESET_ALLOCATIONS: AllocationConfig[] = [
   {
     id: "conservative",
     name: "Conservative",
     description: "High stable allocation, minimal LP exposure",
     extreme_fear: { spot: 65, lp: 0, stable: 35 },
-    fear: { spot: 20, lp: 35, stable: 45 },
-    neutral: { spot: 50, lp: 0, stable: 50 },
+    fear: SHARED_FEAR,
+    neutral: SHARED_NEUTRAL,
     greed: { spot: 50, lp: 5, stable: 45 },
-    extreme_greed: { spot: 0, lp: 45, stable: 55 },
+    extreme_greed: SHARED_EXTREME_GREED,
   },
   {
     id: "balanced",
     name: "Balanced",
     description: "Equal risk distribution across asset types",
     extreme_fear: { spot: 95, lp: 0, stable: 5 },
-    fear: { spot: 20, lp: 35, stable: 45 },
-    neutral: { spot: 50, lp: 0, stable: 50 },
+    fear: SHARED_FEAR,
+    neutral: SHARED_NEUTRAL,
     greed: { spot: 60, lp: 5, stable: 35 },
-    extreme_greed: { spot: 0, lp: 45, stable: 55 },
+    extreme_greed: SHARED_EXTREME_GREED,
   },
   {
     id: "aggressive",
@@ -43,9 +47,9 @@ export const PRESET_ALLOCATIONS: AllocationConfig[] = [
     description: "Maximum spot and LP exposure, minimal stable",
     extreme_fear: { spot: 100, lp: 0, stable: 0 },
     fear: { spot: 25, lp: 35, stable: 40 },
-    neutral: { spot: 50, lp: 0, stable: 50 },
+    neutral: SHARED_NEUTRAL,
     greed: { spot: 60, lp: 0, stable: 40 },
-    extreme_greed: { spot: 0, lp: 45, stable: 55 },
+    extreme_greed: SHARED_EXTREME_GREED,
   },
 ];
 

@@ -1,7 +1,8 @@
 "use client";
 
-import type { AllocationConfig, BacktestRequest } from "@/types/backtesting";
 import { useCallback, useState } from "react";
+
+import type { AllocationConfig, BacktestRequest } from "@/types/backtesting";
 
 import { DEFAULT_REQUEST } from "../constants";
 
@@ -22,10 +23,7 @@ export function useBacktestParams(): UseBacktestParamsReturn {
   const [showCustomBuilder, setShowCustomBuilder] = useState(false);
 
   const updateParam = useCallback(
-    <K extends keyof BacktestRequest>(
-      key: K,
-      value: BacktestRequest[K]
-    ) => {
+    <K extends keyof BacktestRequest>(key: K, value: BacktestRequest[K]) => {
       setParams(prev => ({ ...prev, [key]: value }));
     },
     []
@@ -42,10 +40,12 @@ export function useBacktestParams(): UseBacktestParamsReturn {
       const updated = exists
         ? current.filter(c => c.id !== config.id)
         : [...current, config];
-      const { allocation_configs: _ac, ...rest } = prev;
-      return updated.length > 0
-        ? ({ ...rest, allocation_configs: updated } as BacktestRequest)
-        : (rest as BacktestRequest);
+      if (updated.length > 0) {
+        return { ...prev, allocation_configs: updated };
+      }
+      const next = { ...prev };
+      delete next.allocation_configs;
+      return next;
     });
   }, []);
 

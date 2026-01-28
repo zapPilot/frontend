@@ -1,9 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { BacktestTooltip } from "@/components/wallet/portfolio/views/backtesting/components/BacktestTooltip";
 import { calculatePercentages } from "@/components/wallet/portfolio/views/backtesting/utils/strategyDisplay";
+import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 
 // Mock framer-motion
@@ -26,7 +26,9 @@ vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
 // Mock Recharts
 vi.mock("recharts", () => ({
   ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
-  ComposedChart: ({ children }: any) => <div data-testid="composed-chart">{children}</div>,
+  ComposedChart: ({ children }: any) => (
+    <div data-testid="composed-chart">{children}</div>
+  ),
   Area: () => null,
   Scatter: () => null,
   Line: () => null,
@@ -143,7 +145,7 @@ describe("BacktestingView", () => {
     expect(screen.getByText("+5.2%")).toBeInTheDocument();
 
     expect(screen.getAllByText("Final Value")[0]).toBeInTheDocument();
-    
+
     expect(screen.getByText("$12,000")).toBeInTheDocument();
     expect(screen.getByTestId("composed-chart")).toBeInTheDocument();
   });
@@ -275,7 +277,7 @@ describe("BacktestingView", () => {
         };
       }
 
-      const payload = chartEntries.map((entry) => ({
+      const payload = chartEntries.map(entry => ({
         name: entry.name,
         value: entry.value,
         color: entry.color,
@@ -291,7 +293,9 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 90, stable: 10, lp: 0 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.getByText("Normal DCA")).toBeInTheDocument();
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
@@ -305,7 +309,9 @@ describe("BacktestingView", () => {
         classicConstituents: null,
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
       expect(screen.queryByText("Normal DCA")).not.toBeInTheDocument();
@@ -317,7 +323,9 @@ describe("BacktestingView", () => {
         classicConstituents: null,
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.queryByText("Normal DCA")).not.toBeInTheDocument();
       expect(screen.queryByText("Regime Strategy")).not.toBeInTheDocument();
@@ -328,7 +336,9 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 100, stable: 0, lp: 0 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       // Should show percentages text even if some are 0%
       expect(screen.getByText(/Spot: 100\.0%/)).toBeInTheDocument();
@@ -341,7 +351,9 @@ describe("BacktestingView", () => {
         classicConstituents: { spot: 50, stable: 30, lp: 20 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.getByText(/Spot: 50\.0%/)).toBeInTheDocument();
       expect(screen.getByText(/Stable: 30\.0%/)).toBeInTheDocument();
@@ -357,7 +369,9 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       // Should show portfolio values
       expect(screen.getByText(/Regime Strategy: \$10,000/)).toBeInTheDocument();
@@ -376,7 +390,9 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.getByText("Buy Spot")).toBeInTheDocument();
       expect(screen.getByText("Regime Strategy")).toBeInTheDocument();
@@ -412,7 +428,9 @@ describe("BacktestingView", () => {
         smartConstituents: { spot: 60, stable: 30, lp: 10 },
       });
 
-      render(<BacktestTooltip active={active} payload={payload} label={label} />);
+      render(
+        <BacktestTooltip active={active} payload={payload} label={label} />
+      );
 
       expect(screen.getByText(/(Greed)/)).toBeInTheDocument();
     });
@@ -422,10 +440,11 @@ describe("BacktestingView", () => {
     it("updates strategy parameter", () => {
       render(<BacktestingView />);
 
-      const select = screen.getByLabelText(/Strategy Type/i);
-      fireEvent.change(select, { target: { value: "simple_regime" } });
+      const simpleRegimeCheckbox = screen.getByLabelText(/Simple Regime/i);
+      expect(simpleRegimeCheckbox).not.toBeChecked();
 
-      expect(select).toHaveValue("simple_regime");
+      fireEvent.click(simpleRegimeCheckbox);
+      expect(simpleRegimeCheckbox).toBeChecked();
     });
 
     it("updates days parameter", () => {
@@ -440,14 +459,16 @@ describe("BacktestingView", () => {
     it("resets parameters to defaults", () => {
       render(<BacktestingView />);
 
-      const select = screen.getByLabelText(/Strategy Type/i);
-      fireEvent.change(select, { target: { value: "simple_regime" } });
-      expect(select).toHaveValue("simple_regime");
+      const simpleRegimeCheckbox = screen.getByLabelText(/Simple Regime/i);
+      expect(simpleRegimeCheckbox).not.toBeChecked();
+
+      fireEvent.click(simpleRegimeCheckbox);
+      expect(simpleRegimeCheckbox).toBeChecked();
 
       const resetButton = screen.getByText(/Reset to Defaults/i);
       fireEvent.click(resetButton);
 
-      expect(select).toHaveValue("smart_dca"); // DEFAULT_REQUEST.strategy
+      expect(simpleRegimeCheckbox).not.toBeChecked();
     });
   });
 
@@ -501,10 +522,34 @@ describe("BacktestingView", () => {
     it("sorts core strategies first then others alphabetically", () => {
       const mockData = {
         strategies: {
-          zeta: { strategy_id: "zeta", display_name: "Zeta", roi_percent: 1, final_value: 1, parameters: {} },
-          alpha: { strategy_id: "alpha", display_name: "Alpha", roi_percent: 1, final_value: 1, parameters: {} },
-          dca_classic: { strategy_id: "dca_classic", display_name: "Normal DCA", roi_percent: 1, final_value: 1, parameters: {} },
-          smart_dca: { strategy_id: "smart_dca", display_name: "Regime Strategy", roi_percent: 1, final_value: 1, parameters: {} },
+          zeta: {
+            strategy_id: "zeta",
+            display_name: "Zeta",
+            roi_percent: 1,
+            final_value: 1,
+            parameters: {},
+          },
+          alpha: {
+            strategy_id: "alpha",
+            display_name: "Alpha",
+            roi_percent: 1,
+            final_value: 1,
+            parameters: {},
+          },
+          dca_classic: {
+            strategy_id: "dca_classic",
+            display_name: "Normal DCA",
+            roi_percent: 1,
+            final_value: 1,
+            parameters: {},
+          },
+          smart_dca: {
+            strategy_id: "smart_dca",
+            display_name: "Regime Strategy",
+            roi_percent: 1,
+            final_value: 1,
+            parameters: {},
+          },
         },
         timeline: [],
       };
@@ -517,10 +562,12 @@ describe("BacktestingView", () => {
       render(<BacktestingView />);
 
       // The legends in the chart area should show strategies in sorted order
-      const legends = screen.getAllByText(/Normal DCA|Regime Strategy|alpha|zeta/i);
-      
-      const chartLegendItems = legends.filter(el => 
-        el.closest('.flex.flex-wrap.gap-2') // This is the chart legend container
+      const legends = screen.getAllByText(
+        /Normal DCA|Regime Strategy|alpha|zeta/i
+      );
+
+      const chartLegendItems = legends.filter(
+        el => el.closest(".flex.flex-wrap.gap-2") // This is the chart legend container
       );
 
       expect(chartLegendItems[0]).toHaveTextContent(/Normal DCA/i);

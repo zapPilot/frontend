@@ -17,7 +17,12 @@ const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
 
 export interface BacktestTooltipProps {
   active?: boolean;
-  payload?: Array<{ name?: string; value?: number; color?: string; payload?: Record<string, unknown> }>;
+  payload?: {
+    name?: string;
+    value?: number;
+    color?: string;
+    payload?: Record<string, unknown>;
+  }[];
   label?: string | number;
   /** Strategy IDs in chart legend order. If provided, allocation bars use this order. */
   sortedStrategyIds?: string[];
@@ -32,7 +37,8 @@ function AllocationBar({
   percentages: { spot: number; stable: number; lp: number };
   strategyId?: string;
 }) {
-  const hasAny = percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+  const hasAny =
+    percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
   if (!hasAny) return null;
 
   const color = strategyId != null ? getStrategyColor(strategyId) : undefined;
@@ -109,24 +115,29 @@ export function BacktestTooltip({
   if (!active || !payload || payload.length === 0) return null;
 
   const dateStr = new Date(String(label)).toLocaleDateString();
-  const firstPayload = payload[0]?.payload as Record<string, unknown> | undefined;
+  const firstPayload = payload[0]?.payload as
+    | Record<string, unknown>
+    | undefined;
   const sentiment = firstPayload?.["sentiment_label"] as string | undefined;
 
   const sentimentStr = sentiment
     ? ` (${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)})`
     : "";
 
-  const tokenPrice = (firstPayload?.["token_price"] as { btc?: number } | undefined)?.btc ??
+  const tokenPrice =
+    (firstPayload?.["token_price"] as { btc?: number } | undefined)?.btc ??
     (firstPayload?.["price"] as number | undefined);
 
   const eventStrategies = firstPayload?.["eventStrategies"] as
     | Record<string, string[]>
     | undefined;
 
-  const strategies = firstPayload?.["strategies"] as Record<
-    string,
-    { portfolio_constituant?: { spot: number; lp: number; stable: number } }
-  > | undefined;
+  const strategies = firstPayload?.["strategies"] as
+    | Record<
+        string,
+        { portfolio_constituant?: { spot: number; lp: number; stable: number } }
+      >
+    | undefined;
 
   const orderedIds = (() => {
     const keys = Object.keys(strategies ?? {});
@@ -142,7 +153,8 @@ export function BacktestTooltip({
       const constituents = s?.portfolio_constituant;
       if (!constituents) return null;
       const percentages = calculatePercentages(constituents);
-      const hasAny = percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+      const hasAny =
+        percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
       if (!hasAny) return null;
       return {
         id,

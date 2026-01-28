@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import type { AllocationConfig, RegimeAllocation } from "@/types/backtesting";
 
 interface CustomAllocationBuilderProps {
@@ -22,9 +23,34 @@ const DEFAULT_ALLOCATION: RegimeAllocation = {
   stable: 33.34,
 };
 
-type AllocationsMap = {
-  [K in RegimeKey]: RegimeAllocation;
-};
+type AllocationsMap = Record<RegimeKey, RegimeAllocation>;
+
+function AllocationInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-xs text-muted-foreground mb-1">
+        {label}
+      </label>
+      <input
+        type="number"
+        min="0"
+        max="100"
+        step="0.1"
+        value={value}
+        onChange={e => onChange(parseFloat(e.target.value) || 0)}
+        className="w-full px-2 py-1 text-sm border border-border rounded bg-background"
+      />
+    </div>
+  );
+}
 
 export function CustomAllocationBuilder({
   onAdd,
@@ -138,68 +164,21 @@ export function CustomAllocationBuilder({
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">
-                      Spot %
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={alloc.spot}
-                      onChange={e =>
-                        updateAllocation(
-                          regime.key,
-                          "spot",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-2 py-1 text-sm border border-border rounded bg-background"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">
-                      LP %
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={alloc.lp}
-                      onChange={e =>
-                        updateAllocation(
-                          regime.key,
-                          "lp",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-2 py-1 text-sm border border-border rounded bg-background"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs text-muted-foreground mb-1">
-                      Stable %
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={alloc.stable}
-                      onChange={e =>
-                        updateAllocation(
-                          regime.key,
-                          "stable",
-                          parseFloat(e.target.value) || 0
-                        )
-                      }
-                      className="w-full px-2 py-1 text-sm border border-border rounded bg-background"
-                    />
-                  </div>
+                  <AllocationInput
+                    label="Spot %"
+                    value={alloc.spot}
+                    onChange={v => updateAllocation(regime.key, "spot", v)}
+                  />
+                  <AllocationInput
+                    label="LP %"
+                    value={alloc.lp}
+                    onChange={v => updateAllocation(regime.key, "lp", v)}
+                  />
+                  <AllocationInput
+                    label="Stable %"
+                    value={alloc.stable}
+                    onChange={v => updateAllocation(regime.key, "stable", v)}
+                  />
                 </div>
 
                 <div className="h-2 bg-muted rounded-full overflow-hidden flex">
