@@ -4,8 +4,6 @@ export const DEFAULT_REQUEST: BacktestRequest = {
   token_symbol: "BTC",
   total_capital: 10000,
   days: 500,
-  rebalance_step_count: 20,
-  rebalance_interval_days: 2,
   drift_threshold: 0.05,
   strategies: ["smart_dca"],
 };

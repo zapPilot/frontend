@@ -211,7 +211,7 @@ export function BacktestParamForm({
           <NumberParam
             id="rebalance_step_count"
             label="Rebalance Step Count"
-            value={params.rebalance_step_count}
+            value={1}
             min={1}
             max={50}
             onUpdate={onUpdate}
@@ -220,7 +220,7 @@ export function BacktestParamForm({
           <NumberParam
             id="rebalance_interval_days"
             label="Rebalance Interval (days)"
-            value={params.rebalance_interval_days}
+            value={1}
             min={0}
             max={30}
             onUpdate={onUpdate}
