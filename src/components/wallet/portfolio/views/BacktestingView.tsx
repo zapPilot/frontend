@@ -121,6 +121,20 @@ export function BacktestingView() {
     }
   }, [editorValue]);
 
+  const pacingPolicies = useMemo(() => {
+    const simpleRegime = catalog?.strategies.find(
+      s => s.id === "simple_regime"
+    );
+    const schema = simpleRegime?.hyperparam_schema as
+      | Record<string, unknown>
+      | undefined;
+    const props = schema?.["properties"] as Record<string, unknown> | undefined;
+    const pacingPolicy = props?.["pacing_policy"] as
+      | Record<string, unknown>
+      | undefined;
+    return (pacingPolicy?.["enum"] as string[] | undefined) ?? [];
+  }, [catalog]);
+
   const handleRunBacktest = () => {
     if (!parsedEditorPayload) {
       setEditorError("Invalid JSON: unable to parse.");
@@ -279,6 +293,25 @@ export function BacktestingView() {
         {editorError && (
           <div className="mt-3 text-xs text-red-400 whitespace-pre-wrap">
             {editorError}
+          </div>
+        )}
+
+        {catalog && (
+          <div className="mt-3 text-xs text-gray-500 space-y-1">
+            <div>
+              <span className="text-gray-400 font-medium">
+                Available strategy_id:
+              </span>{" "}
+              {catalog.strategies.map(s => s.id).join(", ")}
+            </div>
+            {pacingPolicies.length > 0 && (
+              <div>
+                <span className="text-gray-400 font-medium">
+                  Available pacing_policy:
+                </span>{" "}
+                {pacingPolicies.join(", ")}
+              </div>
+            )}
           </div>
         )}
       </BaseCard>
