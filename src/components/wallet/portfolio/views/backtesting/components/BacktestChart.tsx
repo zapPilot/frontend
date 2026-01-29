@@ -14,10 +14,7 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
-import {
-  BacktestTooltip,
-  type BacktestTooltipProps,
-} from "./BacktestTooltip";
+import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
 
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
@@ -40,6 +37,10 @@ export function BacktestChart({
   chartIdPrefix = "default",
 }: BacktestChartProps) {
   const gradientId = (s: string) => `${chartIdPrefix}-color-${s}`;
+  const primarySeriesId =
+    sortedStrategyIds.find(id => id !== "dca_classic") ??
+    sortedStrategyIds[0] ??
+    null;
   return (
     <BaseCard
       variant="glass"
@@ -180,8 +181,9 @@ export function BacktestChart({
             {sortedStrategyIds.map(strategyId => {
               const color = getStrategyColor(strategyId);
               const displayName = getStrategyDisplayName(strategyId);
-              const isMainStrategy = strategyId === "smart_dca";
               const isDcaClassic = strategyId === "dca_classic";
+              const isPrimary =
+                primarySeriesId != null && strategyId === primarySeriesId;
 
               return (
                 <Area
@@ -190,9 +192,9 @@ export function BacktestChart({
                   dataKey={`${strategyId}_value`}
                   name={displayName}
                   stroke={color}
-                  fillOpacity={isMainStrategy ? 1 : 0}
+                  fillOpacity={isPrimary ? 1 : 0}
                   fill={
-                    isMainStrategy
+                    isPrimary
                       ? `url(#${gradientId(strategyId)})`
                       : "transparent"
                   }

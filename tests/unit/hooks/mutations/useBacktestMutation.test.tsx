@@ -47,9 +47,9 @@ describe("useBacktestMutation", () => {
     const mutationFn = mutationOptions.mutationFn;
 
     const mockRequest: BacktestRequest = {
-      capital: 10000,
-      start_date: "2024-01-01",
-      end_date: "2024-12-31",
+      token_symbol: "BTC",
+      total_capital: 10000,
+      configs: [{ config_id: "dca_classic", strategy_id: "dca_classic" }],
     };
 
     await mutationFn(mockRequest);

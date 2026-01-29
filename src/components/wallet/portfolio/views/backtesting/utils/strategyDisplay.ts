@@ -1,21 +1,15 @@
-import {
-    ALLOCATION_STRATEGY_COLORS,
-    getAllocationStrategyDisplayName,
-    STRATEGY_COLORS,
-    STRATEGY_DISPLAY_NAMES,
-} from "../constants";
+const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
+  dca_classic: "DCA Classic",
+  simple_regime: "Simple Regime",
+};
+
+const STRATEGY_COLORS: Record<string, string> = {
+  dca_classic: "#4b5563",
+  simple_regime: "#3b82f6",
+};
 
 export function getStrategyDisplayName(strategyId: string): string {
-  if (STRATEGY_DISPLAY_NAMES[strategyId]) {
-    return STRATEGY_DISPLAY_NAMES[strategyId];
-  }
-
-  if (strategyId.startsWith("smart_dca_")) {
-    const configId = strategyId.replace("smart_dca_", "");
-    return getAllocationStrategyDisplayName(configId);
-  }
-
-  return strategyId.replace(/_/g, " ");
+  return STRATEGY_DISPLAY_NAMES[strategyId] ?? strategyId.replace(/_/g, " ");
 }
 
 export function getStrategyColor(strategyId: string): string {
@@ -23,11 +17,8 @@ export function getStrategyColor(strategyId: string): string {
     return STRATEGY_COLORS[strategyId];
   }
 
-  if (ALLOCATION_STRATEGY_COLORS[strategyId]) {
-    return ALLOCATION_STRATEGY_COLORS[strategyId];
-  }
-
   const fallbackColors = [
+    "#06b6d4",
     "#8b5cf6",
     "#ec4899",
     "#f97316",
@@ -43,7 +34,7 @@ export function getStrategyColor(strategyId: string): string {
     hash = strategyId.charCodeAt(i) + ((hash << 5) - hash);
   }
 
-  return fallbackColors[Math.abs(hash) % fallbackColors.length] || "#6b7280";
+  return fallbackColors[Math.abs(hash) % fallbackColors.length] ?? "#6b7280";
 }
 
 /**

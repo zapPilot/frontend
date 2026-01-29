@@ -4,7 +4,9 @@ import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import {
   BacktestRequest,
   BacktestResponse,
+  BacktestStrategyCatalogResponseV3,
   BacktestTimelinePoint,
+  BacktestTransferMetadata,
 } from "@/types/backtesting";
 
 const createBacktestingServiceError = createErrorMapper(
@@ -21,6 +23,42 @@ const createBacktestingServiceError = createErrorMapper(
 );
 
 const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
+
+function extractTransfers(
+  strategy: BacktestTimelinePoint["strategies"][string] | undefined
+): BacktestTransferMetadata[] {
+  const metrics = strategy?.metrics as
+    | { metadata?: { transfers?: unknown } }
+    | undefined;
+  const transfers = metrics?.metadata?.transfers;
+  if (!Array.isArray(transfers)) return [];
+
+  return transfers
+    .map(t => {
+      if (!t || typeof t !== "object") return null;
+      const maybe = t as Partial<BacktestTransferMetadata>;
+      if (
+        (maybe.from_bucket !== "spot" &&
+          maybe.from_bucket !== "stable" &&
+          maybe.from_bucket !== "lp") ||
+        (maybe.to_bucket !== "spot" &&
+          maybe.to_bucket !== "stable" &&
+          maybe.to_bucket !== "lp") ||
+        typeof maybe.amount_usd !== "number"
+      ) {
+        return null;
+      }
+      return maybe as BacktestTransferMetadata;
+    })
+    .filter((t): t is BacktestTransferMetadata => t != null);
+}
+
+function isDcaBaselineStrategy(
+  strategy: BacktestTimelinePoint["strategies"][string] | undefined
+): boolean {
+  const metrics = strategy?.metrics as { signal?: unknown } | undefined;
+  return metrics?.signal === "dca";
+}
 
 /**
  * Minimum number of data points to keep in the timeline for chart rendering.
@@ -68,8 +106,12 @@ function sampleTimelineData(
 
   // Preserve events from ALL strategies except dca_classic (baseline)
   for (const [index, point] of timeline.entries()) {
-    for (const [strategyId, strategy] of Object.entries(point.strategies)) {
-      if (strategyId !== "dca_classic" && strategy?.event) {
+    for (const strategy of Object.values(point.strategies)) {
+      if (isDcaBaselineStrategy(strategy)) continue;
+
+      const hasEvent = strategy?.event != null;
+      const hasTransfers = extractTransfers(strategy).length > 0;
+      if (hasEvent || hasTransfers) {
         criticalIndices.add(index);
         break;
       }
@@ -122,13 +164,8 @@ function sampleTimelineData(
   // Map sampled non-critical back to indices
   const sampledNonCriticalIndices = new Set<number>();
   for (const point of sampledNonCritical) {
-    const index = timeline.findIndex(
-      p =>
-        p &&
-        p.date === point.date &&
-        p.price === point.price &&
-        p.sentiment === point.sentiment
-    );
+    // date is unique for daily candles; keying by it avoids token_price shape issues
+    const index = timeline.findIndex(p => p && p.date === point.date);
     if (index !== -1) {
       sampledNonCriticalIndices.add(index);
     }
@@ -204,7 +241,7 @@ export async function runBacktest(
 ): Promise<BacktestResponse> {
   const response = await callBacktestingApi(() =>
     httpUtils.analyticsEngine.post<BacktestResponse>(
-      "/api/v2/backtesting/dca-comparison",
+      "/api/v3/backtesting/compare",
       request,
       {
         timeout: 600000, // 10 minutes (20x default timeout for complex backtests)
@@ -217,4 +254,12 @@ export async function runBacktest(
     ...response,
     timeline: sampleTimelineData(response.timeline),
   };
+}
+
+export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
+  return callBacktestingApi(() =>
+    httpUtils.analyticsEngine.get<BacktestStrategyCatalogResponseV3>(
+      "/api/v3/backtesting/strategies"
+    )
+  );
 }

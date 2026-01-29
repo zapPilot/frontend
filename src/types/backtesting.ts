@@ -1,42 +1,26 @@
 /**
- * Target allocation percentages for a specific market regime.
- * Percentages should sum to 100.
+ * Backtesting types aligned with analytics-engine v3 endpoints.
+ *
+ * - GET  /api/v3/backtesting/strategies
+ * - POST /api/v3/backtesting/compare
  */
-export interface RegimeAllocation {
-  spot: number; // 0-100%
-  lp: number; // 0-100%
-  stable: number; // 0-100%
-}
 
-/**
- * Complete allocation configuration set with a unique identifier.
- * Defines target allocations for each market regime.
- */
-export interface AllocationConfig {
-  id: string; // Unique identifier for this config (e.g., "aggressive", "conservative")
-  name: string; // Display name (e.g., "Aggressive Growth")
-  description?: string; // Optional description
-  extreme_fear: RegimeAllocation;
-  fear: RegimeAllocation;
-  neutral: RegimeAllocation;
-  greed: RegimeAllocation;
-  extreme_greed: RegimeAllocation;
+export type BacktestStrategyIdV3 = "dca_classic" | "simple_regime";
+
+export interface BacktestCompareConfigV3 {
+  /** Client-provided identifier; becomes the response `strategy_id` key. */
+  config_id: string;
+  strategy_id: BacktestStrategyIdV3;
+  params?: Record<string, unknown>;
 }
 
 export interface BacktestRequest {
   token_symbol: string;
   start_date?: string; // YYYY-MM-DD
   end_date?: string; // YYYY-MM-DD
-  total_capital: number; // Total starting capital (split 50% BTC, 50% stables)
   days?: number;
-  drift_threshold?: number; // Optional drift threshold parameter used by backend to control rebalancing sensitivity (see analytics-engine backtesting docs for units and defaults)
-  strategies?: ("smart_dca" | "simple_regime")[]; // Array of strategies to compare: smart_dca (multi-step) or simple_regime (pattern-based)
-  /**
-   * NEW: Array of allocation configurations to test.
-   * Backend will create a separate strategy variant for each configuration.
-   * Strategy IDs will be: `smart_dca_${config.id}`
-   */
-  allocation_configs?: AllocationConfig[];
+  total_capital: number;
+  configs: BacktestCompareConfigV3[];
 }
 
 export interface BacktestStrategySummary {
@@ -46,65 +30,69 @@ export interface BacktestStrategySummary {
   final_value: number;
   roi_percent: number;
   trade_count: number;
+
+  // Risk Metrics (optional on older payloads)
   max_drawdown_percent: number | null;
-  parameters: Record<string, unknown>;
-  // Risk-adjusted return metrics
   sharpe_ratio?: number | null;
   sortino_ratio?: number | null;
   calmar_ratio?: number | null;
   volatility?: number | null;
   beta?: number | null;
+
+  parameters: Record<string, unknown>;
 }
 
-export interface BacktestStrategyMetrics {
-  regime?: string | null;
-  spot_balance?: number;
-  lp_balance?: number;
-  stable_balance?: number;
-  allocation?: {
-    spot: number;
-    lp: number;
-    stable: number;
-  };
-  effective_exposure?: number;
-  target_reached?: boolean;
+export interface BacktestPortfolioConstituant {
+  spot: number;
+  stable: number;
+  lp: number;
 }
 
-export type BacktestEvent =
-  | "buy"
-  | "sell"
-  | "buy_spot"
-  | "sell_spot"
-  | "buy_lp"
-  | "sell_lp"
-  | null;
+export type BacktestEvent = "buy" | "sell" | "rebalance" | string | null;
 
-export interface BacktestStrategyTimeline {
+export interface BacktestStrategyPoint {
   portfolio_value: number;
-  capital_invested: number;
-  holdings_value: number;
-  available_capital: number;
-  roi_percent: number;
+  portfolio_constituant: BacktestPortfolioConstituant;
   event: BacktestEvent;
-  metrics: BacktestStrategyMetrics | Record<string, never>;
+  metrics: Record<string, unknown>;
 }
 
 /**
  * Dynamic strategy set supporting any number of strategies.
- * Keys are strategy IDs (e.g., "dca_classic", "smart_dca", "momentum", "sentiment_dca").
- * Always includes at least "dca_classic" and "smart_dca" (the core comparison strategies).
+ * Keys are config IDs (strategy_id in the response).
  */
 export type BacktestStrategySet<T> = Record<string, T>;
 
 export interface BacktestTimelinePoint {
   date: string;
-  price: number;
+  token_price: Record<string, number>;
   sentiment: number | null;
   sentiment_label: string | null;
-  strategies: BacktestStrategySet<BacktestStrategyTimeline>;
+  strategies: BacktestStrategySet<BacktestStrategyPoint>;
 }
 
 export interface BacktestResponse {
   strategies: BacktestStrategySet<BacktestStrategySummary>;
   timeline: BacktestTimelinePoint[];
+}
+
+export type BacktestBucket = "spot" | "stable" | "lp";
+
+export interface BacktestTransferMetadata {
+  from_bucket: BacktestBucket;
+  to_bucket: BacktestBucket;
+  amount_usd: number;
+}
+
+export interface BacktestStrategyCatalogEntryV3 {
+  id: BacktestStrategyIdV3;
+  display_name: string;
+  description?: string | null;
+  hyperparam_schema: Record<string, unknown>;
+  recommended_params: Record<string, unknown>;
+}
+
+export interface BacktestStrategyCatalogResponseV3 {
+  catalog_version: string;
+  strategies: BacktestStrategyCatalogEntryV3[];
 }

@@ -2,7 +2,10 @@
 
 import { useMemo } from "react";
 
-import type { BacktestResponse } from "@/types/backtesting";
+import type {
+  BacktestResponse,
+  BacktestTimelinePoint,
+} from "@/types/backtesting";
 
 import { getStrategyDisplayName } from "../utils/strategyDisplay";
 
@@ -16,72 +19,181 @@ export interface UseBacktestResultReturn {
   daysDisplay: string;
 }
 
+type SignalKey = "buy_spot" | "sell_spot" | "buy_lp" | "sell_lp";
+
+interface SignalAccumulator {
+  buySpotSignal: number | null;
+  sellSpotSignal: number | null;
+  buyLpSignal: number | null;
+  sellLpSignal: number | null;
+  eventStrategies: Record<SignalKey, string[]>;
+}
+
+function sentimentLabelToIndex(
+  label: string | null | undefined
+): number | null {
+  switch (label) {
+    case "extreme_fear":
+      return 0;
+    case "fear":
+      return 1;
+    case "neutral":
+      return 2;
+    case "greed":
+      return 3;
+    case "extreme_greed":
+      return 4;
+    default:
+      return null;
+  }
+}
+
+function extractTransfers(
+  metrics: Record<string, unknown> | undefined
+): { from_bucket?: string; to_bucket?: string }[] {
+  const metadata = (metrics as { metadata?: unknown } | undefined)?.metadata as
+    | { transfers?: unknown }
+    | undefined;
+  const transfers = metadata?.transfers;
+  if (!Array.isArray(transfers)) return [];
+  return transfers.filter(
+    (t): t is { from_bucket?: string; to_bucket?: string } =>
+      t != null && typeof t === "object"
+  );
+}
+
+function isDcaBaseline(metrics: Record<string, unknown> | undefined): boolean {
+  const signal = (metrics as { signal?: unknown } | undefined)?.signal;
+  return signal === "dca";
+}
+
+function classifyTransfer(from: string, to: string): SignalKey | null {
+  // spot -> stable/lp = sell_spot
+  if (from === "spot" && (to === "stable" || to === "lp")) {
+    return "sell_spot";
+  }
+  // stable/lp -> spot = buy_spot
+  if (to === "spot" && (from === "stable" || from === "lp")) {
+    return "buy_spot";
+  }
+  // stable/spot -> lp = buy_lp
+  if (to === "lp" && (from === "stable" || from === "spot")) {
+    return "buy_lp";
+  }
+  // lp -> stable/spot = sell_lp
+  if (from === "lp" && (to === "stable" || to === "spot")) {
+    return "sell_lp";
+  }
+  return null;
+}
+
+function updateSignal(
+  acc: SignalAccumulator,
+  signalKey: SignalKey,
+  portfolioValue: number,
+  displayName: string
+): void {
+  const signalMap: Record<
+    SignalKey,
+    "buySpotSignal" | "sellSpotSignal" | "buyLpSignal" | "sellLpSignal"
+  > = {
+    buy_spot: "buySpotSignal",
+    sell_spot: "sellSpotSignal",
+    buy_lp: "buyLpSignal",
+    sell_lp: "sellLpSignal",
+  };
+
+  const field = signalMap[signalKey];
+  const current = acc[field];
+  acc[field] =
+    current == null ? portfolioValue : Math.max(current, portfolioValue);
+
+  const strategies = acc.eventStrategies[signalKey];
+  if (!strategies.includes(displayName)) {
+    strategies.push(displayName);
+  }
+}
+
+function processStrategyTransfers(
+  point: BacktestTimelinePoint,
+  strategyIds: string[],
+  acc: SignalAccumulator
+): void {
+  for (const strategyId of strategyIds) {
+    const strategy = point.strategies[strategyId];
+    if (!strategy) continue;
+    if (isDcaBaseline(strategy.metrics)) continue;
+
+    const transfers = extractTransfers(strategy.metrics);
+    if (transfers.length === 0) continue;
+
+    const displayName = getStrategyDisplayName(strategyId);
+    for (const transfer of transfers) {
+      const { from_bucket: from, to_bucket: to } = transfer;
+      if (!from || !to) continue;
+
+      const signalKey = classifyTransfer(from, to);
+      if (signalKey) {
+        updateSignal(acc, signalKey, strategy.portfolio_value, displayName);
+      }
+    }
+  }
+}
+
+function createSignalAccumulator(): SignalAccumulator {
+  return {
+    buySpotSignal: null,
+    sellSpotSignal: null,
+    buyLpSignal: null,
+    sellLpSignal: null,
+    eventStrategies: {
+      buy_spot: [],
+      sell_spot: [],
+      buy_lp: [],
+      sell_lp: [],
+    },
+  };
+}
+
+function buildChartPoint(
+  point: BacktestTimelinePoint,
+  strategyIds: string[]
+): Record<string, unknown> {
+  const data: Record<string, unknown> = { ...point };
+
+  for (const strategyId of strategyIds) {
+    const strategy = point.strategies[strategyId];
+    if (strategy) {
+      data[`${strategyId}_value`] = strategy.portfolio_value;
+    }
+  }
+
+  data["sentiment"] = sentimentLabelToIndex(point.sentiment_label ?? undefined);
+
+  const acc = createSignalAccumulator();
+  processStrategyTransfers(point, strategyIds, acc);
+
+  data["buySpotSignal"] = acc.buySpotSignal;
+  data["sellSpotSignal"] = acc.sellSpotSignal;
+  data["buyLpSignal"] = acc.buyLpSignal;
+  data["sellLpSignal"] = acc.sellLpSignal;
+  data["eventStrategies"] = acc.eventStrategies;
+
+  return data;
+}
+
 export function useBacktestResult(
   response: BacktestResponse | null,
   requestedDays?: number
 ): UseBacktestResultReturn {
   const strategyIds = useMemo(() => {
-    if (!response) return ["dca_classic", "smart_dca"];
-    return Object.keys(response.strategies);
+    if (!response) return [];
+    return Object.keys(response.strategies ?? {});
   }, [response]);
 
   const chartData = useMemo(() => {
     if (!response) return [];
-    return response.timeline.map(point => {
-      const data: Record<string, unknown> = { ...point };
-
-      for (const strategyId of strategyIds) {
-        const strategy = point.strategies[strategyId];
-        if (strategy) {
-          data[`${strategyId}_value`] = strategy.portfolio_value;
-        }
-      }
-
-      let buySpotSignal: number | null = null;
-      let sellSpotSignal: number | null = null;
-      let buyLpSignal: number | null = null;
-      let sellLpSignal: number | null = null;
-      const eventStrategies: Record<string, string[]> = {
-        buy_spot: [],
-        sell_spot: [],
-        buy_lp: [],
-        sell_lp: [],
-      };
-
-      // Collect events from ALL strategies except dca_classic (baseline)
-      for (const strategyId of strategyIds) {
-        if (strategyId === "dca_classic") continue;
-        const strategy = point.strategies[strategyId];
-        if (strategy?.event) {
-          const displayName = getStrategyDisplayName(strategyId);
-          switch (strategy.event) {
-            case "buy_spot":
-              buySpotSignal = strategy.portfolio_value;
-              eventStrategies["buy_spot"]?.push(displayName);
-              break;
-            case "sell_spot":
-              sellSpotSignal = strategy.portfolio_value;
-              eventStrategies["sell_spot"]?.push(displayName);
-              break;
-            case "buy_lp":
-              buyLpSignal = strategy.portfolio_value;
-              eventStrategies["buy_lp"]?.push(displayName);
-              break;
-            case "sell_lp":
-              sellLpSignal = strategy.portfolio_value;
-              eventStrategies["sell_lp"]?.push(displayName);
-              break;
-          }
-        }
-      }
-
-      data["buySpotSignal"] = buySpotSignal;
-      data["sellSpotSignal"] = sellSpotSignal;
-      data["buyLpSignal"] = buyLpSignal;
-      data["sellLpSignal"] = sellLpSignal;
-      data["eventStrategies"] = eventStrategies;
-      return data;
-    });
+    return response.timeline.map(point => buildChartPoint(point, strategyIds));
   }, [response, strategyIds]);
 
   const yAxisDomain = useMemo((): [number, number] => {
@@ -126,12 +238,16 @@ export function useBacktestResult(
   }, [response]);
 
   const sortedStrategyIds = useMemo(() => {
-    const core = ["dca_classic", "smart_dca"];
-    const rest = strategyIds
-      .filter(id => !core.includes(id))
-      .sort((a, b) => a.localeCompare(b));
-    return [...core.filter(id => strategyIds.includes(id)), ...rest];
-  }, [strategyIds]);
+    if (!response) return [];
+    const ids = [...strategyIds];
+    const baseline = ids.includes("dca_classic") ? ["dca_classic"] : [];
+    const rest = ids
+      .filter(id => id !== "dca_classic")
+      .sort((a, b) =>
+        getStrategyDisplayName(a).localeCompare(getStrategyDisplayName(b))
+      );
+    return [...baseline, ...rest];
+  }, [response, strategyIds]);
 
   const daysDisplay = useMemo(() => {
     if (
