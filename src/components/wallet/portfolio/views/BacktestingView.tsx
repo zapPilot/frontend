@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Play, RefreshCw, Zap } from "lucide-react";
+import { Activity, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ import type {
 } from "@/types/backtesting";
 
 import { BacktestChart } from "./backtesting/components/BacktestChart";
+import { BacktestConfiguration } from "./backtesting/components/BacktestConfiguration";
 import { BacktestMetrics } from "./backtesting/components/BacktestMetrics";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 
@@ -117,20 +118,6 @@ export function BacktestingView() {
     }
   }, [editorValue]);
 
-  const pacingPolicies = useMemo(() => {
-    const simpleRegime = catalog?.strategies.find(
-      s => s.id === "simple_regime"
-    );
-    const schema = simpleRegime?.hyperparam_schema as
-      | Record<string, unknown>
-      | undefined;
-    const props = schema?.["properties"] as Record<string, unknown> | undefined;
-    const pacingPolicy = props?.["pacing_policy"] as
-      | Record<string, unknown>
-      | undefined;
-    return (pacingPolicy?.["enum"] as string[] | undefined) ?? [];
-  }, [catalog]);
-
   const handleRunBacktest = () => {
     if (!parsedEditorPayload) {
       setEditorError("Invalid JSON: unable to parse.");
@@ -181,8 +168,6 @@ export function BacktestingView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const showSingleResults = backtestData != null;
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -195,23 +180,6 @@ export function BacktestingView() {
             Compare Normal DCA vs Regime-Based Strategy performance
           </p>
         </div>
-        <button
-          onClick={handleRunBacktest}
-          disabled={isPending}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-900/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
-        >
-          {isPending ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Running...
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current group-hover:scale-110 transition-transform" />
-              Run Backtest
-            </>
-          )}
-        </button>
       </div>
 
       {error && (
@@ -225,125 +193,61 @@ export function BacktestingView() {
         </BaseCard>
       )}
 
-      <BaseCard variant="glass" className="p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-          <div>
-            <div className="text-sm font-medium text-white">
-              Request Payload (v3)
-            </div>
-            <div className="text-xs text-gray-500">
-              Edit the full JSON payload (globals + configs[]).{" "}
-              {catalog?.catalog_version ? (
-                <>Catalog v{catalog.catalog_version}</>
-              ) : (
-                <>Catalog unavailable</>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                try {
-                  const formatted = JSON.stringify(
-                    JSON.parse(editorValue),
-                    null,
-                    2
-                  );
-                  setEditorValue(formatted);
-                  setEditorError(null);
-                } catch {
-                  setEditorError("Invalid JSON: unable to format.");
-                }
-              }}
-              className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-100 rounded-lg text-xs font-medium transition-colors"
-            >
-              Format
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                const payload = buildDefaultPayload(catalog);
-                userEdited.current = false;
-                setEditorValue(JSON.stringify(payload, null, 2));
-                setEditorError(null);
-              }}
-              className="px-3 py-2 bg-gray-800 hover:bg-gray-700 text-gray-100 rounded-lg text-xs font-medium transition-colors"
-            >
-              Reset
-            </button>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4 xl:col-span-3">
+          <BacktestConfiguration
+            editorValue={editorValue}
+            onEditorValueChange={val => {
+              userEdited.current = true;
+              setEditorValue(val);
+            }}
+            editorError={editorError}
+            setEditorError={setEditorError}
+            onRun={handleRunBacktest}
+            isPending={isPending}
+            catalog={catalog}
+            onReset={() => {
+              const payload = buildDefaultPayload(catalog);
+              userEdited.current = false;
+              setEditorValue(JSON.stringify(payload, null, 2));
+              setEditorError(null);
+            }}
+          />
         </div>
 
-        <textarea
-          value={editorValue}
-          onChange={e => {
-            userEdited.current = true;
-            setEditorValue(e.target.value);
-          }}
-          spellCheck={false}
-          className="w-full min-h-[220px] font-mono text-xs leading-relaxed bg-gray-950/40 border border-gray-800 rounded-xl p-3 text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600/40"
-        />
-
-        {editorError && (
-          <div className="mt-3 text-xs text-red-400 whitespace-pre-wrap">
-            {editorError}
-          </div>
-        )}
-
-        {catalog && (
-          <div className="mt-3 text-xs text-gray-500 space-y-1">
-            <div>
-              <span className="text-gray-400 font-medium">
-                Available strategy_id:
-              </span>{" "}
-              {catalog.strategies.map(s => s.id).join(", ")}
-            </div>
-            {pacingPolicies.length > 0 && (
-              <div>
-                <span className="text-gray-400 font-medium">
-                  Available pacing_policy:
-                </span>{" "}
-                {pacingPolicies.join(", ")}
+        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+          {!backtestData ? (
+            <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
+                <Zap className="relative w-16 h-16 text-gray-700 mb-6" />
               </div>
-            )}
-          </div>
-        )}
-      </BaseCard>
-
-      {!backtestData && (
-        <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
-          <div className="relative">
-            <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
-            <Zap className="relative w-16 h-16 text-gray-700 mb-6" />
-          </div>
-          <h3 className="text-xl font-medium text-gray-200 mb-2">
-            Ready to Compare Strategies
-          </h3>
-          <p className="text-sm text-gray-500 max-w-md mx-auto">
-            Click &quot;Run Backtest&quot; to see how the Zap Pilot regime-based
-            strategy compares to normal DCA over the last 90 days.
-          </p>
+              <h3 className="text-xl font-medium text-gray-200 mb-2">
+                Ready to Compare Strategies
+              </h3>
+              <p className="text-sm text-gray-500 max-w-md mx-auto">
+                Click &quot;Run Backtest&quot; to see how the Zap Pilot
+                regime-based strategy compares to normal DCA.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
+              <BacktestMetrics
+                summary={summary}
+                sortedStrategyIds={sortedStrategyIds}
+                actualDays={actualDays}
+                daysDisplay={daysDisplay}
+              />
+              <BacktestChart
+                chartData={chartData}
+                sortedStrategyIds={sortedStrategyIds}
+                yAxisDomain={yAxisDomain}
+                actualDays={actualDays}
+              />
+            </div>
+          )}
         </div>
-      )}
-
-      {showSingleResults && (
-        <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
-          <BacktestMetrics
-            summary={summary}
-            sortedStrategyIds={sortedStrategyIds}
-            actualDays={actualDays}
-            daysDisplay={daysDisplay}
-          />
-          <BacktestChart
-            chartData={chartData}
-            sortedStrategyIds={sortedStrategyIds}
-            yAxisDomain={yAxisDomain}
-            actualDays={actualDays}
-          />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

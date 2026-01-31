@@ -3,7 +3,10 @@ import { useMemo } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
-import { getStrategyColor, getStrategyDisplayName } from "./utils/strategyDisplay";
+import {
+  getStrategyColor,
+  getStrategyDisplayName,
+} from "./utils/strategyDisplay";
 
 export interface StrategyMetric {
   strategyId: string;
@@ -29,19 +32,6 @@ export interface ComparisonMetricCardProps {
 /**
  * ComparisonMetricCard displays a metric comparison across multiple strategies
  * with horizontal bar visualization and sorted ranking.
- *
- * @example
- * ```tsx
- * <ComparisonMetricCard
- *   label="ROI"
- *   metrics={[
- *     { strategyId: "smart_dca", value: 45.2, formatted: "+45.2%" },
- *     { strategyId: "dca_classic", value: 38.1, formatted: "+38.1%" },
- *   ]}
- *   highlightMode="highest"
- *   unit="%"
- * />
- * ```
  */
 export function ComparisonMetricCard({
   label,
@@ -51,16 +41,14 @@ export function ComparisonMetricCard({
 }: ComparisonMetricCardProps) {
   // Filter out null values and sort by performance
   const sortedMetrics = useMemo(() => {
-    const validMetrics = metrics.filter(m => m.value !== null) as (StrategyMetric & { value: number })[];
+    const validMetrics = metrics.filter(
+      m => m.value !== null
+    ) as (StrategyMetric & { value: number })[];
 
     return validMetrics.sort((a, b) => {
       if (highlightMode === "highest") {
         return b.value - a.value; // Descending for highest
       }
-      // For "lowest" mode: lower is better
-      // For negative values (drawdown): less negative is better, so descending (b - a) puts best first
-      // For positive values (volatility, beta): lower is better, so ascending (a - b) puts best first
-      // Check if values are negative to determine sort direction
       const allNegative = validMetrics.every(m => m.value < 0);
       if (allNegative) {
         return b.value - a.value; // Descending for negatives (less negative = better)
@@ -78,15 +66,12 @@ export function ComparisonMetricCard({
     const max = Math.max(...values);
     const range = max - min;
 
-    // If all values are the same, show 100% for all
     if (range === 0) {
       return sortedMetrics.map(() => 100);
     }
 
-    // Normalize to 20-100% range for visual clarity
     return sortedMetrics.map(m => {
       const normalized = (m.value - min) / range;
-      // For "lowest" mode, invert the bar (best/lowest = widest bar)
       const adjusted = highlightMode === "lowest" ? 1 - normalized : normalized;
       return 20 + adjusted * 80; // Map to 20-100% range
     });
@@ -94,8 +79,10 @@ export function ComparisonMetricCard({
 
   if (sortedMetrics.length === 0) {
     return (
-      <BaseCard variant="glass" className="p-4">
-        <div className="text-xs font-medium text-gray-400 mb-2">{label}</div>
+      <BaseCard variant="glass" className="p-4 overflow-hidden">
+        <div className="text-xs font-medium text-gray-400 mb-2 truncate">
+          {label}
+        </div>
         <div className="text-sm text-gray-500">No data</div>
       </BaseCard>
     );
@@ -104,15 +91,20 @@ export function ComparisonMetricCard({
   const bestIndex = 0; // First item is always best after sorting
 
   return (
-    <BaseCard variant="glass" className="p-4">
+    <BaseCard
+      variant="glass"
+      className="p-4 overflow-hidden flex flex-col min-w-0"
+    >
       {/* Label */}
-      <div className="text-xs font-medium text-gray-400 mb-3 flex items-center gap-1">
-        {label}
-        {unit && <span className="text-gray-500">({unit})</span>}
+      <div className="text-xs font-medium text-gray-400 mb-3 flex items-center gap-1 min-w-0">
+        <span className="truncate" title={label}>
+          {label}
+        </span>
+        {unit && <span className="text-gray-500 flex-shrink-0">({unit})</span>}
       </div>
 
-      {/* Visual comparison bar (shows best strategy's relative performance) */}
-      <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-4">
+      {/* Visual comparison bar */}
+      <div className="h-2 bg-gray-800 rounded-full overflow-hidden mb-4 flex-shrink-0">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{
@@ -125,7 +117,7 @@ export function ComparisonMetricCard({
       </div>
 
       {/* Strategy ranking list */}
-      <div className="space-y-2">
+      <div className="space-y-2 min-w-0">
         {sortedMetrics.map((metric, index) => {
           const isBest = index === bestIndex;
           const color = getStrategyColor(metric.strategyId);
@@ -134,25 +126,28 @@ export function ComparisonMetricCard({
           return (
             <div
               key={metric.strategyId}
-              className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition-colors ${
+              className={`flex items-center justify-between py-1.5 px-2 rounded-lg transition-colors min-w-0 gap-2 ${
                 isBest ? "bg-blue-500/10" : "hover:bg-gray-800/50"
               }`}
             >
               {/* Strategy name with color dot */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: color }}
                 />
                 <span
-                  className={`text-xs ${isBest ? "text-white font-medium" : "text-gray-400"}`}
+                  className={`text-xs truncate ${
+                    isBest ? "text-white font-medium" : "text-gray-400"
+                  }`}
+                  title={displayName}
                 >
                   {displayName}
                 </span>
               </div>
 
               {/* Value with optional star for best */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
                 <span
                   className={`text-sm font-mono ${
                     isBest ? "text-white font-semibold" : "text-gray-300"
@@ -161,7 +156,7 @@ export function ComparisonMetricCard({
                   {metric.formatted}
                 </span>
                 {isBest && (
-                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                  <Star className="w-3 h-3 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                 )}
               </div>
             </div>
