@@ -2,7 +2,12 @@ import { getBarStyle } from "@/constants/assets";
 
 import { AllocationLegend } from "./AllocationLegend";
 
-interface TargetAsset {
+/**
+ * Simplified asset interface for target allocations.
+ * Distinct from AllocationConstituent as this represents a desired state (target)
+ * rather than a current wallet state, and is purely visual (percentage based).
+ */
+export interface TargetAsset {
   symbol: string;
   percentage: number;
   color: string;
@@ -18,7 +23,8 @@ const STYLES = {
 } as const;
 
 /**
- * TargetAllocationBar - Renders target portfolio allocation as a horizontal bar with legend
+ * TargetAllocationBar - Renders target portfolio allocation as a horizontal bar with legend.
+ * This is a lightweight, static visualization compared to the interactive AllocationBars.
  */
 export function TargetAllocationBar({ assets }: TargetAllocationBarProps) {
   if (assets.length === 0) {
