@@ -111,8 +111,12 @@ describe("BacktestingView", () => {
       render(<BacktestingView />);
     });
 
-    expect(screen.getByText(/Running.../i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Running.../i })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Running\.\.\./i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Running\.\.\./i })
+    ).toBeDisabled();
   });
 
   it("displays error message from API", async () => {
@@ -728,7 +732,9 @@ describe("BacktestingView", () => {
       expect(screen.getByText(/Available pacing_policy:/i)).toBeInTheDocument();
 
       // Verify "Running..." button is shown
-      expect(screen.getByText(/Running.../i)).toBeInTheDocument();
+      expect(
+        screen.getByRole("button", { name: /Running\.\.\./i })
+      ).toBeInTheDocument();
     });
 
     it("should keep hints visible when user edits JSON", async () => {

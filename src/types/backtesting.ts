@@ -44,7 +44,7 @@ export interface BacktestStrategySummary {
 }
 
 export interface BacktestPortfolioConstituant {
-  spot: number;
+  spot: Record<string, number>;
   stable: number;
   lp: number;
 }

@@ -4,7 +4,7 @@
  * Tests progress visualization for multi-lane intent execution
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { IntentVisualizer } from "@/components/wallet/portfolio/modals/visualizers/IntentVisualizer";
@@ -149,17 +149,21 @@ describe("IntentVisualizer", () => {
     }
   });
 
-  it("should reset progress when props change", () => {
+  it("should reset progress when props change", async () => {
     vi.useFakeTimers();
     try {
       const { rerender } = render(<IntentVisualizer />);
 
       // Advance time to create progress
-      vi.advanceTimersByTime(1000);
+      await act(async () => {
+        vi.advanceTimersByTime(1000);
+      });
 
       // Change props (new lanes)
       const newLanes = [{ id: "new", name: "New Lane", est: "1s" }];
-      rerender(<IntentVisualizer lanes={newLanes} />);
+      await act(async () => {
+        rerender(<IntentVisualizer lanes={newLanes} />);
+      });
 
       // Progress should reset (new lane renders synchronously)
       expect(screen.getByAltText("New Lane")).toBeInTheDocument();

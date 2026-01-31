@@ -25,6 +25,8 @@ vi.mock("@/components/WalletManager", () => ({
 // Router mock
 const replaceMock = vi.fn();
 const pathnameMock = vi.fn().mockReturnValue("/");
+const searchParamsMock = vi.fn().mockReturnValue(new URLSearchParams());
+
 vi.mock("next/navigation", async () => {
   const actual =
     await vi.importActual<typeof import("next/navigation")>("next/navigation");
@@ -32,6 +34,7 @@ vi.mock("next/navigation", async () => {
     ...actual,
     useRouter: () => ({ replace: replaceMock }),
     usePathname: () => pathnameMock(),
+    useSearchParams: () => searchParamsMock(),
   };
 });
 
@@ -57,6 +60,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
   beforeEach(() => {
     replaceMock.mockReset();
     pathnameMock.mockReturnValue("/");
+    searchParamsMock.mockReturnValue(new URLSearchParams());
     mockIsConnected = false;
     mockUserId = null;
     mockLoading = false;
@@ -92,7 +96,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
 
     it("should preserve existing query parameters during redirect", async () => {
       // Start on home page with existing query params
-      window.history.pushState({}, "", "/?referral=abc123");
+      searchParamsMock.mockReturnValue(new URLSearchParams("referral=abc123"));
 
       mockIsConnected = true;
       mockUserId = "0xUSER123";
@@ -262,7 +266,7 @@ describe("BundlePageClient - Wallet Connection Redirect", () => {
     });
 
     it("should handle multiple query parameters correctly", async () => {
-      window.history.pushState({}, "", "/?foo=bar&baz=qux");
+      searchParamsMock.mockReturnValue(new URLSearchParams("foo=bar&baz=qux"));
 
       mockIsConnected = true;
       mockUserId = "0xUSER";

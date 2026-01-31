@@ -89,6 +89,9 @@ const mixedCryptoAssets: AllocationConstituent[] = [
 
 describe("AllocationBars", () => {
   beforeEach(() => {
+    // Mock location.reload to avoid JSDOM navigation error
+    vi.stubGlobal("location", { reload: vi.fn() });
+
     // Mock getBoundingClientRect for tooltip positioning tests
     Element.prototype.getBoundingClientRect = vi.fn().mockReturnValue({
       width: 100,

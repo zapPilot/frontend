@@ -73,8 +73,18 @@ export function BacktestConfiguration({
   const handleSimpleChange = (field: string, value: string | number) => {
     if (!parsedJson) return;
 
+    // Preserve formatting for numbers while typing (e.g. "10.") by storing as string
+    // until it is a clean number again.
+    let valueToStore = value;
+    if (typeof value === "string" && value !== "") {
+      const num = Number(value);
+      if (!isNaN(num) && String(num) === value) {
+        valueToStore = num;
+      }
+    }
+
     // Allow empty strings to be set in the state
-    const updated = { ...parsedJson, [field]: value };
+    const updated = { ...parsedJson, [field]: valueToStore };
     if (field === "days") {
       delete updated.start_date;
       delete updated.end_date;
@@ -166,12 +176,7 @@ export function BacktestConfiguration({
                 <input
                   type="number"
                   value={days ?? ""}
-                  onChange={e =>
-                    handleSimpleChange(
-                      "days",
-                      e.target.value === "" ? "" : parseInt(e.target.value) || 0
-                    )
-                  }
+                  onChange={e => handleSimpleChange("days", e.target.value)}
                   className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600/40 transition-all placeholder:text-gray-700"
                   placeholder="Custom days..."
                 />
@@ -192,12 +197,7 @@ export function BacktestConfiguration({
                   type="number"
                   value={totalCapital ?? ""}
                   onChange={e =>
-                    handleSimpleChange(
-                      "total_capital",
-                      e.target.value === ""
-                        ? ""
-                        : parseFloat(e.target.value) || 0
-                    )
+                    handleSimpleChange("total_capital", e.target.value)
                   }
                   className="w-full bg-gray-950/60 border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600/40 transition-all placeholder:text-gray-700"
                 />

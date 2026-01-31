@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Zap } from "lucide-react";
+import { Activity, RefreshCw, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 
@@ -21,8 +21,8 @@ const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
-  days: z.number().int().positive().optional(),
-  total_capital: z.number().positive(),
+  days: z.coerce.number().int().positive().optional(),
+  total_capital: z.coerce.number().positive(),
   configs: z
     .array(
       z.object({
@@ -218,7 +218,21 @@ export function BacktestingView() {
         </div>
 
         <div className="w-full space-y-6">
-          {!backtestData ? (
+          {isPending ? (
+            <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500 animate-pulse">
+              <div className="relative mb-6">
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
+                <RefreshCw className="relative w-16 h-16 text-blue-500 animate-spin" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-200 mb-2">
+                Running Backtest Simulation
+              </h3>
+              <p className="text-sm text-gray-500 max-w-md mx-auto">
+                Processing historical market data and calculating strategy
+                returns...
+              </p>
+            </div>
+          ) : !backtestData ? (
             <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
               <div className="relative">
                 <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />

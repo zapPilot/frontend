@@ -92,14 +92,18 @@ export function formatCurrency(
 
   const {
     isHidden = false,
-    minimumFractionDigits = 2,
-    maximumFractionDigits = 2,
     currency = PORTFOLIO_CONFIG.CURRENCY_CODE,
     locale = PORTFOLIO_CONFIG.CURRENCY_LOCALE,
     smartPrecision = false,
     threshold = 0.01,
     showNegative = true,
   } = options;
+
+  const maximumFractionDigits = options.maximumFractionDigits ?? 2;
+  const minimumFractionDigits = Math.min(
+    options.minimumFractionDigits ?? 2,
+    maximumFractionDigits
+  );
 
   if (isHidden) return PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER;
 

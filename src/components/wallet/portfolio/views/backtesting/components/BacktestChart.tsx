@@ -18,16 +18,8 @@ import {
   getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
+import { BacktestChartLegend } from "./BacktestChartLegend";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
-
-/** Signal legend configuration - single source of truth for colors and labels */
-const SIGNAL_LEGEND = [
-  { label: "Sentiment", color: "#a855f7" },
-  { label: "Buy Spot", color: "#22c55e" },
-  { label: "Sell Spot", color: "#ef4444" },
-  { label: "Buy LP", color: "#3b82f6" },
-  { label: "Sell LP", color: "#d946ef" },
-] as const;
 
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
@@ -62,36 +54,7 @@ export function BacktestChart({
             ({actualDays} Days)
           </span>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {sortedStrategyIds.map((strategyId, index) => {
-            const displayName = getStrategyDisplayName(strategyId);
-            const color = getStrategyColor(strategyId, index);
-            return (
-              <div
-                key={strategyId}
-                className="flex items-center gap-1.5 text-[10px] text-gray-400"
-              >
-                <div
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: color }}
-                />
-                {displayName}
-              </div>
-            );
-          })}
-          {SIGNAL_LEGEND.map(({ label, color }) => (
-            <div
-              key={label}
-              className="flex items-center gap-1.5 text-[10px] text-gray-400"
-            >
-              <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: color }}
-              />
-              {label}
-            </div>
-          ))}
-        </div>
+        <BacktestChartLegend sortedStrategyIds={sortedStrategyIds} />
       </div>
 
       <div className="flex-1 w-full pt-4 pr-4">
@@ -143,7 +106,7 @@ export function BacktestChart({
             <YAxis
               yAxisId="right"
               orientation="right"
-              domain={[0, 4]}
+              domain={[0, 100]}
               tick={{ fontSize: 10, fill: "#a855f7" }}
               tickLine={false}
               axisLine={false}
@@ -154,14 +117,10 @@ export function BacktestChart({
                 style: { fontSize: 10, fill: "#a855f7" },
               }}
               tickFormatter={(value: number) => {
-                const labels = [
-                  "Extreme Fear",
-                  "Fear",
-                  "Neutral",
-                  "Greed",
-                  "Extreme Greed",
-                ];
-                return labels[value] ?? String(value);
+                if (value === 0) return "Fear";
+                if (value === 50) return "Neutral";
+                if (value === 100) return "Greed";
+                return String(value);
               }}
             />
             <Tooltip

@@ -166,7 +166,9 @@ function buildChartPoint(
     }
   }
 
-  data["sentiment"] = sentimentLabelToIndex(point.sentiment_label ?? undefined);
+  data["sentiment"] =
+    point.sentiment ??
+    sentimentLabelToIndex(point.sentiment_label ?? undefined);
 
   const acc = createSignalAccumulator();
   processStrategyTransfers(point, strategyIds, acc);

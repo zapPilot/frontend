@@ -4,9 +4,9 @@ import { formatCurrency } from "@/utils";
 
 import {
   calculatePercentages,
-  getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
+import { AllocationBar } from "./AllocationBar";
 
 const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
   "Buy Spot": "buy_spot",
@@ -14,6 +14,8 @@ const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
   "Buy LP": "buy_lp",
   "Sell LP": "sell_lp",
 };
+
+const KNOWN_SIGNALS = ["Sentiment", "VIX"];
 
 export interface BacktestTooltipProps {
   active?: boolean;
@@ -26,73 +28,6 @@ export interface BacktestTooltipProps {
   label?: string | number;
   /** Strategy IDs in chart legend order. If provided, allocation bars use this order. */
   sortedStrategyIds?: string[];
-}
-
-interface AllocationBarProps {
-  displayName: string;
-  percentages: { spot: number; stable: number; lp: number };
-  strategyId?: string;
-  index?: number | undefined;
-}
-
-const BAR_SEGMENTS = [
-  { key: "spot", color: "bg-blue-500", label: "Spot" },
-  { key: "stable", color: "bg-gray-500", label: "Stable" },
-  { key: "lp", color: "bg-cyan-500", label: "LP" },
-] as const;
-
-function AllocationBar({
-  displayName,
-  percentages,
-  strategyId,
-  index,
-}: AllocationBarProps) {
-  const hasAny =
-    percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
-  if (!hasAny) return null;
-
-  const color =
-    strategyId != null ? getStrategyColor(strategyId, index) : undefined;
-
-  return (
-    <div className="space-y-1">
-      <div className="text-[10px] text-gray-400 font-medium flex items-center gap-1.5">
-        {color != null && (
-          <div
-            className="w-2 h-2 rounded-full shrink-0"
-            style={{ backgroundColor: color }}
-          />
-        )}
-        {displayName}
-      </div>
-      <div className="flex h-3 rounded overflow-hidden">
-        {BAR_SEGMENTS.map(({ key, color: bgColor }) => {
-          const pct = percentages[key];
-          if (pct <= 0) return null;
-          return (
-            <div
-              key={key}
-              className={`${bgColor} flex items-center justify-center min-w-[2px]`}
-              style={{ width: `${Math.max(pct, 0.5)}%` }}
-            >
-              {pct > 8 && (
-                <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                  {pct.toFixed(0)}%
-                </span>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex gap-2 text-[8px] text-gray-500">
-        {BAR_SEGMENTS.map(({ key, label }) => (
-          <span key={key}>
-            {label}: {percentages[key].toFixed(1)}%
-          </span>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 /**
@@ -114,10 +49,6 @@ export function BacktestTooltip({
     | undefined;
   const sentiment = firstPayload?.["sentiment_label"] as string | undefined;
 
-  const sentimentStr = sentiment
-    ? ` (${sentiment.charAt(0).toUpperCase() + sentiment.slice(1)})`
-    : "";
-
   const tokenPrice =
     (firstPayload?.["token_price"] as { btc?: number } | undefined)?.btc ??
     (firstPayload?.["price"] as number | undefined);
@@ -129,7 +60,13 @@ export function BacktestTooltip({
   const strategies = firstPayload?.["strategies"] as
     | Record<
         string,
-        { portfolio_constituant?: { spot: number; lp: number; stable: number } }
+        {
+          portfolio_constituant?: {
+            spot: Record<string, number> | number;
+            lp: number;
+            stable: number;
+          };
+        }
       >
     | undefined;
 
@@ -150,10 +87,33 @@ export function BacktestTooltip({
       const hasAny =
         percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
       if (!hasAny) return null;
+
+      // Prepare spot breakdown string if spot is a map
+      let spotBreakdown: string | null = null;
+      if (
+        constituents.spot &&
+        typeof constituents.spot === "object" &&
+        !Array.isArray(constituents.spot)
+      ) {
+        const parts = Object.entries(constituents.spot)
+          .filter(([, val]) => val > 0)
+          .map(
+            ([token, val]) =>
+              `${token.toUpperCase()}: ${formatCurrency(val, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}`
+          );
+        if (parts.length > 0) {
+          spotBreakdown = parts.join(", ");
+        }
+      }
+
       return {
         id,
         displayName: getStrategyDisplayName(id),
         percentages,
+        spotBreakdown,
         index: sortedStrategyIds?.indexOf(id),
       };
     })
@@ -164,18 +124,34 @@ export function BacktestTooltip({
         id: string;
         displayName: string;
         percentages: { spot: number; stable: number; lp: number };
+        spotBreakdown: string | null;
         index: number | undefined;
       } => b != null
     );
 
   const showAllocation = allocationBlocks.length > 0;
 
+  // Group payload items
+  const strategyItems: typeof payload = [];
+  const eventItems: typeof payload = [];
+  const signalItems: typeof payload = [];
+
+  for (const entry of payload) {
+    const name = entry.name || "";
+    if (KNOWN_SIGNALS.includes(name)) {
+      signalItems.push(entry);
+    } else if (SIGNAL_TO_EVENT_KEY[name]) {
+      eventItems.push(entry);
+    } else {
+      strategyItems.push(entry);
+    }
+  }
+
+  const showSignals = signalItems.length > 0;
+
   return (
-    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg">
-      <div className="text-xs font-medium text-white mb-2">
-        {dateStr}
-        {sentimentStr}
-      </div>
+    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px]">
+      <div className="text-xs font-medium text-white mb-2">{dateStr}</div>
       {tokenPrice != null && (
         <div className="text-xs text-gray-400 mb-2">
           BTC Price:{" "}
@@ -186,59 +162,92 @@ export function BacktestTooltip({
         </div>
       )}
       <div className="space-y-1">
-        {payload.map((entry, index) => {
-          if (!entry) return null;
+        {strategyItems.map((entry, index) => {
+          if (!entry || typeof entry.value !== "number") return null;
+          return (
+            <div
+              key={index}
+              className="text-xs"
+              style={{ color: entry.color || "#fff" }}
+            >
+              {entry.name}: ${entry.value.toLocaleString()}
+            </div>
+          );
+        })}
 
+        {eventItems.map((entry, index) => {
+          if (!entry?.value) return null;
           const name = entry.name || "";
-          const value = entry.value;
+          const eventKey = SIGNAL_TO_EVENT_KEY[name] ?? "";
+          if (!eventKey) return null;
 
-          if (SIGNAL_TO_EVENT_KEY[name]) {
-            if (value) {
-              const eventKey = SIGNAL_TO_EVENT_KEY[name];
-              const strategyList = eventStrategies?.[eventKey] || [];
-              const strategiesStr =
-                strategyList.length > 0 ? ` (${strategyList.join(", ")})` : "";
+          const strategyList = eventStrategies?.[eventKey] || [];
+          const strategiesStr =
+            strategyList.length > 0 ? ` (${strategyList.join(", ")})` : "";
 
-              return (
-                <div
-                  key={index}
-                  className="text-xs"
-                  style={{ color: entry.color || "#fff" }}
-                >
-                  {name}
-                  {strategiesStr}
-                </div>
-              );
-            }
-            return null;
-          }
-
-          if (typeof value === "number") {
-            return (
-              <div
-                key={index}
-                className="text-xs"
-                style={{ color: entry.color || "#fff" }}
-              >
-                {name}: ${value.toLocaleString()}
-              </div>
-            );
-          }
-
-          return null;
+          return (
+            <div
+              key={`evt-${index}`}
+              className="text-xs font-medium"
+              style={{ color: entry.color || "#fff" }}
+            >
+              {name}
+              {strategiesStr}
+            </div>
+          );
         })}
       </div>
+
+      {showSignals && (
+        <div className="mt-3 pt-3 border-t border-gray-700 space-y-1">
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">
+            Signals
+          </div>
+          {signalItems.map((entry, index) => {
+            if (!entry) return null;
+            const name = entry.name || "";
+            const value = entry.value;
+
+            let displayValue = String(value);
+            if (name === "Sentiment") {
+              const label = sentiment
+                ? sentiment.charAt(0).toUpperCase() + sentiment.slice(1)
+                : "Unknown";
+              displayValue = `${label} (${value})`;
+            } else if (typeof value === "number") {
+              displayValue = value.toFixed(2);
+            }
+
+            return (
+              <div
+                key={`sig-${index}`}
+                className="text-xs flex justify-between gap-4"
+                style={{ color: entry.color || "#fff" }}
+              >
+                <span>{name}</span>
+                <span className="font-mono">{displayValue}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {showAllocation && (
         <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
           {allocationBlocks.map(block => (
-            <AllocationBar
-              key={block.id}
-              displayName={block.displayName}
-              percentages={block.percentages}
-              strategyId={block.id}
-              index={block.index}
-            />
+            <div key={block.id} className="flex flex-col gap-0.5">
+              <AllocationBar
+                displayName={block.displayName}
+                percentages={block.percentages}
+                strategyId={block.id}
+                index={block.index}
+              />
+              {block.spotBreakdown && (
+                <div className="text-[8px] text-gray-500 pl-4">
+                  Spot: {block.spotBreakdown}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

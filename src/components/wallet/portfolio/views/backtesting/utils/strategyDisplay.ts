@@ -50,14 +50,21 @@ export function getStrategyColor(strategyId: string, index?: number): string {
  * Returns percentages for spot, stable, and lp components.
  */
 export function calculatePercentages(constituents: {
-  spot: number;
+  spot: number | Record<string, number>;
   stable: number;
   lp: number;
 }): { spot: number; stable: number; lp: number } {
-  const total = constituents.spot + constituents.stable + constituents.lp;
+  let spotValue = 0;
+  if (typeof constituents.spot === "number") {
+    spotValue = constituents.spot;
+  } else if (constituents.spot && typeof constituents.spot === "object") {
+    spotValue = Object.values(constituents.spot).reduce((a, b) => a + b, 0);
+  }
+
+  const total = spotValue + constituents.stable + constituents.lp;
   if (total === 0) return { spot: 0, stable: 0, lp: 0 };
   return {
-    spot: (constituents.spot / total) * 100,
+    spot: (spotValue / total) * 100,
     stable: (constituents.stable / total) * 100,
     lp: (constituents.lp / total) * 100,
   };
