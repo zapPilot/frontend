@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -62,50 +68,67 @@ describe("BacktestingView", () => {
     );
   });
 
-  it("renders the JSON editor and run button", () => {
-    render(<BacktestingView />);
+  it("renders the JSON editor and run button", async () => {
+    await act(async () => {
+      render(<BacktestingView />);
+    });
 
     expect(screen.getByText("DCA Strategy Comparison")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Run Backtest/i })
     ).toBeInTheDocument();
-    expect(screen.getByText("Request Payload (v3)")).toBeInTheDocument();
+    expect(screen.getByText(/Request Payload \(v3\)/i)).toBeInTheDocument();
+
+    // Switch to JSON mode to see the textbox
+    const jsonTab = screen.getByRole("button", { name: /JSON/i });
+    await act(async () => {
+      fireEvent.click(jsonTab);
+    });
+
     expect(screen.getByRole("textbox")).toBeInTheDocument();
   });
 
-  it("triggers backtest on button click", () => {
-    render(<BacktestingView />);
+  it("triggers backtest on button click", async () => {
+    await act(async () => {
+      render(<BacktestingView />);
+    });
 
     const runButton = screen.getByRole("button", { name: /Run Backtest/i });
-    fireEvent.click(runButton);
+    await act(async () => {
+      fireEvent.click(runButton);
+    });
 
     expect(mockMutate).toHaveBeenCalled();
   });
 
-  it("shows loading state when pending", () => {
+  it("shows loading state when pending", async () => {
     vi.mocked(useBacktestMutation).mockReturnValue({
       ...defaultMock,
       isPending: true,
     } as any);
 
-    render(<BacktestingView />);
+    await act(async () => {
+      render(<BacktestingView />);
+    });
 
-    expect(screen.getByText("Running...")).toBeInTheDocument();
+    expect(screen.getByText(/Running.../i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Running.../i })).toBeDisabled();
   });
 
-  it("displays error message from API", () => {
+  it("displays error message from API", async () => {
     vi.mocked(useBacktestMutation).mockReturnValue({
       ...defaultMock,
       error: new Error("Test API Error"),
     } as any);
 
-    render(<BacktestingView />);
+    await act(async () => {
+      render(<BacktestingView />);
+    });
 
     expect(screen.getByText("Test API Error")).toBeInTheDocument();
   });
 
-  it("displays results when data is present", () => {
+  it("displays results when data is present", async () => {
     const mockData = {
       strategies: {
         dca_classic: {
@@ -158,7 +181,9 @@ describe("BacktestingView", () => {
       data: mockData,
     } as any);
 
-    render(<BacktestingView />);
+    await act(async () => {
+      render(<BacktestingView />);
+    });
 
     expect(screen.getByText("ROI")).toBeInTheDocument();
     expect(screen.getByText("+15.5%")).toBeInTheDocument();
@@ -205,7 +230,7 @@ describe("BacktestingView", () => {
 
       // Wait for component to settle
       await waitFor(() => {
-        expect(screen.getByText(/Request Payload/i)).toBeInTheDocument();
+        expect(screen.getByText(/Request Payload \(v3\)/i)).toBeInTheDocument();
       });
 
       // Hints section should not be visible when catalog is null
@@ -358,7 +383,7 @@ describe("BacktestingView", () => {
       render(<BacktestingView />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Request Payload/i)).toBeInTheDocument();
+        expect(screen.getByText(/Request Payload \(v3\)/i)).toBeInTheDocument();
       });
 
       // Hints section should not exist
@@ -391,7 +416,9 @@ describe("BacktestingView", () => {
       ).not.toBeInTheDocument();
 
       // Resolve the promise
-      resolvePromise!(mockCatalogWithPacingPolicies);
+      await act(async () => {
+        resolvePromise!(mockCatalogWithPacingPolicies);
+      });
 
       // Wait for hints to appear
       await waitFor(() => {
@@ -571,6 +598,12 @@ describe("BacktestingView", () => {
       });
 
       // Trigger an error by entering invalid JSON
+      // First switch to JSON mode
+      const jsonTab = screen.getByRole("button", { name: /JSON/i });
+      await act(async () => {
+        fireEvent.click(jsonTab);
+      });
+
       const textarea = screen.getByRole("textbox");
       await user.clear(textarea);
       await user.click(textarea);
@@ -578,7 +611,9 @@ describe("BacktestingView", () => {
 
       // Click run backtest to trigger validation
       const runButton = screen.getByRole("button", { name: /Run Backtest/i });
-      await user.click(runButton);
+      await act(async () => {
+        await user.click(runButton);
+      });
 
       // Wait for error to appear
       await waitFor(() => {
@@ -586,17 +621,17 @@ describe("BacktestingView", () => {
       });
 
       // Verify hints are still visible and below the error
-      // Use getAllByText and get the first match (the error div)
-      const errorDiv = screen.getAllByText(/Invalid JSON/i)[0];
-      const hintsDiv = screen.getByText(/Available strategy_id:/i).parentElement
-        ?.parentElement;
+      const errorSpan = screen.getAllByText(/Invalid JSON/i)[0];
+      const errorContainer = errorSpan.parentElement!;
+      const hintsDiv = screen.getByText(/Available strategy_id:/i)
+        .parentElement!.parentElement!;
 
-      // Get parent container to check order
-      const parentContainer = errorDiv.parentElement;
+      // Get shared parent
+      const parentContainer = errorContainer.parentElement;
       const children = Array.from(parentContainer?.children || []);
 
-      const errorIndex = children.indexOf(errorDiv);
-      const hintsIndex = children.indexOf(hintsDiv!);
+      const errorIndex = children.indexOf(errorContainer);
+      const hintsIndex = children.indexOf(hintsDiv);
 
       expect(errorIndex).toBeLessThan(hintsIndex);
     });
@@ -612,6 +647,12 @@ describe("BacktestingView", () => {
         expect(screen.getByText(/Available strategy_id:/i)).toBeInTheDocument();
       });
 
+      // Switch to JSON mode
+      const jsonTab = screen.getByRole("button", { name: /JSON/i });
+      await act(async () => {
+        fireEvent.click(jsonTab);
+      });
+
       // Find the textarea
       const textarea = screen.getByRole("textbox");
       const textareaParent = textarea.parentElement;
@@ -620,8 +661,8 @@ describe("BacktestingView", () => {
       const hintsSection = screen.getByText(/Available strategy_id:/i)
         .parentElement?.parentElement;
 
-      // Verify hints are siblings of textarea within the same card
-      expect(textareaParent).toBe(hintsSection?.parentElement);
+      // Verify hints are siblings of textarea container within the same card
+      expect(textareaParent?.parentElement).toBe(hintsSection?.parentElement);
     });
   });
 
@@ -656,9 +697,6 @@ describe("BacktestingView", () => {
       // Rerender component (simulating catalog refetch)
       rerender(<BacktestingView />);
 
-      // Note: Since catalog fetch happens in useEffect, a rerender won't trigger a new fetch
-      // This test verifies that the component correctly displays based on the catalog state
-      // For a real catalog change, a new mount would be needed
       await waitFor(() => {
         expect(screen.getByText(/Available strategy_id:/i)).toBeInTheDocument();
       });
@@ -705,6 +743,12 @@ describe("BacktestingView", () => {
         expect(
           screen.getByText(/Available pacing_policy:/i)
         ).toBeInTheDocument();
+      });
+
+      // Switch to JSON mode
+      const jsonTab = screen.getByRole("button", { name: /JSON/i });
+      await act(async () => {
+        fireEvent.click(jsonTab);
       });
 
       // Edit the textarea using paste to avoid special character handling

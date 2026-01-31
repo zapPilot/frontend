@@ -15,7 +15,8 @@ export interface BacktestCompareConfigV3 {
 }
 
 export interface BacktestRequest {
-  token_symbol: string;
+  /** @deprecated backend defaults to BTC if omitted */
+  token_symbol?: string;
   start_date?: string; // YYYY-MM-DD
   end_date?: string; // YYYY-MM-DD
   days?: number;

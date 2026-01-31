@@ -18,7 +18,7 @@ import { BacktestMetrics } from "./backtesting/components/BacktestMetrics";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 
 const backtestRequestSchema = z.object({
-  token_symbol: z.string().min(1),
+  token_symbol: z.string().optional(),
   start_date: z.string().optional(),
   end_date: z.string().optional(),
   days: z.number().int().positive().optional(),
@@ -41,7 +41,6 @@ function buildDefaultPayload(
   const recommendedParams = simpleRegime?.recommended_params ?? {};
 
   return {
-    token_symbol: "BTC",
     days: 90,
     total_capital: 10000,
     configs: [
@@ -150,10 +149,13 @@ export function BacktestingView() {
     });
 
     const request: BacktestRequest = {
-      token_symbol: parsed.data.token_symbol,
       total_capital: parsed.data.total_capital,
       configs,
     };
+    /* eslint-disable sonarjs/deprecation */
+    if (parsed.data.token_symbol !== undefined)
+      request.token_symbol = parsed.data.token_symbol;
+    /* eslint-enable sonarjs/deprecation */
     if (parsed.data.start_date !== undefined)
       request.start_date = parsed.data.start_date;
     if (parsed.data.end_date !== undefined)
@@ -193,8 +195,8 @@ export function BacktestingView() {
         </BaseCard>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 xl:col-span-3">
+      <div className="flex flex-col gap-6">
+        <div className="w-full">
           <BacktestConfiguration
             editorValue={editorValue}
             onEditorValueChange={val => {
@@ -215,7 +217,7 @@ export function BacktestingView() {
           />
         </div>
 
-        <div className="lg:col-span-8 xl:col-span-9 space-y-6">
+        <div className="w-full space-y-6">
           {!backtestData ? (
             <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500">
               <div className="relative">

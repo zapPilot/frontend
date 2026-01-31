@@ -21,6 +21,7 @@ export const tokenBalanceRawSchema = z
     // Symbol and name fields
     symbol: z.string().optional(),
     tokenSymbol: z.string().optional(),
+    /** @deprecated use symbol instead */
     token_symbol: z.string().optional(),
     name: z.string().optional(),
     tokenName: z.string().optional(),

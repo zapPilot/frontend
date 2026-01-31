@@ -34,8 +34,11 @@ describe("Logger", () => {
       .spyOn(console, "error")
       .mockImplementation((_msg: unknown) => undefined);
 
-    // Clear logs before each test
+    // Clear logs and reset config before each test to prevent pollution
     logger.clearLogs();
+    logger.setRemoteLogging(false);
+    logger.setConsoleLogging(false);
+    logger.setLevel(LogLevel.DEBUG);
   });
 
   afterEach(() => {
