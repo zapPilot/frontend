@@ -3,38 +3,46 @@ const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
   simple_regime: "Simple Regime",
 };
 
-const STRATEGY_COLORS: Record<string, string> = {
-  dca_classic: "#4b5563",
-  simple_regime: "#3b82f6",
-};
+const DCA_CLASSIC_COLOR = "#4b5563";
+const DEFAULT_COLOR = "#3b82f6";
+
+const STRATEGY_PALETTE = [
+  "#3b82f6", // Blue
+  "#06b6d4", // Cyan
+  "#8b5cf6", // Violet
+  "#ec4899", // Pink
+  "#f97316", // Orange
+  "#84cc16", // Lime
+  "#14b8a6", // Teal
+  "#6366f1", // Indigo
+  "#f59e0b", // Amber
+  "#10b981", // Emerald
+  "#d946ef", // Fuchsia
+  "#f43f5e", // Rose
+  "#0ea5e9", // Sky
+];
 
 export function getStrategyDisplayName(strategyId: string): string {
   return STRATEGY_DISPLAY_NAMES[strategyId] ?? strategyId.replace(/_/g, " ");
 }
 
-export function getStrategyColor(strategyId: string): string {
-  if (STRATEGY_COLORS[strategyId]) {
-    return STRATEGY_COLORS[strategyId];
+export function getStrategyColor(strategyId: string, index?: number): string {
+  if (strategyId === "dca_classic" || strategyId.includes("dca_classic")) {
+    return DCA_CLASSIC_COLOR;
   }
 
-  const fallbackColors = [
-    "#06b6d4",
-    "#8b5cf6",
-    "#ec4899",
-    "#f97316",
-    "#84cc16",
-    "#14b8a6",
-    "#6366f1",
-    "#f43f5e",
-    "#eab308",
-  ];
+  if (typeof index === "number") {
+    return STRATEGY_PALETTE[index % STRATEGY_PALETTE.length] ?? DEFAULT_COLOR;
+  }
 
+  // Fallback to hashing when no index provided
   let hash = 0;
   for (let i = 0; i < strategyId.length; i++) {
     hash = strategyId.charCodeAt(i) + ((hash << 5) - hash);
   }
-
-  return fallbackColors[Math.abs(hash) % fallbackColors.length] ?? "#6b7280";
+  return (
+    STRATEGY_PALETTE[Math.abs(hash) % STRATEGY_PALETTE.length] ?? DEFAULT_COLOR
+  );
 }
 
 /**

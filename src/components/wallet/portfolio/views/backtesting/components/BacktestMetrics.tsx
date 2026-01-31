@@ -7,6 +7,10 @@ import {
   type StrategyMetric,
 } from "../ComparisonMetricCard";
 import { MetricCard } from "../MetricCard";
+import {
+  getStrategyColor,
+  getStrategyDisplayName,
+} from "../utils/strategyDisplay";
 
 export interface BacktestMetricsSummary {
   strategies: Record<string, BacktestStrategySummary>;
@@ -17,8 +21,6 @@ export interface BacktestMetricsProps {
   sortedStrategyIds: string[];
   actualDays: number;
   daysDisplay: string;
-  getStrategyDisplayName: (id: string) => string;
-  getStrategyColor: (id: string) => string;
 }
 
 function buildMetrics(
@@ -43,8 +45,6 @@ export function BacktestMetrics({
   sortedStrategyIds,
   actualDays,
   daysDisplay,
-  getStrategyDisplayName,
-  getStrategyColor,
 }: BacktestMetricsProps) {
   return (
     <div className="space-y-4">
@@ -53,35 +53,23 @@ export function BacktestMetrics({
           label="ROI"
           unit="%"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-            const strategySummary = summary?.strategies[strategyId];
-            const roi = strategySummary?.roi_percent ?? null;
-            return {
-              strategyId,
-              value: roi,
-              formatted:
-                roi !== null
-                  ? `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`
-                  : "N/A",
-            };
-          })}
+          metrics={buildMetrics(
+            "roi_percent",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => `${v >= 0 ? "+" : ""}${v.toFixed(1)}%`
+          )}
         />
         <ComparisonMetricCard
           label="Final Value"
           unit="$"
           highlightMode="highest"
-          metrics={sortedStrategyIds.map((strategyId): StrategyMetric => {
-            const strategySummary = summary?.strategies[strategyId];
-            const finalValue = strategySummary?.final_value ?? null;
-            return {
-              strategyId,
-              value: finalValue,
-              formatted:
-                finalValue !== null
-                  ? `$${finalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-                  : "N/A",
-            };
-          })}
+          metrics={buildMetrics(
+            "final_value",
+            sortedStrategyIds,
+            summary?.strategies,
+            v => `$${v.toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+          )}
         />
         <ComparisonMetricCard
           label="Max Drawdown"
@@ -156,13 +144,13 @@ export function BacktestMetrics({
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-        {sortedStrategyIds.map(strategyId => {
+        {sortedStrategyIds.map((strategyId, index) => {
           const strategySummary = summary?.strategies[strategyId];
           if (!strategySummary) return null;
 
           const displayName = getStrategyDisplayName(strategyId);
           const trades = strategySummary.trade_count ?? 0;
-          const color = getStrategyColor(strategyId);
+          const color = getStrategyColor(strategyId, index);
 
           return (
             <div

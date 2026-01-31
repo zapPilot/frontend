@@ -15,10 +15,6 @@ import type {
 import { BacktestChart } from "./backtesting/components/BacktestChart";
 import { BacktestMetrics } from "./backtesting/components/BacktestMetrics";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
-import {
-  getStrategyColor,
-  getStrategyDisplayName,
-} from "./backtesting/utils/strategyDisplay";
 
 const backtestRequestSchema = z.object({
   token_symbol: z.string().min(1),
@@ -339,16 +335,12 @@ export function BacktestingView() {
             sortedStrategyIds={sortedStrategyIds}
             actualDays={actualDays}
             daysDisplay={daysDisplay}
-            getStrategyDisplayName={getStrategyDisplayName}
-            getStrategyColor={getStrategyColor}
           />
           <BacktestChart
             chartData={chartData}
             sortedStrategyIds={sortedStrategyIds}
             yAxisDomain={yAxisDomain}
             actualDays={actualDays}
-            getStrategyDisplayName={getStrategyDisplayName}
-            getStrategyColor={getStrategyColor}
           />
         </div>
       )}

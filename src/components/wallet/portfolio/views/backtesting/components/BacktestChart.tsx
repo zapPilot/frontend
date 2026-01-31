@@ -14,15 +14,26 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
+import {
+  getStrategyColor,
+  getStrategyDisplayName,
+} from "../utils/strategyDisplay";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
+
+/** Signal legend configuration - single source of truth for colors and labels */
+const SIGNAL_LEGEND = [
+  { label: "Sentiment", color: "#a855f7" },
+  { label: "Buy Spot", color: "#22c55e" },
+  { label: "Sell Spot", color: "#ef4444" },
+  { label: "Buy LP", color: "#3b82f6" },
+  { label: "Sell LP", color: "#d946ef" },
+] as const;
 
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
   sortedStrategyIds: string[];
   yAxisDomain: [number, number];
   actualDays: number;
-  getStrategyDisplayName: (id: string) => string;
-  getStrategyColor: (id: string) => string;
   /** Unique prefix for gradient IDs when multiple charts exist (e.g. scenario id). */
   chartIdPrefix?: string;
 }
@@ -32,8 +43,6 @@ export function BacktestChart({
   sortedStrategyIds,
   yAxisDomain,
   actualDays,
-  getStrategyDisplayName,
-  getStrategyColor,
   chartIdPrefix = "default",
 }: BacktestChartProps) {
   const gradientId = (s: string) => `${chartIdPrefix}-color-${s}`;
@@ -54,9 +63,9 @@ export function BacktestChart({
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {sortedStrategyIds.map(strategyId => {
+          {sortedStrategyIds.map((strategyId, index) => {
             const displayName = getStrategyDisplayName(strategyId);
-            const color = getStrategyColor(strategyId);
+            const color = getStrategyColor(strategyId, index);
             return (
               <div
                 key={strategyId}
@@ -70,26 +79,18 @@ export function BacktestChart({
               </div>
             );
           })}
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-purple-500" />
-            Sentiment
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
-            Buy Spot
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-red-500" />
-            Sell Spot
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-cyan-500" />
-            Buy LP
-          </div>
-          <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-            <div className="w-2 h-2 rounded-full bg-fuchsia-500" />
-            Sell LP
-          </div>
+          {SIGNAL_LEGEND.map(({ label, color }) => (
+            <div
+              key={label}
+              className="flex items-center gap-1.5 text-[10px] text-gray-400"
+            >
+              <div
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: color }}
+              />
+              {label}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -97,8 +98,8 @@ export function BacktestChart({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData}>
             <defs>
-              {sortedStrategyIds.map(strategyId => {
-                const color = getStrategyColor(strategyId);
+              {sortedStrategyIds.map((strategyId, index) => {
+                const color = getStrategyColor(strategyId, index);
                 return (
                   <linearGradient
                     key={`gradient-${strategyId}`}
@@ -178,8 +179,8 @@ export function BacktestChart({
               }}
             />
 
-            {sortedStrategyIds.map(strategyId => {
-              const color = getStrategyColor(strategyId);
+            {sortedStrategyIds.map((strategyId, index) => {
+              const color = getStrategyColor(strategyId, index);
               const displayName = getStrategyDisplayName(strategyId);
               const isDcaClassic = strategyId === "dca_classic";
               const isPrimary =

@@ -19,7 +19,18 @@ export interface UseBacktestResultReturn {
   daysDisplay: string;
 }
 
-type SignalKey = "buy_spot" | "sell_spot" | "buy_lp" | "sell_lp";
+/** Unified signal configuration - single source of truth for signal keys and chart fields */
+const SIGNALS = {
+  buy_spot: { field: "buySpotSignal" },
+  sell_spot: { field: "sellSpotSignal" },
+  buy_lp: { field: "buyLpSignal" },
+  sell_lp: { field: "sellLpSignal" },
+} as const;
+
+type SignalKey = keyof typeof SIGNALS;
+type SignalField = (typeof SIGNALS)[SignalKey]["field"];
+
+const SIGNAL_FIELDS = Object.values(SIGNALS).map(s => s.field) as SignalField[];
 
 interface SignalAccumulator {
   buySpotSignal: number | null;
@@ -29,23 +40,20 @@ interface SignalAccumulator {
   eventStrategies: Record<SignalKey, string[]>;
 }
 
+/** Sentiment label to numeric index for Y-axis positioning */
+const SENTIMENT_MAP: Record<string, number> = {
+  extreme_fear: 0,
+  fear: 1,
+  neutral: 2,
+  greed: 3,
+  extreme_greed: 4,
+};
+
 function sentimentLabelToIndex(
   label: string | null | undefined
 ): number | null {
-  switch (label) {
-    case "extreme_fear":
-      return 0;
-    case "fear":
-      return 1;
-    case "neutral":
-      return 2;
-    case "greed":
-      return 3;
-    case "extreme_greed":
-      return 4;
-    default:
-      return null;
-  }
+  if (!label) return null;
+  return SENTIMENT_MAP[label] ?? null;
 }
 
 function extractTransfers(
@@ -93,17 +101,7 @@ function updateSignal(
   portfolioValue: number,
   displayName: string
 ): void {
-  const signalMap: Record<
-    SignalKey,
-    "buySpotSignal" | "sellSpotSignal" | "buyLpSignal" | "sellLpSignal"
-  > = {
-    buy_spot: "buySpotSignal",
-    sell_spot: "sellSpotSignal",
-    buy_lp: "buyLpSignal",
-    sell_lp: "sellLpSignal",
-  };
-
-  const field = signalMap[signalKey];
+  const field = SIGNALS[signalKey].field;
   const current = acc[field];
   acc[field] =
     current == null ? portfolioValue : Math.max(current, portfolioValue);
@@ -198,26 +196,23 @@ export function useBacktestResult(
 
   const yAxisDomain = useMemo((): [number, number] => {
     if (!chartData || chartData.length === 0) return [0, 1000];
+
     const allValues: number[] = [];
     for (const point of chartData) {
       for (const strategyId of strategyIds) {
         const value = point[`${strategyId}_value`];
-        if (typeof value === "number" && value != null) allValues.push(value);
+        if (typeof value === "number") allValues.push(value);
       }
-      const buySpot = point["buySpotSignal"] as number | null;
-      const sellSpot = point["sellSpotSignal"] as number | null;
-      const buyLp = point["buyLpSignal"] as number | null;
-      const sellLp = point["sellLpSignal"] as number | null;
-      if (buySpot != null) allValues.push(buySpot);
-      if (sellSpot != null) allValues.push(sellSpot);
-      if (buyLp != null) allValues.push(buyLp);
-      if (sellLp != null) allValues.push(sellLp);
+      for (const field of SIGNAL_FIELDS) {
+        const value = point[field] as number | null;
+        if (value != null) allValues.push(value);
+      }
     }
+
     if (allValues.length === 0) return [0, 1000];
     const min = Math.min(...allValues);
     const max = Math.max(...allValues);
-    const range = max - min;
-    const padding = range * 0.05;
+    const padding = (max - min) * 0.05;
     return [Math.max(0, min - padding), max + padding];
   }, [chartData, strategyIds]);
 

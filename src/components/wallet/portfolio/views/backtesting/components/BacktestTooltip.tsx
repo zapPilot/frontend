@@ -28,20 +28,31 @@ export interface BacktestTooltipProps {
   sortedStrategyIds?: string[];
 }
 
+interface AllocationBarProps {
+  displayName: string;
+  percentages: { spot: number; stable: number; lp: number };
+  strategyId?: string;
+  index?: number | undefined;
+}
+
+const BAR_SEGMENTS = [
+  { key: "spot", color: "bg-blue-500", label: "Spot" },
+  { key: "stable", color: "bg-gray-500", label: "Stable" },
+  { key: "lp", color: "bg-cyan-500", label: "LP" },
+] as const;
+
 function AllocationBar({
   displayName,
   percentages,
   strategyId,
-}: {
-  displayName: string;
-  percentages: { spot: number; stable: number; lp: number };
-  strategyId?: string;
-}) {
+  index,
+}: AllocationBarProps) {
   const hasAny =
     percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
   if (!hasAny) return null;
 
-  const color = strategyId != null ? getStrategyColor(strategyId) : undefined;
+  const color =
+    strategyId != null ? getStrategyColor(strategyId, index) : undefined;
 
   return (
     <div className="space-y-1">
@@ -54,48 +65,31 @@ function AllocationBar({
         )}
         {displayName}
       </div>
-      <div className="flex h-3 rounded overflow-hidden relative">
-        {percentages.spot > 0 && (
-          <div
-            className="bg-blue-500 flex items-center justify-center min-w-[2px]"
-            style={{ width: `${Math.max(percentages.spot, 0.5)}%` }}
-          >
-            {percentages.spot > 8 && (
-              <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                {percentages.spot.toFixed(0)}%
-              </span>
-            )}
-          </div>
-        )}
-        {percentages.stable > 0 && (
-          <div
-            className="bg-gray-500 flex items-center justify-center min-w-[2px]"
-            style={{ width: `${Math.max(percentages.stable, 0.5)}%` }}
-          >
-            {percentages.stable > 8 && (
-              <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                {percentages.stable.toFixed(0)}%
-              </span>
-            )}
-          </div>
-        )}
-        {percentages.lp > 0 && (
-          <div
-            className="bg-cyan-500 flex items-center justify-center min-w-[2px]"
-            style={{ width: `${Math.max(percentages.lp, 0.5)}%` }}
-          >
-            {percentages.lp > 8 && (
-              <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                {percentages.lp.toFixed(0)}%
-              </span>
-            )}
-          </div>
-        )}
+      <div className="flex h-3 rounded overflow-hidden">
+        {BAR_SEGMENTS.map(({ key, color: bgColor }) => {
+          const pct = percentages[key];
+          if (pct <= 0) return null;
+          return (
+            <div
+              key={key}
+              className={`${bgColor} flex items-center justify-center min-w-[2px]`}
+              style={{ width: `${Math.max(pct, 0.5)}%` }}
+            >
+              {pct > 8 && (
+                <span className="text-[8px] text-white font-medium whitespace-nowrap">
+                  {pct.toFixed(0)}%
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
       <div className="flex gap-2 text-[8px] text-gray-500">
-        <span>Spot: {percentages.spot.toFixed(1)}%</span>
-        <span>Stable: {percentages.stable.toFixed(1)}%</span>
-        <span>LP: {percentages.lp.toFixed(1)}%</span>
+        {BAR_SEGMENTS.map(({ key, label }) => (
+          <span key={key}>
+            {label}: {percentages[key].toFixed(1)}%
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -160,21 +154,24 @@ export function BacktestTooltip({
         id,
         displayName: getStrategyDisplayName(id),
         percentages,
+        index: sortedStrategyIds?.indexOf(id),
       };
     })
-    .filter((b): b is NonNullable<typeof b> => b != null);
+    .filter(
+      (
+        b
+      ): b is {
+        id: string;
+        displayName: string;
+        percentages: { spot: number; stable: number; lp: number };
+        index: number | undefined;
+      } => b != null
+    );
 
   const showAllocation = allocationBlocks.length > 0;
 
   return (
-    <div
-      className="bg-gray-900 border border-gray-700 rounded-lg p-3 shadow-lg"
-      style={{
-        backgroundColor: "#111827",
-        borderColor: "#374151",
-        borderRadius: "0.5rem",
-      }}
-    >
+    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg">
       <div className="text-xs font-medium text-white mb-2">
         {dateStr}
         {sentimentStr}
@@ -234,12 +231,13 @@ export function BacktestTooltip({
 
       {showAllocation && (
         <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
-          {allocationBlocks.map(({ id, displayName, percentages }) => (
+          {allocationBlocks.map(block => (
             <AllocationBar
-              key={id}
-              displayName={displayName}
-              percentages={percentages}
-              strategyId={id}
+              key={block.id}
+              displayName={block.displayName}
+              percentages={block.percentages}
+              strategyId={block.id}
+              index={block.index}
             />
           ))}
         </div>
