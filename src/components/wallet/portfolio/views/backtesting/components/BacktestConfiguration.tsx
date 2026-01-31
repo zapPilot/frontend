@@ -52,8 +52,8 @@ export function BacktestConfiguration({
   }, [parsedJson]);
 
   // Derived state for inputs
-  const days = parsedJson?.days || 90;
-  const totalCapital = parsedJson?.total_capital || 10000;
+  const days = parsedJson?.days;
+  const totalCapital = parsedJson?.total_capital;
 
   // Extraction of pacing policies for hints
   const pacingPolicies = useMemo(() => {
@@ -73,6 +73,7 @@ export function BacktestConfiguration({
   const handleSimpleChange = (field: string, value: string | number) => {
     if (!parsedJson) return;
 
+    // Allow empty strings to be set in the state
     const updated = { ...parsedJson, [field]: value };
     if (field === "days") {
       delete updated.start_date;
@@ -164,9 +165,12 @@ export function BacktestConfiguration({
               <div className="relative mt-2">
                 <input
                   type="number"
-                  value={days}
+                  value={days ?? ""}
                   onChange={e =>
-                    handleSimpleChange("days", parseInt(e.target.value) || 0)
+                    handleSimpleChange(
+                      "days",
+                      e.target.value === "" ? "" : parseInt(e.target.value) || 0
+                    )
                   }
                   className="w-full bg-gray-950/60 border border-gray-800 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600/40 transition-all placeholder:text-gray-700"
                   placeholder="Custom days..."
@@ -186,11 +190,13 @@ export function BacktestConfiguration({
                 </span>
                 <input
                   type="number"
-                  value={totalCapital}
+                  value={totalCapital ?? ""}
                   onChange={e =>
                     handleSimpleChange(
                       "total_capital",
-                      parseFloat(e.target.value) || 0
+                      e.target.value === ""
+                        ? ""
+                        : parseFloat(e.target.value) || 0
                     )
                   }
                   className="w-full bg-gray-950/60 border border-gray-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-600/40 transition-all placeholder:text-gray-700"
