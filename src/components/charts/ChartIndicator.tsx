@@ -1,8 +1,6 @@
 /**
  * ChartIndicator Component
- *
  * Reusable indicator component for chart hover states with chart-specific styling.
- * Supports single circles, multi-colored circles, and flagged circles for recovery points.
  */
 
 import { motion } from "framer-motion";
@@ -20,20 +18,16 @@ import {
 import { getDrawdownSeverity, getSharpeColor } from "@/utils/chartHoverUtils";
 import { formatters } from "@/utils/formatters";
 
-const DEFAULT_INDICATOR_COLOR = "#8b5cf6" as const;
-const INDICATOR_COLOR_MAP: Record<string, string> = {
-  performance: DEFAULT_INDICATOR_COLOR,
-  "asset-allocation": DEFAULT_INDICATOR_COLOR,
+const DEFAULT_COLOR = "#8b5cf6";
+const COLOR_MAP: Record<string, string> = {
+  performance: DEFAULT_COLOR,
+  "asset-allocation": DEFAULT_COLOR,
   "drawdown-recovery": "#f97316",
   sharpe: "#10b981",
   volatility: "#f59e0b",
 };
 
-const MULTI_CIRCLE_VARIANT = "multi-circle" as const;
-const FLAGGED_CIRCLE_VARIANT = "flagged-circle" as const;
-const DRAWDOWN_CHART_TYPE = "drawdown-recovery" as const;
-
-const BASE_CIRCLE_ANIMATION = {
+const CIRCLE_ANIMATION = {
   initial: { opacity: 0, scale: 0 },
   animate: { opacity: 1, scale: 1 },
   exit: { opacity: 0, scale: 0 },
@@ -41,295 +35,239 @@ const BASE_CIRCLE_ANIMATION = {
 } as const;
 
 interface ChartIndicatorProps {
-  /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
-  /** Indicator variant based on chart type */
   variant?: "circle" | "multi-circle" | "flagged-circle";
-  /** Custom radius for the indicator circle */
   radius?: number;
-  /** Custom stroke width */
   strokeWidth?: number;
 }
 
-function getIndicatorAriaLabel(hoveredPoint: ChartHoverState): string {
-  const formattedDate = formatters.chartDate(hoveredPoint.date);
+// =============================================================================
+// HELPERS
+// =============================================================================
 
-  if (isPerformanceHover(hoveredPoint)) {
-    return `Portfolio value on ${formattedDate} is ${formatters.currency(hoveredPoint.value)}.`;
+function getAriaLabel(point: ChartHoverState): string {
+  const date = formatters.chartDate(point.date);
+
+  if (isPerformanceHover(point)) {
+    return `Portfolio value on ${date} is ${formatters.currency(point.value)}.`;
   }
 
-  if (isAllocationHover(hoveredPoint)) {
-    const allocations = [
-      { label: "BTC", value: hoveredPoint.btc },
-      { label: "ETH", value: hoveredPoint.eth },
-      { label: "Stablecoin", value: hoveredPoint.stablecoin },
-      { label: "Altcoin", value: hoveredPoint.altcoin },
+  if (isAllocationHover(point)) {
+    const items = [
+      { l: "BTC", v: point.btc },
+      { l: "ETH", v: point.eth },
+      { l: "Stablecoin", v: point.stablecoin },
+      { l: "Altcoin", v: point.altcoin },
     ];
-
-    const significantAllocations = allocations
-      .filter(item => item.value >= 1)
-      .map(item => `${item.label} ${formatters.percent(item.value)}`)
+    const text = items
+      .filter(i => i.v >= 1)
+      .map(i => `${i.l} ${formatters.percent(i.v)}`)
       .join(", ");
-
-    return significantAllocations
-      ? `Allocation on ${formattedDate}: ${significantAllocations}.`
-      : `Allocation on ${formattedDate} has minimal distribution across categories.`;
+    return text
+      ? `Allocation on ${date}: ${text}.`
+      : `Allocation on ${date} minimal.`;
   }
 
-  if (isDrawdownHover(hoveredPoint)) {
-    const severity = getDrawdownSeverity(hoveredPoint.drawdown);
-    const recoveryText = hoveredPoint.isRecoveryPoint
-      ? " and marks a new peak"
-      : "";
-    return `Drawdown on ${formattedDate} is ${formatters.percent(Math.abs(hoveredPoint.drawdown), 2)} with ${severity} severity${recoveryText}.`;
+  if (isDrawdownHover(point)) {
+    const severity = getDrawdownSeverity(point.drawdown);
+    const recovery = point.isRecoveryPoint ? " and marks a new peak" : "";
+    return `Drawdown on ${date} is ${formatters.percent(Math.abs(point.drawdown), 2)} with ${severity} severity${recovery}.`;
   }
 
-  if (isSharpeHover(hoveredPoint)) {
-    return `Sharpe ratio on ${formattedDate} is ${hoveredPoint.sharpe.toFixed(2)}, rated ${hoveredPoint.interpretation}.`;
+  if (isSharpeHover(point)) {
+    return `Sharpe ratio on ${date} is ${point.sharpe.toFixed(2)}, rated ${point.interpretation}.`;
   }
 
-  if (isVolatilityHover(hoveredPoint)) {
-    return `Volatility on ${formattedDate} is ${formatters.percent(hoveredPoint.volatility)} with ${hoveredPoint.riskLevel} risk.`;
+  if (isVolatilityHover(point)) {
+    return `Volatility on ${date} is ${formatters.percent(point.volatility)} with ${point.riskLevel} risk.`;
   }
 
-  return `Chart value on ${formattedDate}.`;
+  return `Chart value on ${date}.`;
 }
 
+function getIndicatorColor(chartType: string): string {
+  return COLOR_MAP[chartType] ?? DEFAULT_COLOR;
+}
+
+// =============================================================================
+// SUB-COMPONENTS
+// =============================================================================
+
 function IndicatorWrapper({
-  hoveredPoint,
+  point,
   children,
 }: {
-  hoveredPoint: ChartHoverState;
+  point: ChartHoverState;
   children: ReactNode;
 }) {
-  const ariaLabel = getIndicatorAriaLabel(hoveredPoint);
-
+  const label = getAriaLabel(point);
   return (
     <g
       role="img"
-      aria-label={ariaLabel}
+      aria-label={label}
       style={{ pointerEvents: "none" }}
-      data-chart-type={hoveredPoint.chartType}
+      data-chart-type={point.chartType}
     >
-      <title>{ariaLabel}</title>
+      <title>{label}</title>
       {children}
     </g>
   );
 }
 
-/**
- * Get color based on chart type
- */
-function getIndicatorColor(chartType: string): string {
-  return INDICATOR_COLOR_MAP[chartType] ?? DEFAULT_INDICATOR_COLOR;
-}
-
-interface IndicatorCircleProps {
-  hoveredPoint: ChartHoverState;
-  radius: number;
-  strokeWidth: number;
-  fill: string;
-  delay?: number;
-  offsetX?: number;
-  offsetY?: number;
-  className?: string;
-}
-
 function IndicatorCircle({
-  hoveredPoint,
-  radius,
-  strokeWidth,
+  point,
+  r,
+  sw,
   fill,
   delay = 0,
-  offsetX = 0,
-  offsetY = 0,
+  dx = 0,
+  dy = 0,
   className,
-}: IndicatorCircleProps) {
+}: {
+  point: ChartHoverState;
+  r: number;
+  sw: number;
+  fill: string;
+  delay?: number;
+  dx?: number;
+  dy?: number;
+  className?: string;
+}) {
   return (
     <motion.circle
-      cx={hoveredPoint.x + offsetX}
-      cy={hoveredPoint.y + offsetY}
-      r={radius}
+      cx={point.x + dx}
+      cy={point.y + dy}
+      r={r}
       fill={fill}
       stroke="#ffffff"
-      strokeWidth={strokeWidth}
-      initial={BASE_CIRCLE_ANIMATION.initial}
-      animate={BASE_CIRCLE_ANIMATION.animate}
-      exit={BASE_CIRCLE_ANIMATION.exit}
-      transition={{ ...BASE_CIRCLE_ANIMATION.transition, delay }}
-      className={className ? `drop-shadow-lg ${className}` : "drop-shadow-lg"}
+      strokeWidth={sw}
+      initial={CIRCLE_ANIMATION.initial}
+      animate={CIRCLE_ANIMATION.animate}
+      exit={CIRCLE_ANIMATION.exit}
+      transition={{ ...CIRCLE_ANIMATION.transition, delay }}
+      className={`drop-shadow-lg ${className ?? ""}`}
     />
   );
 }
 
-/**
- * Base props shared by all indicator variant components
- * Consolidates the duplicated prop definitions
- */
-interface BaseIndicatorProps {
-  hoveredPoint: ChartHoverState;
-  radius: number;
-  strokeWidth: number;
-}
+function SingleCircle({
+  point,
+  r,
+  sw,
+}: {
+  point: ChartHoverState;
+  r: number;
+  sw: number;
+}) {
+  let color = getIndicatorColor(point.chartType);
+  if (point.chartType === "sharpe") color = getSharpeColor(point.sharpe || 0);
 
-/**
- * Single circle indicator for most chart types with special effects
- */
-function SingleCircleIndicator({
-  hoveredPoint,
-  radius = 6,
-  strokeWidth = 2,
-}: BaseIndicatorProps) {
-  let color = getIndicatorColor(hoveredPoint.chartType);
-
-  // Dynamic color for Sharpe ratio
-  if (hoveredPoint.chartType === "sharpe") {
-    color = getSharpeColor(hoveredPoint.sharpe || 0);
-  }
-
-  // Check for high volatility (>25%)
-  const isHighVolatility =
-    hoveredPoint.chartType === "volatility" && hoveredPoint.volatility > 25;
+  const isHighVol = point.chartType === "volatility" && point.volatility > 25;
 
   return (
-    <IndicatorWrapper hoveredPoint={hoveredPoint}>
-      {/* Main indicator circle */}
-      <IndicatorCircle
-        hoveredPoint={hoveredPoint}
-        radius={radius}
-        strokeWidth={strokeWidth}
-        fill={color}
-      />
-
-      {/* Pulse animation for high volatility */}
-      {isHighVolatility && (
+    <IndicatorWrapper point={point}>
+      <IndicatorCircle point={point} r={r} sw={sw} fill={color} />
+      {isHighVol && (
         <motion.circle
-          cx={hoveredPoint.x}
-          cy={hoveredPoint.y}
-          r={radius + 6}
+          cx={point.x}
+          cy={point.y}
+          r={r + 6}
           fill="none"
           stroke="#f59e0b"
           strokeWidth="2"
           initial={{ opacity: 0.6, scale: 1 }}
           animate={{ opacity: 0, scale: 2 }}
           exit={{ opacity: 0 }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "easeOut",
-          }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeOut" }}
         />
       )}
     </IndicatorWrapper>
   );
 }
 
-/**
- * Multi-circle indicator for allocation chart
- * Shows stacked colored circles representing different asset categories
- */
-function MultiCircleIndicator({
-  hoveredPoint,
-  radius = 6,
-  strokeWidth = 2,
-}: BaseIndicatorProps) {
-  if (hoveredPoint.chartType !== "asset-allocation") {
-    return (
-      <SingleCircleIndicator
-        hoveredPoint={hoveredPoint}
-        radius={radius}
-        strokeWidth={strokeWidth}
-      />
-    );
-  }
+function MultiCircle({
+  point,
+  r,
+  sw,
+}: {
+  point: ChartHoverState;
+  r: number;
+  sw: number;
+}) {
+  if (point.chartType !== "asset-allocation")
+    return <SingleCircle point={point} r={r} sw={sw} />;
 
   const colors = [
-    { value: hoveredPoint.btc, color: CHART_COLORS.btc },
-    { value: hoveredPoint.eth, color: CHART_COLORS.eth },
-    { value: hoveredPoint.stablecoin, color: CHART_COLORS.stablecoin },
-    { value: hoveredPoint.altcoin, color: CHART_COLORS.altcoin },
-  ];
+    { v: point.btc, c: CHART_COLORS.btc },
+    { v: point.eth, c: CHART_COLORS.eth },
+    { v: point.stablecoin, c: CHART_COLORS.stablecoin },
+    { v: point.altcoin, c: CHART_COLORS.altcoin },
+  ].filter(i => i.v > 1);
 
-  // Filter to only show significant allocations
-  const significantColors = colors.filter(({ value }) => value > 1);
-
-  // If only one significant allocation, show single circle
-  if (significantColors.length === 1 && significantColors[0]) {
+  if (colors.length <= 1) {
     return (
-      <IndicatorWrapper hoveredPoint={hoveredPoint}>
+      <IndicatorWrapper point={point}>
         <IndicatorCircle
-          hoveredPoint={hoveredPoint}
-          radius={radius}
-          strokeWidth={strokeWidth}
-          fill={significantColors[0].color}
+          point={point}
+          r={r}
+          sw={sw}
+          fill={colors[0]?.c ?? CHART_COLORS.btc}
         />
       </IndicatorWrapper>
     );
   }
 
-  // Multiple allocations - show stacked circles
   return (
-    <IndicatorWrapper hoveredPoint={hoveredPoint}>
-      {significantColors.slice(0, 3).map((item, index) => (
+    <IndicatorWrapper point={point}>
+      {colors.slice(0, 3).map((item, i) => (
         <IndicatorCircle
-          key={index}
-          hoveredPoint={hoveredPoint}
-          radius={radius - index * 0.5}
-          strokeWidth={strokeWidth}
-          fill={item.color}
-          offsetX={index * 3}
-          offsetY={-index * 3}
-          delay={index * 0.05}
+          key={i}
+          point={point}
+          r={r - i * 0.5}
+          sw={sw}
+          fill={item.c}
+          dx={i * 3}
+          dy={-i * 3}
+          delay={i * 0.05}
         />
       ))}
     </IndicatorWrapper>
   );
 }
 
-/**
- * Flagged circle indicator for recovery markers
- * Highlights new peaks with a green flag on the baseline
- */
-function FlaggedCircleIndicator({
-  hoveredPoint,
-  radius = 6,
-  strokeWidth = 2,
-}: BaseIndicatorProps) {
-  const color = getIndicatorColor(hoveredPoint.chartType);
-  const isRecoveryPoint =
-    hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
-    Boolean(hoveredPoint.isRecoveryPoint);
+function FlaggedCircle({
+  point,
+  r,
+  sw,
+}: {
+  point: ChartHoverState;
+  r: number;
+  sw: number;
+}) {
+  const color = getIndicatorColor(point.chartType);
+  const isRecovery =
+    point.chartType === "drawdown-recovery" && point.isRecoveryPoint;
 
   return (
-    <IndicatorWrapper hoveredPoint={hoveredPoint}>
-      {/* Main circle */}
-      <IndicatorCircle
-        hoveredPoint={hoveredPoint}
-        radius={radius}
-        strokeWidth={strokeWidth}
-        fill={color}
-      />
-
-      {/* Recovery flag */}
-      {isRecoveryPoint && (
+    <IndicatorWrapper point={point}>
+      <IndicatorCircle point={point} r={r} sw={sw} fill={color} />
+      {isRecovery && (
         <motion.g
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 5 }}
           transition={{ duration: 0.2, delay: 0.1 }}
         >
-          {/* Flag pole */}
           <line
-            x1={hoveredPoint.x}
-            y1={hoveredPoint.y - radius}
-            x2={hoveredPoint.x}
-            y2={hoveredPoint.y - radius - 12}
+            x1={point.x}
+            y1={point.y - r}
+            x2={point.x}
+            y2={point.y - r - 12}
             stroke="#10b981"
             strokeWidth="2"
           />
-          {/* Flag */}
           <path
-            d={`M ${hoveredPoint.x} ${hoveredPoint.y - radius - 12} L ${hoveredPoint.x + 8} ${hoveredPoint.y - radius - 9} L ${hoveredPoint.x} ${hoveredPoint.y - radius - 6} Z`}
+            d={`M ${point.x} ${point.y - r - 12} L ${point.x + 8} ${point.y - r - 9} L ${point.x} ${point.y - r - 6} Z`}
             fill="#10b981"
             stroke="#ffffff"
             strokeWidth="1"
@@ -340,10 +278,10 @@ function FlaggedCircleIndicator({
   );
 }
 
-/**
- * ChartIndicator component
- * Renders the appropriate indicator based on chart type and variant
- */
+// =============================================================================
+// MAIN COMPONENT
+// =============================================================================
+
 export function ChartIndicator({
   hoveredPoint,
   variant = "circle",
@@ -352,43 +290,25 @@ export function ChartIndicator({
 }: ChartIndicatorProps) {
   if (!hoveredPoint) return null;
 
-  // Auto-detect variant from chart type if not specified
   let effectiveVariant = variant;
   if (variant === "circle") {
-    if (hoveredPoint.chartType === "asset-allocation") {
-      effectiveVariant = MULTI_CIRCLE_VARIANT;
-    } else if (
-      hoveredPoint.chartType === DRAWDOWN_CHART_TYPE &&
+    if (hoveredPoint.chartType === "asset-allocation")
+      effectiveVariant = "multi-circle";
+    else if (
+      hoveredPoint.chartType === "drawdown-recovery" &&
       hoveredPoint.isRecoveryPoint
-    ) {
-      effectiveVariant = FLAGGED_CIRCLE_VARIANT;
-    }
+    )
+      effectiveVariant = "flagged-circle";
   }
 
+  const props = { point: hoveredPoint, r: radius, sw: strokeWidth };
+
   switch (effectiveVariant) {
-    case MULTI_CIRCLE_VARIANT:
-      return (
-        <MultiCircleIndicator
-          hoveredPoint={hoveredPoint}
-          radius={radius}
-          strokeWidth={strokeWidth}
-        />
-      );
-    case FLAGGED_CIRCLE_VARIANT:
-      return (
-        <FlaggedCircleIndicator
-          hoveredPoint={hoveredPoint}
-          radius={radius}
-          strokeWidth={strokeWidth}
-        />
-      );
+    case "multi-circle":
+      return <MultiCircle {...props} />;
+    case "flagged-circle":
+      return <FlaggedCircle {...props} />;
     default:
-      return (
-        <SingleCircleIndicator
-          hoveredPoint={hoveredPoint}
-          radius={radius}
-          strokeWidth={strokeWidth}
-        />
-      );
+      return <SingleCircle {...props} />;
   }
 }
