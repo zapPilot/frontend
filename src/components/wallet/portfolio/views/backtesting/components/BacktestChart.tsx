@@ -14,6 +14,7 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
+import { CHART_SIGNALS } from "../utils/chartHelpers";
 import {
   getStrategyColor,
   getStrategyDisplayName,
@@ -37,11 +38,11 @@ export function BacktestChart({
   actualDays,
   chartIdPrefix = "default",
 }: BacktestChartProps) {
-  const gradientId = (s: string) => `${chartIdPrefix}-color-${s}`;
   const primarySeriesId =
     sortedStrategyIds.find(id => id !== "dca_classic") ??
     sortedStrategyIds[0] ??
     null;
+
   return (
     <BaseCard
       variant="glass"
@@ -60,49 +61,31 @@ export function BacktestChart({
       <div className="flex-1 w-full pt-4 pr-4">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={chartData}>
-            <defs>
-              {sortedStrategyIds.map((strategyId, index) => {
-                const color = getStrategyColor(strategyId, index);
-                return (
-                  <linearGradient
-                    key={`gradient-${strategyId}`}
-                    id={gradientId(strategyId)}
-                    x1="0"
-                    y1="0"
-                    x2="0"
-                    y2="1"
-                  >
-                    <stop offset="5%" stopColor={color} stopOpacity={0.3} />
-                    <stop offset="95%" stopColor={color} stopOpacity={0} />
-                  </linearGradient>
-                );
-              })}
-            </defs>
+            <ChartDefs strategyIds={sortedStrategyIds} prefix={chartIdPrefix} />
+
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="rgba(255,255,255,0.05)"
               vertical={false}
             />
+
             <XAxis
               dataKey="date"
               tick={{ fontSize: 10, fill: "#6b7280" }}
               tickLine={false}
               axisLine={false}
               minTickGap={30}
-              tickFormatter={value =>
-                new Date(value as string).toLocaleDateString(undefined, {
-                  month: "short",
-                  year: "2-digit",
-                })
-              }
+              tickFormatter={formatDate}
             />
+
             <YAxis
               domain={yAxisDomain}
               tick={{ fontSize: 10, fill: "#6b7280" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={value => `$${(Number(value) / 1000).toFixed(0)}k`}
+              tickFormatter={formatCurrency}
             />
+
             <YAxis
               yAxisId="right"
               orientation="right"
@@ -116,13 +99,9 @@ export function BacktestChart({
                 position: "insideRight",
                 style: { fontSize: 10, fill: "#a855f7" },
               }}
-              tickFormatter={(value: number) => {
-                if (value === 0) return "Fear";
-                if (value === 50) return "Neutral";
-                if (value === 100) return "Greed";
-                return String(value);
-              }}
+              tickFormatter={formatSentiment}
             />
+
             <Tooltip
               content={({ active, payload, label }) => {
                 const props: BacktestTooltipProps = {
@@ -138,31 +117,15 @@ export function BacktestChart({
               }}
             />
 
-            {sortedStrategyIds.map((strategyId, index) => {
-              const color = getStrategyColor(strategyId, index);
-              const displayName = getStrategyDisplayName(strategyId);
-              const isDcaClassic = strategyId === "dca_classic";
-              const isPrimary =
-                primarySeriesId != null && strategyId === primarySeriesId;
-
-              return (
-                <Area
-                  key={strategyId}
-                  type="monotone"
-                  dataKey={`${strategyId}_value`}
-                  name={displayName}
-                  stroke={color}
-                  fillOpacity={isPrimary ? 1 : 0}
-                  fill={
-                    isPrimary
-                      ? `url(#${gradientId(strategyId)})`
-                      : "transparent"
-                  }
-                  strokeWidth={2}
-                  strokeDasharray={isDcaClassic ? "4 4" : undefined}
-                />
-              );
-            })}
+            {sortedStrategyIds.map((strategyId, index) => (
+              <StrategyArea
+                key={strategyId}
+                strategyId={strategyId}
+                index={index}
+                isPrimary={strategyId === primarySeriesId}
+                prefix={chartIdPrefix}
+              />
+            ))}
 
             <Line
               yAxisId="right"
@@ -176,59 +139,99 @@ export function BacktestChart({
               strokeOpacity={0.4}
             />
 
-            <Scatter
-              name="Buy Spot"
-              dataKey="buySpotSignal"
-              fill="#22c55e"
-              shape="circle"
-              legendType="none"
-            />
-            <Scatter
-              name="Sell Spot"
-              dataKey="sellSpotSignal"
-              fill="#ef4444"
-              shape="circle"
-              legendType="none"
-            />
-            <Scatter
-              name="Buy LP"
-              dataKey="buyLpSignal"
-              fill="#3b82f6"
-              shape="circle"
-              legendType="none"
-            />
-            <Scatter
-              name="Sell LP"
-              dataKey="sellLpSignal"
-              fill="#d946ef"
-              shape="circle"
-              legendType="none"
-            />
-            {/* Borrowing events */}
-            <Scatter
-              name="Borrow"
-              dataKey="borrowSignal"
-              fill="#a855f7"
-              shape="triangle"
-              legendType="none"
-            />
-            <Scatter
-              name="Repay"
-              dataKey="repaySignal"
-              fill="#06b6d4"
-              shape="diamond"
-              legendType="none"
-            />
-            <Scatter
-              name="Liquidation"
-              dataKey="liquidateSignal"
-              fill="#dc2626"
-              shape="cross"
-              legendType="none"
-            />
+            {CHART_SIGNALS.map(signal => (
+              <Scatter
+                key={signal.key}
+                name={signal.name}
+                dataKey={signal.field}
+                fill={signal.color}
+                shape={signal.shape}
+                legendType="none"
+              />
+            ))}
           </ComposedChart>
         </ResponsiveContainer>
       </div>
     </BaseCard>
   );
+}
+
+// --- Sub-components for cleaner render ---
+
+function ChartDefs({
+  strategyIds,
+  prefix,
+}: {
+  strategyIds: string[];
+  prefix: string;
+}) {
+  return (
+    <defs>
+      {strategyIds.map((strategyId, index) => {
+        const color = getStrategyColor(strategyId, index);
+        return (
+          <linearGradient
+            key={`gradient-${strategyId}`}
+            id={`${prefix}-color-${strategyId}`}
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop offset="5%" stopColor={color} stopOpacity={0.3} />
+            <stop offset="95%" stopColor={color} stopOpacity={0} />
+          </linearGradient>
+        );
+      })}
+    </defs>
+  );
+}
+
+function StrategyArea({
+  strategyId,
+  index,
+  isPrimary,
+  prefix,
+}: {
+  strategyId: string;
+  index: number;
+  isPrimary: boolean;
+  prefix: string;
+}) {
+  const color = getStrategyColor(strategyId, index);
+  const displayName = getStrategyDisplayName(strategyId);
+  const isDcaClassic = strategyId === "dca_classic";
+
+  return (
+    <Area
+      type="monotone"
+      dataKey={`${strategyId}_value`}
+      name={displayName}
+      stroke={color}
+      fillOpacity={isPrimary ? 1 : 0}
+      fill={isPrimary ? `url(#${prefix}-color-${strategyId})` : "transparent"}
+      strokeWidth={2}
+      strokeDasharray={isDcaClassic ? "4 4" : undefined}
+    />
+  );
+}
+
+// --- Formatters ---
+
+function formatDate(value: string | number) {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    year: "2-digit",
+  });
+}
+
+function formatCurrency(value: string | number) {
+  return `$${(Number(value) / 1000).toFixed(0)}k`;
+}
+
+function formatSentiment(value: number) {
+  if (value === 0) return "Fear";
+  if (value === 50) return "Neutral";
+  if (value === 100) return "Greed";
+  return String(value);
 }

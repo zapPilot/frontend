@@ -6,6 +6,7 @@ import { BaseCard } from "@/components/ui/BaseCard";
 import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
 
 import { useBacktestEditor } from "../hooks/useBacktestEditor";
+import { BacktestConfigHints } from "./BacktestConfigHints";
 import { BacktestConfigurationHeader } from "./BacktestConfigurationHeader";
 import { JsonModeEditor } from "./JsonModeEditor";
 import { SimpleModeForm } from "./SimpleModeForm";
@@ -91,24 +92,10 @@ export function BacktestConfiguration({
         )}
 
         {/* Hints Section - restoring for test compatibility and user guidance */}
-        {catalog && (
-          <div className="mt-3 text-xs text-gray-500 space-y-1 border-t border-gray-800/30 pt-3">
-            <div>
-              <span className="text-gray-400 font-medium">
-                Available strategy_id:
-              </span>{" "}
-              {catalog.strategies.map(s => s.id).join(", ")}
-            </div>
-            {pacingPolicies.length > 0 && (
-              <div>
-                <span className="text-gray-400 font-medium">
-                  Available pacing_policy:
-                </span>{" "}
-                {pacingPolicies.join(", ")}
-              </div>
-            )}
-          </div>
-        )}
+        <BacktestConfigHints
+          catalog={catalog}
+          pacingPolicies={pacingPolicies}
+        />
       </div>
 
       <div className="p-4 border-t border-gray-800/50 bg-gray-900/30 flex-shrink-0">

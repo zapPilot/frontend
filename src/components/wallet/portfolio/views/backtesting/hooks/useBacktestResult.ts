@@ -4,8 +4,12 @@ import { useMemo } from "react";
 
 import type { BacktestResponse } from "@/types/backtesting";
 
-import { buildChartPoint,SIGNAL_FIELDS } from "../utils/chartHelpers";
-import { getStrategyDisplayName } from "../utils/strategyDisplay";
+import {
+  buildChartPoint,
+  calculateActualDays,
+  calculateYAxisDomain,
+  sortStrategyIds,
+} from "../utils/chartHelpers";
 
 export interface UseBacktestResultReturn {
   strategyIds: string[];
@@ -32,25 +36,7 @@ export function useBacktestResult(
   }, [response, strategyIds]);
 
   const yAxisDomain = useMemo((): [number, number] => {
-    if (!chartData || chartData.length === 0) return [0, 1000];
-
-    const allValues: number[] = [];
-    for (const point of chartData) {
-      for (const strategyId of strategyIds) {
-        const value = point[`${strategyId}_value`];
-        if (typeof value === "number") allValues.push(value);
-      }
-      for (const field of SIGNAL_FIELDS) {
-        const value = point[field] as number | null;
-        if (value != null) allValues.push(value);
-      }
-    }
-
-    if (allValues.length === 0) return [0, 1000];
-    const min = Math.min(...allValues);
-    const max = Math.max(...allValues);
-    const padding = (max - min) * 0.05;
-    return [Math.max(0, min - padding), max + padding];
+    return calculateYAxisDomain(chartData, strategyIds);
   }, [chartData, strategyIds]);
 
   const summary = useMemo(() => {
@@ -59,27 +45,13 @@ export function useBacktestResult(
   }, [response]);
 
   const actualDays = useMemo(() => {
-    if (!response || response.timeline.length < 2) return 0;
-    const first = response.timeline[0];
-    const last = response.timeline[response.timeline.length - 1];
-    if (!first || !last) return 0;
-    const diff = Math.abs(
-      new Date(last.date).getTime() - new Date(first.date).getTime()
-    );
-    return Math.ceil(diff / (1000 * 60 * 60 * 24)) + 1;
+    if (!response) return 0;
+    return calculateActualDays(response.timeline);
   }, [response]);
 
   const sortedStrategyIds = useMemo(() => {
-    if (!response) return [];
-    const ids = [...strategyIds];
-    const baseline = ids.includes("dca_classic") ? ["dca_classic"] : [];
-    const rest = ids
-      .filter(id => id !== "dca_classic")
-      .sort((a, b) =>
-        getStrategyDisplayName(a).localeCompare(getStrategyDisplayName(b))
-      );
-    return [...baseline, ...rest];
-  }, [response, strategyIds]);
+    return sortStrategyIds(strategyIds);
+  }, [strategyIds]);
 
   const daysDisplay = useMemo(() => {
     if (
