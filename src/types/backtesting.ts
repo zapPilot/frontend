@@ -40,6 +40,15 @@ export interface BacktestStrategySummary {
   volatility?: number | null;
   beta?: number | null;
 
+  // Borrowing metrics (optional - only present when borrowing is enabled)
+  total_borrow_events?: number | null;
+  total_repay_events?: number | null;
+  liquidation_events?: number | null;
+  total_interest_paid?: number | null;
+  total_yield_from_borrowed?: number | null;
+  max_borrowed_amount?: number | null;
+  time_in_leverage_pct?: number | null;
+
   parameters: Record<string, unknown>;
 }
 
@@ -49,7 +58,15 @@ export interface BacktestPortfolioConstituant {
   lp: Record<string, number>;
 }
 
-export type BacktestEvent = "buy" | "sell" | "rebalance" | string | null;
+export type BacktestEvent =
+  | "buy"
+  | "sell"
+  | "rebalance"
+  | "borrow"
+  | "repay"
+  | "liquidate"
+  | string
+  | null;
 
 export interface BacktestStrategyPoint {
   portfolio_value: number;

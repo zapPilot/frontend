@@ -204,6 +204,28 @@ export function BacktestChart({
               shape="circle"
               legendType="none"
             />
+            {/* Borrowing events */}
+            <Scatter
+              name="Borrow"
+              dataKey="borrowSignal"
+              fill="#a855f7"
+              shape="triangle"
+              legendType="none"
+            />
+            <Scatter
+              name="Repay"
+              dataKey="repaySignal"
+              fill="#06b6d4"
+              shape="diamond"
+              legendType="none"
+            />
+            <Scatter
+              name="Liquidation"
+              dataKey="liquidateSignal"
+              fill="#dc2626"
+              shape="cross"
+              legendType="none"
+            />
           </ComposedChart>
         </ResponsiveContainer>
       </div>

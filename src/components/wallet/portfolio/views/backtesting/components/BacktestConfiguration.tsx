@@ -4,10 +4,11 @@ import { AlertCircle, Play, RefreshCw } from "lucide-react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
+
+import { useBacktestEditor } from "../hooks/useBacktestEditor";
 import { BacktestConfigurationHeader } from "./BacktestConfigurationHeader";
 import { JsonModeEditor } from "./JsonModeEditor";
 import { SimpleModeForm } from "./SimpleModeForm";
-import { useBacktestEditor } from "../hooks/useBacktestEditor";
 
 interface BacktestConfigurationProps {
   editorValue: string;
@@ -36,6 +37,10 @@ export function BacktestConfiguration({
     isSimpleModeAvailable,
     days,
     totalCapital,
+    // Borrowing settings
+    enableBorrowing,
+    borrowLtv,
+    borrowApr,
     pacingPolicies,
     handleSimpleChange,
     handleFormat,
@@ -62,6 +67,9 @@ export function BacktestConfiguration({
           <SimpleModeForm
             days={days}
             totalCapital={totalCapital}
+            enableBorrowing={enableBorrowing}
+            borrowLtv={borrowLtv}
+            borrowApr={borrowApr}
             handleSimpleChange={handleSimpleChange}
           />
         ) : (

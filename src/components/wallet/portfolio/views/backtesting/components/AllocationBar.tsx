@@ -1,23 +1,16 @@
-import { getStrategyColor } from "../utils/strategyDisplay";
-
-export interface AllocationBarProps {
-  displayName: string;
-  percentages: { spot: number; stable: number; lp: number };
-  strategyId?: string;
-  index?: number | undefined;
-}
-
-
-
 import { useMemo } from "react";
 
+import { getStrategyColor } from "../utils/strategyDisplay";
+
+export interface PortfolioConstituents {
+  spot: Record<string, number> | number;
+  stable: number;
+  lp: Record<string, number> | number;
+}
+
 export interface AllocationBarProps {
   displayName: string;
-  constituents: {
-    spot: Record<string, number> | number;
-    stable: number;
-    lp: Record<string, number> | number;
-  };
+  constituents: PortfolioConstituents;
   strategyId?: string;
   index?: number | undefined;
 }
@@ -44,10 +37,9 @@ export function AllocationBar({
   strategyId,
   index,
 }: AllocationBarProps) {
-
   const segments = useMemo(() => {
     const s: AllocationSegment[] = [];
-    
+
     // Helper to process a bucket (spot or lp)
     const processBucket = (
       bucket: Record<string, number> | number,
@@ -67,7 +59,7 @@ export function AllocationBar({
     const lpItems = processBucket(constituents.lp, "lp");
     const stableVal = constituents.stable;
 
-    const total = 
+    const total =
       spotItems.reduce((sum, item) => sum + item.value, 0) +
       lpItems.reduce((sum, item) => sum + item.value, 0) +
       stableVal;
@@ -75,10 +67,10 @@ export function AllocationBar({
     if (total === 0) return [];
 
     // Spot segments
-    spotItems.forEach(item => {
-      if (item.value <= 0) return;
+    for (const item of spotItems) {
+      if (item.value <= 0) continue;
       const pct = (item.value / total) * 100;
-      let color = ASSET_COLORS["other"];
+      let color = ASSET_COLORS["other"] || "bg-blue-400";
       let label = "Spot";
 
       if (item.subKey) {
@@ -94,7 +86,7 @@ export function AllocationBar({
 
       const key = `spot-${item.subKey || "gen"}`;
       s.push({ key, label, percentage: pct, color });
-    });
+    }
 
     // Stable segment
     if (stableVal > 0) {
@@ -102,25 +94,25 @@ export function AllocationBar({
         key: "stable",
         label: "Stable",
         percentage: (stableVal / total) * 100,
-        color: ASSET_COLORS["stable"],
+        color: ASSET_COLORS["stable"] || "bg-gray-500",
       });
     }
 
     // LP segments
-    lpItems.forEach(item => {
-      if (item.value <= 0) return;
+    for (const item of lpItems) {
+      if (item.value <= 0) continue;
       const pct = (item.value / total) * 100;
       // Use generic LP color for now
-      let color = ASSET_COLORS["lp"]; 
+      const color = ASSET_COLORS["lp"] || "bg-cyan-500";
       let label = "LP";
-      
+
       if (item.subKey) {
         label = `LP ${item.subKey.toUpperCase()}`;
       }
-      
+
       const key = `lp-${item.subKey || "gen"}`;
       s.push({ key, label, percentage: pct, color });
-    });
+    }
 
     return s;
   }, [constituents]);
@@ -143,7 +135,7 @@ export function AllocationBar({
         {displayName}
       </div>
       <div className="flex h-3 rounded overflow-hidden">
-        {segments.map((segment) => {
+        {segments.map(segment => {
           return (
             <div
               key={segment.key}
@@ -153,7 +145,8 @@ export function AllocationBar({
             >
               {segment.percentage > 12 && (
                 <span className="text-[8px] text-white font-medium whitespace-nowrap px-0.5">
-                   {segment.label === "Stable" ? "USD" : segment.label} {segment.percentage.toFixed(0)}%
+                  {segment.label === "Stable" ? "USD" : segment.label}{" "}
+                  {segment.percentage.toFixed(0)}%
                 </span>
               )}
             </div>
@@ -162,13 +155,13 @@ export function AllocationBar({
       </div>
       {/* Legend / Detailed Text below */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 text-[8px] text-gray-500">
-        {segments.map((segment) => (
-           <div key={segment.key} className="flex items-center gap-1">
-              <div className={`w-1.5 h-1.5 rounded-full ${segment.color}`} />
-              <span>
-                {segment.label}: {segment.percentage.toFixed(1)}%
-              </span>
-           </div>
+        {segments.map(segment => (
+          <div key={segment.key} className="flex items-center gap-1">
+            <div className={`w-1.5 h-1.5 rounded-full ${segment.color}`} />
+            <span>
+              {segment.label}: {segment.percentage.toFixed(1)}%
+            </span>
+          </div>
         ))}
       </div>
     </div>

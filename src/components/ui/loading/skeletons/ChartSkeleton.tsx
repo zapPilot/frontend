@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
+import { type BaseLoadingProps, DATA_TEST_ID_PROP } from "../constants";
 import { Skeleton } from "../Skeleton";
-import { DATA_TEST_ID_PROP, type BaseLoadingProps } from "../constants";
 
 function SkeletonLegend({ rows = 4 }: { rows?: number }) {
   return (

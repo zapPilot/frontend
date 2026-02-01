@@ -1,9 +1,10 @@
 import type { ComponentSize, LoadingVariant } from "@/types/ui/ui.types";
+
 import { Skeleton } from "./Skeleton";
-import { Spinner } from "./Spinner";
 import { CardSkeleton, LoadingCard } from "./skeletons/CardSkeleton";
 import { ChartSkeleton } from "./skeletons/ChartSkeleton";
 import { MetricsSkeleton } from "./skeletons/MetricsSkeleton";
+import { Spinner } from "./Spinner";
 
 interface LoadingStateProps {
   variant?: LoadingVariant;

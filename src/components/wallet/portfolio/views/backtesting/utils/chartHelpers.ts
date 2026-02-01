@@ -8,6 +8,10 @@ export const SIGNALS = {
   sell_spot: { field: "sellSpotSignal" },
   buy_lp: { field: "buyLpSignal" },
   sell_lp: { field: "sellLpSignal" },
+  // Borrowing signals
+  borrow: { field: "borrowSignal" },
+  repay: { field: "repaySignal" },
+  liquidate: { field: "liquidateSignal" },
 } as const;
 
 export type SignalKey = keyof typeof SIGNALS;
@@ -22,6 +26,10 @@ interface SignalAccumulator {
   sellSpotSignal: number | null;
   buyLpSignal: number | null;
   sellLpSignal: number | null;
+  // Borrowing signals
+  borrowSignal: number | null;
+  repaySignal: number | null;
+  liquidateSignal: number | null;
   eventStrategies: Record<SignalKey, string[]>;
 }
 
@@ -80,6 +88,21 @@ function classifyTransfer(from: string, to: string): SignalKey | null {
   return null;
 }
 
+/**
+ * Classify borrow events from strategy metrics.
+ * Looks for `borrow_event` field which can be "borrow", "repay", or "liquidate".
+ */
+function classifyBorrowEvent(
+  metrics: Record<string, unknown> | undefined
+): SignalKey | null {
+  const borrowEvent = (metrics as { borrow_event?: string } | undefined)
+    ?.borrow_event;
+  if (borrowEvent === "borrow") return "borrow";
+  if (borrowEvent === "repay") return "repay";
+  if (borrowEvent === "liquidate") return "liquidate";
+  return null;
+}
+
 function updateSignal(
   acc: SignalAccumulator,
   signalKey: SignalKey,
@@ -107,10 +130,16 @@ function processStrategyTransfers(
     if (!strategy) continue;
     if (isDcaBaseline(strategy.metrics)) continue;
 
-    const transfers = extractTransfers(strategy.metrics);
-    if (transfers.length === 0) continue;
-
     const displayName = getStrategyDisplayName(strategyId);
+
+    // Check for borrow events first
+    const borrowSignalKey = classifyBorrowEvent(strategy.metrics);
+    if (borrowSignalKey) {
+      updateSignal(acc, borrowSignalKey, strategy.portfolio_value, displayName);
+    }
+
+    // Then check for transfer events
+    const transfers = extractTransfers(strategy.metrics);
     for (const transfer of transfers) {
       const { from_bucket: from, to_bucket: to } = transfer;
       if (!from || !to) continue;
@@ -129,11 +158,17 @@ function createSignalAccumulator(): SignalAccumulator {
     sellSpotSignal: null,
     buyLpSignal: null,
     sellLpSignal: null,
+    borrowSignal: null,
+    repaySignal: null,
+    liquidateSignal: null,
     eventStrategies: {
       buy_spot: [],
       sell_spot: [],
       buy_lp: [],
       sell_lp: [],
+      borrow: [],
+      repay: [],
+      liquidate: [],
     },
   };
 }
@@ -162,6 +197,10 @@ export function buildChartPoint(
   data["sellSpotSignal"] = acc.sellSpotSignal;
   data["buyLpSignal"] = acc.buyLpSignal;
   data["sellLpSignal"] = acc.sellLpSignal;
+  // Borrowing signals
+  data["borrowSignal"] = acc.borrowSignal;
+  data["repaySignal"] = acc.repaySignal;
+  data["liquidateSignal"] = acc.liquidateSignal;
   data["eventStrategies"] = acc.eventStrategies;
 
   return data;

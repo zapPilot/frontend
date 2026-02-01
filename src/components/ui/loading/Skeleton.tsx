@@ -1,15 +1,16 @@
 import { motion } from "framer-motion";
 
 import type { SkeletonVariant } from "@/types/ui/ui.types";
+
 import {
   ARIA_LABEL_PROP,
   BASE_SKELETON_CLASS,
+  type BaseLoadingProps,
   DATA_TEST_ID_PROP,
   DEFAULT_SKELETON_LABEL,
   PULSE_ANIMATION,
   PULSE_TRANSITION,
   SR_ONLY_CLASS,
-  type BaseLoadingProps,
 } from "./constants";
 
 export interface SkeletonProps extends BaseLoadingProps {

@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 
-import { Skeleton } from "../Skeleton";
 import { DATA_TEST_ID_PROP } from "../constants";
+import { Skeleton } from "../Skeleton";
 
 export function MetricsSkeleton({
   className = "",

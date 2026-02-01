@@ -1,16 +1,17 @@
 import { motion } from "framer-motion";
 
 import type { ComponentSize, SpinnerVariant } from "@/types/ui/ui.types";
+
 import {
   ARIA_HIDDEN_PROP,
   ARIA_LABEL_PROP,
+  type BaseLoadingProps,
   colorClasses,
   DATA_TEST_ID_PROP,
   DEFAULT_SPINNER_LABEL,
+  type LoadingColor,
   sizeClasses,
   SR_ONLY_CLASS,
-  type BaseLoadingProps,
-  type LoadingColor,
 } from "./constants";
 
 export interface SpinnerProps extends BaseLoadingProps {

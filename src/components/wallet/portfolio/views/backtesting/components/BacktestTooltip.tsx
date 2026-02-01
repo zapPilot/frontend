@@ -3,10 +3,10 @@
 import { formatCurrency } from "@/utils";
 
 import {
-    calculatePercentages,
-    getStrategyDisplayName,
+  calculatePercentages,
+  getStrategyDisplayName,
 } from "../utils/strategyDisplay";
-import { AllocationBar } from "./AllocationBar";
+import { AllocationBar, type PortfolioConstituents } from "./AllocationBar";
 
 const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
   "Buy Spot": "buy_spot",
@@ -61,11 +61,7 @@ export function BacktestTooltip({
     | Record<
         string,
         {
-          portfolio_constituant?: {
-            spot: Record<string, number> | number;
-            lp: Record<string, number> | number;
-            stable: number;
-          };
+          portfolio_constituant?: PortfolioConstituents;
         }
       >
     | undefined;
@@ -123,11 +119,7 @@ export function BacktestTooltip({
       ): b is {
         id: string;
         displayName: string;
-        constituents: {
-          spot: Record<string, number> | number;
-          stable: number;
-          lp: Record<string, number> | number;
-        };
+        constituents: PortfolioConstituents;
         spotBreakdown: string | null;
         index: number | undefined;
       } => b != null

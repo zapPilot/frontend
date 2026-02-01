@@ -26,13 +26,30 @@ export function getSharpePercentile(sharpe: number): number {
   return 50;
 }
 
+interface DrawdownAnalysis {
+  enhanced?: {
+    summary?: {
+      max_drawdown_pct?: number;
+      max_drawdown_date?: string;
+      recovery_days?: number;
+    };
+  };
+  underwater_recovery?: {
+    underwater_data?: {
+      drawdown_pct?: number;
+      date?: string;
+    }[];
+  };
+}
+
 /**
  * Safely extract drawdown summary data from response
  */
 export function extractDrawdownSummary(
   dashboard: UnifiedDashboardResponse | undefined
 ) {
-  const drawdownAnalysis = dashboard?.drawdown_analysis as any;
+  const drawdownAnalysis =
+    dashboard?.drawdown_analysis as unknown as DrawdownAnalysis;
 
   return {
     maxDrawdownPct: drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0,

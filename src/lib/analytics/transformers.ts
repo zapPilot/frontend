@@ -122,7 +122,7 @@ export function transformToDrawdownChart(
     };
   }
 
-  const points = underwaterData.map((d: any, idx: number) => ({
+  const points = underwaterData.map((d, idx: number) => ({
     x: (idx / (underwaterData.length - 1)) * 100,
     value: d.drawdown_pct ?? 0,
     date: d.date ?? new Date().toISOString(),

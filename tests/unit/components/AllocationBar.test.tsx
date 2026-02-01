@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+
 import { AllocationBar } from "../../../src/components/wallet/portfolio/views/backtesting/components/AllocationBar";
 
 describe("AllocationBar", () => {
@@ -38,7 +39,7 @@ describe("AllocationBar", () => {
     // Total = 10000. BTC = 60%, ETH = 40%
     expect(screen.getByTitle(/BTC: 60.0%/)).toBeDefined();
     expect(screen.getByTitle(/ETH: 40.0%/)).toBeDefined();
-    
+
     // Check for legend
     expect(screen.getByText(/BTC: 60.0%/)).toBeDefined();
     expect(screen.getByText(/ETH: 40.0%/)).toBeDefined();
@@ -51,10 +52,7 @@ describe("AllocationBar", () => {
       lp: { btc: 100, eth: 100 },
     };
     render(
-      <AllocationBar
-        displayName="LP Strategy"
-        constituents={constituents}
-      />
+      <AllocationBar displayName="LP Strategy" constituents={constituents} />
     );
 
     expect(screen.getByTitle(/LP BTC: 50.0%/)).toBeDefined();
@@ -68,10 +66,7 @@ describe("AllocationBar", () => {
       lp: 0,
     };
     render(
-      <AllocationBar
-        displayName="Zero Check"
-        constituents={constituents}
-      />
+      <AllocationBar displayName="Zero Check" constituents={constituents} />
     );
 
     expect(screen.queryByTitle(/BTC/)).toBeNull();
@@ -85,10 +80,7 @@ describe("AllocationBar", () => {
       lp: 0,
     };
     const { container } = render(
-      <AllocationBar
-        displayName="Empty"
-        constituents={constituents}
-      />
+      <AllocationBar displayName="Empty" constituents={constituents} />
     );
     expect(container.firstChild).toBeNull();
   });

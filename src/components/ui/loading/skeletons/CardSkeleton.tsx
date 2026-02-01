@@ -1,9 +1,9 @@
-import { Skeleton } from "../Skeleton";
 import {
   ARIA_LABEL_PROP,
   DATA_TEST_ID_PROP,
   DEFAULT_SKELETON_LABEL,
 } from "../constants";
+import { Skeleton } from "../Skeleton";
 
 export function CardSkeletonContent() {
   return (

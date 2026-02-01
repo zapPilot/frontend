@@ -40,6 +40,21 @@ function buildMetrics(
   });
 }
 
+/**
+ * Check if any strategy has borrowing metrics.
+ */
+function hasBorrowingMetrics(
+  strategies: BacktestMetricsSummary["strategies"] | undefined
+): boolean {
+  if (!strategies) return false;
+  return Object.values(strategies).some(
+    s =>
+      s.total_borrow_events != null ||
+      s.total_repay_events != null ||
+      s.liquidation_events != null
+  );
+}
+
 export function BacktestMetrics({
   summary,
   sortedStrategyIds,
@@ -173,6 +188,61 @@ export function BacktestMetrics({
           );
         })}
       </div>
+
+      {/* Leverage & Risk Section - show when any strategy has borrowing metrics */}
+      {hasBorrowingMetrics(summary?.strategies) && (
+        <div className="border-t border-gray-800/50 pt-4 mt-4">
+          <h4 className="text-xs font-medium text-gray-400 mb-3 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+            Leverage Metrics
+          </h4>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <ComparisonMetricCard
+              label="Borrow Events"
+              highlightMode="highest"
+              metrics={buildMetrics(
+                "total_borrow_events",
+                sortedStrategyIds,
+                summary?.strategies,
+                v => String(v)
+              )}
+            />
+            <ComparisonMetricCard
+              label="Interest Paid"
+              unit="$"
+              highlightMode="lowest"
+              metrics={buildMetrics(
+                "total_interest_paid",
+                sortedStrategyIds,
+                summary?.strategies,
+                v =>
+                  `$${v.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              )}
+            />
+            <ComparisonMetricCard
+              label="Liquidations"
+              highlightMode="lowest"
+              metrics={buildMetrics(
+                "liquidation_events",
+                sortedStrategyIds,
+                summary?.strategies,
+                v => String(v)
+              )}
+            />
+            <ComparisonMetricCard
+              label="Time Leveraged"
+              unit="%"
+              highlightMode="highest"
+              metrics={buildMetrics(
+                "time_in_leverage_pct",
+                sortedStrategyIds,
+                summary?.strategies,
+                v => `${v.toFixed(1)}%`
+              )}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
