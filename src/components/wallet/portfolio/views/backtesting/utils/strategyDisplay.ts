@@ -48,11 +48,14 @@ export function getStrategyColor(strategyId: string, index?: number): string {
 /**
  * Calculate percentage ratios from constituent absolute values.
  * Returns percentages for spot, stable, and lp components.
+ *
+ * Both spot and lp support either a single number or a Record<string, number>
+ * to handle both single-token and multi-token (index) modes.
  */
 export function calculatePercentages(constituents: {
   spot: number | Record<string, number>;
   stable: number;
-  lp: number;
+  lp: number | Record<string, number>;
 }): { spot: number; stable: number; lp: number } {
   let spotValue = 0;
   if (typeof constituents.spot === "number") {
@@ -61,11 +64,18 @@ export function calculatePercentages(constituents: {
     spotValue = Object.values(constituents.spot).reduce((a, b) => a + b, 0);
   }
 
-  const total = spotValue + constituents.stable + constituents.lp;
+  let lpValue = 0;
+  if (typeof constituents.lp === "number") {
+    lpValue = constituents.lp;
+  } else if (constituents.lp && typeof constituents.lp === "object") {
+    lpValue = Object.values(constituents.lp).reduce((a, b) => a + b, 0);
+  }
+
+  const total = spotValue + constituents.stable + lpValue;
   if (total === 0) return { spot: 0, stable: 0, lp: 0 };
   return {
     spot: (spotValue / total) * 100,
     stable: (constituents.stable / total) * 100,
-    lp: (constituents.lp / total) * 100,
+    lp: (lpValue / total) * 100,
   };
 }

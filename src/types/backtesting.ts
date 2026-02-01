@@ -46,7 +46,7 @@ export interface BacktestStrategySummary {
 export interface BacktestPortfolioConstituant {
   spot: Record<string, number>;
   stable: number;
-  lp: number;
+  lp: Record<string, number>;
 }
 
 export type BacktestEvent = "buy" | "sell" | "rebalance" | string | null;

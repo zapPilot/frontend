@@ -3,8 +3,8 @@
 import { formatCurrency } from "@/utils";
 
 import {
-  calculatePercentages,
-  getStrategyDisplayName,
+    calculatePercentages,
+    getStrategyDisplayName,
 } from "../utils/strategyDisplay";
 import { AllocationBar } from "./AllocationBar";
 
@@ -63,7 +63,7 @@ export function BacktestTooltip({
         {
           portfolio_constituant?: {
             spot: Record<string, number> | number;
-            lp: number;
+            lp: Record<string, number> | number;
             stable: number;
           };
         }
@@ -112,7 +112,7 @@ export function BacktestTooltip({
       return {
         id,
         displayName: getStrategyDisplayName(id),
-        percentages,
+        constituents,
         spotBreakdown,
         index: sortedStrategyIds?.indexOf(id),
       };
@@ -123,7 +123,11 @@ export function BacktestTooltip({
       ): b is {
         id: string;
         displayName: string;
-        percentages: { spot: number; stable: number; lp: number };
+        constituents: {
+          spot: Record<string, number> | number;
+          stable: number;
+          lp: Record<string, number> | number;
+        };
         spotBreakdown: string | null;
         index: number | undefined;
       } => b != null
@@ -238,7 +242,7 @@ export function BacktestTooltip({
             <div key={block.id} className="flex flex-col gap-0.5">
               <AllocationBar
                 displayName={block.displayName}
-                percentages={block.percentages}
+                constituents={block.constituents}
                 strategyId={block.id}
                 index={block.index}
               />

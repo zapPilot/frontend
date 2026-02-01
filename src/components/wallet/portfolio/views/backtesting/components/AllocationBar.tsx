@@ -7,20 +7,125 @@ export interface AllocationBarProps {
   index?: number | undefined;
 }
 
-const BAR_SEGMENTS = [
-  { key: "spot", color: "bg-blue-500", label: "Spot" },
-  { key: "stable", color: "bg-gray-500", label: "Stable" },
-  { key: "lp", color: "bg-cyan-500", label: "LP" },
-] as const;
+
+
+import { useMemo } from "react";
+
+export interface AllocationBarProps {
+  displayName: string;
+  constituents: {
+    spot: Record<string, number> | number;
+    stable: number;
+    lp: Record<string, number> | number;
+  };
+  strategyId?: string;
+  index?: number | undefined;
+}
+
+const ASSET_COLORS: Record<string, string> = {
+  btc: "bg-[#F7931A]", // Bitcoin Orange
+  eth: "bg-[#627EEA]", // Ethereum Blue/Purple
+  stable: "bg-gray-500",
+  lp: "bg-cyan-500",
+  other: "bg-blue-400",
+};
+
+interface AllocationSegment {
+  key: string;
+  label: string;
+  percentage: number;
+  color: string;
+  isGroup?: boolean;
+}
 
 export function AllocationBar({
   displayName,
-  percentages,
+  constituents,
   strategyId,
   index,
 }: AllocationBarProps) {
-  const hasAny =
-    percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+
+  const segments = useMemo(() => {
+    const s: AllocationSegment[] = [];
+    
+    // Helper to process a bucket (spot or lp)
+    const processBucket = (
+      bucket: Record<string, number> | number,
+      bucketKey: "spot" | "lp"
+    ) => {
+      if (typeof bucket === "number") {
+        return [{ key: bucketKey, value: bucket, subKey: null }];
+      }
+      return Object.entries(bucket).map(([k, v]) => ({
+        key: bucketKey,
+        value: v,
+        subKey: k,
+      }));
+    };
+
+    const spotItems = processBucket(constituents.spot, "spot");
+    const lpItems = processBucket(constituents.lp, "lp");
+    const stableVal = constituents.stable;
+
+    const total = 
+      spotItems.reduce((sum, item) => sum + item.value, 0) +
+      lpItems.reduce((sum, item) => sum + item.value, 0) +
+      stableVal;
+
+    if (total === 0) return [];
+
+    // Spot segments
+    spotItems.forEach(item => {
+      if (item.value <= 0) return;
+      const pct = (item.value / total) * 100;
+      let color = ASSET_COLORS["other"];
+      let label = "Spot";
+
+      if (item.subKey) {
+        label = item.subKey.toUpperCase();
+        const keyLower = item.subKey.toLowerCase();
+        const specificColor = ASSET_COLORS[keyLower];
+        if (specificColor) {
+          color = specificColor;
+        }
+      } else {
+        color = "bg-blue-500";
+      }
+
+      const key = `spot-${item.subKey || "gen"}`;
+      s.push({ key, label, percentage: pct, color });
+    });
+
+    // Stable segment
+    if (stableVal > 0) {
+      s.push({
+        key: "stable",
+        label: "Stable",
+        percentage: (stableVal / total) * 100,
+        color: ASSET_COLORS["stable"],
+      });
+    }
+
+    // LP segments
+    lpItems.forEach(item => {
+      if (item.value <= 0) return;
+      const pct = (item.value / total) * 100;
+      // Use generic LP color for now
+      let color = ASSET_COLORS["lp"]; 
+      let label = "LP";
+      
+      if (item.subKey) {
+        label = `LP ${item.subKey.toUpperCase()}`;
+      }
+      
+      const key = `lp-${item.subKey || "gen"}`;
+      s.push({ key, label, percentage: pct, color });
+    });
+
+    return s;
+  }, [constituents]);
+
+  const hasAny = segments.length > 0;
   if (!hasAny) return null;
 
   const color =
@@ -38,29 +143,32 @@ export function AllocationBar({
         {displayName}
       </div>
       <div className="flex h-3 rounded overflow-hidden">
-        {BAR_SEGMENTS.map(({ key, color: bgColor }) => {
-          const pct = percentages[key];
-          if (pct <= 0) return null;
+        {segments.map((segment) => {
           return (
             <div
-              key={key}
-              className={`${bgColor} flex items-center justify-center min-w-[2px]`}
-              style={{ width: `${Math.max(pct, 0.5)}%` }}
+              key={segment.key}
+              className={`${segment.color} flex items-center justify-center min-w-[2px]`}
+              style={{ width: `${Math.max(segment.percentage, 0.5)}%` }}
+              title={`${segment.label}: ${segment.percentage.toFixed(1)}%`}
             >
-              {pct > 8 && (
-                <span className="text-[8px] text-white font-medium whitespace-nowrap">
-                  {pct.toFixed(0)}%
+              {segment.percentage > 12 && (
+                <span className="text-[8px] text-white font-medium whitespace-nowrap px-0.5">
+                   {segment.label === "Stable" ? "USD" : segment.label} {segment.percentage.toFixed(0)}%
                 </span>
               )}
             </div>
           );
         })}
       </div>
-      <div className="flex gap-2 text-[8px] text-gray-500">
-        {BAR_SEGMENTS.map(({ key, label }) => (
-          <span key={key}>
-            {label}: {percentages[key].toFixed(1)}%
-          </span>
+      {/* Legend / Detailed Text below */}
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-[8px] text-gray-500">
+        {segments.map((segment) => (
+           <div key={segment.key} className="flex items-center gap-1">
+              <div className={`w-1.5 h-1.5 rounded-full ${segment.color}`} />
+              <span>
+                {segment.label}: {segment.percentage.toFixed(1)}%
+              </span>
+           </div>
         ))}
       </div>
     </div>
