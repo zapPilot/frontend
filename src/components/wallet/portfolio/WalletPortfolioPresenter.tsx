@@ -10,8 +10,8 @@ import { AnalyticsView } from "@/components/wallet/portfolio/analytics";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/navigation";
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
-import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
+import { StrategyView } from "@/components/wallet/portfolio/views/strategy";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
@@ -155,9 +155,9 @@ export function WalletPortfolioPresenter({
         <AnalyticsView userId={userId} />
       </div>
     ) : null,
-    backtesting: (
-      <div data-testid="backtesting-content">
-        <BacktestingView />
+    strategy: (
+      <div data-testid="strategy-content">
+        <StrategyView userId={userId} />
       </div>
     ),
   };

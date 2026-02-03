@@ -82,6 +82,13 @@ export {
 // Backtesting
 export { runBacktest } from "./backtestingService";
 
+// Strategy Suggestions
+export {
+  type DailySuggestionParams,
+  type DailySuggestionResponse,
+  getDailySuggestion,
+} from "./strategyService";
+
 // ============================================================================
 // MOCK SERVICES (Development/Testing Only)
 // ============================================================================
