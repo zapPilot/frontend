@@ -9,9 +9,9 @@ vi.mock("@/components/wallet/portfolio/analytics", () => ({
   ),
 }));
 
-vi.mock("@/components/wallet/portfolio/views/BacktestingView", () => ({
-  BacktestingView: () => (
-    <div data-testid="backtesting-content">Backtesting Content</div>
+vi.mock("@/components/wallet/portfolio/views/strategy", () => ({
+  StrategyView: () => (
+    <div data-testid="strategy-content">Strategy Content</div>
   ),
 }));
 

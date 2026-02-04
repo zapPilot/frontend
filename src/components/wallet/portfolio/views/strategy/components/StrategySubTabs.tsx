@@ -33,6 +33,7 @@ export function StrategySubTabs({
       {SUB_TABS.map(tab => (
         <button
           key={tab.id}
+          data-testid={`strategy-subtab-${tab.id}`}
           onClick={() => onSubTabChange(tab.id)}
           className={cn(
             "flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all",

@@ -185,6 +185,8 @@ export interface DailySuggestionResponse {
   total_value_usd: number;
   /** Number of days of regime history used for pattern matching */
   regime_history_days: number;
+  /** Total days of portfolio history available for this user */
+  total_portfolio_history_days: number;
 }
 
 /**

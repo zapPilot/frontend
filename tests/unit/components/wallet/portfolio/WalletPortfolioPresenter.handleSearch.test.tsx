@@ -68,8 +68,8 @@ vi.mock("@/components/wallet/portfolio/analytics", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics</div>,
 }));
 
-vi.mock("@/components/wallet/portfolio/views/BacktestingView", () => ({
-  BacktestingView: () => <div data-testid="backtesting-view">Backtesting</div>,
+vi.mock("@/components/wallet/portfolio/views/strategy", () => ({
+  StrategyView: () => <div data-testid="strategy-view">Strategy</div>,
 }));
 
 vi.mock("@/components/wallet/portfolio/components/navigation", () => ({

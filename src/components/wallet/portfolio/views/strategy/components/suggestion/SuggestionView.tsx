@@ -6,13 +6,10 @@ import { BaseCard } from "@/components/ui/BaseCard";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
 import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
 import { Spinner } from "@/components/ui/LoadingSystem";
-import { formatCurrency } from "@/utils/formatters";
 
 import { useDailySuggestion } from "../../hooks/useDailySuggestion";
 import { AllocationComparison } from "./AllocationComparison";
-import { DriftCard } from "./DriftCard";
 import { RegimeIndicator } from "./RegimeIndicator";
-import { SuggestionCard } from "./SuggestionCard";
 import { TradeSuggestionsCard } from "./TradeSuggestionsCard";
 
 interface SuggestionViewProps {
@@ -60,31 +57,27 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header with regime and portfolio value */}
+      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-white">
             Today&apos;s Suggestion
           </h2>
           <p className="text-sm text-gray-400 mt-1">
-            Based on {data.regime_history_days}-day regime pattern analysis
+            Based on your {data.total_portfolio_history_days}-day portfolio
+            history
           </p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-lg font-semibold text-white">
-            {formatCurrency(data.total_value_usd)}
-          </span>
-          <button
-            onClick={() => refetch()}
-            disabled={isRefetching}
-            className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-            title="Refresh suggestion"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`}
-            />
-          </button>
-        </div>
+        <button
+          onClick={() => refetch()}
+          disabled={isRefetching}
+          className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+          title="Refresh suggestion"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`}
+          />
+        </button>
       </div>
 
       {/* Regime indicator */}

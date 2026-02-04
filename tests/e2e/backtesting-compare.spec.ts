@@ -213,7 +213,11 @@ test.describe("Backtesting (v3) - JSON editor + multi-series chart", () => {
     await page.goto(`/bundle?userId=${BUNDLE_USER_ID}`);
     await page.waitForLoadState("domcontentloaded");
 
-    await page.getByTestId("v22-tab-backtesting").click();
+    // Navigate to Strategy tab first
+    await page.getByTestId("v22-tab-strategy").click();
+
+    // Then click on Backtesting sub-tab
+    await page.getByTestId("strategy-subtab-backtesting").click();
 
     // Editor renders
     await expect(page.getByText("Request Payload (v3)")).toBeVisible();

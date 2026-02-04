@@ -181,8 +181,8 @@ export function TradeSuggestionsCard({
         rightContent={
           totalTradeVolume > 0 ? (
             <span className="text-sm text-gray-400">
-              {formatCurrency(totalTradeVolume)} ({volumePercent.toFixed(1)}% of
-              portfolio)
+              Trade volume: {formatCurrency(totalTradeVolume)} (
+              {volumePercent.toFixed(1)}% of holdings)
             </span>
           ) : undefined
         }
