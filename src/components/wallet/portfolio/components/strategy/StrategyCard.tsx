@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Gauge } from "lucide-react";
 import { useState } from "react";
 
+import { cn } from "@/lib/ui/classNames";
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
   getRegimeAllocation,
@@ -21,6 +22,8 @@ import { RegimeSelector } from "./RegimeSelector";
 import { StrategyAllocationDisplay } from "./StrategyAllocationDisplay";
 import { StrategyDirectionTabs } from "./StrategyDirectionTabs";
 
+import { getRegimeConfig } from "@/constants/regimeDisplay";
+
 /** StrategyCard styling constants */
 const STYLES = {
   cardBase:
@@ -30,7 +33,7 @@ const STYLES = {
   cardCollapsed:
     "border-gray-800 hover:border-purple-500/20 hover:bg-gray-900/60",
   regimeBadge:
-    "w-16 h-16 rounded-xl bg-gray-800 flex items-center justify-center text-2xl font-bold border border-gray-700 shadow-inner flex-shrink-0",
+    "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold border shadow-inner flex-shrink-0",
 } as const;
 
 /** Get card className based on expanded state */
@@ -183,6 +186,10 @@ export function StrategyCard({
     data.sentimentValue
   );
 
+  const displayConfig = effectiveRegime
+    ? getRegimeConfig(effectiveRegime.id)
+    : null;
+
   return (
     <motion.div
       data-testid="strategy-card"
@@ -201,7 +208,12 @@ export function StrategyCard({
     >
       {/* Background Icon */}
       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-        <Gauge className="w-32 h-32 text-purple-500" />
+        <Gauge
+          className={cn(
+            "w-32 h-32",
+            displayConfig ? displayConfig.color : "text-purple-500"
+          )}
+        />
       </div>
 
       {/* Header / Collapsed State */}
@@ -210,12 +222,15 @@ export function StrategyCard({
         className="relative z-10 flex items-start justify-between"
       >
         <div className="flex items-center gap-6">
-          <div className={STYLES.regimeBadge}>
-            {effectiveRegime ? (
-              <span
-                style={{ color: effectiveRegime.fillColor }}
-                data-testid="regime-badge"
-              >
+          <div
+            className={cn(
+              STYLES.regimeBadge,
+              displayConfig?.bg,
+              displayConfig?.border
+            )}
+          >
+            {effectiveRegime && displayConfig ? (
+              <span className={displayConfig.color} data-testid="regime-badge">
                 {effectiveRegime.id.toUpperCase()}
               </span>
             ) : (

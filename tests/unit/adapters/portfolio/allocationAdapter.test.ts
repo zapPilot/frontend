@@ -106,7 +106,7 @@ describe("calculateAllocation", () => {
 
       expect(btcAsset?.color).toBe("#F7931A"); // BTC orange
       expect(ethAsset?.color).toBe("#627EEA"); // ETH purple
-      expect(altAsset?.color).toBe("#8C8C8C"); // ALT gray
+      expect(altAsset?.color).toBe("#627EEA"); // ALT ecosystem blue
     });
   });
 

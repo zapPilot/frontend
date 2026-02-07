@@ -73,7 +73,7 @@ describe("BacktestingView", () => {
       render(<BacktestingView />);
     });
 
-    expect(screen.getByText("DCA Strategy Comparison")).toBeInTheDocument();
+    expect(screen.getByText("Strategy Simulator")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /Run Backtest/i })
     ).toBeInTheDocument();

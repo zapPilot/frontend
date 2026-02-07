@@ -1,65 +1,91 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { cn } from "@/lib/ui/classNames";
 import type { RegimeInfo } from "@/types/strategy";
+import { getRegimeConfig } from "@/constants/regimeDisplay";
 
 interface RegimeIndicatorProps {
   regime: RegimeInfo;
 }
 
-const REGIME_COLORS: Record<string, string> = {
-  extreme_fear: "bg-red-500/20 text-red-400 border-red-500/30",
-  fear: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  neutral: "bg-gray-500/20 text-gray-400 border-gray-500/30",
-  greed: "bg-green-500/20 text-green-400 border-green-500/30",
-  extreme_greed: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-};
-
-const REGIME_LABELS: Record<string, string> = {
-  extreme_fear: "Extreme Fear",
-  fear: "Fear",
-  neutral: "Neutral",
-  greed: "Greed",
-  extreme_greed: "Extreme Greed",
-};
-
 const DirectionIcon = ({ direction }: { direction: string }) => {
   switch (direction) {
     case "improving":
-      return <TrendingUp className="w-4 h-4 text-green-400" />;
+      return <TrendingUp className="w-4 h-4 text-emerald-400" />;
     case "worsening":
-      return <TrendingDown className="w-4 h-4 text-red-400" />;
+      return <TrendingDown className="w-4 h-4 text-rose-400" />;
     default:
       return <Minus className="w-4 h-4 text-gray-400" />;
   }
 };
 
 export function RegimeIndicator({ regime }: RegimeIndicatorProps) {
-  const colorClass = REGIME_COLORS[regime.current] || REGIME_COLORS["neutral"];
-  const label = REGIME_LABELS[regime.current] || "Unknown";
+  const config = getRegimeConfig(regime.current);
+  const sentimentValue = regime.sentiment_value ?? config.value;
 
   return (
-    <div className="flex items-center gap-4">
-      {/* Main regime badge */}
-      <div
-        className={cn("px-4 py-2 rounded-lg border font-medium", colorClass)}
-      >
-        {label}
-        {regime.sentiment_value !== null && (
-          <span className="ml-2 opacity-75">({regime.sentiment_value})</span>
-        )}
+    <div className="flex flex-col gap-4 h-full">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm text-gray-400 font-medium uppercase tracking-wider">
+            Market Regime
+          </span>
+          <div className="flex items-center gap-3 mt-1">
+            <h3 className={cn("text-2xl font-bold", config.color)}>
+              {config.label}
+            </h3>
+            <div
+              className={cn(
+                "px-2.5 py-0.5 rounded-full text-xs font-bold border",
+                config.bg,
+                config.color,
+                config.border
+              )}
+            >
+              {sentimentValue}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col items-end">
+          <div className="flex items-center gap-2 text-sm text-gray-400">
+            <span className="capitalize text-gray-300">{regime.direction}</span>
+            <DirectionIcon direction={regime.direction} />
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            For {regime.duration_days} day
+            {regime.duration_days !== 1 ? "s" : ""}
+          </div>
+        </div>
       </div>
 
-      {/* Direction and duration */}
-      <div className="flex items-center gap-2 text-sm text-gray-400">
-        <DirectionIcon direction={regime.direction} />
-        <span className="capitalize">{regime.direction}</span>
-        <span className="text-gray-600">|</span>
-        <span>
-          {regime.duration_days} day{regime.duration_days !== 1 ? "s" : ""}
-        </span>
+      {/* Visual Meter */}
+      <div className="relative h-4 bg-gray-900/50 rounded-full overflow-hidden w-full ring-1 ring-white/5 shadow-inner mt-auto">
+        {/* Background Gradients */}
+        <div className="absolute inset-0 flex opacity-30">
+          <div className="flex-1 bg-gradient-to-r from-rose-600 to-rose-500" />
+          <div className="flex-1 bg-gradient-to-r from-rose-500 to-orange-500" />
+          <div className="flex-1 bg-gradient-to-r from-orange-500 to-blue-500" />
+          <div className="flex-1 bg-gradient-to-r from-blue-500 to-emerald-500" />
+          <div className="flex-1 bg-gradient-to-r from-emerald-500 to-green-400" />
+        </div>
+
+        {/* Indicator Marker */}
+        <motion.div
+          className="absolute top-0 bottom-0 w-1.5 bg-white shadow-[0_0_15px_rgba(255,255,255,1)] z-10 rounded-full"
+          initial={{ left: "50%" }}
+          animate={{ left: `${sentimentValue}%` }}
+          transition={{ type: "spring", stiffness: 50, damping: 20 }}
+        />
+      </div>
+
+      <div className="flex justify-between text-[10px] text-gray-500 font-medium uppercase tracking-wider px-1">
+        <span>Fear</span>
+        <span>Neutral</span>
+        <span>Greed</span>
       </div>
     </div>
   );

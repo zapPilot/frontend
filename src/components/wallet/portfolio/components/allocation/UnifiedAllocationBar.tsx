@@ -39,7 +39,8 @@ const LABEL_TEXT_CLASSES = {
 
 const STYLES = {
   container: "flex flex-col gap-1",
-  barWrapper: "relative w-full rounded-lg overflow-hidden flex",
+  barWrapper:
+    "relative w-full rounded-lg overflow-hidden flex bg-gray-800/50 ring-1 ring-white/5",
   segment:
     "relative flex items-center justify-center transition-all duration-300",
   segmentLabel: "font-medium text-white whitespace-nowrap px-1",

@@ -9,7 +9,6 @@ import {
 } from "@/components/wallet/regime/regimeData";
 import { UNIFIED_COLORS } from "@/constants/assets";
 import { GRADIENTS } from "@/constants/design-system";
-import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
 import {
@@ -47,37 +46,20 @@ const STYLES = {
 
 /**
  * Builds unified target segments from crypto/stable percentages.
- * Uses marketcap-weighted BTC/ETH split when weights are available.
+ * The entire crypto portion maps to BTC (the sole spot crypto asset).
  */
-function buildTargetUnifiedSegments(
-  target: { crypto: number; stable: number },
-  weights: { btc_weight: number; eth_weight: number } | undefined
-): UnifiedSegment[] {
-  const btcWeight = weights?.btc_weight ?? 0.8;
-  const ethWeight = weights?.eth_weight ?? 0.2;
-
-  // BTC portion of crypto goes to "btc" category
-  // ETH portion goes to "alt" category (per unified model: ETH = ALT)
+function buildTargetUnifiedSegments(target: {
+  crypto: number;
+  stable: number;
+}): UnifiedSegment[] {
   const segments: UnifiedSegment[] = [];
 
-  const btcPercentage = target.crypto * btcWeight;
-  const altPercentage = target.crypto * ethWeight;
-
-  if (btcPercentage > 0) {
+  if (target.crypto > 0) {
     segments.push({
       category: "btc",
       label: "BTC",
-      percentage: btcPercentage,
+      percentage: target.crypto,
       color: UNIFIED_COLORS.BTC,
-    });
-  }
-
-  if (altPercentage > 0) {
-    segments.push({
-      category: "alt",
-      label: "ALT",
-      percentage: altPercentage,
-      color: UNIFIED_COLORS.ALT,
     });
   }
 
@@ -104,10 +86,6 @@ export function PortfolioComposition({
 }: PortfolioCompositionProps) {
   // Disable actions if empty state OR not own bundle (visitor mode)
   const isActionsDisabled = isEmptyState || !isOwnBundle;
-  // ⚠️ HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS ⚠️
-  // Fetch marketcap-weighted allocation weights for BTC/ETH split
-  const { data: allocationWeights } = useAllocationWeights();
-
   // Determine target breakdown source
   // Priority: 1. Explicit prop (from progressive loading) 2. Derived from Regime 3. Fallback
   let target = targetAllocation;
@@ -120,11 +98,11 @@ export function PortfolioComposition({
     };
   }
 
-  // Build target segments with marketcap-weighted BTC/ETH split
+  // Build target segments (BTC + STABLE)
   const targetSegments = useMemo(() => {
     if (!target) return [];
-    return buildTargetUnifiedSegments(target, allocationWeights);
-  }, [target, allocationWeights]);
+    return buildTargetUnifiedSegments(target);
+  }, [target]);
 
   // Build current portfolio segments
   const currentSegments = useMemo(() => {

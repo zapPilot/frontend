@@ -41,12 +41,6 @@ export {
   type UnifiedDashboardResponse,
 } from "./analyticsService";
 
-// Portfolio Allocation
-export {
-  type AllocationWeightsResponse,
-  getAllocationWeights,
-} from "./allocationService";
-
 // Bundle Sharing
 export {
   type BundleUser,

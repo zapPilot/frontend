@@ -1,0 +1,71 @@
+import { RegimeLabel } from "@/types/strategy";
+
+export const REGIME_DISPLAY_CONFIG: Record<
+  RegimeLabel,
+  {
+    label: string;
+    color: string;
+    bg: string;
+    border: string;
+    barColor: string;
+    value: number; // Default sentiment value if actual is missing
+  }
+> = {
+  extreme_fear: {
+    label: "Extreme Fear",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+    border: "border-rose-500/20",
+    barColor: "bg-rose-500",
+    value: 10,
+  },
+  fear: {
+    label: "Fear",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+    border: "border-orange-500/20",
+    barColor: "bg-orange-500",
+    value: 30,
+  },
+  neutral: {
+    label: "Neutral",
+    color: "text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    barColor: "bg-blue-500",
+    value: 50,
+  },
+  greed: {
+    label: "Greed",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    barColor: "bg-emerald-500",
+    value: 70,
+  },
+  extreme_greed: {
+    label: "Extreme Greed",
+    color: "text-green-400",
+    bg: "bg-green-500/10",
+    border: "border-green-500/20",
+    barColor: "bg-green-400",
+    value: 90,
+  },
+};
+
+// Helper to map short IDs to labels if needed
+export const REGIME_ID_MAP: Record<string, RegimeLabel> = {
+  ef: "extreme_fear",
+  f: "fear",
+  n: "neutral",
+  g: "greed",
+  eg: "extreme_greed",
+};
+
+export function getRegimeConfig(idOrLabel: string) {
+  const label = REGIME_ID_MAP[idOrLabel] || idOrLabel;
+  return (
+    REGIME_DISPLAY_CONFIG[label as RegimeLabel] ||
+    REGIME_DISPLAY_CONFIG["neutral"]
+  );
+}

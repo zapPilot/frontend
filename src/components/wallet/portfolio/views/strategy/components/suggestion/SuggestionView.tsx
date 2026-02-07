@@ -1,19 +1,19 @@
 "use client";
 
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
 import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
 import { Spinner } from "@/components/ui/LoadingSystem";
+import { useEmailSubscription } from "@/components/WalletManager/hooks/useEmailSubscription";
 
 import { useDailySuggestion } from "../../hooks/useDailySuggestion";
 import { useStrategyConfigs } from "../../hooks/useStrategyConfigs";
-import { TelegramNotificationCard } from "../TelegramNotificationCard";
 import { AllocationComparison } from "./AllocationComparison";
+import { NotificationChannels } from "./NotificationChannels";
 import { RegimeIndicator } from "./RegimeIndicator";
-import { StrategyPresetSelector } from "./StrategyPresetSelector";
 import { TradeSuggestionsCard } from "./TradeSuggestionsCard";
 
 interface SuggestionViewProps {
@@ -22,30 +22,24 @@ interface SuggestionViewProps {
 
 export function SuggestionView({ userId }: SuggestionViewProps) {
   const { data: configsResponse } = useStrategyConfigs(!!userId);
+  const emailSubscription = useEmailSubscription({
+    realUserId: userId || "",
+    viewingUserId: userId || "",
+    isOpen: true,
+    onEmailSubscribed: undefined,
+  });
 
-  const suggestionPresets = useMemo(
-    () =>
-      (configsResponse?.presets ?? []).filter(
-        p => p.strategy_id === "simple_regime"
-      ),
-    [configsResponse]
-  );
+  // We automatically select the "simple_regime" strategy as the default
+  // No UI selector needed as per requirements
+  const defaultPresetId = useMemo(() => {
+    const presets = configsResponse?.presets ?? [];
+    const regimePreset = presets.find(p => p.strategy_id === "simple_regime");
+    return regimePreset?.config_id ?? presets[0]?.config_id;
+  }, [configsResponse]);
 
-  const defaultPresetId = useMemo(
-    () =>
-      suggestionPresets.find(p => p.is_default)?.config_id ??
-      suggestionPresets[0]?.config_id,
-    [suggestionPresets]
-  );
-
-  // Undefined means "use backend default preset" (omit config_id query param).
-  const [selectedConfigId, setSelectedConfigId] = useState<
-    string | undefined
-  >();
-
-  const effectiveConfigId = selectedConfigId ?? defaultPresetId;
-  const suggestionParams = selectedConfigId
-    ? { config_id: selectedConfigId }
+  // Use the default preset ID for fetching suggestions
+  const suggestionParams = defaultPresetId
+    ? { config_id: defaultPresetId }
     : {};
 
   const { data, isLoading, error, refetch, isRefetching } = useDailySuggestion(
@@ -64,12 +58,17 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
 
   if (isLoading) {
     return (
-      <BaseCard variant="glass" className="p-6">
-        <div className="flex flex-col items-center justify-center py-12">
-          <Spinner size="lg" color="primary" className="mb-3" />
-          <p className="text-gray-400">Loading strategy suggestion...</p>
-        </div>
-      </BaseCard>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-96">
+        <BaseCard
+          variant="glass"
+          className="col-span-1 md:col-span-2 flex flex-col items-center justify-center"
+        >
+          <Spinner size="lg" color="primary" className="mb-4" />
+          <p className="text-gray-400 font-medium">
+            Analyzing market regime...
+          </p>
+        </BaseCard>
+      </div>
     );
   }
 
@@ -90,22 +89,28 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Header Section */}
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-gray-800 pb-4">
         <div>
-          <h2 className="text-xl font-bold text-white">
-            Today&apos;s Suggestion
+          <h2 className="text-2xl font-bold text-white tracking-tight">
+            Today&apos;s Strategy
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            Based on your {data.total_portfolio_history_days}-day portfolio
-            history
-          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-sm text-gray-400">
+              Analysis based on {data.total_portfolio_history_days}-day history
+            </span>
+            {isRefetching && (
+              <span className="text-xs text-blue-400 animate-pulse font-medium">
+                Updating...
+              </span>
+            )}
+          </div>
         </div>
         <button
           onClick={() => refetch()}
           disabled={isRefetching}
-          className="p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
-          title="Refresh suggestion"
+          className="p-2.5 rounded-lg bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700 transition-all disabled:opacity-50 ring-1 ring-white/5"
+          title="Refresh analysis"
         >
           <RefreshCw
             className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`}
@@ -113,46 +118,57 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
         </button>
       </div>
 
-      {/* Preset selector */}
-      {effectiveConfigId && suggestionPresets.length > 0 ? (
-        <BaseCard variant="glass" className="p-4">
-          <StrategyPresetSelector
-            presets={suggestionPresets}
-            selectedConfigId={effectiveConfigId}
-            onSelect={nextId => {
-              if (defaultPresetId && nextId === defaultPresetId) {
-                setSelectedConfigId(undefined);
-              } else {
-                setSelectedConfigId(nextId);
-              }
+      {/* Main Dashboard Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Left Column: Context (Regime) - 4 cols */}
+        <div className="lg:col-span-4 flex flex-col gap-6">
+          <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 h-full flex flex-col">
+            <RegimeIndicator regime={data.regime} />
+          </div>
+        </div>
+
+        {/* Right Column: Action (Trades) - 8 cols */}
+        <div className="lg:col-span-8 flex flex-col gap-6">
+          <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-6 h-full">
+            <TradeSuggestionsCard
+              trades={data.trade_suggestions ?? []}
+              pacing={data.pacing ?? null}
+              patternReason={data.pattern_reason}
+            />
+          </div>
+        </div>
+
+        {/* Bottom Row: Allocation Detail - Full Width */}
+        <div className="lg:col-span-12">
+          <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-8">
+            <div className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-6">
+              Allocation Targets
+            </div>
+            <AllocationComparison
+              current={data.current_allocation}
+              target={data.target_allocation}
+              targetName={data.target_name}
+            />
+          </div>
+        </div>
+
+        {/* Notifications - Full Width */}
+        <div className="lg:col-span-12">
+          <NotificationChannels
+            emailSubscriptionProps={{
+              email: emailSubscription.email,
+              subscribedEmail: emailSubscription.subscribedEmail,
+              isEditingSubscription: emailSubscription.isEditingSubscription,
+              subscriptionOperation: emailSubscription.subscriptionOperation,
+              onEmailChange: emailSubscription.setEmail,
+              onSubscribe: emailSubscription.handleSubscribe,
+              onUnsubscribe: emailSubscription.handleUnsubscribe,
+              onStartEditing: emailSubscription.startEditingSubscription,
+              onCancelEditing: emailSubscription.cancelEditingSubscription,
             }}
           />
-        </BaseCard>
-      ) : null}
-
-      {/* Regime indicator */}
-      <BaseCard variant="glass" className="p-4">
-        <RegimeIndicator regime={data.regime} />
-      </BaseCard>
-      {/* Trade suggestions with USD amounts (primary action card) */}
-      <BaseCard variant="glass" className="p-6">
-        <TradeSuggestionsCard
-          trades={data.trade_suggestions ?? []}
-          pacing={data.pacing ?? null}
-          totalValue={data.total_value_usd}
-        />
-      </BaseCard>
-      {/* Allocation comparison */}
-      <BaseCard variant="glass" className="p-6">
-        <AllocationComparison
-          current={data.current_allocation}
-          target={data.target_allocation}
-          targetName={data.target_name}
-        />
-      </BaseCard>
-
-      {/* Telegram notifications */}
-      <TelegramNotificationCard userId={userId} />
+        </div>
+      </div>
     </div>
   );
 }
