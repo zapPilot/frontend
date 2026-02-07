@@ -1,6 +1,9 @@
 "use client";
 
-import { cn } from "@/lib/ui/classNames";
+import {
+  mapStrategyToUnified,
+  UnifiedAllocationBar,
+} from "@/components/wallet/portfolio/components/allocation";
 import type { StrategyBuckets } from "@/types/strategy";
 
 interface AllocationComparisonProps {
@@ -9,69 +12,25 @@ interface AllocationComparisonProps {
   targetName: string | null;
 }
 
-const BUCKET_COLORS = {
-  spot: {
-    bg: "bg-blue-500",
-    text: "text-blue-400",
-    label: "Spot",
-  },
-  lp: {
-    bg: "bg-purple-500",
-    text: "text-purple-400",
-    label: "LP",
-  },
-  stable: {
-    bg: "bg-green-500",
-    text: "text-green-400",
-    label: "Stable",
-  },
-};
-
-interface AllocationBarProps {
-  allocation: StrategyBuckets;
-  label: string;
-}
-
-function AllocationBar({ allocation, label }: AllocationBarProps) {
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-400">{label}</span>
-        <div className="flex gap-4 text-xs">
-          <span className={BUCKET_COLORS.spot.text}>
-            Spot: {(allocation.spot * 100).toFixed(0)}%
-          </span>
-          <span className={BUCKET_COLORS.lp.text}>
-            LP: {(allocation.lp * 100).toFixed(0)}%
-          </span>
-          <span className={BUCKET_COLORS.stable.text}>
-            Stable: {(allocation.stable * 100).toFixed(0)}%
-          </span>
-        </div>
-      </div>
-      <div className="h-4 bg-gray-800 rounded-full overflow-hidden flex">
-        <div
-          className={cn(BUCKET_COLORS.spot.bg, "transition-all duration-500")}
-          style={{ width: `${allocation.spot * 100}%` }}
-        />
-        <div
-          className={cn(BUCKET_COLORS.lp.bg, "transition-all duration-500")}
-          style={{ width: `${allocation.lp * 100}%` }}
-        />
-        <div
-          className={cn(BUCKET_COLORS.stable.bg, "transition-all duration-500")}
-          style={{ width: `${allocation.stable * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
+/**
+ * AllocationComparison - Displays current vs target allocation using unified categories.
+ *
+ * Uses the unified 4-category model (BTC, BTC-STABLE, STABLE, ALT) for consistent
+ * visualization across the application.
+ *
+ * Note: Strategy buckets (spot/lp/stable) are mapped to unified categories:
+ * - spot → BTC (simplified - assumes BTC-heavy spot allocation)
+ * - lp → BTC-STABLE (strategy focuses on BTC-USDC LP)
+ * - stable → STABLE
+ */
 export function AllocationComparison({
   current,
   target,
   targetName,
 }: AllocationComparisonProps) {
+  const currentSegments = mapStrategyToUnified(current);
+  const targetSegments = mapStrategyToUnified(target);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -88,24 +47,27 @@ export function AllocationComparison({
 
       {/* Bars */}
       <div className="space-y-4">
-        <AllocationBar allocation={current} label="Current" />
-        <AllocationBar allocation={target} label="Target" />
+        <UnifiedAllocationBar
+          segments={currentSegments}
+          size="md"
+          title="Current"
+          testIdPrefix="comparison-current"
+        />
+        <UnifiedAllocationBar
+          segments={targetSegments}
+          size="md"
+          title="Target"
+          testIdPrefix="comparison-target"
+        />
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-xs text-gray-500">
-        <div className="flex items-center gap-2">
-          <div className={cn("w-3 h-3 rounded", BUCKET_COLORS.spot.bg)} />
-          <span>Spot (BTC, ETH, Alts)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className={cn("w-3 h-3 rounded", BUCKET_COLORS.lp.bg)} />
-          <span>LP (ETH-USDC, BTC-USDC)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className={cn("w-3 h-3 rounded", BUCKET_COLORS.stable.bg)} />
-          <span>Stable (USDC, USDT, etc.)</span>
-        </div>
+      {/* Category Explanation */}
+      <div className="text-xs text-gray-500">
+        <p>
+          <span className="text-gray-400">Categories:</span> BTC (spot holdings)
+          • BTC-STABLE (BTC-USDC LP) • STABLE (stablecoins) • ALT (ETH, alts,
+          ETH-LP)
+        </p>
       </div>
     </div>
   );

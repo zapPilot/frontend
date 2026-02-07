@@ -1,6 +1,6 @@
+import type { BacktestConstituentsSource } from "@/components/wallet/portfolio/components/allocation";
 import { formatCurrency } from "@/utils";
 
-import type { PortfolioConstituents } from "../components/AllocationBar";
 import {
   calculatePercentages,
   getStrategyDisplayName,
@@ -49,7 +49,7 @@ export interface SignalItem {
 export interface AllocationBlock {
   id: string;
   displayName: string;
-  constituents: PortfolioConstituents;
+  constituents: BacktestConstituentsSource;
   spotBreakdown: string | null;
   index: number | undefined;
 }
@@ -90,7 +90,7 @@ export function useBacktestTooltipData({
     | Record<
         string,
         {
-          portfolio_constituant?: PortfolioConstituents;
+          portfolio_constituant?: BacktestConstituentsSource;
         }
       >
     | undefined;

@@ -6,7 +6,7 @@ import {
   type BacktestTooltipProps,
   useBacktestTooltipData,
 } from "../hooks/useBacktestTooltipData";
-import { AllocationBar } from "./AllocationBar";
+import { BacktestAllocationBar } from "./BacktestAllocationBar";
 
 export type { BacktestTooltipProps };
 
@@ -83,19 +83,14 @@ export function BacktestTooltip(props: BacktestTooltipProps) {
       {allocations.length > 0 && (
         <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
           {allocations.map(block => (
-            <div key={block.id} className="flex flex-col gap-0.5">
-              <AllocationBar
-                displayName={block.displayName}
-                constituents={block.constituents}
-                strategyId={block.id}
-                index={block.index}
-              />
-              {block.spotBreakdown && (
-                <div className="text-[8px] text-gray-500 pl-4">
-                  Spot: {block.spotBreakdown}
-                </div>
-              )}
-            </div>
+            <BacktestAllocationBar
+              key={block.id}
+              displayName={block.displayName}
+              constituents={block.constituents}
+              strategyId={block.id}
+              index={block.index}
+              spotBreakdown={block.spotBreakdown}
+            />
           ))}
         </div>
       )}
