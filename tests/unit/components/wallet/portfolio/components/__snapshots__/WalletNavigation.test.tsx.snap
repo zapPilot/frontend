@@ -118,14 +118,14 @@ exports[`WalletNavigation Component > renders correctly with search bar (snapsho
           </span>
         </button>
         <button
-          aria-label="Backtesting tab"
+          aria-label="Strategy tab"
           class="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 hover:border-purple-500/20 border border-transparent"
-          data-testid="v22-tab-backtesting"
+          data-testid="v22-tab-strategy"
           role="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-history w-4 h-4"
+            class="lucide lucide-compass w-4 h-4"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -137,19 +137,18 @@ exports[`WalletNavigation Component > renders correctly with search bar (snapsho
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"
+              d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"
             />
-            <path
-              d="M3 3v5h5"
-            />
-            <path
-              d="M12 7v5l4 2"
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
             />
           </svg>
           <span
             class="hidden sm:inline"
           >
-            Backtesting
+            Strategy
           </span>
         </button>
       </div>

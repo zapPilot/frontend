@@ -9,7 +9,7 @@ export const API_ENDPOINTS = {
   intentEngine: process.env["NEXT_PUBLIC_INTENT_ENGINE_URL"] || "",
   backendApi: process.env["NEXT_PUBLIC_API_URL"] || "",
   accountApi: process.env["NEXT_PUBLIC_ACCOUNT_API_URL"] || "",
-  debank: process.env["NEXT_PUBLIC_DEBANK_API_URL"] || "",
+  debank: "https://pro-openapi.debank.com/v1",
 } as const;
 
 // Default configuration

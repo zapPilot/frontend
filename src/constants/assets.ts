@@ -11,6 +11,25 @@ export const ASSET_COLORS = {
 } as const;
 
 /**
+ * Unified 4-category color scheme for allocation bars.
+ *
+ * This provides a consistent color palette across all allocation visualizations:
+ * - Dashboard (PortfolioComposition)
+ * - Strategy (AllocationComparison)
+ * - Backtesting (BacktestTooltip)
+ */
+export const UNIFIED_COLORS = {
+  /** Bitcoin spot holdings - Bitcoin Orange */
+  BTC: "#F7931A",
+  /** BTC-USDC LP positions - Amber (blend of BTC orange and stable) */
+  BTC_STABLE: "#D97706",
+  /** Stablecoins - USDC Blue */
+  STABLE: "#2775CA",
+  /** Everything else (ETH, alts, ETH-LP) - Neutral Gray */
+  ALT: "#6B7280",
+} as const;
+
+/**
  * Bar opacity settings for allocation visualizations
  * - BACKGROUND: 40% opacity for bar fill (softer, avoids visual overwhelm)
  * - BORDER: 50% opacity for bar border (subtle definition)

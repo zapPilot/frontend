@@ -6,6 +6,7 @@ export interface BtcPriceSnapshot {
   market_cap_usd?: number;
   volume_24h_usd?: number;
   source: string;
+  /** @deprecated use token_id or specific symbol fields */
   token_symbol?: string;
   token_id?: string;
 }

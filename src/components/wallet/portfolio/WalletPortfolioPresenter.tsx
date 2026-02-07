@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { Footer } from "@/components/Footer/Footer";
@@ -10,8 +10,8 @@ import { AnalyticsView } from "@/components/wallet/portfolio/analytics";
 import { WalletNavigation } from "@/components/wallet/portfolio/components/navigation";
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
-import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
+import { StrategyView } from "@/components/wallet/portfolio/views/strategy";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
@@ -60,6 +60,7 @@ export function WalletPortfolioPresenter({
   const [activeTab, setActiveTab] = useState<TabType>("dashboard");
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const pendingSearchCountRef = useRef(0);
   const [showNewWalletLoading, setShowNewWalletLoading] = useState(false);
 
   const {
@@ -77,9 +78,14 @@ export function WalletPortfolioPresenter({
       return;
     }
 
-    try {
+    // Guard against multiple overlapping searches (e.g. rapid submits) so the
+    // searching indicator doesn't flicker off while a later request is pending.
+    pendingSearchCountRef.current += 1;
+    if (pendingSearchCountRef.current === 1) {
       setIsSearching(true);
+    }
 
+    try {
       // Convert wallet address to userId via backend
       const response = await connectWallet(trimmedAddress);
 
@@ -120,7 +126,13 @@ export function WalletPortfolioPresenter({
         setShowNewWalletLoading(true);
       }
     } finally {
-      setIsSearching(false);
+      pendingSearchCountRef.current = Math.max(
+        0,
+        pendingSearchCountRef.current - 1
+      );
+      if (pendingSearchCountRef.current === 0) {
+        setIsSearching(false);
+      }
     }
   };
 
@@ -143,9 +155,9 @@ export function WalletPortfolioPresenter({
         <AnalyticsView userId={userId} />
       </div>
     ) : null,
-    backtesting: (
-      <div data-testid="backtesting-content">
-        <BacktestingView />
+    strategy: (
+      <div data-testid="strategy-content">
+        <StrategyView userId={userId} />
       </div>
     ),
   };

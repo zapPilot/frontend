@@ -79,6 +79,26 @@ export {
   validateExportData,
 } from "./analyticsExportService";
 
+// Backtesting
+export { runBacktest } from "./backtestingService";
+
+// Strategy Suggestions
+export {
+  type DailySuggestionParams,
+  type DailySuggestionResponse,
+  getDailySuggestion,
+} from "./strategyService";
+
+// Telegram Integration
+export {
+  disconnectTelegram,
+  getTelegramStatus,
+  requestTelegramToken,
+  type TelegramDisconnectResponse,
+  type TelegramStatus,
+  type TelegramTokenResponse,
+} from "./telegramService";
+
 // ============================================================================
 // MOCK SERVICES (Development/Testing Only)
 // ============================================================================

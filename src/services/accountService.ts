@@ -9,6 +9,7 @@ import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
 import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
+import { createServiceError } from "@/lib/http/serviceErrorUtils";
 import {
   connectWalletResponseSchema,
   etlJobStatusResponseSchema,
@@ -31,84 +32,40 @@ import { logger } from "@/utils/logger";
 export { AccountServiceError };
 
 /**
- * Account Service Error Details
- * Extended type for account-specific error context
- */
-interface AccountServiceErrorDetails {
-  field?: string;
-  value?: unknown;
-  constraint?: string;
-  [key: string]: unknown;
-}
-
-/**
- * API Error Response Structure
- */
-interface ApiErrorResponse {
-  status?: number;
-  message?: string;
-  code?: string;
-  details?: AccountServiceErrorDetails;
-  response?: {
-    status?: number;
-  };
-}
-
-/**
- * Type guard for API error response
- */
-function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
-  return error !== null && typeof error === "object";
-}
-
-/**
  * Create enhanced error messages for common account API errors
  */
-const createAccountServiceError = (error: unknown): AccountServiceError => {
-  const apiError = isApiErrorResponse(error) ? error : {};
-  const status = apiError.status || apiError.response?.status || 500;
-  let message = apiError.message || "Account service error";
-
-  // Enhance error messages based on status codes
-  switch (status) {
-    case 400:
-      if (message?.includes("wallet")) {
-        message =
-          "Invalid wallet address format. Must be a 42-character Ethereum address.";
+const createAccountServiceError = (error: unknown): AccountServiceError =>
+  createServiceError(
+    error,
+    AccountServiceError,
+    "Account service error",
+    (status, message) => {
+      // Enhance error messages based on status codes
+      switch (status) {
+        case 400:
+          if (message?.includes("wallet")) {
+            return "Invalid wallet address format. Must be a 42-character Ethereum address.";
+          }
+          break;
+        case 404:
+          return "User account not found. Please connect your wallet first.";
+        case 409:
+          if (message?.includes("wallet already belongs to another user")) {
+            // Keep the backend's enhanced message which already includes guidance
+            return message;
+          }
+          if (message?.includes("wallet")) {
+            return "This wallet is already associated with an account.";
+          } else if (message?.includes("email")) {
+            return "This email address is already in use.";
+          }
+          break;
+        case 422:
+          return "Invalid request data. Please check your input and try again.";
       }
-      break;
-    case 404:
-      message = "User account not found. Please connect your wallet first.";
-      break;
-    case 409:
-      if (message?.includes("wallet already belongs to another user")) {
-        // Keep the backend's enhanced message which already includes guidance
-        // The backend now returns: "Wallet already belongs to another user, please delete one of the accounts instead"
-        break;
-      }
-      if (message?.includes("wallet")) {
-        message = "This wallet is already associated with an account.";
-      } else if (message?.includes("email")) {
-        message = "This email address is already in use.";
-      }
-      break;
-    case 422:
-      message = "Invalid request data. Please check your input and try again.";
-      break;
-  }
-
-  const errorData =
-    error && typeof error === "object"
-      ? (error as Record<string, unknown>)
-      : {};
-
-  return new AccountServiceError(
-    message,
-    status,
-    errorData["code"] as string,
-    errorData["details"] as Record<string, unknown>
+      return message;
+    }
   );
-};
 
 const accountApiClient = httpUtils.accountApi;
 

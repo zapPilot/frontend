@@ -5,7 +5,6 @@ interface MetricCardProps {
   value: string;
   subtext?: string;
   highlight?: boolean;
-  showLevBadge?: boolean;
 }
 
 export function MetricCard({
@@ -13,26 +12,35 @@ export function MetricCard({
   value,
   subtext,
   highlight,
-  showLevBadge,
 }: MetricCardProps) {
   return (
     <BaseCard
       variant="glass"
-      className={`p-5 ${highlight ? "bg-green-500/5 border-green-500/20" : ""}`}
+      className={`p-5 overflow-hidden flex flex-col min-w-0 ${
+        highlight ? "bg-green-500/5 border-green-500/20" : ""
+      }`}
     >
       <div
-        className={`text-xs font-medium mb-1.5 flex items-center gap-1 ${highlight ? "text-green-400" : "text-gray-400"}`}
+        className={`text-xs font-medium mb-1.5 flex items-center gap-1 truncate w-full ${
+          highlight ? "text-green-400" : "text-gray-400"
+        }`}
+        title={label}
       >
         {label}
-        {showLevBadge && (
-          <span className="text-[9px] bg-green-500/20 px-1 rounded">LEV</span>
-        )}
       </div>
-      <div className="text-3xl font-bold text-white tracking-tight">
+      <div
+        className="text-3xl font-bold text-white tracking-tight truncate w-full"
+        title={value}
+      >
         {value}
       </div>
       {subtext && (
-        <div className="text-[11px] text-gray-400 mt-1">{subtext}</div>
+        <div
+          className="text-[11px] text-gray-400 mt-1 truncate w-full"
+          title={subtext}
+        >
+          {subtext}
+        </div>
       )}
     </BaseCard>
   );

@@ -20,6 +20,7 @@ export * from "./export";
 export * from "./portfolio";
 export * from "./portfolio-allocation";
 export * from "./portfolio-progressive";
+export * from "./strategy";
 
 // ============================================================================
 // DOMAIN TYPES

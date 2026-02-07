@@ -1,0 +1,99 @@
+"use client";
+
+import { formatCurrency } from "@/utils";
+
+import {
+  type BacktestTooltipProps,
+  useBacktestTooltipData,
+} from "../hooks/useBacktestTooltipData";
+import { BacktestAllocationBar } from "./BacktestAllocationBar";
+
+export type { BacktestTooltipProps };
+
+/**
+ * Custom Tooltip component that renders date label only once
+ * and properly formats all chart data entries.
+ * Shows which strategies triggered trading signals.
+ */
+export function BacktestTooltip(props: BacktestTooltipProps) {
+  const { active } = props;
+  const data = useBacktestTooltipData(props);
+
+  if (!active || !data) return null;
+
+  const { dateStr, btcPrice, sections } = data;
+  const { strategies, events, signals, allocations } = sections;
+
+  return (
+    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px]">
+      <div className="text-xs font-medium text-white mb-2">{dateStr}</div>
+      {btcPrice != null && (
+        <div className="text-xs text-gray-400 mb-2">
+          BTC Price:{" "}
+          {formatCurrency(btcPrice, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </div>
+      )}
+      <div className="space-y-1">
+        {strategies.map((entry, index) => (
+          <div key={index} className="text-xs" style={{ color: entry.color }}>
+            {entry.name}: ${entry.value.toLocaleString()}
+          </div>
+        ))}
+
+        {events.map((entry, index) => {
+          const strategiesStr =
+            entry.strategies.length > 0
+              ? ` (${entry.strategies.join(", ")})`
+              : "";
+
+          return (
+            <div
+              key={`evt-${index}`}
+              className="text-xs font-medium"
+              style={{ color: entry.color }}
+            >
+              {entry.name}
+              {strategiesStr}
+            </div>
+          );
+        })}
+      </div>
+
+      {signals.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-700 space-y-1">
+          <div className="text-[10px] text-gray-500 uppercase tracking-wider font-semibold mb-1">
+            Signals
+          </div>
+          {signals.map((entry, index) => (
+            <div
+              key={`sig-${index}`}
+              className="text-xs flex justify-between gap-4"
+              style={{ color: entry.color }}
+            >
+              <span>{entry.name}</span>
+              <span className="font-mono">{entry.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {allocations.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-gray-700 space-y-2">
+          {allocations.map(block => (
+            <BacktestAllocationBar
+              key={block.id}
+              displayName={block.displayName}
+              constituents={block.constituents}
+              strategyId={block.id}
+              index={block.index}
+              spotBreakdown={block.spotBreakdown}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

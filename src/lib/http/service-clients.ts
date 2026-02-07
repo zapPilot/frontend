@@ -87,7 +87,7 @@ export const httpUtils = {
   accountApi: createServiceHttpClient(API_ENDPOINTS.accountApi),
 
   /**
-   * DeBank API utilities
+   * DeBank Open API utilities
    */
   debank: createServiceHttpClient(API_ENDPOINTS.debank),
 } as const;

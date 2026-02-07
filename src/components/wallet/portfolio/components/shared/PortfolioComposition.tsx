@@ -7,14 +7,18 @@ import {
   getRegimeAllocation,
   type Regime,
 } from "@/components/wallet/regime/regimeData";
+import { UNIFIED_COLORS } from "@/constants/assets";
 import { GRADIENTS } from "@/constants/design-system";
 import { useAllocationWeights } from "@/hooks/queries/analytics/useAllocationWeights";
 
 import { PortfolioCompositionSkeleton } from "../../views/DashboardSkeleton";
-import { AllocationBars, TargetAllocationBar } from "../allocation";
+import {
+  mapLegacyConstituentsToUnified,
+  UnifiedAllocationBar,
+  type UnifiedSegment,
+} from "../allocation";
 import {
   buildRealCryptoAssets,
-  buildTargetAssetsWithWeights,
   buildTargetCryptoAssets,
 } from "../utils/portfolioCompositionHelpers";
 
@@ -38,9 +42,56 @@ const STYLES = {
   subtitle: "text-sm text-gray-400",
   allocationRow: "flex gap-2 items-center",
   barTrack:
-    "relative w-full bg-gray-900/50 rounded-xl border border-gray-800 p-3 flex flex-col gap-1 overflow-hidden",
-  barLabel: "text-[10px] text-gray-500 font-medium mb-1",
+    "relative w-full bg-gray-900/50 rounded-xl border border-gray-800 p-3 flex flex-col gap-3 overflow-hidden",
 } as const;
+
+/**
+ * Builds unified target segments from crypto/stable percentages.
+ * Uses marketcap-weighted BTC/ETH split when weights are available.
+ */
+function buildTargetUnifiedSegments(
+  target: { crypto: number; stable: number },
+  weights: { btc_weight: number; eth_weight: number } | undefined
+): UnifiedSegment[] {
+  const btcWeight = weights?.btc_weight ?? 0.8;
+  const ethWeight = weights?.eth_weight ?? 0.2;
+
+  // BTC portion of crypto goes to "btc" category
+  // ETH portion goes to "alt" category (per unified model: ETH = ALT)
+  const segments: UnifiedSegment[] = [];
+
+  const btcPercentage = target.crypto * btcWeight;
+  const altPercentage = target.crypto * ethWeight;
+
+  if (btcPercentage > 0) {
+    segments.push({
+      category: "btc",
+      label: "BTC",
+      percentage: btcPercentage,
+      color: UNIFIED_COLORS.BTC,
+    });
+  }
+
+  if (altPercentage > 0) {
+    segments.push({
+      category: "alt",
+      label: "ALT",
+      percentage: altPercentage,
+      color: UNIFIED_COLORS.ALT,
+    });
+  }
+
+  if (target.stable > 0) {
+    segments.push({
+      category: "stable",
+      label: "STABLE",
+      percentage: target.stable,
+      color: UNIFIED_COLORS.STABLE,
+    });
+  }
+
+  return segments.sort((a, b) => b.percentage - a.percentage);
+}
 
 export function PortfolioComposition({
   data,
@@ -69,11 +120,25 @@ export function PortfolioComposition({
     };
   }
 
-  // Build target assets array with marketcap-weighted BTC/ETH split
-  const targetAssets = useMemo(() => {
+  // Build target segments with marketcap-weighted BTC/ETH split
+  const targetSegments = useMemo(() => {
     if (!target) return [];
-    return buildTargetAssetsWithWeights(target, allocationWeights);
+    return buildTargetUnifiedSegments(target, allocationWeights);
   }, [target, allocationWeights]);
+
+  // Build current portfolio segments
+  const currentSegments = useMemo(() => {
+    const cryptoAssets =
+      isEmptyState && currentRegime
+        ? buildTargetCryptoAssets(currentRegime)
+        : buildRealCryptoAssets(data);
+
+    const stablePercentage = isEmptyState
+      ? (target?.stable ?? 0)
+      : data.currentAllocation.stable;
+
+    return mapLegacyConstituentsToUnified(cryptoAssets, stablePercentage);
+  }, [data, isEmptyState, currentRegime, target]);
 
   // Early return for loading state
   if (isLoading) {
@@ -84,19 +149,6 @@ export function PortfolioComposition({
   if (!target) {
     return null;
   }
-
-  // Determine which assets to display
-  // If we lack regime, we can't infer target-specific assets for empty state perfectly,
-  // but we can try to be robust.
-  // buildTargetCryptoAssets usually depends on regime. If missing, maybe fallback or use current assets.
-  const cryptoAssets =
-    isEmptyState && currentRegime
-      ? buildTargetCryptoAssets(currentRegime)
-      : buildRealCryptoAssets(data);
-
-  const stablePercentage = isEmptyState
-    ? target.stable
-    : data.currentAllocation.stable;
 
   return (
     <div className={STYLES.container} data-testid="composition-bar">
@@ -132,15 +184,21 @@ export function PortfolioComposition({
 
       {/* ALLOCATION BAR TRACK */}
       <div className={STYLES.barTrack}>
-        {/* Target Indicator Bar - Dynamic marketcap-weighted BTC/ETH/Stables */}
-        <div className={STYLES.barLabel}>Target Allocation</div>
-        <TargetAllocationBar assets={targetAssets} />
+        {/* Target Indicator Bar - Thin indicator with unified categories */}
+        <UnifiedAllocationBar
+          segments={targetSegments}
+          size="sm"
+          showLabels={false}
+          title="Target Allocation"
+          testIdPrefix="target"
+        />
 
-        {/* ACTUAL BARS */}
-        <div className={STYLES.barLabel}>Current Portfolio</div>
-        <AllocationBars
-          cryptoAssets={cryptoAssets}
-          stablePercentage={stablePercentage}
+        {/* Current Portfolio - Standard size with full labels */}
+        <UnifiedAllocationBar
+          segments={currentSegments}
+          size="md"
+          title="Current Portfolio"
+          testIdPrefix="current"
         />
       </div>
     </div>

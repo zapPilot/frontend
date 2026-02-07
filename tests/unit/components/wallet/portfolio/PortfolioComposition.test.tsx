@@ -155,9 +155,10 @@ describe("PortfolioComposition", () => {
         />
       );
 
-      // Check for legend items (based on mockData symbols)
+      // Check for legend items (unified categories: BTC, ALT, STABLE)
+      // ETH is now categorized as ALT in the unified allocation model
       expect(screen.getAllByText("BTC")[0]).toBeInTheDocument();
-      expect(screen.getAllByText("ETH")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("ALT")[0]).toBeInTheDocument();
       // We expect multiple '40%' (BTC, Stables) and possibly from bars if rendered text
       expect(screen.getAllByText("40%").length).toBeGreaterThanOrEqual(2);
     });
