@@ -89,6 +89,16 @@ export {
   getDailySuggestion,
 } from "./strategyService";
 
+// Telegram Integration
+export {
+  disconnectTelegram,
+  getTelegramStatus,
+  requestTelegramToken,
+  type TelegramDisconnectResponse,
+  type TelegramStatus,
+  type TelegramTokenResponse,
+} from "./telegramService";
+
 // ============================================================================
 // MOCK SERVICES (Development/Testing Only)
 // ============================================================================

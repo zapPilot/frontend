@@ -1,4 +1,5 @@
 import type { BacktestStrategyCatalogResponseV3 } from "@/types/backtesting";
+import type { StrategyConfigsResponse } from "@/types/strategy";
 
 /**
  * Mock catalog with complete pacing policies.
@@ -180,4 +181,69 @@ export const mockCatalogSingleStrategy: BacktestStrategyCatalogResponseV3 = {
 export const mockCatalogEmpty: BacktestStrategyCatalogResponseV3 = {
   catalog_version: "3.0.0",
   strategies: [],
+};
+
+/**
+ * Mock strategy configs response with presets and backtest defaults.
+ * Used for testing the backtest defaults feature.
+ */
+export const mockStrategyConfigsResponse: StrategyConfigsResponse = {
+  presets: [
+    {
+      config_id: "dca_classic",
+      display_name: "Classic DCA",
+      description: "Simple dollar-cost averaging baseline",
+      strategy_id: "dca_classic",
+      params: {},
+      is_default: false,
+      is_benchmark: true,
+    },
+    {
+      config_id: "fgi_exponential",
+      display_name: "FGI Exponential (Aggressive)",
+      description: "Front-loaded rebalancing using FGI exponential pacing",
+      strategy_id: "simple_regime",
+      params: { k: 3.0, r_max: 1.2 },
+      is_default: true,
+      is_benchmark: false,
+    },
+  ],
+  backtest_defaults: {
+    days: 500,
+    total_capital: 10000,
+  },
+};
+
+/**
+ * Mock strategy configs with custom backtest defaults.
+ * Used for testing custom API-provided defaults.
+ */
+export const mockStrategyConfigsCustomDefaults: StrategyConfigsResponse = {
+  presets: [
+    {
+      config_id: "dca_classic",
+      display_name: "Classic DCA",
+      description: "Simple dollar-cost averaging baseline",
+      strategy_id: "dca_classic",
+      params: {},
+      is_default: false,
+      is_benchmark: true,
+    },
+  ],
+  backtest_defaults: {
+    days: 365,
+    total_capital: 50000,
+  },
+};
+
+/**
+ * Mock strategy configs with empty presets.
+ * Tests fallback behavior when no presets available.
+ */
+export const mockStrategyConfigsEmptyPresets: StrategyConfigsResponse = {
+  presets: [],
+  backtest_defaults: {
+    days: 500,
+    total_capital: 10000,
+  },
 };

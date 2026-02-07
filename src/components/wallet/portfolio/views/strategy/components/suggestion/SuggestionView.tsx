@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertCircle, RefreshCw } from "lucide-react";
+import { useMemo, useState } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
@@ -8,8 +9,11 @@ import { ErrorStateCard } from "@/components/ui/ErrorStateCard";
 import { Spinner } from "@/components/ui/LoadingSystem";
 
 import { useDailySuggestion } from "../../hooks/useDailySuggestion";
+import { useStrategyConfigs } from "../../hooks/useStrategyConfigs";
+import { TelegramNotificationCard } from "../TelegramNotificationCard";
 import { AllocationComparison } from "./AllocationComparison";
 import { RegimeIndicator } from "./RegimeIndicator";
+import { StrategyPresetSelector } from "./StrategyPresetSelector";
 import { TradeSuggestionsCard } from "./TradeSuggestionsCard";
 
 interface SuggestionViewProps {
@@ -17,8 +21,37 @@ interface SuggestionViewProps {
 }
 
 export function SuggestionView({ userId }: SuggestionViewProps) {
-  const { data, isLoading, error, refetch, isRefetching } =
-    useDailySuggestion(userId);
+  const { data: configsResponse } = useStrategyConfigs(!!userId);
+
+  const suggestionPresets = useMemo(
+    () =>
+      (configsResponse?.presets ?? []).filter(
+        p => p.strategy_id === "simple_regime"
+      ),
+    [configsResponse]
+  );
+
+  const defaultPresetId = useMemo(
+    () =>
+      suggestionPresets.find(p => p.is_default)?.config_id ??
+      suggestionPresets[0]?.config_id,
+    [suggestionPresets]
+  );
+
+  // Undefined means "use backend default preset" (omit config_id query param).
+  const [selectedConfigId, setSelectedConfigId] = useState<
+    string | undefined
+  >();
+
+  const effectiveConfigId = selectedConfigId ?? defaultPresetId;
+  const suggestionParams = selectedConfigId
+    ? { config_id: selectedConfigId }
+    : {};
+
+  const { data, isLoading, error, refetch, isRefetching } = useDailySuggestion(
+    userId,
+    suggestionParams
+  );
 
   if (!userId) {
     return (
@@ -80,6 +113,23 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
         </button>
       </div>
 
+      {/* Preset selector */}
+      {effectiveConfigId && suggestionPresets.length > 0 ? (
+        <BaseCard variant="glass" className="p-4">
+          <StrategyPresetSelector
+            presets={suggestionPresets}
+            selectedConfigId={effectiveConfigId}
+            onSelect={nextId => {
+              if (defaultPresetId && nextId === defaultPresetId) {
+                setSelectedConfigId(undefined);
+              } else {
+                setSelectedConfigId(nextId);
+              }
+            }}
+          />
+        </BaseCard>
+      ) : null}
+
       {/* Regime indicator */}
       <BaseCard variant="glass" className="p-4">
         <RegimeIndicator regime={data.regime} />
@@ -100,6 +150,9 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
           targetName={data.target_name}
         />
       </BaseCard>
+
+      {/* Telegram notifications */}
+      <TelegramNotificationCard userId={userId} />
     </div>
   );
 }

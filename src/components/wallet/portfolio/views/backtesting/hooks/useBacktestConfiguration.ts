@@ -3,10 +3,16 @@ import { z } from "zod";
 
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 import { getBacktestingStrategiesV3 } from "@/services/backtestingService";
+import { getStrategyConfigs } from "@/services/strategyService";
 import type {
   BacktestRequest,
   BacktestStrategyCatalogResponseV3,
 } from "@/types/backtesting";
+import type {
+  BacktestDefaults,
+  StrategyConfigsResponse,
+  StrategyPreset,
+} from "@/types/strategy";
 
 const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),
@@ -25,15 +31,68 @@ const backtestRequestSchema = z.object({
     .min(1),
 });
 
-function buildDefaultPayload(
-  catalog: BacktestStrategyCatalogResponseV3 | null
+/** Fallback defaults when API response is unavailable. */
+const FALLBACK_DEFAULTS: BacktestDefaults = { days: 500, total_capital: 10000 };
+
+/**
+ * Build default backtest payload from curated strategy presets.
+ * Uses benchmark (baseline) and default (recommended) presets,
+ * plus backtest defaults from the API.
+ */
+function buildDefaultPayloadFromPresets(
+  presets: StrategyPreset[],
+  defaults: BacktestDefaults
+): BacktestRequest {
+  const benchmark = presets.find(p => p.is_benchmark);
+  const recommended = presets.find(p => p.is_default);
+
+  const configs: BacktestRequest["configs"] = [];
+
+  if (benchmark) {
+    configs.push({
+      config_id: benchmark.config_id,
+      strategy_id: benchmark.strategy_id,
+      params: benchmark.params,
+    });
+  }
+
+  if (recommended && recommended.config_id !== benchmark?.config_id) {
+    configs.push({
+      config_id: recommended.config_id,
+      strategy_id: recommended.strategy_id,
+      params: recommended.params,
+    });
+  }
+
+  // Fallback if neither found
+  if (configs.length === 0) {
+    configs.push({
+      config_id: "dca_classic",
+      strategy_id: "dca_classic",
+      params: {},
+    });
+  }
+
+  return {
+    days: defaults.days,
+    total_capital: defaults.total_capital,
+    configs,
+  };
+}
+
+/**
+ * Legacy fallback: build payload from catalog (used before presets load).
+ */
+function buildDefaultPayloadFromCatalog(
+  catalog: BacktestStrategyCatalogResponseV3 | null,
+  defaults: BacktestDefaults = FALLBACK_DEFAULTS
 ): BacktestRequest {
   const simpleRegime = catalog?.strategies.find(s => s.id === "simple_regime");
   const recommendedParams = simpleRegime?.recommended_params ?? {};
 
   return {
-    days: 90,
-    total_capital: 10000,
+    days: defaults.days,
+    total_capital: defaults.total_capital,
     configs: [
       {
         config_id: "dca_classic",
@@ -59,15 +118,50 @@ export function useBacktestConfiguration() {
 
   const [catalog, setCatalog] =
     useState<BacktestStrategyCatalogResponseV3 | null>(null);
+  const [strategyConfigs, setStrategyConfigs] =
+    useState<StrategyConfigsResponse | null>(null);
   const [editorValue, setEditorValue] = useState<string>(() =>
-    JSON.stringify(buildDefaultPayload(null), null, 2)
+    JSON.stringify(
+      buildDefaultPayloadFromCatalog(null, FALLBACK_DEFAULTS),
+      null,
+      2
+    )
   );
   const [editorError, setEditorError] = useState<string | null>(null);
   const [lastSubmittedDays, setLastSubmittedDays] = useState<
     number | undefined
-  >(90);
+  >(FALLBACK_DEFAULTS.days);
   const userEdited = useRef(false);
 
+  // Fetch presets (primary source of truth for defaults)
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchPresets = async () => {
+      try {
+        const result = await getStrategyConfigs();
+        if (cancelled) return;
+        setStrategyConfigs(result);
+        if (!userEdited.current && result.presets.length > 0) {
+          const payload = buildDefaultPayloadFromPresets(
+            result.presets,
+            result.backtest_defaults
+          );
+          setEditorValue(JSON.stringify(payload, null, 2));
+        }
+      } catch {
+        // Presets fetch failed; catalog fetch will serve as fallback.
+      }
+    };
+
+    void fetchPresets();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch catalog (fallback for schema validation, used if presets unavailable)
   useEffect(() => {
     let cancelled = false;
 
@@ -76,8 +170,13 @@ export function useBacktestConfiguration() {
         const result = await getBacktestingStrategiesV3();
         if (cancelled) return;
         setCatalog(result);
-        if (!userEdited.current) {
-          const payload = buildDefaultPayload(result);
+        // Only use catalog as fallback if presets haven't loaded and user hasn't edited
+        if (!userEdited.current && !strategyConfigs) {
+          // strategyConfigs is null here, so use FALLBACK_DEFAULTS
+          const payload = buildDefaultPayloadFromCatalog(
+            result,
+            FALLBACK_DEFAULTS
+          );
           setEditorValue(JSON.stringify(payload, null, 2));
         }
       } catch {
@@ -90,7 +189,7 @@ export function useBacktestConfiguration() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [strategyConfigs]);
 
   const parsedEditorPayload = useMemo(() => {
     try {
@@ -149,7 +248,12 @@ export function useBacktestConfiguration() {
   };
 
   const resetConfiguration = () => {
-    const payload = buildDefaultPayload(catalog);
+    // Prefer presets if available, otherwise fall back to catalog
+    const defaults = strategyConfigs?.backtest_defaults ?? FALLBACK_DEFAULTS;
+    const payload =
+      strategyConfigs && strategyConfigs.presets.length > 0
+        ? buildDefaultPayloadFromPresets(strategyConfigs.presets, defaults)
+        : buildDefaultPayloadFromCatalog(catalog, defaults);
     userEdited.current = false;
     setEditorValue(JSON.stringify(payload, null, 2));
     setEditorError(null);

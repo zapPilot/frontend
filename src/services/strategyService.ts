@@ -7,12 +7,21 @@
 
 import { httpUtils } from "@/lib/http";
 import type {
+  BacktestDefaults,
   DailySuggestionParams,
   DailySuggestionResponse,
+  StrategyConfigsResponse,
+  StrategyPreset,
 } from "@/types/strategy";
 
 // Re-export types for external use
-export type { DailySuggestionParams, DailySuggestionResponse };
+export type {
+  BacktestDefaults,
+  DailySuggestionParams,
+  DailySuggestionResponse,
+  StrategyConfigsResponse,
+  StrategyPreset,
+};
 
 /**
  * Build query string from params, filtering out undefined values
@@ -22,8 +31,48 @@ const buildQueryString = (params: DailySuggestionParams): string => {
     ([, value]) => value !== undefined
   );
   if (entries.length === 0) return "";
-  return "?" + entries.map(([key, value]) => `${key}=${value}`).join("&");
+  return (
+    "?" +
+    entries
+      .map(
+        ([key, value]) =>
+          `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
+      )
+      .join("&")
+  );
 };
+
+// =========================================================================
+// CONFIG PRESETS ENDPOINT
+// =========================================================================
+
+/** Fallback defaults for backward compatibility (when backend returns old format). */
+const FALLBACK_BACKTEST_DEFAULTS: BacktestDefaults = {
+  days: 90,
+  total_capital: 10000,
+};
+
+/**
+ * Get strategy presets and backtest defaults.
+ *
+ * Returns the response envelope containing presets and backtest_defaults.
+ * Handles backward compatibility with old API format (array of presets).
+ */
+export const getStrategyConfigs =
+  async (): Promise<StrategyConfigsResponse> => {
+    const endpoint = `/api/v3/strategy/configs`;
+    const response = await httpUtils.analyticsEngine.get(endpoint);
+
+    // Handle backward compatibility: old API returned array, new API returns object
+    if (Array.isArray(response)) {
+      return {
+        presets: response as StrategyPreset[],
+        backtest_defaults: FALLBACK_BACKTEST_DEFAULTS,
+      };
+    }
+
+    return response as StrategyConfigsResponse;
+  };
 
 // ============================================================================
 // DAILY SUGGESTION ENDPOINT

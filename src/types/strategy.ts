@@ -193,8 +193,49 @@ export interface DailySuggestionResponse {
  * Request parameters for daily suggestion endpoint.
  */
 export interface DailySuggestionParams {
+  /** Strategy preset id (defaults to backend-recommended preset if omitted) */
+  config_id?: string;
   /** Minimum drift to recommend rebalancing (default 0.05 = 5%) */
   drift_threshold?: number;
   /** Days of regime history for pattern matching (default 30) */
   regime_history_days?: number;
+}
+
+/**
+ * Strategy configuration preset served by analytics-engine.
+ */
+export interface StrategyPreset {
+  config_id: string;
+  display_name: string;
+  description: string | null;
+  strategy_id: "dca_classic" | "simple_regime";
+  params: Record<string, unknown>;
+  is_default: boolean;
+  /** Whether this preset is the baseline for comparisons (e.g., DCA Classic) */
+  is_benchmark: boolean;
+}
+
+/**
+ * Default parameters for backtesting simulations.
+ *
+ * These are global simulation parameters (not per-strategy) because:
+ * - days and total_capital are simulation parameters, not strategy parameters
+ * - Users test the same strategy with different time periods
+ */
+export interface BacktestDefaults {
+  /** Default simulation period in days */
+  days: number;
+  /** Default capital for simulation */
+  total_capital: number;
+}
+
+/**
+ * Response from the /configs endpoint.
+ *
+ * Wraps presets and backtest defaults in a structured response envelope
+ * for extensibility and backward compatibility.
+ */
+export interface StrategyConfigsResponse {
+  presets: StrategyPreset[];
+  backtest_defaults: BacktestDefaults;
 }
