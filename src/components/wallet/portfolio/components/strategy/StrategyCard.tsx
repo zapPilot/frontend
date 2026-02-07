@@ -2,7 +2,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Gauge } from "lucide-react";
 import { useState } from "react";
 
-import { cn } from "@/lib/ui/classNames";
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
   getRegimeAllocation,
@@ -11,7 +10,9 @@ import {
 } from "@/components/wallet/regime/regimeData";
 import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
+import { getRegimeConfig } from "@/constants/regimeDisplay";
 import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
+import { cn } from "@/lib/ui/classNames";
 import type {
   SectionState,
   SentimentData,
@@ -21,8 +22,6 @@ import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";
 import { RegimeSelector } from "./RegimeSelector";
 import { StrategyAllocationDisplay } from "./StrategyAllocationDisplay";
 import { StrategyDirectionTabs } from "./StrategyDirectionTabs";
-
-import { getRegimeConfig } from "@/constants/regimeDisplay";
 
 /** StrategyCard styling constants */
 const STYLES = {

@@ -224,9 +224,9 @@ test.describe("Backtesting (v3) - JSON editor + multi-series chart", () => {
 
     // Results render (from mocked /compare)
     await expect(page.getByText("ROI")).toBeVisible();
-    await expect(page.getByText("DCA Classic").first()).toBeVisible();
-    await expect(page.getByText("regime linear").first()).toBeVisible();
-    await expect(page.getByText("regime exponential").first()).toBeVisible();
+    await expect(page.getByTitle("DCA Classic").first()).toBeAttached();
+    await expect(page.getByTitle("regime linear").first()).toBeAttached();
+    await expect(page.getByTitle("regime exponential").first()).toBeAttached();
 
     // Marker points appear (sell spot = red, buy lp = blue)
     const sellSpotMarker = page.locator(

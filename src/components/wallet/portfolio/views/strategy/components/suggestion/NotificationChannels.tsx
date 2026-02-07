@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "framer-motion";
 import {
   Check,
@@ -13,7 +11,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-import { Spinner } from "@/components/ui/LoadingSystem";
 import { cn } from "@/lib/ui/classNames";
 
 import {
@@ -51,40 +48,255 @@ interface ChannelStatus {
   borderColor: string;
 }
 
+interface DisconnectButtonProps {
+  channel: ChannelStatus;
+  emailSubscriptionProps: NotificationChannelsProps["emailSubscriptionProps"];
+  isDisconnectingTg: boolean;
+  onDisconnectTelegram: () => void;
+}
+
+function DisconnectButton({
+  channel,
+  emailSubscriptionProps,
+  isDisconnectingTg,
+  onDisconnectTelegram,
+}: DisconnectButtonProps) {
+  return (
+    <button
+      onClick={
+        channel.id === "telegram"
+          ? onDisconnectTelegram
+          : emailSubscriptionProps.onUnsubscribe
+      }
+      disabled={
+        channel.id === "telegram"
+          ? isDisconnectingTg
+          : emailSubscriptionProps.subscriptionOperation.isLoading
+      }
+      className="p-2 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+      title="Disconnect"
+    >
+      {(
+        channel.id === "telegram"
+          ? isDisconnectingTg
+          : emailSubscriptionProps.subscriptionOperation.isLoading
+      ) ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <Trash2 className="w-4 h-4" />
+      )}
+    </button>
+  );
+}
+
+interface ConnectButtonProps {
+  channel: ChannelStatus;
+  emailSubscriptionProps: NotificationChannelsProps["emailSubscriptionProps"];
+  isConnectingTg: boolean;
+  isTelegramPolling: boolean;
+  onConnectTelegram: () => void;
+}
+
+function ConnectButton({
+  channel,
+  emailSubscriptionProps,
+  isConnectingTg,
+  isTelegramPolling,
+  onConnectTelegram,
+}: ConnectButtonProps) {
+  return (
+    <button
+      onClick={
+        channel.id === "telegram"
+          ? onConnectTelegram
+          : emailSubscriptionProps.onStartEditing
+      }
+      disabled={
+        channel.id === "telegram"
+          ? isConnectingTg || isTelegramPolling
+          : emailSubscriptionProps.isEditingSubscription
+      }
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide border transition-all",
+        "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
+      )}
+    >
+      {channel.id === "telegram" && (isConnectingTg || isTelegramPolling) ? (
+        <Loader2 className="w-3 h-3 animate-spin" />
+      ) : (
+        <Plus className="w-3 h-3" />
+      )}
+      {channel.id === "telegram" && isTelegramPolling
+        ? "Connecting..."
+        : "Connect"}
+    </button>
+  );
+}
+
+interface EmailEditFormProps {
+  emailSubscriptionProps: NotificationChannelsProps["emailSubscriptionProps"];
+}
+
+function EmailEditForm({ emailSubscriptionProps }: EmailEditFormProps) {
+  return (
+    <motion.form
+      initial={{ opacity: 0, height: 0 }}
+      animate={{ opacity: 1, height: "auto" }}
+      exit={{ opacity: 0, height: 0 }}
+      onSubmit={e => {
+        e.preventDefault();
+        emailSubscriptionProps.onSubscribe(e);
+      }}
+      className="flex gap-2 mt-2"
+    >
+      <input
+        type="email"
+        placeholder="Enter your email"
+        value={emailSubscriptionProps.email}
+        onChange={emailSubscriptionProps.onEmailChange}
+        className="flex-1 bg-gray-950/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
+        autoFocus
+      />
+      <button
+        type="submit"
+        disabled={
+          !emailSubscriptionProps.email ||
+          emailSubscriptionProps.subscriptionOperation.isLoading
+        }
+        className="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+      >
+        {emailSubscriptionProps.subscriptionOperation.isLoading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          "Save"
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={emailSubscriptionProps.onCancelEditing}
+        className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </motion.form>
+  );
+}
+
+interface ChannelCardProps {
+  channel: ChannelStatus;
+  emailSubscriptionProps: NotificationChannelsProps["emailSubscriptionProps"];
+  isConnectingTg: boolean;
+  isDisconnectingTg: boolean;
+  isTelegramPolling: boolean;
+  onConnectTelegram: () => void;
+  onDisconnectTelegram: () => void;
+}
+
+function ChannelCard({
+  channel,
+  emailSubscriptionProps,
+  isConnectingTg,
+  isDisconnectingTg,
+  isTelegramPolling,
+  onConnectTelegram,
+  onDisconnectTelegram,
+}: ChannelCardProps) {
+  const renderActionButton = () => {
+    if (channel.isConnected) {
+      return (
+        <DisconnectButton
+          channel={channel}
+          emailSubscriptionProps={emailSubscriptionProps}
+          isDisconnectingTg={isDisconnectingTg}
+          onDisconnectTelegram={onDisconnectTelegram}
+        />
+      );
+    }
+
+    return (
+      <ConnectButton
+        channel={channel}
+        emailSubscriptionProps={emailSubscriptionProps}
+        isConnectingTg={isConnectingTg}
+        isTelegramPolling={isTelegramPolling}
+        onConnectTelegram={onConnectTelegram}
+      />
+    );
+  };
+
+  return (
+    <div className="group relative flex flex-col gap-3 p-3 rounded-xl border bg-gray-900/40 border-gray-800 hover:border-gray-700 transition-all">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "flex items-center justify-center w-10 h-10 rounded-lg border",
+              channel.bgColor,
+              channel.borderColor
+            )}
+          >
+            <channel.icon className={cn("w-5 h-5", channel.color)} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-white">{channel.name}</span>
+              {channel.isConnected && (
+                <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-medium uppercase tracking-wide">
+                  <Check className="w-3 h-3" /> Active
+                </span>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              {channel.isConnected
+                ? channel.identifier || "Connected"
+                : "Not connected"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">{renderActionButton()}</div>
+      </div>
+
+      {/* Email Edit Form */}
+      {channel.id === "email" &&
+        emailSubscriptionProps.isEditingSubscription &&
+        !channel.isConnected && (
+          <EmailEditForm emailSubscriptionProps={emailSubscriptionProps} />
+        )}
+    </div>
+  );
+}
+
 export function NotificationChannels({
   userId,
   emailSubscriptionProps,
 }: NotificationChannelsProps) {
-  const [isTelegramPolling, setIsTelegramPolling] = useState(false);
+  const [isConnectingTg, setIsConnectingTg] = useState(false);
+  const [isDisconnectingTg, setIsDisconnectingTg] = useState(false);
 
-  // Telegram Hooks
-  const { data: tgStatus, isLoading: isLoadingTg } = useTelegramStatus(userId, {
-    polling: isTelegramPolling,
-    pollingInterval: 3000,
-  });
+  const { data: telegramStatus, isLoading: isTelegramPolling } =
+    useTelegramStatus(userId);
+  const connectTelegramMutation = useTelegramConnect();
+  const disconnectTelegramMutation = useTelegramDisconnect();
 
-  const { mutate: connectTg, isPending: isConnectingTg } = useTelegramConnect();
-  const { mutate: disconnectTg, isPending: isDisconnectingTg } =
-    useTelegramDisconnect();
-
-  // Stop polling when connected
-  if (tgStatus?.isConnected && isTelegramPolling) {
-    setIsTelegramPolling(false);
-  }
-
-  const handleConnectTelegram = () => {
+  const handleConnectTelegram = async () => {
     if (!userId) return;
-    connectTg(userId, {
-      onSuccess: ({ deepLink }: { deepLink: string }) => {
-        window.open(deepLink, "_blank", "noopener,noreferrer");
-        setIsTelegramPolling(true);
-      },
-    });
+    setIsConnectingTg(true);
+    try {
+      await connectTelegramMutation.mutateAsync(userId);
+    } finally {
+      setIsConnectingTg(false);
+    }
   };
 
-  const handleDisconnectTelegram = () => {
+  const handleDisconnectTelegram = async () => {
     if (!userId) return;
-    disconnectTg(userId);
+    setIsDisconnectingTg(true);
+    try {
+      await disconnectTelegramMutation.mutateAsync(userId);
+    } finally {
+      setIsDisconnectingTg(false);
+    }
   };
 
   const channels: ChannelStatus[] = [
@@ -92,8 +304,8 @@ export function NotificationChannels({
       id: "telegram",
       name: "Telegram",
       icon: MessageCircle,
-      isConnected: tgStatus?.isConnected ?? false,
-      identifier: tgStatus?.username ? `@${tgStatus.username}` : undefined,
+      isConnected: telegramStatus?.isConnected ?? false,
+      identifier: telegramStatus?.username || undefined,
       color: "text-blue-400",
       bgColor: "bg-blue-500/10",
       borderColor: "border-blue-500/20",
@@ -103,20 +315,12 @@ export function NotificationChannels({
       name: "Email",
       icon: Mail,
       isConnected: !!emailSubscriptionProps.subscribedEmail,
-      identifier: emailSubscriptionProps.subscribedEmail ?? undefined,
+      identifier: emailSubscriptionProps.subscribedEmail || undefined,
       color: "text-purple-400",
       bgColor: "bg-purple-500/10",
       borderColor: "border-purple-500/20",
     },
   ];
-
-  if (isLoadingTg) {
-    return (
-      <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 flex items-center justify-center">
-        <Spinner size="md" color="primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="bg-gray-900/40 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 flex flex-col">
@@ -131,143 +335,16 @@ export function NotificationChannels({
 
       <div className="flex flex-col gap-3 flex-1">
         {channels.map(channel => (
-          <div
+          <ChannelCard
             key={channel.id}
-            className="group relative flex flex-col gap-3 p-3 rounded-xl border bg-gray-900/40 border-gray-800 hover:border-gray-700 transition-all"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg border",
-                    channel.bgColor,
-                    channel.borderColor
-                  )}
-                >
-                  <channel.icon className={cn("w-5 h-5", channel.color)} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-white">
-                      {channel.name}
-                    </span>
-                    {channel.isConnected && (
-                      <span className="flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20 font-medium uppercase tracking-wide">
-                        <Check className="w-3 h-3" /> Active
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    {channel.isConnected
-                      ? channel.identifier || "Connected"
-                      : "Not connected"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {channel.isConnected ? (
-                  <button
-                    onClick={
-                      channel.id === "telegram"
-                        ? handleDisconnectTelegram
-                        : emailSubscriptionProps.onUnsubscribe
-                    }
-                    disabled={
-                      channel.id === "telegram"
-                        ? isDisconnectingTg
-                        : emailSubscriptionProps.subscriptionOperation.isLoading
-                    }
-                    className="p-2 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                    title="Disconnect"
-                  >
-                    {(
-                      channel.id === "telegram"
-                        ? isDisconnectingTg
-                        : emailSubscriptionProps.subscriptionOperation.isLoading
-                    ) ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
-                ) : (
-                  <button
-                    onClick={
-                      channel.id === "telegram"
-                        ? handleConnectTelegram
-                        : emailSubscriptionProps.onStartEditing
-                    }
-                    disabled={
-                      channel.id === "telegram"
-                        ? isConnectingTg || isTelegramPolling
-                        : emailSubscriptionProps.isEditingSubscription
-                    }
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide border transition-all",
-                      "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
-                    )}
-                  >
-                    {channel.id === "telegram" &&
-                    (isConnectingTg || isTelegramPolling) ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
-                      <Plus className="w-3 h-3" />
-                    )}
-                    {channel.id === "telegram" && isTelegramPolling
-                      ? "Connecting..."
-                      : "Connect"}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Email Edit Form */}
-            {channel.id === "email" &&
-              emailSubscriptionProps.isEditingSubscription &&
-              !channel.isConnected && (
-                <motion.form
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  onSubmit={e => {
-                    e.preventDefault();
-                    emailSubscriptionProps.onSubscribe(e);
-                  }}
-                  className="flex gap-2 mt-2"
-                >
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={emailSubscriptionProps.email}
-                    onChange={emailSubscriptionProps.onEmailChange}
-                    className="flex-1 bg-gray-950/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={
-                      !emailSubscriptionProps.email ||
-                      emailSubscriptionProps.subscriptionOperation.isLoading
-                    }
-                    className="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                  >
-                    {emailSubscriptionProps.subscriptionOperation.isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      "Save"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={emailSubscriptionProps.onCancelEditing}
-                    className="p-2 text-gray-500 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </motion.form>
-              )}
-          </div>
+            channel={channel}
+            emailSubscriptionProps={emailSubscriptionProps}
+            isConnectingTg={isConnectingTg}
+            isDisconnectingTg={isDisconnectingTg}
+            isTelegramPolling={isTelegramPolling}
+            onConnectTelegram={handleConnectTelegram}
+            onDisconnectTelegram={handleDisconnectTelegram}
+          />
         ))}
       </div>
     </div>

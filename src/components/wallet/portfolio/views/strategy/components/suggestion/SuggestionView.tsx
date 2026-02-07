@@ -166,8 +166,8 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
                   : null,
               },
               onEmailChange: e => emailSubscription.setEmail(e.target.value),
-              onSubscribe: emailSubscription.handleSubscribe,
-              onUnsubscribe: emailSubscription.handleUnsubscribe,
+              onSubscribe: () => void emailSubscription.handleSubscribe(),
+              onUnsubscribe: () => void emailSubscription.handleUnsubscribe(),
               onStartEditing: emailSubscription.startEditingSubscription,
               onCancelEditing: emailSubscription.cancelEditingSubscription,
             }}

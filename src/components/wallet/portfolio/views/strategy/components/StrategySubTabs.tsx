@@ -14,7 +14,7 @@ const SUB_TABS: { id: StrategySubTab; label: string; icon: React.ReactNode }[] =
   [
     {
       id: "suggestion",
-      label: "Today's Suggestion",
+      label: "Today's Strategy",
       icon: <Lightbulb className="w-4 h-4" />,
     },
     {
