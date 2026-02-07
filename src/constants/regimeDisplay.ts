@@ -8,6 +8,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: string;
     border: string;
     barColor: string;
+    fillColor: string;
     value: number; // Default sentiment value if actual is missing
   }
 > = {
@@ -17,6 +18,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: "bg-rose-500/10",
     border: "border-rose-500/20",
     barColor: "bg-rose-500",
+    fillColor: "#f43f5e", // rose-500
     value: 10,
   },
   fear: {
@@ -25,6 +27,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: "bg-orange-500/10",
     border: "border-orange-500/20",
     barColor: "bg-orange-500",
+    fillColor: "#f97316", // orange-500
     value: 30,
   },
   neutral: {
@@ -33,6 +36,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: "bg-blue-500/10",
     border: "border-blue-500/20",
     barColor: "bg-blue-500",
+    fillColor: "#60a5fa", // blue-400
     value: 50,
   },
   greed: {
@@ -41,6 +45,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
     barColor: "bg-emerald-500",
+    fillColor: "#10b981", // emerald-500
     value: 70,
   },
   extreme_greed: {
@@ -49,6 +54,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
     bg: "bg-green-500/10",
     border: "border-green-500/20",
     barColor: "bg-green-400",
+    fillColor: "#4ade80", // green-400
     value: 90,
   },
 };
@@ -64,8 +70,9 @@ export const REGIME_ID_MAP: Record<string, RegimeLabel> = {
 
 export function getRegimeConfig(idOrLabel: string) {
   const label = REGIME_ID_MAP[idOrLabel] || idOrLabel;
-  return (
+  // Default to neutral if the key is not found or invalid
+  const config =
     REGIME_DISPLAY_CONFIG[label as RegimeLabel] ||
-    REGIME_DISPLAY_CONFIG["neutral"]
-  );
+    REGIME_DISPLAY_CONFIG["neutral"];
+  return config;
 }

@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 
+import { getRegimeConfig } from "@/constants/regimeDisplay";
 import { cn } from "@/lib/ui/classNames";
 import type { RegimeInfo } from "@/types/strategy";
-import { getRegimeConfig } from "@/constants/regimeDisplay";
 
 interface RegimeIndicatorProps {
   regime: RegimeInfo;
@@ -30,10 +30,10 @@ export function RegimeIndicator({ regime }: RegimeIndicatorProps) {
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <span className="text-sm text-gray-400 font-medium uppercase tracking-wider">
+          <span className="text-xs text-gray-500 font-bold uppercase tracking-widest">
             Market Regime
           </span>
-          <div className="flex items-center gap-3 mt-1">
+          <div className="flex items-center gap-3 mt-2">
             <h3 className={cn("text-2xl font-bold", config.color)}>
               {config.label}
             </h3>
