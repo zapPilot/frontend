@@ -14,6 +14,9 @@ import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/u
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
 import { formatCurrency } from "@/utils/formatters";
 
+// Import new ReviewModal
+import { ReviewModal } from "./components/ReviewModal";
+
 // --- Minimalist Components ---
 
 function MinimalInput({
@@ -46,7 +49,11 @@ function MinimalInput({
   );
 }
 
+// --- Updated MinimalRebalance with Modal Logic ---
+
 function MinimalRebalance({ userId }: { userId: string }) {
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+
   const { data: configsResponse } = useStrategyConfigs(true);
   const defaultPresetId = useMemo(() => {
     const presets = configsResponse?.presets ?? [];
@@ -62,69 +69,83 @@ function MinimalRebalance({ userId }: { userId: string }) {
   if (!data) return null;
 
   return (
-    <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
-      <div className="text-center space-y-2">
-        <h3 className="text-4xl font-light text-white">Portfolio Health</h3>
-        <p className="text-gray-400 font-light">
-          Your portfolio is currently aligned with the{" "}
-          <span className="text-white font-medium">{data.regime.current}</span>{" "}
-          regime.
-        </p>
-      </div>
-
-      <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="text-sm text-gray-500">Suggested Moves</div>
-            <div className="text-2xl font-medium">
-              {data.trade_suggestions.length} Actions
-            </div>
-          </div>
-          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
-          </div>
+    <>
+      <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center space-y-2">
+          <h3 className="text-4xl font-light text-white">Portfolio Health</h3>
+          <p className="text-gray-400 font-light">
+            Your portfolio is currently aligned with the{" "}
+            <span className="text-white font-medium">
+              {data.regime.current}
+            </span>{" "}
+            regime.
+          </p>
         </div>
 
-        <div className="space-y-6">
-          {data.trade_suggestions.map((trade, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between group cursor-default"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all group-hover:scale-150",
-                    trade.action === "buy"
-                      ? "bg-green-500"
+        <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <div className="text-sm text-gray-500">Suggested Moves</div>
+              <div className="text-2xl font-medium">
+                {data.trade_suggestions.length} Actions
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+              <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {data.trade_suggestions.map((trade, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between group cursor-default"
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all group-hover:scale-150",
+                      trade.action === "buy"
+                        ? "bg-green-500"
+                        : trade.action === "sell"
+                          ? "bg-red-500"
+                          : "bg-gray-400"
+                    )}
+                  />
+                  <span className="text-lg font-light text-gray-600 dark:text-gray-300">
+                    {trade.action === "buy"
+                      ? "Add to"
                       : trade.action === "sell"
-                        ? "bg-red-500"
-                        : "bg-gray-400"
-                  )}
-                />
-                <span className="text-lg font-light text-gray-600 dark:text-gray-300">
-                  {trade.action === "buy"
-                    ? "Add to"
-                    : trade.action === "sell"
-                      ? "Reduce"
-                      : "Hold"}{" "}
-                  {trade.bucket.toUpperCase()}
+                        ? "Reduce"
+                        : "Hold"}{" "}
+                    {trade.bucket.toUpperCase()}
+                  </span>
+                </div>
+                <span className="font-mono text-gray-900 dark:text-white font-medium">
+                  {formatCurrency(trade.amount_usd)}
                 </span>
               </div>
-              <span className="font-mono text-gray-900 dark:text-white font-medium">
-                {formatCurrency(trade.amount_usd)}
-              </span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
-          <button className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity">
-            Review & Execute All
-          </button>
+          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity"
+            >
+              Review & Execute All
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+
+      <ReviewModal
+        isOpen={isReviewOpen}
+        onClose={() => setIsReviewOpen(false)}
+        trades={data.trade_suggestions}
+        totalValue={data.total_value_usd}
+      />
+    </>
   );
 }
 
@@ -217,7 +238,7 @@ export function VariationC({ userId }: { userId: string }) {
   >("rebalance");
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-950 min-h-[600px] flex flex-col items-center pt-8">
+    <div className="bg-gray-50 dark:bg-gray-950 min-h-[600px] flex flex-col items-center pt-8 relative">
       {/* Segmented Control */}
       <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-800 mb-12 flex gap-1">
         {(["rebalance", "deposit", "withdraw"] as const).map(m => (
@@ -236,7 +257,7 @@ export function VariationC({ userId }: { userId: string }) {
         ))}
       </div>
 
-      <div className="w-full max-w-4xl px-4">
+      <div className="w-full max-w-4xl px-4 pb-20">
         {activeMode === "rebalance" && <MinimalRebalance userId={userId} />}
         {(activeMode === "deposit" || activeMode === "withdraw") && (
           <MinimalTransaction mode={activeMode} />
