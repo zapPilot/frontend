@@ -1,22 +1,23 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { CircleDollarSign, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
 
+import { cn } from "@/lib/ui/classNames";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
-import { cn } from "@/lib/ui/classNames";
 
-import { useDailySuggestion } from "@/components/wallet/portfolio/views/strategy/hooks/useDailySuggestion";
-import { useStrategyConfigs } from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
 import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
 import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/useTransactionForm";
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
+import { useDailySuggestion } from "@/components/wallet/portfolio/views/strategy/hooks/useDailySuggestion";
+import { useStrategyConfigs } from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
 import { formatCurrency } from "@/utils/formatters";
 
 // Import new ReviewModal and ImpactVisual
-import { ReviewModal } from "./components/ReviewModal";
+import { ActionCard } from "./components/ActionCard";
 import { ImpactVisual } from "./components/ImpactVisual";
+import { ReviewModal } from "./components/ReviewModal";
 
 // --- Minimalist Components ---
 
@@ -89,21 +90,21 @@ function MinimalRebalance({ userId }: { userId: string }) {
           </div>
         </div>
 
-        <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <div className="text-sm text-gray-500">Suggested Moves</div>
-              <div className="text-2xl font-medium">
-                {data.trade_suggestions.length} Actions
-              </div>
-            </div>
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-              <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
-            </div>
-          </div>
-
+        <ActionCard
+          title={`${data.trade_suggestions.length} Actions`}
+          subtitle="Suggested Moves"
+          icon={<CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />}
+          footer={
+            <button
+              onClick={() => setIsReviewOpen(true)}
+              className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity"
+            >
+              Review & Execute All
+            </button>
+          }
+        >
           {/* Allocation Impact Visualization */}
-          <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+          <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
             <ImpactVisual
               trades={data.trade_suggestions}
               totalValue={data.total_value_usd}
@@ -142,16 +143,7 @@ function MinimalRebalance({ userId }: { userId: string }) {
               </div>
             ))}
           </div>
-
-          <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
-            <button
-              onClick={() => setIsReviewOpen(true)}
-              className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity"
-            >
-              Review & Execute All
-            </button>
-          </div>
-        </div>
+        </ActionCard>
       </div>
 
       <ReviewModal
@@ -201,7 +193,19 @@ function MinimalTransaction({ mode }: { mode: "deposit" | "withdraw" }) {
         </p>
       </div>
 
-      <div className="bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800 space-y-8">
+      <ActionCard
+        footer={
+          <button
+            onClick={() => submission.handleSubmit()}
+            disabled={submission.isSubmitting}
+            className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
+          >
+            {submission.isSubmitting
+              ? "Processing..."
+              : `Confirm ${mode === "deposit" ? "Deposit" : "Withdrawal"}`}
+          </button>
+        }
+      >
         <MinimalInput
           label="Amount"
           value={amount}
@@ -232,17 +236,7 @@ function MinimalTransaction({ mode }: { mode: "deposit" | "withdraw" }) {
             ))}
           </div>
         </div>
-
-        <button
-          onClick={() => submission.handleSubmit()}
-          disabled={submission.isSubmitting}
-          className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mt-4"
-        >
-          {submission.isSubmitting
-            ? "Processing..."
-            : `Confirm ${mode === "deposit" ? "Deposit" : "Withdrawal"}`}
-        </button>
-      </div>
+      </ActionCard>
     </div>
   );
 }
