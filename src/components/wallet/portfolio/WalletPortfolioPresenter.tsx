@@ -11,6 +11,7 @@ import { WalletNavigation } from "@/components/wallet/portfolio/components/navig
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
+import { ExperimentView } from "@/components/wallet/portfolio/views/experiment/ExperimentView";
 import { StrategyView } from "@/components/wallet/portfolio/views/strategy";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
@@ -158,6 +159,11 @@ export function WalletPortfolioPresenter({
     strategy: (
       <div data-testid="strategy-content">
         <StrategyView userId={userId} />
+      </div>
+    ),
+    experiment: (
+      <div data-testid="experiment-content">
+        <ExperimentView userId={userId} />
       </div>
     ),
   };
