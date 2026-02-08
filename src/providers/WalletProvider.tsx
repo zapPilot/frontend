@@ -9,7 +9,7 @@
 
 import {
   createContext,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useContext,
   useMemo,
@@ -60,6 +60,20 @@ interface WalletProviderProps {
   children: ReactNode;
 }
 
+function getErrorMessage(error: unknown, fallbackMessage: string): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallbackMessage;
+}
+
+function getWalletAddress(walletItem: {
+  getAccount: () => { address?: string } | undefined | null;
+}): string {
+  return walletItem.getAccount()?.address ?? "";
+}
+
 // Main Provider Component
 export function WalletProvider({ children }: WalletProviderProps) {
   // ThirdWeb hooks
@@ -80,10 +94,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
   // Transform connectedWallets to simplified format with active state
   const walletList = useMemo(() => {
     return connectedWallets
-      .map(wallet => ({
-        address: wallet.getAccount()?.address || "",
-        isActive: wallet.getAccount()?.address === account?.address,
-      }))
+      .map(wallet => {
+        const address = getWalletAddress(wallet);
+        return {
+          address,
+          isActive: address === account?.address,
+        };
+      })
       .filter(w => w.address);
   }, [connectedWallets, account?.address]);
 
@@ -91,7 +108,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const handleSwitchActiveWallet = useCallback(
     async (address: string) => {
       const targetWallet = connectedWallets.find(
-        w => w.getAccount()?.address === address
+        walletItem => getWalletAddress(walletItem) === address
       );
 
       if (!targetWallet) {
@@ -108,8 +125,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
         await setActiveWallet(targetWallet);
         walletLogger.info("Switched active wallet to", address);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to switch active wallet";
+        const errorMessage = getErrorMessage(
+          err,
+          "Failed to switch active wallet"
+        );
         setError({
           message: errorMessage,
           code: "SWITCH_WALLET_ERROR",
@@ -128,7 +147,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     return {
       address: account.address,
       isConnected: true,
-      balance: balance.data?.displayValue || "0",
+      balance: balance.data?.displayValue ?? "0",
     };
   }, [account?.address, balance.data?.displayValue]);
 
@@ -138,8 +157,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
     return {
       id: chain.id,
-      name: chain.name || `Chain ${chain.id}`,
-      symbol: chain.nativeCurrency?.symbol || "ETH",
+      name: chain.name ?? `Chain ${chain.id}`,
+      symbol: chain.nativeCurrency?.symbol ?? "ETH",
     };
   }, [chain]);
 
@@ -163,14 +182,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
       // Get the first available wallet from connected wallets
       // In a real app, you might want wallet selection UI
       const availableWallet = connectedWallets[0];
-      if (availableWallet) {
-        await connect(availableWallet);
-      } else {
+      if (!availableWallet) {
         throw new Error("No wallet available");
       }
+
+      await connect(availableWallet);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to connect wallet";
+      const errorMessage = getErrorMessage(err, "Failed to connect wallet");
       setError({
         message: errorMessage,
         code: "CONNECT_ERROR",
@@ -188,8 +206,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       setError(null); // Clear previous errors
       await Promise.resolve(disconnect(wallet));
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to disconnect wallet";
+      const errorMessage = getErrorMessage(err, "Failed to disconnect wallet");
       setError({
         message: errorMessage,
         code: "DISCONNECT_ERROR",

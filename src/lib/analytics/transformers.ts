@@ -29,6 +29,46 @@ import {
   getSharpePercentile,
 } from "./utils/metricUtils";
 
+function clampPercentage(value: number): number {
+  return Math.max(0, Math.min(100, value));
+}
+
+function getRecoverySubValue(recoveryDays: number): string {
+  if (recoveryDays > 0) {
+    return `Recovered in ${recoveryDays} days`;
+  }
+
+  return "Not yet recovered";
+}
+
+function getSignedPrefix(value: number): string {
+  return value > 0 ? "+" : "";
+}
+
+function getSharpeTrend(value: number): MetricData["trend"] {
+  if (value > 1.5) {
+    return "up";
+  }
+
+  if (value > 0.5) {
+    return "neutral";
+  }
+
+  return "down";
+}
+
+function getVolatilityRiskLabel(value: number): string {
+  if (value < 20) {
+    return "Low risk";
+  }
+
+  if (value < 40) {
+    return "Moderate";
+  }
+
+  return "High risk";
+}
+
 // ============================================================================
 // CHART TRANSFORMERS
 // ============================================================================
@@ -84,13 +124,12 @@ export function transformToPerformanceChart(
       baselinePortfolioValue
     );
 
-    const normalizedBTC =
-      btcEquivalentValue !== null
-        ? Math.max(
-            0,
-            Math.min(100, normalizeToScale(btcEquivalentValue, min, range))
-          )
-        : null;
+    let normalizedBTC: number | null = null;
+    if (btcEquivalentValue !== null) {
+      normalizedBTC = clampPercentage(
+        normalizeToScale(btcEquivalentValue, min, range)
+      );
+    }
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
@@ -150,10 +189,7 @@ export function calculateKeyMetrics(
     timeWeightedReturn: calculateTWR(dailyValues),
     maxDrawdown: {
       value: `${maxDrawdownPct.toFixed(1)}%`,
-      subValue:
-        recoveryDays > 0
-          ? `Recovered in ${recoveryDays} days`
-          : "Not yet recovered",
+      subValue: getRecoverySubValue(recoveryDays),
       trend: maxDrawdownPct > -15 ? "up" : "down",
     },
     sharpe: extractSharpe(rollingAnalytics),
@@ -168,21 +204,24 @@ export function calculateKeyMetrics(
 function calculateTWR(
   dailyValues: { total_value_usd?: number; date?: string }[]
 ): MetricData {
-  if (dailyValues.length < 2)
+  if (dailyValues.length < 2) {
     return createPlaceholderMetric("0%", "Insufficient data");
+  }
 
   const first = dailyValues[0]?.total_value_usd ?? 0;
   const last = dailyValues[dailyValues.length - 1]?.total_value_usd ?? 0;
 
-  if (first === 0) return createPlaceholderMetric("0%", "No starting value");
+  if (first === 0) {
+    return createPlaceholderMetric("0%", "No starting value");
+  }
 
   const returnPct = ((last - first) / first) * 100;
-  const isPositive = returnPct > 0;
+  const prefix = getSignedPrefix(returnPct);
 
   return {
-    value: `${isPositive ? "+" : ""}${returnPct.toFixed(1)}%`,
-    subValue: `${isPositive ? "+" : ""}${(returnPct - 15).toFixed(1)}% vs BTC`,
-    trend: isPositive ? "up" : "down",
+    value: `${prefix}${returnPct.toFixed(1)}%`,
+    subValue: `${prefix}${(returnPct - 15).toFixed(1)}% vs BTC`,
+    trend: returnPct > 0 ? "up" : "down",
   };
 }
 
@@ -194,8 +233,9 @@ function extractSharpe(
     .map(d => d.rolling_sharpe_ratio ?? 0)
     .filter(s => !isNaN(s) && isFinite(s));
 
-  if (validSharpes.length === 0)
+  if (validSharpes.length === 0) {
     return createPlaceholderMetric("N/A", "No data");
+  }
 
   const avgSharpe =
     validSharpes.reduce((sum, s) => sum + s, 0) / validSharpes.length;
@@ -204,14 +244,16 @@ function extractSharpe(
   return {
     value: avgSharpe.toFixed(2),
     subValue: `Top ${percentile}% of Pilots`,
-    trend: avgSharpe > 1.5 ? "up" : avgSharpe > 0.5 ? "neutral" : "down",
+    trend: getSharpeTrend(avgSharpe),
   };
 }
 
 function calculateWinRate(
   dailyValues: { pnl_percentage?: number }[]
 ): MetricData {
-  if (dailyValues.length === 0) return createPlaceholderMetric("0%", "No data");
+  if (dailyValues.length === 0) {
+    return createPlaceholderMetric("0%", "No data");
+  }
 
   const positiveDays = dailyValues.filter(
     d => (d.pnl_percentage ?? 0) > 0
@@ -234,20 +276,16 @@ function extractVolatility(
     .map(d => d.annualized_volatility_pct ?? 0)
     .filter(v => !isNaN(v) && isFinite(v));
 
-  if (validVolatilities.length === 0)
+  if (validVolatilities.length === 0) {
     return createPlaceholderMetric("N/A", "No data");
+  }
 
   const avgVolatility =
     validVolatilities.reduce((sum, v) => sum + v, 0) / validVolatilities.length;
 
   return {
     value: `${avgVolatility.toFixed(1)}%`,
-    subValue:
-      avgVolatility < 20
-        ? "Low risk"
-        : avgVolatility < 40
-          ? "Moderate"
-          : "High risk",
+    subValue: getVolatilityRiskLabel(avgVolatility),
     trend: avgVolatility < 25 ? "up" : "down",
   };
 }
@@ -260,12 +298,16 @@ export function aggregateMonthlyPnL(
   dailyReturns: DailyYieldReturnsResponse | undefined,
   portfolioValues: { date?: string; total_value_usd?: number }[] = []
 ): MonthlyPnL[] {
-  if (!dailyReturns?.daily_returns) return [];
+  if (!dailyReturns?.daily_returns) {
+    return [];
+  }
 
   const monthlyMap = new Map<string, number>();
 
   for (const entry of dailyReturns.daily_returns) {
-    if (!entry.date) continue;
+    if (!entry.date) {
+      continue;
+    }
     const date = new Date(entry.date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     monthlyMap.set(
@@ -297,7 +339,9 @@ export function aggregateMonthlyPnL(
       const year = parseInt(yearStr ?? "", 10);
       const month = parseInt(monthStr ?? "", 10);
 
-      if (!year || !month || month < 1 || month > 12) return null;
+      if (!year || !month || month < 1 || month > 12) {
+        return null;
+      }
 
       const monthStart = `${year}-${String(month).padStart(2, "0")}-01`;
       const portfolioValue =

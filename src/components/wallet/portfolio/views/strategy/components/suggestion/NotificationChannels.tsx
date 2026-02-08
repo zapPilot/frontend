@@ -61,26 +61,22 @@ function DisconnectButton({
   isDisconnectingTg,
   onDisconnectTelegram,
 }: DisconnectButtonProps) {
+  const isTelegram = channel.id === "telegram";
+  const isBusy = isTelegram
+    ? isDisconnectingTg
+    : emailSubscriptionProps.subscriptionOperation.isLoading;
+  const handleDisconnect = isTelegram
+    ? onDisconnectTelegram
+    : emailSubscriptionProps.onUnsubscribe;
+
   return (
     <button
-      onClick={
-        channel.id === "telegram"
-          ? onDisconnectTelegram
-          : emailSubscriptionProps.onUnsubscribe
-      }
-      disabled={
-        channel.id === "telegram"
-          ? isDisconnectingTg
-          : emailSubscriptionProps.subscriptionOperation.isLoading
-      }
+      onClick={handleDisconnect}
+      disabled={isBusy}
       className="p-2 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
       title="Disconnect"
     >
-      {(
-        channel.id === "telegram"
-          ? isDisconnectingTg
-          : emailSubscriptionProps.subscriptionOperation.isLoading
-      ) ? (
+      {isBusy ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
         <Trash2 className="w-4 h-4" />
@@ -104,31 +100,31 @@ function ConnectButton({
   isTelegramPolling,
   onConnectTelegram,
 }: ConnectButtonProps) {
+  const isTelegram = channel.id === "telegram";
+  const isBusy = isTelegram && (isConnectingTg || isTelegramPolling);
+  const isDisabled = isTelegram
+    ? isConnectingTg || isTelegramPolling
+    : emailSubscriptionProps.isEditingSubscription;
+  const handleConnect = isTelegram
+    ? onConnectTelegram
+    : emailSubscriptionProps.onStartEditing;
+  const label = isTelegram && isTelegramPolling ? "Connecting..." : "Connect";
+
   return (
     <button
-      onClick={
-        channel.id === "telegram"
-          ? onConnectTelegram
-          : emailSubscriptionProps.onStartEditing
-      }
-      disabled={
-        channel.id === "telegram"
-          ? isConnectingTg || isTelegramPolling
-          : emailSubscriptionProps.isEditingSubscription
-      }
+      onClick={handleConnect}
+      disabled={isDisabled}
       className={cn(
         "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide border transition-all",
         "bg-white/5 text-white border-white/10 hover:bg-white/10 hover:border-white/20"
       )}
     >
-      {channel.id === "telegram" && (isConnectingTg || isTelegramPolling) ? (
+      {isBusy ? (
         <Loader2 className="w-3 h-3 animate-spin" />
       ) : (
         <Plus className="w-3 h-3" />
       )}
-      {channel.id === "telegram" && isTelegramPolling
-        ? "Connecting..."
-        : "Connect"}
+      {label}
     </button>
   );
 }
@@ -201,28 +197,30 @@ function ChannelCard({
   onConnectTelegram,
   onDisconnectTelegram,
 }: ChannelCardProps) {
-  const renderActionButton = () => {
-    if (channel.isConnected) {
-      return (
-        <DisconnectButton
-          channel={channel}
-          emailSubscriptionProps={emailSubscriptionProps}
-          isDisconnectingTg={isDisconnectingTg}
-          onDisconnectTelegram={onDisconnectTelegram}
-        />
-      );
-    }
+  const statusText = channel.isConnected
+    ? (channel.identifier ?? "Connected")
+    : "Not connected";
+  const shouldShowEmailEditForm =
+    channel.id === "email" &&
+    emailSubscriptionProps.isEditingSubscription &&
+    !channel.isConnected;
 
-    return (
-      <ConnectButton
-        channel={channel}
-        emailSubscriptionProps={emailSubscriptionProps}
-        isConnectingTg={isConnectingTg}
-        isTelegramPolling={isTelegramPolling}
-        onConnectTelegram={onConnectTelegram}
-      />
-    );
-  };
+  const actionButton = channel.isConnected ? (
+    <DisconnectButton
+      channel={channel}
+      emailSubscriptionProps={emailSubscriptionProps}
+      isDisconnectingTg={isDisconnectingTg}
+      onDisconnectTelegram={onDisconnectTelegram}
+    />
+  ) : (
+    <ConnectButton
+      channel={channel}
+      emailSubscriptionProps={emailSubscriptionProps}
+      isConnectingTg={isConnectingTg}
+      isTelegramPolling={isTelegramPolling}
+      onConnectTelegram={onConnectTelegram}
+    />
+  );
 
   return (
     <div className="group relative flex flex-col gap-3 p-3 rounded-xl border bg-gray-900/40 border-gray-800 hover:border-gray-700 transition-all">
@@ -246,23 +244,17 @@ function ChannelCard({
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-500">
-              {channel.isConnected
-                ? channel.identifier || "Connected"
-                : "Not connected"}
-            </p>
+            <p className="text-xs text-gray-500">{statusText}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">{renderActionButton()}</div>
+        <div className="flex items-center gap-2">{actionButton}</div>
       </div>
 
       {/* Email Edit Form */}
-      {channel.id === "email" &&
-        emailSubscriptionProps.isEditingSubscription &&
-        !channel.isConnected && (
-          <EmailEditForm emailSubscriptionProps={emailSubscriptionProps} />
-        )}
+      {shouldShowEmailEditForm && (
+        <EmailEditForm emailSubscriptionProps={emailSubscriptionProps} />
+      )}
     </div>
   );
 }

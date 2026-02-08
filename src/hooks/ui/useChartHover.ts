@@ -103,6 +103,30 @@ interface UseChartHoverReturn {
   handleTouchEnd: () => void;
 }
 
+type PointerInteractionEvent =
+  | MouseEvent<SVGSVGElement>
+  | PointerEvent<SVGSVGElement>
+  | TouchEvent<SVGSVGElement>;
+
+function getClientXFromInteraction(
+  event: PointerInteractionEvent
+): number | null {
+  if ("touches" in event) {
+    const touch = event.touches[0] ?? event.changedTouches[0];
+    if (!touch) {
+      return null;
+    }
+
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+
+    return touch.clientX;
+  }
+
+  return event.clientX;
+}
+
 // =============================================================================
 // HOOK
 // =============================================================================
@@ -216,24 +240,43 @@ export function useChartHover<T>(
   );
 
   const handlePointerInteraction = useCallback(
-    (
-      event:
-        | MouseEvent<SVGSVGElement>
-        | PointerEvent<SVGSVGElement>
-        | TouchEvent<SVGSVGElement>
-    ) => {
-      let clientX: number;
-      if ("touches" in event) {
-        const touch = event.touches[0] ?? event.changedTouches[0];
-        if (!touch) return;
-        if (event.cancelable) event.preventDefault();
-        clientX = touch.clientX;
-      } else {
-        clientX = (event as MouseEvent).clientX;
+    (event: PointerInteractionEvent) => {
+      const clientX = getClientXFromInteraction(event);
+      if (clientX == null) {
+        return;
       }
+
       updateHoverFromClientPoint(clientX, event.currentTarget);
     },
     [updateHoverFromClientPoint]
+  );
+
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<SVGSVGElement>) => {
+      handlePointerInteraction(event);
+    },
+    [handlePointerInteraction]
+  );
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      handlePointerInteraction(event);
+    },
+    [handlePointerInteraction]
+  );
+
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<SVGSVGElement>) => {
+      handlePointerInteraction(event);
+    },
+    [handlePointerInteraction]
+  );
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent<SVGSVGElement>) => {
+      handlePointerInteraction(event);
+    },
+    [handlePointerInteraction]
   );
 
   const handleMouseLeave = useCallback(() => {
@@ -271,18 +314,10 @@ export function useChartHover<T>(
 
   return {
     hoveredPoint,
-    handleMouseMove: handlePointerInteraction as unknown as (
-      e: MouseEvent<SVGSVGElement>
-    ) => void,
-    handlePointerMove: handlePointerInteraction as unknown as (
-      e: PointerEvent<SVGSVGElement>
-    ) => void,
-    handlePointerDown: handlePointerInteraction as unknown as (
-      e: PointerEvent<SVGSVGElement>
-    ) => void,
-    handleTouchMove: handlePointerInteraction as unknown as (
-      e: TouchEvent<SVGSVGElement>
-    ) => void,
+    handleMouseMove,
+    handlePointerMove,
+    handlePointerDown,
+    handleTouchMove,
     handleMouseLeave,
     handleTouchEnd: handleMouseLeave,
   };

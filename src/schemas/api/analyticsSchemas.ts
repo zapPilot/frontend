@@ -210,6 +210,20 @@ const borrowingPositionSchema = z.object({
   updated_at: z.string(), // ISO 8601 datetime string
 });
 
+const defaultAprCoverage = {
+  matched_pools: 0,
+  total_pools: 0,
+  coverage_percentage: 0,
+  matched_asset_value_usd: 0,
+} as const;
+
+const aprCoverageSchema = z.object({
+  matched_pools: z.number().default(0),
+  total_pools: z.number().default(0),
+  coverage_percentage: z.number().default(0),
+  matched_asset_value_usd: z.number().default(0),
+});
+
 /**
  * Schema for borrowing positions response
  */
@@ -263,20 +277,7 @@ export const landingPageResponseSchema = z
     message: z.string().optional(),
 
     // Coverage
-    apr_coverage: z
-      .object({
-        matched_pools: z.number().default(0),
-        total_pools: z.number().default(0),
-        coverage_percentage: z.number().default(0),
-        matched_asset_value_usd: z.number().default(0),
-      })
-      .optional()
-      .default({
-        matched_pools: 0,
-        total_pools: 0,
-        coverage_percentage: 0,
-        matched_asset_value_usd: 0,
-      }),
+    apr_coverage: aprCoverageSchema.optional().default(defaultAprCoverage),
 
     // Risk Metrics (MVP: portfolio-level calculation)
     risk_metrics: riskMetricsSchema.nullable().optional(),
@@ -489,7 +490,9 @@ export function validateDailyYieldReturnsResponse(
  * Safe validation that returns result with success/error information
  * Useful for cases where you want to handle validation errors gracefully
  */
-export function safeValidateUnifiedDashboardResponse(data: unknown) {
+export function safeValidateUnifiedDashboardResponse(
+  data: unknown
+): ReturnType<typeof unifiedDashboardResponseSchema.safeParse> {
   return unifiedDashboardResponseSchema.safeParse(data);
 }
 
