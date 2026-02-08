@@ -14,8 +14,9 @@ import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/u
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
 import { formatCurrency } from "@/utils/formatters";
 
-// Import new ReviewModal
+// Import new ReviewModal and ImpactVisual
 import { ReviewModal } from "./components/ReviewModal";
+import { ImpactVisual } from "./components/ImpactVisual";
 
 // --- Minimalist Components ---
 
@@ -99,6 +100,14 @@ function MinimalRebalance({ userId }: { userId: string }) {
             <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <CircleDollarSign className="w-6 h-6 text-gray-900 dark:text-white" />
             </div>
+          </div>
+
+          {/* Allocation Impact Visualization */}
+          <div className="mb-8 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+            <ImpactVisual
+              trades={data.trade_suggestions}
+              totalValue={data.total_value_usd}
+            />
           </div>
 
           <div className="space-y-6">
