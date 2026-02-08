@@ -2,8 +2,8 @@ import { cn } from "@/lib/ui/classNames";
 import { ReactNode } from "react";
 
 interface ActionCardProps {
-  title?: string;
-  subtitle?: string;
+  title?: ReactNode;
+  subtitle?: ReactNode;
   icon?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
@@ -28,20 +28,26 @@ export function ActionCard({
       {(title || subtitle || icon) && (
         <div className="flex items-center justify-between mb-8">
           <div>
-            {subtitle && <div className="text-sm text-gray-500">{subtitle}</div>}
-            {title && <div className="text-2xl font-medium">{title}</div>}
+            {subtitle && (
+              <div className="text-sm text-gray-500 font-medium uppercase tracking-wide mb-1">
+                {subtitle}
+              </div>
+            )}
+            {title && (
+              <div className="text-2xl font-medium text-gray-900 dark:text-white">
+                {title}
+              </div>
+            )}
           </div>
           {icon && (
-            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center shrink-0">
               {icon}
             </div>
           )}
         </div>
       )}
 
-      <div className="space-y-8">
-        {children}
-      </div>
+      <div className="space-y-8">{children}</div>
 
       {footer && (
         <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">

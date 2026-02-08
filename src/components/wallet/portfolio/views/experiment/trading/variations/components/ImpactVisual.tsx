@@ -32,41 +32,47 @@ export function ImpactVisual({
   const { current, target } = usePortfolioState(trades, totalValue);
 
   return (
-    <div className="space-y-4">
-      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
-        Allocation Impact
-      </h4>
-      <div className="flex justify-center gap-12 items-end h-48 px-8">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+          Allocation Impact
+        </h4>
+        {/* Simple Legend */}
+        <div className="flex gap-3 text-[10px] font-medium uppercase tracking-wide">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-orange-500" />
+            <span className="text-gray-600 dark:text-gray-400">BTC</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-purple-500" />
+            <span className="text-gray-600 dark:text-gray-400">LP</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span className="text-gray-600 dark:text-gray-400">Stable</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-center gap-12 items-end h-40 px-8">
         {/* Current Bar */}
         <div className="w-20 h-full flex flex-col justify-end group">
           <div className="text-[10px] text-center text-gray-400 mb-2 font-medium uppercase">
             Current
           </div>
-          <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-sm opacity-80">
+          <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-sm opacity-80 ring-1 ring-black/5 dark:ring-white/10">
             <div
               style={{ height: `${current.spot * 100}%` }}
-              className="bg-orange-500/80 w-full relative group/segment flex items-center justify-center"
-            >
-              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
-                SPOT
-              </span>
-            </div>
+              className="bg-orange-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-orange-500"
+            />
             <div
               style={{ height: `${current.lp * 100}%` }}
-              className="bg-purple-500/80 w-full relative group/segment flex items-center justify-center"
-            >
-              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
-                LP
-              </span>
-            </div>
+              className="bg-purple-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-purple-500"
+            />
             <div
               style={{ height: `${current.stable * 100}%` }}
-              className="bg-emerald-500/80 w-full relative group/segment flex items-center justify-center"
-            >
-              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
-                USD
-              </span>
-            </div>
+              className="bg-emerald-500/80 w-full relative group/segment flex items-center justify-center transition-all hover:bg-emerald-500"
+            />
           </div>
         </div>
 
@@ -85,7 +91,7 @@ export function ImpactVisual({
               style={{ height: `${target.spot * 100}%` }}
               className="bg-orange-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="text-[10px] font-bold text-white">
+              <span className="text-[10px] font-bold text-white shadow-sm">
                 {(target.spot * 100).toFixed(0)}%
               </span>
             </div>
@@ -93,7 +99,7 @@ export function ImpactVisual({
               style={{ height: `${target.lp * 100}%` }}
               className="bg-purple-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="text-[10px] font-bold text-white">
+              <span className="text-[10px] font-bold text-white shadow-sm">
                 {(target.lp * 100).toFixed(0)}%
               </span>
             </div>
@@ -101,7 +107,7 @@ export function ImpactVisual({
               style={{ height: `${target.stable * 100}%` }}
               className="bg-emerald-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="text-[10px] font-bold text-white">
+              <span className="text-[10px] font-bold text-white shadow-sm">
                 {(target.stable * 100).toFixed(0)}%
               </span>
             </div>
