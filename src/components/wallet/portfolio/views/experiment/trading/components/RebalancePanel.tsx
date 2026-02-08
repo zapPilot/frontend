@@ -1,10 +1,10 @@
 "use client";
 
 import { CircleDollarSign, TrendingUp } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useDailySuggestion } from "@/components/wallet/portfolio/views/strategy/hooks/useDailySuggestion";
-import { useStrategyConfigs } from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
+import { useDefaultPresetId } from "@/components/wallet/portfolio/views/strategy/hooks/useDefaultPresetId";
 import { cn } from "@/lib/ui/classNames";
 import { formatCurrency } from "@/utils/formatters";
 
@@ -15,12 +15,7 @@ import { ReviewModal } from "./ReviewModal";
 export function RebalancePanel({ userId }: { userId: string }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
-  const { data: configsResponse } = useStrategyConfigs(true);
-  const defaultPresetId = useMemo(() => {
-    const presets = configsResponse?.presets ?? [];
-    const regimePreset = presets.find(p => p.strategy_id === "simple_regime");
-    return regimePreset?.config_id ?? presets[0]?.config_id;
-  }, [configsResponse]);
+  const defaultPresetId = useDefaultPresetId(true);
 
   const { data } = useDailySuggestion(
     userId,

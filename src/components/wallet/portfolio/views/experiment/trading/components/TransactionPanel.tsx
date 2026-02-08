@@ -2,9 +2,9 @@
 
 import { useMemo,useState } from "react";
 
-import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
 import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/useTransactionForm";
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
+import { useWatchedTransactionData } from "@/components/wallet/portfolio/modals/hooks/useWatchedTransactionData";
 import { cn } from "@/lib/ui/classNames";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
@@ -49,16 +49,8 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const form = useTransactionForm({ chainId: 1 });
-  const chainId = form.watch("chainId");
-  const tokenAddress = form.watch("tokenAddress");
-  const amount = form.watch("amount");
-
-  const transactionData = useTransactionData({
-    isOpen: true,
-    chainId,
-    tokenAddress,
-    amount,
-  });
+  const { tokenAddress, amount, transactionData } =
+    useWatchedTransactionData(form, true);
 
   const submitFn =
     mode === "deposit"

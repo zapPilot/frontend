@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { useMemo } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import { EmptyStateCard } from "@/components/ui/EmptyStateCard";
@@ -10,7 +9,7 @@ import { Spinner } from "@/components/ui/LoadingSystem";
 import { useEmailSubscription } from "@/components/WalletManager/hooks/useEmailSubscription";
 
 import { useDailySuggestion } from "../../hooks/useDailySuggestion";
-import { useStrategyConfigs } from "../../hooks/useStrategyConfigs";
+import { useDefaultPresetId } from "../../hooks/useDefaultPresetId";
 import { AllocationComparison } from "./AllocationComparison";
 import { NotificationChannels } from "./NotificationChannels";
 import { RegimeIndicator } from "./RegimeIndicator";
@@ -21,7 +20,7 @@ interface SuggestionViewProps {
 }
 
 export function SuggestionView({ userId }: SuggestionViewProps) {
-  const { data: configsResponse } = useStrategyConfigs(!!userId);
+  const defaultPresetId = useDefaultPresetId(!!userId);
   const emailSubscription = useEmailSubscription({
     realUserId: userId || "",
     viewingUserId: userId || "",
@@ -29,15 +28,6 @@ export function SuggestionView({ userId }: SuggestionViewProps) {
     onEmailSubscribed: undefined,
   });
 
-  // We automatically select the "simple_regime" strategy as the default
-  // No UI selector needed as per requirements
-  const defaultPresetId = useMemo(() => {
-    const presets = configsResponse?.presets ?? [];
-    const regimePreset = presets.find(p => p.strategy_id === "simple_regime");
-    return regimePreset?.config_id ?? presets[0]?.config_id;
-  }, [configsResponse]);
-
-  // Use the default preset ID for fetching suggestions
   const suggestionParams = defaultPresetId
     ? { config_id: defaultPresetId }
     : {};
