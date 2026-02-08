@@ -6,170 +6,154 @@ import {
   TransactionModalHeader,
 } from "@/components/wallet/portfolio/modals/components/TransactionModalParts";
 import { cn } from "@/lib/ui/classNames";
-import type { TradeSuggestion } from "@/types/strategy";
-import { formatCurrency } from "@/utils/formatters";
 import {
   ArrowRight,
-  ArrowRightLeft,
-  GitMerge,
+  CheckCircle2,
+  Clock,
+  Cpu,
+  Globe,
+  Info,
+  Layers,
   LineChart,
   ShieldCheck,
+  Zap
 } from "lucide-react";
-import { ImpactVisual } from "./ImpactVisual";
+import { useState } from "react";
 
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
-  trades: TradeSuggestion[];
-  totalValue: number;
+  trades?: any[];
+  totalValue?: number;
   title?: string;
 }
 
-// --- Helpers ---
+// --- Mock Data ---
 
-const enrichTradeSteps = (trade: TradeSuggestion) => {
-  const isBuy = trade.action === "buy";
-  const asset =
-    trade.bucket === "spot"
-      ? "BTC"
-      : trade.bucket === "stable"
-        ? "USDC"
-        : "BTC-USDC LP";
+const MOCK_INTENTS = [
+  {
+    id: 1,
+    title: "Bridge Liquidity",
+    description: "Move 10.5 ETH from Ethereum to Arbitrum via Across",
+    status: "pending",
+  },
+  {
+    id: 2,
+    title: "Protocol Swap",
+    description: "Convert ETH to WBTC on Uniswap V3 (0.05% fee tier)",
+    status: "pending",
+  },
+  {
+    id: 3,
+    title: "Vault Deposit",
+    description: "Supply WBTC to the All-Weather Alpha Vault",
+    status: "pending",
+  },
+  {
+    id: 4,
+    title: "Reward Lock",
+    description: "Auto-stake generated GMX rewards for compounding",
+    status: "pending",
+  },
+];
 
-  // Mock logic to determine chain flow
-  const sourceChain = isBuy ? "Arbitrum" : "Ethereum";
-  const targetChain = isBuy ? "Ethereum" : "Arbitrum";
-  const protocol = isBuy ? "Uniswap V3" : "Aave V3";
+const MOCK_ROUTE = [
+  {
+    type: "source",
+    chain: "Ethereum Mainnet",
+    asset: "10.5 ETH",
+    icon: Globe,
+  },
+  {
+    type: "bridge",
+    protocol: "Across Protocol",
+    duration: "~2 mins",
+    icon: Zap,
+  },
+  {
+    type: "target",
+    chain: "Arbitrum One",
+    asset: "10.5 ETH",
+    icon: Globe,
+  },
+  {
+    type: "action",
+    protocol: "Uniswap V3",
+    action: "Swap ETH -> WBTC",
+    impact: "-0.02%",
+    icon: Cpu,
+  },
+  {
+    type: "finish",
+    protocol: "All-Weather Vault",
+    action: "Vault Allocation",
+    icon: ShieldCheck,
+  },
+];
 
-  // Generate steps based on action
-  const steps = [];
-
-  if (trade.action === "sell") {
-    steps.push({
-      label: `Withdraw ${asset}`,
-      detail: `from ${protocol} (${sourceChain})`,
-      icon: ArrowRightLeft,
-    });
-    steps.push({
-      label: `Bridge Funds`,
-      detail: `via Across Protocol to ${targetChain}`,
-      icon: GitMerge,
-    });
-    steps.push({
-      label: `Swap to USDC`,
-      detail: `on 1inch Aggregator`,
-      icon: ArrowRight,
-    });
-  } else {
-    steps.push({
-      label: `Bridge USDC`,
-      detail: `via Stargate to ${targetChain}`,
-      icon: GitMerge,
-    });
-    steps.push({
-      label: `Buy ${asset}`,
-      detail: `on ${protocol}`,
-      icon: ArrowRight,
-    });
-    steps.push({
-      label: `Deposit`,
-      detail: `into Strategy Vault`,
-      icon: ShieldCheck,
-    });
-  }
-
-  return { ...trade, steps, protocol, sourceChain, targetChain, asset };
+const MOCK_LOGIC = {
+  reason: "Volatility Expansion",
+  details: [
+    {
+      label: "Current Market Regime",
+      value: "High Volatility / Uptrend",
+      sentiment: "positive",
+    },
+    {
+      label: "Signal Source",
+      value: "On-chain MVRV Z-Score + RSI",
+      sentiment: "neutral",
+    },
+    {
+      label: "Action Rationale",
+      value:
+        "The strategy is shifting from 40% stables to 80% spot assets to capture the upcoming momentum phase while maintaining a trailing stop-loss.",
+      sentiment: "neutral",
+    },
+    {
+      label: "Estimated Monthly Yield",
+      value: "+12.4% APY",
+      sentiment: "positive",
+    },
+  ],
 };
 
-// --- Components ---
+// --- Components for Variations ---
 
-function RegimeContext() {
-  return (
-    <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex items-start gap-4">
-      <div className="p-2 bg-indigo-500/20 rounded-lg">
-        <LineChart className="w-5 h-5 text-indigo-400" />
-      </div>
-      <div>
-        <h4 className="text-sm font-bold text-indigo-100 flex items-center gap-2">
-          Uptrend Detected
-          <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-mono uppercase">
-            Bullish
-          </span>
-        </h4>
-        <p className="text-xs text-indigo-300 mt-1 leading-relaxed">
-          BTC Price <strong className="font-mono text-white">$65,400</strong> is
-          above the 200-Day Moving Average{" "}
-          <strong className="font-mono text-white">($58,200)</strong>. Strategy
-          recommends increasing Spot exposure.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-function ExecutionTimeline({ trades }: { trades: TradeSuggestion[] }) {
-  const enrichedTrades = trades.map(enrichTradeSteps);
-
+function VariationChecklist() {
   return (
     <div className="space-y-4">
-      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
-        Execution Route
-      </h4>
-      <div className="relative pl-4">
-        {/* Timeline Line */}
-        <div className="absolute left-[27px] top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-gray-800 to-transparent" />
+      <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex gap-3">
+        <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-blue-200 leading-relaxed">
+          By signing this transaction, you are authorizing the following sequence
+          of actions to be performed by our smart execution engine.
+        </p>
+      </div>
 
-        {enrichedTrades.map((t, i) => (
-          <div key={i} className="relative pl-10 pb-8 last:pb-0">
-            {/* Trade Node */}
-            <div className="absolute left-3 top-0 w-6 h-6 rounded-full bg-gray-950 border-2 border-gray-800 z-10 flex items-center justify-center">
-              <div
-                className={cn(
-                  "w-2 h-2 rounded-full",
-                  t.action === "buy" ? "bg-green-500" : "bg-red-500"
-                )}
-              />
-            </div>
-
-            <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 shadow-sm">
-              {/* Trade Header */}
-              <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-800">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={cn(
-                      "text-xs font-bold uppercase px-1.5 py-0.5 rounded",
-                      t.action === "buy"
-                        ? "bg-green-900/30 text-green-400"
-                        : "bg-red-900/30 text-red-400"
-                    )}
-                  >
-                    {t.action}
-                  </span>
-                  <span className="text-sm font-bold text-white">
-                    {t.asset}
-                  </span>
-                </div>
-                <span className="font-mono text-sm text-gray-400">
-                  {formatCurrency(t.amount_usd)}
+      <div className="space-y-3">
+        {MOCK_INTENTS.map((intent, i) => (
+          <div
+            key={intent.id}
+            className="group flex gap-4 p-4 bg-gray-900 border border-gray-800 rounded-2xl hover:border-gray-700 transition-colors"
+          >
+            <div className="relative flex flex-col items-center">
+              <div className="w-6 h-6 rounded-full border-2 border-gray-700 flex items-center justify-center shrink-0">
+                <span className="text-[10px] font-bold text-gray-500">
+                  {i + 1}
                 </span>
               </div>
-
-              {/* Steps */}
-              <div className="space-y-3">
-                {t.steps.map((step, idx) => (
-                  <div key={idx} className="flex items-start gap-3 text-xs">
-                    <step.icon className="w-3.5 h-3.5 text-gray-500 mt-0.5" />
-                    <div>
-                      <span className="font-medium text-gray-300 block">
-                        {step.label}
-                      </span>
-                      <span className="text-gray-600">{step.detail}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {i !== MOCK_INTENTS.length - 1 && (
+                <div className="w-px flex-1 bg-gray-800 my-1" />
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-white mb-1">
+                {intent.title}
+              </h4>
+              <p className="text-xs text-gray-400">{intent.description}</p>
             </div>
           </div>
         ))}
@@ -178,49 +162,122 @@ function ExecutionTimeline({ trades }: { trades: TradeSuggestion[] }) {
   );
 }
 
-function TradeList({ trades }: { trades: TradeSuggestion[] }) {
+function VariationRoute() {
   return (
-    <div className="space-y-3">
-      {trades.map((trade, i) => (
-        <div
-          key={i}
-          className="flex justify-between items-center bg-gray-900/50 border border-gray-800 rounded-xl p-4"
-        >
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "w-2 h-2 rounded-full",
-                trade.action === "buy" ? "bg-green-500" : "bg-red-500"
-              )}
-            />
-            <span className="text-sm font-medium text-gray-300 capitalize">
-              {trade.action} {trade.bucket.toUpperCase()}
-            </span>
-          </div>
-          <span className="font-mono text-white">
-            {formatCurrency(trade.amount_usd)}
-          </span>
+    <div className="space-y-6">
+      <div className="relative">
+        {/* Connection Line */}
+        <div className="absolute left-[23px] top-6 bottom-6 w-px border-l-2 border-dashed border-gray-800" />
+
+        <div className="space-y-6">
+          {MOCK_ROUTE.map((step, i) => (
+            <div key={i} className="relative flex items-center gap-4">
+              <div
+                className={cn(
+                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 z-10",
+                  step.type === "finish"
+                    ? "bg-green-500/20 border border-green-500/30 text-green-400 shadow-lg shadow-green-500/10"
+                    : "bg-gray-900 border border-gray-800 text-gray-400"
+                )}
+              >
+                <step.icon className="w-6 h-6" />
+              </div>
+
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                    {step.type}
+                  </span>
+                  {step.duration && (
+                    <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                      <Clock className="w-3 h-3" /> {step.duration}
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <div className="text-sm font-bold text-white">
+                    {step.chain || step.protocol}
+                  </div>
+                  <div className="text-sm font-mono text-indigo-400">
+                    {step.asset || step.action}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      </div>
     </div>
   );
 }
 
-// --- Variation 1: Simple (List focused) ---
+function VariationLogic() {
+  return (
+    <div className="space-y-6">
+      <div className="p-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-white/10 rounded-2xl">
+        <div className="flex items-center gap-2 mb-4">
+          <LineChart className="w-5 h-5 text-indigo-400" />
+          <h4 className="text-sm font-bold text-white uppercase tracking-tighter">
+            Executive Summary
+          </h4>
+        </div>
+        <p className="text-lg font-medium text-indigo-100 leading-tight">
+          Current market metrics suggest a{" "}
+          <span className="text-white underline decoration-indigo-500">
+            {MOCK_LOGIC.reason}
+          </span>{" "}
+          scenario.
+        </p>
+      </div>
 
-export function ReviewModalSimple({
+      <div className="grid grid-cols-1 gap-3">
+        {MOCK_LOGIC.details.map((detail, i) => (
+          <div
+            key={i}
+            className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl"
+          >
+            <div className="text-[10px] font-bold text-gray-500 uppercase mb-1">
+              {detail.label}
+            </div>
+            <div
+              className={cn(
+                "text-sm",
+                detail.sentiment === "positive" ? "text-green-400" : "text-white"
+              )}
+            >
+              {detail.value}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- Main Modal Container ---
+
+export function ReviewModal({
   isOpen,
   onClose,
   onConfirm,
   isSubmitting = false,
-  trades,
-  title = "Confirm Strategy",
+  title = "Review Execution",
 }: ReviewModalProps) {
+  const [activeTab, setActiveTab] = useState<"checklist" | "route" | "logic">(
+    "checklist"
+  );
+
   if (!isOpen) return null;
+
+  const tabs = [
+    { id: "checklist", label: "Intent Flow", icon: CheckCircle2 },
+    { id: "route", label: "Execution Route", icon: Layers },
+    { id: "logic", label: "Logic Brief", icon: Cpu },
+  ];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} maxWidth="md">
-      <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800">
+      <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800 flex flex-col max-h-[90vh]">
         <TransactionModalHeader
           title={title}
           indicatorClassName="bg-indigo-500"
@@ -228,133 +285,54 @@ export function ReviewModalSimple({
           onClose={onClose}
         />
 
-        <div className="p-6">
-          {isSubmitting ? (
-            <SubmittingState isSuccess={false} />
-          ) : (
-            <div className="space-y-6">
-              <RegimeContext />
-              <TradeList trades={trades} />
-
+        {/* Tab Switcher */}
+        {!isSubmitting && (
+          <div className="flex p-2 bg-gray-900/50 border-b border-gray-800 gap-1">
+            {tabs.map((tab) => (
               <button
-                onClick={onConfirm}
-                className="w-full py-4 rounded-xl bg-white text-black font-bold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={cn(
+                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all",
+                  activeTab === tab.id
+                    ? "bg-gray-800 text-white shadow-sm ring-1 ring-white/10"
+                    : "text-gray-500 hover:text-gray-300"
+                )}
               >
-                Confirm Execution
-                <ArrowRight className="w-4 h-4" />
+                <tab.icon className="w-3.5 h-3.5" />
+                {tab.label}
               </button>
-            </div>
-          )}
-        </div>
-      </ModalContent>
-    </Modal>
-  );
-}
+            ))}
+          </div>
+        )}
 
-// --- Variation 2: Visual (Chart focused) ---
-
-export function ReviewModalVisual({
-  isOpen,
-  onClose,
-  onConfirm,
-  isSubmitting = false,
-  trades,
-  totalValue,
-  title = "Review Allocation",
-}: ReviewModalProps) {
-  if (!isOpen) return null;
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="lg">
-      <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800">
-        <TransactionModalHeader
-          title={title}
-          indicatorClassName="bg-purple-500"
-          isSubmitting={isSubmitting}
-          onClose={onClose}
-        />
-
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
           {isSubmitting ? (
             <SubmittingState isSuccess={false} />
           ) : (
-            <div className="space-y-8">
-              <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-800">
-                <ImpactVisual trades={trades} totalValue={totalValue} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <RegimeContext />
-                <TradeList trades={trades} />
-              </div>
-
-              <div className="pt-4 border-t border-gray-800">
-                <button
-                  onClick={onConfirm}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-purple-500/20"
-                >
-                  Confirm Rebalance
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </ModalContent>
-    </Modal>
-  );
-}
-
-// --- Variation 3: Detailed (Timeline focused) ---
-
-export function ReviewModalTimeline({
-  isOpen,
-  onClose,
-  onConfirm,
-  isSubmitting = false,
-  trades,
-  title = "Execution Plan",
-}: ReviewModalProps) {
-  if (!isOpen) return null;
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="md">
-      <ModalContent className="p-0 overflow-hidden bg-gray-950 border-gray-800 flex flex-col max-h-[85vh]">
-        <TransactionModalHeader
-          title={title}
-          indicatorClassName="bg-green-500"
-          isSubmitting={isSubmitting}
-          onClose={onClose}
-        />
-
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-          {isSubmitting ? (
-            <SubmittingState isSuccess={false} />
-          ) : (
-            <div className="space-y-8">
-              <RegimeContext />
-              <div className="border-t border-dashed border-gray-800" />
-              <ExecutionTimeline trades={trades} />
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {activeTab === "checklist" && <VariationChecklist />}
+              {activeTab === "route" && <VariationRoute />}
+              {activeTab === "logic" && <VariationLogic />}
             </div>
           )}
         </div>
 
         {!isSubmitting && (
-          <div className="p-6 border-t border-gray-800 bg-gray-900/50">
+          <div className="p-6 pt-2 border-t border-gray-800 bg-gray-950">
             <button
               onClick={onConfirm}
-              className="w-full py-4 rounded-xl bg-gray-800 text-white font-bold hover:bg-gray-700 transition-colors border border-gray-700 flex items-center justify-center gap-2"
+              className="group w-full py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
             >
-              Start Execution
-              <ArrowRight className="w-4 h-4" />
+              Sign & Execute
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
+            <p className="text-[10px] text-gray-500 text-center mt-4 uppercase tracking-widest font-medium">
+              Secured by MPC & Hardware Isolation
+            </p>
           </div>
         )}
       </ModalContent>
     </Modal>
   );
-}
-
-export function ReviewModal(props: ReviewModalProps) {
-  return <ReviewModalVisual {...props} />;
 }
