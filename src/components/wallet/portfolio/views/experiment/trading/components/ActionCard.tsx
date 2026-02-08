@@ -1,5 +1,6 @@
-import { cn } from "@/lib/ui/classNames";
 import { ReactNode } from "react";
+
+import { cn } from "@/lib/ui/classNames";
 
 interface ActionCardProps {
   title?: ReactNode;

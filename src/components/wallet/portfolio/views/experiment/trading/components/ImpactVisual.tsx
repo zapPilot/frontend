@@ -1,14 +1,13 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
+
 import type { TradeSuggestion } from "@/types/strategy";
 
 // --- Helpers ---
 
-export const usePortfolioState = (
-  trades: TradeSuggestion[],
-  totalValue: number
-) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const usePortfolioState = (_trades: TradeSuggestion[], _totalValue: number) => {
   const current = {
     spot: 0.45,
     lp: 0.15,

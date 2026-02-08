@@ -22,8 +22,6 @@ import {
 } from "@/components/wallet/portfolio/modals/components/TransactionModalParts";
 import { cn } from "@/lib/ui/classNames";
 
-import { ImpactVisual } from "./ImpactVisual";
-
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -248,9 +246,6 @@ function BacktestMetric({
 function VariationImpact() {
   return (
     <div className="space-y-6">
-      {/* Reuse existing ImpactVisual bar chart */}
-      <ImpactVisual trades={[]} totalValue={0} />
-
       {/* Allocation Table */}
       <div>
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
@@ -366,8 +361,8 @@ function VariationRoute() {
 type TabId = "strategy" | "impact" | "route";
 
 const TABS: { id: TabId; label: string; icon: typeof LineChart }[] = [
-  { id: "strategy", label: "Strategy", icon: LineChart },
   { id: "impact", label: "Impact", icon: Layers },
+  { id: "strategy", label: "Strategy", icon: LineChart },
   { id: "route", label: "Route", icon: Zap },
 ];
 
@@ -378,7 +373,7 @@ export function ReviewModal({
   isSubmitting = false,
   title = "Review Execution",
 }: ReviewModalProps) {
-  const [activeTab, setActiveTab] = useState<TabId>("strategy");
+  const [activeTab, setActiveTab] = useState<TabId>("impact");
 
   if (!isOpen) return null;
 

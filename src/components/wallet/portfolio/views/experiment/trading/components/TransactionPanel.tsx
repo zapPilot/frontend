@@ -1,16 +1,18 @@
 "use client";
 
-import { cn } from "@/lib/ui/classNames";
-import { useWalletProvider } from "@/providers/WalletProvider";
-import { transactionService } from "@/services";
+import { useMemo,useState } from "react";
+
 import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
 import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/useTransactionForm";
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
+import { cn } from "@/lib/ui/classNames";
+import { useWalletProvider } from "@/providers/WalletProvider";
+import { transactionService } from "@/services";
+import type { TradeSuggestion } from "@/types/strategy";
+
 import { ActionCard } from "./ActionCard";
 import { ImpactVisual } from "./ImpactVisual";
 import { ReviewModal } from "./ReviewModal";
-import { useState, useMemo } from "react";
-import type { TradeSuggestion } from "@/types/strategy";
 
 function MinimalInput({
   label,
@@ -42,7 +44,7 @@ function MinimalInput({
   );
 }
 
-export function MinimalTransaction({ mode }: { mode: "deposit" | "withdraw" }) {
+export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   const { isConnected } = useWalletProvider();
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 

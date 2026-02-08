@@ -1,18 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { CircleDollarSign, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
 
-import { cn } from "@/lib/ui/classNames";
 import { useDailySuggestion } from "@/components/wallet/portfolio/views/strategy/hooks/useDailySuggestion";
 import { useStrategyConfigs } from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
+import { cn } from "@/lib/ui/classNames";
 import { formatCurrency } from "@/utils/formatters";
 
 import { ActionCard } from "./ActionCard";
-import { ReviewModal } from "./ReviewModal";
 import { ImpactVisual } from "./ImpactVisual";
+import { ReviewModal } from "./ReviewModal";
 
-export function MinimalRebalance({ userId }: { userId: string }) {
+export function RebalancePanel({ userId }: { userId: string }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const { data: configsResponse } = useStrategyConfigs(true);
