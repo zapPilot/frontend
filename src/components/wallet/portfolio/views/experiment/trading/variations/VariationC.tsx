@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CircleDollarSign } from "lucide-react";
+import { CircleDollarSign, TrendingUp } from "lucide-react";
 
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
@@ -71,15 +71,21 @@ function MinimalRebalance({ userId }: { userId: string }) {
   return (
     <>
       <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center space-y-2">
-          <h3 className="text-4xl font-light text-white">Portfolio Health</h3>
-          <p className="text-gray-400 font-light">
-            Your portfolio is currently aligned with the{" "}
-            <span className="text-white font-medium">
-              {data.regime.current}
-            </span>{" "}
-            regime.
-          </p>
+        <div className="text-center space-y-4">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-300 text-xs font-medium">
+            <TrendingUp className="w-3 h-3" />
+            BTC ($65k) &gt; 200 DMA ($58k)
+          </div>
+          <div>
+            <h3 className="text-4xl font-light text-white">Portfolio Health</h3>
+            <p className="text-gray-400 font-light mt-2">
+              Aligned with{" "}
+              <span className="text-white font-medium capitalize">
+                {data.regime.current.replace("_", " ")}
+              </span>{" "}
+              Regime
+            </p>
+          </div>
         </div>
 
         <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800">
@@ -238,7 +244,7 @@ export function VariationC({ userId }: { userId: string }) {
   >("rebalance");
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-950 min-h-[600px] flex flex-col items-center pt-8 relative">
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-[600px] flex flex-col items-center pt-8 relative">
       {/* Segmented Control */}
       <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-800 mb-12 flex gap-1">
         {(["rebalance", "deposit", "withdraw"] as const).map(m => (

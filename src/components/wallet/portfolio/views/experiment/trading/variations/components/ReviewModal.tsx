@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   ArrowRight,
-  BarChart2,
-  Circle,
-  GripVertical,
-  Layout,
-  PieChart,
+  ArrowRightLeft,
+  ChevronRight,
+  GitMerge,
+  LineChart,
+  ShieldCheck,
+  TrendingUp,
   X,
 } from "lucide-react";
 import { formatCurrency } from "@/utils/formatters";
 import type { TradeSuggestion } from "@/types/strategy";
 import { cn } from "@/lib/ui/classNames";
-
-type ReviewVariation = "bars" | "radial" | "slider";
 
 interface ReviewModalProps {
   isOpen: boolean;
@@ -25,38 +24,106 @@ interface ReviewModalProps {
 
 // --- Helpers ---
 
-// Mock portfolio state generator based on trades
 const usePortfolioState = (trades: TradeSuggestion[], totalValue: number) => {
-  // We infer "Current" state by reverse-engineering the trades relative to a target
-  // Or just mock a plausible starting point for visualization
   const current = {
     spot: 0.45,
     lp: 0.15,
     stable: 0.4,
   };
-
-  // Calculate target based on trades (mock logic for visual)
-  // In reality, this would come from the API response
   const target = {
-    spot: 0.55, // Buying spot
-    lp: 0.35, // Buying LP
-    stable: 0.1, // Selling stable
+    spot: 0.55,
+    lp: 0.35,
+    stable: 0.1,
   };
-
   return { current, target };
 };
 
-const COLORS = {
-  spot: "bg-orange-500",
-  lp: "bg-purple-500",
-  stable: "bg-emerald-500",
-  spotRing: "stroke-orange-500",
-  lpRing: "stroke-purple-500",
-  stableRing: "stroke-emerald-500",
+const enrichTradeSteps = (trade: TradeSuggestion, index: number) => {
+  const isBuy = trade.action === "buy";
+  const asset =
+    trade.bucket === "spot"
+      ? "BTC"
+      : trade.bucket === "stable"
+        ? "USDC"
+        : "BTC-USDC LP";
+
+  // Mock logic to determine chain flow
+  const sourceChain = isBuy ? "Arbitrum" : "Ethereum";
+  const targetChain = isBuy ? "Ethereum" : "Arbitrum";
+  const protocol = isBuy ? "Uniswap V3" : "Aave V3";
+
+  // Generate steps based on action
+  const steps = [];
+
+  if (trade.action === "sell") {
+    steps.push({
+      label: `Withdraw ${asset}`,
+      detail: `from ${protocol} (${sourceChain})`,
+      icon: ArrowRightLeft,
+    });
+    steps.push({
+      label: `Bridge Funds`,
+      detail: `via Across Protocol to ${targetChain}`,
+      icon: GitMerge,
+    });
+    steps.push({
+      label: `Swap to USDC`,
+      detail: `on 1inch Aggregator`,
+      icon: ArrowRight,
+    });
+  } else {
+    steps.push({
+      label: `Bridge USDC`,
+      detail: `via Stargate to ${targetChain}`,
+      icon: GitMerge,
+    });
+    steps.push({
+      label: `Buy ${asset}`,
+      detail: `on ${protocol}`,
+      icon: ArrowRight,
+    });
+    steps.push({
+      label: `Deposit`,
+      detail: `into Strategy Vault`,
+      icon: ShieldCheck,
+    });
+  }
+
+  return { ...trade, steps, protocol, sourceChain, targetChain, asset };
 };
 
-// --- Variation 1: Stacked Bars ---
-function ImpactBarView({
+// --- Components ---
+
+function RegimeContext() {
+  return (
+    <div className="bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-900/50 rounded-xl p-4 flex items-start gap-4">
+      <div className="p-2 bg-indigo-100 dark:bg-indigo-800 rounded-lg">
+        <LineChart className="w-5 h-5 text-indigo-600 dark:text-indigo-300" />
+      </div>
+      <div>
+        <h4 className="text-sm font-bold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
+          Uptrend Detected
+          <span className="text-[10px] bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full font-mono uppercase">
+            Bullish
+          </span>
+        </h4>
+        <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1 leading-relaxed">
+          BTC Price{" "}
+          <strong className="font-mono text-indigo-900 dark:text-white">
+            $65,400
+          </strong>{" "}
+          is above the 200-Day Moving Average{" "}
+          <strong className="font-mono text-indigo-900 dark:text-white">
+            ($58,200)
+          </strong>
+          . Strategy recommends increasing Spot exposure.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ImpactVisual({
   trades,
   totalValue,
 }: {
@@ -66,35 +133,38 @@ function ImpactBarView({
   const { current, target } = usePortfolioState(trades, totalValue);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 py-4">
-      <div className="flex justify-center gap-12 items-end h-64 px-8">
+    <div className="space-y-4">
+      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">
+        Allocation Impact
+      </h4>
+      <div className="flex justify-center gap-12 items-end h-48 px-8">
         {/* Current Bar */}
-        <div className="w-24 h-full flex flex-col justify-end group">
-          <div className="text-xs text-center text-gray-500 mb-2 font-medium uppercase tracking-wider">
-            Before
+        <div className="w-20 h-full flex flex-col justify-end group">
+          <div className="text-[10px] text-center text-gray-400 mb-2 font-medium uppercase">
+            Current
           </div>
-          <div className="w-full h-full rounded-2xl overflow-hidden flex flex-col-reverse shadow-sm opacity-80 group-hover:opacity-100 transition-opacity">
+          <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-sm opacity-80">
             <div
               style={{ height: `${current.spot * 100}%` }}
-              className="bg-orange-500/80 w-full relative group/segment"
+              className="bg-orange-500/80 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white opacity-0 group-hover/segment:opacity-100 transition-opacity">
+              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
                 SPOT
               </span>
             </div>
             <div
               style={{ height: `${current.lp * 100}%` }}
-              className="bg-purple-500/80 w-full relative group/segment"
+              className="bg-purple-500/80 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white opacity-0 group-hover/segment:opacity-100 transition-opacity">
+              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
                 LP
               </span>
             </div>
             <div
               style={{ height: `${current.stable * 100}%` }}
-              className="bg-emerald-500/80 w-full relative group/segment"
+              className="bg-emerald-500/80 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white opacity-0 group-hover/segment:opacity-100 transition-opacity">
+              <span className="text-[10px] font-bold text-white opacity-0 group-hover/segment:opacity-100">
                 USD
               </span>
             </div>
@@ -102,270 +172,111 @@ function ImpactBarView({
         </div>
 
         {/* Connector */}
-        <div className="flex flex-col items-center justify-center pb-12 opacity-30">
-          <ArrowRight className="w-8 h-8 text-gray-400" />
+        <div className="flex flex-col items-center justify-center pb-8 opacity-30">
+          <ArrowRight className="w-6 h-6 text-gray-400" />
         </div>
 
         {/* Target Bar */}
-        <div className="w-24 h-full flex flex-col justify-end group">
-          <div className="text-xs text-center text-indigo-500 mb-2 font-bold uppercase tracking-wider">
-            After
+        <div className="w-20 h-full flex flex-col justify-end group">
+          <div className="text-[10px] text-center text-indigo-500 mb-2 font-bold uppercase">
+            Target
           </div>
-          <div className="w-full h-full rounded-2xl overflow-hidden flex flex-col-reverse shadow-lg ring-2 ring-indigo-500/20">
+          <div className="w-full h-full rounded-xl overflow-hidden flex flex-col-reverse shadow-lg ring-2 ring-indigo-500/20">
             <div
               style={{ height: `${target.spot * 100}%` }}
-              className="bg-orange-500 w-full relative group/segment"
+              className="bg-orange-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+              <span className="text-[10px] font-bold text-white">
                 {(target.spot * 100).toFixed(0)}%
               </span>
             </div>
             <div
               style={{ height: `${target.lp * 100}%` }}
-              className="bg-purple-500 w-full relative group/segment"
+              className="bg-purple-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+              <span className="text-[10px] font-bold text-white">
                 {(target.lp * 100).toFixed(0)}%
               </span>
             </div>
             <div
               style={{ height: `${target.stable * 100}%` }}
-              className="bg-emerald-500 w-full relative group/segment"
+              className="bg-emerald-500 w-full relative group/segment flex items-center justify-center"
             >
-              <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white">
+              <span className="text-[10px] font-bold text-white">
                 {(target.stable * 100).toFixed(0)}%
               </span>
             </div>
           </div>
         </div>
       </div>
-
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
-          <div className="text-[10px] uppercase text-gray-500 font-bold">
-            Spot Exposure
-          </div>
-          <div className="text-sm font-mono font-bold text-green-500">+10%</div>
-        </div>
-        <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
-          <div className="text-[10px] uppercase text-gray-500 font-bold">
-            Yield Assets
-          </div>
-          <div className="text-sm font-mono font-bold text-green-500">+20%</div>
-        </div>
-        <div className="p-2 bg-gray-50 dark:bg-gray-900 rounded-lg">
-          <div className="text-[10px] uppercase text-gray-500 font-bold">
-            Idle Cash
-          </div>
-          <div className="text-sm font-mono font-bold text-red-500">-30%</div>
-        </div>
-      </div>
     </div>
   );
 }
 
-// --- Variation 2: Radial Overlay ---
-function ImpactRadialView({
-  trades,
-  totalValue,
-}: {
-  trades: TradeSuggestion[];
-  totalValue: number;
-}) {
-  const { current, target } = usePortfolioState(trades, totalValue);
-
-  // SVG Helpers
-  const radius = 80;
-  const circumference = 2 * Math.PI * radius;
-
-  const renderSegment = (
-    pct: number,
-    offsetPct: number,
-    color: string,
-    ringRadius: number,
-    opacity: number = 1
-  ) => {
-    const ringCircumference = 2 * Math.PI * ringRadius;
-    const strokeDasharray = `${pct * ringCircumference} ${ringCircumference}`;
-    const strokeDashoffset = -offsetPct * ringCircumference;
-    return (
-      <circle
-        cx="100"
-        cy="100"
-        r={ringRadius}
-        fill="transparent"
-        strokeWidth="12"
-        strokeDasharray={strokeDasharray}
-        strokeDashoffset={strokeDashoffset}
-        className={cn("transition-all duration-1000 ease-out", color)}
-        strokeLinecap="round"
-        style={{ opacity }}
-        transform="rotate(-90 100 100)"
-      />
-    );
-  };
+function ExecutionTimeline({ trades }: { trades: TradeSuggestion[] }) {
+  const enrichedTrades = trades.map(enrichTradeSteps);
 
   return (
-    <div className="space-y-8 animate-in zoom-in-95 duration-500 flex flex-col items-center">
-      <div className="relative w-64 h-64">
-        <svg className="w-full h-full" viewBox="0 0 200 200">
-          {/* Inner Ring (Current) - Faded */}
-          {renderSegment(current.spot, 0, COLORS.spotRing, 60, 0.3)}
-          {renderSegment(current.lp, current.spot, COLORS.lpRing, 60, 0.3)}
-          {renderSegment(
-            current.stable,
-            current.spot + current.lp,
-            COLORS.stableRing,
-            60,
-            0.3
-          )}
+    <div className="space-y-4">
+      <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+        Execution Route
+      </h4>
+      <div className="relative pl-4">
+        {/* Timeline Line */}
+        <div className="absolute left-[27px] top-4 bottom-4 w-px bg-gradient-to-b from-transparent via-gray-200 dark:via-gray-800 to-transparent" />
 
-          {/* Outer Ring (Target) - Solid */}
-          {renderSegment(target.spot, 0, COLORS.spotRing, 85)}
-          {renderSegment(target.lp, target.spot, COLORS.lpRing, 85)}
-          {renderSegment(
-            target.stable,
-            target.spot + target.lp,
-            COLORS.stableRing,
-            85
-          )}
-        </svg>
+        {enrichedTrades.map((t, i) => (
+          <div key={i} className="relative pl-10 pb-8 last:pb-0">
+            {/* Trade Node */}
+            <div className="absolute left-3 top-0 w-6 h-6 rounded-full bg-white dark:bg-black border-2 border-gray-200 dark:border-gray-800 z-10 flex items-center justify-center">
+              <div
+                className={cn(
+                  "w-2 h-2 rounded-full",
+                  t.action === "buy" ? "bg-green-500" : "bg-red-500"
+                )}
+              />
+            </div>
 
-        {/* Center Label */}
-        <div className="absolute inset-0 flex items-center justify-center flex-col">
-          <span className="text-3xl font-bold text-gray-900 dark:text-white">
-            {(target.lp * 100).toFixed(0)}%
-          </span>
-          <span className="text-xs text-purple-500 font-bold uppercase tracking-wider">
-            Target LP
-          </span>
-        </div>
-      </div>
+            <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-4 shadow-sm">
+              {/* Trade Header */}
+              <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-50 dark:border-gray-800">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-xs font-bold uppercase px-1.5 py-0.5 rounded",
+                      t.action === "buy"
+                        ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                        : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                    )}
+                  >
+                    {t.action}
+                  </span>
+                  <span className="text-sm font-bold text-gray-900 dark:text-white">
+                    {t.asset}
+                  </span>
+                </div>
+                <span className="font-mono text-sm text-gray-600 dark:text-gray-300">
+                  {formatCurrency(t.amount_usd)}
+                </span>
+              </div>
 
-      <div className="flex gap-6">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-500" />
-          <div className="text-xs text-gray-600 dark:text-gray-300">
-            Spot{" "}
-            <span className="text-gray-400">
-              ({(current.spot * 100).toFixed(0)}% →{" "}
-              <strong>{(target.spot * 100).toFixed(0)}%</strong>)
-            </span>
+              {/* Steps */}
+              <div className="space-y-3">
+                {t.steps.map((step, idx) => (
+                  <div key={idx} className="flex items-start gap-3 text-xs">
+                    <step.icon className="w-3.5 h-3.5 text-gray-400 mt-0.5" />
+                    <div>
+                      <span className="font-medium text-gray-700 dark:text-gray-200 block">
+                        {step.label}
+                      </span>
+                      <span className="text-gray-500">{step.detail}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-purple-500" />
-          <div className="text-xs text-gray-600 dark:text-gray-300">
-            LP{" "}
-            <span className="text-gray-400">
-              ({(current.lp * 100).toFixed(0)}% →{" "}
-              <strong>{(target.lp * 100).toFixed(0)}%</strong>)
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Variation 3: Interactive Slider ---
-function ImpactSliderView({
-  trades,
-  totalValue,
-}: {
-  trades: TradeSuggestion[];
-  totalValue: number;
-}) {
-  const { current, target } = usePortfolioState(trades, totalValue);
-  const [sliderValue, setSliderValue] = useState(50); // 0 = Before, 100 = After
-  const isDragging = useRef(false);
-
-  // Interpolate values based on slider
-  const interp = (start: number, end: number) =>
-    start + (end - start) * (sliderValue / 100);
-
-  const spotPct = interp(current.spot, target.spot);
-  const lpPct = interp(current.lp, target.lp);
-  const stablePct = interp(current.stable, target.stable);
-
-  return (
-    <div className="space-y-8 animate-in fade-in duration-500 py-4">
-      {/* Visualizer */}
-      <div className="h-48 flex items-end gap-1 px-8 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 relative overflow-hidden">
-        {/* Background Grid */}
-        <div
-          className="absolute inset-0 opacity-[0.05]"
-          style={{
-            backgroundImage: "linear-gradient(#000 1px, transparent 1px)",
-            backgroundSize: "20px 20px",
-          }}
-        />
-
-        {/* Bars */}
-        <div
-          style={{ width: "33%", height: `${spotPct * 100}%` }}
-          className="bg-orange-500 rounded-t-xl transition-all duration-75 relative group"
-        >
-          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-orange-500">
-            {(spotPct * 100).toFixed(0)}%
-          </span>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-orange-900/50 uppercase">
-            Spot
-          </div>
-        </div>
-        <div
-          style={{ width: "33%", height: `${lpPct * 100}%` }}
-          className="bg-purple-500 rounded-t-xl transition-all duration-75 relative group"
-        >
-          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-purple-500">
-            {(lpPct * 100).toFixed(0)}%
-          </span>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-purple-900/50 uppercase">
-            LP
-          </div>
-        </div>
-        <div
-          style={{ width: "33%", height: `${stablePct * 100}%` }}
-          className="bg-emerald-500 rounded-t-xl transition-all duration-75 relative group"
-        >
-          <span className="absolute -top-6 left-1/2 -translate-x-1/2 text-xs font-bold text-emerald-500">
-            {(stablePct * 100).toFixed(0)}%
-          </span>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold text-emerald-900/50 uppercase">
-            Cash
-          </div>
-        </div>
-      </div>
-
-      {/* Slider Control */}
-      <div className="px-4">
-        <div className="relative h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center px-2 select-none touch-none">
-          <div className="absolute left-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
-            Before
-          </div>
-          <div className="absolute right-4 text-xs font-bold text-indigo-500 uppercase tracking-wider">
-            After
-          </div>
-
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={sliderValue}
-            onChange={e => setSliderValue(parseInt(e.target.value))}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-          />
-
-          <div
-            className="absolute h-8 w-12 bg-white dark:bg-black rounded-full shadow-lg border border-gray-200 dark:border-gray-600 flex items-center justify-center z-10 transition-all duration-75 ease-linear pointer-events-none"
-            style={{ left: `calc(${sliderValue}% - 24px + 12px)` }} // simple centering adjustment
-          >
-            <GripVertical className="w-4 h-4 text-gray-400" />
-          </div>
-        </div>
-        <p className="text-center text-xs text-gray-400 mt-3">
-          Drag to simulate the rebalancing effect
-        </p>
+        ))}
       </div>
     </div>
   );
@@ -379,8 +290,6 @@ export function ReviewModal({
   trades,
   totalValue,
 }: ReviewModalProps) {
-  const [variation, setVariation] = useState<ReviewVariation>("bars");
-
   if (!isOpen) return null;
 
   return (
@@ -399,9 +308,7 @@ export function ReviewModal({
             <h3 className="text-xl font-medium text-gray-900 dark:text-white">
               Confirm Strategy
             </h3>
-            <p className="text-sm text-gray-500">
-              Executing {trades.length} bundle actions.
-            </p>
+            <p className="text-sm text-gray-500">Review rebalancing plan.</p>
           </div>
           <button
             onClick={onClose}
@@ -411,42 +318,12 @@ export function ReviewModal({
           </button>
         </div>
 
-        {/* Variation Switcher */}
-        <div className="px-6 pt-4 flex justify-center">
-          <div className="bg-gray-100 dark:bg-gray-900 p-1 rounded-lg inline-flex gap-1">
-            {[
-              { id: "bars", icon: BarChart2, label: "Bars" },
-              { id: "radial", icon: PieChart, label: "Radial" },
-              { id: "slider", icon: Layout, label: "Slider" },
-            ].map(v => (
-              <button
-                key={v.id}
-                onClick={() => setVariation(v.id as ReviewVariation)}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                  variation === v.id
-                    ? "bg-white dark:bg-black text-black dark:text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-900 dark:hover:text-gray-300"
-                )}
-              >
-                <v.icon className="w-3 h-3" />
-                {v.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 min-h-[350px]">
-          {variation === "bars" && (
-            <ImpactBarView trades={trades} totalValue={totalValue} />
-          )}
-          {variation === "radial" && (
-            <ImpactRadialView trades={trades} totalValue={totalValue} />
-          )}
-          {variation === "slider" && (
-            <ImpactSliderView trades={trades} totalValue={totalValue} />
-          )}
+        {/* Scrollable Content (Unified Flow) */}
+        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-8">
+          <RegimeContext />
+          <ImpactVisual trades={trades} totalValue={totalValue} />
+          <div className="border-t border-dashed border-gray-200 dark:border-gray-800" />
+          <ExecutionTimeline trades={trades} />
         </div>
 
         {/* Footer Actions */}
