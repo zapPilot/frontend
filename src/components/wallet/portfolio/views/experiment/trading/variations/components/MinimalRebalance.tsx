@@ -115,6 +115,7 @@ export function MinimalRebalance({ userId }: { userId: string }) {
       <ReviewModal
         isOpen={isReviewOpen}
         onClose={() => setIsReviewOpen(false)}
+        onConfirm={() => setIsReviewOpen(false)}
         trades={data.trade_suggestions}
         totalValue={data.total_value_usd}
       />
