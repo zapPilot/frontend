@@ -11,6 +11,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
 import {
+  getDailySuggestion,
   getStrategyConfigs,
   type StrategyConfigsResponse,
   type StrategyPreset,
@@ -159,6 +160,96 @@ describe("strategyService", () => {
       const result = await getStrategyConfigs();
 
       expect(result.presets[0].params).toEqual({ k: 3.0, r_max: 1.2 });
+    });
+  });
+
+  describe("getDailySuggestion", () => {
+    it("calls correct endpoint with userId", async () => {
+      const mockResponse = { regime: "bull", trade_suggestions: [] };
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      await getDailySuggestion("user-123");
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v3/strategy/daily-suggestion/user-123"
+      );
+    });
+
+    it("returns the response as-is", async () => {
+      const mockResponse = {
+        regime: "bear",
+        trade_suggestions: [{ action: "sell", amount_usd: 100 }],
+      };
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      const result = await getDailySuggestion("user-456");
+
+      expect(result).toEqual(mockResponse);
+    });
+
+    it("appends query string with config_id param", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({});
+
+      await getDailySuggestion("user-123", { config_id: "fgi_exponential" });
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v3/strategy/daily-suggestion/user-123?config_id=fgi_exponential"
+      );
+    });
+
+    it("appends multiple params to query string", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({});
+
+      await getDailySuggestion("user-123", {
+        config_id: "dca_classic",
+        drift_threshold: 0.1,
+      });
+
+      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
+      expect(calledUrl).toContain("config_id=dca_classic");
+      expect(calledUrl).toContain("drift_threshold=0.1");
+    });
+
+    it("filters out undefined params", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({});
+
+      await getDailySuggestion("user-123", {
+        config_id: undefined,
+        drift_threshold: 0.05,
+      });
+
+      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
+      expect(calledUrl).not.toContain("config_id");
+      expect(calledUrl).toContain("drift_threshold=0.05");
+    });
+
+    it("handles empty params object (no query string)", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({});
+
+      await getDailySuggestion("user-123", {});
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v3/strategy/daily-suggestion/user-123"
+      );
+    });
+
+    it("propagates errors from HTTP layer", async () => {
+      analyticsEngineGetSpy.mockRejectedValue(new Error("Server error"));
+
+      await expect(getDailySuggestion("user-123")).rejects.toThrow(
+        "Server error"
+      );
+    });
+
+    it("encodes special characters in params", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({});
+
+      await getDailySuggestion("user-123", {
+        config_id: "some preset&value",
+      });
+
+      const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
+      expect(calledUrl).toContain("some%20preset%26value");
     });
   });
 });
