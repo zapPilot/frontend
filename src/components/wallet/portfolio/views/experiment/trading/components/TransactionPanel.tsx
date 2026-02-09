@@ -10,9 +10,7 @@ import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
 import type { TradeSuggestion } from "@/types/strategy";
 
-import { ActionCard } from "./ActionCard";
-import { ImpactVisual } from "./ImpactVisual";
-import { ReviewModal } from "./ReviewModal";
+import { BaseTradingPanel } from "./BaseTradingPanel";
 
 function MinimalInput({
   label,
@@ -97,77 +95,60 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   }, [amount, tokenAddress, mode, transactionData.selectedToken]);
 
   return (
-    <>
-      <div className="max-w-md mx-auto space-y-12 animate-in slide-in-from-bottom-4 duration-700">
-        <div className="text-center space-y-2">
-          <h3 className="text-4xl font-light text-gray-900 dark:text-white capitalize">
-            {mode}
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400 font-light">
-            {mode === "deposit"
-              ? "Add capital to your strategy."
-              : "Withdraw funds to your wallet."}
-          </p>
-        </div>
-
-        <ActionCard
-          footer={
-            <button
-              onClick={() => setIsReviewOpen(true)}
-              disabled={!amount || parseFloat(amount) <= 0}
-              className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Review {mode === "deposit" ? "Deposit" : "Withdrawal"}
-            </button>
-          }
+    <BaseTradingPanel
+      title={<span className="capitalize">{mode}</span>}
+      subtitle={
+        mode === "deposit"
+          ? "Add capital to your strategy."
+          : "Withdraw funds to your wallet."
+      }
+      footer={
+        <button
+          onClick={() => setIsReviewOpen(true)}
+          disabled={!amount || parseFloat(amount) <= 0}
+          className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {/* Allocation Impact Visualization (Mocked for single txn) */}
-          <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800 mb-6">
-            <ImpactVisual trades={trades} totalValue={10000} />
-          </div>
-
-          <MinimalInput
-            label="Amount"
-            value={amount}
-            onChange={e => form.setValue("amount", e.target.value)}
-            suffix={
-              <span className="text-sm font-medium text-gray-400">USD</span>
-            }
-          />
-
-          <div className="space-y-3">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
-              Select Asset
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {transactionData.tokenQuery.data?.slice(0, 5).map(token => (
-                <button
-                  key={token.address}
-                  onClick={() => form.setValue("tokenAddress", token.address)}
-                  className={cn(
-                    "px-4 py-2.5 rounded-xl text-sm transition-all border font-medium",
-                    transactionData.selectedToken?.address === token.address
-                      ? "bg-gray-900 dark:bg-white text-white dark:text-black border-transparent shadow-md"
-                      : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-                  )}
-                >
-                  {token.symbol}
-                </button>
-              ))}
-            </div>
-          </div>
-        </ActionCard>
-      </div>
-
-      <ReviewModal
-        isOpen={isReviewOpen}
-        onClose={() => setIsReviewOpen(false)}
-        onConfirm={submission.handleSubmit}
-        isSubmitting={submission.isSubmitting}
-        trades={trades}
-        totalValue={10000} // Mock total value
-        title={`Confirm ${mode === "deposit" ? "Deposit" : "Withdrawal"}`}
+          Review {mode === "deposit" ? "Deposit" : "Withdrawal"}
+        </button>
+      }
+      trades={trades}
+      totalValue={10000}
+      isReviewOpen={isReviewOpen}
+      onCloseReview={() => setIsReviewOpen(false)}
+      onConfirmReview={submission.handleSubmit}
+      isSubmitting={submission.isSubmitting}
+      reviewTitle={`Confirm ${mode === "deposit" ? "Deposit" : "Withdrawal"}`}
+    >
+      <MinimalInput
+        label="Amount"
+        value={amount}
+        onChange={e => form.setValue("amount", e.target.value)}
+        suffix={
+          <span className="text-sm font-medium text-gray-400">USD</span>
+        }
       />
-    </>
+
+      <div className="space-y-3">
+        <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide">
+          Select Asset
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {transactionData.tokenQuery.data?.slice(0, 5).map(token => (
+            <button
+              key={token.address}
+              onClick={() => form.setValue("tokenAddress", token.address)}
+              className={cn(
+                "px-4 py-2.5 rounded-xl text-sm transition-all border font-medium",
+                transactionData.selectedToken?.address === token.address
+                  ? "bg-gray-900 dark:bg-white text-white dark:text-black border-transparent shadow-md"
+                  : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+              )}
+            >
+              {token.symbol}
+            </button>
+          ))}
+        </div>
+      </div>
+    </BaseTradingPanel>
   );
 }
