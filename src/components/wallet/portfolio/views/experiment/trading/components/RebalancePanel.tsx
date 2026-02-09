@@ -10,6 +10,73 @@ import { useDailySuggestion } from "../hooks/useDailySuggestion";
 import { useDefaultPresetId } from "../hooks/useDefaultPresetId";
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
+function RebalancePanelSkeleton() {
+  return (
+    <div
+      className="max-w-md mx-auto space-y-12"
+      role="status"
+      aria-label="Loading rebalance data"
+    >
+      {/* Header: title + skeleton subtitle */}
+      <div className="text-center space-y-2">
+        <h3 className="text-4xl font-light text-gray-900 dark:text-white">
+          Portfolio Health
+        </h3>
+        <div className="flex justify-center">
+          <div className="h-4 w-40 bg-gray-700/50 rounded animate-pulse" />
+        </div>
+      </div>
+
+      {/* ActionCard skeleton */}
+      <div className="max-w-md mx-auto bg-white dark:bg-gray-900 rounded-3xl p-8 shadow-xl shadow-black/20 border border-gray-100 dark:border-gray-800">
+        {/* Header: title + subtitle + icon */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="space-y-1">
+            <div className="h-4 w-32 bg-gray-700/50 rounded animate-pulse" />
+            <div className="h-6 w-28 bg-gray-700/50 rounded animate-pulse" />
+          </div>
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse" />
+        </div>
+
+        <div className="space-y-8">
+          {/* ImpactVisual placeholder */}
+          <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+            <div className="h-40 w-full bg-gray-700/30 rounded-2xl animate-pulse" />
+          </div>
+
+          {/* Trade row skeletons */}
+          <div className="space-y-4 pt-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex items-center justify-between p-3 -mx-3"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-2 h-2 rounded-full bg-gray-600 animate-pulse" />
+                  <div className="h-5 w-32 bg-gray-700/50 rounded animate-pulse" />
+                </div>
+                <div className="h-7 w-20 bg-gray-800/50 rounded-lg animate-pulse" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Footer: disabled CTA */}
+        <div className="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+          <button
+            disabled
+            className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium opacity-50 cursor-not-allowed"
+          >
+            Review & Execute All
+          </button>
+        </div>
+      </div>
+
+      <span className="sr-only">Loading rebalance suggestions...</span>
+    </div>
+  );
+}
+
 export function RebalancePanel({ userId }: { userId: string }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
@@ -20,7 +87,7 @@ export function RebalancePanel({ userId }: { userId: string }) {
     defaultPresetId ? { config_id: defaultPresetId } : {}
   );
 
-  if (!data) return null;
+  if (!data) return <RebalancePanelSkeleton />;
 
   return (
     <BaseTradingPanel

@@ -2,19 +2,36 @@
 
 import { RefreshCw } from "lucide-react";
 
+import { MetricsSkeleton } from "@/components/ui";
+
 export function BacktestLoadingState() {
   return (
-    <div className="h-full min-h-[500px] flex flex-col items-center justify-center bg-gray-900/20 border border-dashed border-gray-800 rounded-2xl p-8 text-center text-gray-500 animate-pulse">
-      <div className="relative mb-6">
-        <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full" />
-        <RefreshCw className="relative w-16 h-16 text-blue-500 animate-spin" />
+    <div
+      className="space-y-6"
+      role="status"
+      aria-label="Running backtest simulation"
+    >
+      {/* Status header */}
+      <div className="flex items-center gap-3 text-gray-400">
+        <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
+        <p className="text-sm font-medium">
+          Running Backtest Simulation &mdash; Processing historical market
+          data...
+        </p>
       </div>
-      <h3 className="text-xl font-medium text-gray-200 mb-2">
-        Running Backtest Simulation
-      </h3>
-      <p className="text-sm text-gray-500 max-w-md mx-auto">
-        Processing historical market data and calculating strategy returns...
-      </p>
+
+      {/* Metrics skeleton (matches BacktestMetrics 3-column layout) */}
+      <MetricsSkeleton />
+
+      {/* Chart skeleton */}
+      <div>
+        <h4 className="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3">
+          Performance Chart
+        </h4>
+        <div className="h-80 w-full bg-gray-800/50 rounded-xl animate-pulse" />
+      </div>
+
+      <span className="sr-only">Loading backtest results...</span>
     </div>
   );
 }

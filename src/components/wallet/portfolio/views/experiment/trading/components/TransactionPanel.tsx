@@ -133,20 +133,29 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
           Select Asset
         </label>
         <div className="flex flex-wrap gap-2">
-          {transactionData.tokenQuery.data?.slice(0, 5).map(token => (
-            <button
-              key={token.address}
-              onClick={() => form.setValue("tokenAddress", token.address)}
-              className={cn(
-                "px-4 py-2.5 rounded-xl text-sm transition-all border font-medium",
-                transactionData.selectedToken?.address === token.address
-                  ? "bg-gray-900 dark:bg-white text-white dark:text-black border-transparent shadow-md"
-                  : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
-              )}
-            >
-              {token.symbol}
-            </button>
-          ))}
+          {transactionData.tokenQuery.isLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-10 w-16 bg-gray-800/50 rounded-xl animate-pulse"
+                />
+              ))
+            : transactionData.tokenQuery.data?.slice(0, 5).map(token => (
+                <button
+                  key={token.address}
+                  onClick={() =>
+                    form.setValue("tokenAddress", token.address)
+                  }
+                  className={cn(
+                    "px-4 py-2.5 rounded-xl text-sm transition-all border font-medium",
+                    transactionData.selectedToken?.address === token.address
+                      ? "bg-gray-900 dark:bg-white text-white dark:text-black border-transparent shadow-md"
+                      : "bg-gray-50 dark:bg-gray-800 border-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white"
+                  )}
+                >
+                  {token.symbol}
+                </button>
+              ))}
         </div>
       </div>
     </BaseTradingPanel>
