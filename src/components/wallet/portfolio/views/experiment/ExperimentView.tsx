@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { BacktestingPlayground } from "./backtesting/BacktestingView";
+import { BacktestingView } from "../BacktestingView";
 import { TradingView } from "./trading/TradingView";
 
 interface ExperimentViewProps {
@@ -44,7 +44,7 @@ export function ExperimentView({ userId }: ExperimentViewProps) {
       {/* Content */}
       <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
         {activeSubTab === "trading" && <TradingView userId={userId} />}
-        {activeSubTab === "backtesting" && <BacktestingPlayground />}
+        {activeSubTab === "backtesting" && <BacktestingView />}
       </div>
     </div>
   );
