@@ -12,7 +12,6 @@ import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/useP
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
 import { ExperimentView } from "@/components/wallet/portfolio/views/experiment/ExperimentView";
-import { StrategyView } from "@/components/wallet/portfolio/views/strategy";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
@@ -156,13 +155,8 @@ export function WalletPortfolioPresenter({
         <AnalyticsView userId={userId} />
       </div>
     ) : null,
-    strategy: (
-      <div data-testid="strategy-content">
-        <StrategyView userId={userId} />
-      </div>
-    ),
-    experiment: (
-      <div data-testid="experiment-content">
+    invest: (
+      <div data-testid="invest-content">
         <ExperimentView userId={userId} />
       </div>
     ),

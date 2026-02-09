@@ -132,9 +132,14 @@ vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics View</div>,
 }));
 
-vi.mock("@/components/wallet/portfolio/views/strategy/StrategyView", () => ({
-  StrategyView: () => <div data-testid="strategy-view">Strategy View</div>,
-}));
+vi.mock(
+  "@/components/wallet/portfolio/views/experiment/ExperimentView",
+  () => ({
+    ExperimentView: () => (
+      <div data-testid="experiment-view">Experiment View</div>
+    ),
+  })
+);
 
 vi.mock("@/components/wallet/portfolio/modals", () => ({
   DepositModal: ({ isOpen }: any) =>
@@ -173,7 +178,7 @@ vi.mock("@/components/wallet/portfolio/components/WalletNavigation", () => ({
     <nav data-testid="wallet-navigation">
       <button onClick={() => setActiveTab("dashboard")}>Dashboard</button>
       <button onClick={() => setActiveTab("analytics")}>Analytics</button>
-      <button onClick={() => setActiveTab("strategy")}>Strategy</button>
+      <button onClick={() => setActiveTab("invest")}>Invest</button>
       <input data-testid="mock-search-input" placeholder="Search wallet..." />
     </nav>
   ),
@@ -947,7 +952,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       expect(screen.getByTestId("analytics-view")).toBeInTheDocument();
     });
 
-    it("navigates to strategy tab", async () => {
+    it("navigates to invest tab", async () => {
       const user = userEvent.setup();
       render(
         <WalletPortfolioPresenter
@@ -957,11 +962,11 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         />
       );
 
-      // Switch to strategy
-      await user.click(screen.getByText("Strategy"));
+      // Switch to invest
+      await user.click(screen.getByText("Invest"));
 
-      // Verify strategy content is shown
-      expect(screen.getByTestId("strategy-view")).toBeInTheDocument();
+      // Verify invest content is shown
+      expect(screen.getByTestId("invest-content")).toBeInTheDocument();
     });
   });
 

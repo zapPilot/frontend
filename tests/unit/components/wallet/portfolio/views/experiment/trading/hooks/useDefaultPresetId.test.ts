@@ -11,8 +11,8 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useDefaultPresetId } from "@/components/wallet/portfolio/views/strategy/hooks/useDefaultPresetId";
-import { useStrategyConfigs } from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
+import { useDefaultPresetId } from "@/components/wallet/portfolio/views/experiment/trading/hooks/useDefaultPresetId";
+import { useStrategyConfigs } from "@/components/wallet/portfolio/views/experiment/trading/hooks/useStrategyConfigs";
 import type { StrategyConfigsResponse, StrategyPreset } from "@/types/strategy";
 
 // ============================================================================
@@ -20,7 +20,7 @@ import type { StrategyConfigsResponse, StrategyPreset } from "@/types/strategy";
 // ============================================================================
 
 vi.mock(
-  "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs",
+  "@/components/wallet/portfolio/views/experiment/trading/hooks/useStrategyConfigs",
   () => ({
     useStrategyConfigs: vi.fn(),
   })

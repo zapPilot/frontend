@@ -3,11 +3,11 @@
 import { CircleDollarSign } from "lucide-react";
 import { useState } from "react";
 
-import { useDailySuggestion } from "@/components/wallet/portfolio/views/strategy/hooks/useDailySuggestion";
-import { useDefaultPresetId } from "@/components/wallet/portfolio/views/strategy/hooks/useDefaultPresetId";
 import { cn } from "@/lib/ui/classNames";
 import { formatCurrency } from "@/utils/formatters";
 
+import { useDailySuggestion } from "../hooks/useDailySuggestion";
+import { useDefaultPresetId } from "../hooks/useDefaultPresetId";
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
 export function RebalancePanel({ userId }: { userId: string }) {
