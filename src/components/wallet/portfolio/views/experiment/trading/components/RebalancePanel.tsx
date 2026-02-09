@@ -34,9 +34,6 @@ export function RebalancePanel({ userId }: { userId: string }) {
           Regime
         </>
       }
-      headerBadge={
-<></>
-      }
       actionCardTitle={`${data.trade_suggestions.length} Actions`}
       actionCardSubtitle="Suggested Moves"
       actionCardIcon={
