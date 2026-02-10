@@ -132,14 +132,9 @@ vi.mock("@/components/wallet/portfolio/analytics/AnalyticsView", () => ({
   AnalyticsView: () => <div data-testid="analytics-view">Analytics View</div>,
 }));
 
-vi.mock(
-  "@/components/wallet/portfolio/views/experiment/ExperimentView",
-  () => ({
-    ExperimentView: () => (
-      <div data-testid="experiment-view">Experiment View</div>
-    ),
-  })
-);
+vi.mock("@/components/wallet/portfolio/views/invest/InvestView", () => ({
+  InvestView: () => <div data-testid="invest-view">Invest View</div>,
+}));
 
 vi.mock("@/components/wallet/portfolio/modals", () => ({
   DepositModal: ({ isOpen }: any) =>
@@ -705,17 +700,10 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
    * to prevent continuous /landing API requests during ETL completion.
    */
   describe("ETL Loading State - Race Condition Fix", () => {
-    const defaultEtlState = {
-      jobId: null,
-      status: "idle" as const,
-      errorMessage: undefined,
-      isLoading: false,
-    };
-
     it("should show loading screen when ETL status is 'pending'", () => {
       const mockData = MOCK_DATA;
       const etlState = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "pending" as const,
         isLoading: true,
@@ -736,7 +724,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
     it("should show loading screen when ETL status is 'processing'", () => {
       const mockData = MOCK_DATA;
       const etlState = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "processing" as const,
         isLoading: true,
@@ -762,7 +750,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
     it("should show loading screen when ETL status is 'completing'", () => {
       const mockData = MOCK_DATA;
       const etlState = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "completing" as const,
         isLoading: false,
@@ -783,7 +771,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
     it("should show dashboard when ETL status is 'idle'", () => {
       const mockData = MOCK_DATA;
-      const etlState = defaultEtlState;
+      const etlState = DEFAULT_ETL_STATE;
 
       render(
         <WalletPortfolioPresenter
@@ -800,7 +788,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
     it("should show dashboard when ETL status is 'failed'", () => {
       const mockData = MOCK_DATA;
       const etlState = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "failed" as const,
         errorMessage: "ETL job failed",
@@ -832,7 +820,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
       for (const status of inProgressStatuses) {
         const etlState = {
-          ...defaultEtlState,
+          ...DEFAULT_ETL_STATE,
           jobId: "test-job",
           status,
           isLoading: status !== "completing",
@@ -855,7 +843,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
     it("should show loading when etlState.isLoading is true", () => {
       const mockData = MOCK_DATA;
       const etlState = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "idle" as const,
         isLoading: true, // Just isLoading should trigger loading screen
@@ -878,7 +866,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
       // Case 1: isEtlInProgress true (completing status), isLoading false
       const etlState1 = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "completing" as const,
         isLoading: false,
@@ -896,7 +884,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
       // Case 2: isEtlInProgress false (idle), isLoading true
       const etlState2 = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         jobId: "test-job",
         status: "idle" as const,
         isLoading: true,
@@ -914,7 +902,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
 
       // Case 3: Both false - should show dashboard
       const etlState3 = {
-        ...defaultEtlState,
+        ...DEFAULT_ETL_STATE,
         status: "idle" as const,
         isLoading: false,
       };

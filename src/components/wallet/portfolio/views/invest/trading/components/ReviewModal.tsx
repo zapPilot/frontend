@@ -21,13 +21,14 @@ import {
   TransactionModalHeader,
 } from "@/components/wallet/portfolio/modals/components/TransactionModalParts";
 import { cn } from "@/lib/ui/classNames";
+import type { TradeSuggestion } from "@/types/strategy";
 
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
-  trades?: any[];
+  trades?: TradeSuggestion[];
   totalValue?: number;
   title?: string;
 }
@@ -106,8 +107,7 @@ const MOCK_ROUTE = [
 // --- Tab Components ---
 
 function VariationStrategy() {
-  const { regime, philosophy, patternReason, pacing, backtest } =
-    MOCK_STRATEGY;
+  const { regime, philosophy, patternReason, pacing, backtest } = MOCK_STRATEGY;
   const pacingPct = pacing.currentStep / pacing.totalSteps;
 
   return (
@@ -116,13 +116,10 @@ function VariationStrategy() {
       <div className="flex items-center gap-3">
         <div className="px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/25 flex items-center gap-2">
           <TrendingDown className="w-3.5 h-3.5 text-red-400" />
-          <span className="text-xs font-bold text-red-400">
-            {regime.label}
-          </span>
+          <span className="text-xs font-bold text-red-400">{regime.label}</span>
         </div>
         <div className="text-xs text-gray-500 font-medium">
-          FGI{" "}
-          <span className="text-white font-bold">{regime.fgi}</span>
+          FGI <span className="text-white font-bold">{regime.fgi}</span>
           <span className="text-gray-600">/100</span>
           <span className="ml-1.5 text-red-400/70">
             · {regime.direction} · {regime.duration_days}d
@@ -150,9 +147,7 @@ function VariationStrategy() {
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
           Why Now
         </div>
-        <p className="text-sm text-gray-300 leading-relaxed">
-          {patternReason}
-        </p>
+        <p className="text-sm text-gray-300 leading-relaxed">{patternReason}</p>
       </div>
 
       {/* Pacing Info */}
@@ -191,11 +186,7 @@ function VariationStrategy() {
           Backtesting · {backtest.period}
         </div>
         <div className="grid grid-cols-2 gap-2.5">
-          <BacktestMetric
-            label="ROI"
-            value={`+${backtest.roi}%`}
-            positive
-          />
+          <BacktestMetric label="ROI" value={`+${backtest.roi}%`} positive />
           <BacktestMetric
             label="Sharpe Ratio"
             value={backtest.sharpe.toFixed(2)}
@@ -260,7 +251,7 @@ function VariationImpact() {
             <div className="text-right">Change</div>
           </div>
           {/* Table Rows */}
-          {MOCK_ALLOCATION.map((row) => {
+          {MOCK_ALLOCATION.map(row => {
             const change = row.target - row.current;
             return (
               <div
@@ -344,7 +335,11 @@ function VariationRoute() {
                     {"chain" in step ? step.chain : step.protocol}
                   </div>
                   <div className="text-sm font-mono text-indigo-400">
-                    {"asset" in step ? step.asset : "action" in step ? step.action : ""}
+                    {"asset" in step
+                      ? step.asset
+                      : "action" in step
+                        ? step.action
+                        : ""}
                   </div>
                 </div>
               </div>
@@ -390,7 +385,7 @@ export function ReviewModal({
         {/* Tab Switcher */}
         {!isSubmitting && (
           <div className="flex p-2 bg-gray-900/50 border-b border-gray-800 gap-1">
-            {TABS.map((tab) => (
+            {TABS.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}

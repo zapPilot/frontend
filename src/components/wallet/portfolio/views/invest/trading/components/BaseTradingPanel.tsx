@@ -80,7 +80,7 @@ export function BaseTradingPanel({
           footer={footer}
         >
           <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-            <ImpactVisual trades={trades} totalValue={totalValue} />
+            <ImpactVisual />
           </div>
           {children}
         </ActionCard>

@@ -5,33 +5,20 @@ import { type JSX, useState } from "react";
 import { BacktestingView } from "../BacktestingView";
 import { TradingView } from "./trading/TradingView";
 
-interface ExperimentViewProps {
+interface InvestViewProps {
   userId: string | undefined;
 }
 
-type SubTab = "trading" | "backtesting";
-
-interface SubTabConfig {
-  id: SubTab;
-  label: string;
-}
-
-const SUB_TABS: readonly SubTabConfig[] = [
+const SUB_TABS = [
   { id: "trading", label: "trading" },
   { id: "backtesting", label: "backtesting" },
-];
+] as const;
 
-const ACTIVE_TAB_CLASS_NAME = "text-white";
-const INACTIVE_TAB_CLASS_NAME = "text-gray-500 hover:text-gray-300";
+type SubTab = (typeof SUB_TABS)[number]["id"];
 
 function getSubTabClassName(isActive: boolean): string {
-  let tabStateClassName = INACTIVE_TAB_CLASS_NAME;
-
-  if (isActive) {
-    tabStateClassName = ACTIVE_TAB_CLASS_NAME;
-  }
-
-  return `pb-4 text-sm font-medium transition-colors relative ${tabStateClassName}`;
+  const state = isActive ? "text-white" : "text-gray-500 hover:text-gray-300";
+  return `pb-4 text-sm font-medium transition-colors relative ${state}`;
 }
 
 function renderActiveSubTab(
@@ -46,7 +33,7 @@ function renderActiveSubTab(
   }
 }
 
-export function ExperimentView({ userId }: ExperimentViewProps): JSX.Element {
+export function InvestView({ userId }: InvestViewProps): JSX.Element {
   const [activeSubTab, setActiveSubTab] = useState<SubTab>("trading");
 
   return (

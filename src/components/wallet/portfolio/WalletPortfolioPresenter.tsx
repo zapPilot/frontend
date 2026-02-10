@@ -11,7 +11,7 @@ import { WalletNavigation } from "@/components/wallet/portfolio/components/navig
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
-import { ExperimentView } from "@/components/wallet/portfolio/views/experiment/ExperimentView";
+import { InvestView } from "@/components/wallet/portfolio/views/invest/InvestView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
@@ -157,7 +157,7 @@ export function WalletPortfolioPresenter({
     ) : null,
     invest: (
       <div data-testid="invest-content">
-        <ExperimentView userId={userId} />
+        <InvestView userId={userId} />
       </div>
     ),
   };

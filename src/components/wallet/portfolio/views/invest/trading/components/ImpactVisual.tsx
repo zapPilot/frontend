@@ -2,12 +2,9 @@
 
 import { ArrowRight } from "lucide-react";
 
-import type { TradeSuggestion } from "@/types/strategy";
-
 // --- Helpers ---
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const usePortfolioState = (_trades: TradeSuggestion[], _totalValue: number) => {
+export const usePortfolioState = () => {
   const current = {
     spot: 0.45,
     lp: 0.15,
@@ -21,14 +18,8 @@ export const usePortfolioState = (_trades: TradeSuggestion[], _totalValue: numbe
   return { current, target };
 };
 
-export function ImpactVisual({
-  trades,
-  totalValue,
-}: {
-  trades: TradeSuggestion[];
-  totalValue: number;
-}) {
-  const { current, target } = usePortfolioState(trades, totalValue);
+export function ImpactVisual() {
+  const { current, target } = usePortfolioState();
 
   return (
     <div className="space-y-6">

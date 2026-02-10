@@ -11,8 +11,8 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { useDefaultPresetId } from "@/components/wallet/portfolio/views/experiment/trading/hooks/useDefaultPresetId";
-import { useStrategyConfigs } from "@/components/wallet/portfolio/views/experiment/trading/hooks/useStrategyConfigs";
+import { useDefaultPresetId } from "@/components/wallet/portfolio/views/invest/trading/hooks/useDefaultPresetId";
+import { useStrategyConfigs } from "@/components/wallet/portfolio/views/invest/trading/hooks/useStrategyConfigs";
 import type { StrategyConfigsResponse, StrategyPreset } from "@/types/strategy";
 
 // ============================================================================
@@ -20,7 +20,7 @@ import type { StrategyConfigsResponse, StrategyPreset } from "@/types/strategy";
 // ============================================================================
 
 vi.mock(
-  "@/components/wallet/portfolio/views/experiment/trading/hooks/useStrategyConfigs",
+  "@/components/wallet/portfolio/views/invest/trading/hooks/useStrategyConfigs",
   () => ({
     useStrategyConfigs: vi.fn(),
   })
@@ -67,6 +67,29 @@ const mockConfigsResponse: StrategyConfigsResponse = {
 };
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+function mockUseStrategyConfigs(
+  data: StrategyConfigsResponse | undefined | null,
+  overrides: Partial<{
+    isLoading: boolean;
+    isSuccess: boolean;
+    isError: boolean;
+    error: Error | null;
+  }> = {}
+) {
+  vi.mocked(useStrategyConfigs).mockReturnValue({
+    data,
+    isLoading: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+    ...overrides,
+  } as any);
+}
+
+// ============================================================================
 // TESTS
 // ============================================================================
 
@@ -76,13 +99,7 @@ describe("useDefaultPresetId", () => {
   });
 
   it("should return undefined when configs not yet loaded", () => {
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: undefined,
-      isLoading: true,
-      isSuccess: false,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(undefined, { isLoading: true, isSuccess: false });
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -90,13 +107,7 @@ describe("useDefaultPresetId", () => {
   });
 
   it("should return simple_regime config_id when available", () => {
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: mockConfigsResponse,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(mockConfigsResponse);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -109,13 +120,7 @@ describe("useDefaultPresetId", () => {
       presets: [mockDcaClassicPreset, mockSimpleRegimePreset],
     };
 
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: configsWithRegimeSecond,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(configsWithRegimeSecond);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -128,13 +133,7 @@ describe("useDefaultPresetId", () => {
       presets: [mockDcaClassicPreset],
     };
 
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: configsWithoutRegime,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(configsWithoutRegime);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -147,13 +146,7 @@ describe("useDefaultPresetId", () => {
       presets: [],
     };
 
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: configsWithEmptyPresets,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(configsWithEmptyPresets);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -161,13 +154,7 @@ describe("useDefaultPresetId", () => {
   });
 
   it("should return undefined when configs response is null", () => {
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: null,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(null);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -175,13 +162,7 @@ describe("useDefaultPresetId", () => {
   });
 
   it("should pass enabled parameter to useStrategyConfigs", () => {
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: mockConfigsResponse,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(mockConfigsResponse);
 
     renderHook(() => useDefaultPresetId(false));
 
@@ -194,26 +175,14 @@ describe("useDefaultPresetId", () => {
       presets: [mockDcaClassicPreset],
     };
 
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: configsWithoutRegime,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(configsWithoutRegime);
 
     const { result, rerender } = renderHook(() => useDefaultPresetId(true));
 
     expect(result.current).toBe(mockDcaClassicPreset.config_id);
 
     // Update to include simple_regime
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: mockConfigsResponse,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(mockConfigsResponse);
 
     rerender();
 
@@ -236,13 +205,7 @@ describe("useDefaultPresetId", () => {
       ],
     };
 
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: configsWithMultipleRegimes,
-      isLoading: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    } as any);
+    mockUseStrategyConfigs(configsWithMultipleRegimes);
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 
@@ -251,13 +214,11 @@ describe("useDefaultPresetId", () => {
   });
 
   it("should handle configs error state gracefully", () => {
-    vi.mocked(useStrategyConfigs).mockReturnValue({
-      data: undefined,
-      isLoading: false,
+    mockUseStrategyConfigs(undefined, {
       isSuccess: false,
       isError: true,
       error: new Error("Failed to fetch configs"),
-    } as any);
+    });
 
     const { result } = renderHook(() => useDefaultPresetId(true));
 

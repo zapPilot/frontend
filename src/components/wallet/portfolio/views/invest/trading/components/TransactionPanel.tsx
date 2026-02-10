@@ -20,7 +20,7 @@ function MinimalInput({
 }: {
   label: string;
   value: string;
-  onChange: (e: any) => void;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   suffix?: React.ReactNode;
 }) {
   return (
@@ -47,8 +47,10 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const form = useTransactionForm({ chainId: 1 });
-  const { tokenAddress, amount, transactionData } =
-    useWatchedTransactionData(form, true);
+  const { tokenAddress, amount, transactionData } = useWatchedTransactionData(
+    form,
+    true
+  );
 
   const submitFn =
     mode === "deposit"
@@ -82,11 +84,8 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
       {
         action: mode === "deposit" ? "buy" : "sell",
         amount_usd: parseFloat(amount) * price,
-        asset: transactionData.selectedToken?.symbol || "Unknown",
-        bucket: bucket as any,
-        reason: "User action",
-        steps: [],
-        from_bucket: "stable", // Mock defaults for type safety
+        bucket,
+        from_bucket: "stable",
         to_bucket: "spot",
         step_fraction: 1,
         description: "Manual transaction",
@@ -123,9 +122,7 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
         label="Amount"
         value={amount}
         onChange={e => form.setValue("amount", e.target.value)}
-        suffix={
-          <span className="text-sm font-medium text-gray-400">USD</span>
-        }
+        suffix={<span className="text-sm font-medium text-gray-400">USD</span>}
       />
 
       <div className="space-y-3">
@@ -143,9 +140,7 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
             : transactionData.tokenQuery.data?.slice(0, 5).map(token => (
                 <button
                   key={token.address}
-                  onClick={() =>
-                    form.setValue("tokenAddress", token.address)
-                  }
+                  onClick={() => form.setValue("tokenAddress", token.address)}
                   className={cn(
                     "px-4 py-2.5 rounded-xl text-sm transition-all border font-medium",
                     transactionData.selectedToken?.address === token.address
