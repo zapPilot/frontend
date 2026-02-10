@@ -6,18 +6,15 @@ const ROUTE_PATTERNS = {
   landing: "**/api/v2/portfolio/*/landing",
   strategies: "**/api/v3/backtesting/strategies",
   compare: "**/api/v3/backtesting/compare",
+  strategyConfigs: "**/api/v3/strategy/configs",
 } as const;
 
 const SELECTORS = {
   investTabTestId: "v22-tab-invest",
   backtestingSubTabName: /^backtesting$/i,
-  requestPayloadLabel: "Request Payload (v3)",
   roiLabel: "ROI",
-  dcaClassicTitle: "DCA Classic",
-  regimeLinearTitle: "regime linear",
-  regimeExponentialTitle: "regime exponential",
-  sellSpotMarker: 'path[fill="#ef4444"], circle[fill="#ef4444"]',
-  buyLpMarker: 'path[fill="#3b82f6"], circle[fill="#3b82f6"]',
+  calmarLabel: "CALMAR",
+  maxDrawdownLabel: "MAX DRAWDOWN",
 } as const;
 
 const LANDING_RESPONSE = {
@@ -74,6 +71,33 @@ const STRATEGIES_RESPONSE = {
   ],
 } as const;
 
+const STRATEGY_CONFIGS_RESPONSE = {
+  presets: [
+    {
+      config_id: "dca_classic",
+      display_name: "Classic DCA",
+      description: "Simple dollar-cost averaging baseline",
+      strategy_id: "dca_classic",
+      params: {},
+      is_default: false,
+      is_benchmark: true,
+    },
+    {
+      config_id: "fgi_exponential",
+      display_name: "FGI Exponential (Aggressive)",
+      description: "Front-loaded rebalancing using FGI exponential pacing",
+      strategy_id: "simple_regime",
+      params: { k: 3.0, r_max: 1.2 },
+      is_default: true,
+      is_benchmark: false,
+    },
+  ],
+  backtest_defaults: {
+    days: 500,
+    total_capital: 10000,
+  },
+} as const;
+
 const COMPARE_RESPONSE = {
   strategies: {
     dca_classic: {
@@ -83,7 +107,12 @@ const COMPARE_RESPONSE = {
       final_value: 11000,
       roi_percent: 10,
       trade_count: 2,
-      max_drawdown_percent: null,
+      max_drawdown_percent: -5,
+      calmar_ratio: 2.0,
+      sharpe_ratio: 0.8,
+      sortino_ratio: 1.1,
+      volatility: 0.12,
+      beta: 0.95,
       parameters: {},
     },
     regime_linear: {
@@ -93,7 +122,12 @@ const COMPARE_RESPONSE = {
       final_value: 11200,
       roi_percent: 12,
       trade_count: 3,
-      max_drawdown_percent: null,
+      max_drawdown_percent: -4,
+      calmar_ratio: 3.0,
+      sharpe_ratio: 1.2,
+      sortino_ratio: 1.6,
+      volatility: 0.18,
+      beta: 1.1,
       parameters: {},
     },
     regime_exponential: {
@@ -103,7 +137,12 @@ const COMPARE_RESPONSE = {
       final_value: 10800,
       roi_percent: 8,
       trade_count: 1,
-      max_drawdown_percent: null,
+      max_drawdown_percent: -3,
+      calmar_ratio: 2.67,
+      sharpe_ratio: 0.9,
+      sortino_ratio: 1.3,
+      volatility: 0.15,
+      beta: 1.0,
       parameters: {},
     },
   },
@@ -237,6 +276,13 @@ async function registerBacktestingRoutes(page: Page): Promise<void> {
   );
 
   await page.route(
+    ROUTE_PATTERNS.strategyConfigs,
+    async function handleStrategyConfigsRoute(route: Route): Promise<void> {
+      await fulfillJson(route, STRATEGY_CONFIGS_RESPONSE);
+    }
+  );
+
+  await page.route(
     ROUTE_PATTERNS.compare,
     async function handleCompareRoute(route: Route): Promise<void> {
       await fulfillJson(route, COMPARE_RESPONSE);
@@ -254,29 +300,25 @@ async function openBacktestingView(page: Page): Promise<void> {
     .click();
 }
 
-test.describe("Backtesting (v3) - JSON editor + multi-series chart", () => {
-  test("renders legend for N series and markers from transfers", async ({
+test.describe("Backtesting (v3) - Terminal display + multi-series chart", () => {
+  test("renders terminal display with hero metrics and chart legend", async ({
     page,
   }) => {
     await registerBacktestingRoutes(page);
     await openBacktestingView(page);
 
-    await expect(page.getByText(SELECTORS.requestPayloadLabel)).toBeVisible();
+    // Terminal display hero metrics should be visible
     await expect(page.getByText(SELECTORS.roiLabel)).toBeVisible();
-    await expect(
-      page.getByTitle(SELECTORS.dcaClassicTitle).first()
-    ).toBeAttached();
-    await expect(
-      page.getByTitle(SELECTORS.regimeLinearTitle).first()
-    ).toBeAttached();
-    await expect(
-      page.getByTitle(SELECTORS.regimeExponentialTitle).first()
-    ).toBeAttached();
+    await expect(page.getByText(SELECTORS.calmarLabel)).toBeVisible();
+    await expect(page.getByText(SELECTORS.maxDrawdownLabel)).toBeVisible();
 
-    const sellSpotMarker = page.locator(SELECTORS.sellSpotMarker);
-    await expect(sellSpotMarker.first()).toBeVisible();
+    // Chart legend shows strategy display names
+    await expect(page.getByText("DCA Classic").first()).toBeVisible();
+    await expect(page.getByText("regime linear").first()).toBeVisible();
+    await expect(page.getByText("regime exponential").first()).toBeVisible();
 
-    const buyLpMarker = page.locator(SELECTORS.buyLpMarker);
-    await expect(buyLpMarker.first()).toBeVisible();
+    // Chart signal legend entries
+    await expect(page.getByText("Sell Spot").first()).toBeVisible();
+    await expect(page.getByText("Buy LP").first()).toBeVisible();
   });
 });
