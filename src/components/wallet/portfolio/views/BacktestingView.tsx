@@ -7,7 +7,7 @@ import { BaseCard } from "@/components/ui/BaseCard";
 
 import { BacktestEmptyState } from "./backtesting/components/BacktestEmptyState";
 import { BacktestLoadingState } from "./backtesting/components/BacktestLoadingState";
-import { TerminalVariation } from "./backtesting/components/NewVariations/TerminalVariation";
+import { BacktestTerminalDisplay } from "./backtesting/components/BacktestTerminalDisplay";
 import { useBacktestConfiguration } from "./backtesting/hooks/useBacktestConfiguration";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 
@@ -65,7 +65,7 @@ export function BacktestingView() {
           <BacktestEmptyState />
         </BaseCard>
       ) : (
-        <TerminalVariation
+        <BacktestTerminalDisplay
           summary={summary}
           sortedStrategyIds={sortedStrategyIds}
           actualDays={actualDays}

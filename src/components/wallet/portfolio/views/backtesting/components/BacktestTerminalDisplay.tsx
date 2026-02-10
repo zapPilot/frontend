@@ -8,7 +8,7 @@ import type {
   BacktestStrategySummary,
 } from "@/types/backtesting";
 
-import { BacktestChart } from "../BacktestChart";
+import { BacktestChart } from "./BacktestChart";
 
 // ─── Terminal visual constants ───────────────────────────────────────
 
@@ -23,7 +23,7 @@ const COLLAPSE_ANIMATION = {
 
 // ─── Props ───────────────────────────────────────────────────────────
 
-export interface TerminalVariationProps {
+export interface BacktestTerminalDisplayProps {
   /** Strategy summaries keyed by strategy_id */
   summary: { strategies: BacktestResponse["strategies"] } | null;
   /** Strategy IDs in display order */
@@ -111,7 +111,7 @@ function updateJsonField(json: string, key: string, value: number): string {
  * Terminal-themed backtesting results display with a retro CLI aesthetic,
  * monospace text, ASCII bars, and a scan-line overlay.
  */
-export function TerminalVariation({
+export function BacktestTerminalDisplay({
   summary,
   sortedStrategyIds,
   actualDays,
@@ -121,7 +121,7 @@ export function TerminalVariation({
   onRun,
   editorValue,
   onEditorValueChange,
-}: TerminalVariationProps): React.ReactElement {
+}: BacktestTerminalDisplayProps): React.ReactElement {
   const [showMetrics, setShowMetrics] = useState(false);
 
   const days = parseJsonField(editorValue, "days", 500);
