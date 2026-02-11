@@ -75,7 +75,7 @@ function buildDefaultPayloadFromPresets(
 
   return {
     days: defaults.days,
-    total_capital: defaults.total_capital,
+    total_capital: 10000,
     configs,
   };
 }
@@ -92,7 +92,7 @@ function buildDefaultPayloadFromCatalog(
 
   return {
     days: defaults.days,
-    total_capital: defaults.total_capital,
+    total_capital: 10000,
     configs: [
       {
         config_id: "dca_classic",

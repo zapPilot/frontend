@@ -15,6 +15,19 @@ import { BacktestChart } from "./BacktestChart";
 const PHOSPHOR_GLOW = "0 0 8px rgba(52,211,153,0.6)";
 const PHOSPHOR_GLOW_DIM = "0 0 8px rgba(52,211,153,0.4)";
 
+const SIGNAL_PROVIDER_OPTIONS = [
+  { value: "", label: "default" },
+  { value: "fgi", label: "fgi" },
+  { value: "hybrid_fgi_dma", label: "hybrid_fgi_dma" },
+  { value: "dma_200", label: "dma_200" },
+  { value: "vix", label: "vix" },
+  { value: "mvrv", label: "mvrv" },
+] as const;
+
+const PACING_POLICY_OPTIONS = [
+  { value: "fgi_exponential", label: "fgi_exponential" },
+] as const;
+
 const COLLAPSE_ANIMATION = {
   initial: { height: 0, opacity: 0 },
   animate: { height: "auto" as const, opacity: 1 },
@@ -105,6 +118,46 @@ function updateJsonField(json: string, key: string, value: number): string {
   }
 }
 
+/**
+ * Read a param from the `simple_regime` config inside the JSON editor value.
+ */
+function parseRegimeParam(json: string, param: string, fallback: string): string {
+  try {
+    const parsed = JSON.parse(json);
+    const config = parsed.configs?.find(
+      (c: Record<string, unknown>) => c["strategy_id"] === "simple_regime"
+    );
+    const val = config?.params?.[param];
+    return typeof val === "string" ? val : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Write a param into the `simple_regime` config inside the JSON editor value.
+ * An empty string removes the key (lets the backend use its default).
+ */
+function updateRegimeParam(json: string, param: string, value: string): string {
+  try {
+    const parsed = JSON.parse(json);
+    if (!Array.isArray(parsed.configs)) return json;
+    const config = parsed.configs.find(
+      (c: Record<string, unknown>) => c["strategy_id"] === "simple_regime"
+    );
+    if (!config) return json;
+    if (!config.params) config.params = {};
+    if (value) {
+      config.params[param] = value;
+    } else {
+      delete config.params[param];
+    }
+    return JSON.stringify(parsed, null, 2);
+  } catch {
+    return json;
+  }
+}
+
 // ─── Component ───────────────────────────────────────────────────────
 
 /**
@@ -125,7 +178,8 @@ export function BacktestTerminalDisplay({
   const [showMetrics, setShowMetrics] = useState(false);
 
   const days = parseJsonField(editorValue, "days", 500);
-  const capital = parseJsonField(editorValue, "total_capital", 10000);
+  const signalProvider = parseRegimeParam(editorValue, "signal_provider", "");
+  const pacingPolicy = parseRegimeParam(editorValue, "pacing_policy", "fgi_exponential");
 
   const primaryId =
     sortedStrategyIds.find(id => id !== "dca_classic") ?? sortedStrategyIds[0];
@@ -166,10 +220,11 @@ export function BacktestTerminalDisplay({
     );
   };
 
-  const handleCapitalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onEditorValueChange(
-      updateJsonField(editorValue, "total_capital", Number(e.target.value))
-    );
+  const handleSignalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onEditorValueChange(updateRegimeParam(editorValue, "signal_provider", e.target.value));
+  };
+  const handlePacingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    onEditorValueChange(updateRegimeParam(editorValue, "pacing_policy", e.target.value));
   };
 
   return (
@@ -191,16 +246,32 @@ export function BacktestTerminalDisplay({
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 w-16 text-center focus:outline-none"
           style={{ textShadow: PHOSPHOR_GLOW }}
         />
-        <span className="text-gray-400">--capital</span>
-        <input
-          type="number"
-          value={capital}
-          onChange={handleCapitalChange}
-          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 w-20 text-center focus:outline-none"
+        <span className="text-gray-400">--signal</span>
+        <select
+          value={signalProvider}
+          onChange={handleSignalChange}
+          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
           style={{ textShadow: PHOSPHOR_GLOW }}
-        />
-        <span className="text-gray-400">--strat</span>
-        <span className="text-emerald-400">regime</span>
+        >
+          {SIGNAL_PROVIDER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value} className="bg-gray-900 text-emerald-400">
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        <span className="text-gray-400">--pacing</span>
+        <select
+          value={pacingPolicy}
+          onChange={handlePacingChange}
+          className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
+          style={{ textShadow: PHOSPHOR_GLOW }}
+        >
+          {PACING_POLICY_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value} className="bg-gray-900 text-emerald-400">
+              {opt.label}
+            </option>
+          ))}
+        </select>
         <button
           onClick={onRun}
           disabled={isPending}
