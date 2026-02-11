@@ -11,6 +11,21 @@ import { transactionService } from "@/services";
 
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
+const MODE_CONFIG = {
+  deposit: {
+    subtitle: "Add capital to your strategy.",
+    buttonLabel: "Deposit",
+    reviewTitle: "Confirm Deposit",
+    submitFn: transactionService.simulateDeposit,
+  },
+  withdraw: {
+    subtitle: "Withdraw funds to your wallet.",
+    buttonLabel: "Withdrawal",
+    reviewTitle: "Confirm Withdrawal",
+    submitFn: transactionService.simulateWithdraw,
+  },
+} as const;
+
 function MinimalInput({
   label,
   value,
@@ -48,41 +63,34 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   const form = useTransactionForm({ chainId: 1 });
   const { amount, transactionData } = useWatchedTransactionData(form, true);
 
-  const submitFn =
-    mode === "deposit"
-      ? transactionService.simulateDeposit
-      : transactionService.simulateWithdraw;
+  const config = MODE_CONFIG[mode];
 
   const submission = useTransactionSubmission(
     form,
     isConnected,
     transactionData.selectedToken,
-    submitFn,
+    config.submitFn,
     () => setIsReviewOpen(false)
   );
 
   return (
     <BaseTradingPanel
       title={<span className="capitalize">{mode}</span>}
-      subtitle={
-        mode === "deposit"
-          ? "Add capital to your strategy."
-          : "Withdraw funds to your wallet."
-      }
+      subtitle={config.subtitle}
       footer={
         <button
           onClick={() => setIsReviewOpen(true)}
           disabled={!amount || parseFloat(amount) <= 0}
           className="w-full py-4 rounded-xl bg-gray-900 dark:bg-white text-white dark:text-black font-medium hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg shadow-gray-200 dark:shadow-none disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Review {mode === "deposit" ? "Deposit" : "Withdrawal"}
+          Review {config.buttonLabel}
         </button>
       }
       isReviewOpen={isReviewOpen}
       onCloseReview={() => setIsReviewOpen(false)}
       onConfirmReview={submission.handleSubmit}
       isSubmitting={submission.isSubmitting}
-      reviewTitle={`Confirm ${mode === "deposit" ? "Deposit" : "Withdrawal"}`}
+      reviewTitle={config.reviewTitle}
     >
       <MinimalInput
         label="Amount"

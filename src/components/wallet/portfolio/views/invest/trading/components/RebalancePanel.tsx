@@ -10,6 +10,16 @@ import { useDailySuggestion } from "../hooks/useDailySuggestion";
 import { useDefaultPresetId } from "../hooks/useDefaultPresetId";
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
+const ACTION_STYLES: Record<string, string> = {
+  buy: "bg-green-500 shadow-green-200 dark:shadow-none",
+  sell: "bg-red-500 shadow-red-200 dark:shadow-none",
+};
+
+const ACTION_LABELS: Record<string, string> = {
+  buy: "Add",
+  sell: "Reduce",
+};
+
 function RebalancePanelSkeleton() {
   return (
     <div
@@ -126,20 +136,12 @@ export function RebalancePanel({ userId }: { userId: string }) {
               <div
                 className={cn(
                   "w-2 h-2 rounded-full transition-all group-hover:scale-125 shadow-sm",
-                  trade.action === "buy"
-                    ? "bg-green-500 shadow-green-200 dark:shadow-none"
-                    : trade.action === "sell"
-                      ? "bg-red-500 shadow-red-200 dark:shadow-none"
-                      : "bg-gray-400"
+                  ACTION_STYLES[trade.action] ?? "bg-gray-400"
                 )}
               />
               <span className="text-lg font-light text-gray-600 dark:text-gray-300">
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {trade.action === "buy"
-                    ? "Add"
-                    : trade.action === "sell"
-                      ? "Reduce"
-                      : "Hold"}
+                  {ACTION_LABELS[trade.action] ?? "Hold"}
                 </span>{" "}
                 <span className="text-gray-400 mx-1">·</span>{" "}
                 {trade.bucket.toUpperCase()}

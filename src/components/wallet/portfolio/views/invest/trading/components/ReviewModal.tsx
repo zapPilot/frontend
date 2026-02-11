@@ -295,6 +295,12 @@ function VariationImpact() {
   );
 }
 
+function getRouteStepDetail(step: (typeof MOCK_ROUTE)[number]): string {
+  if ("asset" in step) return step.asset;
+  if ("action" in step) return step.action;
+  return "";
+}
+
 function VariationRoute() {
   return (
     <div className="space-y-6">
@@ -332,11 +338,7 @@ function VariationRoute() {
                     {"chain" in step ? step.chain : step.protocol}
                   </div>
                   <div className="text-sm font-mono text-indigo-400">
-                    {"asset" in step
-                      ? step.asset
-                      : "action" in step
-                        ? step.action
-                        : ""}
+                    {getRouteStepDetail(step)}
                   </div>
                 </div>
               </div>

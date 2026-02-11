@@ -48,8 +48,8 @@ export function BaseTradingPanel({
   isReviewOpen,
   onCloseReview,
   onConfirmReview,
-  isSubmitting,
-  reviewTitle,
+  isSubmitting = false,
+  reviewTitle = "Review Execution",
 }: BaseTradingPanelProps) {
   return (
     <>
@@ -81,8 +81,8 @@ export function BaseTradingPanel({
         isOpen={isReviewOpen}
         onClose={onCloseReview}
         onConfirm={onConfirmReview}
-        isSubmitting={isSubmitting ?? false}
-        title={reviewTitle ?? "Review Execution"}
+        isSubmitting={isSubmitting}
+        title={reviewTitle}
       />
     </>
   );
