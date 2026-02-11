@@ -26,6 +26,11 @@ export function useWatchedTransactionData(
     chainId,
     tokenAddress,
     amount,
-    transactionData: useTransactionData({ isOpen, chainId, tokenAddress, amount }),
+    transactionData: useTransactionData({
+      isOpen,
+      chainId,
+      tokenAddress,
+      amount,
+    }),
   };
 }
