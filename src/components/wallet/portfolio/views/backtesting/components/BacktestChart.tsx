@@ -14,6 +14,7 @@ import {
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
+import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { CHART_SIGNALS } from "../utils/chartHelpers";
 import {
   getStrategyColor,
@@ -39,7 +40,7 @@ export function BacktestChart({
   chartIdPrefix = "default",
 }: BacktestChartProps) {
   const primarySeriesId =
-    sortedStrategyIds.find(id => id !== "dca_classic") ??
+    sortedStrategyIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ??
     sortedStrategyIds[0] ??
     null;
 
@@ -200,7 +201,7 @@ function StrategyArea({
 }) {
   const color = getStrategyColor(strategyId, index);
   const displayName = getStrategyDisplayName(strategyId);
-  const isDcaClassic = strategyId === "dca_classic";
+  const isDcaClassic = strategyId === DCA_CLASSIC_STRATEGY_ID;
 
   return (
     <Area

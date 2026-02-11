@@ -1,5 +1,6 @@
 import type { BacktestTimelinePoint } from "@/types/backtesting";
 
+import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
 import { getStrategyDisplayName } from "./strategyDisplay";
 
 // --- Signal Types & Constants ---
@@ -263,9 +264,11 @@ export function calculateActualDays(timeline: BacktestTimelinePoint[]): number {
 }
 
 export function sortStrategyIds(ids: string[]): string[] {
-  const dca = ids.includes("dca_classic") ? ["dca_classic"] : [];
+  const dca = ids.includes(DCA_CLASSIC_STRATEGY_ID)
+    ? [DCA_CLASSIC_STRATEGY_ID]
+    : [];
   const others = ids
-    .filter(id => id !== "dca_classic")
+    .filter(id => id !== DCA_CLASSIC_STRATEGY_ID)
     .sort((a, b) =>
       getStrategyDisplayName(a).localeCompare(getStrategyDisplayName(b))
     );

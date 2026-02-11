@@ -1,15 +1,24 @@
+import { CHART_SIGNALS, type SignalKey } from "../utils/chartHelpers";
 import {
   getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
 
+const LEGEND_SIGNAL_KEYS: SignalKey[] = [
+  "buy_spot",
+  "sell_spot",
+  "buy_lp",
+  "sell_lp",
+];
+
+/** Signal subset shown in the chart legend (excludes borrow/repay/liquidate). */
 export const SIGNAL_LEGEND = [
   { label: "Sentiment", color: "#a855f7" },
-  { label: "Buy Spot", color: "#22c55e" },
-  { label: "Sell Spot", color: "#ef4444" },
-  { label: "Buy LP", color: "#3b82f6" },
-  { label: "Sell LP", color: "#d946ef" },
-] as const;
+  ...LEGEND_SIGNAL_KEYS.flatMap(key => {
+    const s = CHART_SIGNALS.find(c => c.key === key);
+    return s ? [{ label: s.name, color: s.color }] : [];
+  }),
+];
 
 interface BacktestChartLegendProps {
   sortedStrategyIds: string[];

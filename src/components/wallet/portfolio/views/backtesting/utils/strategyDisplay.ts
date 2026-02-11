@@ -1,6 +1,11 @@
+import {
+  DCA_CLASSIC_STRATEGY_ID,
+  SIMPLE_REGIME_STRATEGY_ID,
+} from "../constants";
+
 const STRATEGY_DISPLAY_NAMES: Record<string, string> = {
-  dca_classic: "DCA Classic",
-  simple_regime: "Simple Regime",
+  [DCA_CLASSIC_STRATEGY_ID]: "DCA Classic",
+  [SIMPLE_REGIME_STRATEGY_ID]: "Simple Regime",
 };
 
 const DCA_CLASSIC_COLOR = "#4b5563";
@@ -27,7 +32,10 @@ export function getStrategyDisplayName(strategyId: string): string {
 }
 
 export function getStrategyColor(strategyId: string, index?: number): string {
-  if (strategyId === "dca_classic" || strategyId.includes("dca_classic")) {
+  if (
+    strategyId === DCA_CLASSIC_STRATEGY_ID ||
+    strategyId.includes(DCA_CLASSIC_STRATEGY_ID)
+  ) {
     return DCA_CLASSIC_COLOR;
   }
 

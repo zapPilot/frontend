@@ -8,7 +8,11 @@ import type {
   BacktestStrategySummary,
 } from "@/types/backtesting";
 
-import { PACING_POLICY_OPTIONS, SIGNAL_PROVIDER_OPTIONS } from "../constants";
+import {
+  DCA_CLASSIC_STRATEGY_ID,
+  PACING_POLICY_OPTIONS,
+  SIGNAL_PROVIDER_OPTIONS,
+} from "../constants";
 import {
   parseJsonField,
   parseRegimeParam,
@@ -19,6 +23,8 @@ import { BacktestChart } from "./BacktestChart";
 
 const PHOSPHOR_GLOW = "0 0 8px rgba(52,211,153,0.6)";
 const PHOSPHOR_GLOW_DIM = "0 0 8px rgba(52,211,153,0.4)";
+const phosphorGlowStyle = { textShadow: PHOSPHOR_GLOW } as const;
+const phosphorGlowDimStyle = { textShadow: PHOSPHOR_GLOW_DIM } as const;
 
 const COLLAPSE_ANIMATION = {
   initial: { height: 0, opacity: 0 },
@@ -124,7 +130,8 @@ export function BacktestTerminalDisplay({
   );
 
   const primaryId =
-    sortedStrategyIds.find(id => id !== "dca_classic") ?? sortedStrategyIds[0];
+    sortedStrategyIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ??
+    sortedStrategyIds[0];
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
 
   const heroMetrics = useMemo(() => {
@@ -177,10 +184,7 @@ export function BacktestTerminalDisplay({
     <div className="font-mono bg-gray-950 rounded-2xl border border-gray-800 overflow-hidden">
       {/* Command prompt bar */}
       <div className="border-b border-gray-800 px-4 py-3 flex items-center gap-2 flex-wrap">
-        <span
-          className="text-emerald-400"
-          style={{ textShadow: PHOSPHOR_GLOW }}
-        >
+        <span className="text-emerald-400" style={phosphorGlowStyle}>
           $
         </span>
         <span className="text-gray-300">backtest</span>
@@ -190,14 +194,14 @@ export function BacktestTerminalDisplay({
           value={days}
           onChange={handleDaysChange}
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 w-16 text-center focus:outline-none"
-          style={{ textShadow: PHOSPHOR_GLOW }}
+          style={phosphorGlowStyle}
         />
         <span className="text-gray-400">--signal</span>
         <select
           value={signalProvider}
           onChange={handleSignalChange}
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
-          style={{ textShadow: PHOSPHOR_GLOW }}
+          style={phosphorGlowStyle}
         >
           <TerminalOptionList options={SIGNAL_PROVIDER_OPTIONS} />
         </select>
@@ -206,7 +210,7 @@ export function BacktestTerminalDisplay({
           value={pacingPolicy}
           onChange={handlePacingChange}
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
-          style={{ textShadow: PHOSPHOR_GLOW }}
+          style={phosphorGlowStyle}
         >
           <TerminalOptionList options={PACING_POLICY_OPTIONS} />
         </select>
@@ -214,7 +218,7 @@ export function BacktestTerminalDisplay({
           onClick={onRun}
           disabled={isPending}
           className="ml-auto border border-emerald-400/30 text-emerald-400 px-3 py-1 rounded hover:bg-emerald-400/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          style={{ textShadow: PHOSPHOR_GLOW }}
+          style={phosphorGlowStyle}
         >
           {isPending ? "[...]" : "[RUN]"}
         </button>
@@ -233,7 +237,7 @@ export function BacktestTerminalDisplay({
               >
                 <div
                   className="text-xs text-emerald-400/60 uppercase tracking-widest mb-2"
-                  style={{ textShadow: PHOSPHOR_GLOW }}
+                  style={phosphorGlowStyle}
                 >
                   {metric.label}
                 </div>
@@ -243,7 +247,7 @@ export function BacktestTerminalDisplay({
                   </span>
                   <span
                     className={`text-xl font-bold ${metric.color}`}
-                    style={{ textShadow: PHOSPHOR_GLOW }}
+                    style={phosphorGlowStyle}
                   >
                     {metric.value}
                   </span>
@@ -309,7 +313,7 @@ export function BacktestTerminalDisplay({
                   <span className="text-emerald-400/60">{m.label}</span>{" "}
                   <span
                     className="text-white font-bold"
-                    style={{ textShadow: PHOSPHOR_GLOW_DIM }}
+                    style={phosphorGlowDimStyle}
                   >
                     {m.value}
                   </span>

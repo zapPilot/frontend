@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { SIMPLE_REGIME_STRATEGY_ID } from "@/components/wallet/portfolio/views/backtesting/constants";
 import {
   parseJsonField,
   parseRegimeParam,
@@ -149,11 +150,11 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig).toBeDefined();
-      expect(regimeConfig.config_id).toBe("simple_regime");
-      expect(regimeConfig.strategy_id).toBe("simple_regime");
+      expect(regimeConfig.config_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
+      expect(regimeConfig.strategy_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
     });
 
     it("should update enable_borrowing in simple_regime params", () => {
@@ -162,7 +163,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.enable_borrowing).toBe(true);
     });
@@ -171,8 +172,8 @@ describe("patchBacktestConfig", () => {
       const input = {
         configs: [
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
+            config_id: SIMPLE_REGIME_STRATEGY_ID,
+            strategy_id: SIMPLE_REGIME_STRATEGY_ID,
             params: { existing_param: "keep-me" },
           },
         ],
@@ -201,15 +202,15 @@ describe("patchBacktestConfig", () => {
       const parsed = JSON.parse(result!);
       expect(parsed.configs.length).toBe(2);
       expect(parsed.configs[0].strategy_id).toBe("other-strategy");
-      expect(parsed.configs[1].strategy_id).toBe("simple_regime");
+      expect(parsed.configs[1].strategy_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
     });
 
     it("should create params object if it doesn't exist on existing regime config", () => {
       const input = {
         configs: [
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
+            config_id: SIMPLE_REGIME_STRATEGY_ID,
+            strategy_id: SIMPLE_REGIME_STRATEGY_ID,
           },
         ],
       };
@@ -217,7 +218,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params).toBeDefined();
       expect(regimeConfig.params.enable_borrowing).toBe(true);
@@ -227,8 +228,8 @@ describe("patchBacktestConfig", () => {
       const input = {
         configs: [
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
+            config_id: SIMPLE_REGIME_STRATEGY_ID,
+            strategy_id: SIMPLE_REGIME_STRATEGY_ID,
             params: null as any,
           },
         ],
@@ -237,7 +238,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params).toBeDefined();
       expect(regimeConfig.params.enable_borrowing).toBe(true);
@@ -251,7 +252,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_ltv).toBe(75);
     });
@@ -262,7 +263,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_ltv).toBe("80");
     });
@@ -271,8 +272,8 @@ describe("patchBacktestConfig", () => {
       const input = {
         configs: [
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
+            config_id: SIMPLE_REGIME_STRATEGY_ID,
+            strategy_id: SIMPLE_REGIME_STRATEGY_ID,
             params: {
               enable_borrowing: true,
               borrow_apr: 0.05,
@@ -297,7 +298,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe(0.05);
     });
@@ -308,7 +309,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe(1.0);
     });
@@ -319,7 +320,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe(0.005);
     });
@@ -330,7 +331,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe("5");
     });
@@ -341,7 +342,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe(true);
     });
@@ -352,7 +353,7 @@ describe("patchBacktestConfig", () => {
 
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params.borrow_apr).toBe(0);
     });
@@ -407,7 +408,7 @@ describe("patchBacktestConfig", () => {
       const parsed = JSON.parse(result!);
       expect(parsed.configs.length).toBe(3);
       const regimeConfig = parsed.configs.find(
-        (c: any) => c.strategy_id === "simple_regime"
+        (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig).toBeDefined();
     });
@@ -466,8 +467,8 @@ describe("patchBacktestConfig", () => {
       const input = {
         configs: [
           {
-            config_id: "simple_regime",
-            strategy_id: "simple_regime",
+            config_id: SIMPLE_REGIME_STRATEGY_ID,
+            strategy_id: SIMPLE_REGIME_STRATEGY_ID,
             params: { enable_borrowing: false },
           },
         ],
@@ -532,7 +533,7 @@ describe("updateJsonField", () => {
 /** Build a minimal JSON string with a simple_regime config for regime param tests. */
 const makeRegimeJson = (params: Record<string, unknown> = {}) =>
   JSON.stringify({
-    configs: [{ strategy_id: "simple_regime", params }],
+    configs: [{ strategy_id: SIMPLE_REGIME_STRATEGY_ID, params }],
   });
 
 describe("parseRegimeParam", () => {
@@ -606,7 +607,7 @@ describe("updateRegimeParam", () => {
 
   it("should create params object if missing on config", () => {
     const json = JSON.stringify({
-      configs: [{ strategy_id: "simple_regime" }],
+      configs: [{ strategy_id: SIMPLE_REGIME_STRATEGY_ID }],
     });
     const result = JSON.parse(
       updateRegimeParam(json, "signal_provider", "fgi")

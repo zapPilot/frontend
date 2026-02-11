@@ -14,6 +14,12 @@ import type {
   StrategyPreset,
 } from "@/types/strategy";
 
+import {
+  DCA_CLASSIC_STRATEGY_ID,
+  DEFAULT_TOTAL_CAPITAL,
+  SIMPLE_REGIME_STRATEGY_ID,
+} from "../constants";
+
 const backtestRequestSchema = z.object({
   token_symbol: z.string().optional(),
   start_date: z.string().optional(),
@@ -24,7 +30,10 @@ const backtestRequestSchema = z.object({
     .array(
       z.object({
         config_id: z.string().min(1),
-        strategy_id: z.enum(["dca_classic", "simple_regime"]),
+        strategy_id: z.enum([
+          DCA_CLASSIC_STRATEGY_ID,
+          SIMPLE_REGIME_STRATEGY_ID,
+        ]),
         params: z.record(z.string(), z.unknown()).optional(),
       })
     )
@@ -32,7 +41,10 @@ const backtestRequestSchema = z.object({
 });
 
 /** Fallback defaults when API response is unavailable. */
-const FALLBACK_DEFAULTS: BacktestDefaults = { days: 500, total_capital: 10000 };
+const FALLBACK_DEFAULTS: BacktestDefaults = {
+  days: 500,
+  total_capital: DEFAULT_TOTAL_CAPITAL,
+};
 
 /**
  * Build default backtest payload from curated strategy presets.
@@ -67,15 +79,15 @@ function buildDefaultPayloadFromPresets(
   // Fallback if neither found
   if (configs.length === 0) {
     configs.push({
-      config_id: "dca_classic",
-      strategy_id: "dca_classic",
+      config_id: DCA_CLASSIC_STRATEGY_ID,
+      strategy_id: DCA_CLASSIC_STRATEGY_ID,
       params: {},
     });
   }
 
   return {
     days: defaults.days,
-    total_capital: 10000,
+    total_capital: defaults.total_capital,
     configs,
   };
 }
@@ -87,21 +99,23 @@ function buildDefaultPayloadFromCatalog(
   catalog: BacktestStrategyCatalogResponseV3 | null,
   defaults: BacktestDefaults = FALLBACK_DEFAULTS
 ): BacktestRequest {
-  const simpleRegime = catalog?.strategies.find(s => s.id === "simple_regime");
+  const simpleRegime = catalog?.strategies.find(
+    s => s.id === SIMPLE_REGIME_STRATEGY_ID
+  );
   const recommendedParams = simpleRegime?.recommended_params ?? {};
 
   return {
     days: defaults.days,
-    total_capital: 10000,
+    total_capital: defaults.total_capital,
     configs: [
       {
-        config_id: "dca_classic",
-        strategy_id: "dca_classic",
+        config_id: DCA_CLASSIC_STRATEGY_ID,
+        strategy_id: DCA_CLASSIC_STRATEGY_ID,
         params: {},
       },
       {
-        config_id: "simple_regime",
-        strategy_id: "simple_regime",
+        config_id: SIMPLE_REGIME_STRATEGY_ID,
+        strategy_id: SIMPLE_REGIME_STRATEGY_ID,
         params: recommendedParams,
       },
     ],
