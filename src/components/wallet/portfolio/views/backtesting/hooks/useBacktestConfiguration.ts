@@ -133,63 +133,52 @@ export function useBacktestConfiguration() {
   >(FALLBACK_DEFAULTS.days);
   const userEdited = useRef(false);
 
-  // Fetch presets (primary source of truth for defaults)
+  // Fetch presets (primary) and catalog (fallback) in parallel on mount
   useEffect(() => {
     let cancelled = false;
 
-    const fetchPresets = async () => {
-      try {
-        const result = await getStrategyConfigs();
-        if (cancelled) return;
-        setStrategyConfigs(result);
-        if (!userEdited.current && result.presets.length > 0) {
+    const fetchDefaults = async () => {
+      const [presetsResult, catalogResult] = await Promise.allSettled([
+        getStrategyConfigs(),
+        getBacktestingStrategiesV3(),
+      ]);
+      if (cancelled) return;
+
+      // Always store catalog when available (used for schema validation)
+      const catalogData =
+        catalogResult.status === "fulfilled" ? catalogResult.value : null;
+      if (catalogData) setCatalog(catalogData);
+
+      // Presets take priority for editor defaults
+      if (presetsResult.status === "fulfilled") {
+        const presets = presetsResult.value;
+        setStrategyConfigs(presets);
+        if (!userEdited.current && presets.presets.length > 0) {
           const payload = buildDefaultPayloadFromPresets(
-            result.presets,
-            result.backtest_defaults
+            presets.presets,
+            presets.backtest_defaults
           );
           setEditorValue(JSON.stringify(payload, null, 2));
+          return;
         }
-      } catch {
-        // Presets fetch failed; catalog fetch will serve as fallback.
+      }
+
+      // Catalog as fallback only when presets unavailable and user hasn't edited
+      if (!userEdited.current && catalogData) {
+        const payload = buildDefaultPayloadFromCatalog(
+          catalogData,
+          FALLBACK_DEFAULTS
+        );
+        setEditorValue(JSON.stringify(payload, null, 2));
       }
     };
 
-    void fetchPresets();
+    void fetchDefaults();
 
     return () => {
       cancelled = true;
     };
   }, []);
-
-  // Fetch catalog (fallback for schema validation, used if presets unavailable)
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchCatalog = async () => {
-      try {
-        const result = await getBacktestingStrategiesV3();
-        if (cancelled) return;
-        setCatalog(result);
-        // Only use catalog as fallback if presets haven't loaded and user hasn't edited
-        if (!userEdited.current && !strategyConfigs) {
-          // strategyConfigs is null here, so use FALLBACK_DEFAULTS
-          const payload = buildDefaultPayloadFromCatalog(
-            result,
-            FALLBACK_DEFAULTS
-          );
-          setEditorValue(JSON.stringify(payload, null, 2));
-        }
-      } catch {
-        // Catalog is optional; the editor can still work without it.
-      }
-    };
-
-    void fetchCatalog();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [strategyConfigs]);
 
   const parsedEditorPayload = useMemo(() => {
     try {
@@ -234,10 +223,8 @@ export function useBacktestConfiguration() {
       total_capital: parsed.data.total_capital,
       configs,
     };
-    /* eslint-disable sonarjs/deprecation */
     if (parsed.data.token_symbol !== undefined)
-      request.token_symbol = parsed.data.token_symbol;
-    /* eslint-enable sonarjs/deprecation */
+      request.token_symbol = parsed.data.token_symbol; // eslint-disable-line sonarjs/deprecation
     if (parsed.data.start_date !== undefined)
       request.start_date = parsed.data.start_date;
     if (parsed.data.end_date !== undefined)

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { patchBacktestConfig } from "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers";
+import {
+  parseJsonField,
+  parseRegimeParam,
+  patchBacktestConfig,
+  updateJsonField,
+  updateRegimeParam,
+} from "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers";
 
 describe("patchBacktestConfig", () => {
   describe("null/falsy input handling", () => {
@@ -478,5 +484,139 @@ describe("patchBacktestConfig", () => {
       // This is expected behavior - shallow copy at top level only
       expect(parsed.configs[0].params.enable_borrowing).toBe(true);
     });
+  });
+});
+
+describe("parseJsonField", () => {
+  it("should return the numeric value for a valid key", () => {
+    expect(parseJsonField('{"days": 500}', "days", 365)).toBe(500);
+  });
+
+  it("should return fallback when key is missing", () => {
+    expect(parseJsonField('{"days": 500}', "total_capital", 10000)).toBe(10000);
+  });
+
+  it("should return fallback when JSON is invalid", () => {
+    expect(parseJsonField("not json", "days", 365)).toBe(365);
+  });
+
+  it("should return fallback when value is not a number", () => {
+    expect(parseJsonField('{"days": "500"}', "days", 365)).toBe(365);
+  });
+
+  it("should handle zero as a valid numeric value", () => {
+    expect(parseJsonField('{"days": 0}', "days", 365)).toBe(0);
+  });
+});
+
+describe("updateJsonField", () => {
+  it("should update a field and preserve others", () => {
+    const json = JSON.stringify({ days: 500, total_capital: 10000 });
+    const result = JSON.parse(updateJsonField(json, "days", 365));
+    expect(result.days).toBe(365);
+    expect(result.total_capital).toBe(10000);
+  });
+
+  it("should return original JSON on invalid input", () => {
+    const bad = "not json";
+    expect(updateJsonField(bad, "days", 365)).toBe(bad);
+  });
+
+  it("should add a new field if it does not exist", () => {
+    const json = JSON.stringify({ days: 500 });
+    const result = JSON.parse(updateJsonField(json, "total_capital", 5000));
+    expect(result.total_capital).toBe(5000);
+  });
+});
+
+/** Build a minimal JSON string with a simple_regime config for regime param tests. */
+const makeRegimeJson = (params: Record<string, unknown> = {}) =>
+  JSON.stringify({
+    configs: [{ strategy_id: "simple_regime", params }],
+  });
+
+describe("parseRegimeParam", () => {
+  it("should read a string param from the simple_regime config", () => {
+    expect(
+      parseRegimeParam(
+        makeRegimeJson({ signal_provider: "fgi" }),
+        "signal_provider",
+        ""
+      )
+    ).toBe("fgi");
+  });
+
+  it("should return fallback when config is missing", () => {
+    const json = JSON.stringify({ configs: [{ strategy_id: "dca_classic" }] });
+    expect(parseRegimeParam(json, "signal_provider", "default")).toBe(
+      "default"
+    );
+  });
+
+  it("should return fallback when param value is not a string", () => {
+    expect(
+      parseRegimeParam(
+        makeRegimeJson({ signal_provider: 42 }),
+        "signal_provider",
+        "default"
+      )
+    ).toBe("default");
+  });
+
+  it("should return fallback when configs is not an array", () => {
+    expect(
+      parseRegimeParam('{"configs": "invalid"}', "signal_provider", "default")
+    ).toBe("default");
+  });
+
+  it("should return fallback on invalid JSON", () => {
+    expect(parseRegimeParam("bad json", "signal_provider", "default")).toBe(
+      "default"
+    );
+  });
+});
+
+describe("updateRegimeParam", () => {
+  it("should set a param value", () => {
+    const result = JSON.parse(
+      updateRegimeParam(makeRegimeJson({}), "signal_provider", "fgi")
+    );
+    expect(result.configs[0].params.signal_provider).toBe("fgi");
+  });
+
+  it("should remove param key when value is empty string", () => {
+    const json = makeRegimeJson({
+      signal_provider: "fgi",
+      pacing_policy: "exp",
+    });
+    const result = JSON.parse(updateRegimeParam(json, "signal_provider", ""));
+    expect(result.configs[0].params.signal_provider).toBeUndefined();
+    expect(result.configs[0].params.pacing_policy).toBe("exp");
+  });
+
+  it("should return original JSON when configs is not an array", () => {
+    const json = '{"configs": "invalid"}';
+    expect(updateRegimeParam(json, "signal_provider", "fgi")).toBe(json);
+  });
+
+  it("should return original JSON when simple_regime config is missing", () => {
+    const json = JSON.stringify({ configs: [{ strategy_id: "dca_classic" }] });
+    expect(updateRegimeParam(json, "signal_provider", "fgi")).toBe(json);
+  });
+
+  it("should create params object if missing on config", () => {
+    const json = JSON.stringify({
+      configs: [{ strategy_id: "simple_regime" }],
+    });
+    const result = JSON.parse(
+      updateRegimeParam(json, "signal_provider", "fgi")
+    );
+    expect(result.configs[0].params.signal_provider).toBe("fgi");
+  });
+
+  it("should return original JSON on invalid input", () => {
+    expect(updateRegimeParam("bad json", "signal_provider", "fgi")).toBe(
+      "bad json"
+    );
   });
 });

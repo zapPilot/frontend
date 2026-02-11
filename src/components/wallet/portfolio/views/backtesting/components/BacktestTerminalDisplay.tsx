@@ -8,33 +8,23 @@ import type {
   BacktestStrategySummary,
 } from "@/types/backtesting";
 
+import { PACING_POLICY_OPTIONS, SIGNAL_PROVIDER_OPTIONS } from "../constants";
+import {
+  parseJsonField,
+  parseRegimeParam,
+  updateJsonField,
+  updateRegimeParam,
+} from "../utils/jsonConfigurationHelpers";
 import { BacktestChart } from "./BacktestChart";
-
-// ─── Terminal visual constants ───────────────────────────────────────
 
 const PHOSPHOR_GLOW = "0 0 8px rgba(52,211,153,0.6)";
 const PHOSPHOR_GLOW_DIM = "0 0 8px rgba(52,211,153,0.4)";
-
-const SIGNAL_PROVIDER_OPTIONS = [
-  { value: "", label: "default" },
-  { value: "fgi", label: "fgi" },
-  { value: "hybrid_fgi_dma", label: "hybrid_fgi_dma" },
-  { value: "dma_200", label: "dma_200" },
-  { value: "vix", label: "vix" },
-  { value: "mvrv", label: "mvrv" },
-] as const;
-
-const PACING_POLICY_OPTIONS = [
-  { value: "fgi_exponential", label: "fgi_exponential" },
-] as const;
 
 const COLLAPSE_ANIMATION = {
   initial: { height: 0, opacity: 0 },
   animate: { height: "auto" as const, opacity: 1 },
   exit: { height: 0, opacity: 0 },
 };
-
-// ─── Internal Components ─────────────────────────────────────────────
 
 function TerminalOptionList({
   options,
@@ -56,8 +46,6 @@ function TerminalOptionList({
   );
 }
 
-// ─── Props ───────────────────────────────────────────────────────────
-
 export interface BacktestTerminalDisplayProps {
   /** Strategy summaries keyed by strategy_id */
   summary: { strategies: BacktestResponse["strategies"] } | null;
@@ -78,8 +66,6 @@ export interface BacktestTerminalDisplayProps {
   /** Update the JSON editor value */
   onEditorValueChange: (v: string) => void;
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────
 
 function asciiBar(value: number, max: number, width: number): string {
   const filled = Math.round((Math.min(Math.abs(value), max) / max) * width);
@@ -111,84 +97,6 @@ function buildSecondaryMetrics(
     },
   ];
 }
-
-/**
- * Parse a numeric field from the JSON editor value string.
- * Returns `fallback` when the JSON is invalid or the key is missing.
- */
-function parseJsonField(json: string, key: string, fallback: number): number {
-  try {
-    const parsed = JSON.parse(json) as Record<string, unknown>;
-    const val = parsed[key];
-    return typeof val === "number" ? val : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-/**
- * Update a single numeric field inside the JSON editor value and return
- * the new JSON string.  Preserves all other fields.
- */
-function updateJsonField(json: string, key: string, value: number): string {
-  try {
-    const parsed = JSON.parse(json) as Record<string, unknown>;
-    parsed[key] = value;
-    return JSON.stringify(parsed, null, 2);
-  } catch {
-    return json;
-  }
-}
-
-/**
- * Read a param from the `simple_regime` config inside the JSON editor value.
- */
-function parseRegimeParam(
-  json: string,
-  param: string,
-  fallback: string
-): string {
-  try {
-    const parsed = JSON.parse(json);
-    const config = parsed.configs?.find(
-      (c: Record<string, unknown>) => c["strategy_id"] === "simple_regime"
-    );
-    const val = config?.params?.[param];
-    return typeof val === "string" ? val : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-/**
- * Write a param into the `simple_regime` config inside the JSON editor value.
- * An empty string removes the key (lets the backend use its default).
- */
-function updateRegimeParam(json: string, param: string, value: string): string {
-  try {
-    const parsed = JSON.parse(json);
-    if (!Array.isArray(parsed.configs)) return json;
-    const config = parsed.configs.find(
-      (c: Record<string, unknown>) => c["strategy_id"] === "simple_regime"
-    );
-    if (!config) return json;
-    if (!config.params) config.params = {};
-    if (value) {
-      config.params[param] = value;
-    } else {
-      config.params = Object.fromEntries(
-        Object.entries(config.params as Record<string, unknown>).filter(
-          ([k]) => k !== param
-        )
-      );
-    }
-    return JSON.stringify(parsed, null, 2);
-  } catch {
-    return json;
-  }
-}
-
-// ─── Component ───────────────────────────────────────────────────────
 
 /**
  * Terminal-themed backtesting results display with a retro CLI aesthetic,
