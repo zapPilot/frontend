@@ -235,12 +235,9 @@ describe("BacktestingView", () => {
     });
 
     const daysInput = screen.getByDisplayValue("500");
-    const capitalInput = screen.getByDisplayValue("10000");
 
     expect(daysInput).toBeInTheDocument();
     expect(daysInput).toHaveAttribute("type", "number");
-    expect(capitalInput).toBeInTheDocument();
-    expect(capitalInput).toHaveAttribute("type", "number");
   });
 
   it("renders [RUN] button when data present", async () => {

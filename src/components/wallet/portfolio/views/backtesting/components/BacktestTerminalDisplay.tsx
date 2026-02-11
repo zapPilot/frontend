@@ -34,6 +34,28 @@ const COLLAPSE_ANIMATION = {
   exit: { height: 0, opacity: 0 },
 };
 
+// ─── Internal Components ─────────────────────────────────────────────
+
+function TerminalOptionList({
+  options,
+}: {
+  options: readonly { readonly value: string; readonly label: string }[];
+}) {
+  return (
+    <>
+      {options.map(opt => (
+        <option
+          key={opt.value}
+          value={opt.value}
+          className="bg-gray-900 text-emerald-400"
+        >
+          {opt.label}
+        </option>
+      ))}
+    </>
+  );
+}
+
 // ─── Props ───────────────────────────────────────────────────────────
 
 export interface BacktestTerminalDisplayProps {
@@ -121,7 +143,11 @@ function updateJsonField(json: string, key: string, value: number): string {
 /**
  * Read a param from the `simple_regime` config inside the JSON editor value.
  */
-function parseRegimeParam(json: string, param: string, fallback: string): string {
+function parseRegimeParam(
+  json: string,
+  param: string,
+  fallback: string
+): string {
   try {
     const parsed = JSON.parse(json);
     const config = parsed.configs?.find(
@@ -150,7 +176,11 @@ function updateRegimeParam(json: string, param: string, value: string): string {
     if (value) {
       config.params[param] = value;
     } else {
-      delete config.params[param];
+      config.params = Object.fromEntries(
+        Object.entries(config.params as Record<string, unknown>).filter(
+          ([k]) => k !== param
+        )
+      );
     }
     return JSON.stringify(parsed, null, 2);
   } catch {
@@ -179,7 +209,11 @@ export function BacktestTerminalDisplay({
 
   const days = parseJsonField(editorValue, "days", 500);
   const signalProvider = parseRegimeParam(editorValue, "signal_provider", "");
-  const pacingPolicy = parseRegimeParam(editorValue, "pacing_policy", "fgi_exponential");
+  const pacingPolicy = parseRegimeParam(
+    editorValue,
+    "pacing_policy",
+    "fgi_exponential"
+  );
 
   const primaryId =
     sortedStrategyIds.find(id => id !== "dca_classic") ?? sortedStrategyIds[0];
@@ -221,10 +255,14 @@ export function BacktestTerminalDisplay({
   };
 
   const handleSignalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onEditorValueChange(updateRegimeParam(editorValue, "signal_provider", e.target.value));
+    onEditorValueChange(
+      updateRegimeParam(editorValue, "signal_provider", e.target.value)
+    );
   };
   const handlePacingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    onEditorValueChange(updateRegimeParam(editorValue, "pacing_policy", e.target.value));
+    onEditorValueChange(
+      updateRegimeParam(editorValue, "pacing_policy", e.target.value)
+    );
   };
 
   return (
@@ -253,11 +291,7 @@ export function BacktestTerminalDisplay({
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
           style={{ textShadow: PHOSPHOR_GLOW }}
         >
-          {SIGNAL_PROVIDER_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value} className="bg-gray-900 text-emerald-400">
-              {opt.label}
-            </option>
-          ))}
+          <TerminalOptionList options={SIGNAL_PROVIDER_OPTIONS} />
         </select>
         <span className="text-gray-400">--pacing</span>
         <select
@@ -266,11 +300,7 @@ export function BacktestTerminalDisplay({
           className="bg-transparent border-b border-emerald-400/30 text-emerald-400 focus:outline-none appearance-none cursor-pointer text-center"
           style={{ textShadow: PHOSPHOR_GLOW }}
         >
-          {PACING_POLICY_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value} className="bg-gray-900 text-emerald-400">
-              {opt.label}
-            </option>
-          ))}
+          <TerminalOptionList options={PACING_POLICY_OPTIONS} />
         </select>
         <button
           onClick={onRun}
