@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { useTransactionForm } from "@/components/wallet/portfolio/modals/hooks/useTransactionForm";
 import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission";
@@ -8,7 +8,6 @@ import { useWatchedTransactionData } from "@/components/wallet/portfolio/modals/
 import { cn } from "@/lib/ui/classNames";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { transactionService } from "@/services";
-import type { TradeSuggestion } from "@/types/strategy";
 
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
@@ -47,10 +46,7 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
 
   const form = useTransactionForm({ chainId: 1 });
-  const { tokenAddress, amount, transactionData } = useWatchedTransactionData(
-    form,
-    true
-  );
+  const { amount, transactionData } = useWatchedTransactionData(form, true);
 
   const submitFn =
     mode === "deposit"
@@ -64,34 +60,6 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
     submitFn,
     () => setIsReviewOpen(false)
   );
-
-  // Derive trade suggestion for the review modal
-  const trades: TradeSuggestion[] = useMemo(() => {
-    if (!amount || !tokenAddress) return [];
-
-    // Simple heuristic for bucket/asset mapping
-    const isStable = ["USDC", "USDT", "DAI"].includes(
-      transactionData.selectedToken?.symbol || ""
-    );
-    const isSpot = ["BTC", "WBTC", "ETH", "WETH"].includes(
-      transactionData.selectedToken?.symbol || ""
-    );
-    const bucket = isStable ? "stable" : isSpot ? "spot" : "lp";
-
-    const price = transactionData.selectedToken?.usdPrice ?? 1;
-
-    return [
-      {
-        action: mode === "deposit" ? "buy" : "sell",
-        amount_usd: parseFloat(amount) * price,
-        bucket,
-        from_bucket: "stable",
-        to_bucket: "spot",
-        step_fraction: 1,
-        description: "Manual transaction",
-      },
-    ];
-  }, [amount, tokenAddress, mode, transactionData.selectedToken]);
 
   return (
     <BaseTradingPanel
@@ -110,8 +78,6 @@ export function TransactionPanel({ mode }: { mode: "deposit" | "withdraw" }) {
           Review {mode === "deposit" ? "Deposit" : "Withdrawal"}
         </button>
       }
-      trades={trades}
-      totalValue={10000}
       isReviewOpen={isReviewOpen}
       onCloseReview={() => setIsReviewOpen(false)}
       onConfirmReview={submission.handleSubmit}

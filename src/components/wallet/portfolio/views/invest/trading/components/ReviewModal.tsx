@@ -21,15 +21,12 @@ import {
   TransactionModalHeader,
 } from "@/components/wallet/portfolio/modals/components/TransactionModalParts";
 import { cn } from "@/lib/ui/classNames";
-import type { TradeSuggestion } from "@/types/strategy";
 
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
   isSubmitting?: boolean;
-  trades?: TradeSuggestion[];
-  totalValue?: number;
   title?: string;
 }
 

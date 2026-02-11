@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import type { TradeSuggestion } from "@/types/strategy";
-
 import { ActionCard } from "./ActionCard";
 import { ImpactVisual } from "./ImpactVisual";
 import { ReviewModal } from "./ReviewModal";
@@ -26,11 +24,6 @@ interface BaseTradingPanelProps {
   /** ActionCard footer slot (CTA button) */
   footer: ReactNode;
 
-  /** Trade suggestions for ImpactVisual + ReviewModal */
-  trades: TradeSuggestion[];
-  /** Portfolio total value for ImpactVisual + ReviewModal */
-  totalValue: number;
-
   /** Whether the ReviewModal is open */
   isReviewOpen: boolean;
   /** Close handler for ReviewModal */
@@ -52,8 +45,6 @@ export function BaseTradingPanel({
   actionCardIcon,
   children,
   footer,
-  trades,
-  totalValue,
   isReviewOpen,
   onCloseReview,
   onConfirmReview,
@@ -91,8 +82,6 @@ export function BaseTradingPanel({
         onClose={onCloseReview}
         onConfirm={onConfirmReview}
         isSubmitting={isSubmitting ?? false}
-        trades={trades}
-        totalValue={totalValue}
         title={reviewTitle ?? "Review Execution"}
       />
     </>

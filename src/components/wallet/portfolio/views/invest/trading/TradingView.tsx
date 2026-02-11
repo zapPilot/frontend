@@ -9,14 +9,15 @@ import { cn } from "@/lib/ui/classNames";
 import { RebalancePanel } from "./components/RebalancePanel";
 import { TransactionPanel } from "./components/TransactionPanel";
 
+const TRADING_MODES = ["rebalance", "deposit", "withdraw"] as const;
+type TradingMode = (typeof TRADING_MODES)[number];
+
 interface TradingViewProps {
   userId: string | undefined;
 }
 
 export function TradingView({ userId }: TradingViewProps) {
-  const [activeMode, setActiveMode] = useState<
-    "rebalance" | "deposit" | "withdraw"
-  >("rebalance");
+  const [activeMode, setActiveMode] = useState<TradingMode>("rebalance");
 
   if (!userId) {
     return (
@@ -32,7 +33,7 @@ export function TradingView({ userId }: TradingViewProps) {
       <div className="bg-gray-50 dark:bg-gray-900 min-h-[600px] flex flex-col items-center pt-8 relative">
         {/* Segmented Control */}
         <div className="bg-white dark:bg-gray-900 p-1.5 rounded-full shadow-sm border border-gray-200 dark:border-gray-800 mb-12 flex gap-1">
-          {(["rebalance", "deposit", "withdraw"] as const).map(m => (
+          {TRADING_MODES.map(m => (
             <button
               key={m}
               onClick={() => setActiveMode(m)}

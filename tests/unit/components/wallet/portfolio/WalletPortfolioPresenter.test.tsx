@@ -211,177 +211,89 @@ vi.mock("@/hooks/queries/analytics/useAllocationWeights", () => ({
 
 describe("WalletPortfolioPresenter - Regime Highlighting", () => {
   describe("Regime Spectrum Display", () => {
-    it("should highlight Extreme Fear regime when currentRegime is 'ef'", async () => {
-      const user = userEvent.setup();
-      const mockData = MOCK_SCENARIOS.extremeFear;
+    const regimeHighlightCases: {
+      label: string;
+      regimeId: RegimeId;
+      getMockData: () => WalletPortfolioDataWithDirection;
+      inactiveLabel?: string;
+    }[] = [
+      {
+        label: "Extreme Fear",
+        regimeId: "ef",
+        getMockData: () => MOCK_SCENARIOS.extremeFear,
+        inactiveLabel: "Greed",
+      },
+      {
+        label: "Fear",
+        regimeId: "f",
+        getMockData: () => ({
+          ...MOCK_DATA,
+          sentimentValue: 35,
+          sentimentStatus: "Fear" as const,
+          currentRegime: "f" as RegimeId,
+        }),
+      },
+      {
+        label: "Neutral",
+        regimeId: "n",
+        getMockData: () => ({
+          ...MOCK_SCENARIOS.neutral,
+          currentAllocation: {
+            ...MOCK_SCENARIOS.neutral.currentAllocation,
+            simplifiedCrypto: MOCK_DATA.currentAllocation.simplifiedCrypto,
+          },
+        }),
+      },
+      {
+        label: "Greed",
+        regimeId: "g",
+        getMockData: () => MOCK_DATA,
+      },
+      {
+        label: "Extreme Greed",
+        regimeId: "eg",
+        getMockData: () => MOCK_SCENARIOS.extremeGreed,
+        inactiveLabel: "Greed",
+      },
+    ];
 
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
+    it.each(regimeHighlightCases)(
+      "should highlight $label regime when currentRegime is '$regimeId'",
+      async ({ label, getMockData, inactiveLabel }) => {
+        const user = userEvent.setup();
+        const mockData = getMockData();
 
-      // Expand strategy section to show regime spectrum
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
+        render(
+          <WalletPortfolioPresenter
+            data={mockData}
+            sections={createMockSections(mockData)}
+            etlState={DEFAULT_ETL_STATE}
+          />
+        );
 
-      // Find the regime spectrum container
-      const regimeSpectrum = screen.getByTestId("regime-spectrum");
-      expect(regimeSpectrum).toBeInTheDocument();
+        const strategyCard = screen.getByTestId("strategy-card");
+        await user.click(strategyCard);
 
-      // Verify all 5 regimes are rendered
-      expect(
-        within(regimeSpectrum).getByText("Extreme Fear")
-      ).toBeInTheDocument();
-      expect(within(regimeSpectrum).getByText("Fear")).toBeInTheDocument();
-      expect(within(regimeSpectrum).getByText("Neutral")).toBeInTheDocument();
-      expect(within(regimeSpectrum).getByText("Greed")).toBeInTheDocument();
-      expect(
-        within(regimeSpectrum).getByText("Extreme Greed")
-      ).toBeInTheDocument();
+        const regimeSpectrum = screen.getByTestId("regime-spectrum");
+        expect(regimeSpectrum).toBeInTheDocument();
 
-      // Verify Extreme Fear is highlighted
-      const extremeFearRegime = within(regimeSpectrum)
-        .getByText("Extreme Fear")
-        .closest("button");
-      expect(extremeFearRegime).toHaveClass("bg-gray-800");
-      expect(
-        within(extremeFearRegime!).getByText("Current")
-      ).toBeInTheDocument();
+        // Verify active regime is highlighted
+        const activeRegime = within(regimeSpectrum)
+          .getByText(label)
+          .closest("button");
+        expect(activeRegime).toHaveClass("bg-gray-800");
+        expect(within(activeRegime!).getByText("Current")).toBeInTheDocument();
 
-      // Verify other regimes are not highlighted
-      const greedRegime = within(regimeSpectrum)
-        .getByText("Greed")
-        .closest("button");
-      expect(greedRegime).toHaveClass("opacity-60");
-      expect(greedRegime).not.toHaveClass("bg-gray-800");
-    });
-
-    it("should highlight Fear regime when currentRegime is 'f'", async () => {
-      const user = userEvent.setup();
-      const mockData = {
-        ...MOCK_DATA,
-        sentimentValue: 35,
-        sentimentStatus: "Fear" as const,
-        currentRegime: "f" as RegimeId,
-      };
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      // Expand strategy section
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      const regimeSpectrum = screen.getByTestId("regime-spectrum");
-
-      // Verify Fear is highlighted
-      const fearRegime = within(regimeSpectrum)
-        .getByText("Fear")
-        .closest("button");
-      expect(fearRegime).toHaveClass("bg-gray-800");
-      expect(within(fearRegime!).getByText("Current")).toBeInTheDocument();
-    });
-
-    it("should highlight Neutral regime when currentRegime is 'n'", async () => {
-      const user = userEvent.setup();
-      const mockData = {
-        ...MOCK_SCENARIOS.neutral,
-        currentAllocation: {
-          ...MOCK_SCENARIOS.neutral.currentAllocation,
-          simplifiedCrypto: MOCK_DATA.currentAllocation.simplifiedCrypto,
-        },
-      };
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      // Expand strategy section
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      const regimeSpectrum = screen.getByTestId("regime-spectrum");
-
-      // Verify Neutral is highlighted
-      const neutralRegime = within(regimeSpectrum)
-        .getByText("Neutral")
-        .closest("button");
-      expect(neutralRegime).toHaveClass("bg-gray-800");
-      expect(within(neutralRegime!).getByText("Current")).toBeInTheDocument();
-    });
-
-    it("should highlight Greed regime when currentRegime is 'g'", async () => {
-      const user = userEvent.setup();
-      const mockData = MOCK_DATA; // Default is Greed
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      // Expand strategy section
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      const regimeSpectrum = screen.getByTestId("regime-spectrum");
-
-      // Verify Greed is highlighted
-      const greedRegime = within(regimeSpectrum)
-        .getByText("Greed")
-        .closest("button");
-      expect(greedRegime).toHaveClass("bg-gray-800");
-      expect(within(greedRegime!).getByText("Current")).toBeInTheDocument();
-    });
-
-    it("should highlight Extreme Greed regime when currentRegime is 'eg'", async () => {
-      const user = userEvent.setup();
-      const mockData = MOCK_SCENARIOS.extremeGreed;
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      // Expand strategy section
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      const regimeSpectrum = screen.getByTestId("regime-spectrum");
-
-      // Verify Extreme Greed is highlighted
-      const extremeGreedRegime = within(regimeSpectrum)
-        .getByText("Extreme Greed")
-        .closest("button");
-      expect(extremeGreedRegime).toHaveClass("bg-gray-800");
-      expect(
-        within(extremeGreedRegime!).getByText("Current")
-      ).toBeInTheDocument();
-
-      // Verify other regimes are not highlighted
-      const greedRegime = within(regimeSpectrum)
-        .getByText("Greed")
-        .closest("button");
-      expect(greedRegime).toHaveClass("opacity-60");
-      expect(greedRegime).not.toHaveClass("bg-gray-800");
-    });
+        // Verify an inactive regime is not highlighted (when specified)
+        if (inactiveLabel) {
+          const inactiveRegime = within(regimeSpectrum)
+            .getByText(inactiveLabel)
+            .closest("button");
+          expect(inactiveRegime).toHaveClass("opacity-60");
+          expect(inactiveRegime).not.toHaveClass("bg-gray-800");
+        }
+      }
+    );
   });
 
   describe("Visual State Verification", () => {
@@ -550,61 +462,48 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
       }
     });
 
-    it("should show 'prices are high' for Greed/Extreme Greed", async () => {
-      const user = userEvent.setup();
-      render(
-        <WalletPortfolioPresenter
-          data={MOCK_SCENARIOS.extremeGreed}
-          sections={createMockSections(MOCK_SCENARIOS.extremeGreed)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
+    it.each([
+      {
+        desc: "prices are high (Extreme Greed)",
+        regimeId: "eg" as RegimeId,
+        getMockData: () => MOCK_SCENARIOS.extremeGreed,
+      },
+      {
+        desc: "prices are low (Extreme Fear)",
+        regimeId: "ef" as RegimeId,
+        getMockData: () => MOCK_SCENARIOS.extremeFear,
+      },
+      {
+        desc: "market sentiment is balanced (Neutral)",
+        regimeId: "n" as RegimeId,
+        getMockData: () => ({
+          ...MOCK_SCENARIOS.neutral,
+          currentAllocation: {
+            ...MOCK_SCENARIOS.neutral.currentAllocation,
+            simplifiedCrypto: MOCK_DATA.currentAllocation.simplifiedCrypto,
+          },
+        }),
+      },
+    ])(
+      "should show correct zapAction for $desc",
+      async ({ regimeId, getMockData }) => {
+        const user = userEvent.setup();
+        const mockData = getMockData();
 
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
+        render(
+          <WalletPortfolioPresenter
+            data={mockData}
+            sections={createMockSections(mockData)}
+            etlState={DEFAULT_ETL_STATE}
+          />
+        );
 
-      expect(screen.getByText(getZapAction("eg"))).toBeInTheDocument();
-    });
+        const strategyCard = screen.getByTestId("strategy-card");
+        await user.click(strategyCard);
 
-    it("should show 'prices are low' for Fear/Extreme Fear", async () => {
-      const user = userEvent.setup();
-      render(
-        <WalletPortfolioPresenter
-          data={MOCK_SCENARIOS.extremeFear}
-          sections={createMockSections(MOCK_SCENARIOS.extremeFear)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      expect(screen.getByText(getZapAction("ef"))).toBeInTheDocument();
-    });
-
-    it("should show 'market sentiment is balanced' for Neutral", async () => {
-      const user = userEvent.setup();
-      const neutralMockData = {
-        ...MOCK_SCENARIOS.neutral,
-        currentAllocation: {
-          ...MOCK_SCENARIOS.neutral.currentAllocation,
-          simplifiedCrypto: MOCK_DATA.currentAllocation.simplifiedCrypto,
-        },
-      };
-
-      render(
-        <WalletPortfolioPresenter
-          data={neutralMockData}
-          sections={createMockSections(neutralMockData)}
-          etlState={DEFAULT_ETL_STATE}
-        />
-      );
-
-      const strategyCard = screen.getByTestId("strategy-card");
-      await user.click(strategyCard);
-
-      expect(screen.getByText(getZapAction("n"))).toBeInTheDocument();
-    });
+        expect(screen.getByText(getZapAction(regimeId))).toBeInTheDocument();
+      }
+    );
   });
 
   describe("AnimatePresence Rendering", () => {
@@ -700,74 +599,36 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
    * to prevent continuous /landing API requests during ETL completion.
    */
   describe("ETL Loading State - Race Condition Fix", () => {
-    it("should show loading screen when ETL status is 'pending'", () => {
-      const mockData = MOCK_DATA;
-      const etlState = {
-        ...DEFAULT_ETL_STATE,
-        jobId: "test-job",
-        status: "pending" as const,
-        isLoading: true,
-      };
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={etlState}
-        />
-      );
-
-      // Should show ETL loading state, not the dashboard
-      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
-    });
-
-    it("should show loading screen when ETL status is 'processing'", () => {
-      const mockData = MOCK_DATA;
-      const etlState = {
-        ...DEFAULT_ETL_STATE,
-        jobId: "test-job",
-        status: "processing" as const,
-        isLoading: true,
-      };
-
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={etlState}
-        />
-      );
-
-      // Should show ETL loading state
-      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
-    });
-
     /**
-     * CRITICAL TEST: The key fix for the race condition.
-     * "completing" status should keep the loading screen visible
-     * until completeTransition() is called after cache invalidation.
+     * Tests that pending, processing, and completing statuses all keep the
+     * loading screen visible. "completing" is the critical case — it prevents
+     * a race condition where the dashboard flashes before cache invalidation.
      */
-    it("should show loading screen when ETL status is 'completing'", () => {
-      const mockData = MOCK_DATA;
-      const etlState = {
-        ...DEFAULT_ETL_STATE,
-        jobId: "test-job",
-        status: "completing" as const,
-        isLoading: false,
-      };
+    it.each([
+      { status: "pending" as const, isLoading: true },
+      { status: "processing" as const, isLoading: true },
+      { status: "completing" as const, isLoading: false },
+    ])(
+      "should show loading screen when ETL status is '$status'",
+      ({ status, isLoading }) => {
+        const etlState = {
+          ...DEFAULT_ETL_STATE,
+          jobId: "test-job",
+          status,
+          isLoading,
+        };
 
-      render(
-        <WalletPortfolioPresenter
-          data={mockData}
-          sections={createMockSections(mockData)}
-          etlState={etlState}
-        />
-      );
+        render(
+          <WalletPortfolioPresenter
+            data={MOCK_DATA}
+            sections={createMockSections(MOCK_DATA)}
+            etlState={etlState}
+          />
+        );
 
-      // Should show ETL loading state, NOT the dashboard
-      // This is the key test - "completing" must keep loading screen visible
-      expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
-    });
+        expect(screen.queryByTestId("v22-dashboard")).not.toBeInTheDocument();
+      }
+    );
 
     it("should show dashboard when ETL status is 'idle'", () => {
       const mockData = MOCK_DATA;

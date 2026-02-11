@@ -71,8 +71,6 @@ function RebalancePanelSkeleton() {
           </button>
         </div>
       </div>
-
-      <span className="sr-only">Loading rebalance suggestions...</span>
     </div>
   );
 }
@@ -114,8 +112,6 @@ export function RebalancePanel({ userId }: { userId: string }) {
           Review & Execute All
         </button>
       }
-      trades={data.trade_suggestions}
-      totalValue={data.total_value_usd}
       isReviewOpen={isReviewOpen}
       onCloseReview={() => setIsReviewOpen(false)}
       onConfirmReview={() => setIsReviewOpen(false)}

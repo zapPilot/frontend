@@ -4,22 +4,13 @@ import { ArrowRight } from "lucide-react";
 
 // --- Helpers ---
 
-export const usePortfolioState = () => {
-  const current = {
-    spot: 0.45,
-    lp: 0.15,
-    stable: 0.4,
-  };
-  const target = {
-    spot: 0.55,
-    lp: 0.35,
-    stable: 0.1,
-  };
-  return { current, target };
-};
+const PORTFOLIO_STATE = {
+  current: { spot: 0.45, lp: 0.15, stable: 0.4 },
+  target: { spot: 0.55, lp: 0.35, stable: 0.1 },
+} as const;
 
 export function ImpactVisual() {
-  const { current, target } = usePortfolioState();
+  const { current, target } = PORTFOLIO_STATE;
 
   return (
     <div className="space-y-6">
