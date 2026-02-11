@@ -95,11 +95,11 @@ function ChainSelector({
             width={32}
             height={32}
             className="w-8 h-8 rounded-full bg-black p-1"
-            alt={selectedChain?.name || "Chain"}
+            alt={selectedChain?.name ?? "Chain"}
           />
         }
         label="Network"
-        value={selectedChain?.name || "Select"}
+        value={selectedChain?.name ?? "Select"}
         isOpen={isOpen}
       />
 
@@ -154,11 +154,11 @@ function AssetSelector({
         onClick={onToggle}
         icon={
           <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-            {selectedSymbol?.[0] || "?"}
+            {selectedSymbol?.[0] ?? "?"}
           </div>
         }
         label="Asset"
-        value={selectedSymbol || "Select Asset"}
+        value={selectedSymbol ?? "Select Asset"}
         isOpen={isOpen}
       />
 
@@ -287,31 +287,37 @@ export function TransactionModalContent({
     handleSubmit
   );
 
+  const handleSelectChain = (selectedChainId: number): void => {
+    form.setValue("chainId", selectedChainId);
+    dropdownState.closeDropdowns();
+  };
+
+  const chainSelector = (
+    <ChainSelector
+      chainId={chainId}
+      chainList={transactionData.chainList}
+      selectedChain={selectedChain}
+      isOpen={dropdownState.isChainDropdownOpen}
+      onToggle={dropdownState.toggleChainDropdown}
+      onSelect={handleSelectChain}
+    />
+  );
+
+  const assetSelector = (
+    <AssetSelector
+      isOpen={dropdownState.isAssetDropdownOpen}
+      onToggle={dropdownState.toggleAssetDropdown}
+      selectedSymbol={transactionData.selectedToken?.symbol}
+    >
+      {assetContent}
+    </AssetSelector>
+  );
+
   return (
     <TransactionModalLayout
       dropdownRef={dropdownState.dropdownRef}
-      chainSelector={
-        <ChainSelector
-          chainId={chainId}
-          chainList={transactionData.chainList}
-          selectedChain={selectedChain}
-          isOpen={dropdownState.isChainDropdownOpen}
-          onToggle={dropdownState.toggleChainDropdown}
-          onSelect={selectedChainId => {
-            form.setValue("chainId", selectedChainId);
-            dropdownState.closeDropdowns();
-          }}
-        />
-      }
-      assetSelector={
-        <AssetSelector
-          isOpen={dropdownState.isAssetDropdownOpen}
-          onToggle={dropdownState.toggleAssetDropdown}
-          selectedSymbol={transactionData.selectedToken?.symbol}
-        >
-          {assetContent}
-        </AssetSelector>
-      }
+      chainSelector={chainSelector}
+      assetSelector={assetSelector}
       formActions={<TransactionFormActionsWithForm {...formActionsProps} />}
     />
   );

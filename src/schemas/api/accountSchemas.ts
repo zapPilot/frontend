@@ -15,9 +15,6 @@ import { z } from "zod";
 /**
  * Schema for base user object
  */
-/**
- * Schema for base user object
- */
 export const userSchema = z.object({
   id: z.string(),
   // eslint-disable-next-line sonarjs/deprecation
@@ -108,7 +105,7 @@ export const healthCheckResponseSchema = z.object({
  * - Matches the existing snake_case convention at the top level
  * - Future-proofs against new API fields
  */
-const LenientEtlJobStatusSchema = z
+const lenientEtlJobStatusSchema = z
   .object({
     job_id: z.string(),
     status: z.enum(["pending", "processing", "completed", "failed"]),
@@ -137,7 +134,7 @@ const LenientEtlJobStatusSchema = z
  * Accepts API's snake_case fields directly without transformation.
  * No preprocessing needed - what the API sends is what we validate.
  */
-export const etlJobStatusResponseSchema = LenientEtlJobStatusSchema;
+export const etlJobStatusResponseSchema = lenientEtlJobStatusSchema;
 
 export const connectWalletResponseSchema = z.object({
   user_id: z.string(),

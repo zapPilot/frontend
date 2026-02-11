@@ -15,9 +15,10 @@ import {
   SubmittingState,
   TransactionModalHeader,
 } from "../components/TransactionModalParts";
-import { useTransactionData } from "../hooks/useTransactionData";
+import type { useTransactionData } from "../hooks/useTransactionData";
 import { useTransactionForm } from "../hooks/useTransactionForm";
 import { useTransactionSubmission } from "../hooks/useTransactionSubmission";
+import { useWatchedTransactionData } from "../hooks/useWatchedTransactionData";
 
 /**
  * State exposed to render prop children for custom modal content
@@ -84,18 +85,9 @@ export function TransactionModalBase({
     ...(slippage !== undefined ? { slippage } : {}),
   });
 
-  // Watch form values for data fetching
-  const chainId = form.watch("chainId");
-  const tokenAddress = form.watch("tokenAddress");
-  const amount = form.watch("amount");
-
-  // 2. Data fetching (tokens, chains, balances)
-  const transactionData = useTransactionData({
-    isOpen,
-    chainId,
-    tokenAddress,
-    amount,
-  });
+  // 2. Watch form values & fetch data (tokens, chains, balances)
+  const { chainId, tokenAddress, amount, transactionData } =
+    useWatchedTransactionData(form, isOpen);
 
   // Auto-select first token when tokens load and no token is selected
   useEffect(() => {

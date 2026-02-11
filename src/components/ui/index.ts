@@ -11,6 +11,7 @@ export {
   Skeleton as LoadingSkeleton,
   Spinner as LoadingSpinner,
   LoadingState,
+  MetricsSkeleton,
   Skeleton,
   Spinner,
 } from "./LoadingSystem";

@@ -41,6 +41,8 @@ interface ChartIndicatorProps {
   strokeWidth?: number;
 }
 
+type IndicatorVariant = NonNullable<ChartIndicatorProps["variant"]>;
+
 // =============================================================================
 // HELPERS
 // =============================================================================
@@ -63,9 +65,11 @@ function getAriaLabel(point: ChartHoverState): string {
       .filter(i => i.v >= 1)
       .map(i => `${i.l} ${formatters.percent(i.v)}`)
       .join(", ");
-    return text
-      ? `Allocation on ${date}: ${text}.`
-      : `Allocation on ${date} minimal.`;
+    if (text) {
+      return `Allocation on ${date}: ${text}.`;
+    }
+
+    return `Allocation on ${date} minimal.`;
   }
 
   if (isDrawdownHover(point)) {
@@ -87,6 +91,28 @@ function getAriaLabel(point: ChartHoverState): string {
 
 function getIndicatorColor(chartType: string): string {
   return COLOR_MAP[chartType] ?? DEFAULT_COLOR;
+}
+
+function resolveIndicatorVariant(
+  variant: IndicatorVariant,
+  hoveredPoint: ChartHoverState
+): IndicatorVariant {
+  if (variant !== "circle") {
+    return variant;
+  }
+
+  if (hoveredPoint.chartType === "asset-allocation") {
+    return "multi-circle";
+  }
+
+  if (
+    hoveredPoint.chartType === "drawdown-recovery" &&
+    hoveredPoint.isRecoveryPoint
+  ) {
+    return "flagged-circle";
+  }
+
+  return "circle";
 }
 
 // =============================================================================
@@ -160,7 +186,9 @@ function SingleCircle({
   sw: number;
 }) {
   let color = getIndicatorColor(point.chartType);
-  if (point.chartType === "sharpe") color = getSharpeColor(point.sharpe || 0);
+  if (point.chartType === "sharpe") {
+    color = getSharpeColor(point.sharpe || 0);
+  }
 
   const isHighVol = point.chartType === "volatility" && point.volatility > 25;
 
@@ -194,8 +222,9 @@ function MultiCircle({
   r: number;
   sw: number;
 }) {
-  if (point.chartType !== "asset-allocation")
+  if (point.chartType !== "asset-allocation") {
     return <SingleCircle point={point} r={r} sw={sw} />;
+  }
 
   const colors = [
     { v: point.btc, c: CHART_COLORS.btc },
@@ -288,19 +317,11 @@ export function ChartIndicator({
   radius = 6,
   strokeWidth = 2,
 }: ChartIndicatorProps) {
-  if (!hoveredPoint) return null;
-
-  let effectiveVariant = variant;
-  if (variant === "circle") {
-    if (hoveredPoint.chartType === "asset-allocation")
-      effectiveVariant = "multi-circle";
-    else if (
-      hoveredPoint.chartType === "drawdown-recovery" &&
-      hoveredPoint.isRecoveryPoint
-    )
-      effectiveVariant = "flagged-circle";
+  if (!hoveredPoint) {
+    return null;
   }
 
+  const effectiveVariant = resolveIndicatorVariant(variant, hoveredPoint);
   const props = { point: hoveredPoint, r: radius, sw: strokeWidth };
 
   switch (effectiveVariant) {

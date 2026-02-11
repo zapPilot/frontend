@@ -44,7 +44,7 @@ interface UseBundlePageResult {
 const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
 const NOOP_SWITCH_ACTIVE_WALLET = () => Promise.resolve();
 
-function useSafeQueryClient(fallback: QueryClient) {
+function useSafeQueryClient(fallback: QueryClient): QueryClient {
   try {
     return useQueryClient();
   } catch {
@@ -52,7 +52,7 @@ function useSafeQueryClient(fallback: QueryClient) {
   }
 }
 
-function useSafeWalletProvider() {
+function useSafeWalletProvider(): ReturnType<typeof useWalletProvider> | null {
   try {
     return useWalletProvider();
   } catch {
@@ -100,8 +100,15 @@ export function computeShowEmailBanner(
 }
 
 export function computeRedirectUrl(search: string): string {
-  const s = search || "";
-  return `/${s ? (s.startsWith("?") ? s : `?${s}`) : ""}`;
+  if (!search) {
+    return "/";
+  }
+
+  if (search.startsWith("?")) {
+    return `/${search}`;
+  }
+
+  return `/?${search}`;
 }
 
 /**
@@ -134,34 +141,34 @@ export function useBundlePage(
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
-  // Auto-switch wallet on mount (only for own bundles with walletId)
   useEffect(() => {
-    if (!walletId || !isConnected || !userInfo) return;
+    if (!walletId || !isConnected || userInfo?.userId !== userId) {
+      return;
+    }
 
-    const isOwnBundle = userInfo.userId === userId;
-    if (!isOwnBundle) return;
-
+    const normalizedWalletId = walletId.toLowerCase();
     const targetWallet = connectedWallets.find(
-      w => w.address.toLowerCase() === walletId.toLowerCase()
+      walletItem => walletItem.address.toLowerCase() === normalizedWalletId
     );
 
-    if (targetWallet && !targetWallet.isActive) {
-      void (async () => {
-        try {
-          await switchActiveWallet(walletId);
-          // Invalidate portfolio and wallet queries after successful switch
-          await queryClient.invalidateQueries({
-            queryKey: ["portfolio"],
-          });
-          await queryClient.invalidateQueries({
-            queryKey: ["wallets"],
-          });
-          logger.info("Cache invalidated after wallet switch");
-        } catch (err) {
-          logger.error("Failed to auto-switch wallet:", err);
-        }
-      })();
+    if (!targetWallet || targetWallet.isActive) {
+      return;
     }
+
+    void (async () => {
+      try {
+        await switchActiveWallet(walletId);
+        await queryClient.invalidateQueries({
+          queryKey: ["portfolio"],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["wallets"],
+        });
+        logger.info("Cache invalidated after wallet switch");
+      } catch (err) {
+        logger.error("Failed to auto-switch wallet:", err);
+      }
+    })();
   }, [
     walletId,
     isConnected,
@@ -172,13 +179,11 @@ export function useBundlePage(
     queryClient,
   ]);
 
-  // Compute if viewing different user's bundle (no dismissal state)
   const isDifferentUser = useMemo(
     () => computeIsDifferentUser(isConnected, userInfo?.userId, userId),
     [isConnected, userInfo?.userId, userId]
   );
 
-  // Only show banner when NOT loading AND viewing different user's bundle
   const showSwitchPrompt = !loading && isDifferentUser;
 
   const isOwnBundle = useMemo(
@@ -201,11 +206,8 @@ export function useBundlePage(
     [isConnected, isOwnBundle, userInfo?.email, emailBannerDismissed]
   );
 
-  // Local storage sync eliminated via lazy initializer above
-
-  // Load bundle user info
   useEffect(() => {
-    const loadBundleUser = async () => {
+    async function loadBundleUser(): Promise<void> {
       if (!userId) {
         setBundleNotFound(true);
         return;
@@ -222,11 +224,11 @@ export function useBundlePage(
         logger.error("Failed to load bundle user:", error);
         setBundleNotFound(true);
       }
-    };
+    }
+
     void loadBundleUser();
   }, [userId]);
 
-  // Redirect when disconnected from own bundle
   useEffect(() => {
     const ownsBundle = userInfo?.userId === userId;
     if (!isConnected && ownsBundle) {
@@ -242,7 +244,10 @@ export function useBundlePage(
   ]);
 
   const handleSwitchToMyBundle = useCallback(() => {
-    if (!userInfo?.userId) return;
+    if (!userInfo?.userId) {
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     params.set("userId", userInfo.userId);
     if (userInfo.etlJobId) {
@@ -254,9 +259,8 @@ export function useBundlePage(
     router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
   }, [router, userInfo?.userId, userInfo?.etlJobId]);
 
-  const handleStayHere = useCallback(() => {
-    // No-op: Banner will persist, user can close temporarily but it will reappear on refresh
-    // This keeps UX consistent but removes permanent dismissal
+  const handleStayHere = useCallback((): void => {
+    return;
   }, []);
 
   const openWalletManager = useCallback(() => {

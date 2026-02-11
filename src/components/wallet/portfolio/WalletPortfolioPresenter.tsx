@@ -11,7 +11,7 @@ import { WalletNavigation } from "@/components/wallet/portfolio/components/navig
 import { usePortfolioModalState } from "@/components/wallet/portfolio/hooks/usePortfolioModalState";
 import { PortfolioModals } from "@/components/wallet/portfolio/modals";
 import { DashboardView } from "@/components/wallet/portfolio/views/DashboardView";
-import { StrategyView } from "@/components/wallet/portfolio/views/strategy";
+import { InvestView } from "@/components/wallet/portfolio/views/invest/InvestView";
 import { getRegimeById } from "@/components/wallet/regime/regimeData";
 import { WalletManager } from "@/components/WalletManager";
 import type { EtlJobPollingState } from "@/hooks/wallet";
@@ -155,9 +155,9 @@ export function WalletPortfolioPresenter({
         <AnalyticsView userId={userId} />
       </div>
     ) : null,
-    strategy: (
-      <div data-testid="strategy-content">
-        <StrategyView userId={userId} />
+    invest: (
+      <div data-testid="invest-content">
+        <InvestView userId={userId} />
       </div>
     ),
   };

@@ -1,489 +1,167 @@
-# CLAUDE.md - Zap Pilot Development Guide
+# Code Style
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this
-repository.
+- Use ES modules (`import`/`export`), not CommonJS
+- Destructure imports: `import { foo } from 'bar'`
+- Use barrel exports: `import { connectWallet } from '@/services'` not deep paths
+- Double quotes for strings (Prettier enforced)
+- Arrow functions with `avoid` parens: `x => x + 1`
+- Path alias: `@/*` maps to `src/*`
 
-## Project Overview
+# TypeScript
 
-Zap Pilot is a modern DeFi portfolio management Progressive Web App built with Next.js 15, React 19,
-and TypeScript. It provides intelligent portfolio analytics, intent-based trading operations, and
-real-time APR data for optimal DeFi portfolio management.
+- Strict mode enabled with comprehensive checks
+- NO implicit any - all types must be explicit
+- NO unused locals or parameters
+- Use `type` for object shapes, `interface` for extensible contracts
+- Include TSDoc for all exported functions with `@param`, `@returns`, `@example`
 
-### Core Features
+# Testing
 
-- **Portfolio Management**: Real-time portfolio analytics with APR data and performance trends
-- **Intent-Based Trading**: ZapIn, ZapOut, and Optimize operations with unified progress tracking
-- **Bundle Sharing**: Deep-linked portfolio sharing with visitor/owner modes
-- **Multi-Chain Support**: Ethereum, Polygon, and other EVM chains via ThirdWeb SDK
-- **Pool Analytics**: Individual pool performance analysis with underperforming position
-  identification
-- **PWA Support**: Offline-capable mobile app with service worker integration
-
-## Architecture
-
-This is a static-export Next.js application with a service-first, component-based architecture:
-
-- **Service Layer**: All API operations use service functions (`src/services/`)
-- **Component System**: Feature-based organization with reusable UI components
-- **State Management**: React Query for API state, React Context for global state
-- **Type Safety**: Comprehensive TypeScript with strict configuration
-- **Security**: Hardened CSP headers and security best practices
-
-### Key Architectural Patterns
-
-- **Service Functions**: Plain functions for all API operations (no classes)
-- **Custom Hooks**: Business logic encapsulation and state management
-- **Component Composition**: Reusable components with clear prop interfaces
-- **Error Boundary**: Comprehensive error handling with user-friendly fallbacks
-- **Performance**: React.memo, useMemo, and lazy loading for optimization
-
-### Provider Stack
-
-The application uses a lightweight provider composition that wraps the app with essential context:
-
-```
-QueryProvider  →  SimpleWeb3Provider  →  WalletProvider  →  App
+```bash
+npm run test:unit           # Run unit tests (memory optimized)
+npm run test:e2e           # Run Playwright E2E tests
+npm run test:coverage      # Check coverage thresholds (90% required)
+npm run type-check         # ALWAYS run before committing
 ```
 
-#### QueryProvider
+- Unit tests in `tests/unit/`, E2E in `tests/e2e/`
+- Use `renderWithProviders()` from `tests/test-utils.tsx` for component tests
+- Mock service functions, not implementation details
+- Coverage thresholds: 90% statements/functions/lines, 85% branches
 
-- Wraps the app with a shared `QueryClient` from TanStack Query
-- Enables React Query Devtools only when `NODE_ENV=development` **and**
-  `NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS=1`
-- Provides caching and state management for all API operations
+# Architecture Patterns
 
-#### SimpleWeb3Provider
+**IMPORTANT: Use service functions for ALL API operations**
 
-- Thin wrapper around `ThirdwebProvider`
-- Environment variables are read directly by Thirdweb's SDK
-- No custom configuration required for basic wallet operations
+```typescript
+// ✅ Correct - service function pattern
+import { getPortfolioAPR } from "@/services/analyticsService";
+const data = await getPortfolioAPR(userId);
 
-#### WalletProvider
+// ❌ Wrong - no classes or direct fetch calls
+const client = new APIClient();
+const data = await fetch("/api/...");
+```
 
-- Bridges Thirdweb React hooks into a simplified context
-- Exposes a unified wallet interface:
-  ```typescript
-  {
-    account: { address, isConnected, balance? } | null;
-    chain: { id, name, symbol } | null;
-    connect(): Promise<void>;
-    disconnect(): Promise<void>;
-    switchChain(chainId: number): Promise<void>;
-    signMessage(message: string): Promise<string>;
-    isConnected: boolean;
-    isConnecting: boolean;
-    isDisconnecting: boolean;
-    error: { message; code? } | null;
-    clearError(): void;
-  }
-  ```
-- Access via `useWalletProvider()` hook
-- Error handling through `walletLogger` with promise rejection handling
+- Service functions in `src/services/` (plain functions, no classes)
+- Custom hooks in `src/hooks/` for business logic
+- React Query for API state management
+- React Context only for global state (wallet, onboarding)
+- Component state for UI-only concerns
 
-#### Provider Composition
+# Component Patterns
 
-```tsx
-import { QueryProvider } from "@/providers/QueryProvider";
-import { SimpleWeb3Provider } from "@/providers/SimpleWeb3Provider";
-import { WalletProvider } from "@/providers/WalletProvider";
+- Feature-based organization: `components/FeatureName/`
+- Memoize expensive components with `React.memo`
+- Use `useMemo`/`useCallback` for expensive computations
+- Props interfaces for all components
+- Error boundaries for async operations
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <QueryProvider>
-      <SimpleWeb3Provider>
-        <WalletProvider>{children}</WalletProvider>
-      </SimpleWeb3Provider>
-    </QueryProvider>
-  );
+# API Integration
+
+**Service function structure:**
+
+```typescript
+// src/services/myService.ts
+export async function fetchData(params: Params): Promise<Result> {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error("Failed");
+  return response.json();
 }
 ```
 
-#### Usage Example
-
-```tsx
-import { useWalletProvider } from "@/providers/WalletProvider";
-
-const ConnectButton = () => {
-  const { account, connect, disconnect, isConnected } = useWalletProvider();
-
-  return isConnected ? (
-    <button onClick={disconnect}>Disconnect {account?.address}</button>
-  ) : (
-    <button onClick={connect}>Connect Wallet</button>
-  );
-};
-```
-
-## Project Structure & Module Organization
-
-- `src/app`: Next.js App Router entry points (`layout.tsx`, `page.tsx`)
-- `src/components`: Reusable UI components organized by feature
-  - `ui/`: Design system components (buttons, cards, loading states)
-  - `PortfolioAllocation/`: Main portfolio management feature
-  - `SwapPage/`: Trading and optimization interface
-  - `Web3/`: Wallet connectivity and chain management
-  - `PoolAnalytics/`: Pool performance analysis components
-  - `shared/`: Cross-feature shared components
-- `src/hooks`: Custom hooks for business logic and state management
-- `src/services`: API integration service functions
-- `src/lib`: Utilities, formatters, and helper functions
-- `src/types`: TypeScript type definitions
-- `src/config`: Configuration files and constants
-- `public/`: Static assets and PWA configuration
-
-## Development Commands
-
-### Core Development
-
-```bash
-npm run dev          # Start Next.js dev server (Turbopack) at localhost:3000
-npm run dev:turbo    # Explicit Turbopack mode
-npm run dev:webpack  # Fallback to Webpack mode
-npm run build        # Production build with static export
-npm run start        # Serve production build
-```
-
-### Code Quality & Testing
-
-```bash
-npm run lint            # ESLint check with auto-fix
-npm run lint:fix        # Fix all auto-fixable issues
-npm run format          # Prettier formatting
-npm run format:check    # Check formatting without changes
-npm run type-check      # TypeScript type checking
-
-# Testing
-npm test                # Run Vitest tests (memory optimized)
-npm run test:unit       # Unit tests only
-npm run test:integration # Integration tests
-npm run test:watch      # Watch mode
-npm run test:coverage   # Coverage report with thresholds
-npm run test:safe       # Memory-safe test runner
-npm run test:e2e        # Playwright E2E tests
-npm run test:e2e:ui     # Playwright with UI mode
-npm run test:e2e:debug  # Debug mode for E2E tests
-npm run test:all        # Full test suite (coverage + E2E)
-```
-
-## Key API Integration Points
-
-### Service Architecture
-
-All API operations use service functions for consistency:
+**React Query integration:**
 
 ```typescript
-// src/services/accountService.ts - User & wallet management
-export async function connectWallet(address: string): Promise<UserProfile>;
-export async function addWallet(userId: string, walletData: WalletData): Promise<Wallet>;
-
-// src/services/intentService.ts - Transaction execution
-export async function executeZapIn(request: ZapInRequest): Promise<TransactionResult>;
-export async function executeOptimize(request: OptimizeRequest): Promise<OptimizationResult>;
-
-// src/services/analyticsService.ts - Portfolio analytics
-export async function getPortfolioAPR(userId: string): Promise<PortfolioAPRData>;
-export async function getPoolPerformance(userId: string): Promise<PoolPerformanceData[]>;
-```
-
-### React Query Integration
-
-API state management uses React Query patterns:
-
-```typescript
-// Custom hooks in src/hooks/queries/
-export function usePortfolioQuery(userId: string) {
+// src/hooks/queries/useMyData.ts
+export function useMyData(id: string) {
   return useQuery({
-    queryKey: ["portfolio", userId],
-    queryFn: () => analyticsService.getPortfolioData(userId),
+    queryKey: ["myData", id],
+    queryFn: () => myService.fetchData(id),
   });
 }
 ```
 
-## Bundle Sharing System
+# Environment Variables
 
-### URL Structure
-
-- **Bundle URL**: `/bundle?userId=<wallet-address>`
-- **Owner Mode**: Connected user viewing their own bundle (full functionality)
-- **Visitor Mode**: Viewing someone else's bundle or disconnected viewing (read-only)
-
-### Implementation Components
-
-- `BundlePageEntry`: URL parameter extraction and routing
-- `BundlePageClient`: Page-level logic with switch banner management
-- `SwitchPromptBanner`: Banner for connected users viewing other bundles
-- `bundleService`: URL generation and ownership logic
-
-## Component Development Patterns
-
-### UI Component Structure
-
-```typescript
-// src/components/ui/ - Design system components
-interface ButtonProps {
-  variant?: "primary" | "secondary" | "outline";
-  size?: "sm" | "md" | "lg";
-  loading?: boolean;
-  children: React.ReactNode;
-}
-
-export function GradientButton({ variant = "primary", ...props }: ButtonProps) {
-  // Implementation with consistent styling and animation
-}
-```
-
-### Feature Component Organization
-
-```typescript
-// src/components/PortfolioAllocation/ - Feature-based structure
-PortfolioAllocation/
-├── components/        # Feature-specific UI components
-├── hooks/            # Business logic hooks
-├── types.ts          # Domain types
-├── utils/            # Feature utilities
-└── index.ts          # Public API exports
-```
-
-### Custom Hook Patterns
-
-```typescript
-// Business logic encapsulation
-export function usePortfolioDataProgressive(userId: string) {
-  const landing = useLandingPageData(userId);
-  const sentiment = useSentimentData();
-  const regimeHistory = useRegimeHistory();
-
-  return {
-    landing: landing.data,
-    sentiment: sentiment.data,
-    regimeHistory: regimeHistory.data,
-    isLoading: landing.isLoading,
-    error: landing.error,
-  };
-}
-```
-
-## Styling & Design System
-
-### Tailwind CSS Configuration
-
-- **Framework**: Tailwind CSS v4 with PostCSS
-- **Theme**: Custom purple-blue gradients with glass morphism
-- **Responsive**: Mobile-first design with desktop enhancements
-- **Dark Mode**: Default dark theme optimized for DeFi applications
-
-### Design Tokens
-
-```typescript
-// src/constants/design-system.ts
-export const Z_INDEX = {
-  CONTENT: "z-10",
-  BANNER: "z-20",
-  HEADER: "z-30",
-  MODAL: "z-40",
-  TOOLTIP: "z-50",
-};
-
-export const HEADER = {
-  HEIGHT: "h-16",
-  TOP_OFFSET: "top-16",
-};
-```
-
-### Animation System
-
-- **Framework**: Framer Motion for declarative animations
-- **Performance**: GPU-accelerated transforms and transitions
-- **Patterns**: Stagger animations, fade transitions, and micro-interactions
-
-## Web3 Integration
-
-### Wallet Connectivity
-
-- **SDK**: ThirdWeb SDK v5 for wallet management
-- **Chains**: Multi-chain support with chain switching
-- **Authentication**: Wallet-based user authentication
-
-### Transaction Handling
-
-```typescript
-// Intent-based transaction execution
-const { mutate: executeZapIn, isPending } = useMutation({
-  mutationFn: intentService.executeZapIn,
-  onSuccess: result => {
-    // Handle successful transaction
-  },
-  onError: error => {
-    // Handle transaction error
-  },
-});
-```
-
-## Testing Strategy
-
-### Unit Testing (Vitest)
-
-- **Location**: `tests/unit/` directory
-- **Patterns**: Component testing with React Testing Library
-- **Mocking**: Service function mocks for isolation
-- **Coverage**: Minimum 80% coverage threshold
-
-### E2E Testing (Playwright)
-
-- **Location**: `tests/` directory with `.spec.ts` files
-- **Coverage**: Critical user flows and wallet interactions
-- **Mobile**: Responsive testing across device sizes
-
-### Testing Best Practices
-
-```typescript
-// Component testing example
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-
-function renderWithProviders(component: ReactElement) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } }
-  })
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      {component}
-    </QueryClientProvider>
-  )
-}
-```
-
-## Performance Optimization
-
-### Build Optimization
-
-- **Static Export**: Pre-rendered static site generation
-- **Code Splitting**: Route-based and component-level splitting
-- **Tree Shaking**: Automatic unused code elimination
-- **Image Optimization**: Next.js image optimization with CDN support
-
-### Runtime Performance
-
-- **React Query Caching**: Intelligent API response caching with stale-while-revalidate
-- **Component Memoization**: React.memo for expensive components
-- **Hook Optimization**: useMemo and useCallback for computation caching
-- **Animation Performance**: CSS transforms for smooth 60fps animations
-
-## Security & Compliance
-
-### Content Security Policy
-
-- **Strict CSP**: Comprehensive headers preventing XSS attacks
-- **Web3 Security**: Secure wallet connection domains
-- **Development/Production**: Environment-specific security policies
-
-### Data Protection
-
-- **Input Validation**: Comprehensive form validation with Zod schemas
-- **Error Handling**: Safe error messages without data leakage
-- **Wallet Security**: Read-only portfolio access for visitor mode
-
-## Development Workflow
-
-### Code Quality Gates
-
-1. **Pre-commit Hooks**: Husky + lint-staged for automated checks
-2. **TypeScript**: Strict type checking with no implicit any
-3. **ESLint**: Comprehensive linting with Next.js and React rules
-4. **Prettier**: Consistent code formatting
-
-### Development Best Practices
-
-- **Service Functions**: Use service functions for all API operations
-- **Type Safety**: Comprehensive TypeScript types for all data structures
-- **Error Boundaries**: Wrap components with error boundaries
-- **Loading States**: Provide loading and error states for all async operations
-- **Accessibility**: ARIA labels and keyboard navigation support
-
-### Testing Before Commits
+Required in `.env.local`:
 
 ```bash
-# Recommended pre-commit sequence
-npm run type-check    # TypeScript compilation
-npm run lint         # ESLint fixes
-npm run test:unit    # Unit test suite
-npm run test:e2e     # E2E test suite (if relevant changes)
+NEXT_PUBLIC_THIRDWEB_CLIENT_ID=     # Web3 wallet connectivity
+NEXT_PUBLIC_API_URL=                # Account API endpoint
+NEXT_PUBLIC_ANALYTICS_ENGINE_URL=   # Analytics API endpoint
+NEXT_PUBLIC_INTENT_ENGINE_URL=      # Transaction execution API
 ```
 
-### Memory Management
+# Development Workflow
 
-Due to the complex nature of the application, use memory-optimized commands:
-
-- Use `npm run test:safe` for memory-constrained environments
-- Use `npm run dev` with NODE_OPTIONS for development
-- Monitor test execution with `--maxConcurrency=1` for stability
-
-## AI Development Support
-
-This project includes comprehensive AI agent configuration:
-
-- **Architecture Memory**: `.serena/memories/architecture_overview.md`
-- **Component Inventory**: `.serena/memories/component_inventory.md`
-- **Service Documentation**: `docs/SERVICES.md` for API integration patterns
-- **Layer Management**: `docs/LAYERING.md` for z-index and positioning standards
-
-### AI-Friendly Patterns
-
-#### Barrel Exports (Clean Imports)
-
-Use centralized imports for cleaner code:
-
-```typescript
-// ✅ Preferred - barrel imports
-import { connectWallet, getUserProfile } from "@/services";
-import { formatCurrency, logger } from "@/utils";
-import type { AnalyticsData, PortfolioAllocationData } from "@/types";
-
-// ❌ Avoid - deep imports
-import { connectWallet } from "@/services/accountService";
-import { formatCurrency } from "@/utils/formatters";
+```bash
+npm run dev              # Start dev server (Turbopack default)
+npm run dev:webpack      # Use Webpack if Turbopack issues
+npm run lint:fix         # Auto-fix linting issues
+npm run format           # Format all files
 ```
 
-**Available Barrels:**
+**Before committing:**
 
-| Path              | Contents                                  |
-| ----------------- | ----------------------------------------- |
-| `@/services`      | All API service functions + types         |
-| `@/types`         | Domain, UI, and analytics types           |
-| `@/utils`         | Formatters, logger, clipboard, math utils |
-| `@/hooks`         | All React hooks (queries, UI, wallet)     |
-| `@/adapters`      | Data transformation adapters              |
-| `@/components/ui` | Design system components                  |
+1. `npm run type-check` - TypeScript must pass
+2. `npm run lint` - No ESLint errors
+3. `npm run test:unit` - Tests must pass
+4. Pre-commit hook runs automatically (type-check, lint, tests, deadcode, duplicates)
 
-#### TSDoc Standards
+# Common Gotchas
 
-All exported functions include comprehensive TSDoc:
+- **Memory**: Use `cross-env NODE_OPTIONS=--max-old-space-size=3072` for dev/build
+- **Static Export**: `output: 'export'` in next.config.ts - no server-side features
+- **CSP Headers**: Strict Content-Security-Policy - test new external domains in dev first
+- **Wallet Provider**: Access via `useWalletProvider()` hook, not direct Thirdweb hooks
+- **Bundle URLs**: `/bundle?userId=<address>` - handle owner vs visitor mode
+- **API Schema**: Analytics API uses new field names (`daily_values` not `daily_totals`)
 
-````typescript
-/**
- * Brief description of what the function does.
- *
- * @param paramName - Description of parameter
- * @returns Description of return value
- *
- * @example
- * ```typescript
- * const result = await myFunction(param);
- * ```
- */
-````
+# Performance
 
-#### Testing Helpers
+- React Query caching: 5min stale time for analytics data
+- Component memoization for charts and expensive renders
+- Lazy load routes and heavy components
+- GPU-accelerated animations (CSS transforms only)
 
-- **Test Utils**: `tests/test-utils.tsx` - Provider wrappers for component tests
-- **Fixtures**: `tests/fixtures/` - Reusable test data
-- **Mocks**: `tests/mocks/` - Service mocks for isolated testing
-- **Helpers**: `tests/helpers/` - Common test utilities
+# Security
 
-The codebase is designed with AI-friendly patterns, comprehensive documentation, and consistent
-conventions to facilitate automated development and maintenance.
+- NEVER commit secrets or API keys
+- Validate all user inputs with Zod schemas
+- Use CSP-compliant inline styles (Tailwind safe)
+- Wallet addresses are case-sensitive - use checksummed format
 
----
+# Project-Specific Rules
 
-_Last updated: 2026-01-04 | Zap Pilot v0.1.0 | Next.js 15 + React 19 + TypeScript 5_
+**YOU MUST follow these patterns:**
+
+1. **Service Functions Only** - No API client classes, use plain functions
+2. **Barrel Imports** - Use `@/services`, `@/types`, `@/utils` not deep paths
+3. **Type Safety** - All function params and returns must have explicit types
+4. **Error Handling** - Wrap async operations in try-catch or React Query error states
+5. **Testing** - New features require unit tests with 90% coverage
+6. **TSDoc** - All exported functions need documentation with examples
+
+# Files to Never Modify
+
+- `package-lock.json` - Use `npm install` only
+- `.next/` - Build output, auto-generated
+- `coverage/` - Test coverage reports
+- `playwright-report/` - E2E test results
+- `tsconfig.tsbuildinfo` - TypeScript cache
+
+# Quick Reference
+
+| Task             | Command                  |
+| ---------------- | ------------------------ |
+| Add dependency   | `npm install <package>`  |
+| Type check       | `npm run type-check`     |
+| Fix linting      | `npm run lint:fix`       |
+| Run tests        | `npm run test:unit`      |
+| Check coverage   | `npm run test:coverage`  |
+| Find dead code   | `npm run deadcode:check` |
+| Find duplicates  | `npm run dup:check`      |
+| E2E tests        | `npm run test:e2e`       |
+| E2E debug        | `npm run test:e2e:debug` |
+| Build production | `npm run build`          |

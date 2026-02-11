@@ -118,14 +118,14 @@ exports[`WalletNavigation Component > renders correctly with search bar (snapsho
           </span>
         </button>
         <button
-          aria-label="Strategy tab"
+          aria-label="Invest tab"
           class="px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-2 cursor-pointer text-gray-400 hover:text-gray-200 hover:bg-gray-800/50 hover:border-purple-500/20 border border-transparent"
-          data-testid="v22-tab-strategy"
+          data-testid="v22-tab-invest"
           role="button"
         >
           <svg
             aria-hidden="true"
-            class="lucide lucide-compass w-4 h-4"
+            class="lucide lucide-flask-conical w-4 h-4"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -137,18 +137,19 @@ exports[`WalletNavigation Component > renders correctly with search bar (snapsho
             xmlns="http://www.w3.org/2000/svg"
           >
             <path
-              d="m16.24 7.76-1.804 5.411a2 2 0 0 1-1.265 1.265L7.76 16.24l1.804-5.411a2 2 0 0 1 1.265-1.265z"
+              d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"
             />
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
+            <path
+              d="M6.453 15h11.094"
+            />
+            <path
+              d="M8.5 2h7"
             />
           </svg>
           <span
             class="hidden sm:inline"
           >
-            Strategy
+            Invest
           </span>
         </button>
       </div>

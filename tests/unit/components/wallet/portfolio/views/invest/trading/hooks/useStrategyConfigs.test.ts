@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, Mock, vi } from "vitest";
 import {
   strategyConfigKeys,
   useStrategyConfigs,
-} from "@/components/wallet/portfolio/views/strategy/hooks/useStrategyConfigs";
+} from "@/components/wallet/portfolio/views/invest/trading/hooks/useStrategyConfigs";
 import { getStrategyConfigs } from "@/services/strategyService";
 import type { StrategyPreset } from "@/types/strategy";
 

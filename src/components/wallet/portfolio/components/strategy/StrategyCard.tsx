@@ -35,21 +35,57 @@ const STYLES = {
     "w-16 h-16 rounded-xl flex items-center justify-center text-2xl font-bold border shadow-inner flex-shrink-0",
 } as const;
 
-/** Get card className based on expanded state */
-const getCardClassName = (isExpanded: boolean): string =>
-  `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
+function getCardClassName(isExpanded: boolean): string {
+  return `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
+}
 
-/** Determine active direction based on user selection, data, and available strategies */
-const determineActiveDirection = (
+function findRegimeById(
+  regimeId: string | null | undefined
+): Regime | undefined {
+  if (!regimeId) {
+    return undefined;
+  }
+
+  return regimes.find(regime => regime.id === regimeId);
+}
+
+function resolveEffectiveRegime(
+  currentRegime: Regime | undefined,
+  sentimentSection: SectionState<SentimentData> | undefined
+): Regime | undefined {
+  if (currentRegime) {
+    return currentRegime;
+  }
+
+  const derivedRegimeId = sentimentSection?.data
+    ? getRegimeFromStatus(sentimentSection.data.status)
+    : undefined;
+
+  return findRegimeById(derivedRegimeId);
+}
+
+function resolveDisplayRegime(
+  selectedRegimeId: string | null,
+  effectiveRegime: Regime | undefined
+): Regime | undefined {
+  return findRegimeById(selectedRegimeId) ?? effectiveRegime;
+}
+
+function determineActiveDirection(
   displayRegime: Regime | undefined,
   selectedDirection: StrategyDirection | null,
   isViewingCurrent: boolean,
   data: WalletPortfolioDataWithDirection
-): StrategyDirection => {
-  if (!displayRegime) return "default";
+): StrategyDirection {
+  if (!displayRegime) {
+    return "default";
+  }
 
-  const hasStrategy = (dir: StrategyDirection) =>
-    displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies];
+  function hasStrategy(dir: StrategyDirection): boolean {
+    return Boolean(
+      displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies]
+    );
+  }
 
   if (selectedDirection && hasStrategy(selectedDirection)) {
     return selectedDirection;
@@ -72,13 +108,32 @@ const determineActiveDirection = (
   }
 
   return "default";
-};
+}
 
-/** Render sentiment display badge */
-const renderSentimentDisplay = (
+function resolveTargetAllocation(
+  activeStrategy: Regime["strategies"][keyof Regime["strategies"]] | undefined,
+  displayRegime: Regime | undefined
+): { spot: number; lp: number; stable: number } {
+  const allocationAfter = activeStrategy?.useCase?.allocationAfter;
+  if (allocationAfter) {
+    return {
+      spot: allocationAfter.spot,
+      lp: allocationAfter.lp,
+      stable: allocationAfter.stable,
+    };
+  }
+
+  if (displayRegime) {
+    return getRegimeAllocation(displayRegime);
+  }
+
+  return { spot: 0, lp: 0, stable: 0 };
+}
+
+function renderSentimentDisplay(
   sentimentSection: SectionState<SentimentData> | undefined,
   fallbackValue: string | number | undefined
-): React.ReactNode => {
+): React.ReactNode {
   if (sentimentSection?.isLoading) {
     return (
       <span
@@ -96,7 +151,7 @@ const renderSentimentDisplay = (
       {sentimentSection?.data?.value ?? fallbackValue ?? "—"}
     </span>
   );
-};
+}
 
 export interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
@@ -110,52 +165,32 @@ export interface StrategyCardProps {
 export function StrategyCard({
   data,
   currentRegime,
-  // isEmptyState intentionally not destructured - kept in props for API consistency
   isLoading = false,
   sentimentSection,
 }: StrategyCardProps) {
-  // Show skeleton during loading - must be before hooks for consistency
-  // but after destructuring (which is before hooks anyway)
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
   const [selectedDirection, setSelectedDirection] =
     useState<StrategyDirection | null>(null);
 
-  // Early return for loading state - AFTER hooks to comply with React rules
   if (isLoading) {
     return <StrategyCardSkeleton />;
   }
 
-  // independent sentiment data but no explicit regime (because main data is loading),
-  // we can derive the regime from the sentiment value to show the full card immediately.
-  const derivedRegimeId = sentimentSection?.data
-    ? getRegimeFromStatus(sentimentSection.data.status)
-    : undefined;
+  const effectiveRegime = resolveEffectiveRegime(
+    currentRegime,
+    sentimentSection
+  );
 
-  const effectiveRegime =
-    currentRegime ||
-    (derivedRegimeId ? regimes.find(r => r.id === derivedRegimeId) : undefined);
-
-  // Only return null if we truly have no regime info (neither explicit nor derived)
   if (!effectiveRegime && !sentimentSection) {
     return null;
   }
 
-  // Determine which regime to display (selected or current)
-  // If user selects a regime, we show that. Otherwise we show the effective regime.
-  const displayRegime = selectedRegimeId
-    ? regimes.find(r => r.id === selectedRegimeId) || effectiveRegime
-    : effectiveRegime;
+  const displayRegime = resolveDisplayRegime(selectedRegimeId, effectiveRegime);
+  const isViewingCurrent = Boolean(
+    displayRegime && effectiveRegime && displayRegime.id === effectiveRegime.id
+  );
 
-  // Use effectiveRegime for comparison
-  const isViewingCurrent =
-    displayRegime && effectiveRegime
-      ? displayRegime.id === effectiveRegime.id
-      : false;
-
-  // Extract directional strategy metadata (safely handle missing fields)
-
-  // Determine the active strategy to display
   const activeDirection = determineActiveDirection(
     displayRegime,
     selectedDirection,
@@ -168,17 +203,10 @@ export function StrategyCard({
       displayRegime.strategies.default
     : undefined;
 
-  // Calculate target allocation from strategy or regime
-  // Prefer strategy-specific 'allocationAfter' if defined, otherwise use regime default
-  const targetAllocation = activeStrategy?.useCase?.allocationAfter
-    ? {
-        spot: activeStrategy.useCase.allocationAfter.spot,
-        lp: activeStrategy.useCase.allocationAfter.lp,
-        stable: activeStrategy.useCase.allocationAfter.stable,
-      }
-    : displayRegime
-      ? getRegimeAllocation(displayRegime)
-      : { spot: 0, lp: 0, stable: 0 };
+  const targetAllocation = resolveTargetAllocation(
+    activeStrategy,
+    displayRegime
+  );
 
   const sentimentDisplay = renderSentimentDisplay(
     sentimentSection,
@@ -195,14 +223,12 @@ export function StrategyCard({
       layout
       className={getCardClassName(isStrategyExpanded)}
       onClick={e => {
-        // Prevent collapsing if we don't have a regime to show details for
         if (!displayRegime) return;
 
-        // Prevent collapsing when clicking on interactive elements inside
         if ((e.target as HTMLElement).closest('[data-interactive="true"]')) {
           return;
         }
-        setIsStrategyExpanded(!isStrategyExpanded);
+        setIsStrategyExpanded(previous => !previous);
       }}
     >
       {/* Background Icon */}
