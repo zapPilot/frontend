@@ -4,6 +4,7 @@ import { httpUtils } from "@/lib/http";
 import {
   _enrichTimelineWithDma200 as enrichTimelineWithDma200,
   _sampleTimelineData as sampleTimelineData,
+  getBacktestingStrategiesV3,
   MAX_CHART_POINTS,
   MIN_CHART_POINTS,
   runBacktest,
@@ -54,15 +55,18 @@ function createTimelinePoint(
 }
 
 const analyticsEnginePostSpy = vi.spyOn(httpUtils.analyticsEngine, "post");
+const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
 
 describe("backtestingService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     analyticsEnginePostSpy.mockReset();
+    analyticsEngineGetSpy.mockReset();
   });
 
   afterAll(() => {
     analyticsEnginePostSpy.mockRestore();
+    analyticsEngineGetSpy.mockRestore();
   });
 
   describe("runBacktest", () => {
@@ -184,6 +188,20 @@ describe("backtestingService", () => {
 
       expect(result[199]?.dma_200).toBeCloseTo(expectedAt199, 10);
     });
+
+    it("resets dma_200 to null when encountering empty token_price", () => {
+      const timeline = Array.from({ length: 205 }, (_, i) => {
+        const point = createTimelinePoint(i);
+        if (i === 201) return { ...point, token_price: {} };
+        return point;
+      });
+
+      const result = enrichTimelineWithDma200(timeline);
+
+      for (let i = 201; i <= 204; i++) {
+        expect(result[i]?.dma_200).toBeNull();
+      }
+    });
   });
 
   describe("sampleTimelineData", () => {
@@ -227,6 +245,48 @@ describe("backtestingService", () => {
 
       expect(result.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
       expect(result.length).toBeLessThan(timeline.length);
+    });
+
+    it("returns only critical points when events exhaust all slots", () => {
+      // Create timeline where 140+ points have transfers - exceeds MAX_CHART_POINTS
+      const timeline = Array.from({ length: 500 }, (_, i) =>
+        createTimelinePoint(i, { withTransfers: i > 0 && i < 141 })
+      );
+      const result = sampleTimelineData(timeline);
+
+      // All returned points should be critical (first, last, or transfer points)
+      expect(result.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
+      expect(result.length).toBeGreaterThan(0);
+
+      // First and last points preserved
+      expect(result[0]?.date).toBe(timeline[0]?.date);
+      expect(result[result.length - 1]?.date).toBe(
+        timeline[timeline.length - 1]?.date
+      );
+    });
+  });
+
+  describe("getBacktestingStrategiesV3", () => {
+    it("calls the v3 strategies endpoint via GET", async () => {
+      const mockStrategies = {
+        strategies: [{ id: "dca_classic", name: "DCA Classic" }],
+      };
+      analyticsEngineGetSpy.mockResolvedValue(mockStrategies);
+
+      const result = await getBacktestingStrategiesV3();
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v3/backtesting/strategies"
+      );
+      expect(result).toEqual(mockStrategies);
+    });
+
+    it("propagates API errors using the backtesting error mapper", async () => {
+      analyticsEngineGetSpy.mockRejectedValue(new Error("API Error"));
+
+      await expect(getBacktestingStrategiesV3()).rejects.toThrow(
+        "An unexpected error occurred while running the backtest."
+      );
     });
   });
 });

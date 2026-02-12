@@ -12,6 +12,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { httpUtils } from "@/lib/http";
 
 import {
+  getBorrowingPositions,
   getLandingPagePortfolioData,
   getPortfolioDashboard,
   type LandingPageResponse,
@@ -670,6 +671,52 @@ describe("analyticsService", () => {
 
       await expect(getDailyYieldReturns(testUserId)).rejects.toThrow(
         "Failed to fetch yield data"
+      );
+    });
+  });
+
+  describe("getBorrowingPositions", () => {
+    const testUserId = "0xBorrowingUser";
+
+    const mockBorrowingResponse = {
+      positions: [
+        {
+          protocol_id: "aave-v3",
+          protocol_name: "Aave V3",
+          chain: "ethereum",
+          health_rate: 1.8,
+          health_status: "HEALTHY",
+          collateral_usd: 5000,
+          debt_usd: 2000,
+          net_value_usd: 3000,
+          collateral_tokens: [{ symbol: "ETH", amount: 2.5, value_usd: 5000 }],
+          debt_tokens: [{ symbol: "USDC", amount: 2000, value_usd: 2000 }],
+          updated_at: "2025-02-07T12:00:00Z",
+        },
+      ],
+      total_collateral_usd: 5000,
+      total_debt_usd: 2000,
+      worst_health_rate: 1.8,
+      last_updated: "2025-02-07T12:00:00Z",
+    };
+
+    it("should call correct endpoint and return validated response", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(mockBorrowingResponse);
+
+      const result = await getBorrowingPositions(testUserId);
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        `/api/v2/analytics/${testUserId}/borrowing/positions`
+      );
+      expect(result).toEqual(mockBorrowingResponse);
+    });
+
+    it("should propagate HTTP errors", async () => {
+      const error = new Error("Failed to fetch borrowing positions");
+      analyticsEngineGetSpy.mockRejectedValue(error);
+
+      await expect(getBorrowingPositions(testUserId)).rejects.toThrow(
+        "Failed to fetch borrowing positions"
       );
     });
   });
