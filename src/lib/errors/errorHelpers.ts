@@ -10,13 +10,7 @@
 import { getIntentErrorMessage } from "@/lib/errors/errorMessages";
 
 import { resolveErrorMessage } from "./errorFactory";
-import {
-  AccountServiceError,
-  AnalyticsServiceError,
-  BundleServiceError,
-  IntentServiceError,
-  type ServiceError,
-} from "./ServiceError";
+import { IntentServiceError, type ServiceError } from "./ServiceError";
 
 /**
  * Check if error is a client error (4xx status code)
@@ -130,13 +124,6 @@ export function extractErrorCode(error: unknown): string | undefined {
 // Factory Functions
 // ============================================================================
 
-type ServiceErrorConstructor<T extends ServiceError> = new (
-  message: string,
-  status: number,
-  code?: string,
-  details?: Record<string, unknown>
-) => T;
-
 function buildErrorContext(error: unknown, fallbackMessage: string) {
   const status = extractStatusCode(error);
   const code = extractErrorCode(error);
@@ -156,24 +143,6 @@ function buildErrorContext(error: unknown, fallbackMessage: string) {
   );
 
   return { status, code, errorObj, message };
-}
-
-function createServiceError<T extends ServiceError>(
-  ErrorClass: ServiceErrorConstructor<T>,
-  error: unknown,
-  fallbackMessage: string
-): T {
-  const { status, code, errorObj, message } = buildErrorContext(
-    error,
-    fallbackMessage
-  );
-
-  return new ErrorClass(
-    message,
-    status,
-    code,
-    errorObj.details as Record<string, unknown> | undefined
-  );
 }
 
 /**
@@ -222,46 +191,4 @@ export function createIntentServiceError(error: unknown): IntentServiceError {
     code,
     errorObj.details as Record<string, unknown> | undefined
   );
-}
-
-/**
- * Create AccountServiceError from unknown error
- *
- * @param error - Raw error object
- * @param fallbackMessage - Default message if none found
- * @returns Formatted AccountServiceError
- */
-export function createAccountServiceError(
-  error: unknown,
-  fallbackMessage = "Account service error"
-): AccountServiceError {
-  return createServiceError(AccountServiceError, error, fallbackMessage);
-}
-
-/**
- * Create AnalyticsServiceError from unknown error
- *
- * @param error - Raw error object
- * @param fallbackMessage - Default message if none found
- * @returns Formatted AnalyticsServiceError
- */
-export function createAnalyticsServiceError(
-  error: unknown,
-  fallbackMessage = "Analytics service error"
-): AnalyticsServiceError {
-  return createServiceError(AnalyticsServiceError, error, fallbackMessage);
-}
-
-/**
- * Create BundleServiceError from unknown error
- *
- * @param error - Raw error object
- * @param fallbackMessage - Default message if none found
- * @returns Formatted BundleServiceError
- */
-export function createBundleServiceError(
-  error: unknown,
-  fallbackMessage = "Bundle service error"
-): BundleServiceError {
-  return createServiceError(BundleServiceError, error, fallbackMessage);
 }

@@ -18,12 +18,10 @@ export interface UseBacktestResultReturn {
   summary: { strategies: BacktestResponse["strategies"] } | null;
   sortedStrategyIds: string[];
   actualDays: number;
-  daysDisplay: string;
 }
 
 export function useBacktestResult(
-  response: BacktestResponse | null,
-  requestedDays?: number
+  response: BacktestResponse | null
 ): UseBacktestResultReturn {
   const strategyIds = useMemo(() => {
     if (!response) return [];
@@ -53,17 +51,6 @@ export function useBacktestResult(
     return sortStrategyIds(strategyIds);
   }, [strategyIds]);
 
-  const daysDisplay = useMemo(() => {
-    if (
-      requestedDays != null &&
-      requestedDays !== actualDays &&
-      actualDays > 0
-    ) {
-      return `${requestedDays} days requested (${actualDays} available)`;
-    }
-    return `${actualDays} days simulated`;
-  }, [requestedDays, actualDays]);
-
   return {
     strategyIds,
     chartData,
@@ -71,6 +58,5 @@ export function useBacktestResult(
     summary,
     sortedStrategyIds,
     actualDays,
-    daysDisplay,
   };
 }

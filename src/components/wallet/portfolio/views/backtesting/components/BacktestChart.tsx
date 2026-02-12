@@ -84,16 +84,27 @@ export function BacktestChart({
               tick={{ fontSize: 10, fill: "#6b7280" }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={formatCurrency}
+              tickFormatter={formatCurrencyAxis}
             />
 
             <YAxis
-              yAxisId="right"
+              yAxisId="priceRight"
+              orientation="right"
+              tick={{ fontSize: 10, fill: "#f59e0b" }}
+              tickLine={false}
+              axisLine={false}
+              width={64}
+              tickFormatter={formatCurrencyAxis}
+            />
+
+            <YAxis
+              yAxisId="sentimentRight"
               orientation="right"
               domain={[0, 100]}
               tick={{ fontSize: 10, fill: "#a855f7" }}
               tickLine={false}
               axisLine={false}
+              width={48}
               label={{
                 value: "Sentiment",
                 angle: 90,
@@ -129,7 +140,7 @@ export function BacktestChart({
             ))}
 
             <Line
-              yAxisId="right"
+              yAxisId="sentimentRight"
               type="monotone"
               dataKey="sentiment"
               name="Sentiment"
@@ -138,6 +149,20 @@ export function BacktestChart({
               dot={false}
               connectNulls={true}
               strokeOpacity={0.4}
+              legendType="none"
+            />
+
+            <Line
+              yAxisId="priceRight"
+              type="monotone"
+              dataKey="dma_200"
+              name="DMA 200"
+              stroke="#f59e0b"
+              strokeWidth={1.25}
+              strokeDasharray="5 3"
+              dot={false}
+              connectNulls={true}
+              legendType="none"
             />
 
             {CHART_SIGNALS.map(signal => (
@@ -226,7 +251,7 @@ function formatDate(value: string | number) {
   });
 }
 
-function formatCurrency(value: string | number) {
+function formatCurrencyAxis(value: string | number) {
   return `$${(Number(value) / 1000).toFixed(0)}k`;
 }
 

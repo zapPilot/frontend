@@ -105,6 +105,9 @@ interface Transfer {
   to_bucket?: string;
 }
 
+const MS_PER_DAY = 86_400_000;
+const DEFAULT_Y_DOMAIN: [number, number] = [0, 1000];
+
 // --- Logic ---
 
 export function sentimentLabelToIndex(
@@ -230,7 +233,7 @@ export function calculateYAxisDomain(
   chartData: Record<string, unknown>[],
   strategyIds: string[]
 ): [number, number] {
-  if (!chartData.length) return [0, 1000];
+  if (!chartData.length) return DEFAULT_Y_DOMAIN;
 
   let min = Infinity;
   let max = -Infinity;
@@ -243,7 +246,7 @@ export function calculateYAxisDomain(
     }
   }
 
-  if (min === Infinity || max === -Infinity) return [0, 1000];
+  if (min === Infinity || max === -Infinity) return DEFAULT_Y_DOMAIN;
 
   const padding = (max - min) * 0.05;
   return [Math.max(0, min - padding), max + padding];
@@ -260,7 +263,7 @@ export function calculateActualDays(timeline: BacktestTimelinePoint[]): number {
   const start = new Date(firstPoint.date).getTime();
   const end = new Date(lastPoint.date).getTime();
 
-  return Math.ceil(Math.abs(end - start) / 86400000) + 1;
+  return Math.ceil(Math.abs(end - start) / MS_PER_DAY) + 1;
 }
 
 export function sortStrategyIds(ids: string[]): string[] {
@@ -294,6 +297,7 @@ export function buildChartPoint(
   data["sentiment"] =
     point.sentiment ??
     sentimentLabelToIndex(point.sentiment_label ?? undefined);
+  data["dma_200"] = point.dma_200 ?? null;
 
   // Signals
   const acc = createSignalAccumulator();

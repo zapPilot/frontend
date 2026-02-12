@@ -1,7 +1,5 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
-
 import { MetricsSkeleton } from "@/components/ui";
 
 export function BacktestLoadingState() {
@@ -11,15 +9,6 @@ export function BacktestLoadingState() {
       role="status"
       aria-label="Running backtest simulation"
     >
-      {/* Status header */}
-      <div className="flex items-center gap-3 text-gray-400">
-        <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
-        <p className="text-sm font-medium">
-          Running Backtest Simulation &mdash; Processing historical market
-          data...
-        </p>
-      </div>
-
       {/* Metrics skeleton (matches BacktestMetrics 3-column layout) */}
       <MetricsSkeleton />
 

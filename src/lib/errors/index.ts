@@ -24,9 +24,6 @@ export {
 
 // Error helper functions (classification and factory)
 export {
-  createAccountServiceError,
-  createAnalyticsServiceError,
-  createBundleServiceError,
   createIntentServiceError,
   extractErrorCode,
   extractStatusCode,

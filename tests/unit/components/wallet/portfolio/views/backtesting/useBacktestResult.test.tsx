@@ -34,6 +34,7 @@ describe("useBacktestResult markers", () => {
           token_price: { btc: 50000 },
           sentiment: 50,
           sentiment_label: "neutral",
+          dma_200: 49500,
           strategies: {
             dca_classic: {
               portfolio_value: 10000,
@@ -64,13 +65,14 @@ describe("useBacktestResult markers", () => {
       ],
     };
 
-    const { result } = renderHook(() => useBacktestResult(response as any, 90));
+    const { result } = renderHook(() => useBacktestResult(response as any));
 
     const point = result.current.chartData[0] as any;
     expect(point.sellSpotSignal).toBe(10000);
     expect(point.buyLpSignal).toBe(10000);
     expect(point.buySpotSignal).toBeNull();
     expect(point.sellLpSignal).toBeNull();
+    expect(point.dma_200).toBe(49500);
 
     expect(point.eventStrategies.sell_spot).toContain("Simple Regime");
     expect(point.eventStrategies.buy_lp).toContain("Simple Regime");

@@ -71,6 +71,64 @@ export const MIN_CHART_POINTS = 90;
  * Allows dynamic expansion for event-heavy timelines while maintaining performance.
  */
 export const MAX_CHART_POINTS = 150;
+const DMA_WINDOW_DAYS = 200;
+
+function getTimelinePointPrice(point: BacktestTimelinePoint): number | null {
+  const btcPrice = point.token_price?.["btc"];
+  if (typeof btcPrice === "number" && Number.isFinite(btcPrice)) {
+    return btcPrice;
+  }
+
+  for (const value of Object.values(point.token_price ?? {})) {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Enrich timeline points with rolling DMA-200 values.
+ *
+ * Notes:
+ * - Uses BTC price when available, otherwise falls back to the first numeric token price.
+ * - Requires a full contiguous 200-day window; missing price resets the window.
+ */
+function enrichTimelineWithDma200(
+  timeline: BacktestTimelinePoint[] | undefined
+): BacktestTimelinePoint[] {
+  if (!timeline || timeline.length === 0) {
+    return [];
+  }
+
+  const window: number[] = [];
+  let rollingSum = 0;
+
+  return timeline.map(point => {
+    const price = getTimelinePointPrice(point);
+    if (price == null) {
+      window.length = 0;
+      rollingSum = 0;
+      return { ...point, dma_200: null };
+    }
+
+    window.push(price);
+    rollingSum += price;
+
+    if (window.length > DMA_WINDOW_DAYS) {
+      const removed = window.shift();
+      if (removed != null) {
+        rollingSum -= removed;
+      }
+    }
+
+    const dma200 =
+      window.length === DMA_WINDOW_DAYS ? rollingSum / DMA_WINDOW_DAYS : null;
+
+    return { ...point, dma_200: dma200 };
+  });
+}
 
 /**
  * Sample timeline data while preserving critical trading events.
@@ -231,10 +289,21 @@ function sampleEvenlyIndices<T>(points: T[], targetSize: number): T[] {
  * - High computational load on the analytics server
  */
 /**
- * Export sampleTimelineData for testing purposes.
+ * Export internal helpers for testing purposes.
  * @internal - Not part of the public API
  */
-export { sampleTimelineData as _sampleTimelineData };
+export {
+  enrichTimelineWithDma200 as _enrichTimelineWithDma200,
+  sampleTimelineData as _sampleTimelineData,
+};
+
+export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
+  return callBacktestingApi(() =>
+    httpUtils.analyticsEngine.get<BacktestStrategyCatalogResponseV3>(
+      "/api/v3/backtesting/strategies"
+    )
+  );
+}
 
 export async function runBacktest(
   request: BacktestRequest
@@ -249,17 +318,12 @@ export async function runBacktest(
     )
   );
 
+  // Compute DMA200 on the full timeline first, then sample while preserving events.
+  const timelineWithDma = enrichTimelineWithDma200(response.timeline);
+
   // Sample timeline data to reduce memory usage while preserving signals
   return {
     ...response,
-    timeline: sampleTimelineData(response.timeline),
+    timeline: sampleTimelineData(timelineWithDma),
   };
-}
-
-export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
-  return callBacktestingApi(() =>
-    httpUtils.analyticsEngine.get<BacktestStrategyCatalogResponseV3>(
-      "/api/v3/backtesting/strategies"
-    )
-  );
 }

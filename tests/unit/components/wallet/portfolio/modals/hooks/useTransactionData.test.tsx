@@ -3,12 +3,12 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
-import { useChainQuery } from "@/hooks/queries/useChainQuery";
+import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
 import { transactionService } from "@/services";
 
 // Mock dependencies
-vi.mock("@/hooks/queries/useChainQuery");
+vi.mock("@/hooks/queries/wallet/useChainQuery");
 vi.mock("@/hooks/queries/wallet/useTokenBalanceQuery");
 vi.mock("@/services", () => ({
   transactionService: {

@@ -17,13 +17,12 @@ export function BacktestingView() {
     editorValue,
     error,
     isPending,
-    lastSubmittedDays,
     handleRunBacktest,
     updateEditorValue,
   } = useBacktestConfiguration();
 
   const { chartData, yAxisDomain, summary, sortedStrategyIds, actualDays } =
-    useBacktestResult(backtestData ?? null, lastSubmittedDays);
+    useBacktestResult(backtestData ?? null);
 
   useEffect(() => {
     handleRunBacktest();
@@ -54,10 +53,7 @@ export function BacktestingView() {
       )}
 
       {isPending ? (
-        <BaseCard
-          variant="glass"
-          className="h-96 flex items-center justify-center bg-gray-900/40"
-        >
+        <BaseCard variant="glass" className="bg-gray-900/40">
           <BacktestLoadingState />
         </BaseCard>
       ) : !backtestData ? (

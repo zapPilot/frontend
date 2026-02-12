@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  createAccountServiceError,
-  createAnalyticsServiceError,
-  createBundleServiceError,
   createIntentServiceError,
   extractErrorCode,
   extractStatusCode,
@@ -13,8 +10,6 @@ import {
 } from "@/lib/errors/errorHelpers";
 import {
   AccountServiceError,
-  AnalyticsServiceError,
-  BundleServiceError,
   IntentServiceError,
 } from "@/lib/errors/ServiceError";
 
@@ -39,32 +34,6 @@ describe("errorHelpers", () => {
     ).toBe("E_ACCOUNT");
     expect(extractErrorCode({ code: "E_GENERIC" })).toBe("E_GENERIC");
     expect(extractErrorCode({})).toBeUndefined();
-  });
-
-  it("creates service errors with resolved messages and metadata", () => {
-    const accountError = createAccountServiceError(
-      { status: 404, message: "User not found" },
-      "Fallback"
-    );
-    expect(accountError).toBeInstanceOf(AccountServiceError);
-    expect(accountError.status).toBe(404);
-    expect(accountError.message).toBe("User not found");
-
-    const analyticsError = createAnalyticsServiceError({
-      status: 500,
-      message: "Analytics exploded",
-      details: { retry: true },
-    });
-    expect(analyticsError).toBeInstanceOf(AnalyticsServiceError);
-    expect(analyticsError.details).toEqual({ retry: true });
-
-    const bundleError = createBundleServiceError({
-      status: 500,
-      message: "Bundle failed",
-      details: { reason: "missing" },
-    });
-    expect(bundleError).toBeInstanceOf(BundleServiceError);
-    expect(bundleError.details).toEqual({ reason: "missing" });
   });
 
   it("enhances intent service errors with friendly messaging", () => {

@@ -367,6 +367,35 @@ describe("useBacktestTooltipData", () => {
       expect(result?.sections.signals[0]?.value).toBe("Bullish (3)");
       expect(result?.sections.signals[1]?.value).toBe(18.33);
     });
+
+    it("categorizes DMA 200 as signal and not strategy", () => {
+      const result = useBacktestTooltipData({
+        payload: [
+          {
+            name: "DMA 200",
+            value: 48765.4321,
+            color: "#f59e0b",
+            payload: {},
+          },
+          {
+            name: "Strategy A",
+            value: 1000,
+            color: "#0000ff",
+            payload: {},
+          },
+        ],
+        label: "2026-01-01",
+      });
+
+      expect(result?.sections.signals).toHaveLength(1);
+      expect(result?.sections.signals[0]).toEqual({
+        name: "DMA 200",
+        value: 48765.43,
+        color: "#f59e0b",
+      });
+      expect(result?.sections.strategies).toHaveLength(1);
+      expect(result?.sections.strategies[0]?.name).toBe("Strategy A");
+    });
   });
 
   describe("event items categorization", () => {

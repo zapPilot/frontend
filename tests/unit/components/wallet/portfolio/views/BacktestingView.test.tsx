@@ -255,6 +255,26 @@ describe("BacktestingView", () => {
     expect(runButton.tagName).toBe("BUTTON");
   });
 
+  it("loading BaseCard does not constrain height (regression)", async () => {
+    vi.mocked(useBacktestMutation).mockReturnValue({
+      ...defaultMock,
+      isPending: true,
+    } as any);
+
+    await act(async () => {
+      render(<BacktestingView />);
+    });
+
+    const status = screen.getByRole("status", {
+      name: /Running backtest simulation/i,
+    });
+    // The parent BaseCard wrapper should not have h-96 or centering classes
+    const wrapper = status.parentElement!;
+    expect(wrapper).not.toHaveClass("h-96");
+    expect(wrapper).not.toHaveClass("items-center");
+    expect(wrapper).not.toHaveClass("justify-center");
+  });
+
   it("shows loading state when pending even with data", async () => {
     vi.mocked(useBacktestMutation).mockReturnValue({
       ...defaultMock,

@@ -10,6 +10,7 @@ import type {
 
 import {
   DCA_CLASSIC_STRATEGY_ID,
+  DEFAULT_DAYS,
   PACING_POLICY_OPTIONS,
   SIGNAL_PROVIDER_OPTIONS,
 } from "../constants";
@@ -121,7 +122,7 @@ export function BacktestTerminalDisplay({
 }: BacktestTerminalDisplayProps): React.ReactElement {
   const [showMetrics, setShowMetrics] = useState(false);
 
-  const days = parseJsonField(editorValue, "days", 500);
+  const days = parseJsonField(editorValue, "days", DEFAULT_DAYS);
   const signalProvider = parseRegimeParam(editorValue, "signal_provider", "");
   const pacingPolicy = parseRegimeParam(
     editorValue,

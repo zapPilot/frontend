@@ -222,13 +222,14 @@ export function calculateDataFreshness(
     }
 
     const hoursSince = dayjs.utc().diff(updateTime, "hour", true);
+    const state = getFreshnessState(hoursSince);
 
     return {
       relativeTime: updateTime.fromNow(),
-      state: getFreshnessState(hoursSince),
+      state,
       hoursSince,
       timestamp: lastUpdated,
-      isCurrent: hoursSince <= 24,
+      isCurrent: state === "fresh",
     };
   } catch (error) {
     logger.error("Error calculating data freshness", error, "formatters");

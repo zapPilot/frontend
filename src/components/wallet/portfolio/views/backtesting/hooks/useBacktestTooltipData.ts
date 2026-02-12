@@ -1,19 +1,27 @@
 import type { BacktestConstituentsSource } from "@/components/wallet/portfolio/components/allocation";
 import { formatCurrency } from "@/utils";
 
+import { CHART_SIGNALS } from "../utils/chartHelpers";
 import {
   calculatePercentages,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
 
-const SIGNAL_TO_EVENT_KEY: Record<string, string> = {
-  "Buy Spot": "buy_spot",
-  "Sell Spot": "sell_spot",
-  "Buy LP": "buy_lp",
-  "Sell LP": "sell_lp",
-};
+const SIGNAL_EVENT_KEYS = new Set<string>([
+  "buy_spot",
+  "sell_spot",
+  "buy_lp",
+  "sell_lp",
+]);
 
-const KNOWN_SIGNALS = ["Sentiment", "VIX"];
+const SIGNAL_TO_EVENT_KEY: Record<string, string> = Object.fromEntries(
+  CHART_SIGNALS.filter(s => SIGNAL_EVENT_KEYS.has(s.key)).map(s => [
+    s.name,
+    s.key,
+  ])
+);
+
+const KNOWN_SIGNALS = ["Sentiment", "VIX", "DMA 200"];
 
 export interface BacktestTooltipProps {
   active?: boolean;

@@ -13,7 +13,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { useChainQuery } from "@/hooks/queries/useChainQuery";
+import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
 import { transactionService } from "@/services";
 import type {

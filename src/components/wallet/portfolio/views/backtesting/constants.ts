@@ -7,6 +7,9 @@ export const DCA_CLASSIC_STRATEGY_ID = "dca_classic";
 /** Default total capital when the API does not provide backtest defaults. */
 export const DEFAULT_TOTAL_CAPITAL = 10000;
 
+/** Default number of simulation days when no API default is available. */
+export const DEFAULT_DAYS = 500;
+
 /** Available signal-provider options for the regime strategy backtest controls. */
 export const SIGNAL_PROVIDER_OPTIONS = [
   { value: "", label: "default" },

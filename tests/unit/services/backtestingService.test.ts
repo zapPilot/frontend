@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
 import {
+  _enrichTimelineWithDma200 as enrichTimelineWithDma200,
   _sampleTimelineData as sampleTimelineData,
   MAX_CHART_POINTS,
   MIN_CHART_POINTS,
@@ -106,6 +107,82 @@ describe("backtestingService", () => {
       ).rejects.toThrow(
         "An unexpected error occurred while running the backtest."
       );
+    });
+
+    it("computes DMA from full timeline before downsampling", async () => {
+      const timeline = Array.from({ length: 220 }, (_, i) =>
+        createTimelinePoint(i)
+      );
+
+      analyticsEnginePostSpy.mockResolvedValue({
+        strategies: {},
+        timeline,
+      });
+
+      const result = await runBacktest({
+        token_symbol: "BTC",
+        total_capital: 10000,
+        configs: [{ config_id: "dca_classic", strategy_id: "dca_classic" }],
+      });
+
+      expect(result.timeline.length).toBeLessThanOrEqual(MAX_CHART_POINTS);
+      const lastPoint = result.timeline[result.timeline.length - 1];
+      expect(lastPoint?.dma_200).toBeTypeOf("number");
+    });
+  });
+
+  describe("enrichTimelineWithDma200", () => {
+    it("sets null for first 199 points and day-200 average at index 199", () => {
+      const timeline = Array.from({ length: 205 }, (_, i) =>
+        createTimelinePoint(i)
+      );
+      const result = enrichTimelineWithDma200(timeline);
+
+      for (let i = 0; i < 199; i++) {
+        expect(result[i]?.dma_200).toBeNull();
+      }
+
+      const expectedAt199 =
+        timeline
+          .slice(0, 200)
+          .reduce((acc, point) => acc + (point.token_price.btc ?? 0), 0) / 200;
+      expect(result[199]?.dma_200).toBeCloseTo(expectedAt199, 10);
+    });
+
+    it("rolls deterministically over the next day", () => {
+      const timeline = Array.from({ length: 205 }, (_, i) =>
+        createTimelinePoint(i)
+      );
+      const result = enrichTimelineWithDma200(timeline);
+
+      const expectedAt200 =
+        timeline
+          .slice(1, 201)
+          .reduce((acc, point) => acc + (point.token_price.btc ?? 0), 0) / 200;
+      expect(result[200]?.dma_200).toBeCloseTo(expectedAt200, 10);
+    });
+
+    it("falls back to first numeric token price when btc is missing", () => {
+      const timeline = Array.from({ length: 205 }, (_, i) => {
+        const point = createTimelinePoint(i);
+        return {
+          ...point,
+          token_price: {
+            eth: (point.token_price.btc ?? 0) + 100,
+          },
+        };
+      });
+
+      const result = enrichTimelineWithDma200(timeline);
+      const expectedAt199 =
+        timeline
+          .slice(0, 200)
+          .reduce(
+            (acc, point) => acc + (Object.values(point.token_price)[0] ?? 0),
+            0
+          ) / 200;
+
+      expect(result[199]?.dma_200).toBeCloseTo(expectedAt199, 10);
     });
   });
 

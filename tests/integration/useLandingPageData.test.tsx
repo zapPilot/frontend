@@ -21,7 +21,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { useLandingPageData } from "../../src/hooks/queries/usePortfolioQuery";
+import { useLandingPageData } from "../../src/hooks/queries/analytics/usePortfolioQuery";
 import type {
   LandingPageResponse,
   PoolDetail,

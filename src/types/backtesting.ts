@@ -86,6 +86,7 @@ export interface BacktestTimelinePoint {
   token_price: Record<string, number>;
   sentiment: number | null;
   sentiment_label: string | null;
+  dma_200?: number | null;
   strategies: BacktestStrategySet<BacktestStrategyPoint>;
 }
 

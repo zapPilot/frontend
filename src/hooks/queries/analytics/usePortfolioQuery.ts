@@ -10,39 +10,6 @@ import { createQueryConfig } from "../queryDefaults";
 
 const PORTFOLIO_REFETCH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
-interface PortfolioQueryOptions<T> {
-  userId: string | null | undefined;
-  queryKey: readonly unknown[];
-  fetcher: (userId: string) => Promise<T>;
-  enabledOverride?: boolean;
-}
-
-function buildPortfolioQueryConfig<T>({
-  userId,
-  queryKey,
-  fetcher,
-  enabledOverride,
-}: PortfolioQueryOptions<T>) {
-  return {
-    ...createQueryConfig({
-      dataType: "realtime",
-      retryConfig: {
-        skipErrorMessages: ["USER_NOT_FOUND", "404"],
-      },
-    }),
-    queryKey,
-    queryFn: async (): Promise<T> => {
-      if (!userId) {
-        throw new Error("User ID is required");
-      }
-
-      return fetcher(userId);
-    },
-    enabled: enabledOverride !== undefined ? enabledOverride : Boolean(userId),
-    refetchInterval: PORTFOLIO_REFETCH_INTERVAL,
-  };
-}
-
 /**
  * Hook for landing page core data (Balance, ROI, PnL)
  *
@@ -57,14 +24,21 @@ export function useLandingPageData(
   userId: string | null | undefined,
   isEtlInProgress = false
 ) {
-  return useQuery(
-    buildPortfolioQueryConfig<LandingPageResponse>({
-      userId,
-      queryKey: queryKeys.portfolio.landingPage(userId || ""),
-      fetcher: async resolvedUserId => {
-        return getLandingPagePortfolioData(resolvedUserId);
+  return useQuery({
+    ...createQueryConfig({
+      dataType: "realtime",
+      retryConfig: {
+        skipErrorMessages: ["USER_NOT_FOUND", "404"],
       },
-      enabledOverride: Boolean(userId) && !isEtlInProgress,
-    })
-  );
+    }),
+    queryKey: queryKeys.portfolio.landingPage(userId || ""),
+    queryFn: async (): Promise<LandingPageResponse> => {
+      if (!userId) {
+        throw new Error("User ID is required");
+      }
+      return getLandingPagePortfolioData(userId);
+    },
+    enabled: Boolean(userId) && !isEtlInProgress,
+    refetchInterval: PORTFOLIO_REFETCH_INTERVAL,
+  });
 }

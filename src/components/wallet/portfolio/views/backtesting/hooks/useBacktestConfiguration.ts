@@ -16,6 +16,7 @@ import type {
 
 import {
   DCA_CLASSIC_STRATEGY_ID,
+  DEFAULT_DAYS,
   DEFAULT_TOTAL_CAPITAL,
   SIMPLE_REGIME_STRATEGY_ID,
 } from "../constants";
@@ -42,7 +43,7 @@ const backtestRequestSchema = z.object({
 
 /** Fallback defaults when API response is unavailable. */
 const FALLBACK_DEFAULTS: BacktestDefaults = {
-  days: 500,
+  days: DEFAULT_DAYS,
   total_capital: DEFAULT_TOTAL_CAPITAL,
 };
 
@@ -142,9 +143,6 @@ export function useBacktestConfiguration() {
     )
   );
   const [editorError, setEditorError] = useState<string | null>(null);
-  const [lastSubmittedDays, setLastSubmittedDays] = useState<
-    number | undefined
-  >(FALLBACK_DEFAULTS.days);
   const userEdited = useRef(false);
 
   // Fetch presets (primary) and catalog (fallback) in parallel on mount
@@ -221,7 +219,6 @@ export function useBacktestConfiguration() {
     }
 
     setEditorError(null);
-    setLastSubmittedDays(parsed.data.days);
 
     // Build request with only defined optional properties (exactOptionalPropertyTypes)
     const configs: BacktestRequest["configs"] = parsed.data.configs.map(cfg => {
@@ -272,7 +269,6 @@ export function useBacktestConfiguration() {
     editorValue,
     error,
     isPending,
-    lastSubmittedDays,
     setEditorError,
     handleRunBacktest,
     resetConfiguration,
