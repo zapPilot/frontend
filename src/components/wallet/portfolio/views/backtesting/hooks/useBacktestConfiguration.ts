@@ -220,29 +220,29 @@ export function useBacktestConfiguration() {
 
     setEditorError(null);
 
-    // Build request with only defined optional properties (exactOptionalPropertyTypes)
-    const configs: BacktestRequest["configs"] = parsed.data.configs.map(cfg => {
-      const config: BacktestRequest["configs"][number] = {
+    // Conditional spreads keep only defined properties (exactOptionalPropertyTypes)
+    const configs: BacktestRequest["configs"] = parsed.data.configs.map(
+      cfg => ({
         config_id: cfg.config_id,
         strategy_id: cfg.strategy_id,
-      };
-      if (cfg.params !== undefined) config.params = cfg.params;
-      return config;
-    });
+        ...(cfg.params !== undefined && { params: cfg.params }),
+      })
+    );
 
-    const request: BacktestRequest = {
+    mutate({
       total_capital: parsed.data.total_capital,
       configs,
-    };
-    if (parsed.data.token_symbol !== undefined)
-      request.token_symbol = parsed.data.token_symbol; // eslint-disable-line sonarjs/deprecation
-    if (parsed.data.start_date !== undefined)
-      request.start_date = parsed.data.start_date;
-    if (parsed.data.end_date !== undefined)
-      request.end_date = parsed.data.end_date;
-    if (parsed.data.days !== undefined) request.days = parsed.data.days;
-
-    mutate(request);
+      ...(parsed.data.token_symbol !== undefined && {
+        token_symbol: parsed.data.token_symbol,
+      }),
+      ...(parsed.data.start_date !== undefined && {
+        start_date: parsed.data.start_date,
+      }),
+      ...(parsed.data.end_date !== undefined && {
+        end_date: parsed.data.end_date,
+      }),
+      ...(parsed.data.days !== undefined && { days: parsed.data.days }),
+    });
   };
 
   const resetConfiguration = () => {

@@ -15,7 +15,7 @@ import {
 import { BaseCard } from "@/components/ui/BaseCard";
 
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
-import { CHART_SIGNALS } from "../utils/chartHelpers";
+import { CHART_SIGNALS, getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
   getStrategyColor,
   getStrategyDisplayName,
@@ -39,10 +39,7 @@ export function BacktestChart({
   actualDays,
   chartIdPrefix = "default",
 }: BacktestChartProps) {
-  const primarySeriesId =
-    sortedStrategyIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ??
-    sortedStrategyIds[0] ??
-    null;
+  const primarySeriesId = getPrimaryStrategyId(sortedStrategyIds);
 
   return (
     <BaseCard

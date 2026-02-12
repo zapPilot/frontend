@@ -74,17 +74,14 @@ export const MAX_CHART_POINTS = 150;
 const DMA_WINDOW_DAYS = 200;
 
 function getTimelinePointPrice(point: BacktestTimelinePoint): number | null {
-  const btcPrice = point.token_price?.["btc"];
-  if (typeof btcPrice === "number" && Number.isFinite(btcPrice)) {
-    return btcPrice;
-  }
+  const prices = point.token_price ?? {};
+  // Prefer BTC; fall back to first valid price
+  const btc = prices["btc"];
+  if (typeof btc === "number" && Number.isFinite(btc)) return btc;
 
-  for (const value of Object.values(point.token_price ?? {})) {
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return value;
-    }
+  for (const value of Object.values(prices)) {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
   }
-
   return null;
 }
 
@@ -210,29 +207,16 @@ function sampleTimelineData(
     }
   }
 
-  // Sample non-critical points evenly
-  const nonCriticalPoints = nonCriticalIndices
-    .map(i => timeline[i])
-    .filter((p): p is BacktestTimelinePoint => p !== undefined);
-  const sampledNonCritical = sampleEvenlyIndices(
-    nonCriticalPoints,
+  // Sample non-critical indices evenly (avoids O(n*m) date-based re-lookup)
+  const sampledNonCriticalIndices = sampleEvenlyFromIndices(
+    nonCriticalIndices,
     remainingSlots
   );
-
-  // Map sampled non-critical back to indices
-  const sampledNonCriticalIndices = new Set<number>();
-  for (const point of sampledNonCritical) {
-    // date is unique for daily candles; keying by it avoids token_price shape issues
-    const index = timeline.findIndex(p => p && p.date === point.date);
-    if (index !== -1) {
-      sampledNonCriticalIndices.add(index);
-    }
-  }
 
   // Combine and sort
   const allIndices = [
     ...criticalIndicesArray,
-    ...Array.from(sampledNonCriticalIndices),
+    ...sampledNonCriticalIndices,
   ].sort((a, b) => a - b);
 
   return allIndices
@@ -241,39 +225,29 @@ function sampleTimelineData(
 }
 
 /**
- * Sample an array of points evenly to a target size.
+ * Sample evenly from a pre-collected array of indices.
  *
- * @param points - Array of points to sample
- * @param targetSize - Target number of points
- * @returns Sampled array
+ * @param indices - Source index array to sample from
+ * @param targetSize - Target number of indices to return
+ * @returns Evenly spaced subset of the input indices
  */
-function sampleEvenlyIndices<T>(points: T[], targetSize: number): T[] {
-  if (points.length <= targetSize) {
-    return points;
-  }
-
-  if (targetSize === 0) {
-    return [];
-  }
-
+function sampleEvenlyFromIndices(
+  indices: number[],
+  targetSize: number
+): number[] {
+  if (indices.length <= targetSize) return indices;
+  if (targetSize === 0) return [];
   if (targetSize === 1) {
-    const middleIndex = Math.floor(points.length / 2);
-    const point = points[middleIndex];
-    return point !== undefined ? [point] : [];
+    const mid = indices[Math.floor(indices.length / 2)];
+    return mid !== undefined ? [mid] : [];
   }
-
-  const step = (points.length - 1) / (targetSize - 1);
-  const sampled: T[] = [];
-
+  const step = (indices.length - 1) / (targetSize - 1);
+  const result: number[] = [];
   for (let i = 0; i < targetSize; i++) {
-    const index = Math.round(i * step);
-    const point = points[index];
-    if (point !== undefined) {
-      sampled.push(point);
-    }
+    const val = indices[Math.round(i * step)];
+    if (val !== undefined) result.push(val);
   }
-
-  return sampled;
+  return result;
 }
 
 /**

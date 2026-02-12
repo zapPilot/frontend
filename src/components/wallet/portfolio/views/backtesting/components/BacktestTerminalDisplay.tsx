@@ -9,11 +9,11 @@ import type {
 } from "@/types/backtesting";
 
 import {
-  DCA_CLASSIC_STRATEGY_ID,
   DEFAULT_DAYS,
   PACING_POLICY_OPTIONS,
   SIGNAL_PROVIDER_OPTIONS,
 } from "../constants";
+import { getPrimaryStrategyId } from "../utils/chartHelpers";
 import {
   parseJsonField,
   parseRegimeParam,
@@ -130,9 +130,7 @@ export function BacktestTerminalDisplay({
     "fgi_exponential"
   );
 
-  const primaryId =
-    sortedStrategyIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ??
-    sortedStrategyIds[0];
+  const primaryId = getPrimaryStrategyId(sortedStrategyIds);
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
 
   const heroMetrics = useMemo(() => {

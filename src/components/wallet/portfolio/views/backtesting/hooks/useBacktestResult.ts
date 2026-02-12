@@ -12,7 +12,6 @@ import {
 } from "../utils/chartHelpers";
 
 export interface UseBacktestResultReturn {
-  strategyIds: string[];
   chartData: Record<string, unknown>[];
   yAxisDomain: [number, number];
   summary: { strategies: BacktestResponse["strategies"] } | null;
@@ -37,10 +36,7 @@ export function useBacktestResult(
     return calculateYAxisDomain(chartData, strategyIds);
   }, [chartData, strategyIds]);
 
-  const summary = useMemo(() => {
-    if (!response) return null;
-    return { strategies: response.strategies };
-  }, [response]);
+  const summary = response ? { strategies: response.strategies } : null;
 
   const actualDays = useMemo(() => {
     if (!response) return 0;
@@ -52,7 +48,6 @@ export function useBacktestResult(
   }, [strategyIds]);
 
   return {
-    strategyIds,
     chartData,
     yAxisDomain,
     summary,

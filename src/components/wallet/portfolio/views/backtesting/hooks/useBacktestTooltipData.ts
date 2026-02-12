@@ -173,11 +173,9 @@ export function useBacktestTooltipData({
       }
       signalItems.push({ name, value: displayValue, color });
     } else if (SIGNAL_TO_EVENT_KEY[name]) {
-      const eventKey = SIGNAL_TO_EVENT_KEY[name] ?? "";
-      if (eventKey) {
-        const strategyList = eventStrategies?.[eventKey] || [];
-        eventItems.push({ name, strategies: strategyList, color });
-      }
+      const eventKey = SIGNAL_TO_EVENT_KEY[name];
+      const strategyList = eventStrategies?.[eventKey] || [];
+      eventItems.push({ name, strategies: strategyList, color });
     } else if (typeof entry.value === "number") {
       strategyItems.push({ name, value: entry.value, color });
     }

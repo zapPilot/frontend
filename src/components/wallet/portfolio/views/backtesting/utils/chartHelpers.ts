@@ -266,6 +266,16 @@ export function calculateActualDays(timeline: BacktestTimelinePoint[]): number {
   return Math.ceil(Math.abs(end - start) / MS_PER_DAY) + 1;
 }
 
+/**
+ * Return the first non-DCA strategy ID, or fall back to the first ID.
+ * Used by chart and terminal components to determine which series gets area fill.
+ */
+export function getPrimaryStrategyId(sortedIds: string[]): string | null {
+  return (
+    sortedIds.find(id => id !== DCA_CLASSIC_STRATEGY_ID) ?? sortedIds[0] ?? null
+  );
+}
+
 export function sortStrategyIds(ids: string[]): string[] {
   const dca = ids.includes(DCA_CLASSIC_STRATEGY_ID)
     ? [DCA_CLASSIC_STRATEGY_ID]
