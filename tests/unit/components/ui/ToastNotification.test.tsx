@@ -1,10 +1,7 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import {
-  Toast,
-  ToastNotification,
-} from "../../../../src/components/ui/ToastNotification";
+import { Toast, ToastNotification } from "@/components/ui/ToastNotification";
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
@@ -151,10 +148,7 @@ describe("ToastNotification", () => {
 
       // Default duration is 6000ms + 300ms for exit animation
       act(() => {
-        vi.advanceTimersByTime(6000);
-      });
-      act(() => {
-        vi.advanceTimersByTime(300);
+        vi.advanceTimersByTime(6300);
       });
 
       expect(mockOnClose).toHaveBeenCalledWith("test-toast-1");
@@ -169,10 +163,7 @@ describe("ToastNotification", () => {
       );
 
       act(() => {
-        vi.advanceTimersByTime(3000);
-      });
-      act(() => {
-        vi.advanceTimersByTime(300);
+        vi.advanceTimersByTime(3300);
       });
 
       expect(mockOnClose).toHaveBeenCalledWith("test-toast-1");

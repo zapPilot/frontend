@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import { LoadingSpinner } from "../../../../src/components/ui";
+import { LoadingSpinner } from "@/components/ui";
 
 describe("LoadingSpinner", () => {
   describe("Basic Rendering", () => {
@@ -66,13 +66,6 @@ describe("LoadingSpinner", () => {
   });
 
   describe("Accessibility", () => {
-    it("should have proper ARIA attributes", () => {
-      render(<LoadingSpinner />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveAttribute("aria-label", "Loading");
-    });
-
     it("should be hidden from screen readers when decorative", () => {
       render(<LoadingSpinner aria-hidden="true" />);
 

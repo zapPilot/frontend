@@ -6,226 +6,65 @@ import {
   validateSentimentApiResponse,
 } from "@/schemas/api/sentimentSchemas";
 
+const BASE_SENTIMENT = {
+  timestamp: "2025-12-04T00:00:00Z",
+  source: "alternative.me",
+};
+
 describe("sentimentSchemas", () => {
   describe("sentimentApiResponseSchema", () => {
     describe("valid sentiment data", () => {
-      it("validates correct sentiment response", () => {
-        const validData = {
-          value: 26,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-          cached: true,
+      it.each([
+        [26, "Fear", true],
+        [26, "Fear", undefined],
+        [0, "Extreme Fear", undefined],
+        [100, "Extreme Greed", undefined],
+        [25, "Fear", undefined],
+        [50, "Neutral", undefined],
+        [75, "Greed", undefined],
+        [50, "Neutral", false],
+      ])("validates value=%d status=%s cached=%s", (value, status, cached) => {
+        const data = {
+          ...BASE_SENTIMENT,
+          value,
+          status,
+          ...(cached !== undefined && { cached }),
         };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates sentiment without optional cached field", () => {
-        const validData = {
-          value: 26,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates extreme fear (0)", () => {
-        const validData = {
-          value: 0,
-          status: "Extreme Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates extreme greed (100)", () => {
-        const validData = {
-          value: 100,
-          status: "Extreme Greed",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates fear range (25)", () => {
-        const validData = {
-          value: 25,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates neutral range (50)", () => {
-        const validData = {
-          value: 50,
-          status: "Neutral",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates greed range (75)", () => {
-        const validData = {
-          value: 75,
-          status: "Greed",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
-      });
-
-      it("validates with cached false", () => {
-        const validData = {
-          value: 50,
-          status: "Neutral",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-          cached: false,
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(validData)).not.toThrow();
+        expect(() => sentimentApiResponseSchema.parse(data)).not.toThrow();
       });
     });
 
     describe("invalid sentiment data", () => {
-      it("rejects value below 0", () => {
-        const invalidData = {
-          value: -1,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects value above 100", () => {
-        const invalidData = {
-          value: 101,
-          status: "Extreme Greed",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects non-integer value", () => {
-        const invalidData = {
-          value: 50.5,
-          status: "Neutral",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects missing value field", () => {
-        const invalidData = {
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects missing status field", () => {
-        const invalidData = {
-          value: 26,
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects missing timestamp field", () => {
-        const invalidData = {
-          value: 26,
-          status: "Fear",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects missing source field", () => {
-        const invalidData = {
-          value: 26,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects invalid value type", () => {
-        const invalidData = {
-          value: "26",
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects invalid status type", () => {
-        const invalidData = {
-          value: 26,
-          status: 26,
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
-      });
-
-      it("rejects invalid cached type", () => {
-        const invalidData = {
-          value: 26,
-          status: "Fear",
-          timestamp: "2025-12-04T00:00:00Z",
-          source: "alternative.me",
-          cached: "true",
-        };
-
-        expect(() => sentimentApiResponseSchema.parse(invalidData)).toThrow(
-          ZodError
-        );
+      it.each([
+        ["value below 0", { value: -1, status: "Fear" }],
+        ["value above 100", { value: 101, status: "Extreme Greed" }],
+        ["non-integer value", { value: 50.5, status: "Neutral" }],
+        ["missing value", { status: "Fear" }],
+        ["missing status", { value: 26 }],
+        [
+          "missing timestamp",
+          {
+            value: 26,
+            status: "Fear",
+            timestamp: undefined,
+            source: "alternative.me",
+          },
+        ],
+        [
+          "missing source",
+          {
+            value: 26,
+            status: "Fear",
+            timestamp: "2025-12-04T00:00:00Z",
+            source: undefined,
+          },
+        ],
+        ["invalid value type", { value: "26", status: "Fear" }],
+        ["invalid status type", { value: 26, status: 26 }],
+        ["invalid cached type", { value: 26, status: "Fear", cached: "true" }],
+      ])("rejects %s", (_label, overrides) => {
+        const data = { ...BASE_SENTIMENT, ...overrides };
+        expect(() => sentimentApiResponseSchema.parse(data)).toThrow(ZodError);
       });
     });
   });
@@ -235,8 +74,7 @@ describe("sentimentSchemas", () => {
       const validData = {
         value: 26,
         status: "Fear",
-        timestamp: "2025-12-04T00:00:00Z",
-        source: "alternative.me",
+        ...BASE_SENTIMENT,
         cached: true,
       };
 
@@ -253,6 +91,4 @@ describe("sentimentSchemas", () => {
       expect(() => validateSentimentApiResponse(invalidData)).toThrow(ZodError);
     });
   });
-
-  // safeValidateSentimentApiResponse tests removed - function removed (2025-12-22)
 });

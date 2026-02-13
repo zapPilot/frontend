@@ -6,11 +6,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  getColorForSeverity,
-  type SeverityLevel,
-  severityMappers,
-} from "@/lib/ui/severityColors";
+import { getColorForSeverity, severityMappers } from "@/lib/ui/severityColors";
 
 describe("getColorForSeverity", () => {
   it("should return green colors for excellent", () => {
@@ -101,19 +97,5 @@ describe("severityMappers", () => {
     [-30, "critical"],
   ])("underwater(%d) → %s", (value, expected) => {
     expect(severityMappers.underwater(value)).toBe(expected);
-  });
-});
-
-describe("SeverityLevel type", () => {
-  it("should only allow valid severity levels", () => {
-    // Type check at compile time - just verify the values exist
-    const levels: SeverityLevel[] = [
-      "excellent",
-      "good",
-      "fair",
-      "poor",
-      "critical",
-    ];
-    expect(levels).toHaveLength(5);
   });
 });

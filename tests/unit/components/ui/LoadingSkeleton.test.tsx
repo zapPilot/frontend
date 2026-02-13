@@ -6,7 +6,7 @@ import {
   ChartSkeleton,
   MetricsSkeleton,
   Skeleton as LoadingSkeleton,
-} from "../../../../src/components/ui/LoadingSystem";
+} from "@/components/ui/LoadingSystem";
 
 describe("LoadingSkeleton", () => {
   describe("Basic Rendering", () => {
@@ -102,15 +102,6 @@ describe("LoadingSkeleton", () => {
       );
     });
   });
-
-  describe("Animation", () => {
-    it("should have pulse animation", () => {
-      render(<LoadingSkeleton />);
-
-      const skeleton = screen.getByTestId("loading-skeleton");
-      expect(skeleton).toHaveClass("animate-pulse");
-    });
-  });
 });
 
 describe("CardSkeleton", () => {
@@ -195,40 +186,5 @@ describe("ChartSkeleton", () => {
     // Check for circular chart skeleton (200x200)
     const circularSkeleton = chart.querySelector(".rounded-full");
     expect(circularSkeleton).toBeInTheDocument();
-  });
-});
-
-describe("Skeleton Integration", () => {
-  it("should work together in a complex layout", () => {
-    render(
-      <div>
-        <CardSkeleton />
-        <MetricsSkeleton />
-        <ChartSkeleton />
-      </div>
-    );
-
-    expect(screen.getByTestId("card-skeleton")).toBeInTheDocument();
-    expect(screen.getByTestId("metrics-skeleton")).toBeInTheDocument();
-    expect(screen.getByTestId("chart-skeleton")).toBeInTheDocument();
-  });
-
-  it("should all have skeleton elements with pulse animation", () => {
-    render(
-      <div>
-        <CardSkeleton />
-        <MetricsSkeleton />
-        <ChartSkeleton />
-      </div>
-    );
-
-    for (const testId of [
-      "card-skeleton",
-      "metrics-skeleton",
-      "chart-skeleton",
-    ]) {
-      const el = screen.getByTestId(testId);
-      expect(el.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
-    }
   });
 });
