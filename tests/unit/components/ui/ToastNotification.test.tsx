@@ -36,58 +36,21 @@ describe("ToastNotification", () => {
   });
 
   describe("Snapshot Tests - UI Design Freeze", () => {
-    it("should match snapshot for success toast", () => {
-      const { container } = render(
-        <ToastNotification
-          toast={createToast({ type: "success" })}
-          onClose={mockOnClose}
-        />
-      );
-      // Trigger animation
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-      expect(container.firstChild).toMatchSnapshot();
-    });
-
-    it("should match snapshot for error toast", () => {
-      const { container } = render(
-        <ToastNotification
-          toast={createToast({ type: "error" })}
-          onClose={mockOnClose}
-        />
-      );
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-      expect(container.firstChild).toMatchSnapshot();
-    });
-
-    it("should match snapshot for info toast", () => {
-      const { container } = render(
-        <ToastNotification
-          toast={createToast({ type: "info" })}
-          onClose={mockOnClose}
-        />
-      );
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-      expect(container.firstChild).toMatchSnapshot();
-    });
-
-    it("should match snapshot for warning toast", () => {
-      const { container } = render(
-        <ToastNotification
-          toast={createToast({ type: "warning" })}
-          onClose={mockOnClose}
-        />
-      );
-      act(() => {
-        vi.advanceTimersByTime(100);
-      });
-      expect(container.firstChild).toMatchSnapshot();
-    });
+    it.each(["success", "error", "info", "warning"] as const)(
+      "should match snapshot for %s toast",
+      type => {
+        const { container } = render(
+          <ToastNotification
+            toast={createToast({ type })}
+            onClose={mockOnClose}
+          />
+        );
+        act(() => {
+          vi.advanceTimersByTime(100);
+        });
+        expect(container.firstChild).toMatchSnapshot();
+      }
+    );
 
     it("should match snapshot with message", () => {
       const { container } = render(
@@ -154,44 +117,19 @@ describe("ToastNotification", () => {
       expect(screen.getByText("Toast message")).toBeInTheDocument();
     });
 
-    it("should render correct icon for success type", () => {
+    it.each([
+      ["success", "icon-success"],
+      ["error", "icon-error"],
+      ["info", "icon-info"],
+      ["warning", "icon-warning"],
+    ] as const)("should render correct icon for %s type", (type, testId) => {
       render(
         <ToastNotification
-          toast={createToast({ type: "success" })}
+          toast={createToast({ type })}
           onClose={mockOnClose}
         />
       );
-      expect(screen.getByTestId("icon-success")).toBeInTheDocument();
-    });
-
-    it("should render correct icon for error type", () => {
-      render(
-        <ToastNotification
-          toast={createToast({ type: "error" })}
-          onClose={mockOnClose}
-        />
-      );
-      expect(screen.getByTestId("icon-error")).toBeInTheDocument();
-    });
-
-    it("should render correct icon for info type", () => {
-      render(
-        <ToastNotification
-          toast={createToast({ type: "info" })}
-          onClose={mockOnClose}
-        />
-      );
-      expect(screen.getByTestId("icon-info")).toBeInTheDocument();
-    });
-
-    it("should render correct icon for warning type", () => {
-      render(
-        <ToastNotification
-          toast={createToast({ type: "warning" })}
-          onClose={mockOnClose}
-        />
-      );
-      expect(screen.getByTestId("icon-warning")).toBeInTheDocument();
+      expect(screen.getByTestId(testId)).toBeInTheDocument();
     });
 
     it("should close toast when close button is clicked", () => {

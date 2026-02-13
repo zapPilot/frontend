@@ -242,8 +242,6 @@ describe("sentimentSchemas", () => {
 
       const result = validateSentimentApiResponse(validData);
       expect(result).toEqual(validData);
-      expect(result.value).toBe(26);
-      expect(result.status).toBe("Fear");
     });
 
     it("throws ZodError for invalid data", () => {

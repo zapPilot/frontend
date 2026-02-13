@@ -29,76 +29,30 @@ describe("LoadingSpinner", () => {
   });
 
   describe("Size Variants", () => {
-    it("should render xs size", () => {
-      render(<LoadingSpinner size="xs" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("w-3", "h-3");
-    });
-
-    it("should render sm size", () => {
-      render(<LoadingSpinner size="sm" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("w-4", "h-4");
-    });
-
-    it("should render md size (default)", () => {
-      render(<LoadingSpinner size="md" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("w-6", "h-6");
-    });
-
-    it("should render lg size", () => {
-      render(<LoadingSpinner size="lg" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("w-8", "h-8");
-    });
-
-    it("should render xl size", () => {
-      render(<LoadingSpinner size="xl" />);
-
-      const spinner = screen.getByRole("status");
-      expect(spinner).toHaveClass("w-12", "h-12");
+    it.each([
+      ["xs", "w-3", "h-3"],
+      ["sm", "w-4", "h-4"],
+      ["md", "w-6", "h-6"],
+      ["lg", "w-8", "h-8"],
+      ["xl", "w-12", "h-12"],
+    ] as const)("should render %s size", (size, ...classes) => {
+      render(<LoadingSpinner size={size} />);
+      expect(screen.getByRole("status")).toHaveClass(...classes);
     });
   });
 
   describe("Color Variants", () => {
-    it("should render with primary color (default)", () => {
-      render(<LoadingSpinner color="primary" />);
-
-      const svg = screen.getByRole("status").querySelector("svg");
-      expect(svg).toHaveClass("text-blue-600");
-    });
-
-    it("should render with secondary color", () => {
-      render(<LoadingSpinner color="secondary" />);
-
-      const svg = screen.getByRole("status").querySelector("svg");
-      expect(svg).toHaveClass("text-gray-600");
-    });
-
-    it("should render with white color", () => {
-      render(<LoadingSpinner color="white" />);
-
-      const svg = screen.getByRole("status").querySelector("svg");
-      expect(svg).toHaveClass("text-white");
-    });
-
-    it("should render with success color", () => {
-      render(<LoadingSpinner color="success" />);
-
-      const svg = screen.getByRole("status").querySelector("svg");
-      expect(svg).toHaveClass("text-green-600");
-    });
-
-    it("should render with warning color", () => {
-      render(<LoadingSpinner color="warning" />);
-
-      const svg = screen.getByRole("status").querySelector("svg");
-      expect(svg).toHaveClass("text-yellow-600");
+    it.each([
+      ["primary", "text-blue-600"],
+      ["secondary", "text-gray-600"],
+      ["white", "text-white"],
+      ["success", "text-green-600"],
+      ["warning", "text-yellow-600"],
+    ] as const)("should render with %s color", (color, expectedClass) => {
+      render(<LoadingSpinner color={color} />);
+      expect(screen.getByRole("status").querySelector("svg")).toHaveClass(
+        expectedClass
+      );
     });
   });
 

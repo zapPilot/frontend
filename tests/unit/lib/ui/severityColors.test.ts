@@ -45,107 +45,62 @@ describe("getColorForSeverity", () => {
 });
 
 describe("severityMappers", () => {
-  describe("drawdown", () => {
-    it("should return excellent for < 5%", () => {
-      expect(severityMappers.drawdown(-3)).toBe("excellent");
-      expect(severityMappers.drawdown(-4.9)).toBe("excellent");
-    });
-
-    it("should return fair for 5-10%", () => {
-      expect(severityMappers.drawdown(-5)).toBe("fair");
-      expect(severityMappers.drawdown(-9)).toBe("fair");
-    });
-
-    it("should return poor for 10-20%", () => {
-      expect(severityMappers.drawdown(-10)).toBe("poor");
-      expect(severityMappers.drawdown(-19)).toBe("poor");
-    });
-
-    it("should return critical for >= 20%", () => {
-      expect(severityMappers.drawdown(-20)).toBe("critical");
-      expect(severityMappers.drawdown(-50)).toBe("critical");
-    });
+  it.each([
+    [-3, "excellent"],
+    [-4.9, "excellent"],
+    [-5, "fair"],
+    [-9, "fair"],
+    [-10, "poor"],
+    [-19, "poor"],
+    [-20, "critical"],
+    [-50, "critical"],
+  ])("drawdown(%d) → %s", (value, expected) => {
+    expect(severityMappers.drawdown(value)).toBe(expected);
   });
 
-  describe("sharpe", () => {
-    it("should return excellent for >= 2.0", () => {
-      expect(severityMappers.sharpe(2.0)).toBe("excellent");
-      expect(severityMappers.sharpe(3.5)).toBe("excellent");
-    });
-
-    it("should return good for 1.0-2.0", () => {
-      expect(severityMappers.sharpe(1.0)).toBe("good");
-      expect(severityMappers.sharpe(1.9)).toBe("good");
-    });
-
-    it("should return fair for 0.5-1.0", () => {
-      expect(severityMappers.sharpe(0.5)).toBe("fair");
-      expect(severityMappers.sharpe(0.9)).toBe("fair");
-    });
-
-    it("should return poor for 0-0.5", () => {
-      expect(severityMappers.sharpe(0)).toBe("poor");
-      expect(severityMappers.sharpe(0.4)).toBe("poor");
-    });
-
-    it("should return critical for negative values", () => {
-      expect(severityMappers.sharpe(-0.1)).toBe("critical");
-      expect(severityMappers.sharpe(-1)).toBe("critical");
-    });
+  it.each([
+    [2.0, "excellent"],
+    [3.5, "excellent"],
+    [1.0, "good"],
+    [1.9, "good"],
+    [0.5, "fair"],
+    [0.9, "fair"],
+    [0, "poor"],
+    [0.4, "poor"],
+    [-0.1, "critical"],
+    [-1, "critical"],
+  ])("sharpe(%d) → %s", (value, expected) => {
+    expect(severityMappers.sharpe(value)).toBe(expected);
   });
 
-  describe("volatility", () => {
-    it("should return excellent for < 20%", () => {
-      expect(severityMappers.volatility(10)).toBe("excellent");
-      expect(severityMappers.volatility(19)).toBe("excellent");
-    });
-
-    it("should return good for 20-40%", () => {
-      expect(severityMappers.volatility(20)).toBe("good");
-      expect(severityMappers.volatility(39)).toBe("good");
-    });
-
-    it("should return fair for 40-60%", () => {
-      expect(severityMappers.volatility(40)).toBe("fair");
-      expect(severityMappers.volatility(59)).toBe("fair");
-    });
-
-    it("should return poor for 60-85%", () => {
-      expect(severityMappers.volatility(60)).toBe("poor");
-      expect(severityMappers.volatility(84)).toBe("poor");
-    });
-
-    it("should return critical for >= 85%", () => {
-      expect(severityMappers.volatility(85)).toBe("critical");
-      expect(severityMappers.volatility(100)).toBe("critical");
-    });
+  it.each([
+    [10, "excellent"],
+    [19, "excellent"],
+    [20, "good"],
+    [39, "good"],
+    [40, "fair"],
+    [59, "fair"],
+    [60, "poor"],
+    [84, "poor"],
+    [85, "critical"],
+    [100, "critical"],
+  ])("volatility(%d) → %s", (value, expected) => {
+    expect(severityMappers.volatility(value)).toBe(expected);
   });
 
-  describe("underwater", () => {
-    it("should return excellent for < 2%", () => {
-      expect(severityMappers.underwater(-1)).toBe("excellent");
-      expect(severityMappers.underwater(-1.9)).toBe("excellent");
-    });
-
-    it("should return good for 2-5%", () => {
-      expect(severityMappers.underwater(-2)).toBe("good");
-      expect(severityMappers.underwater(-4.9)).toBe("good");
-    });
-
-    it("should return fair for 5-10%", () => {
-      expect(severityMappers.underwater(-5)).toBe("fair");
-      expect(severityMappers.underwater(-9.9)).toBe("fair");
-    });
-
-    it("should return poor for 10-15%", () => {
-      expect(severityMappers.underwater(-10)).toBe("poor");
-      expect(severityMappers.underwater(-14.9)).toBe("poor");
-    });
-
-    it("should return critical for >= 15%", () => {
-      expect(severityMappers.underwater(-15)).toBe("critical");
-      expect(severityMappers.underwater(-30)).toBe("critical");
-    });
+  it.each([
+    [-1, "excellent"],
+    [-1.9, "excellent"],
+    [-2, "good"],
+    [-4.9, "good"],
+    [-5, "fair"],
+    [-9.9, "fair"],
+    [-10, "poor"],
+    [-14.9, "poor"],
+    [-15, "critical"],
+    [-30, "critical"],
+  ])("underwater(%d) → %s", (value, expected) => {
+    expect(severityMappers.underwater(value)).toBe(expected);
   });
 });
 

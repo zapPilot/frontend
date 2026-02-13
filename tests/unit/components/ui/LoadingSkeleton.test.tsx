@@ -27,26 +27,23 @@ describe("LoadingSkeleton", () => {
   });
 
   describe("Variant Types", () => {
-    it("should render text variant", () => {
-      render(<LoadingSkeleton variant="text" />);
-
-      const skeleton = screen.getByTestId("loading-skeleton");
-      expect(skeleton).toHaveClass("h-4", "bg-gray-200", "rounded");
-    });
-
-    it("should render circular variant", () => {
-      render(<LoadingSkeleton variant="circular" />);
-
-      const skeleton = screen.getByTestId("loading-skeleton");
-      expect(skeleton).toHaveClass("rounded-full");
-    });
-
-    it("should render rectangular variant", () => {
-      render(<LoadingSkeleton variant="rectangular" />);
-
-      const skeleton = screen.getByTestId("loading-skeleton");
-      expect(skeleton).toHaveClass("rounded");
-    });
+    it.each([
+      ["text", ["h-4", "bg-gray-200", "rounded"]],
+      ["circular", ["rounded-full"]],
+      ["rectangular", ["rounded"]],
+    ] as [string, string[]][])(
+      "should render %s variant",
+      (variant, expectedClasses) => {
+        render(
+          <LoadingSkeleton
+            variant={variant as "text" | "circular" | "rectangular"}
+          />
+        );
+        expect(screen.getByTestId("loading-skeleton")).toHaveClass(
+          ...expectedClasses
+        );
+      }
+    );
   });
 
   describe("Text Variant with Lines", () => {
@@ -225,19 +222,13 @@ describe("Skeleton Integration", () => {
       </div>
     );
 
-    // Check that each skeleton component contains animated elements
-    const cardSkeleton = screen.getByTestId("card-skeleton");
-    const metricsSkeleton = screen.getByTestId("metrics-skeleton");
-    const chartSkeleton = screen.getByTestId("chart-skeleton");
-
-    expect(
-      cardSkeleton.querySelectorAll(".animate-pulse").length
-    ).toBeGreaterThan(0);
-    expect(
-      metricsSkeleton.querySelectorAll(".animate-pulse").length
-    ).toBeGreaterThan(0);
-    expect(
-      chartSkeleton.querySelectorAll(".animate-pulse").length
-    ).toBeGreaterThan(0);
+    for (const testId of [
+      "card-skeleton",
+      "metrics-skeleton",
+      "chart-skeleton",
+    ]) {
+      const el = screen.getByTestId(testId);
+      expect(el.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    }
   });
 });
