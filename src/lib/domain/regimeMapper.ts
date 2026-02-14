@@ -36,20 +36,14 @@ export const REGIME_LABELS: Record<RegimeId, string> = {
  * ```
  */
 export function getRegimeFromSentiment(sentimentValue: number): RegimeId {
-  // Validate input
-  if (isNaN(sentimentValue) || !isFinite(sentimentValue)) {
+  // Validate input: reject NaN, Infinity, and out-of-range values
+  if (
+    !Number.isFinite(sentimentValue) ||
+    sentimentValue < 0 ||
+    sentimentValue > 100
+  ) {
     logger.warn(
       `Invalid sentiment value: ${sentimentValue}. Defaulting to neutral regime.`,
-      { sentimentValue },
-      "regimeMapper"
-    );
-    return "n";
-  }
-
-  // Handle out-of-range values
-  if (sentimentValue < 0 || sentimentValue > 100) {
-    logger.warn(
-      `Sentiment value ${sentimentValue} is out of range (0-100). Defaulting to neutral regime.`,
       { sentimentValue },
       "regimeMapper"
     );

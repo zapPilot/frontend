@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createValidator } from "@/schemas/schemaUtils";
+
 /**
  * Zod schemas for regime history API responses
  *
@@ -112,18 +114,6 @@ export type RegimeHistoryResponse = z.infer<typeof regimeHistoryResponseSchema>;
 // VALIDATION HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Validates regime history API response data
- * Returns validated data or throws ZodError with detailed error messages
- *
- * @param data - Unknown data to validate
- * @returns Validated regime history response
- * @throws {ZodError} If validation fails
- */
-export function validateRegimeHistoryResponse(
-  data: unknown
-): RegimeHistoryResponse {
-  return regimeHistoryResponseSchema.parse(data);
-}
-
-// safeValidateRegimeHistoryResponse removed (test-only)
+export const validateRegimeHistoryResponse = createValidator(
+  regimeHistoryResponseSchema
+);

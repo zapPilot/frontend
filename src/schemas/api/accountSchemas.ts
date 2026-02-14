@@ -1,6 +1,8 @@
 import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
 import { z } from "zod";
 
+import { createValidator } from "@/schemas/schemaUtils";
+
 /**
  * Zod schemas for account service API responses
  *
@@ -241,76 +243,25 @@ export type { EtlJobStatus };
 // VALIDATION HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Validates connect wallet response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateConnectWalletResponse(
-  data: unknown
-): ConnectWalletResponse {
-  return connectWalletResponseSchema.parse(data) as ConnectWalletResponse;
-}
-
-/**
- * Validates add wallet response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateAddWalletResponse(data: unknown): AddWalletResponse {
-  return addWalletResponseSchema.parse(data);
-}
-
-/**
- * Validates update email response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateUpdateEmailResponse(
-  data: unknown
-): UpdateEmailResponse {
-  return updateEmailResponseSchema.parse(data);
-}
-
-/**
- * Validates user profile response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateUserProfileResponse(
-  data: unknown
-): UserProfileResponse {
-  return userProfileResponseSchema.parse(data);
-}
-
-/**
- * Validates user crypto wallets array from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateUserWallets(data: unknown): UserCryptoWallet[] {
-  return z.array(userCryptoWalletSchema).parse(data);
-}
-
-/**
- * Validates account tokens array from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateAccountTokens(data: unknown): AccountToken[] {
-  return z.array(accountTokenSchema).parse(data);
-}
-
-/**
- * Validates message response from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateMessageResponse(data: unknown): MessageResponse {
-  return messageResponseSchema.parse(data);
-}
-
-/**
- * Validates health check response from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateHealthCheckResponse(
-  data: unknown
-): HealthCheckResponse {
-  return healthCheckResponseSchema.parse(data);
-}
-
-// safeValidateUserProfile removed (test-only usage)
+export const validateConnectWalletResponse = createValidator(
+  connectWalletResponseSchema
+);
+export const validateAddWalletResponse = createValidator(
+  addWalletResponseSchema
+);
+export const validateUpdateEmailResponse = createValidator(
+  updateEmailResponseSchema
+);
+export const validateUserProfileResponse = createValidator(
+  userProfileResponseSchema
+);
+export const validateUserWallets = createValidator(
+  z.array(userCryptoWalletSchema)
+);
+export const validateAccountTokens = createValidator(
+  z.array(accountTokenSchema)
+);
+export const validateMessageResponse = createValidator(messageResponseSchema);
+export const validateHealthCheckResponse = createValidator(
+  healthCheckResponseSchema
+);

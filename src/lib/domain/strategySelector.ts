@@ -140,10 +140,29 @@ export function getActiveStrategy(
 }
 
 /**
+ * Strategy metadata config for each direction type.
+ * Record<DirectionType, ...> ensures compile-time exhaustiveness.
+ */
+const STRATEGY_META: Record<DirectionType, StrategyMeta> = {
+  fromLeft: {
+    animationClass: "slide-from-left",
+    ariaLabel: "Transitioning from bearish to bullish regime",
+    description: "Increasing crypto allocation",
+  },
+  fromRight: {
+    animationClass: "slide-from-right",
+    ariaLabel: "Transitioning from bullish to bearish regime",
+    description: "Decreasing crypto allocation",
+  },
+  default: {
+    animationClass: "fade-in",
+    ariaLabel: "Current market regime",
+    description: "Maintaining current allocation",
+  },
+};
+
+/**
  * Gets strategy metadata for UI rendering
- *
- * Maps direction to animation classes and accessibility labels.
- * Used by portfolio presenter components for visual transitions.
  *
  * @param direction - Strategy direction type
  * @returns Strategy metadata with animation and accessibility info
@@ -159,29 +178,7 @@ export function getActiveStrategy(
  * ```
  */
 export function getStrategyMeta(direction: DirectionType): StrategyMeta {
-  switch (direction) {
-    case "fromLeft":
-      return {
-        animationClass: "slide-from-left",
-        ariaLabel: "Transitioning from bearish to bullish regime",
-        description: "Increasing crypto allocation",
-      };
-
-    case "fromRight":
-      return {
-        animationClass: "slide-from-right",
-        ariaLabel: "Transitioning from bullish to bearish regime",
-        description: "Decreasing crypto allocation",
-      };
-
-    case "default":
-    default:
-      return {
-        animationClass: "fade-in",
-        ariaLabel: "Current market regime",
-        description: "Maintaining current allocation",
-      };
-  }
+  return STRATEGY_META[direction] ?? STRATEGY_META.default;
 }
 
 // Unused export removed: isValidRegimeId

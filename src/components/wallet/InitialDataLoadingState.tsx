@@ -34,17 +34,13 @@ export function InitialDataLoadingState({
   );
 }
 
+const STATUS_MESSAGES: Record<string, string> = {
+  pending: "Job queued...",
+  processing: "Fetching data from DeBank...",
+  completed: "Finalizing...",
+  failed: "Something went wrong",
+};
+
 function getStatusMessage(status: string): string {
-  switch (status) {
-    case "pending":
-      return "Job queued...";
-    case "processing":
-      return "Fetching data from DeBank...";
-    case "completed":
-      return "Finalizing...";
-    case "failed":
-      return "Something went wrong";
-    default:
-      return "Initializing...";
-  }
+  return STATUS_MESSAGES[status] ?? "Initializing...";
 }

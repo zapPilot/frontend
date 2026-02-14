@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createValidator } from "@/schemas/schemaUtils";
+
 /**
  * Zod schemas for market sentiment API responses
  *
@@ -43,14 +45,6 @@ export type SentimentApiResponse = z.infer<typeof sentimentApiResponseSchema>;
 // VALIDATION HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Validates sentiment API response data
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateSentimentApiResponse(
-  data: unknown
-): SentimentApiResponse {
-  return sentimentApiResponseSchema.parse(data);
-}
-
-// safeValidateSentimentApiResponse removed - only used in tests (2025-12-22)
+export const validateSentimentApiResponse = createValidator(
+  sentimentApiResponseSchema
+);

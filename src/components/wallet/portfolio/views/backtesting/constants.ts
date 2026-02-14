@@ -16,6 +16,8 @@ export const SIGNAL_PROVIDER_OPTIONS = [
   { value: "fgi", label: "fgi" },
   { value: "hybrid_fgi_dma", label: "hybrid_fgi_dma" },
   { value: "hybrid_dma_fgi", label: "hybrid_dma_fgi" },
+  { value: "mayer", label: "mayer" },
+  { value: "hybrid_fgi_mayer", label: "hybrid_fgi_mayer" },
   { value: "dma_200", label: "dma_200" },
   { value: "vix", label: "vix" },
   { value: "mvrv", label: "mvrv" },

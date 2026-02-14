@@ -166,17 +166,14 @@ export function getRiskConfig(healthRate: number) {
  * mapBorrowingStatusToRiskLevel("HEALTHY")  // RiskLevel.SAFE
  * ```
  */
+const BORROWING_STATUS_TO_RISK: Record<string, RiskLevel> = {
+  HEALTHY: RiskLevel.SAFE,
+  WARNING: RiskLevel.RISKY, // Map WARNING to RISKY for visual consistency
+  CRITICAL: RiskLevel.CRITICAL,
+};
+
 export function mapBorrowingStatusToRiskLevel(
   status: "HEALTHY" | "WARNING" | "CRITICAL"
 ): RiskLevel {
-  switch (status) {
-    case "HEALTHY":
-      return RiskLevel.SAFE;
-    case "WARNING":
-      return RiskLevel.RISKY; // Map WARNING to RISKY for visual consistency
-    case "CRITICAL":
-      return RiskLevel.CRITICAL;
-    default:
-      return RiskLevel.MODERATE;
-  }
+  return BORROWING_STATUS_TO_RISK[status] ?? RiskLevel.MODERATE;
 }

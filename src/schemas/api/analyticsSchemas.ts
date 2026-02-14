@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { createValidator } from "@/schemas/schemaUtils";
+
 /**
  * Zod schemas for analytics service API responses
  *
@@ -235,14 +237,10 @@ export const borrowingPositionsResponseSchema = z.object({
   last_updated: z.string(), // ISO 8601 datetime string
 });
 
-/**
- * Validator function for borrowing positions response
- */
-export function validateBorrowingPositionsResponse(
-  data: unknown
-): BorrowingPositionsResponse {
-  return borrowingPositionsResponseSchema.parse(data);
-}
+/** Validator function for borrowing positions response */
+export const validateBorrowingPositionsResponse = createValidator(
+  borrowingPositionsResponseSchema
+);
 
 /**
  * Schema for landing page response
@@ -358,7 +356,7 @@ export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
 /** @public */ export type ProtocolYieldToday = z.infer<
   typeof protocolYieldTodaySchema
 >;
-export type YieldReturnsSummaryResponse = z.infer<
+/** @public */ export type YieldReturnsSummaryResponse = z.infer<
   typeof yieldReturnsSummaryResponseSchema
 >;
 export type LandingPageResponse = z.infer<typeof landingPageResponseSchema>;
@@ -437,7 +435,7 @@ export interface UnifiedDashboardResponse {
 export type DailyYieldReturnsResponse = z.infer<
   typeof dailyYieldReturnsResponseSchema
 >;
-export type PoolPerformanceResponse = z.infer<
+/** @public */ export type PoolPerformanceResponse = z.infer<
   typeof poolPerformanceResponseSchema
 >;
 export type PoolDetail = z.infer<typeof poolDetailSchema>;
@@ -446,45 +444,21 @@ export type PoolDetail = z.infer<typeof poolDetailSchema>;
 // VALIDATION HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Validates yield returns summary response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateYieldReturnsSummaryResponse(
-  data: unknown
-): YieldReturnsSummaryResponse {
-  return yieldReturnsSummaryResponseSchema.parse(data);
-}
-
-/**
- * Validates landing page response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateLandingPageResponse(
-  data: unknown
-): LandingPageResponse {
-  return landingPageResponseSchema.parse(data);
-}
-
-/**
- * Validates unified dashboard response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateUnifiedDashboardResponse(
-  data: unknown
-): UnifiedDashboardResponse {
-  return unifiedDashboardResponseSchema.parse(data);
-}
-
-/**
- * Validates daily yield returns response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validateDailyYieldReturnsResponse(
-  data: unknown
-): DailyYieldReturnsResponse {
-  return dailyYieldReturnsResponseSchema.parse(data);
-}
+export const validateYieldReturnsSummaryResponse = createValidator(
+  yieldReturnsSummaryResponseSchema
+);
+export const validateLandingPageResponse = createValidator(
+  landingPageResponseSchema
+);
+export const validateUnifiedDashboardResponse = createValidator(
+  unifiedDashboardResponseSchema
+);
+export const validateDailyYieldReturnsResponse = createValidator(
+  dailyYieldReturnsResponseSchema
+);
+export const validatePoolPerformanceResponse = createValidator(
+  poolPerformanceResponseSchema
+);
 
 /**
  * Safe validation that returns result with success/error information
@@ -494,14 +468,4 @@ export function safeValidateUnifiedDashboardResponse(
   data: unknown
 ): ReturnType<typeof unifiedDashboardResponseSchema.safeParse> {
   return unifiedDashboardResponseSchema.safeParse(data);
-}
-
-/**
- * Validates pool performance response data from API
- * Returns validated data or throws ZodError with detailed error messages
- */
-export function validatePoolPerformanceResponse(
-  data: unknown
-): PoolPerformanceResponse {
-  return poolPerformanceResponseSchema.parse(data);
 }

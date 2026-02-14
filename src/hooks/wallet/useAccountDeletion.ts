@@ -4,12 +4,12 @@ import { useCallback, useState } from "react";
 import { TIMINGS } from "@/constants/timings";
 import { WALLET_MESSAGES } from "@/constants/wallet";
 import { useUser } from "@/contexts/UserContext";
+import { invalidateAndRefetch } from "@/hooks/utils/useQueryInvalidation";
 import { queryKeys } from "@/lib/state/queryClient";
 import { handleWalletError } from "@/lib/validation/walletUtils";
 import { useToast } from "@/providers/ToastProvider";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import { deleteUser as deleteUserAccount } from "@/services/accountService";
-import { walletLogger } from "@/utils/logger";
 
 interface UseAccountDeletionParams {
   userId: string;
@@ -68,24 +68,12 @@ export function useAccountDeletion({ userId }: UseAccountDeletionParams) {
       });
 
       // Invalidate queries and trigger reconnection flow
-      try {
-        await queryClient.invalidateQueries({
-          queryKey: queryKeys.user.wallets(userId),
-        });
-      } catch (invalidateError) {
-        walletLogger.error(
-          "Failed to invalidate wallet queries after deleting account",
-          invalidateError
-        );
-      }
-      try {
-        await refetch();
-      } catch (refetchError) {
-        walletLogger.error(
-          "Failed to refetch user data after deleting account",
-          refetchError
-        );
-      }
+      await invalidateAndRefetch({
+        queryClient,
+        queryKey: queryKeys.user.wallets(userId),
+        refetch,
+        operationName: "account deletion",
+      });
 
       if (shouldReload) {
         // Close the wallet manager after a brief delay
