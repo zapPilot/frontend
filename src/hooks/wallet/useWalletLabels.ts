@@ -54,12 +54,14 @@ export function useWalletLabels({
         error: null,
       });
 
-      try {
-        // Update local state immediately (optimistic update)
+      const updateLabel = (label: string) =>
         setWallets(prev =>
-          prev.map(w => (w.id === walletId ? { ...w, label: newLabel } : w))
+          prev.map(w => (w.id === walletId ? { ...w, label } : w))
         );
 
+      try {
+        // Update local state immediately (optimistic update)
+        updateLabel(newLabel);
         setEditingWallet(null);
 
         // Call the API to update wallet label
@@ -70,13 +72,7 @@ export function useWalletLabels({
         );
 
         if (!response.success) {
-          // Revert optimistic update on API failure
-          setWallets(prev =>
-            prev.map(w =>
-              w.id === walletId ? { ...w, label: wallet.label } : w
-            )
-          );
-
+          updateLabel(wallet.label);
           setWalletOperationState("editing", walletId, {
             isLoading: false,
             error: response.error ?? "Failed to update wallet label",
@@ -89,11 +85,7 @@ export function useWalletLabels({
           error: null,
         });
       } catch (error) {
-        // Revert optimistic update on error
-        setWallets(prev =>
-          prev.map(w => (w.id === walletId ? { ...w, label: wallet.label } : w))
-        );
-
+        updateLabel(wallet.label);
         const errorMessage = handleWalletError(error);
         setWalletOperationState("editing", walletId, {
           isLoading: false,

@@ -27,19 +27,12 @@ export type {
  * Build query string from params, filtering out undefined values
  */
 const buildQueryString = (params: DailySuggestionParams): string => {
-  const entries = Object.entries(params).filter(
-    ([, value]) => value !== undefined
-  );
-  if (entries.length === 0) return "";
-  return (
-    "?" +
-    entries
-      .map(
-        ([key, value]) =>
-          `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`
-      )
-      .join("&")
-  );
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) query.append(key, String(value));
+  }
+  const str = query.toString();
+  return str ? `?${str}` : "";
 };
 
 // =========================================================================

@@ -55,41 +55,31 @@ export function calculateAllocation(
   const stablePercent = (stablecoinsValue / totalAssets) * 100;
 
   // Build constituents for detailed breakdown
-  const cryptoConstituents: AllocationConstituent[] = [];
-  const stableConstituents: AllocationConstituent[] = [];
-
-  // Add BTC if present
-  if (btcValue > 0) {
-    cryptoConstituents.push({
+  const safeCryptoDivisor = totalCrypto || 1;
+  const cryptoConstituents: AllocationConstituent[] = [
+    {
       asset: "BTC",
       symbol: "BTC",
       name: "Bitcoin",
-      value: (btcValue / totalCrypto) * 100,
+      value: (btcValue / safeCryptoDivisor) * 100,
       color: ASSET_COLORS.BTC,
-    });
-  }
-
-  // Add ETH if present
-  if (ethValue > 0) {
-    cryptoConstituents.push({
+    },
+    {
       asset: "ETH",
       symbol: "ETH",
       name: "Ethereum",
-      value: (ethValue / totalCrypto) * 100,
+      value: (ethValue / safeCryptoDivisor) * 100,
       color: ASSET_COLORS.ETH,
-    });
-  }
-
-  // Add Others if present
-  if (othersValue > 0) {
-    cryptoConstituents.push({
+    },
+    {
       asset: "Others",
       symbol: "ALT",
       name: "Altcoins",
-      value: (othersValue / totalCrypto) * 100,
+      value: (othersValue / safeCryptoDivisor) * 100,
       color: ASSET_COLORS.ALT,
-    });
-  }
+    },
+  ].filter(c => c.value > 0);
+  const stableConstituents: AllocationConstituent[] = [];
 
   // Estimate USDC/USDT split (60/40 default - backend does not provide breakdown yet)
   if (stablecoinsValue > 0) {

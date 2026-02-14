@@ -1,12 +1,8 @@
 "use client";
 
-import {
-  type RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type RefObject, useCallback, useRef, useState } from "react";
+
+import { useClickOutside } from "@/hooks/ui/useClickOutside";
 
 export interface TransactionDropdownState {
   dropdownRef: RefObject<HTMLDivElement | null>;
@@ -37,18 +33,10 @@ export function useTransactionDropdownState(): TransactionDropdownState {
     setIsAssetDropdownOpen(false);
   }, []);
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        closeDropdowns();
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [closeDropdowns]);
+  const isAnyDropdownOpen = isAssetDropdownOpen || isChainDropdownOpen;
+  useClickOutside(dropdownRef, closeDropdowns, isAnyDropdownOpen, {
+    enableEscapeKey: false,
+  });
 
   return {
     dropdownRef,

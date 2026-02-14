@@ -255,7 +255,14 @@ describe("useTransactionDropdownState", () => {
 
     it("cleans up event listener on unmount", () => {
       const removeEventListenerSpy = vi.spyOn(document, "removeEventListener");
-      const { unmount } = renderHook(() => useTransactionDropdownState());
+      const { result, unmount } = renderHook(() =>
+        useTransactionDropdownState()
+      );
+
+      // Open a dropdown so useClickOutside registers its listeners
+      act(() => {
+        result.current.toggleAssetDropdown();
+      });
 
       unmount();
 

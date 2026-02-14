@@ -19,8 +19,9 @@ import { InitialDataLoadingState } from "@/components/wallet/InitialDataLoadingS
 
 import { render, screen } from "../../../test-utils";
 
-// Mock lucide-react icons
-vi.mock("lucide-react", () => ({
+// Mock lucide-react icons — spread originals so transitive imports (e.g. ToastNotification) work
+vi.mock("lucide-react", async importOriginal => ({
+  ...(await importOriginal<typeof import("lucide-react")>()),
   Loader2: (props: any) => (
     <svg data-testid="loader-icon" className={props.className} {...props} />
   ),

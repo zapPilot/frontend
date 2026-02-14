@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CheckCircle,
   ExternalLink,
+  type LucideIcon,
   X,
   XCircle,
 } from "lucide-react";
@@ -35,6 +36,36 @@ interface ToastNotificationProps {
   onClose: (id: string) => void;
 }
 
+const TOAST_STYLES: Record<
+  Toast["type"],
+  { Icon: LucideIcon; iconColor: string; borderColor: string; bgColor: string }
+> = {
+  success: {
+    Icon: CheckCircle,
+    iconColor: "text-green-400",
+    borderColor: "border-green-600/30",
+    bgColor: "bg-green-900/20",
+  },
+  error: {
+    Icon: XCircle,
+    iconColor: "text-red-400",
+    borderColor: "border-red-600/30",
+    bgColor: "bg-red-900/20",
+  },
+  info: {
+    Icon: AlertCircle,
+    iconColor: "text-blue-400",
+    borderColor: "border-blue-600/30",
+    bgColor: "bg-blue-900/20",
+  },
+  warning: {
+    Icon: AlertTriangle,
+    iconColor: "text-amber-400",
+    borderColor: "border-amber-500/30",
+    bgColor: "bg-amber-900/20",
+  },
+};
+
 export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -59,56 +90,13 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
     return () => clearTimeout(timer);
   }, [toast.duration, handleClose]);
 
-  const getIcon = () => {
-    switch (toast.type) {
-      case "success":
-        return <CheckCircle size={20} className="text-green-400" />;
-      case "error":
-        return <XCircle size={20} className="text-red-400" />;
-      case "info":
-        return <AlertCircle size={20} className="text-blue-400" />;
-      case "warning":
-        return <AlertTriangle size={20} className="text-amber-400" />;
-      default:
-        return <CheckCircle size={20} className="text-green-400" />;
-    }
-  };
-
-  const getBorderColor = () => {
-    switch (toast.type) {
-      case "success":
-        return "border-green-600/30";
-      case "error":
-        return "border-red-600/30";
-      case "info":
-        return "border-blue-600/30";
-      case "warning":
-        return "border-amber-500/30";
-      default:
-        return "border-green-600/30";
-    }
-  };
-
-  const getBackgroundColor = () => {
-    switch (toast.type) {
-      case "success":
-        return "bg-green-900/20";
-      case "error":
-        return "bg-red-900/20";
-      case "info":
-        return "bg-blue-900/20";
-      case "warning":
-        return "bg-amber-900/20";
-      default:
-        return "bg-green-900/20";
-    }
-  };
+  const { Icon, iconColor, borderColor, bgColor } = TOAST_STYLES[toast.type];
 
   return (
     <div
       className={`
         mb-3 w-96 max-w-sm rounded-lg border backdrop-blur-sm transition-all duration-300 ease-out
-        ${getBorderColor()} ${getBackgroundColor()}
+        ${borderColor} ${bgColor}
         ${
           isVisible && !isExiting
             ? "translate-x-0 opacity-100"
@@ -119,7 +107,7 @@ export function ToastNotification({ toast, onClose }: ToastNotificationProps) {
       <div className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1">
-            {getIcon()}
+            <Icon size={20} className={iconColor} />
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-white text-sm break-words leading-tight">
                 {toast.title}

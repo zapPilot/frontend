@@ -249,7 +249,8 @@ describe("strategyService", () => {
       });
 
       const calledUrl = analyticsEngineGetSpy.mock.calls[0][0];
-      expect(calledUrl).toContain("some%20preset%26value");
+      // URLSearchParams encodes spaces as '+' per application/x-www-form-urlencoded spec
+      expect(calledUrl).toContain("some+preset%26value");
     });
   });
 });

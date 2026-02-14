@@ -225,26 +225,31 @@ function calculateTWR(
   };
 }
 
+function extractRollingAverage<T>(
+  data: T[] | undefined,
+  selector: (item: T) => number | undefined
+): number | null {
+  const values = (data ?? [])
+    .map(d => selector(d) ?? 0)
+    .filter(v => !isNaN(v) && isFinite(v));
+  return values.length > 0
+    ? values.reduce((sum, v) => sum + v, 0) / values.length
+    : null;
+}
+
 function extractSharpe(
   rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]
 ): MetricData {
-  const sharpeData = rollingAnalytics?.sharpe?.rolling_sharpe_data ?? [];
-  const validSharpes = sharpeData
-    .map(d => d.rolling_sharpe_ratio ?? 0)
-    .filter(s => !isNaN(s) && isFinite(s));
-
-  if (validSharpes.length === 0) {
-    return createPlaceholderMetric("N/A", "No data");
-  }
-
-  const avgSharpe =
-    validSharpes.reduce((sum, s) => sum + s, 0) / validSharpes.length;
-  const percentile = getSharpePercentile(avgSharpe);
+  const avg = extractRollingAverage(
+    rollingAnalytics?.sharpe?.rolling_sharpe_data,
+    d => d.rolling_sharpe_ratio
+  );
+  if (avg === null) return createPlaceholderMetric("N/A", "No data");
 
   return {
-    value: avgSharpe.toFixed(2),
-    subValue: `Top ${percentile}% of Pilots`,
-    trend: getSharpeTrend(avgSharpe),
+    value: avg.toFixed(2),
+    subValue: `Top ${getSharpePercentile(avg)}% of Pilots`,
+    trend: getSharpeTrend(avg),
   };
 }
 
@@ -270,23 +275,16 @@ function calculateWinRate(
 function extractVolatility(
   rollingAnalytics: UnifiedDashboardResponse["rolling_analytics"]
 ): MetricData {
-  const volatilityData =
-    rollingAnalytics?.volatility?.rolling_volatility_data ?? [];
-  const validVolatilities = volatilityData
-    .map(d => d.annualized_volatility_pct ?? 0)
-    .filter(v => !isNaN(v) && isFinite(v));
-
-  if (validVolatilities.length === 0) {
-    return createPlaceholderMetric("N/A", "No data");
-  }
-
-  const avgVolatility =
-    validVolatilities.reduce((sum, v) => sum + v, 0) / validVolatilities.length;
+  const avg = extractRollingAverage(
+    rollingAnalytics?.volatility?.rolling_volatility_data,
+    d => d.annualized_volatility_pct
+  );
+  if (avg === null) return createPlaceholderMetric("N/A", "No data");
 
   return {
-    value: `${avgVolatility.toFixed(1)}%`,
-    subValue: getVolatilityRiskLabel(avgVolatility),
-    trend: avgVolatility < 25 ? "up" : "down",
+    value: `${avg.toFixed(1)}%`,
+    subValue: getVolatilityRiskLabel(avg),
+    trend: avg < 25 ? "up" : "down",
   };
 }
 
