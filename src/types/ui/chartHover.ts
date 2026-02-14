@@ -142,36 +142,21 @@ export type ChartHoverState =
   | DailyYieldHoverData;
 
 /**
- * Helper type guard functions for type narrowing
+ * Factory for chart hover type guard functions
  */
-export function isPerformanceHover(
-  state: ChartHoverState | null
-): state is PerformanceHoverData {
-  return state?.chartType === "performance";
+function createHoverGuard<T extends ChartHoverState>(
+  chartType: T["chartType"]
+) {
+  return (state: ChartHoverState | null): state is T =>
+    state?.chartType === chartType;
 }
 
-export function isAllocationHover(
-  state: ChartHoverState | null
-): state is AllocationHoverData {
-  return state?.chartType === "asset-allocation";
-}
-
-export function isDrawdownHover(
-  state: ChartHoverState | null
-): state is DrawdownHoverData {
-  return state?.chartType === "drawdown-recovery";
-}
-
-export function isSharpeHover(
-  state: ChartHoverState | null
-): state is SharpeHoverData {
-  return state?.chartType === "sharpe";
-}
-
-export function isVolatilityHover(
-  state: ChartHoverState | null
-): state is VolatilityHoverData {
-  return state?.chartType === "volatility";
-}
-
-// isDailyYieldHover removed - unused (2025-12-22)
+export const isPerformanceHover =
+  createHoverGuard<PerformanceHoverData>("performance");
+export const isAllocationHover =
+  createHoverGuard<AllocationHoverData>("asset-allocation");
+export const isDrawdownHover =
+  createHoverGuard<DrawdownHoverData>("drawdown-recovery");
+export const isSharpeHover = createHoverGuard<SharpeHoverData>("sharpe");
+export const isVolatilityHover =
+  createHoverGuard<VolatilityHoverData>("volatility");

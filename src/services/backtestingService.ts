@@ -24,33 +24,25 @@ const createBacktestingServiceError = createErrorMapper(
 
 const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
 
+const VALID_BUCKETS = new Set(["spot", "stable", "lp"]);
+
+function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
+  if (!t || typeof t !== "object") return false;
+  const m = t as Partial<BacktestTransferMetadata>;
+  return (
+    VALID_BUCKETS.has(m.from_bucket ?? "") &&
+    VALID_BUCKETS.has(m.to_bucket ?? "") &&
+    typeof m.amount_usd === "number"
+  );
+}
+
 function extractTransfers(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): BacktestTransferMetadata[] {
-  const metrics = strategy?.metrics as
-    | { metadata?: { transfers?: unknown } }
-    | undefined;
-  const transfers = metrics?.metadata?.transfers;
-  if (!Array.isArray(transfers)) return [];
-
-  return transfers
-    .map(t => {
-      if (!t || typeof t !== "object") return null;
-      const maybe = t as Partial<BacktestTransferMetadata>;
-      if (
-        (maybe.from_bucket !== "spot" &&
-          maybe.from_bucket !== "stable" &&
-          maybe.from_bucket !== "lp") ||
-        (maybe.to_bucket !== "spot" &&
-          maybe.to_bucket !== "stable" &&
-          maybe.to_bucket !== "lp") ||
-        typeof maybe.amount_usd !== "number"
-      ) {
-        return null;
-      }
-      return maybe as BacktestTransferMetadata;
-    })
-    .filter((t): t is BacktestTransferMetadata => t != null);
+  const transfers = (
+    strategy?.metrics as { metadata?: { transfers?: unknown } } | undefined
+  )?.metadata?.transfers;
+  return Array.isArray(transfers) ? transfers.filter(isValidTransfer) : [];
 }
 
 function isDcaBaselineStrategy(

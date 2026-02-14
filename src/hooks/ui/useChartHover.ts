@@ -251,34 +251,6 @@ export function useChartHover<T>(
     [updateHoverFromClientPoint]
   );
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent<SVGSVGElement>) => {
-      handlePointerInteraction(event);
-    },
-    [handlePointerInteraction]
-  );
-
-  const handlePointerMove = useCallback(
-    (event: PointerEvent<SVGSVGElement>) => {
-      handlePointerInteraction(event);
-    },
-    [handlePointerInteraction]
-  );
-
-  const handlePointerDown = useCallback(
-    (event: PointerEvent<SVGSVGElement>) => {
-      handlePointerInteraction(event);
-    },
-    [handlePointerInteraction]
-  );
-
-  const handleTouchMove = useCallback(
-    (event: TouchEvent<SVGSVGElement>) => {
-      handlePointerInteraction(event);
-    },
-    [handlePointerInteraction]
-  );
-
   const handleMouseLeave = useCallback(() => {
     if (rafId.current != null) cancelAnimationFrame(rafId.current);
     rafId.current = null;
@@ -314,10 +286,10 @@ export function useChartHover<T>(
 
   return {
     hoveredPoint,
-    handleMouseMove,
-    handlePointerMove,
-    handlePointerDown,
-    handleTouchMove,
+    handleMouseMove: handlePointerInteraction,
+    handlePointerMove: handlePointerInteraction,
+    handlePointerDown: handlePointerInteraction,
+    handleTouchMove: handlePointerInteraction,
     handleMouseLeave,
     handleTouchEnd: handleMouseLeave,
   };

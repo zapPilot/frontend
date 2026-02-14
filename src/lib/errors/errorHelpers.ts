@@ -83,20 +83,11 @@ function getErrorStatus(error: unknown): number | undefined {
  */
 export function extractStatusCode(error: unknown): number {
   const directStatus = getErrorStatus(error);
-  if (typeof directStatus === "number") {
-    return directStatus;
-  }
+  if (typeof directStatus === "number") return directStatus;
 
-  if (
-    error &&
-    typeof error === "object" &&
-    "response" in error &&
-    typeof (error as { response?: { status?: number } }).response === "object"
-  ) {
-    const status = (error as { response?: { status?: number } }).response
-      ?.status;
-    if (typeof status === "number") return status;
-  }
+  const responseStatus = (error as { response?: { status?: unknown } })
+    ?.response?.status;
+  if (typeof responseStatus === "number") return responseStatus;
 
   return 500;
 }

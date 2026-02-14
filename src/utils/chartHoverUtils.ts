@@ -10,6 +10,30 @@ import {
 } from "@/lib/ui/severityColors";
 
 // ============================================================================
+// Factory Helpers
+// ============================================================================
+
+/**
+ * Creates a function that maps a numeric value through a severity mapper
+ * and returns the corresponding label from the provided lookup table.
+ */
+function mapSeverity<T>(
+  mapper: (v: number) => SeverityLevel,
+  labels: Record<SeverityLevel, T>
+): (value: number) => T {
+  return value => labels[mapper(value)];
+}
+
+/**
+ * Creates a function that maps a label to its severity-based color pair.
+ */
+function mapLabelToColor<L extends string>(
+  mapping: Record<L, SeverityLevel>
+): (label: L) => { color: string; bgColor: string } {
+  return label => getColorForSeverity(mapping[label]);
+}
+
+// ============================================================================
 // Drawdown Functions
 // ============================================================================
 
@@ -18,22 +42,13 @@ import {
  * @param drawdown - Drawdown percentage (negative value)
  * @returns Severity label
  */
-export function getDrawdownSeverity(
-  drawdown: number
-): "Minor" | "Moderate" | "Significant" | "Severe" {
-  const severity = severityMappers.drawdown(drawdown);
-  const mapping: Record<
-    SeverityLevel,
-    "Minor" | "Moderate" | "Significant" | "Severe"
-  > = {
-    excellent: "Minor",
-    good: "Minor",
-    fair: "Moderate",
-    poor: "Significant",
-    critical: "Severe",
-  };
-  return mapping[severity];
-}
+export const getDrawdownSeverity = mapSeverity(severityMappers.drawdown, {
+  excellent: "Minor",
+  good: "Minor",
+  fair: "Moderate",
+  poor: "Significant",
+  critical: "Severe",
+} as const);
 
 // ============================================================================
 // Sharpe Ratio Functions
@@ -44,22 +59,13 @@ export function getDrawdownSeverity(
  * @param sharpe - Sharpe ratio value
  * @returns Interpretation label
  */
-export function getSharpeInterpretation(
-  sharpe: number
-): "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor" {
-  const severity = severityMappers.sharpe(sharpe);
-  const mapping: Record<
-    SeverityLevel,
-    "Excellent" | "Good" | "Fair" | "Poor" | "Very Poor"
-  > = {
-    excellent: "Excellent",
-    good: "Good",
-    fair: "Fair",
-    poor: "Poor",
-    critical: "Very Poor",
-  };
-  return mapping[severity];
-}
+export const getSharpeInterpretation = mapSeverity(severityMappers.sharpe, {
+  excellent: "Excellent",
+  good: "Good",
+  fair: "Fair",
+  poor: "Poor",
+  critical: "Very Poor",
+} as const);
 
 // ============================================================================
 // Volatility Functions
@@ -79,18 +85,9 @@ const VOLATILITY_RISK_THRESHOLDS = {
 export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) {
-    return "Low";
-  }
-
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) {
-    return "Moderate";
-  }
-
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) {
-    return "High";
-  }
-
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) return "Low";
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) return "Moderate";
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) return "High";
   return "Very High";
 }
 
@@ -104,10 +101,6 @@ export function calculateDailyVolatility(annualizedVol: number): number {
 }
 
 // ============================================================================
-// Underwater Recovery Functions
-// ============================================================================
-
-// ============================================================================
 // Color Utilities
 // ============================================================================
 
@@ -116,58 +109,34 @@ export function calculateDailyVolatility(annualizedVol: number): number {
  * @param sharpe - Sharpe ratio value
  * @returns Hex color code
  */
-export function getSharpeColor(sharpe: number): string {
-  const severity = severityMappers.sharpe(sharpe);
-  const colors: Record<SeverityLevel, string> = {
-    excellent: "#10b981",
-    good: "#84cc16",
-    fair: "#fbbf24",
-    poor: "#fb923c",
-    critical: "#ef4444",
-  };
-  return colors[severity];
-}
+export const getSharpeColor = mapSeverity<string>(severityMappers.sharpe, {
+  excellent: "#10b981",
+  good: "#84cc16",
+  fair: "#fbbf24",
+  poor: "#fb923c",
+  critical: "#ef4444",
+});
 
 /**
  * Gets Tailwind classes for drawdown severity badge
  * @param severity - Severity level
  * @returns Object with color and bgColor Tailwind classes
  */
-export function getDrawdownSeverityColor(
-  severity: "Minor" | "Moderate" | "Significant" | "Severe"
-): { color: string; bgColor: string } {
-  const drawdownSeverityMap: Record<
-    "Minor" | "Moderate" | "Significant" | "Severe",
-    SeverityLevel
-  > = {
-    Minor: "good",
-    Moderate: "fair",
-    Significant: "poor",
-    Severe: "critical",
-  };
-
-  const severityLevel = drawdownSeverityMap[severity];
-  return getColorForSeverity(severityLevel);
-}
+export const getDrawdownSeverityColor = mapLabelToColor({
+  Minor: "good",
+  Moderate: "fair",
+  Significant: "poor",
+  Severe: "critical",
+} as const);
 
 /**
  * Gets Tailwind classes for volatility risk level badge
  * @param riskLevel - Risk level
  * @returns Object with color and bgColor Tailwind classes
  */
-export function getVolatilityRiskColor(
-  riskLevel: "Low" | "Moderate" | "High" | "Very High"
-): { color: string; bgColor: string } {
-  const riskToSeverity: Record<
-    "Low" | "Moderate" | "High" | "Very High",
-    SeverityLevel
-  > = {
-    Low: "excellent",
-    Moderate: "good",
-    High: "poor",
-    "Very High": "critical",
-  };
-
-  const severityLevel = riskToSeverity[riskLevel];
-  return getColorForSeverity(severityLevel);
-}
+export const getVolatilityRiskColor = mapLabelToColor({
+  Low: "excellent",
+  Moderate: "good",
+  High: "poor",
+  "Very High": "critical",
+} as const);
