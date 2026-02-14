@@ -32,17 +32,16 @@ export function extractROIChanges(
     return { change7d: 0, change30d: 0 };
   }
 
-  let change7d = 0;
-  let change30d = 0;
-
   if (roiData.windows) {
-    change7d = roiData.windows["7d"]?.value ?? 0;
-    change30d = roiData.windows["30d"]?.value ?? 0;
-  } else {
-    // Fallback to legacy fields
-    change7d = roiData.roi_7d?.value ?? 0;
-    change30d = roiData.roi_30d?.value ?? 0;
+    return {
+      change7d: roiData.windows["7d"]?.value ?? 0,
+      change30d: roiData.windows["30d"]?.value ?? 0,
+    };
   }
 
-  return { change7d, change30d };
+  // Fallback to legacy fields
+  return {
+    change7d: roiData.roi_7d?.value ?? 0,
+    change30d: roiData.roi_30d?.value ?? 0,
+  };
 }

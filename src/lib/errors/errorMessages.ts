@@ -157,8 +157,7 @@ function findMessagePattern(
 
   // Check each pattern
   for (const [pattern, userMessage] of Object.entries(patterns)) {
-    if (pattern === "default") continue;
-    if (lowerMessage.includes(pattern.toLowerCase())) {
+    if (pattern !== "default" && lowerMessage.includes(pattern.toLowerCase())) {
       return userMessage;
     }
   }

@@ -52,23 +52,17 @@ export function parseCacheControlForHint(
 
   for (const directive of directives) {
     if (maxAgeSeconds === undefined) {
-      const parsedMaxAge =
+      maxAgeSeconds =
         parseDirectiveSeconds(directive, "max-age=") ??
         parseDirectiveSeconds(directive, "s-maxage=");
-      if (parsedMaxAge !== undefined) {
-        maxAgeSeconds = parsedMaxAge;
-        continue;
-      }
+      if (maxAgeSeconds !== undefined) continue;
     }
 
     if (staleWhileRevalidateSeconds === undefined) {
-      const parsedStale = parseDirectiveSeconds(
+      staleWhileRevalidateSeconds = parseDirectiveSeconds(
         directive,
         "stale-while-revalidate="
       );
-      if (parsedStale !== undefined) {
-        staleWhileRevalidateSeconds = parsedStale;
-      }
     }
   }
 

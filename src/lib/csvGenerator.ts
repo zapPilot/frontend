@@ -25,11 +25,9 @@ export function escapeCsvField(
   const { delimiter = ",", quote = '"' } = { ...DEFAULT_OPTIONS, ...options };
   const stringValue = value?.toString() ?? "";
 
-  if (!new RegExp(`[${delimiter}${quote}\\r\\n]`).test(stringValue)) {
-    return stringValue;
-  }
-
-  return `${quote}${stringValue.replace(new RegExp(quote, "g"), quote + quote)}${quote}`;
+  return new RegExp(`[${delimiter}${quote}\\r\\n]`).test(stringValue)
+    ? `${quote}${stringValue.replace(new RegExp(quote, "g"), quote + quote)}${quote}`
+    : stringValue;
 }
 
 export function formatCsvRow(

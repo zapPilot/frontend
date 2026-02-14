@@ -72,8 +72,8 @@ function buildUserInfo({
     visibleWallets: bundleWallets,
     totalWallets: bundleWallets.length,
     totalVisibleWallets: bundleWallets.length,
-    ...(isNewUser ? { isNewUser } : {}),
-    ...(etlJobId ? { etlJobId } : {}),
+    ...(isNewUser && { isNewUser }),
+    ...(etlJobId && { etlJobId }),
   };
 }
 
