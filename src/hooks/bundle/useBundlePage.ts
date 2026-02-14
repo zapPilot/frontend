@@ -259,9 +259,7 @@ export function useBundlePage(
     router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
   }, [router, userInfo?.userId, userInfo?.etlJobId]);
 
-  const handleStayHere = useCallback((): void => {
-    return;
-  }, []);
+  const handleStayHere = useCallback((): void => undefined, []);
 
   const openWalletManager = useCallback(() => {
     setIsWalletManagerOpen(true);
@@ -271,15 +269,7 @@ export function useBundlePage(
     setIsWalletManagerOpen(false);
   }, []);
 
-  const handleEmailSubscribe = useCallback(() => {
-    openWalletManager();
-  }, [openWalletManager]);
-
-  const handleEmailSubscribed = useCallback(() => {
-    setEmailBannerDismissed(true);
-  }, []);
-
-  const handleEmailReminderDismiss = useCallback(() => {
+  const handleDismissEmailBanner = useCallback(() => {
     setEmailBannerDismissed(true);
   }, []);
 
@@ -296,15 +286,15 @@ export function useBundlePage(
     },
     emailBanner: {
       show: showEmailBanner,
-      onSubscribe: handleEmailSubscribe,
-      onDismiss: handleEmailReminderDismiss,
+      onSubscribe: openWalletManager,
+      onDismiss: handleDismissEmailBanner,
     },
     overlays: {
       showQuickSwitch,
       isWalletManagerOpen,
       openWalletManager,
       closeWalletManager,
-      onEmailSubscribed: handleEmailSubscribed,
+      onEmailSubscribed: handleDismissEmailBanner,
     },
   };
 }

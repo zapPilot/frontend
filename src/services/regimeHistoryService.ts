@@ -9,9 +9,8 @@
  * Backend API: /api/v2/market/regime/history
  */
 
-import { APIError, httpUtils } from "@/lib/http";
-import { createErrorMapper } from "@/lib/http/createErrorMapper";
-import { createServiceCaller } from "@/lib/http/createServiceCaller";
+import { httpUtils } from "@/lib/http";
+import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
 import {
   type DirectionType,
   type DurationInfo,
@@ -63,13 +62,7 @@ export const DEFAULT_REGIME_HISTORY: RegimeHistoryData = {
   cached: false,
 };
 
-/**
- * Error mapper for regime history service using standardized createErrorMapper utility
- * Transforms API errors into user-friendly error instances
- */
-const createRegimeHistoryServiceError = createErrorMapper(
-  (message, status, code, details) =>
-    new APIError(message, status, code, details),
+const callRegimeHistoryApi = createApiServiceCaller(
   {
     404: "Regime history endpoint not found. Using default values. (This is expected if backend v2 is not deployed)",
     500: "An unexpected error occurred while fetching regime history. Using default values.",
@@ -78,10 +71,6 @@ const createRegimeHistoryServiceError = createErrorMapper(
     504: "Request timed out while fetching regime history. Using default values.",
   },
   "Failed to fetch regime history"
-);
-
-const callRegimeHistoryApi = createServiceCaller(
-  createRegimeHistoryServiceError
 );
 
 /**

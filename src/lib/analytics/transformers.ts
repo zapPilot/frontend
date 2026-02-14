@@ -33,41 +33,16 @@ function clampPercentage(value: number): number {
   return Math.max(0, Math.min(100, value));
 }
 
-function getRecoverySubValue(recoveryDays: number): string {
-  if (recoveryDays > 0) {
-    return `Recovered in ${recoveryDays} days`;
-  }
+const getRecoverySubValue = (days: number): string =>
+  days > 0 ? `Recovered in ${days} days` : "Not yet recovered";
 
-  return "Not yet recovered";
-}
+const getSignedPrefix = (value: number): string => (value > 0 ? "+" : "");
 
-function getSignedPrefix(value: number): string {
-  return value > 0 ? "+" : "";
-}
+const getSharpeTrend = (value: number): MetricData["trend"] =>
+  value > 1.5 ? "up" : value > 0.5 ? "neutral" : "down";
 
-function getSharpeTrend(value: number): MetricData["trend"] {
-  if (value > 1.5) {
-    return "up";
-  }
-
-  if (value > 0.5) {
-    return "neutral";
-  }
-
-  return "down";
-}
-
-function getVolatilityRiskLabel(value: number): string {
-  if (value < 20) {
-    return "Low risk";
-  }
-
-  if (value < 40) {
-    return "Moderate";
-  }
-
-  return "High risk";
-}
+const getVolatilityRiskLabel = (value: number): string =>
+  value < 20 ? "Low risk" : value < 40 ? "Moderate" : "High risk";
 
 // ============================================================================
 // CHART TRANSFORMERS
@@ -124,12 +99,10 @@ export function transformToPerformanceChart(
       baselinePortfolioValue
     );
 
-    let normalizedBTC: number | null = null;
-    if (btcEquivalentValue !== null) {
-      normalizedBTC = clampPercentage(
-        normalizeToScale(btcEquivalentValue, min, range)
-      );
-    }
+    const normalizedBTC =
+      btcEquivalentValue !== null
+        ? clampPercentage(normalizeToScale(btcEquivalentValue, min, range))
+        : null;
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
@@ -231,7 +204,7 @@ function extractRollingAverage<T>(
 ): number | null {
   const values = (data ?? [])
     .map(d => selector(d) ?? 0)
-    .filter(v => !isNaN(v) && isFinite(v));
+    .filter(Number.isFinite);
   return values.length > 0
     ? values.reduce((sum, v) => sum + v, 0) / values.length
     : null;

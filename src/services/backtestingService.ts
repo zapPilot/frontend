@@ -1,6 +1,5 @@
-import { APIError, httpUtils } from "@/lib/http";
-import { createErrorMapper } from "@/lib/http/createErrorMapper";
-import { createServiceCaller } from "@/lib/http/createServiceCaller";
+import { httpUtils } from "@/lib/http";
+import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
 import {
   BacktestRequest,
   BacktestResponse,
@@ -9,9 +8,7 @@ import {
   BacktestTransferMetadata,
 } from "@/types/backtesting";
 
-const createBacktestingServiceError = createErrorMapper(
-  (message, status, code, details) =>
-    new APIError(message, status, code, details),
+const callBacktestingApi = createApiServiceCaller(
   {
     400: "Invalid backtest parameters. Please review your inputs and try again.",
     404: "Backtest endpoint not found. Please verify analytics-engine is running.",
@@ -21,8 +18,6 @@ const createBacktestingServiceError = createErrorMapper(
   },
   "Failed to run backtest"
 );
-
-const callBacktestingApi = createServiceCaller(createBacktestingServiceError);
 
 const VALID_BUCKETS = new Set(["spot", "stable", "lp"]);
 

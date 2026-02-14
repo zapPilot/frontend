@@ -9,9 +9,8 @@ import {
   getQuoteForSentiment,
   type SentimentLabel,
 } from "@/config/sentimentQuotes";
-import { APIError, httpUtils } from "@/lib/http";
-import { createErrorMapper } from "@/lib/http/createErrorMapper";
-import { createServiceCaller } from "@/lib/http/createServiceCaller";
+import { httpUtils } from "@/lib/http";
+import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
 import {
   type SentimentApiResponse,
   validateSentimentApiResponse,
@@ -31,13 +30,7 @@ export interface MarketSentimentData {
   };
 }
 
-/**
- * Error mapper for sentiment service using standardized createErrorMapper utility
- * Transforms API errors into user-friendly error instances
- */
-const createSentimentServiceError = createErrorMapper(
-  (message, status, code, details) =>
-    new APIError(message, status, code, details),
+const callSentimentApi = createApiServiceCaller(
   {
     500: "An unexpected error occurred while fetching sentiment data.",
     502: "Invalid data received from sentiment provider.",
@@ -46,8 +39,6 @@ const createSentimentServiceError = createErrorMapper(
   },
   "Failed to fetch market sentiment"
 );
-
-const callSentimentApi = createServiceCaller(createSentimentServiceError);
 
 /**
  * Transform backend response to frontend format with quote
