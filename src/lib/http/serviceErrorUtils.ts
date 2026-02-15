@@ -40,11 +40,10 @@ export function createServiceError<T extends typeof ServiceError>(
 ): InstanceType<T> {
   const apiError = isApiErrorResponse(error) ? error : {};
   const status = apiError.status || apiError.response?.status || 500;
-  let message = apiError.message || defaultMessage;
-
-  if (enhanceMessage) {
-    message = enhanceMessage(status, message);
-  }
+  const baseMessage = apiError.message || defaultMessage;
+  const message = enhanceMessage
+    ? enhanceMessage(status, baseMessage)
+    : baseMessage;
 
   const errorData =
     error && typeof error === "object"

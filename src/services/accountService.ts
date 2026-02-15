@@ -262,12 +262,11 @@ export const triggerWalletDataFetch = async (
   userId: string,
   walletAddress: string
 ): Promise<EtlJobResponse> => {
-  const response = await callAccountApi(() =>
+  return callAccountApi(() =>
     accountApiClient.post<EtlJobResponse>(
       `/users/${userId}/wallets/${walletAddress}/fetch-data`
     )
   );
-  return response;
 };
 
 /**

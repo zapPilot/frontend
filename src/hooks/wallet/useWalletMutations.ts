@@ -137,17 +137,17 @@ export function useWalletMutations({
           }));
 
           return { success: true };
-        } else {
-          const error = response.error ?? "Failed to add wallet";
-          setOperations(prev => ({
-            ...prev,
-            adding: {
-              isLoading: false,
-              error,
-            },
-          }));
-          return { success: false, error };
         }
+
+        const error = response.error ?? "Failed to add wallet";
+        setOperations(prev => ({
+          ...prev,
+          adding: {
+            isLoading: false,
+            error,
+          },
+        }));
+        return { success: false, error };
       } catch (error) {
         const errorMessage = handleWalletError(error);
         setOperations(prev => ({

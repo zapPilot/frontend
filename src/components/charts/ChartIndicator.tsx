@@ -185,10 +185,10 @@ function SingleCircle({
   r: number;
   sw: number;
 }) {
-  let color = getIndicatorColor(point.chartType);
-  if (point.chartType === "sharpe") {
-    color = getSharpeColor(point.sharpe || 0);
-  }
+  const color =
+    point.chartType === "sharpe"
+      ? getSharpeColor(point.sharpe || 0)
+      : getIndicatorColor(point.chartType);
 
   const isHighVol = point.chartType === "volatility" && point.volatility > 25;
 

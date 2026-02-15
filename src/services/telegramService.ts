@@ -101,12 +101,11 @@ const callTelegramApi = createServiceCaller(createTelegramServiceError);
 export const requestTelegramToken = async (
   userId: string
 ): Promise<TelegramTokenResponse> => {
-  const response = await callTelegramApi(() =>
+  return callTelegramApi(() =>
     accountApiClient.post<TelegramTokenResponse>(
       `/users/${userId}/telegram/request-token`
     )
   );
-  return response;
 };
 
 /**
@@ -126,10 +125,9 @@ export const requestTelegramToken = async (
 export const getTelegramStatus = async (
   userId: string
 ): Promise<TelegramStatus> => {
-  const response = await callTelegramApi(() =>
+  return callTelegramApi(() =>
     accountApiClient.get<TelegramStatus>(`/users/${userId}/telegram/status`)
   );
-  return response;
 };
 
 /**
@@ -148,10 +146,9 @@ export const getTelegramStatus = async (
 export const disconnectTelegram = async (
   userId: string
 ): Promise<TelegramDisconnectResponse> => {
-  const response = await callTelegramApi(() =>
+  return callTelegramApi(() =>
     accountApiClient.delete<TelegramDisconnectResponse>(
       `/users/${userId}/telegram/disconnect`
     )
   );
-  return response;
 };

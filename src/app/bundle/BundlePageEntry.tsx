@@ -26,14 +26,12 @@ export function BundlePageEntry() {
   }
 
   // V1 layout (default)
-  return walletId || etlJobId || isNewUser ? (
+  return (
     <BundlePageClient
       userId={userId}
-      {...(walletId ? { walletId } : {})}
-      {...(etlJobId ? { etlJobId } : {})}
-      {...(isNewUser ? { isNewUser } : {})}
+      {...(walletId && { walletId })}
+      {...(etlJobId && { etlJobId })}
+      {...(isNewUser && { isNewUser })}
     />
-  ) : (
-    <BundlePageClient userId={userId} />
   );
 }
