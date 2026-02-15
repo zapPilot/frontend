@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { getRiskConfig, RiskLevel } from "@/constants/riskThresholds";
@@ -9,6 +8,7 @@ import type { RiskMetrics } from "@/services/analyticsService";
 
 import { HealthRiskTooltip } from "./HealthRiskTooltip";
 import { useTooltipPosition } from "./useTooltipPosition";
+import { useTooltipState } from "./useTooltipState";
 
 /**
  * Size configurations for the Health Factor Pill
@@ -70,12 +70,13 @@ export function HealthFactorPill({
   size = "md",
   onViewDetails,
 }: HealthFactorPillProps) {
-  /* jscpd:ignore-start */
-  const [isHovered, setIsHovered] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  /* jscpd:ignore-end */
+  const {
+    isVisible: isHovered,
+    setIsVisible: setIsHovered,
+    isMounted,
+    containerRef,
+    tooltipRef,
+  } = useTooltipState();
 
   const { health_rate } = riskMetrics;
   const config = getRiskConfig(health_rate);
@@ -83,11 +84,6 @@ export function HealthFactorPill({
 
   // Check if mobile for tap vs hover behavior
   const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
-
-  // Client-side only rendering for portal
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const tooltipPosition = useTooltipPosition(
     isHovered,
@@ -139,10 +135,8 @@ export function HealthFactorPill({
       }}
     >
       <motion.div
-        /* jscpd:ignore-start */
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
-        /* jscpd:ignore-end */
         exit={{ opacity: 0, y: -4 }}
         transition={{ duration: 0.2 }}
       >

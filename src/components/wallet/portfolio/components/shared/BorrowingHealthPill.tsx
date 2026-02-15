@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -14,6 +14,7 @@ import type { BorrowingSummary } from "@/services/analyticsService";
 
 import { BorrowingPositionsTooltip } from "./BorrowingPositionsTooltip";
 import { useTooltipPosition } from "./useTooltipPosition";
+import { useTooltipState } from "./useTooltipState";
 
 interface BorrowingHealthPillProps {
   summary: BorrowingSummary;
@@ -45,12 +46,13 @@ export function BorrowingHealthPill({
   userId,
   size = "md",
 }: BorrowingHealthPillProps) {
-  /* jscpd:ignore-start */
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const tooltipRef = useRef<HTMLDivElement>(null);
-  /* jscpd:ignore-end */
+  const {
+    isVisible: isExpanded,
+    setIsVisible: setIsExpanded,
+    isMounted,
+    containerRef,
+    tooltipRef,
+  } = useTooltipState();
 
   const { overall_status, worst_health_rate } = summary;
 
@@ -63,10 +65,6 @@ export function BorrowingHealthPill({
     error,
     refetch,
   } = useBorrowingPositions(userId, isExpanded);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   // Handle click outside to close
   useEffect(() => {
@@ -89,7 +87,7 @@ export function BorrowingHealthPill({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isExpanded]);
+  }, [isExpanded, containerRef, tooltipRef, setIsExpanded]);
 
   const tooltipPosition = useTooltipPosition(
     isExpanded,

@@ -12,8 +12,6 @@ export enum LogLevel {
 interface LogConfig {
   level: LogLevel;
   enableConsole: boolean;
-  enableRemote: boolean;
-  remoteEndpoint?: string;
   maxLocalLogs: number;
   enableDebugInProduction?: boolean;
   enableDevLogging?: boolean;
@@ -44,7 +42,6 @@ export class Logger {
       level:
         isProduction && !enableDebugInProd ? LogLevel.WARN : LogLevel.DEBUG,
       enableConsole: isDevelopment || enableDebugInProd,
-      enableRemote: isProduction,
       enableDebugInProduction: enableDebugInProd,
       enableDevLogging,
       maxLocalLogs: 1000,
@@ -127,36 +124,6 @@ export class Logger {
           break;
       }
     }
-
-    // Remote logging (if enabled)
-    if (this.config.enableRemote && this.config.remoteEndpoint) {
-      void (async () => {
-        try {
-          await this.sendToRemote(entry);
-        } catch (err) {
-          // Fallback to console if remote fails
-          console.error("Failed to send log to remote endpoint:", err);
-        }
-      })();
-    }
-  }
-
-  private async sendToRemote(entry: LogEntry): Promise<void> {
-    if (!this.config.remoteEndpoint) return;
-
-    try {
-      await fetch(this.config.remoteEndpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(entry),
-      });
-    } catch (error) {
-      throw new Error(
-        `Remote logging failed: ${error instanceof Error ? error.message : String(error)}`
-      );
-    }
   }
 
   debug(message: string, data?: unknown, context?: string): void {
@@ -195,16 +162,6 @@ export class Logger {
    */
   setConsoleLogging(enabled: boolean): void {
     this.config.enableConsole = enabled;
-  }
-
-  /**
-   * Enable/disable remote logging at runtime
-   */
-  setRemoteLogging(enabled: boolean, endpoint?: string): void {
-    this.config.enableRemote = enabled;
-    if (endpoint) {
-      this.config.remoteEndpoint = endpoint;
-    }
   }
 
   /**

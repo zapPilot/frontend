@@ -3,15 +3,10 @@ import { ChevronDown, Gauge } from "lucide-react";
 import { useState } from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import {
-  getRegimeAllocation,
-  type Regime,
-  regimes,
-} from "@/components/wallet/regime/regimeData";
+import { type Regime, regimes } from "@/components/wallet/regime/regimeData";
 import { type StrategyDirection } from "@/components/wallet/regime/strategyLabels";
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeConfig } from "@/constants/regimeDisplay";
-import { getRegimeFromStatus } from "@/lib/domain/regimeMapper";
 import { cn } from "@/lib/ui/classNames";
 import type {
   SectionState,
@@ -21,6 +16,12 @@ import type {
 import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";
 import { RegimeSelector } from "./RegimeSelector";
 import { StrategyAllocationDisplay } from "./StrategyAllocationDisplay";
+import {
+  determineActiveDirection,
+  resolveDisplayRegime,
+  resolveEffectiveRegime,
+  resolveTargetAllocation,
+} from "./strategyCardResolvers";
 import { StrategyDirectionTabs } from "./StrategyDirectionTabs";
 
 /** StrategyCard styling constants */
@@ -37,97 +38,6 @@ const STYLES = {
 
 function getCardClassName(isExpanded: boolean): string {
   return `${STYLES.cardBase} ${isExpanded ? STYLES.cardExpanded : STYLES.cardCollapsed}`;
-}
-
-function findRegimeById(
-  regimeId: string | null | undefined
-): Regime | undefined {
-  if (!regimeId) {
-    return undefined;
-  }
-
-  return regimes.find(regime => regime.id === regimeId);
-}
-
-function resolveEffectiveRegime(
-  currentRegime: Regime | undefined,
-  sentimentSection: SectionState<SentimentData> | undefined
-): Regime | undefined {
-  if (currentRegime) {
-    return currentRegime;
-  }
-
-  const derivedRegimeId = sentimentSection?.data
-    ? getRegimeFromStatus(sentimentSection.data.status)
-    : undefined;
-
-  return findRegimeById(derivedRegimeId);
-}
-
-function resolveDisplayRegime(
-  selectedRegimeId: string | null,
-  effectiveRegime: Regime | undefined
-): Regime | undefined {
-  return findRegimeById(selectedRegimeId) ?? effectiveRegime;
-}
-
-function determineActiveDirection(
-  displayRegime: Regime | undefined,
-  selectedDirection: StrategyDirection | null,
-  isViewingCurrent: boolean,
-  data: WalletPortfolioDataWithDirection
-): StrategyDirection {
-  if (!displayRegime) {
-    return "default";
-  }
-
-  function hasStrategy(dir: StrategyDirection): boolean {
-    return Boolean(
-      displayRegime?.strategies?.[dir as keyof typeof displayRegime.strategies]
-    );
-  }
-
-  if (selectedDirection && hasStrategy(selectedDirection)) {
-    return selectedDirection;
-  }
-
-  if (
-    isViewingCurrent &&
-    "strategyDirection" in data &&
-    data.strategyDirection !== "default"
-  ) {
-    return data.strategyDirection as StrategyDirection;
-  }
-
-  if (hasStrategy("fromLeft")) {
-    return "fromLeft";
-  }
-
-  if (hasStrategy("fromRight")) {
-    return "fromRight";
-  }
-
-  return "default";
-}
-
-function resolveTargetAllocation(
-  activeStrategy: Regime["strategies"][keyof Regime["strategies"]] | undefined,
-  displayRegime: Regime | undefined
-): { spot: number; lp: number; stable: number } {
-  const allocationAfter = activeStrategy?.useCase?.allocationAfter;
-  if (allocationAfter) {
-    return {
-      spot: allocationAfter.spot,
-      lp: allocationAfter.lp,
-      stable: allocationAfter.stable,
-    };
-  }
-
-  if (displayRegime) {
-    return getRegimeAllocation(displayRegime);
-  }
-
-  return { spot: 0, lp: 0, stable: 0 };
 }
 
 function renderSentimentDisplay(

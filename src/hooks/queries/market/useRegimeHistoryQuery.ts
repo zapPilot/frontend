@@ -15,7 +15,7 @@ import {
 
 import { logQueryError } from "./queryErrorUtils";
 
-const REGIME_HISTORY_CACHE_MS = 60 * 1000; // 60 seconds (aligned with sentiment)
+const REGIME_HISTORY_CACHE_MS = 60 * 1000; // 60 seconds (regime transitions are infrequent)
 
 /**
  * React Query hook for regime history with caching and graceful error handling

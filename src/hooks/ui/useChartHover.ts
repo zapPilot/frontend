@@ -1,5 +1,5 @@
 /* c8 ignore file - Complex chart hover/pointer interaction code, covered by E2E tests */
-/* eslint-disable sonarjs/deprecation */
+
 /**
  * useChartHover Hook
  * Generic hook for chart hover functionality with RAF optimization.
@@ -7,7 +7,6 @@
 
 import {
   type MouseEvent,
-  type MutableRefObject,
   type PointerEvent,
   type TouchEvent,
   useCallback,
@@ -18,26 +17,17 @@ import {
 
 import type { ChartHoverState } from "@/types/ui/chartHover";
 import { logger } from "@/utils/logger";
-import { clamp, clampMin } from "@/utils/mathUtils";
+import { clamp } from "@/utils/mathUtils";
+
+import {
+  calculateYPosition,
+  type ChartHoverConfig,
+  useTestAutoHoverEffect,
+} from "./useTestAutoHoverEffect";
 
 // =============================================================================
 // HELPERS
 // =============================================================================
-
-function calculateYPosition(
-  yValue: number,
-  minValue: number,
-  maxValue: number,
-  chartHeight: number,
-  chartPadding: number
-): number {
-  const valueRange = Math.max(maxValue - minValue, 1);
-  return (
-    chartHeight -
-    chartPadding -
-    ((yValue - minValue) / valueRange) * (chartHeight - 2 * chartPadding)
-  );
-}
 
 function getSvgX(
   svg: SVGSVGElement,
@@ -75,20 +65,7 @@ function getSvgX(
 // TYPES
 // =============================================================================
 
-interface UseChartHoverOptions<T> {
-  chartType: string;
-  chartWidth: number;
-  chartHeight: number;
-  chartPadding: number;
-  minValue: number;
-  maxValue: number;
-  getYValue: (point: T) => number;
-  buildHoverData: (
-    point: T,
-    x: number,
-    y: number,
-    index: number
-  ) => ChartHoverState;
+interface UseChartHoverOptions<T> extends ChartHoverConfig<T> {
   enabled?: boolean;
   testAutoPopulate?: boolean;
 }
@@ -293,106 +270,4 @@ export function useChartHover<T>(
     handleMouseLeave,
     handleTouchEnd: handleMouseLeave,
   };
-}
-
-// =============================================================================
-// TEST UTILS
-// =============================================================================
-
-function useTestAutoHoverEffect<T>(
-  params: UseChartHoverOptions<T> & {
-    data: T[];
-    hoveredPoint: ChartHoverState | null;
-    setHoveredPoint: (state: ChartHoverState | null) => void;
-    isAutoHoverActiveRef: MutableRefObject<boolean>;
-  }
-) {
-  const {
-    enabled,
-    testAutoPopulate,
-    data,
-    hoveredPoint,
-    setHoveredPoint,
-    isAutoHoverActiveRef,
-    chartWidth,
-    chartHeight,
-    chartPadding,
-    minValue,
-    maxValue,
-    getYValue,
-    buildHoverData,
-  } = params;
-
-  const hasTestAutoPopulatedRef = useRef(false);
-  const testAutoHideTimerRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (
-      process.env.NODE_ENV === "test" &&
-      testAutoPopulate &&
-      enabled &&
-      hoveredPoint == null &&
-      data.length > 0 &&
-      !hasTestAutoPopulatedRef.current
-    ) {
-      const index = Math.min(Math.floor(data.length / 2), data.length - 1);
-      const point = data[index];
-      if (!point) return;
-
-      const normalizedX =
-        data.length <= 1 ? 0.5 : index / clampMin(data.length - 1, 1);
-      const x = normalizedX * chartWidth;
-      const yValue = getYValue(point);
-      const y = calculateYPosition(
-        yValue,
-        minValue,
-        maxValue,
-        chartHeight,
-        chartPadding
-      );
-
-      setHoveredPoint(buildHoverData(point, x, y, index));
-      hasTestAutoPopulatedRef.current = true;
-      isAutoHoverActiveRef.current = true;
-    }
-  }, [
-    testAutoPopulate,
-    enabled,
-    hoveredPoint,
-    data,
-    chartWidth,
-    chartHeight,
-    chartPadding,
-    minValue,
-    maxValue,
-    getYValue,
-    buildHoverData,
-    setHoveredPoint,
-    isAutoHoverActiveRef,
-  ]);
-
-  useEffect(() => {
-    if (process.env.NODE_ENV !== "test" || !testAutoPopulate) return;
-
-    if (hoveredPoint != null && isAutoHoverActiveRef.current) {
-      if (testAutoHideTimerRef.current != null)
-        clearTimeout(testAutoHideTimerRef.current);
-      testAutoHideTimerRef.current = window.setTimeout(() => {
-        setHoveredPoint(null);
-        isAutoHoverActiveRef.current = false;
-      }, 1000);
-    } else if (hoveredPoint != null) {
-      if (testAutoHideTimerRef.current != null) {
-        clearTimeout(testAutoHideTimerRef.current);
-        testAutoHideTimerRef.current = null;
-      }
-    }
-
-    return () => {
-      if (testAutoHideTimerRef.current != null) {
-        clearTimeout(testAutoHideTimerRef.current);
-        testAutoHideTimerRef.current = null;
-      }
-    };
-  }, [hoveredPoint, testAutoPopulate, isAutoHoverActiveRef, setHoveredPoint]);
 }

@@ -19,8 +19,6 @@
  * @module lib/createServiceCaller
  */
 
-import { executeServiceCall } from "../../services/serviceHelpers";
-
 /**
  * Creates a service caller with consistent error mapping
  *
@@ -30,6 +28,11 @@ import { executeServiceCall } from "../../services/serviceHelpers";
 export const createServiceCaller = <TError extends Error>(
   errorMapper: (error: unknown) => TError
 ) => {
-  return <T>(call: () => Promise<T>): Promise<T> =>
-    executeServiceCall(call, { mapError: errorMapper });
+  return async <T>(call: () => Promise<T>): Promise<T> => {
+    try {
+      return await call();
+    } catch (error) {
+      throw errorMapper(error);
+    }
+  };
 };

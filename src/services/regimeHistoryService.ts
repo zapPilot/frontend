@@ -1,4 +1,3 @@
-/* jscpd:ignore-start */
 /**
  * Regime History Service
  *
@@ -111,19 +110,3 @@ export async function fetchRegimeHistory(
     return transformRegimeHistoryData(validatedResponse);
   });
 }
-
-// ============================================================================
-// ARCHITECTURAL PURITY NOTE (Phase 12 - Deprecated Re-Export Cleanup)
-// ============================================================================
-
-/**
- * useRegimeHistory hook removed from this file (Phase 12)
- *
- * React hooks should be imported from @/hooks/queries/market/useRegimeHistoryQuery
- * Services should only export pure async functions, not React hooks.
- *
- * This maintains architectural separation:
- * - Service layer: Pure async functions for API operations
- * - Hook layer: React-specific logic and state management
- */
-/* jscpd:ignore-end */

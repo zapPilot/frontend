@@ -36,7 +36,6 @@ describe("Logger", () => {
 
     // Clear logs and reset config before each test to prevent pollution
     logger.clearLogs();
-    logger.setRemoteLogging(false);
     logger.setConsoleLogging(false);
     logger.setLevel(LogLevel.DEBUG);
   });
@@ -178,7 +177,6 @@ describe("Logger", () => {
 
       expect(config).toHaveProperty("level");
       expect(config).toHaveProperty("enableConsole");
-      expect(config).toHaveProperty("enableRemote");
       expect(config).toHaveProperty("maxLocalLogs");
     });
 
@@ -188,14 +186,6 @@ describe("Logger", () => {
 
       logger.setConsoleLogging(true);
       expect(logger.getConfig().enableConsole).toBe(true);
-    });
-
-    it("should enable/disable remote logging with endpoint", () => {
-      logger.setRemoteLogging(true, "https://api.example.com/logs");
-      const config = logger.getConfig();
-
-      expect(config.enableRemote).toBe(true);
-      expect(config.remoteEndpoint).toBe("https://api.example.com/logs");
     });
   });
 
@@ -261,87 +251,6 @@ describe("Logger", () => {
       expect(logs[0].message).toBe("Log 5");
       expect(logs[999].message).toBe("Log 1004");
     });
-
-    it("should handle remote logging success", async () => {
-      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue({
-        ok: true,
-        json: async () => ({}),
-      } as Response);
-
-      logger.setRemoteLogging(true, "https://test-endpoint");
-      logger.setLevel(LogLevel.INFO); // Ensure we log
-      logger.info("Remote log test");
-
-      // Wait for async execution (void promise)
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(fetchSpy).toHaveBeenCalledWith(
-        "https://test-endpoint",
-        expect.objectContaining({
-          method: "POST",
-          body: expect.stringContaining("Remote log test"),
-        })
-      );
-    });
-
-    it("should handle remote logging failure gracefully", async () => {
-      const fetchSpy = vi
-        .spyOn(global, "fetch")
-        .mockRejectedValue(new Error("Network Error"));
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {
-          // Suppress console.error during test
-        });
-
-      logger.setRemoteLogging(true, "https://test-endpoint");
-      logger.info("Remote fail test");
-
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(fetchSpy).toHaveBeenCalled();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to send log to remote endpoint:",
-        expect.any(Error)
-      );
-    });
-
-    it("should not send remote log if endpoint not set", async () => {
-      const fetchSpy = vi
-        .spyOn(global, "fetch")
-        .mockResolvedValue({} as Response);
-
-      logger.setRemoteLogging(true, undefined);
-      logger.setRemoteLogging(false); // Disable it first to be sure?
-      // Wait, setRemoteLogging(true, undefined) keeps previous enpoint?
-      // Source: if (endpoint) config.remoteEndpoint = endpoint;
-      // So we need to reset it. But we can't unset remoteEndpoint easily.
-      // Let's just disable remote logging.
-      logger.setRemoteLogging(false);
-      logger.info("Local only");
-
-      await new Promise(resolve => setTimeout(resolve, 10));
-      expect(fetchSpy).not.toHaveBeenCalled();
-    });
-    it("should handle non-Error remote failure", async () => {
-      const _fetchSpy = vi
-        .spyOn(global, "fetch")
-        .mockRejectedValue("String Error");
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => undefined);
-
-      logger.setRemoteLogging(true, "https://remote");
-      logger.info("Test");
-      await new Promise(resolve => setTimeout(resolve, 10));
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to send log to remote endpoint:",
-        expect.objectContaining({
-          message: expect.stringContaining("String Error"),
-        })
-      );
-    });
   });
 
   describe("Environment Configuration", () => {
@@ -360,7 +269,6 @@ describe("Logger", () => {
 
       expect(config.level).toBe(LogLevel.WARN);
       expect(config.enableConsole).toBe(false);
-      expect(config.enableRemote).toBe(true);
     });
 
     it("should enable debug in production if flag set", () => {
