@@ -34,12 +34,24 @@ const httpUtilsMock = vi.hoisted(() => ({
 
 vi.mock("@/lib/http", () => httpUtilsMock);
 
+function resolveMockSentiment(value: number): string {
+  if (value > 75) {
+    return "Extreme Greed";
+  }
+
+  if (value > 55) {
+    return "Greed";
+  }
+
+  return "Neutral";
+}
+
 // Mock sentiment quotes
 vi.mock("@/config/sentimentQuotes", () => ({
   getQuoteForSentiment: vi.fn((value: number) => ({
     quote: `Mock quote for ${value}`,
     author: "Mock Author",
-    sentiment: value > 75 ? "Extreme Greed" : value > 55 ? "Greed" : "Neutral",
+    sentiment: resolveMockSentiment(value),
   })),
 }));
 

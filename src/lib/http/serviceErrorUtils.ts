@@ -23,6 +23,14 @@ export function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
  */
 export type MessageEnhancer = (status: number, message: string) => string;
 
+function getErrorData(error: unknown): Record<string, unknown> {
+  if (error && typeof error === "object") {
+    return error as Record<string, unknown>;
+  }
+
+  return {};
+}
+
 /**
  * Creates a service-specific error from an unknown error, handling standard API error extraction
  * and message enhancement.
@@ -38,17 +46,13 @@ export function createServiceError<T extends typeof ServiceError>(
   defaultMessage: string,
   enhanceMessage?: MessageEnhancer
 ): InstanceType<T> {
-  const apiError = isApiErrorResponse(error) ? error : {};
-  const status = apiError.status || apiError.response?.status || 500;
-  const baseMessage = apiError.message || defaultMessage;
+  const apiError = isApiErrorResponse(error) ? error : undefined;
+  const status = apiError?.status || apiError?.response?.status || 500;
+  const baseMessage = apiError?.message || defaultMessage;
   const message = enhanceMessage
     ? enhanceMessage(status, baseMessage)
     : baseMessage;
-
-  const errorData =
-    error && typeof error === "object"
-      ? (error as Record<string, unknown>)
-      : {};
+  const errorData = getErrorData(error);
 
   return new ErrorClass(
     message,

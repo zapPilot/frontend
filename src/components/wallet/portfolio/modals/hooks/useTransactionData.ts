@@ -44,18 +44,28 @@ interface UseTransactionDataParams {
   amount: string;
 }
 
+function normalizeChainList(
+  chains: ChainData[] | ChainData | null | undefined
+): ChainData[] {
+  if (Array.isArray(chains)) {
+    return chains;
+  }
+
+  if (chains) {
+    return [chains];
+  }
+
+  return [];
+}
+
 export function useTransactionData({
   isOpen,
   chainId,
   tokenAddress,
   amount,
 }: UseTransactionDataParams) {
-  // Fetch available chains
   const { data: chains } = useChainQuery();
-  const chainList = useMemo(
-    () => (Array.isArray(chains) ? chains : chains ? [chains] : []),
-    [chains]
-  );
+  const chainList = useMemo(() => normalizeChainList(chains), [chains]);
 
   // Fetch supported tokens for selected chain
   const tokenQuery = useQuery({

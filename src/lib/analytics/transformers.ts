@@ -38,11 +38,29 @@ const getRecoverySubValue = (days: number): string =>
 
 const getSignedPrefix = (value: number): string => (value > 0 ? "+" : "");
 
-const getSharpeTrend = (value: number): MetricData["trend"] =>
-  value > 1.5 ? "up" : value > 0.5 ? "neutral" : "down";
+function getSharpeTrend(value: number): MetricData["trend"] {
+  if (value > 1.5) {
+    return "up";
+  }
 
-const getVolatilityRiskLabel = (value: number): string =>
-  value < 20 ? "Low risk" : value < 40 ? "Moderate" : "High risk";
+  if (value > 0.5) {
+    return "neutral";
+  }
+
+  return "down";
+}
+
+function getVolatilityRiskLabel(value: number): string {
+  if (value < 20) {
+    return "Low risk";
+  }
+
+  if (value < 40) {
+    return "Moderate";
+  }
+
+  return "High risk";
+}
 
 // ============================================================================
 // CHART TRANSFORMERS
@@ -205,9 +223,12 @@ function extractRollingAverage<T>(
   const values = (data ?? [])
     .map(d => selector(d) ?? 0)
     .filter(Number.isFinite);
-  return values.length > 0
-    ? values.reduce((sum, v) => sum + v, 0) / values.length
-    : null;
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
 function extractSharpe(

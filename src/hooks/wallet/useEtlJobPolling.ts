@@ -57,12 +57,37 @@ export interface UseEtlJobPollingReturn {
 }
 
 const ETL_JOB_QUERY_KEY = ["etl-job-status"];
-const POLLING_INTERVAL = 3000; // 3 seconds
+const POLLING_INTERVAL = 3000;
+const DEFAULT_TRIGGER_ERROR_MESSAGE = "Failed to trigger ETL";
+const PENDING_STATUS = "pending";
 
-const normalizeStatus = (status: string): EtlJobPollingState["status"] =>
-  status === "completed"
-    ? "completing"
-    : (status as EtlJobPollingState["status"]);
+function normalizeStatus(status: string): EtlJobPollingState["status"] {
+  if (status === "completed") {
+    return "completing";
+  }
+
+  return status as EtlJobPollingState["status"];
+}
+
+function deriveStatus(
+  jobId: string | null,
+  jobStatus: EtlJobStatus | undefined,
+  latestStatus: EtlJobPollingState["status"] | null
+): EtlJobPollingState["status"] {
+  if (!jobId) {
+    return "idle";
+  }
+
+  if (jobStatus) {
+    return normalizeStatus(jobStatus.status);
+  }
+
+  if (latestStatus) {
+    return latestStatus;
+  }
+
+  return PENDING_STATUS;
+}
 
 /**
  * Hook for polling ETL job status
@@ -105,24 +130,22 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
   });
 
   useEffect(() => {
-    if (!jobStatus) return;
+    if (!jobStatus) {
+      return;
+    }
+
     setLatestStatus(normalizeStatus(jobStatus.status));
   }, [jobStatus]);
 
-  // Determine current state
-  // Map "completed" from API to "completing" to prevent premature query re-enablement
-  const deriveStatus = (): EtlJobPollingState["status"] => {
-    if (!jobId) return "idle";
-    if (jobStatus) return normalizeStatus(jobStatus.status);
-    if (latestStatus) return latestStatus;
-    return "pending";
-  };
+  const status = deriveStatus(jobId, jobStatus, latestStatus);
+  const errorMessage = triggerError || jobStatus?.error?.message;
+  const hasPendingJob = Boolean(jobId && jobStatus?.status === PENDING_STATUS);
 
   const state: EtlJobPollingState = {
     jobId,
-    status: deriveStatus(),
-    errorMessage: triggerError || jobStatus?.error?.message,
-    isLoading: isPolling || (!!jobId && jobStatus?.status === "pending"),
+    status,
+    errorMessage,
+    isLoading: isPolling || hasPendingJob,
   };
 
   // Trigger a new ETL job
@@ -147,7 +170,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
         }
       } catch (error) {
         setTriggerError(
-          error instanceof Error ? error.message : "Failed to trigger ETL"
+          error instanceof Error ? error.message : DEFAULT_TRIGGER_ERROR_MESSAGE
         );
       }
     },

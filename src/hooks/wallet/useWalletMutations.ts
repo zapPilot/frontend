@@ -28,6 +28,22 @@ interface UseWalletMutationsParams {
   loadWallets: () => Promise<void>;
 }
 
+interface WalletMutationResult {
+  success: boolean;
+  error?: string;
+}
+
+interface UseWalletMutationsReturn {
+  handleDeleteWallet: (walletId: string) => Promise<void>;
+  handleAddWallet: (newWallet: NewWallet) => Promise<WalletMutationResult>;
+  addingState: WalletOperations["adding"];
+}
+
+const USER_ID_REQUIRED_ERROR = "User ID is required";
+const INVALID_WALLET_DATA_ERROR = "Invalid wallet data";
+const REMOVE_WALLET_ERROR = "Failed to remove wallet";
+const ADD_WALLET_ERROR = "Failed to add wallet";
+
 /**
  * Hook for wallet mutation operations (add/delete)
  *
@@ -43,28 +59,44 @@ export function useWalletMutations({
   setWallets,
   setWalletOperationState,
   loadWallets,
-}: UseWalletMutationsParams) {
+}: UseWalletMutationsParams): UseWalletMutationsReturn {
   const queryClient = useQueryClient();
   const { refetch } = useUser();
+
+  const setRemovingState = useCallback(
+    (walletId: string, isLoading: boolean, error: string | null) => {
+      setWalletOperationState("removing", walletId, {
+        isLoading,
+        error,
+      });
+    },
+    [setWalletOperationState]
+  );
+
+  const setAddingState = useCallback(
+    (isLoading: boolean, error: string | null) => {
+      setOperations(prev => ({
+        ...prev,
+        adding: { isLoading, error },
+      }));
+    },
+    [setOperations]
+  );
 
   // Handle wallet deletion
   const handleDeleteWallet = useCallback(
     async (walletId: string) => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
 
-      // Set loading state for this specific wallet
-      setWalletOperationState("removing", walletId, {
-        isLoading: true,
-        error: null,
-      });
+      setRemovingState(walletId, true, null);
 
       try {
         const response = await removeWalletFromBundle(userId, walletId);
         if (response.success) {
-          // Remove wallet from local state immediately (optimistic update)
           setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
 
-          // Invalidate and refetch user data
           await invalidateAndRefetch({
             queryClient,
             queryKey: queryKeys.user.wallets(userId),
@@ -72,45 +104,39 @@ export function useWalletMutations({
             operationName: "wallet removal",
           });
 
-          setWalletOperationState("removing", walletId, {
-            isLoading: false,
-            error: null,
-          });
-        } else {
-          setWalletOperationState("removing", walletId, {
-            isLoading: false,
-            error: response.error ?? "Failed to remove wallet",
-          });
+          setRemovingState(walletId, false, null);
+          return;
         }
+
+        setRemovingState(
+          walletId,
+          false,
+          response.error ?? REMOVE_WALLET_ERROR
+        );
       } catch (error) {
         const errorMessage = handleWalletError(error);
-        setWalletOperationState("removing", walletId, {
-          isLoading: false,
-          error: errorMessage,
-        });
+        setRemovingState(walletId, false, errorMessage);
       }
     },
-    [userId, queryClient, refetch, setWalletOperationState, setWallets]
+    [userId, queryClient, refetch, setRemovingState, setWallets]
   );
 
   // Handle adding new wallet
   const handleAddWallet = useCallback(
-    async (newWallet: NewWallet) => {
-      if (!userId) return { success: false, error: "User ID is required" };
+    async (newWallet: NewWallet): Promise<WalletMutationResult> => {
+      if (!userId) {
+        return { success: false, error: USER_ID_REQUIRED_ERROR };
+      }
 
-      // Validate input
       const validation = validateNewWallet(newWallet);
       if (!validation.isValid) {
         return {
           success: false,
-          error: validation.error ?? "Invalid wallet data",
+          error: validation.error ?? INVALID_WALLET_DATA_ERROR,
         };
       }
 
-      setOperations(prev => ({
-        ...prev,
-        adding: { isLoading: true, error: null },
-      }));
+      setAddingState(true, null);
 
       try {
         const response = await addWalletToBundle(
@@ -120,10 +146,8 @@ export function useWalletMutations({
         );
 
         if (response.success) {
-          // Refresh wallets list
           await loadWallets();
 
-          // Invalidate and refetch user data
           await invalidateAndRefetch({
             queryClient,
             queryKey: queryKeys.user.wallets(userId),
@@ -131,33 +155,21 @@ export function useWalletMutations({
             operationName: "adding wallet",
           });
 
-          setOperations(prev => ({
-            ...prev,
-            adding: { isLoading: false, error: null },
-          }));
+          setAddingState(false, null);
 
           return { success: true };
         }
 
-        const error = response.error ?? "Failed to add wallet";
-        setOperations(prev => ({
-          ...prev,
-          adding: {
-            isLoading: false,
-            error,
-          },
-        }));
+        const error = response.error ?? ADD_WALLET_ERROR;
+        setAddingState(false, error);
         return { success: false, error };
       } catch (error) {
         const errorMessage = handleWalletError(error);
-        setOperations(prev => ({
-          ...prev,
-          adding: { isLoading: false, error: errorMessage },
-        }));
+        setAddingState(false, errorMessage);
         return { success: false, error: errorMessage };
       }
     },
-    [userId, loadWallets, queryClient, refetch, setOperations]
+    [userId, loadWallets, queryClient, refetch, setAddingState]
   );
 
   return {

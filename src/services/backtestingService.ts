@@ -21,6 +21,11 @@ const callBacktestingApi = createApiServiceCaller(
 
 const VALID_BUCKETS = new Set(["spot", "stable", "lp"]);
 
+interface StrategyMetrics {
+  metadata?: { transfers?: unknown };
+  signal?: unknown;
+}
+
 function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
   if (!t || typeof t !== "object") return false;
   const m = t as Partial<BacktestTransferMetadata>;
@@ -34,16 +39,20 @@ function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
 function extractTransfers(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): BacktestTransferMetadata[] {
-  const transfers = (
-    strategy?.metrics as { metadata?: { transfers?: unknown } } | undefined
-  )?.metadata?.transfers;
-  return Array.isArray(transfers) ? transfers.filter(isValidTransfer) : [];
+  const metrics = strategy?.metrics as StrategyMetrics | undefined;
+  const transfers = metrics?.metadata?.transfers;
+
+  if (!Array.isArray(transfers)) {
+    return [];
+  }
+
+  return transfers.filter(isValidTransfer);
 }
 
 function isDcaBaselineStrategy(
   strategy: BacktestTimelinePoint["strategies"][string] | undefined
 ): boolean {
-  const metrics = strategy?.metrics as { signal?: unknown } | undefined;
+  const metrics = strategy?.metrics as StrategyMetrics | undefined;
   return metrics?.signal === "dca";
 }
 
