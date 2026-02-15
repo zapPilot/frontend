@@ -167,8 +167,8 @@ interface TransactionFormActionsProps {
   actionDisabled: boolean;
   actionGradient: string;
   onAction: () => void;
-  className?: string;
-  amountClassName?: string;
+  className?: string | undefined;
+  amountClassName?: string | undefined;
 }
 
 // Internal function used by TransactionFormActionsWithForm
@@ -236,8 +236,8 @@ export function TransactionFormActionsWithForm({
       actionDisabled={actionDisabled}
       actionGradient={actionGradient}
       onAction={onAction}
-      {...(className && { className })}
-      {...(amountClassName && { amountClassName })}
+      className={className}
+      amountClassName={amountClassName}
     />
   );
 }

@@ -20,6 +20,11 @@ import {
   getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
+import {
+  formatChartDate,
+  formatCurrencyAxis,
+  formatSentiment,
+} from "./backtestChartFormatters";
 import { BacktestChartLegend } from "./BacktestChartLegend";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
 
@@ -73,7 +78,7 @@ export function BacktestChart({
               tickLine={false}
               axisLine={false}
               minTickGap={30}
-              tickFormatter={formatDate}
+              tickFormatter={formatChartDate}
             />
 
             <YAxis
@@ -237,24 +242,4 @@ function StrategyArea({
       strokeDasharray={isDcaClassic ? "4 4" : undefined}
     />
   );
-}
-
-// --- Formatters ---
-
-function formatDate(value: string | number) {
-  return new Date(value).toLocaleDateString(undefined, {
-    month: "short",
-    year: "2-digit",
-  });
-}
-
-function formatCurrencyAxis(value: string | number) {
-  return `$${(Number(value) / 1000).toFixed(0)}k`;
-}
-
-function formatSentiment(value: number) {
-  if (value === 0) return "Fear";
-  if (value === 50) return "Neutral";
-  if (value === 100) return "Greed";
-  return String(value);
 }

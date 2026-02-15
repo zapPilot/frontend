@@ -1,33 +1,12 @@
-import { CHART_SIGNALS, type SignalKey } from "../utils/chartHelpers";
 import {
   getStrategyColor,
   getStrategyDisplayName,
 } from "../utils/strategyDisplay";
-
-interface LegendItem {
-  label: string;
-  color: string;
-}
-
-const EVENT_LEGEND_KEYS: SignalKey[] = [
-  "buy_spot",
-  "sell_spot",
-  "buy_lp",
-  "sell_lp",
-];
-
-export const INDICATOR_LEGEND: LegendItem[] = [
-  { label: "Sentiment", color: "#a855f7" },
-  { label: "DMA 200", color: "#f59e0b" },
-];
-
-/** Event subset shown in the chart legend (excludes borrow/repay/liquidate). */
-export const EVENT_LEGEND: LegendItem[] = [
-  ...EVENT_LEGEND_KEYS.flatMap(key => {
-    const s = CHART_SIGNALS.find(c => c.key === key);
-    return s ? [{ label: s.name, color: s.color }] : [];
-  }),
-];
+import {
+  EVENT_LEGEND,
+  INDICATOR_LEGEND,
+  type LegendItem,
+} from "./backtestChartLegendData";
 
 interface BacktestChartLegendProps {
   sortedStrategyIds: string[];

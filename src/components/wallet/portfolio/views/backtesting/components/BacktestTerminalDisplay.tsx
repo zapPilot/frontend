@@ -3,10 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
 
-import type {
-  BacktestResponse,
-  BacktestStrategySummary,
-} from "@/types/backtesting";
+import type { BacktestResponse } from "@/types/backtesting";
 
 import {
   DEFAULT_DAYS,
@@ -21,6 +18,10 @@ import {
   updateRegimeParam,
 } from "../utils/jsonConfigurationHelpers";
 import { BacktestChart } from "./BacktestChart";
+import {
+  createHeroMetrics,
+  createSecondaryMetrics,
+} from "./backtestTerminalMetrics";
 
 const PHOSPHOR_GLOW = "0 0 8px rgba(52,211,153,0.6)";
 const PHOSPHOR_GLOW_DIM = "0 0 8px rgba(52,211,153,0.4)";
@@ -74,37 +75,6 @@ export interface BacktestTerminalDisplayProps {
   onEditorValueChange: (v: string) => void;
 }
 
-function asciiBar(value: number, max: number, width: number): string {
-  const filled = Math.round((Math.min(Math.abs(value), max) / max) * width);
-  const empty = width - filled;
-  return "\u2588".repeat(filled) + "\u2591".repeat(empty);
-}
-
-interface SecondaryMetric {
-  label: string;
-  value: string;
-}
-
-function buildSecondaryMetrics(
-  strategy: BacktestStrategySummary
-): SecondaryMetric[] {
-  return [
-    { label: "SHARPE", value: strategy.sharpe_ratio?.toFixed(2) ?? "N/A" },
-    { label: "SORTINO", value: strategy.sortino_ratio?.toFixed(2) ?? "N/A" },
-    {
-      label: "VOL",
-      value: strategy.volatility
-        ? `${(strategy.volatility * 100).toFixed(1)}%`
-        : "N/A",
-    },
-    { label: "BETA", value: strategy.beta?.toFixed(2) ?? "N/A" },
-    {
-      label: "FINAL",
-      value: `$${strategy.final_value.toLocaleString()}`,
-    },
-  ];
-}
-
 /**
  * Terminal-themed backtesting results display with a retro CLI aesthetic,
  * monospace text, ASCII bars, and a scan-line overlay.
@@ -133,34 +103,11 @@ export function BacktestTerminalDisplay({
   const primaryId = getPrimaryStrategyId(sortedStrategyIds);
   const regime = primaryId ? summary?.strategies[primaryId] : undefined;
 
-  const heroMetrics = useMemo(() => {
-    if (!regime) return [];
-    return [
-      {
-        label: "ROI",
-        value: `+${regime.roi_percent.toFixed(1)}%`,
-        bar: asciiBar(regime.roi_percent, 200, 10),
-        color: "text-emerald-400",
-      },
-      {
-        label: "CALMAR",
-        value: regime.calmar_ratio?.toFixed(2) ?? "N/A",
-        bar: asciiBar(regime.calmar_ratio ?? 0, 5, 10),
-        color: "text-cyan-400",
-      },
-      {
-        label: "MAX DRAWDOWN",
-        value: `${regime.max_drawdown_percent?.toFixed(1)}%`,
-        bar: asciiBar(Math.abs(regime.max_drawdown_percent ?? 0), 30, 10),
-        color: "text-rose-400",
-      },
-    ];
-  }, [regime]);
-
-  const secondaryMetrics = useMemo(() => {
-    if (!regime) return [];
-    return buildSecondaryMetrics(regime);
-  }, [regime]);
+  const heroMetrics = useMemo(() => createHeroMetrics(regime), [regime]);
+  const secondaryMetrics = useMemo(
+    () => createSecondaryMetrics(regime),
+    [regime]
+  );
 
   const handleDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onEditorValueChange(

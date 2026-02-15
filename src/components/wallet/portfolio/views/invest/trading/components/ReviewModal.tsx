@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight, Layers, LineChart, Zap } from "lucide-react";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
 import {
@@ -31,6 +31,19 @@ const TABS: { id: TabId; label: string; icon: typeof LineChart }[] = [
   { id: "strategy", label: "Strategy", icon: LineChart },
   { id: "route", label: "Route", icon: Zap },
 ];
+
+function renderTabContent(activeTab: TabId): ReactNode {
+  switch (activeTab) {
+    case "strategy":
+      return <VariationStrategy />;
+    case "impact":
+      return <VariationImpact />;
+    case "route":
+      return <VariationRoute />;
+    default:
+      return null;
+  }
+}
 
 export function ReviewModal({
   isOpen,
@@ -79,9 +92,7 @@ export function ReviewModal({
             <SubmittingState isSuccess={false} />
           ) : (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-              {activeTab === "strategy" && <VariationStrategy />}
-              {activeTab === "impact" && <VariationImpact />}
-              {activeTab === "route" && <VariationRoute />}
+              {renderTabContent(activeTab)}
             </div>
           )}
         </div>

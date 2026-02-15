@@ -3,20 +3,26 @@ import { Clock, Quote, TrendingDown, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/ui/classNames";
 
 import {
+  formatPercent,
+  formatSignedPercent,
+  getAllocationChangeClass,
+  getRouteStepDetail,
+  getRouteStepIconClass,
+  getRouteStepTitle,
+} from "./reviewModalHelpers";
+import {
   MOCK_ALLOCATION,
   MOCK_ROUTE,
   MOCK_STRATEGY,
 } from "./reviewModalMockData";
 
-function BacktestMetric({
-  label,
-  value,
-  positive,
-}: {
+interface BacktestMetricProps {
   label: string;
   value: string;
   positive: boolean;
-}) {
+}
+
+function BacktestMetric({ label, value, positive }: BacktestMetricProps) {
   return (
     <div className="p-3 bg-gray-900/60 border border-gray-800 rounded-xl">
       <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -37,10 +43,10 @@ function BacktestMetric({
 export function VariationStrategy() {
   const { regime, philosophy, patternReason, pacing, backtest } = MOCK_STRATEGY;
   const pacingPct = pacing.currentStep / pacing.totalSteps;
+  const convergencePct = `${(pacing.convergencePct * 100).toFixed(0)}%`;
 
   return (
     <div className="space-y-5">
-      {/* Regime Badge */}
       <div className="flex items-center gap-3">
         <div className="px-3 py-1.5 rounded-full bg-red-500/15 border border-red-500/25 flex items-center gap-2">
           <TrendingDown className="w-3.5 h-3.5 text-red-400" />
@@ -55,7 +61,6 @@ export function VariationStrategy() {
         </div>
       </div>
 
-      {/* Philosophy Quote */}
       <div className="p-4 bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-white/5 rounded-2xl">
         <div className="flex gap-3">
           <Quote className="w-5 h-5 text-indigo-400/60 shrink-0 mt-0.5" />
@@ -70,7 +75,6 @@ export function VariationStrategy() {
         </div>
       </div>
 
-      {/* Pattern Reason */}
       <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
           Why Now
@@ -78,7 +82,6 @@ export function VariationStrategy() {
         <p className="text-sm text-gray-300 leading-relaxed">{patternReason}</p>
       </div>
 
-      {/* Pacing Info */}
       <div className="p-4 bg-gray-900/50 border border-gray-800 rounded-xl">
         <div className="flex items-center justify-between mb-3">
           <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
@@ -101,14 +104,11 @@ export function VariationStrategy() {
         </div>
         <div className="text-[10px] text-gray-500 mt-2">
           Executing{" "}
-          <span className="text-indigo-400 font-bold">
-            {(pacing.convergencePct * 100).toFixed(0)}%
-          </span>{" "}
-          of target delta this step
+          <span className="text-indigo-400 font-bold">{convergencePct}</span> of
+          target delta this step
         </div>
       </div>
 
-      {/* Backtesting Proof */}
       <div>
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
           Backtesting · {backtest.period}
@@ -139,20 +139,17 @@ export function VariationStrategy() {
 export function VariationImpact() {
   return (
     <div className="space-y-6">
-      {/* Allocation Table */}
       <div>
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
           Allocation Breakdown
         </div>
         <div className="border border-gray-800 rounded-xl overflow-hidden">
-          {/* Table Header */}
           <div className="grid grid-cols-4 gap-2 px-4 py-2.5 bg-gray-900/70 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
             <div>Bucket</div>
             <div className="text-right">Current</div>
             <div className="text-right">Target</div>
             <div className="text-right">Change</div>
           </div>
-          {/* Table Rows */}
           {MOCK_ALLOCATION.map(row => {
             const change = row.target - row.current;
             return (
@@ -164,19 +161,18 @@ export function VariationImpact() {
                   {row.bucket}
                 </div>
                 <div className="text-sm text-gray-400 text-right font-mono">
-                  {(row.current * 100).toFixed(0)}%
+                  {formatPercent(row.current)}
                 </div>
                 <div className="text-sm text-white text-right font-mono font-medium">
-                  {(row.target * 100).toFixed(0)}%
+                  {formatPercent(row.target)}
                 </div>
                 <div
                   className={cn(
                     "text-sm text-right font-mono font-bold",
-                    change > 0 ? "text-emerald-400" : "text-red-400"
+                    getAllocationChangeClass(change)
                   )}
                 >
-                  {change > 0 ? "+" : ""}
-                  {(change * 100).toFixed(0)}%
+                  {formatSignedPercent(change)}
                 </div>
               </div>
             );
@@ -184,7 +180,6 @@ export function VariationImpact() {
         </div>
       </div>
 
-      {/* Net Summary */}
       <div className="p-3.5 bg-gray-900/50 border border-gray-800 rounded-xl flex items-center gap-3">
         <div className="w-8 h-8 rounded-lg bg-indigo-500/15 flex items-center justify-center shrink-0">
           <TrendingUp className="w-4 h-4 text-indigo-400" />
@@ -200,30 +195,16 @@ export function VariationImpact() {
   );
 }
 
-function getRouteStepDetail(step: (typeof MOCK_ROUTE)[number]): string {
-  if ("asset" in step) return step.asset;
-  if ("action" in step) return step.action;
-  return "";
-}
-
 export function VariationRoute() {
   return (
     <div className="space-y-6">
       <div className="relative">
-        {/* Connection Line */}
         <div className="absolute left-[23px] top-6 bottom-6 w-px border-l-2 border-dashed border-gray-800" />
 
         <div className="space-y-6">
           {MOCK_ROUTE.map((step, i) => (
             <div key={i} className="relative flex items-center gap-4">
-              <div
-                className={cn(
-                  "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 z-10",
-                  step.type === "finish"
-                    ? "bg-green-500/20 border border-green-500/30 text-green-400 shadow-lg shadow-green-500/10"
-                    : "bg-gray-900 border border-gray-800 text-gray-400"
-                )}
-              >
+              <div className={getRouteStepIconClass(step.type)}>
                 <step.icon className="w-6 h-6" />
               </div>
 
@@ -240,7 +221,7 @@ export function VariationRoute() {
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <div className="text-sm font-bold text-white">
-                    {"chain" in step ? step.chain : step.protocol}
+                    {getRouteStepTitle(step)}
                   </div>
                   <div className="text-sm font-mono text-indigo-400">
                     {getRouteStepDetail(step)}
