@@ -93,14 +93,13 @@ type HttpUtilsModule = typeof import("@/lib/http");
 let _sentimentService: SentimentServiceModule;
 let httpUtils: HttpUtilsModule["httpUtils"];
 
-const loadModules = async () => {
+async function loadModules(): Promise<void> {
   vi.resetModules();
   ({ httpUtils } = await import("@/lib/http"));
   _sentimentService = await import("@/services/sentimentService");
-};
+}
 
-// Create wrapper for React Query hooks
-const createWrapper = (): FC<PropsWithChildren> => {
+function createWrapper(): FC<PropsWithChildren> {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -114,7 +113,7 @@ const createWrapper = (): FC<PropsWithChildren> => {
   return ({ children }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
-};
+}
 
 beforeAll(async () => {
   await loadModules();

@@ -23,6 +23,29 @@ export function isApiErrorResponse(error: unknown): error is ApiErrorResponse {
  */
 export type MessageEnhancer = (status: number, message: string) => string;
 
+function resolveStatus(apiError: ApiErrorResponse | undefined): number {
+  return apiError?.status || apiError?.response?.status || 500;
+}
+
+function resolveBaseMessage(
+  apiError: ApiErrorResponse | undefined,
+  defaultMessage: string
+): string {
+  return apiError?.message || defaultMessage;
+}
+
+function resolveMessage(
+  status: number,
+  baseMessage: string,
+  enhanceMessage: MessageEnhancer | undefined
+): string {
+  if (!enhanceMessage) {
+    return baseMessage;
+  }
+
+  return enhanceMessage(status, baseMessage);
+}
+
 function getErrorData(error: unknown): Record<string, unknown> {
   if (error && typeof error === "object") {
     return error as Record<string, unknown>;
@@ -47,11 +70,9 @@ export function createServiceError<T extends typeof ServiceError>(
   enhanceMessage?: MessageEnhancer
 ): InstanceType<T> {
   const apiError = isApiErrorResponse(error) ? error : undefined;
-  const status = apiError?.status || apiError?.response?.status || 500;
-  const baseMessage = apiError?.message || defaultMessage;
-  const message = enhanceMessage
-    ? enhanceMessage(status, baseMessage)
-    : baseMessage;
+  const status = resolveStatus(apiError);
+  const baseMessage = resolveBaseMessage(apiError, defaultMessage);
+  const message = resolveMessage(status, baseMessage, enhanceMessage);
   const errorData = getErrorData(error);
 
   return new ErrorClass(

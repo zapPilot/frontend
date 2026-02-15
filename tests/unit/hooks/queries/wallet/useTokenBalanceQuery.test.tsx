@@ -28,7 +28,7 @@ vi.mock("@/services", () => ({
 }));
 
 // Create test query wrapper
-const createTestQueryWrapper = () => {
+function createTestQueryWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -39,7 +39,7 @@ const createTestQueryWrapper = () => {
   );
   TestQueryWrapper.displayName = "TestQueryWrapper";
   return TestQueryWrapper;
-};
+}
 
 describe("useTokenBalanceQuery", () => {
   beforeEach(() => {

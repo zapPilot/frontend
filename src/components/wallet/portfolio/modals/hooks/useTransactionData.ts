@@ -58,6 +58,46 @@ function normalizeChainList(
   return [];
 }
 
+function resolveSelectedToken(
+  availableTokens: TransactionToken[] | undefined,
+  tokenAddress: string | undefined
+): TransactionToken | null {
+  if (!availableTokens?.length) {
+    return null;
+  }
+
+  const selectedToken = availableTokens.find(
+    token => token.address === tokenAddress
+  );
+
+  return selectedToken ?? availableTokens[0] ?? null;
+}
+
+function mapTokenBalances(
+  selectedToken: TransactionToken | null,
+  tokenBalance: TokenBalance | undefined
+): Record<string, TokenBalance> {
+  if (!selectedToken || !tokenBalance) {
+    return {};
+  }
+
+  return {
+    [selectedToken.address]: tokenBalance,
+  };
+}
+
+function calculateUsdAmount(
+  amount: string,
+  usdPrice: number | undefined
+): number {
+  const numericAmount = parseFloat(amount || "0");
+  if (!usdPrice || Number.isNaN(numericAmount)) {
+    return 0;
+  }
+
+  return numericAmount * usdPrice;
+}
+
 export function useTransactionData({
   isOpen,
   chainId,
@@ -67,7 +107,6 @@ export function useTransactionData({
   const { data: chains } = useChainQuery();
   const chainList = useMemo(() => normalizeChainList(chains), [chains]);
 
-  // Fetch supported tokens for selected chain
   const tokenQuery = useQuery({
     queryKey: ["transaction-tokens", chainId],
     queryFn: () => {
@@ -79,60 +118,36 @@ export function useTransactionData({
     enabled: isOpen && Boolean(chainId),
   });
 
-  // Find selected token or default to first token
   const selectedToken: TransactionToken | null = useMemo(() => {
-    if (!tokenQuery.data?.length) return null;
-    return (
-      tokenQuery.data.find(token => token.address === tokenAddress) ??
-      tokenQuery.data[0] ??
-      null
-    );
+    return resolveSelectedToken(tokenQuery.data, tokenAddress);
   }, [tokenAddress, tokenQuery.data]);
 
-  // Fetch balance for selected token
   const balanceQuery = useTokenBalanceQuery(chainId, selectedToken?.address, {
     enabled: isOpen && Boolean(selectedToken),
   });
 
-  // Map balances by token address
   const balances: Record<string, TokenBalance> = useMemo(() => {
-    if (!selectedToken || !balanceQuery.data) return {};
-    return {
-      [selectedToken.address]: balanceQuery.data,
-    };
+    return mapTokenBalances(selectedToken, balanceQuery.data);
   }, [balanceQuery.data, selectedToken]);
 
-  // Calculate USD amount
   const usdAmount = useMemo(() => {
-    const numeric = parseFloat(amount || "0");
-    if (!selectedToken?.usdPrice || Number.isNaN(numeric)) return 0;
-    return numeric * selectedToken.usdPrice;
+    return calculateUsdAmount(amount, selectedToken?.usdPrice);
   }, [amount, selectedToken?.usdPrice]);
 
-  // Find selected chain data
   const selectedChain: ChainData | null = useMemo(
     () => chainList.find(chain => chain.chainId === chainId) ?? null,
     [chainId, chainList]
   );
 
   return {
-    // Chain data
     chainList,
     selectedChain,
-
-    // Token data
     availableTokens: tokenQuery.data ?? [],
     selectedToken,
     tokenQuery,
-
-    // Balance data
     balances,
     balanceQuery,
-
-    // Calculated values
     usdAmount,
-
-    // Loading states
     isLoadingTokens: tokenQuery.isLoading,
     isLoadingBalance: balanceQuery.isLoading,
     isLoading: tokenQuery.isLoading || balanceQuery.isLoading,

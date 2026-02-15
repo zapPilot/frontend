@@ -1,16 +1,28 @@
-/**
- * Error Helper Utilities
- *
- * Utility functions for working with ServiceError instances.
- * Provides error classification and factory functions.
- *
- * @module lib/errors/errorHelpers
- */
-
 import { getIntentErrorMessage } from "@/lib/errors/errorMessages";
 
 import { resolveErrorMessage } from "./errorFactory";
 import { IntentServiceError, type ServiceError } from "./ServiceError";
+
+interface ErrorWithStatus {
+  status?: number;
+}
+
+interface ErrorWithCode {
+  code?: string;
+}
+
+interface ErrorContextSource {
+  message?: string;
+  response?: { data?: unknown; status?: unknown };
+  details?: Record<string, unknown>;
+}
+
+interface ErrorContext {
+  status: number;
+  code: string | undefined;
+  errorObj: ErrorContextSource;
+  message: string;
+}
 
 /**
  * Check if error is a client error (4xx status code)
@@ -68,11 +80,16 @@ function getErrorStatus(error: unknown): number | undefined {
   }
 
   if (error && typeof error === "object" && "status" in error) {
-    const status = (error as { status?: number }).status;
+    const status = (error as ErrorWithStatus).status;
     if (typeof status === "number") return status;
   }
 
   return undefined;
+}
+
+function getResponseStatus(error: unknown): number | undefined {
+  const responseStatus = (error as ErrorContextSource)?.response?.status;
+  return typeof responseStatus === "number" ? responseStatus : undefined;
 }
 
 /**
@@ -85,8 +102,7 @@ export function extractStatusCode(error: unknown): number {
   const directStatus = getErrorStatus(error);
   if (typeof directStatus === "number") return directStatus;
 
-  const responseStatus = (error as { response?: { status?: unknown } })
-    ?.response?.status;
+  const responseStatus = getResponseStatus(error);
   if (typeof responseStatus === "number") return responseStatus;
 
   return 500;
@@ -104,26 +120,20 @@ export function extractErrorCode(error: unknown): string | undefined {
   }
 
   if (error && typeof error === "object" && "code" in error) {
-    const code = (error as { code?: string }).code;
+    const code = (error as ErrorWithCode).code;
     if (typeof code === "string") return code;
   }
 
   return undefined;
 }
 
-// ============================================================================
-// Factory Functions
-// ============================================================================
-
-function buildErrorContext(error: unknown, fallbackMessage: string) {
+function buildErrorContext(
+  error: unknown,
+  fallbackMessage: string
+): ErrorContext {
   const status = extractStatusCode(error);
   const code = extractErrorCode(error);
-
-  const errorObj = error as {
-    message?: string;
-    response?: { data?: unknown };
-    details?: Record<string, unknown>;
-  };
+  const errorObj = error as ErrorContextSource;
 
   const message = resolveErrorMessage(
     fallbackMessage,
@@ -134,6 +144,31 @@ function buildErrorContext(error: unknown, fallbackMessage: string) {
   );
 
   return { status, code, errorObj, message };
+}
+
+function resolveIntentMessage(status: number, message: string): string {
+  if (status === 400) {
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes("slippage")) {
+      return "Invalid slippage tolerance. Must be between 0.1% and 50%.";
+    }
+    if (lowerMessage.includes("amount")) {
+      return "Invalid transaction amount. Please check your balance.";
+    }
+
+    return message;
+  }
+
+  if (status === 429) {
+    return "Too many transactions in progress. Please wait before submitting another.";
+  }
+
+  if (status === 503) {
+    return "Intent engine is temporarily overloaded. Please try again in a moment.";
+  }
+
+  return message;
 }
 
 /**
@@ -147,33 +182,9 @@ export function createIntentServiceError(error: unknown): IntentServiceError {
     status,
     code,
     errorObj,
-    message: resolvedMessage,
+    message: fallbackMessage,
   } = buildErrorContext(error, "Intent service error");
-
-  let message = resolvedMessage;
-
-  const lowerMessage = message.toLowerCase();
-
-  // Enhance message based on status code
-  switch (status) {
-    case 400:
-      if (lowerMessage.includes("slippage")) {
-        message = "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-      } else if (lowerMessage.includes("amount")) {
-        message = "Invalid transaction amount. Please check your balance.";
-      }
-      break;
-    case 429:
-      message =
-        "Too many transactions in progress. Please wait before submitting another.";
-      break;
-    case 503:
-      message =
-        "Intent engine is temporarily overloaded. Please try again in a moment.";
-      break;
-  }
-
-  // Get user-friendly message
+  const message = resolveIntentMessage(status, fallbackMessage);
   const userMessage = getIntentErrorMessage(status, message);
 
   return new IntentServiceError(

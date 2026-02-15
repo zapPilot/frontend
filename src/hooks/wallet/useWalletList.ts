@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { loadWallets as fetchWallets } from "@/components/WalletManager/services/WalletService";
 import { TIMINGS } from "@/constants/timings";
@@ -16,6 +22,34 @@ interface UseWalletListParams {
   isOwner: boolean;
 }
 
+interface UseWalletListReturn {
+  wallets: WalletData[];
+  setWallets: Dispatch<SetStateAction<WalletData[]>>;
+  isRefreshing: boolean;
+  loadWallets: (silent?: boolean) => Promise<void>;
+}
+
+function isWalletActive(
+  connectedWallets: ConnectedWallet[],
+  walletAddress: string
+): boolean {
+  return connectedWallets.some(
+    connectedWallet =>
+      connectedWallet.address.toLowerCase() === walletAddress.toLowerCase() &&
+      connectedWallet.isActive
+  );
+}
+
+function mapWalletsWithActiveState(
+  loadedWallets: WalletData[],
+  connectedWallets: ConnectedWallet[]
+): WalletData[] {
+  return loadedWallets.map(wallet => ({
+    ...wallet,
+    isActive: isWalletActive(connectedWallets, wallet.address),
+  }));
+}
+
 /**
  * Hook for managing wallet list loading and periodic refresh
  *
@@ -29,14 +63,15 @@ export function useWalletList({
   connectedWallets,
   isOpen,
   isOwner,
-}: UseWalletListParams) {
+}: UseWalletListParams): UseWalletListReturn {
   const [wallets, setWallets] = useState<WalletData[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load wallets from API
   const loadWallets = useCallback(
     async (silent = false) => {
-      if (!userId) return;
+      if (!userId) {
+        return;
+      }
 
       if (!silent) {
         setIsRefreshing(true);
@@ -44,20 +79,9 @@ export function useWalletList({
 
       try {
         const loadedWallets = await fetchWallets(userId);
-
-        // Mark wallets as active based on WalletProvider's connectedWallets
-        const walletsWithActiveState = loadedWallets.map(wallet => ({
-          ...wallet,
-          isActive: connectedWallets.some(
-            cw =>
-              cw.address.toLowerCase() === wallet.address.toLowerCase() &&
-              cw.isActive
-          ),
-        }));
-
-        setWallets(walletsWithActiveState);
+        setWallets(mapWalletsWithActiveState(loadedWallets, connectedWallets));
       } catch {
-        // Handle silently - error state is managed by service response
+        // Handled by service-level response normalization.
       } finally {
         if (!silent) {
           setIsRefreshing(false);
@@ -67,19 +91,19 @@ export function useWalletList({
     [userId, connectedWallets]
   );
 
-  // Load wallets when component opens or user changes
   useEffect(() => {
     if (isOpen && userId) {
       void loadWallets();
     }
   }, [isOpen, userId, loadWallets]);
 
-  // Auto-refresh data periodically (only for connected users viewing their own data)
   useEffect(() => {
-    if (!isOpen || !userId || !isOwner) return;
+    if (!isOpen || !userId || !isOwner) {
+      return;
+    }
 
     const interval = setInterval(() => {
-      void loadWallets(true); // Silent refresh
+      void loadWallets(true);
     }, TIMINGS.WALLET_REFRESH_INTERVAL);
 
     return () => clearInterval(interval);

@@ -18,8 +18,9 @@
  * clamp(-5, 0, 10) // 0
  * clamp(5, 0, 10)  // 5
  */
-export const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value));
+export function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
 
 /**
  * Clamp a value to a minimum bound
@@ -34,5 +35,6 @@ export const clamp = (value: number, min: number, max: number): number =>
  * clampMin(-5, 0)  // 0
  * clampMin(10, 0)  // 10
  */
-export const clampMin = (value: number, min: number): number =>
-  Math.max(min, value);
+export function clampMin(value: number, min: number): number {
+  return Math.max(min, value);
+}

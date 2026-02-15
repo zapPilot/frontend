@@ -32,7 +32,7 @@ const mockResponse = {
   last_updated: "2025-02-07T12:00:00Z",
 };
 
-const createWrapper = () => {
+function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   });
@@ -42,7 +42,7 @@ const createWrapper = () => {
     );
   }
   return Wrapper;
-};
+}
 
 describe("useBorrowingPositions", () => {
   beforeEach(() => {

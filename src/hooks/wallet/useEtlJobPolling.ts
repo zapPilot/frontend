@@ -60,9 +60,23 @@ const ETL_JOB_QUERY_KEY = ["etl-job-status"];
 const POLLING_INTERVAL = 3000;
 const DEFAULT_TRIGGER_ERROR_MESSAGE = "Failed to trigger ETL";
 const PENDING_STATUS = "pending";
+const COMPLETED_STATUS = "completed";
+const FAILED_STATUS = "failed";
+
+function shouldStopPolling(status: string | undefined): boolean {
+  return status === COMPLETED_STATUS || status === FAILED_STATUS;
+}
+
+function resolveTriggerErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return DEFAULT_TRIGGER_ERROR_MESSAGE;
+}
 
 function normalizeStatus(status: string): EtlJobPollingState["status"] {
-  if (status === "completed") {
+  if (status === COMPLETED_STATUS) {
     return "completing";
   }
 
@@ -113,20 +127,18 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     EtlJobPollingState["status"] | null
   >(null);
 
-  // Poll job status when we have a job ID
   const { data: jobStatus, isLoading: isPolling } = useQuery<EtlJobStatus>({
     queryKey: [...ETL_JOB_QUERY_KEY, jobId],
     queryFn: () => getEtlJobStatus(jobId!),
     enabled: !!jobId,
     refetchInterval: query => {
       const data = query.state.data;
-      // Stop polling when job is completed or failed
-      if (data?.status === "completed" || data?.status === "failed") {
+      if (shouldStopPolling(data?.status)) {
         return false;
       }
       return POLLING_INTERVAL;
     },
-    staleTime: 0, // Always refetch
+    staleTime: 0,
   });
 
   useEffect(() => {
@@ -148,7 +160,6 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     isLoading: isPolling || hasPendingJob,
   };
 
-  // Trigger a new ETL job
   const triggerEtl = useCallback(
     async (userId: string, walletAddress: string) => {
       setTriggerError(undefined);
@@ -165,13 +176,11 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
         }
 
         if (response.job_id) {
-          setLatestStatus("pending");
+          setLatestStatus(PENDING_STATUS);
           setJobId(response.job_id);
         }
       } catch (error) {
-        setTriggerError(
-          error instanceof Error ? error.message : DEFAULT_TRIGGER_ERROR_MESSAGE
-        );
+        setTriggerError(resolveTriggerErrorMessage(error));
       }
     },
     []
@@ -182,11 +191,10 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
       return;
     }
     setTriggerError(undefined);
-    setLatestStatus("pending");
+    setLatestStatus(PENDING_STATUS);
     setJobId(existingJobId);
   }, []);
 
-  // Reset polling state
   const reset = useCallback(() => {
     setJobId(null);
     setTriggerError(undefined);
@@ -194,8 +202,6 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     queryClient.removeQueries({ queryKey: ETL_JOB_QUERY_KEY });
   }, [queryClient]);
 
-  // Complete the transition from 'completing' to 'idle'
-  // This should be called after data refetch completes in the parent component
   const completeTransition = useCallback(() => {
     reset();
   }, [reset]);

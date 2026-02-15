@@ -64,13 +64,13 @@ vi.mock("@/constants/wallet", () => ({
 }));
 
 // Create test query wrapper
-const createTestQueryWrapper = (queryClient: QueryClient) => {
+function createTestQueryWrapper(queryClient: QueryClient) {
   const TestQueryWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
   TestQueryWrapper.displayName = "TestQueryWrapper";
   return TestQueryWrapper;
-};
+}
 
 describe("useAccountDeletion", () => {
   let queryClient: QueryClient;

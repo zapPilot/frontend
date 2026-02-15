@@ -43,6 +43,12 @@ const USER_ID_REQUIRED_ERROR = "User ID is required";
 const INVALID_WALLET_DATA_ERROR = "Invalid wallet data";
 const REMOVE_WALLET_ERROR = "Failed to remove wallet";
 const ADD_WALLET_ERROR = "Failed to add wallet";
+const REMOVE_OPERATION_NAME = "wallet removal";
+const ADD_OPERATION_NAME = "adding wallet";
+
+function createFailureResult(error: string): WalletMutationResult {
+  return { success: false, error };
+}
 
 /**
  * Hook for wallet mutation operations (add/delete)
@@ -94,25 +100,25 @@ export function useWalletMutations({
 
       try {
         const response = await removeWalletFromBundle(userId, walletId);
-        if (response.success) {
-          setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
-
-          await invalidateAndRefetch({
-            queryClient,
-            queryKey: queryKeys.user.wallets(userId),
-            refetch,
-            operationName: "wallet removal",
-          });
-
-          setRemovingState(walletId, false, null);
+        if (!response.success) {
+          setRemovingState(
+            walletId,
+            false,
+            response.error ?? REMOVE_WALLET_ERROR
+          );
           return;
         }
 
-        setRemovingState(
-          walletId,
-          false,
-          response.error ?? REMOVE_WALLET_ERROR
-        );
+        setWallets(prev => prev.filter(wallet => wallet.id !== walletId));
+
+        await invalidateAndRefetch({
+          queryClient,
+          queryKey: queryKeys.user.wallets(userId),
+          refetch,
+          operationName: REMOVE_OPERATION_NAME,
+        });
+
+        setRemovingState(walletId, false, null);
       } catch (error) {
         const errorMessage = handleWalletError(error);
         setRemovingState(walletId, false, errorMessage);
@@ -130,10 +136,9 @@ export function useWalletMutations({
 
       const validation = validateNewWallet(newWallet);
       if (!validation.isValid) {
-        return {
-          success: false,
-          error: validation.error ?? INVALID_WALLET_DATA_ERROR,
-        };
+        return createFailureResult(
+          validation.error ?? INVALID_WALLET_DATA_ERROR
+        );
       }
 
       setAddingState(true, null);
@@ -145,28 +150,28 @@ export function useWalletMutations({
           newWallet.label
         );
 
-        if (response.success) {
-          await loadWallets();
-
-          await invalidateAndRefetch({
-            queryClient,
-            queryKey: queryKeys.user.wallets(userId),
-            refetch,
-            operationName: "adding wallet",
-          });
-
-          setAddingState(false, null);
-
-          return { success: true };
+        if (!response.success) {
+          const error = response.error ?? ADD_WALLET_ERROR;
+          setAddingState(false, error);
+          return createFailureResult(error);
         }
 
-        const error = response.error ?? ADD_WALLET_ERROR;
-        setAddingState(false, error);
-        return { success: false, error };
+        await loadWallets();
+
+        await invalidateAndRefetch({
+          queryClient,
+          queryKey: queryKeys.user.wallets(userId),
+          refetch,
+          operationName: ADD_OPERATION_NAME,
+        });
+
+        setAddingState(false, null);
+
+        return { success: true };
       } catch (error) {
         const errorMessage = handleWalletError(error);
         setAddingState(false, errorMessage);
-        return { success: false, error: errorMessage };
+        return createFailureResult(errorMessage);
       }
     },
     [userId, loadWallets, queryClient, refetch, setAddingState]

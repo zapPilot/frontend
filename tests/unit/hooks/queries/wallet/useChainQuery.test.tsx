@@ -8,7 +8,7 @@ import { describe, expect, it, vi } from "vitest";
 import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 
 // Create test query wrapper
-const createTestQueryWrapper = () => {
+function createTestQueryWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -19,7 +19,7 @@ const createTestQueryWrapper = () => {
   );
   TestQueryWrapper.displayName = "TestQueryWrapper";
   return TestQueryWrapper;
-};
+}
 
 // Mock chainService
 vi.mock("@/services", () => ({

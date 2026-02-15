@@ -21,148 +21,150 @@ import {
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
 
-const createMockDashboardResponse = (): UnifiedDashboardResponse => ({
-  user_id: "0xDashboardUser",
-  parameters: {
-    trend_days: 30,
-    risk_days: 30,
-    drawdown_days: 90,
-    allocation_days: 40,
-    rolling_days: 40,
-  },
-  trends: {
-    period_days: 30,
-    data_points: 0,
-    period: {
-      start_date: "2025-01-01",
-      end_date: "2025-01-30",
-      days: 30,
+function createMockDashboardResponse(): UnifiedDashboardResponse {
+  return {
+    user_id: "0xDashboardUser",
+    parameters: {
+      trend_days: 30,
+      risk_days: 30,
+      drawdown_days: 90,
+      allocation_days: 40,
+      rolling_days: 40,
     },
-    daily_values: [],
-    summary: {
-      current_value_usd: 0,
-      start_value_usd: 0,
-      change_usd: 0,
-      change_pct: 0,
-    },
-  },
-  drawdown_analysis: {
-    enhanced: {
+    trends: {
+      period_days: 30,
+      data_points: 0,
       period: {
         start_date: "2025-01-01",
         end_date: "2025-01-30",
         days: 30,
       },
-      period_info: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        timezone: "UTC",
-        label: "Last 30 Days",
-      },
-      drawdown_data: [],
+      daily_values: [],
       summary: {
-        max_drawdown_pct: 0,
-        current_drawdown_pct: 0,
-        peak_value: 0,
-        current_value: 0,
+        current_value_usd: 0,
+        start_value_usd: 0,
+        change_usd: 0,
+        change_pct: 0,
       },
     },
-    underwater_recovery: {
+    drawdown_analysis: {
+      enhanced: {
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        period_info: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          timezone: "UTC",
+          label: "Last 30 Days",
+        },
+        drawdown_data: [],
+        summary: {
+          max_drawdown_pct: 0,
+          current_drawdown_pct: 0,
+          peak_value: 0,
+          current_value: 0,
+        },
+      },
+      underwater_recovery: {
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        period_info: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          timezone: "UTC",
+          label: "Last 30 Days",
+        },
+        underwater_data: [],
+        summary: {
+          total_underwater_days: 0,
+          underwater_percentage: 0,
+          recovery_points: 0,
+          current_underwater_pct: 0,
+          is_currently_underwater: false,
+        },
+      },
+    },
+    allocation: {
+      period_days: 40,
+      data_points: 0,
       period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
+        start_date: "2024-12-12",
+        end_date: "2025-01-21",
+        days: 40,
       },
-      period_info: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        timezone: "UTC",
-        label: "Last 30 Days",
-      },
-      underwater_data: [],
+      allocations: [],
       summary: {
-        total_underwater_days: 0,
-        underwater_percentage: 0,
-        recovery_points: 0,
-        current_underwater_pct: 0,
-        is_currently_underwater: false,
+        unique_dates: 0,
+        unique_protocols: 0,
+        unique_chains: 0,
       },
     },
-  },
-  allocation: {
-    period_days: 40,
-    data_points: 0,
-    period: {
-      start_date: "2024-12-12",
-      end_date: "2025-01-21",
-      days: 40,
-    },
-    allocations: [],
-    summary: {
-      unique_dates: 0,
-      unique_protocols: 0,
-      unique_chains: 0,
-    },
-  },
-  rolling_analytics: {
-    sharpe: {
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
+    rolling_analytics: {
+      sharpe: {
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        rolling_sharpe_data: [],
+        summary: {
+          latest_sharpe_ratio: 0,
+          avg_sharpe_ratio: 0,
+          reliable_data_points: 0,
+          statistical_reliability: "",
+        },
+        educational_context: {
+          title: "Sharpe Ratio",
+          summary: "Measures excess return per unit of risk",
+          highlights: ["Sharpe ratio above 1.0 indicates strong performance"],
+          links: [
+            {
+              label: "What is Sharpe Ratio?",
+              url: "https://example.com/sharpe-ratio",
+            },
+          ],
+        },
       },
-      rolling_sharpe_data: [],
-      summary: {
-        latest_sharpe_ratio: 0,
-        avg_sharpe_ratio: 0,
-        reliable_data_points: 0,
-        statistical_reliability: "",
-      },
-      educational_context: {
-        title: "Sharpe Ratio",
-        summary: "Measures excess return per unit of risk",
-        highlights: ["Sharpe ratio above 1.0 indicates strong performance"],
-        links: [
-          {
-            label: "What is Sharpe Ratio?",
-            url: "https://example.com/sharpe-ratio",
-          },
-        ],
-      },
-    },
-    volatility: {
-      period: {
-        start_date: "2025-01-01",
-        end_date: "2025-01-30",
-        days: 30,
-      },
-      rolling_volatility_data: [],
-      summary: {
-        latest_daily_volatility: 0,
-        latest_annualized_volatility: 0,
-        avg_daily_volatility: 0,
-        avg_annualized_volatility: 0,
-      },
-      educational_context: {
-        title: "Volatility",
-        summary: "Tracks dispersion of portfolio returns",
-        highlights: ["Lower volatility typically indicates more stability"],
-        links: [
-          {
-            label: "Volatility basics",
-            url: "https://example.com/volatility",
-          },
-        ],
+      volatility: {
+        period: {
+          start_date: "2025-01-01",
+          end_date: "2025-01-30",
+          days: 30,
+        },
+        rolling_volatility_data: [],
+        summary: {
+          latest_daily_volatility: 0,
+          latest_annualized_volatility: 0,
+          avg_daily_volatility: 0,
+          avg_annualized_volatility: 0,
+        },
+        educational_context: {
+          title: "Volatility",
+          summary: "Tracks dispersion of portfolio returns",
+          highlights: ["Lower volatility typically indicates more stability"],
+          links: [
+            {
+              label: "Volatility basics",
+              url: "https://example.com/volatility",
+            },
+          ],
+        },
       },
     },
-  },
-  _metadata: {
-    success_count: 1,
-    error_count: 0,
-    success_rate: 1,
-    errors: {},
-  },
-});
+    _metadata: {
+      success_count: 1,
+      error_count: 0,
+      success_rate: 1,
+      errors: {},
+    },
+  };
+}
 describe("analyticsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();

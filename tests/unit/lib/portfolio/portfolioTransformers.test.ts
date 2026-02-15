@@ -300,4 +300,78 @@ describe("portfolioTransformers", () => {
       expect(extractSentimentData(greedInput).value).toBe(100);
     });
   });
+
+  describe("extractBalanceData edge cases", () => {
+    it("should handle missing portfolio_roi", () => {
+      const response = {
+        ...mockLandingResponse,
+        portfolio_roi:
+          undefined as unknown as LandingPageResponse["portfolio_roi"],
+      };
+      const result = extractBalanceData(response);
+      expect(result.roi).toBe(0);
+    });
+
+    it("should handle missing last_updated", () => {
+      const response = {
+        ...mockLandingResponse,
+        last_updated: undefined as unknown as string,
+      };
+      const result = extractBalanceData(response);
+      expect(result.lastUpdated).toBeNull();
+    });
+
+    it("should handle null net_portfolio_value", () => {
+      const response = {
+        ...mockLandingResponse,
+        net_portfolio_value: null as unknown as number,
+      };
+      const result = extractBalanceData(response);
+      expect(result.balance).toBe(0);
+    });
+  });
+
+  describe("extractCompositionData edge cases", () => {
+    it("should handle missing positions/protocols/chains", () => {
+      const response = {
+        ...mockLandingResponse,
+        positions: undefined as unknown as number,
+        protocols: undefined as unknown as number,
+        chains: undefined as unknown as number,
+      };
+      const result = extractCompositionData(response);
+      expect(result.positions).toBe(0);
+      expect(result.protocols).toBe(0);
+      expect(result.chains).toBe(0);
+    });
+  });
+
+  describe("combineStrategyData edge cases", () => {
+    it("should set hasSentiment false when sentimentData is undefined", () => {
+      const result = combineStrategyData(
+        mockLandingResponse,
+        undefined,
+        undefined
+      );
+      expect(result?.hasSentiment).toBe(false);
+    });
+
+    it("should set hasRegimeHistory false when regimeHistoryData is undefined", () => {
+      const result = combineStrategyData(
+        mockLandingResponse,
+        undefined,
+        undefined
+      );
+      expect(result?.hasRegimeHistory).toBe(false);
+    });
+
+    it("should set sentimentValue to null when sentimentData is undefined", () => {
+      const result = combineStrategyData(
+        mockLandingResponse,
+        undefined,
+        undefined
+      );
+      expect(result?.sentimentValue).toBeNull();
+    });
+  });
 });

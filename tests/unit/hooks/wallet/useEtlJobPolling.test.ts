@@ -13,12 +13,19 @@ vi.mock("@/services/accountService", () => ({
 const { getEtlJobStatus, triggerWalletDataFetch } = await import(
   "@/services/accountService"
 );
+const USER_ID = "user-123";
+const WALLET_ADDRESS = "0x123abc";
+const DEFAULT_JOB_ID = "job-123";
+
+function renderUseEtlJobPolling() {
+  return renderHook(() => useEtlJobPolling());
+}
 
 function createTriggerResponse(
   overrides: Partial<EtlJobResponse> = {}
 ): EtlJobResponse {
   return {
-    job_id: "job-123",
+    job_id: DEFAULT_JOB_ID,
     status: "pending",
     message: "ETL job started",
     rate_limited: false,
@@ -33,7 +40,7 @@ function createJobStatus(
   const now = new Date().toISOString();
 
   return {
-    job_id: "job-123",
+    job_id: DEFAULT_JOB_ID,
     status,
     created_at: now,
     updated_at: now,
@@ -48,7 +55,7 @@ describe("useEtlJobPolling", () => {
   });
 
   it("returns idle state and all public methods initially", () => {
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     expect(result.current.state).toEqual({
       jobId: null,
@@ -73,10 +80,13 @@ describe("useEtlJobPolling", () => {
     const { result } = renderHook(() => useEtlJobPolling());
 
     await act(async () => {
-      await result.current.triggerEtl("user-123", "0x123abc");
+      await result.current.triggerEtl(USER_ID, WALLET_ADDRESS);
     });
 
-    expect(triggerWalletDataFetch).toHaveBeenCalledWith("user-123", "0x123abc");
+    expect(triggerWalletDataFetch).toHaveBeenCalledWith(
+      USER_ID,
+      WALLET_ADDRESS
+    );
     expect(result.current.state.jobId).toBe("new-job-123");
     expect(result.current.state.status).toBe("pending");
   });
@@ -90,10 +100,10 @@ describe("useEtlJobPolling", () => {
       })
     );
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     await act(async () => {
-      await result.current.triggerEtl("user-123", "0x123abc");
+      await result.current.triggerEtl(USER_ID, WALLET_ADDRESS);
     });
 
     expect(result.current.state.jobId).toBeNull();
@@ -107,10 +117,10 @@ describe("useEtlJobPolling", () => {
       new Error("Network error occurred")
     );
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     await act(async () => {
-      await result.current.triggerEtl("user-123", "0x123abc");
+      await result.current.triggerEtl(USER_ID, WALLET_ADDRESS);
     });
 
     expect(result.current.state.errorMessage).toBe("Network error occurred");
@@ -119,17 +129,17 @@ describe("useEtlJobPolling", () => {
   it("returns default trigger error for non-Error failures", async () => {
     vi.mocked(triggerWalletDataFetch).mockRejectedValue("string error");
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     await act(async () => {
-      await result.current.triggerEtl("user-123", "0x123abc");
+      await result.current.triggerEtl(USER_ID, WALLET_ADDRESS);
     });
 
     expect(result.current.state.errorMessage).toBe("Failed to trigger ETL");
   });
 
   it("starts polling for existing job IDs and ignores empty job IDs", () => {
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     act(() => {
       result.current.startPolling("existing-job-456");
@@ -148,14 +158,14 @@ describe("useEtlJobPolling", () => {
   it("maps API completed status to internal completing status", async () => {
     vi.mocked(getEtlJobStatus).mockResolvedValue(createJobStatus("completed"));
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     act(() => {
-      result.current.startPolling("job-123");
+      result.current.startPolling(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {
-      expect(getEtlJobStatus).toHaveBeenCalledWith("job-123");
+      expect(getEtlJobStatus).toHaveBeenCalledWith(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {
@@ -172,10 +182,10 @@ describe("useEtlJobPolling", () => {
         } as Partial<EtlJobStatus>)
       );
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     act(() => {
-      result.current.startPolling("job-123");
+      result.current.startPolling(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {
@@ -184,7 +194,7 @@ describe("useEtlJobPolling", () => {
 
     act(() => {
       result.current.reset();
-      result.current.startPolling("job-123");
+      result.current.startPolling(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {
@@ -196,10 +206,10 @@ describe("useEtlJobPolling", () => {
   it("keeps isLoading true while pending", async () => {
     vi.mocked(getEtlJobStatus).mockResolvedValue(createJobStatus("pending"));
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     act(() => {
-      result.current.startPolling("job-123");
+      result.current.startPolling(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {
@@ -212,10 +222,10 @@ describe("useEtlJobPolling", () => {
       new Error("Some error")
     );
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     await act(async () => {
-      await result.current.triggerEtl("user-123", "0x123abc");
+      await result.current.triggerEtl(USER_ID, WALLET_ADDRESS);
     });
 
     expect(result.current.state.errorMessage).toBe("Some error");
@@ -235,10 +245,10 @@ describe("useEtlJobPolling", () => {
   it("transitions from completing to idle via completeTransition", async () => {
     vi.mocked(getEtlJobStatus).mockResolvedValue(createJobStatus("completed"));
 
-    const { result } = renderHook(() => useEtlJobPolling());
+    const { result } = renderUseEtlJobPolling();
 
     act(() => {
-      result.current.startPolling("job-123");
+      result.current.startPolling(DEFAULT_JOB_ID);
     });
 
     await waitFor(() => {

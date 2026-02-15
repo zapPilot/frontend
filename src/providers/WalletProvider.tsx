@@ -74,6 +74,10 @@ function getWalletAddress(walletItem: {
   return walletItem.getAccount()?.address ?? "";
 }
 
+function createWalletError(message: string, code: string): WalletError {
+  return { message, code };
+}
+
 // Main Provider Component
 export function WalletProvider({ children }: WalletProviderProps) {
   // ThirdWeb hooks
@@ -113,10 +117,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
       if (!targetWallet) {
         const errorMessage = `Wallet ${address} not found`;
-        setError({
-          message: errorMessage,
-          code: "WALLET_NOT_FOUND",
-        });
+        setError(createWalletError(errorMessage, "WALLET_NOT_FOUND"));
         throw new Error(errorMessage);
       }
 
@@ -129,10 +130,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
           err,
           "Failed to switch active wallet"
         );
-        setError({
-          message: errorMessage,
-          code: "SWITCH_WALLET_ERROR",
-        });
+        setError(createWalletError(errorMessage, "SWITCH_WALLET_ERROR"));
         walletLogger.error("Failed to switch active wallet:", err);
         throw err;
       }
@@ -189,10 +187,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       await connect(availableWallet);
     } catch (err) {
       const errorMessage = getErrorMessage(err, "Failed to connect wallet");
-      setError({
-        message: errorMessage,
-        code: "CONNECT_ERROR",
-      });
+      setError(createWalletError(errorMessage, "CONNECT_ERROR"));
       walletLogger.error("Failed to connect wallet:", err);
       throw err;
     }
@@ -207,10 +202,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       await Promise.resolve(disconnect(wallet));
     } catch (err) {
       const errorMessage = getErrorMessage(err, "Failed to disconnect wallet");
-      setError({
-        message: errorMessage,
-        code: "DISCONNECT_ERROR",
-      });
+      setError(createWalletError(errorMessage, "DISCONNECT_ERROR"));
       walletLogger.error("Failed to disconnect wallet:", err);
       throw err;
     }
@@ -317,7 +309,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
 }
 
 // Hook to use the wallet context
-export function useWalletProvider() {
+export function useWalletProvider(): WalletProviderInterface {
   const context = useContext(WalletContext);
   if (!context) {
     throw new Error("useWalletProvider must be used within a WalletProvider");

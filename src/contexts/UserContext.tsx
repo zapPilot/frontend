@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, type ReactNode, useCallback, useContext } from "react";
 
 import {
   useCurrentUser,
@@ -27,8 +27,17 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
+async function triggerUserRefetch(
+  refetch: () => Promise<unknown>
+): Promise<void> {
+  try {
+    await refetch();
+  } catch (error) {
+    logger.error("Failed to refetch user data", error);
+  }
+}
+
 export function UserProvider({ children }: UserProviderProps) {
-  // Use React Query hook for all user data management
   const {
     userInfo,
     isLoading: loading,
@@ -38,15 +47,9 @@ export function UserProvider({ children }: UserProviderProps) {
     refetch,
   } = useCurrentUser();
 
-  const triggerRefetch = () => {
-    void (async () => {
-      try {
-        await refetch();
-      } catch (error) {
-        logger.error("Failed to refetch user data", error);
-      }
-    })();
-  };
+  const triggerRefetch = useCallback(() => {
+    void triggerUserRefetch(refetch);
+  }, [refetch]);
 
   const value: UserContextType = {
     userInfo,

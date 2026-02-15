@@ -760,4 +760,75 @@ describe("accountService", () => {
       await expect(accountService.getEtlJobStatus("job123")).rejects.toThrow();
     });
   });
+
+  describe("createAccountServiceError branches", () => {
+    it("should handle 400 non-wallet error (default break)", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 400,
+        message: "Bad request general",
+      });
+
+      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
+        "Bad request general"
+      );
+    });
+
+    it("should handle 409 non-wallet non-email error (default break)", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 409,
+        message: "Conflict on something else",
+      });
+
+      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
+        "Conflict on something else"
+      );
+    });
+
+    it("should handle error with response.status instead of status", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        message: "Not found",
+        response: { status: 404 },
+      });
+
+      await expect(accountService.connectWallet("0x123")).rejects.toThrow(
+        "User account not found. Please connect your wallet first."
+      );
+    });
+
+    it("should handle null error", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue(null);
+
+      try {
+        await accountService.connectWallet("0x123");
+        expect.fail("Should have thrown");
+      } catch (e: unknown) {
+        const err = e as { message: string; status: number };
+        expect(err.message).toBe("Account service error");
+        expect(err.status).toBe(500);
+      }
+    });
+
+    it("should handle error with code and details fields", async () => {
+      vi.mocked(httpUtils.accountApi.post).mockRejectedValue({
+        status: 500,
+        message: "Server error",
+        code: "INTERNAL_ERROR",
+        details: { trace: "abc123" },
+      });
+
+      try {
+        await accountService.connectWallet("0x123");
+        expect.fail("Should have thrown");
+      } catch (e: unknown) {
+        const err = e as {
+          message: string;
+          code: string;
+          details: Record<string, unknown>;
+        };
+        expect(err.message).toBe("Server error");
+        expect(err.code).toBe("INTERNAL_ERROR");
+        expect(err.details).toEqual({ trace: "abc123" });
+      }
+    });
+  });
 });

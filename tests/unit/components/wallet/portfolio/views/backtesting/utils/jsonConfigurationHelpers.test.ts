@@ -531,10 +531,11 @@ describe("updateJsonField", () => {
 });
 
 /** Build a minimal JSON string with a simple_regime config for regime param tests. */
-const makeRegimeJson = (params: Record<string, unknown> = {}) =>
-  JSON.stringify({
+function makeRegimeJson(params: Record<string, unknown> = {}): string {
+  return JSON.stringify({
     configs: [{ strategy_id: SIMPLE_REGIME_STRATEGY_ID, params }],
   });
+}
 
 describe("parseRegimeParam", () => {
   it("should read a string param from the simple_regime config", () => {

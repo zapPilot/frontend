@@ -18,6 +18,22 @@ interface UseWalletLabelsParams {
   setWalletOperationState: WalletOperationStateSetter;
 }
 
+interface UseWalletLabelsReturn {
+  handleEditLabel: (walletId: string, newLabel: string) => Promise<void>;
+}
+
+const UPDATE_LABEL_FAILED_ERROR = "Failed to update wallet label";
+
+function updateWalletEntryLabel(
+  previousWallets: WalletData[],
+  walletId: string,
+  label: string
+): WalletData[] {
+  return previousWallets.map(wallet =>
+    wallet.id === walletId ? { ...wallet, label } : wallet
+  );
+}
+
 /**
  * Hook for wallet label editing operations
  *
@@ -32,8 +48,17 @@ export function useWalletLabels({
   setWallets,
   setEditingWallet,
   setWalletOperationState,
-}: UseWalletLabelsParams) {
-  // Handle editing label
+}: UseWalletLabelsParams): UseWalletLabelsReturn {
+  const setEditingState = useCallback(
+    (walletId: string, isLoading: boolean, error: string | null) => {
+      setWalletOperationState("editing", walletId, {
+        isLoading,
+        error,
+      });
+    },
+    [setWalletOperationState]
+  );
+
   const handleEditLabel = useCallback(
     async (walletId: string, newLabel: string) => {
       if (!userId || !newLabel.trim()) {
@@ -41,30 +66,23 @@ export function useWalletLabels({
         return;
       }
 
-      // Find the wallet to get its address
       const wallet = wallets.find(w => w.id === walletId);
       if (!wallet) {
         setEditingWallet(null);
         return;
       }
 
-      // Set loading state for this specific wallet edit
-      setWalletOperationState("editing", walletId, {
-        isLoading: true,
-        error: null,
-      });
-
-      const updateLabel = (label: string) =>
-        setWallets(prev =>
-          prev.map(w => (w.id === walletId ? { ...w, label } : w))
+      setEditingState(walletId, true, null);
+      const updateLabel = (label: string) => {
+        setWallets(previousWallets =>
+          updateWalletEntryLabel(previousWallets, walletId, label)
         );
+      };
 
       try {
-        // Update local state immediately (optimistic update)
         updateLabel(newLabel);
         setEditingWallet(null);
 
-        // Call the API to update wallet label
         const response = await updateWalletLabelRequest(
           userId,
           wallet.address,
@@ -73,27 +91,22 @@ export function useWalletLabels({
 
         if (!response.success) {
           updateLabel(wallet.label);
-          setWalletOperationState("editing", walletId, {
-            isLoading: false,
-            error: response.error ?? "Failed to update wallet label",
-          });
+          setEditingState(
+            walletId,
+            false,
+            response.error ?? UPDATE_LABEL_FAILED_ERROR
+          );
           return;
         }
 
-        setWalletOperationState("editing", walletId, {
-          isLoading: false,
-          error: null,
-        });
+        setEditingState(walletId, false, null);
       } catch (error) {
         updateLabel(wallet.label);
         const errorMessage = handleWalletError(error);
-        setWalletOperationState("editing", walletId, {
-          isLoading: false,
-          error: errorMessage,
-        });
+        setEditingState(walletId, false, errorMessage);
       }
     },
-    [userId, wallets, setWallets, setEditingWallet, setWalletOperationState]
+    [userId, wallets, setWallets, setEditingWallet, setEditingState]
   );
 
   return {

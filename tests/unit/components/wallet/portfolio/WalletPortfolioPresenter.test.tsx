@@ -12,7 +12,7 @@ import {
 } from "../../../../fixtures/mockPortfolioData";
 import { render } from "../../../../test-utils";
 
-const getDefaultStrategy = (regimeId: RegimeId) => {
+function getDefaultStrategy(regimeId: RegimeId) {
   const regime = regimes.find(item => item.id === regimeId);
 
   if (!regime) {
@@ -24,58 +24,61 @@ const getDefaultStrategy = (regimeId: RegimeId) => {
   }
 
   return regime.strategies.fromLeft ?? regime.strategies.fromRight;
-};
+}
 
-const getZapAction = (regimeId: RegimeId) =>
-  getDefaultStrategy(regimeId)?.useCase?.zapAction ?? "";
+function getZapAction(regimeId: RegimeId): string {
+  return getDefaultStrategy(regimeId)?.useCase?.zapAction ?? "";
+}
 
-const createMockSections = (data: WalletPortfolioDataWithDirection) => ({
-  balance: {
-    data: {
-      balance: data.balance,
-      roiChange7d: 0,
-      roiChange30d: 0,
+function createMockSections(data: WalletPortfolioDataWithDirection) {
+  return {
+    balance: {
+      data: {
+        balance: data.balance,
+        roiChange7d: 0,
+        roiChange30d: 0,
+      },
+      isLoading: false,
+      error: null,
     },
-    isLoading: false,
-    error: null,
-  },
-  composition: {
-    data: {
-      currentAllocation: data.currentAllocation,
-      targetAllocation: { crypto: 50, stable: 50 },
-      delta: data.delta,
-      positions: 0,
-      protocols: 0,
-      chains: 0,
+    composition: {
+      data: {
+        currentAllocation: data.currentAllocation,
+        targetAllocation: { crypto: 50, stable: 50 },
+        delta: data.delta,
+        positions: 0,
+        protocols: 0,
+        chains: 0,
+      },
+      isLoading: false,
+      error: null,
     },
-    isLoading: false,
-    error: null,
-  },
-  strategy: {
-    data: {
-      currentRegime: data.currentRegime,
-      sentimentValue: data.sentimentValue,
-      sentimentStatus: data.sentimentStatus,
-      sentimentQuote: data.sentimentQuote,
-      targetAllocation: { crypto: 50, stable: 50 },
-      strategyDirection: data.strategyDirection,
-      previousRegime: data.previousRegime,
-      hasSentiment: true,
-      hasRegimeHistory: true,
+    strategy: {
+      data: {
+        currentRegime: data.currentRegime,
+        sentimentValue: data.sentimentValue,
+        sentimentStatus: data.sentimentStatus,
+        sentimentQuote: data.sentimentQuote,
+        targetAllocation: { crypto: 50, stable: 50 },
+        strategyDirection: data.strategyDirection,
+        previousRegime: data.previousRegime,
+        hasSentiment: true,
+        hasRegimeHistory: true,
+      },
+      isLoading: false,
+      error: null,
     },
-    isLoading: false,
-    error: null,
-  },
-  sentiment: {
-    data: {
-      value: data.sentimentValue,
-      status: data.sentimentStatus,
-      quote: data.sentimentQuote,
+    sentiment: {
+      data: {
+        value: data.sentimentValue,
+        status: data.sentimentStatus,
+        quote: data.sentimentQuote,
+      },
+      isLoading: false,
+      error: null,
     },
-    isLoading: false,
-    error: null,
-  },
-});
+  };
+}
 
 // Default ETL state for tests that don't need specific ETL behavior
 // This provides the required etlState prop with idle (no ETL in progress) status

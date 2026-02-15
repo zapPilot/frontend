@@ -21,7 +21,9 @@ const INTERPRETATION_COLORS: Record<SharpeHoverData["interpretation"], string> =
   };
 
 export function SharpeTooltip({ data }: { data: SharpeHoverData }) {
-  const interpretation = getSharpeInterpretation(data.sharpe);
+  const interpretation = getSharpeInterpretation(
+    data.sharpe
+  ) as SharpeHoverData["interpretation"];
   const indicatorColor = getSharpeColor(data.sharpe);
 
   return (

@@ -1,6 +1,6 @@
 import { httpUtils } from "@/lib/http";
 import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
-import {
+import type {
   BacktestRequest,
   BacktestResponse,
   BacktestStrategyCatalogResponseV3,
@@ -27,7 +27,10 @@ interface StrategyMetrics {
 }
 
 function isValidTransfer(t: unknown): t is BacktestTransferMetadata {
-  if (!t || typeof t !== "object") return false;
+  if (!t || typeof t !== "object") {
+    return false;
+  }
+
   const m = t as Partial<BacktestTransferMetadata>;
   return (
     VALID_BUCKETS.has(m.from_bucket ?? "") &&
@@ -158,7 +161,9 @@ function sampleTimelineData(
   // Preserve events from ALL strategies except dca_classic (baseline)
   for (const [index, point] of timeline.entries()) {
     for (const strategy of Object.values(point.strategies)) {
-      if (isDcaBaselineStrategy(strategy)) continue;
+      if (isDcaBaselineStrategy(strategy)) {
+        continue;
+      }
 
       const hasEvent = strategy?.event != null;
       const hasTransfers = extractTransfers(strategy).length > 0;

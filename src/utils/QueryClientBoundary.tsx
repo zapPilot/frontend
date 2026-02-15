@@ -3,11 +3,11 @@ import {
   QueryClientProvider,
   useQueryClient,
 } from "@tanstack/react-query";
-import type { PropsWithChildren } from "react";
+import type { PropsWithChildren, ReactNode } from "react";
 
 const fallbackQueryClient = new QueryClient();
 
-function useHasQueryClient() {
+function useHasQueryClient(): boolean {
   try {
     useQueryClient();
     return true;
@@ -16,14 +16,18 @@ function useHasQueryClient() {
   }
 }
 
-export const QueryClientBoundary = ({ children }: PropsWithChildren) => {
+export function QueryClientBoundary({
+  children,
+}: PropsWithChildren): ReactNode {
   const hasClient = useHasQueryClient();
 
-  return hasClient ? (
-    <>{children}</>
-  ) : (
+  if (hasClient) {
+    return <>{children}</>;
+  }
+
+  return (
     <QueryClientProvider client={fallbackQueryClient}>
       {children}
     </QueryClientProvider>
   );
-};
+}

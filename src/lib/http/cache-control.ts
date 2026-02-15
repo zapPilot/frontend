@@ -1,8 +1,3 @@
-/**
- * Cache Control Parsing
- * Parses Cache-Control headers and syncs with React Query
- */
-
 import { CACHE_WINDOW } from "@/config/cacheWindow";
 import { queryClient } from "@/lib/state/queryClient";
 
@@ -22,17 +17,17 @@ const DEFAULT_CACHE_HINT: CacheHint = {
 
 let appliedCacheHint: CacheHint = DEFAULT_CACHE_HINT;
 
-const parseDirectiveSeconds = (
+function parseDirectiveSeconds(
   directive: string,
   key: string
-): number | undefined => {
+): number | undefined {
   if (!directive.startsWith(key)) {
     return undefined;
   }
 
   const parsed = Number(directive.slice(key.length));
   return Number.isFinite(parsed) ? parsed : undefined;
-};
+}
 
 export function parseCacheControlForHint(
   value?: string | null

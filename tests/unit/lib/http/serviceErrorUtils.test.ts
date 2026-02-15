@@ -6,6 +6,12 @@ import {
   isApiErrorResponse,
 } from "@/lib/http/serviceErrorUtils";
 
+const DEFAULT_MESSAGE = "Default message";
+
+function createTestServiceError(error: unknown): ServiceError {
+  return createServiceError(error, ServiceError, DEFAULT_MESSAGE);
+}
+
 describe("isApiErrorResponse", () => {
   it("returns true for plain objects", () => {
     const result = isApiErrorResponse({ message: "error", status: 400 });
@@ -46,11 +52,7 @@ describe("createServiceError", () => {
       status: 404,
     };
 
-    const result = createServiceError(
-      apiError,
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError(apiError);
 
     expect(result).toBeInstanceOf(ServiceError);
     expect(result.message).toBe("Not found");
@@ -64,11 +66,7 @@ describe("createServiceError", () => {
       response: { status: 503 },
     };
 
-    const result = createServiceError(
-      apiError,
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError(apiError);
 
     expect(result.status).toBe(503);
     expect(result.message).toBe("Server error");
@@ -79,11 +77,7 @@ describe("createServiceError", () => {
       message: "Unknown error",
     };
 
-    const result = createServiceError(
-      apiError,
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError(apiError);
 
     expect(result.status).toBe(500);
     expect(result.message).toBe("Unknown error");
@@ -94,13 +88,9 @@ describe("createServiceError", () => {
       status: 400,
     };
 
-    const result = createServiceError(
-      apiError,
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError(apiError);
 
-    expect(result.message).toBe("Default message");
+    expect(result.message).toBe(DEFAULT_MESSAGE);
     expect(result.status).toBe(400);
   });
 
@@ -116,7 +106,7 @@ describe("createServiceError", () => {
     const result = createServiceError(
       apiError,
       ServiceError,
-      "Default message",
+      DEFAULT_MESSAGE,
       enhanceMessage
     );
 
@@ -124,22 +114,18 @@ describe("createServiceError", () => {
   });
 
   it("handles null error and uses defaultMessage and status 500", () => {
-    const result = createServiceError(null, ServiceError, "Default message");
+    const result = createTestServiceError(null);
 
-    expect(result.message).toBe("Default message");
+    expect(result.message).toBe(DEFAULT_MESSAGE);
     expect(result.status).toBe(500);
     expect(result.code).toBeUndefined();
     expect(result.details).toBeUndefined();
   });
 
   it("handles string error and uses defaultMessage, status 500", () => {
-    const result = createServiceError(
-      "string error",
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError("string error");
 
-    expect(result.message).toBe("Default message");
+    expect(result.message).toBe(DEFAULT_MESSAGE);
     expect(result.status).toBe(500);
     expect(result.code).toBeUndefined();
     expect(result.details).toBeUndefined();
@@ -156,11 +142,7 @@ describe("createServiceError", () => {
       },
     };
 
-    const result = createServiceError(
-      apiError,
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError(apiError);
 
     expect(result.code).toBe("VALIDATION_ERROR");
     expect(result.details).toEqual({
@@ -170,11 +152,7 @@ describe("createServiceError", () => {
   });
 
   it("does not extract code/details from non-object errors", () => {
-    const result = createServiceError(
-      "string error",
-      ServiceError,
-      "Default message"
-    );
+    const result = createTestServiceError("string error");
 
     expect(result.code).toBeUndefined();
     expect(result.details).toBeUndefined();

@@ -30,19 +30,21 @@ vi.mock(
 // MOCK DATA
 // ============================================================================
 
-const createMockPreset = (
+function createMockPreset(
   config_id: string,
   strategy_id: "dca_classic" | "simple_regime",
   display_name: string
-): StrategyPreset => ({
-  config_id,
-  strategy_id,
-  display_name,
-  description: `${display_name} description`,
-  params: {},
-  is_default: false,
-  is_benchmark: strategy_id === "dca_classic",
-});
+): StrategyPreset {
+  return {
+    config_id,
+    strategy_id,
+    display_name,
+    description: `${display_name} description`,
+    params: {},
+    is_default: false,
+    is_benchmark: strategy_id === "dca_classic",
+  };
+}
 
 const mockSimpleRegimePreset = createMockPreset(
   "preset-simple-regime-1",

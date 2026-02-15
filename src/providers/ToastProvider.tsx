@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useState,
+} from "react";
 
 import { Z_INDEX } from "@/constants/design-system";
 
@@ -13,7 +19,11 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export function useToast() {
+function createToastId(): string {
+  return Math.random().toString(36).substring(7);
+}
+
+export function useToast(): ToastContextType {
   const context = useContext(ToastContext);
   if (!context) {
     throw new Error("useToast must be used within a ToastProvider");
@@ -28,22 +38,21 @@ interface ToastProviderProps {
 export function ToastProvider({ children }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const showToast = (toastData: Omit<Toast, "id">) => {
-    const id = Math.random().toString(36).substring(7);
+  const showToast = useCallback((toastData: Omit<Toast, "id">) => {
+    const id = createToastId();
     const newToast: Toast = { ...toastData, id };
 
     setToasts(prev => [...prev, newToast]);
-  };
+  }, []);
 
-  const hideToast = (id: string) => {
+  const hideToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
+  }, []);
 
   return (
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
 
-      {/* Toast Container - Fixed to top-right */}
       <div
         className={`fixed top-4 right-4 ${Z_INDEX.TOAST} pointer-events-none`}
       >

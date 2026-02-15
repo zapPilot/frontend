@@ -37,7 +37,11 @@ vi.mock("@/components/wallet/regime/regimeData", () => ({
 vi.mock("@/lib/domain/strategySelector", () => ({
   getActiveStrategy: vi.fn(
     (direction: string, _current: string, _previous: string | null) => {
-      return direction === "improving" ? "risk-on" : "risk-off";
+      if (direction === "improving") {
+        return "risk-on";
+      }
+
+      return "risk-off";
     }
   ),
 }));

@@ -1,5 +1,3 @@
-"use strict";
-
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -11,14 +9,18 @@ const mockConnect = vi.fn();
 const mockDisconnect = vi.fn();
 
 // Create mutable mock state for different test scenarios
-const createMockWalletProvider = (overrides = {}) => ({
-  connectedWallets: [],
-  hasMultipleWallets: false,
-  account: null,
-  isConnected: false,
-  disconnect: mockDisconnect,
-  ...overrides,
-});
+function createMockWalletProvider(
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
+  return {
+    connectedWallets: [],
+    hasMultipleWallets: false,
+    account: null,
+    isConnected: false,
+    disconnect: mockDisconnect,
+    ...overrides,
+  };
+}
 
 let mockWalletProviderState = createMockWalletProvider();
 

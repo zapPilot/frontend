@@ -33,10 +33,21 @@ function clampPercentage(value: number): number {
   return Math.max(0, Math.min(100, value));
 }
 
-const getRecoverySubValue = (days: number): string =>
-  days > 0 ? `Recovered in ${days} days` : "Not yet recovered";
+function getRecoverySubValue(days: number): string {
+  if (days > 0) {
+    return `Recovered in ${days} days`;
+  }
 
-const getSignedPrefix = (value: number): string => (value > 0 ? "+" : "");
+  return "Not yet recovered";
+}
+
+function getSignedPrefix(value: number): string {
+  if (value > 0) {
+    return "+";
+  }
+
+  return "";
+}
 
 function getSharpeTrend(value: number): MetricData["trend"] {
   if (value > 1.5) {
@@ -116,11 +127,12 @@ export function transformToPerformanceChart(
       firstBtcPrice,
       baselinePortfolioValue
     );
-
-    const normalizedBTC =
-      btcEquivalentValue !== null
-        ? clampPercentage(normalizeToScale(btcEquivalentValue, min, range))
-        : null;
+    let normalizedBTC: number | null = null;
+    if (btcEquivalentValue !== null) {
+      normalizedBTC = clampPercentage(
+        normalizeToScale(btcEquivalentValue, min, range)
+      );
+    }
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,

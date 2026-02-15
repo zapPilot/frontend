@@ -40,62 +40,70 @@ vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
 }));
 
 // Test fixtures
-const createMockPreset = (
+function createMockPreset(
   overrides: Partial<StrategyPreset> = {}
-): StrategyPreset => ({
-  config_id: "test_preset",
-  display_name: "Test Preset",
-  description: "Test description",
-  strategy_id: "dca_classic",
-  params: {},
-  is_default: false,
-  is_benchmark: false,
-  ...overrides,
-});
+): StrategyPreset {
+  return {
+    config_id: "test_preset",
+    display_name: "Test Preset",
+    description: "Test description",
+    strategy_id: "dca_classic",
+    params: {},
+    is_default: false,
+    is_benchmark: false,
+    ...overrides,
+  };
+}
 
-const createMockDefaults = (
+function createMockDefaults(
   overrides: Partial<BacktestDefaults> = {}
-): BacktestDefaults => ({
-  days: 500,
-  total_capital: 10000,
-  ...overrides,
-});
+): BacktestDefaults {
+  return {
+    days: 500,
+    total_capital: 10000,
+    ...overrides,
+  };
+}
 
-const createMockStrategyConfigs = (
+function createMockStrategyConfigs(
   overrides: Partial<StrategyConfigsResponse> = {}
-): StrategyConfigsResponse => ({
-  presets: [
-    createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
-    createMockPreset({
-      config_id: "fgi_exponential",
-      strategy_id: "simple_regime",
-      params: { k: 3.0 },
-      is_default: true,
-    }),
-  ],
-  backtest_defaults: createMockDefaults(),
-  ...overrides,
-});
+): StrategyConfigsResponse {
+  return {
+    presets: [
+      createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
+      createMockPreset({
+        config_id: "fgi_exponential",
+        strategy_id: "simple_regime",
+        params: { k: 3.0 },
+        is_default: true,
+      }),
+    ],
+    backtest_defaults: createMockDefaults(),
+    ...overrides,
+  };
+}
 
-const createMockCatalog = (): BacktestStrategyCatalogResponseV3 => ({
-  catalog_version: "3.0.0",
-  strategies: [
-    {
-      id: "dca_classic",
-      display_name: "DCA Classic",
-      description: "Traditional DCA",
-      hyperparam_schema: {},
-      recommended_params: {},
-    },
-    {
-      id: "simple_regime",
-      display_name: "Simple Regime",
-      description: "Regime-based strategy",
-      hyperparam_schema: {},
-      recommended_params: { pacing_policy: "regime_mapping" },
-    },
-  ],
-});
+function createMockCatalog(): BacktestStrategyCatalogResponseV3 {
+  return {
+    catalog_version: "3.0.0",
+    strategies: [
+      {
+        id: "dca_classic",
+        display_name: "DCA Classic",
+        description: "Traditional DCA",
+        hyperparam_schema: {},
+        recommended_params: {},
+      },
+      {
+        id: "simple_regime",
+        display_name: "Simple Regime",
+        description: "Regime-based strategy",
+        hyperparam_schema: {},
+        recommended_params: { pacing_policy: "regime_mapping" },
+      },
+    ],
+  };
+}
 
 describe("useBacktestConfiguration", () => {
   beforeEach(() => {

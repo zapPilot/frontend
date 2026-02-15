@@ -19,33 +19,37 @@ import {
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
 
-const createMockPreset = (
+function createMockPreset(
   overrides: Partial<StrategyPreset> = {}
-): StrategyPreset => ({
-  config_id: "test_preset",
-  display_name: "Test Preset",
-  description: "Test description",
-  strategy_id: "dca_classic",
-  params: {},
-  is_default: false,
-  is_benchmark: false,
-  ...overrides,
-});
+): StrategyPreset {
+  return {
+    config_id: "test_preset",
+    display_name: "Test Preset",
+    description: "Test description",
+    strategy_id: "dca_classic",
+    params: {},
+    is_default: false,
+    is_benchmark: false,
+    ...overrides,
+  };
+}
 
-const createMockResponse = (
+function createMockResponse(
   overrides: Partial<StrategyConfigsResponse> = {}
-): StrategyConfigsResponse => ({
-  presets: [
-    createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
-    createMockPreset({
-      config_id: "fgi_exponential",
-      strategy_id: "simple_regime",
-      is_default: true,
-    }),
-  ],
-  backtest_defaults: { days: 500, total_capital: 10000 },
-  ...overrides,
-});
+): StrategyConfigsResponse {
+  return {
+    presets: [
+      createMockPreset({ config_id: "dca_classic", is_benchmark: true }),
+      createMockPreset({
+        config_id: "fgi_exponential",
+        strategy_id: "simple_regime",
+        is_default: true,
+      }),
+    ],
+    backtest_defaults: { days: 500, total_capital: 10000 },
+    ...overrides,
+  };
+}
 
 describe("strategyService", () => {
   beforeEach(() => {

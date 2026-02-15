@@ -1,80 +1,68 @@
-/**
- * QueryProvider Unit Tests
- *
- * Tests for the React Query provider wrapper
- */
-
-import { render, screen } from "@testing-library/react";
-import React from "react";
-import { describe, expect, it, vi } from "vitest";
+import { useQueryClient } from "@tanstack/react-query";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { QueryProvider } from "@/providers/QueryProvider";
 
-// Mock React Query
-vi.mock("@tanstack/react-query", () => ({
-  QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="query-provider">{children}</div>
-  ),
-}));
+import { render, screen } from "../../test-utils";
+
+vi.mock("@/lib/state/queryClient", () => {
+  const { QueryClient } = require("@tanstack/react-query");
+  return { queryClient: new QueryClient() };
+});
 
 vi.mock("@tanstack/react-query-devtools", () => ({
   ReactQueryDevtools: () => <div data-testid="devtools" />,
 }));
 
-vi.mock("@/lib/state/queryClient", () => ({
-  queryClient: {},
-}));
-
 describe("QueryProvider", () => {
-  it("should render children", () => {
-    render(
-      <QueryProvider>
-        <div data-testid="child">Test Child</div>
-      </QueryProvider>
-    );
-
-    expect(screen.getByTestId("child")).toBeInTheDocument();
-    expect(screen.getByText("Test Child")).toBeInTheDocument();
-  });
-
-  it("should wrap children with QueryClientProvider", () => {
-    render(
-      <QueryProvider>
-        <span>Content</span>
-      </QueryProvider>
-    );
-
-    expect(screen.getByTestId("query-provider")).toBeInTheDocument();
-  });
-});
-
-describe("DevTools configuration", () => {
-  const originalEnv = process.env;
+  const originalEnv = process.env.NODE_ENV;
 
   beforeEach(() => {
-    vi.resetModules();
-    process.env = { ...originalEnv };
+    vi.clearAllMocks();
   });
 
-  afterAll(() => {
-    process.env = originalEnv;
-  });
-
-  // Note: Since the QueryProvider imports use state initialized at module level
-  // properly testing the env var switch requires dealing with Next.js module caching
-  // logic which is complex in unit tests.
-  // For now we verify the structure.
-
-  it("should include DevTools when rendered", () => {
+  it("renders children", () => {
     render(
       <QueryProvider>
-        <div>Test</div>
+        <div data-testid="test-child">Test Content</div>
       </QueryProvider>
     );
 
-    // The mock renders <div data-testid="devtools" />
-    // In the actual component, it conditionally renders based on process.env.NODE_ENV
-    // Since we are in 'test' env (which is != 'production'), it might render or not depending on the logic.
-    // Let's check the logic in QueryProvider.tsx first.
+    expect(screen.getByTestId("test-child")).toBeInTheDocument();
+    expect(screen.getByText("Test Content")).toBeInTheDocument();
+  });
+
+  it("does not render devtools in test environment", () => {
+    process.env.NODE_ENV = "test";
+    process.env["NEXT_PUBLIC_ENABLE_RQ_DEVTOOLS"] = "1";
+
+    render(
+      <QueryProvider>
+        <div>Child</div>
+      </QueryProvider>
+    );
+
+    expect(screen.queryByTestId("devtools")).not.toBeInTheDocument();
+
+    process.env.NODE_ENV = originalEnv;
+  });
+
+  it("provides QueryClient context", () => {
+    function TestComponent() {
+      const queryClient = useQueryClient();
+      return (
+        <div data-testid="has-client">
+          {queryClient ? "Has Client" : "No Client"}
+        </div>
+      );
+    }
+
+    render(
+      <QueryProvider>
+        <TestComponent />
+      </QueryProvider>
+    );
+
+    expect(screen.getByTestId("has-client")).toHaveTextContent("Has Client");
   });
 });

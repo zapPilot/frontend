@@ -42,13 +42,19 @@ function mapLabelToColor<L extends string>(
  * @param drawdown - Drawdown percentage (negative value)
  * @returns Severity label
  */
-export const getDrawdownSeverity = mapSeverity(severityMappers.drawdown, {
+const getDrawdownSeverityFromValue = mapSeverity(severityMappers.drawdown, {
   excellent: "Minor",
   good: "Minor",
   fair: "Moderate",
   poor: "Significant",
   critical: "Severe",
 } as const);
+
+type DrawdownSeverityLabel = "Minor" | "Moderate" | "Significant" | "Severe";
+
+export function getDrawdownSeverity(drawdown: number): DrawdownSeverityLabel {
+  return getDrawdownSeverityFromValue(drawdown);
+}
 
 // ============================================================================
 // Sharpe Ratio Functions
@@ -59,13 +65,17 @@ export const getDrawdownSeverity = mapSeverity(severityMappers.drawdown, {
  * @param sharpe - Sharpe ratio value
  * @returns Interpretation label
  */
-export const getSharpeInterpretation = mapSeverity(severityMappers.sharpe, {
+const getSharpeInterpretationFromValue = mapSeverity(severityMappers.sharpe, {
   excellent: "Excellent",
   good: "Good",
   fair: "Fair",
   poor: "Poor",
   critical: "Very Poor",
 } as const);
+
+export function getSharpeInterpretation(sharpe: number): string {
+  return getSharpeInterpretationFromValue(sharpe);
+}
 
 // ============================================================================
 // Volatility Functions
@@ -85,9 +95,18 @@ const VOLATILITY_RISK_THRESHOLDS = {
 export function getVolatilityRiskLevel(
   volatility: number
 ): "Low" | "Moderate" | "High" | "Very High" {
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) return "Low";
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) return "Moderate";
-  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) return "High";
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.LOW_MAX) {
+    return "Low";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.MODERATE_MAX) {
+    return "Moderate";
+  }
+
+  if (volatility < VOLATILITY_RISK_THRESHOLDS.HIGH_MAX) {
+    return "High";
+  }
+
   return "Very High";
 }
 
@@ -109,7 +128,7 @@ export function calculateDailyVolatility(annualizedVol: number): number {
  * @param sharpe - Sharpe ratio value
  * @returns Hex color code
  */
-export const getSharpeColor = mapSeverity<string>(severityMappers.sharpe, {
+const getSharpeColorFromValue = mapSeverity<string>(severityMappers.sharpe, {
   excellent: "#10b981",
   good: "#84cc16",
   fair: "#fbbf24",
@@ -117,26 +136,46 @@ export const getSharpeColor = mapSeverity<string>(severityMappers.sharpe, {
   critical: "#ef4444",
 });
 
+export function getSharpeColor(sharpe: number): string {
+  return getSharpeColorFromValue(sharpe);
+}
+
 /**
  * Gets Tailwind classes for drawdown severity badge
  * @param severity - Severity level
  * @returns Object with color and bgColor Tailwind classes
  */
-export const getDrawdownSeverityColor = mapLabelToColor({
+const getDrawdownSeverityColorForLabel = mapLabelToColor({
   Minor: "good",
   Moderate: "fair",
   Significant: "poor",
   Severe: "critical",
 } as const);
 
+export function getDrawdownSeverityColor(severity: DrawdownSeverityLabel): {
+  color: string;
+  bgColor: string;
+} {
+  return getDrawdownSeverityColorForLabel(severity);
+}
+
 /**
  * Gets Tailwind classes for volatility risk level badge
  * @param riskLevel - Risk level
  * @returns Object with color and bgColor Tailwind classes
  */
-export const getVolatilityRiskColor = mapLabelToColor({
+const getVolatilityRiskColorForLabel = mapLabelToColor({
   Low: "excellent",
   Moderate: "good",
   High: "poor",
   "Very High": "critical",
 } as const);
+
+export function getVolatilityRiskColor(
+  riskLevel: ReturnType<typeof getVolatilityRiskLevel>
+): {
+  color: string;
+  bgColor: string;
+} {
+  return getVolatilityRiskColorForLabel(riskLevel);
+}

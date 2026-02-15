@@ -16,6 +16,14 @@ interface InvalidateAndRefetchOptions {
   operationName?: string;
 }
 
+function logQueryOperationError(
+  errorPrefix: string,
+  operationName: string,
+  error: unknown
+): void {
+  walletLogger.error(`${errorPrefix} after ${operationName}`, error);
+}
+
 /**
  * Safely invalidates query cache and refetches data after a mutation.
  * Handles errors gracefully without throwing.
@@ -28,22 +36,22 @@ export async function invalidateAndRefetch({
   refetch,
   operationName = "operation",
 }: InvalidateAndRefetchOptions): Promise<void> {
-  // Invalidate query cache
   try {
     await queryClient.invalidateQueries({ queryKey });
   } catch (invalidateError) {
-    walletLogger.error(
-      `Failed to invalidate queries after ${operationName}`,
+    logQueryOperationError(
+      "Failed to invalidate queries",
+      operationName,
       invalidateError
     );
   }
 
-  // Refetch data
   try {
     await refetch();
   } catch (refetchError) {
-    walletLogger.error(
-      `Failed to refetch data after ${operationName}`,
+    logQueryOperationError(
+      "Failed to refetch data",
+      operationName,
       refetchError
     );
   }

@@ -1,8 +1,3 @@
-/**
- * Severity-based color system for chart metrics
- * Consolidates 8 duplicate color mapping functions into generic pattern
- */
-
 export type SeverityLevel = "excellent" | "good" | "fair" | "poor" | "critical";
 
 const SEVERITY_COLORS: Record<
@@ -80,7 +75,9 @@ export const severityMappers = {
  * @param level - Severity level
  * @returns Object with color and bgColor Tailwind classes
  */
-export const getColorForSeverity = (level: SeverityLevel) =>
-  SEVERITY_COLORS[level];
-
-// Unused exports removed: backendSeverityMapping, legacyLabelMapping
+export function getColorForSeverity(level: SeverityLevel): {
+  color: string;
+  bgColor: string;
+} {
+  return SEVERITY_COLORS[level];
+}

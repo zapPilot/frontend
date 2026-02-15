@@ -17,18 +17,15 @@ export function resolveActionLabel({
   hasSelection = true,
   selectionLabel = notReadyLabel,
 }: ActionLabelConfig): string {
-  const needsConnection = !isConnected;
-  if (needsConnection) {
+  if (!isConnected) {
     return WALLET_LABELS.CONNECT;
   }
 
-  const needsSelection = !hasSelection;
-  if (needsSelection) {
+  if (!hasSelection) {
     return selectionLabel;
   }
 
-  const cannotProceed = !isReady;
-  if (cannotProceed) {
+  if (!isReady) {
     return notReadyLabel;
   }
 

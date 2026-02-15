@@ -14,14 +14,11 @@
  * const maxAge = toSeconds(process.env.NEXT_PUBLIC_CACHE_MAX_AGE_SECONDS, 3600);
  * ```
  */
-export const toSeconds = (
-  value: string | undefined,
-  fallback: number
-): number => {
+export function toSeconds(value: string | undefined, fallback: number): number {
   if (!value) {
     return fallback;
   }
 
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
-};
+}

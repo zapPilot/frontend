@@ -59,8 +59,22 @@ type WalletOperationsUpdater =
 const mockUserId = "0x1234567890123456789012345678901234567890";
 const mockWalletId = "wallet-1";
 const mockWallets: WalletData[] = [
-  { id: "wallet-1", address: "0xabc", label: "Wallet 1", chain: "ethereum" },
-  { id: "wallet-2", address: "0xdef", label: "Wallet 2", chain: "ethereum" },
+  {
+    id: "wallet-1",
+    address: "0xabc",
+    label: "Wallet 1",
+    isMain: false,
+    isActive: false,
+    createdAt: "2024-01-01",
+  },
+  {
+    id: "wallet-2",
+    address: "0xdef",
+    label: "Wallet 2",
+    isMain: false,
+    isActive: false,
+    createdAt: "2024-01-02",
+  },
 ];
 const mockNewWallet: NewWallet = {
   address: "0x9876543210987654321098765432109876543210",
