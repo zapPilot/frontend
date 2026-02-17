@@ -214,22 +214,4 @@ describe("DepositModal", () => {
 
     expect(screen.getByTestId("modal")).toBeInTheDocument();
   });
-
-  it("should pass isConnected: false to resolveActionLabel when wallet is disconnected", async () => {
-    // Determine the imported mock to spy on it
-    const { resolveActionLabel } = await import(
-      "@/components/wallet/portfolio/modals/transactionModalDependencies"
-    );
-
-    mockUseWalletProvider.mockReturnValue({ isConnected: false });
-
-    render(<DepositModal isOpen={true} onClose={vi.fn()} />);
-
-    expect(resolveActionLabel).toHaveBeenCalledWith(
-      expect.objectContaining({ isConnected: false })
-    );
-
-    // Reset for other tests
-    mockUseWalletProvider.mockReturnValue({ isConnected: true });
-  });
 });

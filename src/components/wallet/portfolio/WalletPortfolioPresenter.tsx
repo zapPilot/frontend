@@ -213,11 +213,18 @@ export function WalletPortfolioPresenter({
       />
 
       {/* Wallet Manager Modal */}
-      <WalletManager
-        isOpen={isWalletManagerOpen}
-        onClose={() => setIsWalletManagerOpen(false)}
-        {...(userId && { urlUserId: userId })}
-      />
+      {userId ? (
+        <WalletManager
+          isOpen={isWalletManagerOpen}
+          onClose={() => setIsWalletManagerOpen(false)}
+          urlUserId={userId}
+        />
+      ) : (
+        <WalletManager
+          isOpen={isWalletManagerOpen}
+          onClose={() => setIsWalletManagerOpen(false)}
+        />
+      )}
 
       {/* Footer overlays (Bundle-specific: QuickSwitchFAB) */}
       {footerOverlays}

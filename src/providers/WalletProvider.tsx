@@ -9,7 +9,9 @@
 
 import {
   createContext,
+  type Dispatch,
   type ReactNode,
+  type SetStateAction,
   useCallback,
   useContext,
   useMemo,
@@ -78,6 +80,19 @@ function createWalletError(message: string, code: string): WalletError {
   return { message, code };
 }
 
+function handleWalletOperationError(
+  setError: Dispatch<SetStateAction<WalletError | null>>,
+  error: unknown,
+  fallbackMessage: string,
+  code: string,
+  logPrefix: string
+): never {
+  const errorMessage = getErrorMessage(error, fallbackMessage);
+  setError(createWalletError(errorMessage, code));
+  walletLogger.error(logPrefix, error);
+  throw error;
+}
+
 // Main Provider Component
 export function WalletProvider({ children }: WalletProviderProps) {
   // ThirdWeb hooks
@@ -122,17 +137,17 @@ export function WalletProvider({ children }: WalletProviderProps) {
       }
 
       try {
-        setError(null); // Clear previous errors
+        setError(null);
         await setActiveWallet(targetWallet);
         walletLogger.info("Switched active wallet to", address);
       } catch (err) {
-        const errorMessage = getErrorMessage(
+        handleWalletOperationError(
+          setError,
           err,
-          "Failed to switch active wallet"
+          "Failed to switch active wallet",
+          "SWITCH_WALLET_ERROR",
+          "Failed to switch active wallet:"
         );
-        setError(createWalletError(errorMessage, "SWITCH_WALLET_ERROR"));
-        walletLogger.error("Failed to switch active wallet:", err);
-        throw err;
       }
     },
     [connectedWallets, setActiveWallet]
@@ -176,9 +191,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!connect) return;
 
     try {
-      setError(null); // Clear previous errors
-      // Get the first available wallet from connected wallets
-      // In a real app, you might want wallet selection UI
+      setError(null);
       const availableWallet = connectedWallets[0];
       if (!availableWallet) {
         throw new Error("No wallet available");
@@ -186,10 +199,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
       await connect(availableWallet);
     } catch (err) {
-      const errorMessage = getErrorMessage(err, "Failed to connect wallet");
-      setError(createWalletError(errorMessage, "CONNECT_ERROR"));
-      walletLogger.error("Failed to connect wallet:", err);
-      throw err;
+      handleWalletOperationError(
+        setError,
+        err,
+        "Failed to connect wallet",
+        "CONNECT_ERROR",
+        "Failed to connect wallet:"
+      );
     }
   }, [connect, connectedWallets]);
 
@@ -198,13 +214,16 @@ export function WalletProvider({ children }: WalletProviderProps) {
     if (!disconnect || !wallet) return;
 
     try {
-      setError(null); // Clear previous errors
+      setError(null);
       await Promise.resolve(disconnect(wallet));
     } catch (err) {
-      const errorMessage = getErrorMessage(err, "Failed to disconnect wallet");
-      setError(createWalletError(errorMessage, "DISCONNECT_ERROR"));
-      walletLogger.error("Failed to disconnect wallet:", err);
-      throw err;
+      handleWalletOperationError(
+        setError,
+        err,
+        "Failed to disconnect wallet",
+        "DISCONNECT_ERROR",
+        "Failed to disconnect wallet:"
+      );
     }
   }, [disconnect, wallet]);
 
@@ -214,7 +233,6 @@ export function WalletProvider({ children }: WalletProviderProps) {
       if (!switchChain) return;
 
       try {
-        // Create basic chain object
         const chainToSwitch = {
           id: chainId,
           name: `Chain ${chainId}`,

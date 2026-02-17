@@ -125,9 +125,7 @@ export function BalanceCard({
                     riskMetrics={riskMetrics}
                     isOwnBundle={isOwnBundle}
                     size="sm"
-                    {...(onViewRiskDetails && {
-                      onViewDetails: onViewRiskDetails,
-                    })}
+                    onViewDetails={onViewRiskDetails}
                   />
                 )}
                 {showBorrowingAlert && borrowingSummary && userId && (

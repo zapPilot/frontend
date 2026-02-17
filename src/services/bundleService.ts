@@ -8,8 +8,6 @@
 import { formatAddress } from "@/utils/formatters";
 import { logger } from "@/utils/logger";
 
-// Re-export utilities from lib for backward compatibility
-// Prefer importing directly from @/lib/bundle in new code
 export { generateBundleUrl, isOwnBundle } from "@/lib/bundle/bundleUtils";
 
 export interface BundleUser {
@@ -28,12 +26,10 @@ const bundleLogger = logger.createContextLogger("BundleService");
  * @param userId - User wallet address
  * @returns Promise resolving to user information or null on error
  */
-export const getBundleUser = async (
+export async function getBundleUser(
   userId: string
-): Promise<BundleUser | null> => {
+): Promise<BundleUser | null> {
   try {
-    // ZAP-206: Pending API implementation for user info
-    // Currently returns basic user info based on userId
     return {
       userId,
       displayName: formatAddress(userId),
@@ -42,4 +38,4 @@ export const getBundleUser = async (
     bundleLogger.error("Failed to fetch bundle user:", error);
     return null;
   }
-};
+}

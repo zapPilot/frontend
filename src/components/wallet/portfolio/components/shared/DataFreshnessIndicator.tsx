@@ -12,7 +12,7 @@
  */
 
 import { AlertCircle, AlertTriangle, Clock, Info } from "lucide-react";
-import { memo } from "react";
+import { memo, type ReactElement } from "react";
 
 import { calculateDataFreshness } from "@/utils/formatters";
 
@@ -66,18 +66,31 @@ const SIZE_STYLES = {
   },
 } as const;
 
-export const DataFreshnessIndicator = memo(function DataFreshnessIndicator({
+function getTextClasses(
+  variant: DataFreshnessIndicatorProps["variant"]
+): string {
+  if (variant === "icon-only") {
+    return "sr-only";
+  }
+
+  if (variant === "responsive") {
+    return "hidden md:inline";
+  }
+
+  return "";
+}
+
+function DataFreshnessIndicatorComponent({
   lastUpdated,
   variant = "responsive",
   size = "sm",
   className = "",
-}: DataFreshnessIndicatorProps) {
+}: DataFreshnessIndicatorProps): ReactElement {
   const freshness = calculateDataFreshness(lastUpdated);
   const styles = FRESHNESS_STYLES[freshness.state];
   const sizeStyles = SIZE_STYLES[size];
   const Icon = styles.Icon;
 
-  // Base classes
   const isTextOnly = variant === "text-only";
   const baseClasses = `
     inline-flex items-center rounded-full
@@ -87,13 +100,7 @@ export const DataFreshnessIndicator = memo(function DataFreshnessIndicator({
     ${className}
   `;
 
-  // Responsive visibility classes
-  const textClasses =
-    variant === "icon-only"
-      ? "sr-only"
-      : variant === "responsive"
-        ? "hidden md:inline"
-        : "";
+  const textClasses = getTextClasses(variant);
 
   return (
     <div
@@ -111,4 +118,8 @@ export const DataFreshnessIndicator = memo(function DataFreshnessIndicator({
       </span>
     </div>
   );
-});
+}
+
+export const DataFreshnessIndicator = memo(DataFreshnessIndicatorComponent);
+
+DataFreshnessIndicator.displayName = "DataFreshnessIndicator";

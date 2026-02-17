@@ -48,6 +48,21 @@ vi.mock("@/lib/ui/classNames", () => ({
   cn: (...args: unknown[]) => args.filter(Boolean).join(" "),
 }));
 
+vi.mock(
+  "@/components/wallet/portfolio/views/invest/trading/components/ReviewModalTabs",
+  () => ({
+    VariationImpact: () => (
+      <div data-testid="variation-impact">Impact Content</div>
+    ),
+    VariationStrategy: () => (
+      <div data-testid="variation-strategy">Strategy Content</div>
+    ),
+    VariationRoute: () => (
+      <div data-testid="variation-route">Route Content</div>
+    ),
+  })
+);
+
 describe("ReviewModal", () => {
   const defaultProps = {
     isOpen: true,
@@ -117,5 +132,26 @@ describe("ReviewModal", () => {
     const confirmButton = screen.getByText("Sign & Execute");
     fireEvent.click(confirmButton);
     expect(onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows Impact content by default", () => {
+    render(<ReviewModal {...defaultProps} />);
+    expect(screen.getByTestId("variation-impact")).toBeInTheDocument();
+  });
+
+  it("switches to Strategy tab when Strategy button clicked", () => {
+    render(<ReviewModal {...defaultProps} />);
+    const strategyTab = screen.getByText("Strategy");
+    fireEvent.click(strategyTab);
+    expect(screen.getByTestId("variation-strategy")).toBeInTheDocument();
+    expect(screen.queryByTestId("variation-impact")).not.toBeInTheDocument();
+  });
+
+  it("switches to Route tab when Route button clicked", () => {
+    render(<ReviewModal {...defaultProps} />);
+    const routeTab = screen.getByText("Route");
+    fireEvent.click(routeTab);
+    expect(screen.getByTestId("variation-route")).toBeInTheDocument();
+    expect(screen.queryByTestId("variation-impact")).not.toBeInTheDocument();
   });
 });

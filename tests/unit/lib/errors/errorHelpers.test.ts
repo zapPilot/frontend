@@ -47,4 +47,78 @@ describe("errorHelpers", () => {
       "Invalid slippage tolerance. Must be between 0.1% and 50%."
     );
   });
+
+  describe("createIntentServiceError - resolveIntentMessage coverage", () => {
+    it("resolves 400 status with slippage keyword to friendly message", () => {
+      const error = createIntentServiceError({
+        status: 400,
+        message: "Invalid SLIPPAGE value",
+      });
+      expect(error.message).toBe(
+        "Invalid slippage tolerance. Must be between 0.1% and 50%."
+      );
+    });
+
+    it("resolves 400 status with amount keyword to friendly message", () => {
+      const error = createIntentServiceError({
+        status: 400,
+        message: "Invalid AMOUNT provided",
+      });
+      expect(error.message).toBe(
+        "Invalid transaction amount. Please check your balance."
+      );
+    });
+
+    it("returns default 400 message for status without known keywords", () => {
+      const error = createIntentServiceError({
+        status: 400,
+        message: "Some other validation error",
+      });
+      // getIntentErrorMessage applies service-specific default for 400
+      expect(error.message).toBe("Invalid transaction parameters.");
+    });
+
+    it("resolves 429 status to rate limit message", () => {
+      const error = createIntentServiceError({
+        status: 429,
+        message: "Rate limit exceeded",
+      });
+      expect(error.message).toBe(
+        "Too many transactions in progress. Please wait before submitting another."
+      );
+    });
+
+    it("resolves 503 status to overload message", () => {
+      const error = createIntentServiceError({
+        status: 503,
+        message: "Service unavailable",
+      });
+      expect(error.message).toBe(
+        "Intent engine is temporarily overloaded. Please try again in a moment."
+      );
+    });
+
+    it("returns HTTP status message for non-special status codes", () => {
+      const error = createIntentServiceError({
+        status: 500,
+        message: "Internal server error",
+      });
+      // getIntentErrorMessage applies generic HTTP status message for 500
+      expect(error.message).toBe(
+        "Internal server error. Please try again later."
+      );
+    });
+
+    it("preserves error details and code when provided", () => {
+      const error = createIntentServiceError({
+        status: 400,
+        code: "E_SLIPPAGE",
+        message: "slippage error",
+        details: { max: 50, provided: 100 },
+      });
+      expect(error.status).toBe(400);
+      expect(error.code).toBe("E_SLIPPAGE");
+      expect(error.details).toEqual({ max: 50, provided: 100 });
+    });
+  });
 });

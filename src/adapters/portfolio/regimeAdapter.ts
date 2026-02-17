@@ -15,6 +15,10 @@ export interface TargetAllocation {
   stable: number;
 }
 
+function createFallbackTargetAllocation(): TargetAllocation {
+  return { crypto: 50, stable: 50 };
+}
+
 /**
  * Gets target allocation for a regime
  */
@@ -22,8 +26,7 @@ export function getTargetAllocation(regimeId: RegimeId): TargetAllocation {
   const regime = regimes.find(r => r.id === regimeId);
 
   if (!regime) {
-    // Fallback to neutral (50/50)
-    return { crypto: 50, stable: 50 };
+    return createFallbackTargetAllocation();
   }
 
   const allocation = getRegimeAllocation(regime);

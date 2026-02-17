@@ -131,4 +131,159 @@ describe("LogViewer", () => {
     render(<LogViewer />);
     expect(screen.getByText(/🐛 Logs/)).toBeInTheDocument();
   });
+
+  it("should render string data in renderData", async () => {
+    const mockLogs = [
+      {
+        timestamp: Date.now(),
+        level: LogLevel.INFO,
+        message: "Request completed",
+        data: "some string data",
+      },
+    ];
+    vi.mocked(logger.getLogs).mockReturnValue(mockLogs);
+
+    const { rerender } = render(<LogViewer />);
+
+    // Open the panel
+    fireEvent.click(screen.getByText(/🐛 Logs/));
+
+    // Advance timer to trigger interval callback
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // Check that string data is rendered in a pre element
+    const preElement = screen.getByText("some string data");
+    expect(preElement).toBeInTheDocument();
+    expect(preElement.tagName).toBe("PRE");
+  });
+
+  it("should render object data with JSON.stringify in renderData", async () => {
+    const mockLogs = [
+      {
+        timestamp: Date.now(),
+        level: LogLevel.DEBUG,
+        message: "API response",
+        data: { key: "value", nested: { prop: 123 } },
+      },
+    ];
+    vi.mocked(logger.getLogs).mockReturnValue(mockLogs);
+
+    const { rerender } = render(<LogViewer />);
+
+    // Open the panel
+    fireEvent.click(screen.getByText(/🐛 Logs/));
+
+    // Advance timer
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // Check that JSON stringified data is rendered
+    expect(screen.getByText(/"key": "value"/)).toBeInTheDocument();
+    expect(screen.getByText(/"prop": 123/)).toBeInTheDocument();
+  });
+
+  it("should render [Object] when JSON.stringify throws in renderData", async () => {
+    // Create a circular reference object
+    const circularObj: Record<string, unknown> = { a: 1 };
+    circularObj.self = circularObj;
+
+    const mockLogs = [
+      {
+        timestamp: Date.now(),
+        level: LogLevel.ERROR,
+        message: "Circular data",
+        data: circularObj,
+      },
+    ];
+    vi.mocked(logger.getLogs).mockReturnValue(mockLogs);
+
+    const { rerender } = render(<LogViewer />);
+
+    // Open the panel
+    fireEvent.click(screen.getByText(/🐛 Logs/));
+
+    // Advance timer
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // Check that [Object] is rendered due to stringify error
+    expect(screen.getByText("[Object]")).toBeInTheDocument();
+  });
+
+  it("should not render data section when data is null", async () => {
+    const mockLogs = [
+      {
+        timestamp: Date.now(),
+        level: LogLevel.WARN,
+        message: "Warning without data",
+        data: null,
+      },
+    ];
+    vi.mocked(logger.getLogs).mockReturnValue(mockLogs);
+
+    const { rerender } = render(<LogViewer />);
+
+    // Open the panel
+    fireEvent.click(screen.getByText(/🐛 Logs/));
+
+    // Advance timer
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // Check message is rendered
+    expect(screen.getByText("Warning without data")).toBeInTheDocument();
+
+    // Check that no pre element for data is rendered
+    const preElements = document.querySelectorAll("pre");
+    expect(preElements.length).toBe(0);
+  });
+
+  it("should filter logs by level when changing filter dropdown", async () => {
+    const mockLogs = [
+      {
+        timestamp: Date.now(),
+        level: LogLevel.DEBUG,
+        message: "Debug message",
+      },
+      {
+        timestamp: Date.now(),
+        level: LogLevel.INFO,
+        message: "Info message",
+      },
+      {
+        timestamp: Date.now(),
+        level: LogLevel.WARN,
+        message: "Warn message",
+      },
+    ];
+    vi.mocked(logger.getLogs).mockReturnValue(mockLogs);
+
+    const { rerender } = render(<LogViewer />);
+
+    // Open the panel
+    fireEvent.click(screen.getByText(/🐛 Logs/));
+
+    // Advance timer to render logs
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // Initially all logs should be visible (DEBUG+ filter)
+    expect(screen.getByText("Debug message")).toBeInTheDocument();
+    expect(screen.getByText("Info message")).toBeInTheDocument();
+    expect(screen.getByText("Warn message")).toBeInTheDocument();
+
+    // Change filter to INFO
+    const filterSelect = screen.getByRole("combobox");
+    fireEvent.change(filterSelect, { target: { value: "1" } });
+
+    // Advance timer to trigger re-render
+    await vi.advanceTimersByTimeAsync(1000);
+    rerender(<LogViewer />);
+
+    // DEBUG should be filtered out, INFO and WARN should remain
+    expect(screen.queryByText("Debug message")).not.toBeInTheDocument();
+    expect(screen.getByText("Info message")).toBeInTheDocument();
+    expect(screen.getByText("Warn message")).toBeInTheDocument();
+  });
 });

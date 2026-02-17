@@ -6,7 +6,13 @@
  * - Form validation state management
  * - Submit button enabled/disabled states
  */
-import { act, render, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TransactionModalBase } from "@/components/wallet/portfolio/modals/base/TransactionModalBase";
@@ -21,6 +27,9 @@ let mockAvailableTokens: {
 }[];
 let mockTokenAddress: string;
 let mockIsConnected: boolean;
+let mockResetState: ReturnType<typeof vi.fn>;
+let mockIsSubmitting: boolean;
+let mockStatus: string;
 
 // Mock WalletProvider
 vi.mock("@/providers/WalletProvider", () => ({
@@ -79,14 +88,17 @@ vi.mock(
 vi.mock(
   "@/components/wallet/portfolio/modals/hooks/useTransactionSubmission",
   () => ({
-    useTransactionSubmission: vi.fn(() => ({
-      status: "idle",
-      result: null,
-      isSubmitting: false,
-      isSubmitDisabled: mockTokenAddress.length < 4,
-      handleSubmit: vi.fn(),
-      resetState: vi.fn(),
-    })),
+    useTransactionSubmission: vi.fn(() => {
+      mockResetState = vi.fn();
+      return {
+        status: mockStatus,
+        result: null,
+        isSubmitting: mockIsSubmitting,
+        isSubmitDisabled: mockTokenAddress.length < 4,
+        handleSubmit: vi.fn(),
+        resetState: mockResetState,
+      };
+    }),
   })
 );
 
@@ -179,6 +191,8 @@ describe("TransactionModalBase", () => {
     mockAvailableTokens = [];
     mockTokenAddress = "";
     mockIsConnected = true;
+    mockIsSubmitting = false;
+    mockStatus = "idle";
   });
 
   describe("Auto-selection of first token", () => {
@@ -326,6 +340,63 @@ describe("TransactionModalBase", () => {
       renderComponent();
 
       expect(screen.getByTestId("selected-token")).toHaveTextContent("USDC");
+    });
+  });
+
+  describe("Reset state and close handling", () => {
+    it("calls resetState when close button is clicked", () => {
+      mockTokenAddress = "0x123456";
+      mockAvailableTokens = [
+        { symbol: "USDC", address: "0x123456", usdPrice: 1 },
+      ];
+
+      renderComponent();
+
+      const closeButton = screen.getByTestId("close-button");
+      fireEvent.click(closeButton);
+
+      expect(mockResetState).toHaveBeenCalled();
+    });
+  });
+
+  describe("Submitting state rendering", () => {
+    it("shows SubmittingState when isSubmitting is true", () => {
+      mockIsSubmitting = true;
+      mockStatus = "idle";
+      mockTokenAddress = "0x123456";
+      mockAvailableTokens = [
+        { symbol: "USDC", address: "0x123456", usdPrice: 1 },
+      ];
+
+      renderComponent();
+
+      expect(screen.getByTestId("submitting-state")).toBeInTheDocument();
+      expect(screen.queryByTestId("child-content")).not.toBeInTheDocument();
+    });
+
+    it("shows SubmittingState with success message when status is success", () => {
+      mockIsSubmitting = true;
+      mockStatus = "success";
+      mockTokenAddress = "0x123456";
+      mockAvailableTokens = [
+        { symbol: "USDC", address: "0x123456", usdPrice: 1 },
+      ];
+
+      render(
+        <TransactionModalBase
+          isOpen={true}
+          onClose={mockOnClose}
+          title="Test Modal"
+          indicatorColor="bg-green-500"
+          submitFn={mockSubmitFn}
+          successMessage="Deposit Complete"
+        >
+          {() => <div data-testid="child-content">Child Content</div>}
+        </TransactionModalBase>
+      );
+
+      expect(screen.getByTestId("submitting-state")).toBeInTheDocument();
+      expect(screen.getByText("Deposit Complete")).toBeInTheDocument();
     });
   });
 });

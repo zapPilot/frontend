@@ -1,5 +1,5 @@
 import { Copy, Edit3, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
-import { memo } from "react";
+import { memo, type ReactElement } from "react";
 
 import { Portal } from "@/components/ui/Portal";
 import { Z_INDEX } from "@/constants/design-system";
@@ -19,7 +19,7 @@ interface WalletActionMenuProps extends WalletMenuHandlers {
   isOwner: boolean;
 }
 
-export const WalletActionMenu = memo((props: WalletActionMenuProps) => {
+function WalletActionMenuComponent(props: WalletActionMenuProps): ReactElement {
   const {
     wallet,
     isOpen,
@@ -122,6 +122,8 @@ export const WalletActionMenu = memo((props: WalletActionMenuProps) => {
       )}
     </div>
   );
-});
+}
+
+export const WalletActionMenu = memo(WalletActionMenuComponent);
 
 WalletActionMenu.displayName = "WalletActionMenu";

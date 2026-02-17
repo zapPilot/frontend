@@ -51,27 +51,18 @@ export interface DashboardWindowParams {
  * Combines portfolio summary, APR calculations, and pre-formatted data
  * in a single API call for optimal performance. Implements BFF pattern.
  */
-export const getLandingPagePortfolioData = async (
+export async function getLandingPagePortfolioData(
   userId: string
-): Promise<LandingPageResponse> => {
+): Promise<LandingPageResponse> {
   const endpoint = `/api/v2/portfolio/${userId}/landing`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateLandingPageResponse(response);
-};
+}
 
 // ============================================================================
 // UNIFIED DASHBOARD ENDPOINT (Performance Optimized - 96% faster)
 // ============================================================================
 
-/**
- * Unified Dashboard Response - Single endpoint for all portfolio analytics
- *
- * Replaces 6 separate API calls with 1 unified call:
- * - 96% faster (1500ms → 55ms avg with cache)
- * - 95% database load reduction
- * - 12-hour server-side cache
- * - Graceful degradation with partial failure support
- */
 /**
  * Get unified portfolio dashboard analytics (Performance Optimized)
  *
@@ -107,26 +98,19 @@ export const getLandingPagePortfolioData = async (
  * }
  * ```
  */
-export const getPortfolioDashboard = async (
+export async function getPortfolioDashboard(
   userId: string,
   params: DashboardWindowParams = {}
-): Promise<UnifiedDashboardResponse> => {
+): Promise<UnifiedDashboardResponse> {
   const endpoint = `/api/v2/analytics/${userId}/dashboard${buildAnalyticsQueryString(params)}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateUnifiedDashboardResponse(response);
-};
+}
 
 // ============================================================================
 // DAILY YIELD RETURNS ENDPOINT
 // ============================================================================
 
-/**
- * Token details for daily yield returns
- */
-/**
- * Response structure for daily yield returns endpoint
- * (Type is imported from schemas - see line 17)
- */
 /**
  * Get daily yield returns for a user
  *
@@ -152,11 +136,11 @@ export const getPortfolioDashboard = async (
  * });
  * ```
  */
-export const getDailyYieldReturns = async (
+export async function getDailyYieldReturns(
   userId: string,
   days = 30,
   walletAddress?: string
-): Promise<DailyYieldReturnsResponse> => {
+): Promise<DailyYieldReturnsResponse> {
   const params = new URLSearchParams({ days: String(days) });
   if (walletAddress) {
     params.append("walletAddress", walletAddress);
@@ -164,7 +148,7 @@ export const getDailyYieldReturns = async (
   const endpoint = `/api/v2/analytics/${userId}/yield/daily?${params}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateDailyYieldReturnsResponse(response);
-};
+}
 
 // ============================================================================
 // BORROWING POSITIONS ENDPOINT
@@ -192,10 +176,10 @@ export const getDailyYieldReturns = async (
  * });
  * ```
  */
-export const getBorrowingPositions = async (
+export async function getBorrowingPositions(
   userId: string
-): Promise<BorrowingPositionsResponse> => {
+): Promise<BorrowingPositionsResponse> {
   const endpoint = `/api/v2/analytics/${userId}/borrowing/positions`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateBorrowingPositionsResponse(response);
-};
+}

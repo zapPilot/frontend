@@ -88,13 +88,22 @@ interface QueryConfigOptions {
   retryConfig?: RetryConfig;
 }
 
+interface QueryConfigResult {
+  staleTime: number;
+  gcTime: number;
+  retry: (failureCount: number, error: unknown) => boolean;
+  retryDelay: (attemptIndex: number) => number;
+}
+
 /**
  * Create standardized React Query configuration
  *
  * @param options - Configuration options
  * @returns Query configuration object with retry, retryDelay, staleTime, and gcTime
  */
-export const createQueryConfig = (options: QueryConfigOptions = {}) => {
+export function createQueryConfig(
+  options: QueryConfigOptions = {}
+): QueryConfigResult {
   const { dataType = "etl", retryConfig } = options;
 
   const {
@@ -136,4 +145,4 @@ export const createQueryConfig = (options: QueryConfigOptions = {}) => {
     retryDelay: (attemptIndex: number) =>
       Math.min(1500 * 2 ** attemptIndex, 30_000),
   };
-};
+}

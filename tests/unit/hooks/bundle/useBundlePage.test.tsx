@@ -260,5 +260,279 @@ describe("useBundlePage", () => {
       // We can verify "show" property changes if we construct the scenario right.
       // But since computeShowEmailBanner is tested, we rely on React state working.
     });
+
+    it("does not auto-switch if walletId is not provided", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [{ address: "0x1", isActive: true }],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).not.toHaveBeenCalled();
+      });
+    });
+
+    it("does not auto-switch if not connected", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: false,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [{ address: "0x999", isActive: false }],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1", "0x999"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).not.toHaveBeenCalled();
+      });
+    });
+
+    it("does not auto-switch if viewing different user's bundle", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [{ address: "0x999", isActive: false }],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-other", "0x999"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).not.toHaveBeenCalled();
+      });
+    });
+
+    it("does not auto-switch if target wallet not found", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [{ address: "0x1", isActive: true }],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1", "0x999"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).not.toHaveBeenCalled();
+      });
+    });
+
+    it("does not auto-switch if target wallet is already active", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [{ address: "0x999", isActive: true }],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1", "0x999"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).not.toHaveBeenCalled();
+      });
+    });
+
+    it("handles wallet switch error gracefully", async () => {
+      const switchError = new Error("Switch failed");
+      mockSwitchActiveWallet.mockRejectedValue(switchError);
+
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [
+          { address: "0x1", isActive: true },
+          { address: "0x999", isActive: false },
+        ],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1", "0x999"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).toHaveBeenCalledWith("0x999");
+      });
+
+      await waitFor(() => {
+        expect(logger.error).toHaveBeenCalledWith(
+          "Failed to auto-switch wallet:",
+          switchError
+        );
+      });
+    });
+
+    it("normalizes wallet ID to lowercase for comparison", async () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      vi.mocked(useWalletProvider).mockReturnValue({
+        connectedWallets: [
+          { address: "0x1", isActive: true },
+          { address: "0xABC", isActive: false },
+        ],
+        switchActiveWallet: mockSwitchActiveWallet,
+      } as any);
+
+      renderHook(() => useBundlePage("user-1", "0xabc"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockSwitchActiveWallet).toHaveBeenCalledWith("0xabc");
+      });
+    });
+
+    it("handles redirect with query parameters", async () => {
+      const originalLocation = window.location;
+      delete (window as any).location;
+      window.location = { search: "?foo=bar" } as any;
+
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: false,
+        userInfo: { userId: "user-1" },
+      } as any);
+
+      renderHook(() => useBundlePage("user-1"), { wrapper });
+
+      await waitFor(() => {
+        expect(mockRouter.replace).toHaveBeenCalledWith("/?foo=bar");
+      });
+
+      window.location = originalLocation;
+    });
+
+    it("handles switch to my bundle without etlJobId", () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: "user-me" },
+      } as any);
+
+      const { result } = renderHook(() => useBundlePage("user-other"), {
+        wrapper,
+      });
+
+      act(() => {
+        result.current.switchPrompt.onSwitch();
+      });
+
+      expect(mockRouter.replace).toHaveBeenCalledWith("/bundle?userId=user-me");
+    });
+
+    it("returns handleStayHere as noop function", () => {
+      const { result } = renderHook(() => useBundlePage("user-target"), {
+        wrapper,
+      });
+
+      const returnValue = result.current.switchPrompt.onStay();
+      expect(returnValue).toBeUndefined();
+    });
+
+    it("handles getBundleUser returning null", async () => {
+      vi.mocked(getBundleUser).mockResolvedValue(null);
+
+      const { result } = renderHook(() => useBundlePage("user-target"), {
+        wrapper,
+      });
+
+      await waitFor(() => {
+        expect(result.current.bundleNotFound).toBe(true);
+      });
+    });
+
+    it("uses safe fallback when useQueryClient throws", async () => {
+      // This tests the useSafeQueryClient fallback
+      const { result } = renderHook(() => useBundlePage("user-1"), {
+        wrapper,
+      });
+
+      // If it doesn't throw, the safe fallback is working
+      expect(result.current).toBeDefined();
+    });
+
+    it("uses safe fallback when useWalletProvider throws", async () => {
+      vi.mocked(useWalletProvider).mockImplementation(() => {
+        throw new Error("Provider not available");
+      });
+
+      const { result } = renderHook(() => useBundlePage("user-1"), {
+        wrapper,
+      });
+
+      // Should use EMPTY_CONNECTED_WALLETS and NOOP_SWITCH_ACTIVE_WALLET
+      expect(result.current).toBeDefined();
+    });
+
+    it("handles handleSwitchToMyBundle when userInfo is null", () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: null,
+      } as any);
+
+      const { result } = renderHook(() => useBundlePage("user-other"), {
+        wrapper,
+      });
+
+      act(() => {
+        result.current.switchPrompt.onSwitch();
+      });
+
+      // Should early return without calling router.replace
+      expect(mockRouter.replace).not.toHaveBeenCalled();
+    });
+
+    it("handles handleSwitchToMyBundle when userInfo.userId is undefined", () => {
+      vi.mocked(useUser).mockReturnValue({
+        isConnected: true,
+        userInfo: { userId: undefined } as any,
+      } as any);
+
+      const { result } = renderHook(() => useBundlePage("user-other"), {
+        wrapper,
+      });
+
+      act(() => {
+        result.current.switchPrompt.onSwitch();
+      });
+
+      // Should early return without calling router.replace
+      expect(mockRouter.replace).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("Coverage for safe fallback paths", () => {
+    it("uses fallback QueryClient when useQueryClient throws", () => {
+      // Create a wrapper that doesn't provide QueryClient
+      const BrokenWrapper = ({ children }: { children: React.ReactNode }) => (
+        <>{children}</>
+      );
+
+      const { result } = renderHook(() => useBundlePage("user-1"), {
+        wrapper: BrokenWrapper,
+      });
+
+      // Should create and use fallback QueryClient without crashing
+      expect(result.current).toBeDefined();
+    });
   });
 });

@@ -7,13 +7,13 @@
 
 import type { Chain as ThirdWebChain } from "thirdweb/chains";
 
-import { BaseChainConfig, ChainAdapter, ChainListAdapter } from "./types";
+import type { BaseChainConfig } from "./types";
 
 /**
  * Convert canonical chain config to ThirdWeb chain format
  * Internal function used by toThirdWebChains
  */
-const toThirdWebChain: ChainAdapter<ThirdWebChain> = config => {
+function toThirdWebChain(config: BaseChainConfig): ThirdWebChain {
   return {
     id: config.id,
     name: config.name,
@@ -23,18 +23,20 @@ const toThirdWebChain: ChainAdapter<ThirdWebChain> = config => {
       ? [config.blockExplorers.default]
       : undefined,
   } as ThirdWebChain;
-};
+}
 
 /**
  * Convert list of canonical chains to ThirdWeb chains
  */
-export const toThirdWebChains: ChainListAdapter<ThirdWebChain> = configs => {
+export function toThirdWebChains(configs: BaseChainConfig[]): ThirdWebChain[] {
   return configs.map(toThirdWebChain);
-};
+}
 
 /**
  * Get only mainnet chains from a list
  */
-export const getMainnetChains = (configs: BaseChainConfig[]) => {
+export function getMainnetChains(
+  configs: BaseChainConfig[]
+): BaseChainConfig[] {
   return configs.filter(config => config.isSupported);
-};
+}

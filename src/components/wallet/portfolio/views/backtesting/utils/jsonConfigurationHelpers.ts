@@ -11,10 +11,38 @@ const BORROWING_FIELDS = new Set([
 type BacktestConfig = Partial<BacktestRequest> & Record<string, unknown>;
 type ValueType = string | number | boolean;
 
+function parseJsonValue(json: string): unknown | null {
+  try {
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+function parseJsonObject(json: string): Record<string, unknown> | null {
+  const parsed = parseJsonValue(json);
+  if (!parsed || typeof parsed !== "object") {
+    return null;
+  }
+
+  return parsed as Record<string, unknown>;
+}
+
 function findRegimeConfig(
   configs: Record<string, unknown>[]
 ): Record<string, unknown> | undefined {
   return configs.find(c => c["strategy_id"] === SIMPLE_REGIME_STRATEGY_ID);
+}
+
+function parseConfigsArray(json: string): {
+  parsed: Record<string, unknown>;
+  configs: Record<string, unknown>[];
+} | null {
+  const parsed = parseJsonObject(json);
+  if (!parsed || !Array.isArray(parsed["configs"])) {
+    return null;
+  }
+  return { parsed, configs: parsed["configs"] as Record<string, unknown>[] };
 }
 
 export function patchBacktestConfig(
@@ -51,13 +79,13 @@ export function parseJsonField(
   key: string,
   fallback: number
 ): number {
-  try {
-    const parsed = JSON.parse(json) as Record<string, unknown>;
-    const val = parsed[key];
-    return typeof val === "number" ? val : fallback;
-  } catch {
+  const parsed = parseJsonObject(json);
+  if (!parsed) {
     return fallback;
   }
+
+  const value = parsed[key];
+  return typeof value === "number" ? value : fallback;
 }
 
 /**
@@ -80,13 +108,13 @@ export function updateJsonField(
   key: string,
   value: number
 ): string {
-  try {
-    const parsed = JSON.parse(json) as Record<string, unknown>;
-    parsed[key] = value;
-    return JSON.stringify(parsed, null, 2);
-  } catch {
+  const parsed = parseJsonObject(json);
+  if (!parsed) {
     return json;
   }
+
+  parsed[key] = value;
+  return JSON.stringify(parsed, null, 2);
 }
 
 /**
@@ -107,17 +135,13 @@ export function parseRegimeParam(
   param: string,
   fallback: string
 ): string {
-  try {
-    const parsed = JSON.parse(json);
-    const config = Array.isArray(parsed.configs)
-      ? findRegimeConfig(parsed.configs)
-      : undefined;
-    const params = config?.["params"] as Record<string, unknown> | undefined;
-    const val = params?.[param];
-    return typeof val === "string" ? val : fallback;
-  } catch {
-    return fallback;
-  }
+  const result = parseConfigsArray(json);
+  if (!result) return fallback;
+
+  const config = findRegimeConfig(result.configs);
+  const params = config?.["params"] as Record<string, unknown> | undefined;
+  const value = params?.[param];
+  return typeof value === "string" ? value : fallback;
 }
 
 /**
@@ -140,24 +164,28 @@ export function updateRegimeParam(
   param: string,
   value: string
 ): string {
-  try {
-    const parsed = JSON.parse(json);
-    if (!Array.isArray(parsed.configs)) return json;
-    const config = findRegimeConfig(parsed.configs);
-    if (!config) return json;
-    if (!config["params"]) config["params"] = {};
-    const params = config["params"] as Record<string, unknown>;
-    if (value) {
-      params[param] = value;
-    } else {
-      config["params"] = Object.fromEntries(
-        Object.entries(params).filter(([k]) => k !== param)
-      );
-    }
-    return JSON.stringify(parsed, null, 2);
-  } catch {
+  const result = parseConfigsArray(json);
+  if (!result) return json;
+
+  const config = findRegimeConfig(result.configs);
+  if (!config) {
     return json;
   }
+
+  if (!config["params"]) {
+    config["params"] = {};
+  }
+
+  const params = config["params"] as Record<string, unknown>;
+  if (value) {
+    params[param] = value;
+  } else {
+    config["params"] = Object.fromEntries(
+      Object.entries(params).filter(([key]) => key !== param)
+    );
+  }
+
+  return JSON.stringify(result.parsed, null, 2);
 }
 
 function isBorrowingField(field: string): boolean {

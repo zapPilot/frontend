@@ -50,9 +50,3 @@ export interface BaseChainConfig {
     parentChain?: number;
   };
 }
-
-/**
- * Chain adapter function types
- */
-export type ChainAdapter<T> = (config: BaseChainConfig) => T;
-export type ChainListAdapter<T> = (configs: BaseChainConfig[]) => T[];

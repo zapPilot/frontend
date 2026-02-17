@@ -2,7 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { MenuPosition } from "../types/wallet.types";
 
-export const useDropdownMenu = () => {
+interface UseDropdownMenuResult {
+  openDropdown: string | null;
+  menuPosition: MenuPosition | null;
+  openDropdownMenu: (walletId: string, buttonElement: HTMLElement) => void;
+  closeDropdown: () => void;
+  toggleDropdown: (walletId: string, buttonElement: HTMLElement) => void;
+}
+
+export function useDropdownMenu(): UseDropdownMenuResult {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
 
@@ -65,4 +73,4 @@ export const useDropdownMenu = () => {
     closeDropdown,
     toggleDropdown,
   };
-};
+}

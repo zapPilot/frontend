@@ -18,18 +18,28 @@ vi.mock("@/components/charts", () => ({
   ChartTooltip: () => <div data-testid="chart-tooltip" />,
 }));
 
+// Capture buildHoverData callback
+let capturedBuildHoverData: any;
+
 // Mock chart helpers
 vi.mock("@/hooks/ui/useChartHover", () => ({
-  useChartHover: () => ({
-    hoveredPoint: null,
-    onMouseMove: vi.fn(),
-    onMouseLeave: vi.fn(),
+  useChartHover: vi.fn((_data: any, options: any) => {
+    capturedBuildHoverData = options?.buildHoverData;
+    return {
+      hoveredPoint: null,
+      onMouseMove: vi.fn(),
+      onMouseLeave: vi.fn(),
+    };
   }),
 }));
 
 vi.mock("../utils/chartHelpers", () => ({
   buildPath: () => "M 0,0 L 100,100",
   CHART_GRID_POSITIONS: { FOUR_LINES: [] },
+}));
+
+vi.mock("@/utils/formatters", () => ({
+  formatChartDate: (date: string) => date,
 }));
 
 describe("DrawdownChart", () => {
@@ -49,5 +59,23 @@ describe("DrawdownChart", () => {
   it("renders correct max drawdown label", () => {
     render(<DrawdownChart chartData={mockData} maxDrawdown={-25.5} />);
     expect(screen.getByText(/-25.5% Max/)).toBeInTheDocument();
+  });
+
+  it("buildHoverData produces correct hover data", () => {
+    render(<DrawdownChart chartData={mockData} maxDrawdown={-15} />);
+
+    expect(capturedBuildHoverData).toBeDefined();
+    const result = capturedBuildHoverData(
+      { date: "2024-01-01", value: -10 },
+      50,
+      100
+    );
+    expect(result).toEqual({
+      chartType: "drawdown-recovery",
+      x: 50,
+      y: 100,
+      date: "2024-01-01",
+      drawdown: -10,
+    });
   });
 });

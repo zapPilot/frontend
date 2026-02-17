@@ -9,40 +9,50 @@ import type { NewWallet } from "../types/wallet.types";
 import { AddWalletForm } from "./AddWalletForm";
 import { WalletCard } from "./WalletCard";
 
-const WalletListHeader = ({ count }: { count: number }) => (
-  <div className="flex items-center justify-between mb-4">
-    <h3 className="text-sm font-medium text-gray-300">
-      Bundled Wallets ({count})
-    </h3>
-  </div>
-);
+interface WalletListHeaderProps {
+  count: number;
+}
 
-const WalletListEmptyState = ({
-  isOwner,
-  onStartAdding,
-}: {
+function WalletListHeader({ count }: WalletListHeaderProps) {
+  return (
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="text-sm font-medium text-gray-300">
+        Bundled Wallets ({count})
+      </h3>
+    </div>
+  );
+}
+
+interface WalletListEmptyStateProps {
   isOwner: boolean;
   onStartAdding: () => void;
-}) => (
-  <div className="p-6 border-b border-gray-700/50">
-    <WalletListHeader count={0} />
-    <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
-      <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-      <p className="text-gray-300 mb-4">
-        {isOwner ? "Add wallets to your bundle" : "No wallets in this bundle"}
-      </p>
-      {isOwner && (
-        <GradientButton
-          onClick={onStartAdding}
-          gradient={GRADIENTS.PRIMARY}
-          icon={Plus}
-        >
-          Add Your First Wallet
-        </GradientButton>
-      )}
+}
+
+function WalletListEmptyState({
+  isOwner,
+  onStartAdding,
+}: WalletListEmptyStateProps) {
+  return (
+    <div className="p-6 border-b border-gray-700/50">
+      <WalletListHeader count={0} />
+      <div className="text-center py-8 border-2 border-dashed border-gray-600 rounded-xl">
+        <Wallet className="w-8 h-8 text-gray-400 mx-auto mb-3" />
+        <p className="text-gray-300 mb-4">
+          {isOwner ? "Add wallets to your bundle" : "No wallets in this bundle"}
+        </p>
+        {isOwner && (
+          <GradientButton
+            onClick={onStartAdding}
+            gradient={GRADIENTS.PRIMARY}
+            icon={Plus}
+          >
+            Add Your First Wallet
+          </GradientButton>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+}
 
 /**
  * Props for WalletList component (reduced from 17 to 9)
@@ -60,7 +70,7 @@ interface WalletListProps {
   onCancelAdding: () => void;
 }
 
-export const WalletList = ({
+export function WalletList({
   wallets,
   isOwner,
   isAdding,
@@ -70,8 +80,7 @@ export const WalletList = ({
   onAddWallet,
   onStartAdding,
   onCancelAdding,
-}: WalletListProps) => {
-  // Get operation handlers from context (eliminates 8 props)
+}: WalletListProps) {
   const {
     operations,
     openDropdown,
@@ -90,7 +99,6 @@ export const WalletList = ({
 
   return (
     <>
-      {/* Wallets Display */}
       <div className="p-6 border-b border-gray-700/50">
         <WalletListHeader count={wallets.length} />
 
@@ -113,7 +121,6 @@ export const WalletList = ({
         </div>
       </div>
 
-      {/* Add Another Wallet Section */}
       {isOwner && (
         <div className="p-6 border-b border-gray-700/50">
           <h3 className="text-sm font-medium text-gray-300 mb-4">
@@ -133,4 +140,4 @@ export const WalletList = ({
       )}
     </>
   );
-};
+}

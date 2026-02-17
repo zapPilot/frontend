@@ -6,8 +6,9 @@ import type { NewWallet, ValidationResult } from "../types/wallet.types";
  * Validate wallet address format
  * Internal function used by validateNewWallet
  */
-const validateAddress = (address: string): ValidationResult => {
-  if (!address.trim()) {
+function validateAddress(address: string): ValidationResult {
+  const trimmedAddress = address.trim();
+  if (!trimmedAddress) {
     return {
       isValid: false,
       error: "Wallet address is required",
@@ -23,21 +24,22 @@ const validateAddress = (address: string): ValidationResult => {
   }
 
   return { isValid: true };
-};
+}
 
 /**
  * Validate wallet label
  * Internal function used by validateNewWallet
  */
-const validateLabel = (label: string): ValidationResult => {
-  if (!label.trim()) {
+function validateLabel(label: string): ValidationResult {
+  const trimmedLabel = label.trim();
+  if (!trimmedLabel) {
     return {
       isValid: false,
       error: "Wallet label is required",
     };
   }
 
-  if (label.trim().length < 2) {
+  if (trimmedLabel.length < 2) {
     return {
       isValid: false,
       error: "Wallet label must be at least 2 characters long",
@@ -45,20 +47,20 @@ const validateLabel = (label: string): ValidationResult => {
   }
 
   return { isValid: true };
-};
+}
 
 /**
  * Validate email format
  */
-export const validateEmail = (email: string): ValidationResult => {
-  if (!email.trim()) {
+export function validateEmail(email: string): ValidationResult {
+  const trimmedEmail = email.trim();
+  if (!trimmedEmail) {
     return {
       isValid: false,
       error: "Email address is required",
     };
   }
 
-  // More specific email regex to prevent catastrophic backtracking
   const emailRegex = /^[a-zA-Z0-9._+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailRegex.test(email)) {
     return {
@@ -68,12 +70,12 @@ export const validateEmail = (email: string): ValidationResult => {
   }
 
   return { isValid: true };
-};
+}
 
 /**
  * Validate new wallet form data
  */
-export const validateNewWallet = (wallet: NewWallet): ValidationResult => {
+export function validateNewWallet(wallet: NewWallet): ValidationResult {
   const labelValidation = validateLabel(wallet.label);
   if (!labelValidation.isValid) {
     return labelValidation;
@@ -85,4 +87,4 @@ export const validateNewWallet = (wallet: NewWallet): ValidationResult => {
   }
 
   return { isValid: true };
-};
+}

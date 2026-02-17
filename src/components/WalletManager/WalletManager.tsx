@@ -2,7 +2,7 @@
 
 import { AnimatePresence } from "framer-motion";
 import { AlertTriangle, Wallet, X } from "lucide-react";
-import { memo, useCallback } from "react";
+import { memo, type ReactElement, useCallback } from "react";
 
 import { BaseCard } from "@/components/ui";
 import { Skeleton } from "@/components/ui/LoadingSystem";
@@ -29,12 +29,12 @@ function getWalletDescription(isConnected: boolean, isOwner: boolean): string {
   return "Viewing wallet bundle";
 }
 
-const WalletManagerComponent = ({
+function WalletManagerComponent({
   isOpen,
   onClose,
   urlUserId,
   onEmailSubscribed,
-}: WalletManagerProps) => {
+}: WalletManagerProps): ReactElement | null {
   const { userInfo, loading, error, isConnected, refetch } = useUser();
 
   // User identification logic
@@ -233,6 +233,6 @@ const WalletManagerComponent = ({
       </ModalBackdrop>
     </AnimatePresence>
   );
-};
+}
 
 export const WalletManager = memo(WalletManagerComponent);

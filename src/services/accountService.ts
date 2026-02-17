@@ -4,7 +4,7 @@
  * Replaces AccountApiClient with simpler service function approach
  */
 
-import { type EtlJobStatus } from "@davidtnfsh/etl-contracts";
+import type { EtlJobStatus } from "@davidtnfsh/etl-contracts";
 
 import { AccountServiceError } from "@/lib/errors";
 import { httpUtils } from "@/lib/http";
@@ -28,19 +28,17 @@ import type {
 } from "@/types/domain/user.types";
 import { logger } from "@/utils/logger";
 
-// Re-export AccountServiceError for backward compatibility
 export { AccountServiceError };
 
 /**
  * Create enhanced error messages for common account API errors
  */
-const createAccountServiceError = (error: unknown): AccountServiceError =>
-  createServiceError(
+function createAccountServiceError(error: unknown): AccountServiceError {
+  return createServiceError(
     error,
     AccountServiceError,
     "Account service error",
     (status, message) => {
-      // Enhance error messages based on status codes
       switch (status) {
         case 400:
           if (message?.includes("wallet")) {
@@ -51,7 +49,6 @@ const createAccountServiceError = (error: unknown): AccountServiceError =>
           return "User account not found. Please connect your wallet first.";
         case 409:
           if (message?.includes("wallet already belongs to another user")) {
-            // Keep the backend's enhanced message which already includes guidance
             return message;
           }
           if (message?.includes("wallet")) {
@@ -66,6 +63,32 @@ const createAccountServiceError = (error: unknown): AccountServiceError =>
       return message;
     }
   );
+}
+
+function logDevelopmentResponse(label: string, payload: unknown): void {
+  if (process.env.NODE_ENV !== "development") {
+    return;
+  }
+
+  logger.debug(label, JSON.stringify(payload, null, 2));
+}
+
+function validateConnectWalletResponse(
+  response: unknown
+): ConnectWalletResponse {
+  const validationResult = connectWalletResponseSchema.safeParse(response);
+  if (!validationResult.success) {
+    logger.error("❌ Validation failed:", validationResult.error.issues);
+    throw new AccountServiceError(
+      "Connect wallet response validation failed",
+      500,
+      "VALIDATION_ERROR",
+      { issues: validationResult.error.issues }
+    );
+  }
+
+  return validationResult.data as ConnectWalletResponse;
+}
 
 const accountApiClient = httpUtils.accountApi;
 
@@ -76,123 +99,95 @@ const callAccountApi = createServiceCaller(createAccountServiceError);
 /**
  * Connect wallet and create/retrieve user
  */
-export const connectWallet = async (
+export async function connectWallet(
   walletAddress: string
-): Promise<ConnectWalletResponse> => {
+): Promise<ConnectWalletResponse> {
   const response = await callAccountApi(() =>
     accountApiClient.post<ConnectWalletResponse>("/users/connect-wallet", {
       wallet: walletAddress,
     })
   );
 
-  // DEBUG: Log raw response to see what API actually returns
-  if (process.env.NODE_ENV === "development") {
-    logger.debug(
-      "🔍 Raw connect-wallet response:",
-      JSON.stringify(response, null, 2)
-    );
-  }
+  logDevelopmentResponse("🔍 Raw connect-wallet response:", response);
+  const validatedResponse = validateConnectWalletResponse(response);
+  logDevelopmentResponse("✅ Validated response:", validatedResponse);
 
-  // Use safeParse to see validation details
-  const validationResult = connectWalletResponseSchema.safeParse(response);
-  if (!validationResult.success) {
-    logger.error("❌ Validation failed:", validationResult.error.issues);
-    // Still throw to maintain error handling, but we've logged the details
-    throw new AccountServiceError(
-      "Connect wallet response validation failed",
-      500,
-      "VALIDATION_ERROR",
-      { issues: validationResult.error.issues }
-    );
-  }
-
-  if (process.env.NODE_ENV === "development") {
-    logger.debug(
-      "✅ Validated response:",
-      JSON.stringify(validationResult.data, null, 2)
-    );
-  }
-
-  return validationResult.data as ConnectWalletResponse;
-};
+  return validatedResponse;
+}
 
 /**
  * Get complete user profile
  */
-export const getUserProfile = async (
+export async function getUserProfile(
   userId: string
-): Promise<UserProfileResponse> => {
+): Promise<UserProfileResponse> {
   const response = await callAccountApi(() =>
     accountApiClient.get<UserProfileResponse>(`/users/${userId}`)
   );
   return validateUserProfileResponse(response);
-};
+}
 
 /**
  * Update user email
  */
-export const updateUserEmail = async (
+export async function updateUserEmail(
   userId: string,
   email: string
-): Promise<UpdateEmailResponse> => {
+): Promise<UpdateEmailResponse> {
   const response = await callAccountApi(() =>
     accountApiClient.put<UpdateEmailResponse>(`/users/${userId}/email`, {
       email,
     })
   );
   return validateUpdateEmailResponse(response);
-};
+}
 
-const deleteUserResource = async (
-  path: string
-): Promise<UpdateEmailResponse> => {
+async function deleteUserResource(path: string): Promise<UpdateEmailResponse> {
   const response = await callAccountApi(() =>
     accountApiClient.delete<UpdateEmailResponse>(path)
   );
   return validateUpdateEmailResponse(response);
-};
+}
 
 /**
  * Remove user email (unsubscribe from email-based reports)
  */
-export const removeUserEmail = async (
+export async function removeUserEmail(
   userId: string
-): Promise<UpdateEmailResponse> => {
+): Promise<UpdateEmailResponse> {
   return deleteUserResource(`/users/${userId}/email`);
-};
+}
 
 /**
  * Delete user account
  * Cannot delete users with active subscriptions
  */
-export const deleteUser = async (
-  userId: string
-): Promise<UpdateEmailResponse> => {
+export async function deleteUser(userId: string): Promise<UpdateEmailResponse> {
   return deleteUserResource(`/users/${userId}`);
-};
+}
 
 // Wallet Management Operations
 
 /**
  * Get all user wallets
  */
-export const getUserWallets = async (
+export async function getUserWallets(
   userId: string
-): Promise<UserCryptoWallet[]> => {
+): Promise<UserCryptoWallet[]> {
   const response = await callAccountApi(() =>
     accountApiClient.get<UserCryptoWallet[]>(`/users/${userId}/wallets`)
   );
   return validateUserWallets(response);
-};
+}
 
 /**
  * Add wallet to user bundle
  */
-export const addWalletToBundle = async (
+export async function addWalletToBundle(
   userId: string,
   walletAddress: string,
   label?: string
-): Promise<AddWalletResponse> => {
+): Promise<AddWalletResponse> {
   const response = await callAccountApi(() =>
     accountApiClient.post<AddWalletResponse>(`/users/${userId}/wallets`, {
       wallet: walletAddress,
@@ -200,31 +195,31 @@ export const addWalletToBundle = async (
     })
   );
   return validateAddWalletResponse(response);
-};
+}
 
 /**
  * Remove wallet from user bundle
  */
-export const removeWalletFromBundle = async (
+export async function removeWalletFromBundle(
   userId: string,
   walletId: string
-): Promise<{ message: string }> => {
+): Promise<{ message: string }> {
   const response = await callAccountApi(() =>
     accountApiClient.delete<{ message: string }>(
       `/users/${userId}/wallets/${walletId}`
     )
   );
   return validateMessageResponse(response);
-};
+}
 
 /**
  * Update wallet label
  */
-export const updateWalletLabel = async (
+export async function updateWalletLabel(
   userId: string,
   walletAddress: string,
   label: string
-): Promise<{ message: string }> => {
+): Promise<{ message: string }> {
   const response = await callAccountApi(() =>
     accountApiClient.put<{ message: string }>(
       `/users/${userId}/wallets/${walletAddress}/label`,
@@ -234,7 +229,7 @@ export const updateWalletLabel = async (
     )
   );
   return validateMessageResponse(response);
-};
+}
 
 // ETL Job Operations
 
@@ -258,25 +253,24 @@ export type { EtlJobStatus } from "@davidtnfsh/etl-contracts";
  * Trigger ETL data fetch for a wallet
  * Used for on-the-fly portfolio data loading
  */
-export const triggerWalletDataFetch = async (
+export async function triggerWalletDataFetch(
   userId: string,
   walletAddress: string
-): Promise<EtlJobResponse> => {
+): Promise<EtlJobResponse> {
   return callAccountApi(() =>
     accountApiClient.post<EtlJobResponse>(
       `/users/${userId}/wallets/${walletAddress}/fetch-data`
     )
   );
-};
+}
 
 /**
  * Get ETL job status by ID
  * Used for polling job completion
  */
-export const getEtlJobStatus = async (jobId: string): Promise<EtlJobStatus> => {
+export async function getEtlJobStatus(jobId: string): Promise<EtlJobStatus> {
   const response = await callAccountApi(() =>
     accountApiClient.get<EtlJobStatus>(`/etl/jobs/${jobId}`)
   );
-  // Validate response against contract schema
   return etlJobStatusResponseSchema.parse(response);
-};
+}

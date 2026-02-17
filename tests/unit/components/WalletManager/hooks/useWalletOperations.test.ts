@@ -311,4 +311,250 @@ describe("useWalletOperations", () => {
     expect(fetchWallets).toHaveBeenCalledTimes(1); // Only initial load
     vi.useRealTimers();
   });
+
+  it("handleCopyAddress handles clipboard failure gracefully", async () => {
+    const { copyTextToClipboard } = await import("@/utils/clipboard");
+    vi.mocked(copyTextToClipboard).mockResolvedValue(false);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleCopyAddress("0x123");
+    });
+
+    // Should not show success toast if copy failed
+    expect(mockShowToast).not.toHaveBeenCalled();
+  });
+
+  it("handleSwitchWallet switches active wallet successfully", async () => {
+    const mockSwitchActiveWallet = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useWalletProvider).mockReturnValue({
+      disconnect: mockDisconnect,
+      isConnected: true,
+      connectedWallets: [],
+      switchActiveWallet: mockSwitchActiveWallet,
+    } as any);
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleSwitchWallet("0x789");
+    });
+
+    expect(mockSwitchActiveWallet).toHaveBeenCalledWith("0x789");
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "success",
+        title: "Wallet Switched",
+      })
+    );
+    expect(fetchWallets).toHaveBeenCalledTimes(2); // Initial + reload after switch
+  });
+
+  it("handleSwitchWallet handles switch error", async () => {
+    const mockSwitchActiveWallet = vi
+      .fn()
+      .mockRejectedValue(new Error("Switch failed"));
+    vi.mocked(useWalletProvider).mockReturnValue({
+      disconnect: mockDisconnect,
+      isConnected: true,
+      connectedWallets: [],
+      switchActiveWallet: mockSwitchActiveWallet,
+    } as any);
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await act(async () => {
+      await result.current.handleSwitchWallet("0x789");
+    });
+
+    expect(mockSwitchActiveWallet).toHaveBeenCalledWith("0x789");
+    expect(mockShowToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: "error",
+        title: "Switch Failed",
+      })
+    );
+  });
+
+  it("handleAddWallet handles API error response", async () => {
+    vi.mocked(addWalletToBundle).mockResolvedValue({
+      success: false,
+      error: "Wallet already exists",
+    });
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    act(() => {
+      result.current.setNewWallet({
+        address: "0x1234567890123456789012345678901234567890",
+        label: "Duplicate",
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleAddWallet();
+    });
+
+    expect(result.current.validationError).toBe("Wallet already exists");
+    expect(result.current.isAdding).toBe(false);
+  });
+
+  it("handleAddWallet handles exception during API call", async () => {
+    vi.mocked(addWalletToBundle).mockRejectedValue(new Error("Network error"));
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    act(() => {
+      result.current.setNewWallet({
+        address: "0x1234567890123456789012345678901234567890",
+        label: "Test",
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleAddWallet();
+    });
+
+    expect(result.current.validationError).toBeTruthy();
+    expect(result.current.isAdding).toBe(false);
+  });
+
+  it("handleDeleteWallet handles API error response", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Main" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(removeWalletFromBundle).mockResolvedValue({
+      success: false,
+      error: "Cannot remove last wallet",
+    });
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleDeleteWallet("w1");
+    });
+
+    expect(result.current.operations.removing.w1.error).toBe(
+      "Cannot remove last wallet"
+    );
+    expect(result.current.wallets).toHaveLength(1); // Wallet not removed
+  });
+
+  it("handleDeleteWallet handles exception during API call", async () => {
+    const mockWallets = [{ id: "w1", address: "0x123", label: "Main" }];
+    vi.mocked(fetchWallets).mockResolvedValue(mockWallets);
+    vi.mocked(removeWalletFromBundle).mockRejectedValue(
+      new Error("Network error")
+    );
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    await waitFor(() => {
+      expect(result.current.wallets).toHaveLength(1);
+    });
+
+    await act(async () => {
+      await result.current.handleDeleteWallet("w1");
+    });
+
+    expect(result.current.operations.removing.w1.error).toBeTruthy();
+    expect(result.current.wallets).toHaveLength(1); // Wallet not removed
+  });
+
+  it("uses default empty array when connectedWallets is undefined", () => {
+    vi.mocked(useWalletProvider).mockReturnValue({
+      disconnect: mockDisconnect,
+      isConnected: true,
+      connectedWallets: undefined,
+      switchActiveWallet: undefined,
+    } as any);
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    // Should not throw error and use empty array as default
+    expect(result.current).toBeDefined();
+  });
+
+  it("uses default noop function when switchActiveWallet is undefined", async () => {
+    vi.mocked(useWalletProvider).mockReturnValue({
+      disconnect: mockDisconnect,
+      isConnected: true,
+      connectedWallets: [],
+      switchActiveWallet: undefined,
+    } as any);
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    // Should not throw error when calling handleSwitchWallet with undefined switchActiveWallet
+    await act(async () => {
+      await result.current.handleSwitchWallet("0x789");
+    });
+
+    expect(result.current).toBeDefined();
+  });
+
+  it("setValidationError updates validation error state", () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    act(() => {
+      result.current.setValidationError("Invalid format");
+    });
+
+    expect(result.current.validationError).toBe("Invalid format");
+
+    act(() => {
+      result.current.setValidationError(null);
+    });
+
+    expect(result.current.validationError).toBeNull();
+  });
+
+  it("setNewWallet updates new wallet state", () => {
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    act(() => {
+      result.current.setNewWallet({
+        address: "0xABC",
+        label: "New Label",
+      });
+    });
+
+    expect(result.current.newWallet).toEqual({
+      address: "0xABC",
+      label: "New Label",
+    });
+  });
+
+  it("handleAddWallet resets validation error on success", async () => {
+    vi.mocked(addWalletToBundle).mockResolvedValue({ success: true });
+    vi.mocked(fetchWallets).mockResolvedValue([]);
+
+    const { result } = renderHook(() => useWalletOperations(defaultParams));
+
+    // Set initial validation error
+    act(() => {
+      result.current.setValidationError("Old error");
+      result.current.setNewWallet({
+        address: "0x1234567890123456789012345678901234567890",
+        label: "Test",
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleAddWallet();
+    });
+
+    expect(result.current.validationError).toBeNull();
+    expect(result.current.newWallet).toEqual({ address: "", label: "" });
+  });
 });

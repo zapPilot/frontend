@@ -211,4 +211,348 @@ describe("useAnalyticsData", () => {
     expect(mockRefetchBtc).toHaveBeenCalled();
     expect(mockRefetchPnL).toHaveBeenCalled();
   });
+
+  it("should not refetch monthlyPnL when dashboard data is missing", () => {
+    const mockRefetchDashboard = vi.fn();
+    const mockRefetchBtc = vi.fn();
+    const mockRefetchPnL = vi.fn();
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      refetch: mockRefetchDashboard,
+      data: null, // No dashboard data
+    } as any);
+    vi.mocked(useBtcPriceQuery).mockReturnValue({
+      ...defaultBtcQuery,
+      refetch: mockRefetchBtc,
+    } as any);
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      refetch: mockRefetchPnL,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    result.current.refetch();
+
+    expect(mockRefetchDashboard).toHaveBeenCalled();
+    expect(mockRefetchBtc).toHaveBeenCalled();
+    expect(mockRefetchPnL).not.toHaveBeenCalled();
+  });
+
+  it("should show loading when dashboard is fetching", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      isLoading: false,
+      isFetching: true,
+      data: mockDashboardData,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it("should show monthlyPnL loading state independently", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: true,
+      isFetching: false,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.isMonthlyPnLLoading).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+  });
+
+  it("should show monthlyPnL loading when fetching", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      isFetching: true,
+      error: null,
+      refetch: vi.fn(),
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.isMonthlyPnLLoading).toBe(true);
+  });
+
+  it("should prioritize dashboard error over monthlyPnL error", () => {
+    const dashboardError = new Error("Dashboard error");
+    const pnlError = new Error("PnL error");
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      error: dashboardError,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: pnlError,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.error).toBe(dashboardError);
+  });
+
+  it("should show monthlyPnL error when dashboard is successful", () => {
+    const pnlError = new Error("PnL error");
+
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      error: null,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: pnlError,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.error).toBe(pnlError);
+  });
+
+  it("should return empty monthlyPnL array when PnL query fails", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error("PnL failed"),
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.data?.monthlyPnL).toEqual([]);
+  });
+
+  it("should handle wallet filter parameter", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, "0x123")
+    );
+
+    // Verify usePortfolioDashboard was called with wallet_address filter
+    expect(usePortfolioDashboard).toHaveBeenCalledWith(
+      "user1",
+      expect.objectContaining({
+        wallet_address: "0x123",
+      }),
+      expect.any(Object)
+    );
+  });
+
+  it("should not include wallet_address in dashboard params when filter is null", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, null)
+    );
+
+    // Verify usePortfolioDashboard was called without wallet_address
+    const callArgs = vi.mocked(usePortfolioDashboard).mock.calls[0];
+    expect(callArgs[1]).not.toHaveProperty("wallet_address");
+  });
+
+  it("should handle missing daily_values gracefully", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: { trends: {} }, // No daily_values
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: mockPnLData,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.data).not.toBeNull();
+    expect(AnalyticsTransformers.aggregateMonthlyPnL).toHaveBeenCalledWith(
+      mockPnLData,
+      []
+    );
+  });
+
+  it("should handle missing btc snapshots gracefully", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useBtcPriceQuery).mockReturnValue({
+      ...defaultBtcQuery,
+      data: null, // No BTC data
+    } as any);
+
+    const { result } = renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.data).not.toBeNull();
+    expect(
+      AnalyticsTransformers.transformToPerformanceChart
+    ).toHaveBeenCalledWith(mockDashboardData, undefined);
+  });
+
+  it("should track period changes and update staleTime", () => {
+    const { rerender } = renderHook(
+      ({ timePeriod }) => useAnalyticsData("user1", timePeriod),
+      {
+        initialProps: { timePeriod: { key: "1M", days: 30, label: "1M" } },
+      }
+    );
+
+    // Change period
+    rerender({ timePeriod: { key: "1Y", days: 365, label: "1Y" } });
+
+    // Verify hook was called again with new period
+    expect(usePortfolioDashboard).toHaveBeenCalledTimes(2);
+  });
+
+  it("should pass wallet filter to monthlyPnL query", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    vi.mocked(useQuery).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+      isFetching: false,
+    } as any);
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, "0xabc")
+    );
+
+    // Verify useQuery was called with wallet filter in queryKey
+    const queryKeyCall = vi.mocked(useQuery).mock.calls[0][0];
+    expect(queryKeyCall.queryKey).toContain("0xabc");
+  });
+
+  it("should handle undefined userId gracefully", () => {
+    const { result } = renderHook(() =>
+      useAnalyticsData(undefined, { key: "1M", days: 30, label: "1M" })
+    );
+
+    expect(result.current.data).toBeNull();
+  });
+
+  it("should call monthlyPnL query with correct parameters when enabled", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    let capturedQueryFn: any = null;
+    vi.mocked(useQuery).mockImplementation((options: any) => {
+      capturedQueryFn = options.queryFn;
+      return {
+        data: null,
+        isLoading: false,
+        error: null,
+        refetch: vi.fn(),
+        isFetching: false,
+      } as any;
+    });
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" }, "0xabc")
+    );
+
+    // Verify queryFn was captured
+    expect(capturedQueryFn).toBeDefined();
+
+    // Verify query is enabled when both userId and dashboard data exist
+    const queryOptions = vi.mocked(useQuery).mock.calls[0][0];
+    expect(queryOptions.enabled).toBe(true);
+  });
+
+  it("should disable monthlyPnL query when dashboard data is missing", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: null,
+    } as any);
+
+    renderHook(() =>
+      useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
+    );
+
+    const queryOptions = vi.mocked(useQuery).mock.calls[0][0];
+    expect(queryOptions.enabled).toBe(false);
+  });
+
+  it("should disable monthlyPnL query when userId is missing", () => {
+    vi.mocked(usePortfolioDashboard).mockReturnValue({
+      ...defaultDashboardQuery,
+      data: mockDashboardData,
+    } as any);
+
+    renderHook(() =>
+      useAnalyticsData(undefined, { key: "1M", days: 30, label: "1M" })
+    );
+
+    const queryOptions = vi.mocked(useQuery).mock.calls[0][0];
+    expect(queryOptions.enabled).toBe(false);
+  });
 });

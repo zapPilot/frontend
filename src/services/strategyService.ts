@@ -26,14 +26,22 @@ export type {
 /**
  * Build query string from params, filtering out undefined values
  */
-const buildQueryString = (params: DailySuggestionParams): string => {
+function buildQueryString(params: DailySuggestionParams): string {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) query.append(key, String(value));
+    if (value === undefined) {
+      continue;
+    }
+
+    query.append(key, String(value));
   }
-  const str = query.toString();
-  return str ? `?${str}` : "";
-};
+  const queryString = query.toString();
+  if (!queryString) {
+    return "";
+  }
+
+  return `?${queryString}`;
+}
 
 // =========================================================================
 // CONFIG PRESETS ENDPOINT
@@ -51,21 +59,19 @@ const FALLBACK_BACKTEST_DEFAULTS: BacktestDefaults = {
  * Returns the response envelope containing presets and backtest_defaults.
  * Handles backward compatibility with old API format (array of presets).
  */
-export const getStrategyConfigs =
-  async (): Promise<StrategyConfigsResponse> => {
-    const endpoint = `/api/v3/strategy/configs`;
-    const response = await httpUtils.analyticsEngine.get(endpoint);
+export async function getStrategyConfigs(): Promise<StrategyConfigsResponse> {
+  const endpoint = `/api/v3/strategy/configs`;
+  const response = await httpUtils.analyticsEngine.get(endpoint);
 
-    // Handle backward compatibility: old API returned array, new API returns object
-    if (Array.isArray(response)) {
-      return {
-        presets: response as StrategyPreset[],
-        backtest_defaults: FALLBACK_BACKTEST_DEFAULTS,
-      };
-    }
+  if (Array.isArray(response)) {
+    return {
+      presets: response as StrategyPreset[],
+      backtest_defaults: FALLBACK_BACKTEST_DEFAULTS,
+    };
+  }
 
-    return response as StrategyConfigsResponse;
-  };
+  return response as StrategyConfigsResponse;
+}
 
 // ============================================================================
 // DAILY SUGGESTION ENDPOINT
@@ -107,12 +113,12 @@ export const getStrategyConfigs =
  * }
  * ```
  */
-export const getDailySuggestion = async (
+export async function getDailySuggestion(
   userId: string,
   params: DailySuggestionParams = {}
-): Promise<DailySuggestionResponse> => {
+): Promise<DailySuggestionResponse> {
   const queryString = buildQueryString(params);
   const endpoint = `/api/v3/strategy/daily-suggestion/${userId}${queryString}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return response as DailySuggestionResponse;
-};
+}

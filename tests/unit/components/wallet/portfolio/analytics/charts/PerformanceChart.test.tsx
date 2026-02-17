@@ -3,6 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 import { PerformanceChart } from "@/components/wallet/portfolio/analytics/charts/PerformanceChart";
 
+// Capture buildHoverData callback
+let capturedBuildHoverData: any;
+
 // Mock dependencies
 vi.mock("@/components/charts", () => ({
   ChartIndicator: () => <div data-testid="chart-indicator" />,
@@ -10,10 +13,13 @@ vi.mock("@/components/charts", () => ({
 }));
 
 vi.mock("@/hooks/ui/useChartHover", () => ({
-  useChartHover: () => ({
-    hoveredPoint: null,
-    onMouseMove: vi.fn(),
-    onMouseLeave: vi.fn(),
+  useChartHover: vi.fn((_data: any, options: any) => {
+    capturedBuildHoverData = options?.buildHoverData;
+    return {
+      hoveredPoint: null,
+      onMouseMove: vi.fn(),
+      onMouseLeave: vi.fn(),
+    };
   }),
 }));
 
@@ -87,5 +93,63 @@ describe("PerformanceChart", () => {
     );
     // Validation is implicit via render not crashing and mocks being called
     // In a real browser test we could check attributes
+  });
+
+  it("buildHoverData produces correct hover data", () => {
+    render(
+      <PerformanceChart
+        chartData={mockData}
+        startDate="2024-01-01"
+        endDate="2024-01-02"
+      />
+    );
+
+    expect(capturedBuildHoverData).toBeDefined();
+    const result = capturedBuildHoverData(
+      {
+        date: "2024-01-01",
+        portfolioValue: 100,
+        btcBenchmarkValue: 110,
+      },
+      75,
+      150
+    );
+    expect(result).toEqual({
+      chartType: "performance",
+      x: 75,
+      y: 150,
+      date: "2024-01-01",
+      value: 100,
+      benchmark: 110,
+    });
+  });
+
+  it("buildHoverData handles null btcBenchmarkValue", () => {
+    render(
+      <PerformanceChart
+        chartData={mockData}
+        startDate="2024-01-01"
+        endDate="2024-01-02"
+      />
+    );
+
+    expect(capturedBuildHoverData).toBeDefined();
+    const result = capturedBuildHoverData(
+      {
+        date: "2024-01-01",
+        portfolioValue: 100,
+        btcBenchmarkValue: null,
+      },
+      75,
+      150
+    );
+    expect(result).toEqual({
+      chartType: "performance",
+      x: 75,
+      y: 150,
+      date: "2024-01-01",
+      value: 100,
+      benchmark: undefined, // null converted to undefined
+    });
   });
 });

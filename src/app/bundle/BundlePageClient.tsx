@@ -30,20 +30,14 @@ export function BundlePageClient({
   const { userInfo, isConnected, loading } = useUser();
   const vm = useBundlePage(userId, walletId);
 
-  // Redirect to user's bundle page after wallet connection (if currently on guest view)
   useEffect(() => {
-    // Don't attempt redirect while user data is loading
     if (loading) {
       return;
     }
 
-    if (
-      isConnected &&
-      !loading &&
-      userInfo?.userId &&
-      !userId &&
-      pathname === "/"
-    ) {
+    const shouldRedirectToUserBundle =
+      isConnected && userInfo?.userId && !userId && pathname === "/";
+    if (shouldRedirectToUserBundle) {
       const current = new URLSearchParams(Array.from(searchParams.entries()));
       current.set("userId", userInfo.userId);
       if (userInfo.etlJobId) {
@@ -83,7 +77,6 @@ export function BundlePageClient({
     return () => observer.disconnect();
   }, []);
 
-  // Header banners (switch prompt + email banner)
   const headerBanners = useMemo(
     () => (
       <>
@@ -127,7 +120,6 @@ export function BundlePageClient({
     ]
   );
 
-  // Footer overlays (quick switch FAB + WalletManager)
   const footerOverlays = useMemo(
     () => (
       <>
@@ -144,7 +136,6 @@ export function BundlePageClient({
     ]
   );
 
-  // Render v22 portfolio with bundle features
   return (
     <DashboardShell
       urlUserId={userId}

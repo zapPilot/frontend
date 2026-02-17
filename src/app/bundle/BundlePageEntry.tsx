@@ -25,13 +25,24 @@ export function BundlePageEntry() {
     }
   }
 
-  // V1 layout (default)
-  return (
-    <BundlePageClient
-      userId={userId}
-      {...(walletId && { walletId })}
-      {...(etlJobId && { etlJobId })}
-      {...(isNewUser && { isNewUser })}
-    />
-  );
+  const bundlePageClientProps: {
+    userId: string;
+    walletId?: string;
+    etlJobId?: string;
+    isNewUser?: boolean;
+  } = { userId };
+
+  if (walletId) {
+    bundlePageClientProps.walletId = walletId;
+  }
+
+  if (etlJobId) {
+    bundlePageClientProps.etlJobId = etlJobId;
+  }
+
+  if (isNewUser) {
+    bundlePageClientProps.isNewUser = true;
+  }
+
+  return <BundlePageClient {...bundlePageClientProps} />;
 }

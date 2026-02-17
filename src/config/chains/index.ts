@@ -17,4 +17,6 @@ export { getMainnetChains, toThirdWebChains } from "./adapters";
 /**
  * Get all supported chains in ThirdWeb format
  */
-export const getThirdWebChains = () => toThirdWebChains(SUPPORTED_CHAINS);
+export function getThirdWebChains() {
+  return toThirdWebChains(SUPPORTED_CHAINS);
+}

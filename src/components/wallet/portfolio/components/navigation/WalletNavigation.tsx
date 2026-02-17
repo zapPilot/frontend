@@ -18,8 +18,9 @@ const STYLES = {
 } as const;
 
 /** Get tab button className based on active state */
-const getTabClassName = (isActive: boolean): string =>
-  `${STYLES.tabBase} ${isActive ? STYLES.tabActive : STYLES.tabInactive}`;
+function getTabClassName(isActive: boolean): string {
+  return `${STYLES.tabBase} ${isActive ? STYLES.tabActive : STYLES.tabInactive}`;
+}
 
 interface WalletNavigationProps {
   activeTab: TabType;
@@ -42,7 +43,6 @@ export function WalletNavigation({
 }: WalletNavigationProps) {
   return (
     <nav className={STYLES.nav}>
-      {/* Logo */}
       <div className="flex items-center gap-2">
         <div className={STYLES.logo}>ZP</div>
         <span className="text-white font-bold tracking-tight hidden md:block">
@@ -50,9 +50,7 @@ export function WalletNavigation({
         </span>
       </div>
 
-      {/* Tab buttons */}
       <div className="flex items-center gap-2 md:gap-4">
-        {/* On mobile, if search is expanded, it covers this. That's handled in WalletSearchNav */}
         <div className={STYLES.tabContainer}>
           {TABS.map(tab => (
             <button
@@ -69,17 +67,20 @@ export function WalletNavigation({
           ))}
         </div>
 
-        {/* Persistent Search (Option B) - Renders here next to tabs */}
         {showSearch && onSearch && (
           <WalletSearchNav onSearch={onSearch} isSearching={isSearching} />
         )}
       </div>
 
       <div className="flex items-center gap-2 md:gap-4">
-        <WalletMenu
-          {...(onOpenWalletManager && { onOpenWalletManager })}
-          onOpenSettings={onOpenSettings}
-        />
+        {onOpenWalletManager ? (
+          <WalletMenu
+            onOpenSettings={onOpenSettings}
+            onOpenWalletManager={onOpenWalletManager}
+          />
+        ) : (
+          <WalletMenu onOpenSettings={onOpenSettings} />
+        )}
       </div>
     </nav>
   );

@@ -3,7 +3,7 @@
  * @module utils/formatters
  */
 
-import dayjs from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import utc from "dayjs/plugin/utc";
 
@@ -82,6 +82,24 @@ function formatSmartCurrency(
   return `${prefix}$${absValue.toFixed(minDecimals)}`;
 }
 
+function formatSmartNumber(amount: number): string {
+  if (amount === 0) return "0";
+  if (amount < 0.000001) return "< 0.000001";
+  if (amount < 0.01) return amount.toFixed(6);
+  if (amount < 1) return amount.toFixed(4);
+  if (amount < 100) return amount.toFixed(2);
+  return amount.toFixed(0);
+}
+
+function parseUtcDate(dateString: string): Dayjs | null {
+  const parsedDate = dayjs.utc(dateString);
+  if (!parsedDate.isValid()) {
+    return null;
+  }
+
+  return parsedDate;
+}
+
 // =============================================================================
 // CURRENCY FORMATTING
 // =============================================================================
@@ -136,12 +154,7 @@ export function formatNumber(
   if (options.isHidden) return PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER;
 
   if (options.smartPrecision) {
-    if (amount === 0) return "0";
-    if (amount < 0.000001) return "< 0.000001";
-    if (amount < 0.01) return amount.toFixed(6);
-    if (amount < 1) return amount.toFixed(4);
-    if (amount < 100) return amount.toFixed(2);
-    return amount.toFixed(0);
+    return formatSmartNumber(amount);
   }
 
   return amount.toLocaleString(options.locale, {
@@ -216,8 +229,8 @@ export function calculateDataFreshness(
   if (!lastUpdated) return UNKNOWN_FRESHNESS;
 
   try {
-    const updateTime = dayjs.utc(lastUpdated);
-    if (!updateTime.isValid()) {
+    const updateTime = parseUtcDate(lastUpdated);
+    if (!updateTime) {
       return { ...UNKNOWN_FRESHNESS, timestamp: lastUpdated };
     }
 
@@ -241,9 +254,14 @@ export function formatRelativeTime(
   dateString: string | null | undefined
 ): string {
   if (!dateString) return "Unknown";
+
   try {
-    const date = dayjs.utc(dateString);
-    return date.isValid() ? date.fromNow() : "Unknown";
+    const parsedDate = parseUtcDate(dateString);
+    if (!parsedDate) {
+      return "Unknown";
+    }
+
+    return parsedDate.fromNow();
   } catch {
     return "Unknown";
   }

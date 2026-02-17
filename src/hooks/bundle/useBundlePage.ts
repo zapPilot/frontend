@@ -44,6 +44,26 @@ interface UseBundlePageResult {
 const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
 const NOOP_SWITCH_ACTIVE_WALLET = () => Promise.resolve();
 
+async function invalidateWalletSwitchQueries(
+  queryClient: QueryClient
+): Promise<void> {
+  await queryClient.invalidateQueries({
+    queryKey: ["portfolio"],
+  });
+  await queryClient.invalidateQueries({
+    queryKey: ["wallets"],
+  });
+}
+
+function buildBundlePageUrl(searchParams: URLSearchParams): string {
+  const queryString = searchParams.toString();
+  if (!queryString) {
+    return "/bundle";
+  }
+
+  return `/bundle?${queryString}`;
+}
+
 function useSafeQueryClient(fallback: QueryClient): QueryClient {
   try {
     return useQueryClient();
@@ -155,20 +175,19 @@ export function useBundlePage(
       return;
     }
 
-    void (async () => {
+    const targetWalletId = walletId;
+
+    async function switchWalletAndRefresh(): Promise<void> {
       try {
-        await switchActiveWallet(walletId);
-        await queryClient.invalidateQueries({
-          queryKey: ["portfolio"],
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["wallets"],
-        });
+        await switchActiveWallet(targetWalletId);
+        await invalidateWalletSwitchQueries(queryClient);
         logger.info("Cache invalidated after wallet switch");
       } catch (err) {
         logger.error("Failed to auto-switch wallet:", err);
       }
-    })();
+    }
+
+    void switchWalletAndRefresh();
   }, [
     walletId,
     isConnected,
@@ -212,14 +231,11 @@ export function useBundlePage(
         setBundleNotFound(true);
         return;
       }
+
       try {
         const user = await getBundleUser(userId);
-        if (user) {
-          setBundleUser(user);
-          setBundleNotFound(false);
-        } else {
-          setBundleNotFound(true);
-        }
+        setBundleUser(user);
+        setBundleNotFound(!user);
       } catch (error) {
         logger.error("Failed to load bundle user:", error);
         setBundleNotFound(true);
@@ -255,8 +271,7 @@ export function useBundlePage(
     } else {
       params.delete("etlJobId");
     }
-    const queryString = params.toString();
-    router.replace(`/bundle${queryString ? `?${queryString}` : ""}`);
+    router.replace(buildBundlePageUrl(params));
   }, [router, userInfo?.userId, userInfo?.etlJobId]);
 
   const handleStayHere = useCallback((): void => undefined, []);

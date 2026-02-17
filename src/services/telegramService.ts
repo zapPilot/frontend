@@ -54,8 +54,8 @@ export interface TelegramDisconnectResponse {
 // ERROR HANDLING
 // ============================================================================
 
-const createTelegramServiceError = (error: unknown): AccountServiceError =>
-  createServiceError(
+function createTelegramServiceError(error: unknown): AccountServiceError {
+  return createServiceError(
     error,
     AccountServiceError,
     "Telegram service error",
@@ -73,6 +73,7 @@ const createTelegramServiceError = (error: unknown): AccountServiceError =>
       return message;
     }
   );
+}
 
 // ============================================================================
 // API CLIENT
@@ -98,15 +99,15 @@ const callTelegramApi = createServiceCaller(createTelegramServiceError);
  * window.open(deepLink, '_blank');
  * ```
  */
-export const requestTelegramToken = async (
+export async function requestTelegramToken(
   userId: string
-): Promise<TelegramTokenResponse> => {
+): Promise<TelegramTokenResponse> {
   return callTelegramApi(() =>
     accountApiClient.post<TelegramTokenResponse>(
       `/users/${userId}/telegram/request-token`
     )
   );
-};
+}
 
 /**
  * Get the current Telegram connection status for a user.
@@ -122,13 +123,13 @@ export const requestTelegramToken = async (
  * }
  * ```
  */
-export const getTelegramStatus = async (
+export async function getTelegramStatus(
   userId: string
-): Promise<TelegramStatus> => {
+): Promise<TelegramStatus> {
   return callTelegramApi(() =>
     accountApiClient.get<TelegramStatus>(`/users/${userId}/telegram/status`)
   );
-};
+}
 
 /**
  * Disconnect Telegram account from user.
@@ -143,12 +144,12 @@ export const getTelegramStatus = async (
  * // User will no longer receive Telegram notifications
  * ```
  */
-export const disconnectTelegram = async (
+export async function disconnectTelegram(
   userId: string
-): Promise<TelegramDisconnectResponse> => {
+): Promise<TelegramDisconnectResponse> {
   return callTelegramApi(() =>
     accountApiClient.delete<TelegramDisconnectResponse>(
       `/users/${userId}/telegram/disconnect`
     )
   );
-};
+}
