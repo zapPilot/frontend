@@ -12,7 +12,7 @@ import { SUPPORTED_CHAINS } from "./definitions";
 export { SUPPORTED_CHAINS } from "./definitions";
 
 // Adapter functions
-export { getMainnetChains, toThirdWebChains } from "./adapters";
+export { toThirdWebChains } from "./adapters";
 
 /**
  * Get all supported chains in ThirdWeb format

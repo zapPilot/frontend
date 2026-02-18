@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 
 import type { ModalType } from "@/types/portfolio";
 
@@ -12,17 +12,17 @@ export function usePortfolioModalState() {
   const [activeModal, setActiveModal] = useState<ModalType | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const openModal = useCallback((type: ModalType | null) => {
+  const openModal = (type: ModalType | null) => {
     setActiveModal(type);
-  }, []);
+  };
 
-  const closeModal = useCallback(() => {
+  const closeModal = () => {
     setActiveModal(null);
-  }, []);
+  };
 
-  const openSettings = useCallback(() => {
+  const openSettings = () => {
     setIsSettingsOpen(true);
-  }, []);
+  };
 
   return {
     activeModal,

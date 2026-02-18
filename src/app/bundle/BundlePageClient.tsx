@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
 import { EmailReminderBanner } from "@/components/layout/banners/EmailReminderBanner";
@@ -77,65 +77,6 @@ export function BundlePageClient({
     return () => observer.disconnect();
   }, []);
 
-  const headerBanners = useMemo(
-    () => (
-      <>
-        <SwitchPromptBanner
-          show={vm.switchPrompt.show}
-          bundleUserName={vm.bundleUser?.displayName}
-          onSwitch={vm.switchPrompt.onSwitch}
-        />
-        {vm.emailBanner.show && (
-          <EmailReminderBanner
-            onSubscribe={vm.emailBanner.onSubscribe}
-            onDismiss={vm.emailBanner.onDismiss}
-          />
-        )}
-      </>
-    ),
-    [
-      vm.switchPrompt.show,
-      vm.bundleUser?.displayName,
-      vm.emailBanner.show,
-      vm.switchPrompt.onSwitch,
-      vm.emailBanner.onSubscribe,
-      vm.emailBanner.onDismiss,
-    ]
-  );
-
-  const walletManagerOverlay = useMemo(
-    () => (
-      <WalletManager
-        isOpen={vm.overlays.isWalletManagerOpen}
-        onClose={vm.overlays.closeWalletManager}
-        onEmailSubscribed={vm.overlays.onEmailSubscribed}
-        {...(userId ? { urlUserId: userId } : {})}
-      />
-    ),
-    [
-      userId,
-      vm.overlays.closeWalletManager,
-      vm.overlays.isWalletManagerOpen,
-      vm.overlays.onEmailSubscribed,
-    ]
-  );
-
-  const footerOverlays = useMemo(
-    () => (
-      <>
-        {vm.overlays.showQuickSwitch && (
-          <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
-        )}
-        {walletManagerOverlay}
-      </>
-    ),
-    [
-      vm.overlays.showQuickSwitch,
-      vm.switchPrompt.onSwitch,
-      walletManagerOverlay,
-    ]
-  );
-
   return (
     <DashboardShell
       urlUserId={userId}
@@ -143,8 +84,34 @@ export function BundlePageClient({
       isNewUser={isNewUser}
       isOwnBundle={vm.isOwnBundle}
       bundleUrl={vm.bundleUrl}
-      headerBanners={headerBanners}
-      footerOverlays={footerOverlays}
+      headerBanners={
+        <>
+          <SwitchPromptBanner
+            show={vm.switchPrompt.show}
+            bundleUserName={vm.bundleUser?.displayName}
+            onSwitch={vm.switchPrompt.onSwitch}
+          />
+          {vm.emailBanner.show && (
+            <EmailReminderBanner
+              onSubscribe={vm.emailBanner.onSubscribe}
+              onDismiss={vm.emailBanner.onDismiss}
+            />
+          )}
+        </>
+      }
+      footerOverlays={
+        <>
+          {vm.overlays.showQuickSwitch && (
+            <QuickSwitchFAB onSwitchToMyBundle={vm.switchPrompt.onSwitch} />
+          )}
+          <WalletManager
+            isOpen={vm.overlays.isWalletManagerOpen}
+            onClose={vm.overlays.closeWalletManager}
+            onEmailSubscribed={vm.overlays.onEmailSubscribed}
+            {...(userId ? { urlUserId: userId } : {})}
+          />
+        </>
+      }
       {...(vm.bundleUser?.displayName
         ? { bundleUserName: vm.bundleUser.displayName }
         : {})}

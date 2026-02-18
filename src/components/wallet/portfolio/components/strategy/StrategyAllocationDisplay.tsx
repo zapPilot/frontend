@@ -1,4 +1,4 @@
-import { ProgressBar } from "../shared";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface StrategyAllocationDisplayProps {
   targetAllocation: {
