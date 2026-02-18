@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { useMemo } from "react";
 
 import { ASSET_COLORS, getBarStyle } from "@/constants/assets";
 import type { AllocationConstituent } from "@/types/portfolio-allocation";
@@ -110,23 +109,21 @@ export function AllocationBars({
   cryptoAssets,
   stablePercentage,
 }: AllocationBarsProps): React.ReactElement {
-  const legendItems = useMemo(() => {
-    const items = cryptoAssets.map(asset => ({
-      symbol: asset.symbol,
-      percentage: asset.value,
-      color: asset.color,
-    }));
+  const items = cryptoAssets.map(asset => ({
+    symbol: asset.symbol,
+    percentage: asset.value,
+    color: asset.color,
+  }));
 
-    if (stablePercentage > 0) {
-      items.push({
-        symbol: "Stables",
-        percentage: stablePercentage,
-        color: ASSET_COLORS.USDT,
-      });
-    }
+  if (stablePercentage > 0) {
+    items.push({
+      symbol: "Stables",
+      percentage: stablePercentage,
+      color: ASSET_COLORS.USDT,
+    });
+  }
 
-    return items;
-  }, [cryptoAssets, stablePercentage]);
+  const legendItems = items;
 
   return (
     <div className={STYLES.container} data-testid="allocation-bars-container">

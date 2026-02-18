@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { StickyBannerShell } from "@/components/shared/StickyBannerShell";
+import { StickyBannerShell } from "@/components/layout/banners/StickyBannerShell";
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({

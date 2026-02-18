@@ -38,7 +38,7 @@ vi.mock("@/contexts/UserContext", () => ({
 }));
 
 // Mock SwitchPromptBanner
-vi.mock("@/components/bundle/SwitchPromptBanner", () => ({
+vi.mock("@/components/layout/banners/SwitchPromptBanner", () => ({
   SwitchPromptBanner: ({
     show,
     onStay,
@@ -83,7 +83,7 @@ vi.mock("@/components/bundle/QuickSwitchFAB", () => ({
 }));
 
 // Mock EmailReminderBanner
-vi.mock("@/components/EmailReminderBanner", () => ({
+vi.mock("@/components/layout/banners/EmailReminderBanner", () => ({
   EmailReminderBanner: ({
     onSubscribe,
     onDismiss,

@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 // Mock all child components
-vi.mock("@/components/shared/GhostModeOverlay", () => ({
+vi.mock("@/components/layout/overlays/GhostModeOverlay", () => ({
   GhostModeOverlay: ({
     children,
     enabled,

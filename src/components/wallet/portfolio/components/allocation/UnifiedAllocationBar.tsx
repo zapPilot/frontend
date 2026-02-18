@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useMemo } from "react";
 
 import { getBarStyle } from "@/constants/assets";
 import { cn } from "@/lib/ui/classNames";
@@ -124,15 +123,12 @@ export function UnifiedAllocationBar({
   title,
   testIdPrefix,
 }: UnifiedAllocationBarProps) {
-  // Memoize legend items to prevent unnecessary re-renders
-  const legendItems = useMemo(() => {
-    return segments.map(s => ({
-      symbol: s.category,
-      label: s.label,
-      percentage: s.percentage,
-      color: s.color,
-    }));
-  }, [segments]);
+  const legendItems = segments.map(s => ({
+    symbol: s.category,
+    label: s.label,
+    percentage: s.percentage,
+    color: s.color,
+  }));
 
   // Don't render if no segments
   if (segments.length === 0) {

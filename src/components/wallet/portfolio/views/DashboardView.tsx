@@ -1,7 +1,7 @@
 import { useSearchParams } from "next/navigation";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
-import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
+import { GhostModeOverlay } from "@/components/layout/overlays/GhostModeOverlay";
 import { SectionWrapper } from "@/components/shared/SectionWrapper";
 import {
   BalanceCard,

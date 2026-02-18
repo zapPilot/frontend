@@ -11,7 +11,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { GhostModeOverlay } from "@/components/shared/GhostModeOverlay";
+import { GhostModeOverlay } from "@/components/layout/overlays/GhostModeOverlay";
 
 // Mock the ConnectWalletButton to avoid thirdweb dependencies
 vi.mock("@/components/WalletManager/components/ConnectWalletButton", () => ({
