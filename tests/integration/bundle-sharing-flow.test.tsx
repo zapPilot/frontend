@@ -104,7 +104,7 @@ vi.mock("@/components/layout/banners/EmailReminderBanner", () => ({
 }));
 
 // Mock DashboardShell - includes footerOverlays which contains WalletManager
-vi.mock("@/components/DashboardShell", () => ({
+vi.mock("@/components/wallet/portfolio/DashboardShell", () => ({
   DashboardShell: ({
     urlUserId,
     isOwnBundle,

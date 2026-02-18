@@ -19,7 +19,7 @@ vi.mock("@/components/bundle", () => ({
   QuickSwitchFAB: () => null,
 }));
 
-vi.mock("@/components/DashboardShell", () => ({
+vi.mock("@/components/wallet/portfolio/DashboardShell", () => ({
   DashboardShell: ({
     headerBanners,
     footerOverlays,

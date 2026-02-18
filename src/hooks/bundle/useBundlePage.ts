@@ -198,31 +198,26 @@ export function useBundlePage(
     queryClient,
   ]);
 
-  const isDifferentUser = useMemo(
-    () => computeIsDifferentUser(isConnected, userInfo?.userId, userId),
-    [isConnected, userInfo?.userId, userId]
+  const isDifferentUser = computeIsDifferentUser(
+    isConnected,
+    userInfo?.userId,
+    userId
   );
 
   const showSwitchPrompt = !loading && isDifferentUser;
 
-  const isOwnBundle = useMemo(
-    () => isBundleOwned(userId, userInfo?.userId),
-    [userId, userInfo?.userId]
+  const isOwnBundle = isBundleOwned(userId, userInfo?.userId);
+  const bundleUrl = generateBundleUrl(userId);
+  const showQuickSwitch = computeShowQuickSwitch(
+    isConnected,
+    isOwnBundle,
+    userInfo?.userId
   );
-  const bundleUrl = useMemo(() => generateBundleUrl(userId), [userId]);
-  const showQuickSwitch = useMemo(
-    () => computeShowQuickSwitch(isConnected, isOwnBundle, userInfo?.userId),
-    [isConnected, isOwnBundle, userInfo?.userId]
-  );
-  const showEmailBanner = useMemo(
-    () =>
-      computeShowEmailBanner(
-        isConnected,
-        isOwnBundle,
-        userInfo?.email,
-        emailBannerDismissed
-      ),
-    [isConnected, isOwnBundle, userInfo?.email, emailBannerDismissed]
+  const showEmailBanner = computeShowEmailBanner(
+    isConnected,
+    isOwnBundle,
+    userInfo?.email,
+    emailBannerDismissed
   );
 
   useEffect(() => {

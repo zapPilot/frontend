@@ -14,7 +14,7 @@ vi.mock("@/components/wallet/portfolio/WalletPortfolio", () => ({
   WalletPortfolio: () => <div data-testid="wallet-portfolio" />,
 }));
 
-vi.mock("@/components/DashboardShell", () => ({
+vi.mock("@/components/wallet/portfolio/DashboardShell", () => ({
   DashboardShell: ({
     headerBanners,
     footerOverlays,

@@ -4,9 +4,9 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 
 import { QuickSwitchFAB } from "@/components/bundle";
-import { DashboardShell } from "@/components/DashboardShell";
 import { EmailReminderBanner } from "@/components/layout/banners/EmailReminderBanner";
 import { SwitchPromptBanner } from "@/components/layout/banners/SwitchPromptBanner";
+import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
 import { WalletManager } from "@/components/WalletManager";
 import { useUser } from "@/contexts/UserContext";
 import { useBundlePage } from "@/hooks/bundle/useBundlePage";

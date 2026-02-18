@@ -9,7 +9,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { DashboardShell } from "@/components/DashboardShell";
+import { DashboardShell } from "@/components/wallet/portfolio/DashboardShell";
 
 // Mock all dependencies
 const mockUsePortfolioDataProgressive = vi.fn();

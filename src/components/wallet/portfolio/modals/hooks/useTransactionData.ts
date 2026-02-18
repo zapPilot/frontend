@@ -130,9 +130,7 @@ export function useTransactionData({
     return mapTokenBalances(selectedToken, balanceQuery.data);
   }, [balanceQuery.data, selectedToken]);
 
-  const usdAmount = useMemo(() => {
-    return calculateUsdAmount(amount, selectedToken?.usdPrice);
-  }, [amount, selectedToken?.usdPrice]);
+  const usdAmount = calculateUsdAmount(amount, selectedToken?.usdPrice);
 
   const selectedChain: ChainData | null = useMemo(
     () => chainList.find(chain => chain.chainId === chainId) ?? null,

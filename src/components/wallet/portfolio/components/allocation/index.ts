@@ -27,10 +27,3 @@ export {
   mapPortfolioToUnified,
   mapStrategyToUnified,
 } from "./unifiedAllocationUtils";
-
-/**
- * @deprecated Use AllocationBarTooltip instead
- *
- * Renamed to avoid conflict with chart AllocationTooltip component.
- */
-export { AllocationBarTooltip as AllocationTooltip } from "./AllocationBarTooltip";

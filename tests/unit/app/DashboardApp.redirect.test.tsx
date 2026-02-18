@@ -16,7 +16,7 @@ vi.mock("../../../src/components/Navigation", () => ({
   ),
 }));
 
-vi.mock("@/components/DashboardShell", () => ({
+vi.mock("@/components/wallet/portfolio/DashboardShell", () => ({
   DashboardShell: () => <div data-testid="dashboard-shell" />,
 }));
 
