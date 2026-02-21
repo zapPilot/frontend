@@ -10,8 +10,7 @@
  * Simplified consolidation of useTransactionTokenData and useTransactionViewModel.
  */
 
-import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
@@ -42,6 +41,20 @@ interface UseTransactionDataParams {
    * Transaction amount as string
    */
   amount: string;
+}
+
+interface UseTransactionDataResult {
+  chainList: ChainData[];
+  selectedChain: ChainData | null;
+  availableTokens: TransactionToken[];
+  selectedToken: TransactionToken | null;
+  tokenQuery: UseQueryResult<TransactionToken[], Error>;
+  balances: Record<string, TokenBalance>;
+  balanceQuery: ReturnType<typeof useTokenBalanceQuery>;
+  usdAmount: number;
+  isLoadingTokens: boolean;
+  isLoadingBalance: boolean;
+  isLoading: boolean;
 }
 
 function normalizeChainList(
@@ -103,9 +116,9 @@ export function useTransactionData({
   chainId,
   tokenAddress,
   amount,
-}: UseTransactionDataParams) {
+}: UseTransactionDataParams): UseTransactionDataResult {
   const { data: chains } = useChainQuery();
-  const chainList = useMemo(() => normalizeChainList(chains), [chains]);
+  const chainList = normalizeChainList(chains);
 
   const tokenQuery = useQuery({
     queryKey: ["transaction-tokens", chainId],
@@ -118,24 +131,26 @@ export function useTransactionData({
     enabled: isOpen && Boolean(chainId),
   });
 
-  const selectedToken: TransactionToken | null = useMemo(() => {
-    return resolveSelectedToken(tokenQuery.data, tokenAddress);
-  }, [tokenAddress, tokenQuery.data]);
+  const selectedToken: TransactionToken | null = resolveSelectedToken(
+    tokenQuery.data,
+    tokenAddress
+  );
 
   const balanceQuery = useTokenBalanceQuery(chainId, selectedToken?.address, {
     enabled: isOpen && Boolean(selectedToken),
   });
 
-  const balances: Record<string, TokenBalance> = useMemo(() => {
-    return mapTokenBalances(selectedToken, balanceQuery.data);
-  }, [balanceQuery.data, selectedToken]);
+  const balances: Record<string, TokenBalance> = mapTokenBalances(
+    selectedToken,
+    balanceQuery.data
+  );
 
   const usdAmount = calculateUsdAmount(amount, selectedToken?.usdPrice);
 
-  const selectedChain: ChainData | null = useMemo(
-    () => chainList.find(chain => chain.chainId === chainId) ?? null,
-    [chainId, chainList]
-  );
+  const selectedChain: ChainData | null =
+    chainList.find(chain => chain.chainId === chainId) ?? null;
+  const isLoadingTokens = tokenQuery.isLoading;
+  const isLoadingBalance = balanceQuery.isLoading;
 
   return {
     chainList,
@@ -146,8 +161,8 @@ export function useTransactionData({
     balances,
     balanceQuery,
     usdAmount,
-    isLoadingTokens: tokenQuery.isLoading,
-    isLoadingBalance: balanceQuery.isLoading,
-    isLoading: tokenQuery.isLoading || balanceQuery.isLoading,
-  } as const;
+    isLoadingTokens,
+    isLoadingBalance,
+    isLoading: isLoadingTokens || isLoadingBalance,
+  };
 }

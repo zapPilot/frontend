@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 import {
   type BacktestConstituentsSource,
@@ -30,11 +30,8 @@ export function BacktestAllocationBar({
   strategyId,
   index,
   spotBreakdown,
-}: BacktestAllocationBarProps) {
-  const segments = useMemo(
-    () => mapBacktestToUnified(constituents),
-    [constituents]
-  );
+}: BacktestAllocationBarProps): ReactElement | null {
+  const segments = mapBacktestToUnified(constituents);
 
   // Don't render if no segments
   if (segments.length === 0) {

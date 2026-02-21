@@ -31,6 +31,25 @@ let mockResetState: ReturnType<typeof vi.fn>;
 let mockIsSubmitting: boolean;
 let mockStatus: string;
 
+function getMockTransactionData() {
+  return {
+    chainList: [{ chainId: 1, name: "Ethereum", symbol: "ETH" }],
+    selectedChain: { chainId: 1, name: "Ethereum" },
+    availableTokens: mockAvailableTokens,
+    selectedToken:
+      mockAvailableTokens.find(token => token.address === mockTokenAddress) ||
+      mockAvailableTokens[0] ||
+      null,
+    tokenQuery: { data: mockAvailableTokens, isLoading: false },
+    balances: {},
+    balanceQuery: { data: { balance: "1000" }, isLoading: false },
+    usdAmount: 100,
+    isLoadingTokens: false,
+    isLoadingBalance: false,
+    isLoading: false,
+  };
+}
+
 // Mock WalletProvider
 vi.mock("@/providers/WalletProvider", () => ({
   useWalletProvider: () => ({
@@ -65,22 +84,7 @@ vi.mock(
 vi.mock(
   "@/components/wallet/portfolio/modals/hooks/useTransactionData",
   () => ({
-    useTransactionData: vi.fn(() => ({
-      chainList: [{ chainId: 1, name: "Ethereum", symbol: "ETH" }],
-      selectedChain: { chainId: 1, name: "Ethereum" },
-      availableTokens: mockAvailableTokens,
-      selectedToken:
-        mockAvailableTokens.find(t => t.address === mockTokenAddress) ||
-        mockAvailableTokens[0] ||
-        null,
-      tokenQuery: { data: mockAvailableTokens, isLoading: false },
-      balances: {},
-      balanceQuery: { data: { balance: "1000" }, isLoading: false },
-      usdAmount: 100,
-      isLoadingTokens: false,
-      isLoadingBalance: false,
-      isLoading: false,
-    })),
+    useTransactionData: vi.fn(() => getMockTransactionData()),
   })
 );
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type ReactElement, useState } from "react";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
@@ -20,30 +20,24 @@ export function RebalanceModal({
   onClose,
   currentAllocation,
   targetAllocation,
-}: RebalanceModalProps) {
+}: RebalanceModalProps): ReactElement {
   const { isConnected } = useWalletProvider();
-  const [intensity] = useState(100);
 
-  // Status state (internalized from deleted useTransactionStatus)
   const [status, setStatus] = useState<"idle" | "submitting" | "success">(
     "idle"
   );
 
-  const projected = useMemo(
-    () =>
-      transactionService.computeProjectedAllocation(
-        intensity,
-        currentAllocation,
-        targetAllocation
-      ),
-    [currentAllocation, intensity, targetAllocation]
+  const projected = transactionService.computeProjectedAllocation(
+    100,
+    currentAllocation,
+    targetAllocation
   );
 
   const handleSubmit = async () => {
     setStatus("submitting");
     try {
       await transactionService.simulateRebalance(
-        intensity,
+        100,
         currentAllocation,
         targetAllocation
       );
@@ -61,9 +55,9 @@ export function RebalanceModal({
   const isSubmitting = status === "submitting" || status === "success";
   const actionLabel = resolveActionLabel({
     isConnected,
-    isReady: intensity !== 0,
+    isReady: true,
     readyLabel: "Confirm Rebalance",
-    notReadyLabel: "Set Intensity",
+    notReadyLabel: "",
   });
 
   return (
@@ -152,7 +146,7 @@ export function RebalanceModal({
 
               <TransactionActionButton
                 gradient="from-indigo-600 to-purple-600"
-                disabled={!isConnected || intensity === 0}
+                disabled={!isConnected}
                 onClick={handleSubmit}
                 label={actionLabel}
               />

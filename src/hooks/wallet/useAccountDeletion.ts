@@ -15,6 +15,11 @@ interface UseAccountDeletionParams {
   userId: string;
 }
 
+interface UseAccountDeletionReturn {
+  isDeletingAccount: boolean;
+  handleDeleteAccount: () => Promise<void>;
+}
+
 /**
  * Hook for account deletion operations
  *
@@ -24,7 +29,9 @@ interface UseAccountDeletionParams {
  * - Query invalidation and cleanup
  * - Page reload to reset application state
  */
-export function useAccountDeletion({ userId }: UseAccountDeletionParams) {
+export function useAccountDeletion({
+  userId,
+}: UseAccountDeletionParams): UseAccountDeletionReturn {
   const queryClient = useQueryClient();
   const { refetch } = useUser();
   const { showToast } = useToast();

@@ -1,4 +1,9 @@
-import { useCallback, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useState,
+} from "react";
 
 import { useAccountDeletion } from "@/hooks/wallet/useAccountDeletion";
 import { useWalletLabels } from "@/hooks/wallet/useWalletLabels";
@@ -28,6 +33,32 @@ interface UseWalletOperationsParams {
   isOpen: boolean;
 }
 
+interface UseWalletOperationsReturn {
+  wallets: ReturnType<typeof useWalletList>["wallets"];
+  operations: WalletOperations;
+  isRefreshing: ReturnType<typeof useWalletList>["isRefreshing"];
+  isAdding: boolean;
+  editingWallet: EditingWallet | null;
+  newWallet: NewWallet;
+  validationError: string | null;
+  isDeletingAccount: ReturnType<typeof useAccountDeletion>["isDeletingAccount"];
+  setIsAdding: Dispatch<SetStateAction<boolean>>;
+  setEditingWallet: Dispatch<SetStateAction<EditingWallet | null>>;
+  setNewWallet: Dispatch<SetStateAction<NewWallet>>;
+  setValidationError: Dispatch<SetStateAction<string | null>>;
+  loadWallets: ReturnType<typeof useWalletList>["loadWallets"];
+  handleDeleteWallet: ReturnType<
+    typeof useWalletMutations
+  >["handleDeleteWallet"];
+  handleEditLabel: ReturnType<typeof useWalletLabels>["handleEditLabel"];
+  handleAddWallet: () => Promise<void>;
+  handleCopyAddress: (address: string) => Promise<void>;
+  handleDeleteAccount: ReturnType<
+    typeof useAccountDeletion
+  >["handleDeleteAccount"];
+  handleSwitchWallet: (walletAddress: string) => Promise<void>;
+}
+
 /**
  * Facade hook that orchestrates wallet management operations
  *
@@ -39,12 +70,12 @@ interface UseWalletOperationsParams {
  *
  * Maintains backward compatibility with existing component interface.
  */
-export const useWalletOperations = ({
+export function useWalletOperations({
   viewingUserId,
   realUserId,
   isOwner,
   isOpen,
-}: UseWalletOperationsParams) => {
+}: UseWalletOperationsParams): UseWalletOperationsReturn {
   const { showToast } = useToast();
   const {
     connectedWallets = EMPTY_CONNECTED_WALLETS,
@@ -193,4 +224,4 @@ export const useWalletOperations = ({
     handleDeleteAccount: accountDeletion.handleDeleteAccount,
     handleSwitchWallet,
   };
-};
+}

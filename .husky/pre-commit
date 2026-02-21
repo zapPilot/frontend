@@ -1,24 +1,19 @@
-#!/bin/bash
-set -euo pipefail
+#!/usr/bin/env sh
+set -eu
 
-# Pre-commit quality gates (optimized for fail-fast)
-# Run fastest/most-likely-to-fail checks first to save developer time
+# Pre-commit quality gates (fast and reliable)
+# Keep commit-time checks focused on staged code and static analysis.
 
-echo "🔍 Running quality gates..."
+printf '%s\n' "🔍 Running pre-commit quality gates..."
 
-# Phase 1: Fast static analysis (15s total)
-echo "\n📋 Phase 1: Static Analysis"
-npm run type-check           # ~10s - TypeScript errors (most common)
-npm run deadcode:check       # ~5s  - Unused exports (now fails properly)
+# Phase 1: Staged file formatting/linting
+printf '\n📋 Phase 1: Staged Formatting & Linting\n'
+npx lint-staged
 
-# Phase 2: Code quality checks (13s total)
-echo "\n🎨 Phase 2: Code Quality"
-npx lint-staged             # ~2s  - Format & lint staged files
-npm run lint                # ~8s  - Full lint (complexity thresholds)
-npm run dup:all            # ~3s  - Duplicate code detection (fails if >2.5%)
+# Phase 2: Fast static analysis
+printf '\n📋 Phase 2: Fast Static Analysis\n'
+npm run type-check
+npm run deadcode:check
+npm run dup:all
 
-# Phase 3: Comprehensive testing (60s+)
-echo "\n🧪 Phase 3: Testing"
-npm run test:safeall       # ~60s - Full test suite + coverage
-
-echo "\n✅ All quality gates passed!"
+printf '\n✅ Pre-commit quality gates passed!\n'

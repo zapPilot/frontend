@@ -15,6 +15,23 @@ vi.mock("@/providers/WalletProvider", () => ({
   useWalletProvider: () => mockUseWalletProvider(),
 }));
 
+const mockTransactionData = {
+  chainList: [
+    { chainId: 1, name: "Ethereum", symbol: "ETH" },
+    { chainId: 42161, name: "Arbitrum", symbol: "ETH" },
+  ],
+  selectedChain: { chainId: 1, name: "Ethereum" },
+  availableTokens: [{ symbol: "USDC", address: "0x123", usdPrice: 1 }],
+  selectedToken: { symbol: "USDC", address: "0x123", usdPrice: 1 },
+  tokenQuery: { data: [], isLoading: false },
+  balances: {},
+  balanceQuery: { data: { balance: "1000" }, isLoading: false },
+  usdAmount: 100,
+  isLoadingTokens: false,
+  isLoadingBalance: false,
+  isLoading: false,
+};
+
 // Mock the 3 simplified hooks that TransactionModalBase uses
 vi.mock(
   "@/components/wallet/portfolio/modals/hooks/useTransactionForm",
@@ -37,22 +54,7 @@ vi.mock(
 vi.mock(
   "@/components/wallet/portfolio/modals/hooks/useTransactionData",
   () => ({
-    useTransactionData: vi.fn(() => ({
-      chainList: [
-        { chainId: 1, name: "Ethereum", symbol: "ETH" },
-        { chainId: 42161, name: "Arbitrum", symbol: "ETH" },
-      ],
-      selectedChain: { chainId: 1, name: "Ethereum" },
-      availableTokens: [{ symbol: "USDC", address: "0x123", usdPrice: 1 }],
-      selectedToken: { symbol: "USDC", address: "0x123", usdPrice: 1 },
-      tokenQuery: { data: [], isLoading: false },
-      balances: {},
-      balanceQuery: { data: { balance: "1000" }, isLoading: false },
-      usdAmount: 100,
-      isLoadingTokens: false,
-      isLoadingBalance: false,
-      isLoading: false,
-    })),
+    useTransactionData: vi.fn(() => mockTransactionData),
   })
 );
 

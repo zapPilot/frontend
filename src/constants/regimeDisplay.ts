@@ -68,11 +68,17 @@ export const REGIME_ID_MAP: Record<string, RegimeLabel> = {
   eg: "extreme_greed",
 };
 
-export function getRegimeConfig(idOrLabel: string) {
-  const label = REGIME_ID_MAP[idOrLabel] || idOrLabel;
-  // Default to neutral if the key is not found or invalid
-  const config =
-    REGIME_DISPLAY_CONFIG[label as RegimeLabel] ||
-    REGIME_DISPLAY_CONFIG["neutral"];
-  return config;
+export type RegimeDisplayConfig = (typeof REGIME_DISPLAY_CONFIG)[RegimeLabel];
+
+function isRegimeLabel(value: string): value is RegimeLabel {
+  return value in REGIME_DISPLAY_CONFIG;
+}
+
+export function getRegimeConfig(idOrLabel: string): RegimeDisplayConfig {
+  const mappedLabel = REGIME_ID_MAP[idOrLabel] ?? idOrLabel;
+  if (isRegimeLabel(mappedLabel)) {
+    return REGIME_DISPLAY_CONFIG[mappedLabel];
+  }
+
+  return REGIME_DISPLAY_CONFIG.neutral;
 }

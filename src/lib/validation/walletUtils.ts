@@ -6,6 +6,15 @@
 import { APIError, handleHTTPError } from "@/lib/http";
 import type { UserCryptoWallet } from "@/types/domain/user.types";
 
+export interface WalletData {
+  id: string;
+  address: string;
+  label: string;
+  isMain: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
 /**
  * Validate wallet address format
  */
@@ -14,7 +23,7 @@ export function validateWalletAddress(address: string): boolean {
   return ethRegex.test(address);
 }
 
-function toWalletData(wallet: UserCryptoWallet) {
+function toWalletData(wallet: UserCryptoWallet): WalletData {
   return {
     id: wallet.id,
     address: wallet.wallet,
@@ -29,7 +38,7 @@ function toWalletData(wallet: UserCryptoWallet) {
  * Transform UserCryptoWallet to component-friendly format
  * Maintains compatibility with existing WalletManager component structure
  */
-export function transformWalletData(wallets: UserCryptoWallet[]) {
+export function transformWalletData(wallets: UserCryptoWallet[]): WalletData[] {
   return wallets.map(wallet => toWalletData(wallet));
 }
 
@@ -51,6 +60,3 @@ export function handleWalletError(error: unknown): string {
 
   return handleHTTPError(error);
 }
-
-// Export convenience type for component usage
-export type WalletData = ReturnType<typeof transformWalletData>[0];

@@ -7,7 +7,7 @@
 
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useState } from "react";
 
 import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
 import { useUserById } from "@/hooks/queries/wallet/useUserQuery";
@@ -72,9 +72,9 @@ interface AnalyticsViewContainerProps {
 /**
  * Time period definitions
  */
-export const AnalyticsViewContainer = ({
+export function AnalyticsViewContainer({
   userId,
-}: AnalyticsViewContainerProps) => {
+}: AnalyticsViewContainerProps): ReactElement {
   // Find default period (1Y)
   const defaultPeriod: AnalyticsTimePeriod = DEFAULT_ANALYTICS_PERIOD;
 
@@ -87,19 +87,20 @@ export const AnalyticsViewContainer = ({
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
-  // NEW: Wallet filter state
   const [selectedWallet, setSelectedWallet] = useState<WalletFilter>(null);
 
-  // Get available wallets from bundle owner's data (not connected user)
   const { data: bundleOwnerInfo } = useUserById(userId);
-  const availableWallets: WalletOption[] = useMemo(
-    () =>
-      bundleOwnerInfo?.additionalWallets.map(w => ({
-        address: w.wallet_address,
-        label: w.label,
-      })) || [],
-    [bundleOwnerInfo?.additionalWallets]
-  );
+  const availableWallets: WalletOption[] = useMemo(() => {
+    const additionalWallets = bundleOwnerInfo?.additionalWallets;
+    if (!additionalWallets) {
+      return [];
+    }
+
+    return additionalWallets.map(wallet => ({
+      address: wallet.wallet_address,
+      label: wallet.label,
+    }));
+  }, [bundleOwnerInfo?.additionalWallets]);
 
   // Always show wallet selector (even for single-wallet users)
   // This allows users to see which wallet is associated with the bundle
@@ -128,7 +129,6 @@ export const AnalyticsViewContainer = ({
     setActiveChartTab(tab);
   };
 
-  // NEW: Handler for wallet filter change
   const handleWalletChange = (wallet: WalletFilter) => {
     setSelectedWallet(wallet);
   };
@@ -160,7 +160,6 @@ export const AnalyticsViewContainer = ({
     }
   };
 
-  // Error state (show error UI only when there's an actual error and no data)
   if (error && !data) {
     return <AnalyticsErrorState error={error} onRetry={refetch} />;
   }
@@ -181,11 +180,10 @@ export const AnalyticsViewContainer = ({
       isMonthlyPnLLoading={isMonthlyPnLLoading}
       isExporting={isExporting}
       exportError={exportError}
-      // NEW: Wallet filter props
       selectedWallet={selectedWallet}
       availableWallets={availableWallets}
       onWalletChange={handleWalletChange}
       showWalletSelector={showWalletSelector}
     />
   );
-};
+}

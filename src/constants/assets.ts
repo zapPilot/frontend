@@ -39,12 +39,18 @@ const BAR_OPACITY = {
   BORDER: "4D", // 30% - Subtle border
 } as const;
 
+interface BarStyle {
+  background: string;
+  borderColor: string;
+  boxShadow: string;
+}
+
 /**
  * Generate inline styles for allocation bar segments.
  * Creates a "glass" effect with vertical gradient and subtle bevel.
  * @param color - Base color hex (e.g., ASSET_COLORS.BTC)
  */
-export function getBarStyle(color: string) {
+export function getBarStyle(color: string): BarStyle {
   return {
     background: `linear-gradient(180deg, ${color}${BAR_OPACITY.TOP} 0%, ${color}${BAR_OPACITY.BOTTOM} 100%)`,
     borderColor: `${color}${BAR_OPACITY.BORDER}`,

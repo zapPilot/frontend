@@ -17,6 +17,6 @@ export { toThirdWebChains } from "./adapters";
 /**
  * Get all supported chains in ThirdWeb format
  */
-export function getThirdWebChains() {
+export function getThirdWebChains(): ReturnType<typeof toThirdWebChains> {
   return toThirdWebChains(SUPPORTED_CHAINS);
 }

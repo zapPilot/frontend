@@ -208,28 +208,6 @@ describe("BacktestAllocationBar", () => {
     expect(screen.queryByText(/Spot:/)).not.toBeInTheDocument();
   });
 
-  it("memoizes segments calculation", () => {
-    const constituents = { spot: 7000, lp: 1500, stable: 1500 };
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 70, color: "#f7931a" },
-      { id: "ETH", label: "ETH", percentage: 30, color: "#627eea" },
-    ]);
-
-    const { rerender } = render(
-      <BacktestAllocationBar displayName="AWP" constituents={constituents} />
-    );
-
-    expect(mockedMapBacktestToUnified).toHaveBeenCalledTimes(1);
-
-    // Rerender with same constituents
-    rerender(
-      <BacktestAllocationBar displayName="AWP" constituents={constituents} />
-    );
-
-    // Should not call mapping function again due to useMemo
-    expect(mockedMapBacktestToUnified).toHaveBeenCalledTimes(1);
-  });
-
   it("recalculates segments when constituents change", () => {
     mockedMapBacktestToUnified.mockReturnValue([
       { id: "BTC", label: "BTC", percentage: 70, color: "#f7931a" },

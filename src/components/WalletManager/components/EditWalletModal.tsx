@@ -1,5 +1,10 @@
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  useEffect,
+  useState,
+} from "react";
 
 import { BaseCard, GradientButton, LoadingSpinner } from "@/components/ui";
 import { ModalBackdrop } from "@/components/ui/modal";
@@ -16,13 +21,13 @@ interface EditWalletModalProps {
   onClose: () => void;
 }
 
-export const EditWalletModal = ({
+export function EditWalletModal({
   editingWallet,
   wallets,
   operations,
   onSave,
   onClose,
-}: EditWalletModalProps) => {
+}: EditWalletModalProps): ReactElement | null {
   const [newLabel, setNewLabel] = useState("");
 
   // Update newLabel when editingWallet changes
@@ -43,9 +48,9 @@ export const EditWalletModal = ({
     setNewLabel("");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleSave();
-    if (e.key === "Escape") handleClose();
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") handleSave();
+    if (event.key === "Escape") handleClose();
   };
 
   const wallet = wallets.find(w => w.id === editingWallet.id);
@@ -107,4 +112,4 @@ export const EditWalletModal = ({
       </BaseCard>
     </ModalBackdrop>
   );
-};
+}

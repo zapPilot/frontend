@@ -6,7 +6,7 @@
  */
 
 import { Check, ChevronDown, Wallet } from "lucide-react";
-import { useRef, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 
 import { useClickOutside } from "@/hooks/ui/useClickOutside";
 import type { WalletFilter, WalletOption } from "@/types/analytics";
@@ -52,20 +52,22 @@ export interface WalletFilterSelectorProps {
  * />
  * ```
  */
-export const WalletFilterSelector = ({
+export function WalletFilterSelector({
   selectedWallet,
   availableWallets,
   onChange,
   isLoading = false,
-}: WalletFilterSelectorProps) => {
+}: WalletFilterSelectorProps): ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Get current selection display text
-  const currentLabel = selectedWallet
-    ? availableWallets.find(w => w.address === selectedWallet)?.label ||
-      formatAddress(selectedWallet)
-    : "All Wallets";
+  let currentLabel = "All Wallets";
+  if (selectedWallet !== null) {
+    const selectedWalletLabel = availableWallets.find(
+      wallet => wallet.address === selectedWallet
+    )?.label;
+    currentLabel = selectedWalletLabel || formatAddress(selectedWallet);
+  }
 
   // Close dropdown when clicking outside or pressing Escape
   useClickOutside(dropdownRef, () => setIsOpen(false), isOpen);
@@ -82,7 +84,7 @@ export const WalletFilterSelector = ({
     <div className="relative" ref={dropdownRef}>
       {/* Dropdown trigger button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(previous => !previous)}
         disabled={isLoading}
         className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-900 hover:bg-gray-800 border border-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Filter by wallet"
@@ -157,4 +159,4 @@ export const WalletFilterSelector = ({
       )}
     </div>
   );
-};
+}

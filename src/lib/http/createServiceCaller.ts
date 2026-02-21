@@ -25,14 +25,14 @@
  * @param errorMapper - Function to transform errors into service-specific error types
  * @returns A function that wraps service calls with error handling
  */
-export const createServiceCaller = <TError extends Error>(
+export function createServiceCaller<TError extends Error>(
   errorMapper: (error: unknown) => TError
-) => {
-  return async <T>(call: () => Promise<T>): Promise<T> => {
+): <T>(call: () => Promise<T>) => Promise<T> {
+  return async function callService<T>(call: () => Promise<T>): Promise<T> {
     try {
       return await call();
     } catch (error) {
       throw errorMapper(error);
     }
   };
-};
+}

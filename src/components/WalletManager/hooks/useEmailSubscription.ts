@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { useUser } from "@/contexts/UserContext";
 import { useOperationStateHandlers } from "@/hooks/utils/useOperationState";
@@ -19,11 +25,23 @@ interface UseEmailSubscriptionParams {
   onEmailSubscribed: (() => void) | undefined;
 }
 
-export const useEmailSubscription = ({
+interface UseEmailSubscriptionReturn {
+  email: string;
+  subscribedEmail: string | null;
+  isEditingSubscription: boolean;
+  subscriptionOperation: OperationState;
+  setEmail: Dispatch<SetStateAction<string>>;
+  handleSubscribe: () => Promise<void>;
+  handleUnsubscribe: () => Promise<void>;
+  startEditingSubscription: () => void;
+  cancelEditingSubscription: () => void;
+}
+
+export function useEmailSubscription({
   realUserId,
   isOpen,
   onEmailSubscribed,
-}: UseEmailSubscriptionParams) => {
+}: UseEmailSubscriptionParams): UseEmailSubscriptionReturn {
   const { showToast } = useToast();
   const { userInfo } = useUser();
 
@@ -160,4 +178,4 @@ export const useEmailSubscription = ({
     startEditingSubscription,
     cancelEditingSubscription,
   };
-};
+}

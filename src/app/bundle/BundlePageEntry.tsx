@@ -1,11 +1,12 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import type { ReactElement } from "react";
 
 import { logger } from "../../utils/logger";
 import { BundlePageClient } from "./BundlePageClient";
 
-export function BundlePageEntry() {
+export function BundlePageEntry(): ReactElement {
   const searchParams = useSearchParams();
 
   let userId = "";

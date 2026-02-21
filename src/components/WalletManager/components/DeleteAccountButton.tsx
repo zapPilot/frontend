@@ -1,5 +1,5 @@
 import { AlertTriangle, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 
 import { GradientButton } from "@/components/ui";
 import { GRADIENTS } from "@/constants/design-system";
@@ -9,10 +9,10 @@ interface DeleteAccountButtonProps {
   isDeleting: boolean;
 }
 
-export const DeleteAccountButton = ({
+export function DeleteAccountButton({
   onDelete,
   isDeleting,
-}: DeleteAccountButtonProps) => {
+}: DeleteAccountButtonProps): ReactElement {
   const [showConfirm, setShowConfirm] = useState(false);
 
   if (!showConfirm) {
@@ -72,4 +72,4 @@ export const DeleteAccountButton = ({
       </div>
     </div>
   );
-};
+}

@@ -71,13 +71,22 @@ npm run type-check
 
 ## Pre-commit Hooks
 
-The project uses Husky and lint-staged to run quality checks before commits:
+The project uses Husky and lint-staged to run quality checks automatically:
 
-- **Prettier** - Formats staged files
-- **ESLint** - Lints and fixes staged files
-- **TypeScript** - Type checks (in CI)
+### On Commit (`.husky/pre-commit`)
 
-These hooks run automatically when you commit. If they fail, fix the issues before committing.
+- **lint-staged** - Runs Prettier and ESLint fixers on staged files
+- **TypeScript** - `npm run type-check`
+- **Dead code scan** - `npm run deadcode:check`
+- **Duplicate code scan** - `npm run dup:all`
+
+### On Push (`.husky/pre-push`)
+
+- **Full lint** - `npm run lint`
+- **Comprehensive tests** - `npm run test:safeall`
+
+If a hook fails, fix the reported issues and re-run commit/push. CI remains the final gate for
+shared branches.
 
 ### Handling Code Duplication Failures
 

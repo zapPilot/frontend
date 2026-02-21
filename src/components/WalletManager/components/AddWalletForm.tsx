@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
+import { type ChangeEvent, type ReactElement } from "react";
 
 import { GradientButton, LoadingSpinner } from "@/components/ui";
 import { ANIMATIONS, GRADIENTS } from "@/constants/design-system";
@@ -17,7 +18,7 @@ interface AddWalletFormProps {
   onStartAdding: () => void;
 }
 
-export const AddWalletForm = ({
+export function AddWalletForm({
   isAdding,
   newWallet,
   operations,
@@ -26,13 +27,13 @@ export const AddWalletForm = ({
   onAddWallet,
   onCancel,
   onStartAdding,
-}: AddWalletFormProps) => {
-  const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onWalletChange({ label: e.target.value });
+}: AddWalletFormProps): ReactElement {
+  const handleLabelChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onWalletChange({ label: event.target.value });
   };
 
-  const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onWalletChange({ address: e.target.value });
+  const handleAddressChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onWalletChange({ address: event.target.value });
   };
 
   if (isAdding) {
@@ -109,4 +110,4 @@ export const AddWalletForm = ({
       Add Another Wallet
     </GradientButton>
   );
-};
+}

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { SIMPLE_REGIME_STRATEGY_ID } from "@/components/wallet/portfolio/views/backtesting/constants";
 
 import { useStrategyConfigs } from "./useStrategyConfigs";
 
@@ -11,12 +11,12 @@ import { useStrategyConfigs } from "./useStrategyConfigs";
  * @param enabled - Whether to enable the underlying configs query
  * @returns The config_id of the default preset, or undefined if not yet loaded
  */
-export function useDefaultPresetId(enabled: boolean) {
+export function useDefaultPresetId(enabled: boolean): string | undefined {
   const { data: configsResponse } = useStrategyConfigs(enabled);
 
-  return useMemo(() => {
-    const presets = configsResponse?.presets ?? [];
-    const regimePreset = presets.find(p => p.strategy_id === "simple_regime");
-    return regimePreset?.config_id ?? presets[0]?.config_id;
-  }, [configsResponse]);
+  const presets = configsResponse?.presets ?? [];
+  const regimePreset = presets.find(
+    p => p.strategy_id === SIMPLE_REGIME_STRATEGY_ID
+  );
+  return regimePreset?.config_id ?? presets[0]?.config_id;
 }

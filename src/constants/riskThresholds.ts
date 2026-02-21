@@ -96,6 +96,13 @@ export const RISK_LABELS = {
   [RiskLevel.CRITICAL]: "Critical",
 } as const;
 
+export interface RiskConfig {
+  level: RiskLevel;
+  colors: (typeof RISK_COLORS)[RiskLevel];
+  label: (typeof RISK_LABELS)[RiskLevel];
+  emoji: string;
+}
+
 /**
  * Determines risk level from health rate value
  *
@@ -140,13 +147,15 @@ export function getRiskLevel(healthRate: number): RiskLevel {
  * // }
  * ```
  */
-export function getRiskConfig(healthRate: number) {
+export function getRiskConfig(healthRate: number): RiskConfig {
   const level = getRiskLevel(healthRate);
+  const colors = RISK_COLORS[level];
+
   return {
     level,
-    colors: RISK_COLORS[level],
+    colors,
     label: RISK_LABELS[level],
-    emoji: RISK_COLORS[level].emoji,
+    emoji: colors.emoji,
   };
 }
 

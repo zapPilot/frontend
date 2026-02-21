@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import { GradientButton, LoadingSpinner } from "@/components/ui";
 
 import type { OperationState } from "../types/wallet.types";
@@ -14,7 +16,7 @@ interface EmailSubscriptionProps {
   onCancelEditing: () => void;
 }
 
-export const EmailSubscription = ({
+export function EmailSubscription({
   email,
   subscribedEmail,
   isEditingSubscription,
@@ -24,7 +26,7 @@ export const EmailSubscription = ({
   onUnsubscribe,
   onStartEditing,
   onCancelEditing,
-}: EmailSubscriptionProps) => {
+}: EmailSubscriptionProps): ReactElement {
   return (
     <div className="p-6 bg-gray-900/20">
       <h3 className="text-sm font-medium text-gray-300 mb-3">
@@ -96,4 +98,4 @@ export const EmailSubscription = ({
       )}
     </div>
   );
-};
+}

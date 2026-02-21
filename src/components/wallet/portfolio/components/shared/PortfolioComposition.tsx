@@ -1,5 +1,5 @@
 import { Zap } from "lucide-react";
-import { useMemo } from "react";
+import type { ReactElement } from "react";
 
 import { type WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { GradientButton } from "@/components/ui";
@@ -83,8 +83,7 @@ export function PortfolioComposition({
   isOwnBundle = true,
   isLoading = false,
   onRebalance,
-}: PortfolioCompositionProps) {
-  // Disable actions if empty state OR not own bundle (visitor mode)
+}: PortfolioCompositionProps): ReactElement | null {
   const isActionsDisabled = isEmptyState || !isOwnBundle;
   // Determine target breakdown source
   // Priority: 1. Explicit prop (from progressive loading) 2. Derived from Regime 3. Fallback
@@ -98,35 +97,29 @@ export function PortfolioComposition({
     };
   }
 
-  // Build target segments (BTC + STABLE)
-  const targetSegments = useMemo(() => {
-    if (!target) return [];
-    return buildTargetUnifiedSegments(target);
-  }, [target]);
-
-  // Build current portfolio segments
-  const currentSegments = useMemo(() => {
-    const cryptoAssets =
-      isEmptyState && currentRegime
-        ? buildTargetCryptoAssets(currentRegime)
-        : buildRealCryptoAssets(data);
-
-    const stablePercentage = isEmptyState
-      ? (target?.stable ?? 0)
-      : data.currentAllocation.stable;
-
-    return mapLegacyConstituentsToUnified(cryptoAssets, stablePercentage);
-  }, [data, isEmptyState, currentRegime, target]);
-
-  // Early return for loading state
   if (isLoading) {
     return <PortfolioCompositionSkeleton />;
   }
 
-  // If we still have no target (missing prop AND missing regime), we can't render meaningful bars
   if (!target) {
     return null;
   }
+
+  const targetSegments = buildTargetUnifiedSegments(target);
+
+  const cryptoAssets =
+    isEmptyState && currentRegime
+      ? buildTargetCryptoAssets(currentRegime)
+      : buildRealCryptoAssets(data);
+
+  const stablePercentage = isEmptyState
+    ? target.stable
+    : data.currentAllocation.stable;
+
+  const currentSegments = mapLegacyConstituentsToUnified(
+    cryptoAssets,
+    stablePercentage
+  );
 
   return (
     <div className={STYLES.container} data-testid="composition-bar">

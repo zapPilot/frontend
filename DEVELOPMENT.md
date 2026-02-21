@@ -119,7 +119,8 @@ On every push/PR to main/develop:
 - `.vscode/settings.json` - VS Code workspace settings
 - `.vscode/extensions.json` - Recommended extensions
 - `.editorconfig` - Cross-editor configuration
-- `.husky/pre-commit` - Git pre-commit hook
+- `.husky/pre-commit` - Fast commit-time checks (lint-staged, type-check, deadcode, dup)
+- `.husky/pre-push` - Heavy push-time checks (full lint + `test:safeall`)
 
 ### CI/CD Workflows
 
