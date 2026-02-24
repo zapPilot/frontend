@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
 set -eu
 
-# Pre-commit quality gates (fast and reliable)
-# Keep commit-time checks focused on staged code and static analysis.
+# Pre-commit quality gates (strict local safety)
+# Block commits unless static analysis and comprehensive tests pass.
 
 printf '%s\n' "🔍 Running pre-commit quality gates..."
 
@@ -15,5 +15,9 @@ printf '\n📋 Phase 2: Fast Static Analysis\n'
 npm run type-check
 npm run deadcode:check
 npm run dup:all
+
+# Phase 3: Comprehensive tests
+printf '\n🧪 Phase 3: Comprehensive Test Suite\n'
+npm run test:safeall
 
 printf '\n✅ Pre-commit quality gates passed!\n'

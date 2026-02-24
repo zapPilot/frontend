@@ -79,14 +79,10 @@ The project uses Husky and lint-staged to run quality checks automatically:
 - **TypeScript** - `npm run type-check`
 - **Dead code scan** - `npm run deadcode:check`
 - **Duplicate code scan** - `npm run dup:all`
-
-### On Push (`.husky/pre-push`)
-
-- **Full lint** - `npm run lint`
 - **Comprehensive tests** - `npm run test:safeall`
 
-If a hook fails, fix the reported issues and re-run commit/push. CI remains the final gate for
-shared branches.
+There is no local `pre-push` hook by design. If a hook fails, fix the reported issues and re-run
+commit. CI remains the final gate for shared branches.
 
 ### Handling Code Duplication Failures
 

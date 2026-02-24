@@ -69,6 +69,8 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env['CI'],
+    // Always launch this repo's app to avoid accidentally targeting a
+    // different local server already listening on port 3000.
+    reuseExistingServer: false,
   },
 });

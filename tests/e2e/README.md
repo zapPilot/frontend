@@ -406,6 +406,8 @@ routes (`/bundle` for production, `/layout-demo/v22` for forced V22)
 - Check Node.js version (should match CI)
 - Clear Playwright cache: `npx playwright install --force`
 - Ensure dev server is running: `npm run dev`
+- If Playwright exits with `http://localhost:3000 is already used`, stop or move the other process
+  using port `3000`, then rerun `npm run test:e2e`
 
 ### Tests Timeout Frequently
 

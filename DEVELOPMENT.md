@@ -18,7 +18,8 @@ and CI/CD pipelines.
 
 - **Husky** - Git hooks management
 - **lint-staged** - Run linters on staged files only
-- **Pre-commit hooks** - Automatic formatting and linting before commits
+- **Pre-commit hooks** - Automatic staged linting, static analysis, and comprehensive tests before
+  commits
 
 ### CI/CD Pipelines
 
@@ -69,7 +70,10 @@ etc.) now include both passes, so failures will surface whenever either tool det
 3. **Commit** - Pre-commit hooks automatically run:
    - Prettier formatting
    - ESLint fixing
-   - Type checking (in CI)
+   - Type checking
+   - Dead code scan
+   - Duplicate code scan
+   - Comprehensive tests (`npm run test:safeall`)
 
 ### Quality Checks
 
@@ -119,8 +123,9 @@ On every push/PR to main/develop:
 - `.vscode/settings.json` - VS Code workspace settings
 - `.vscode/extensions.json` - Recommended extensions
 - `.editorconfig` - Cross-editor configuration
-- `.husky/pre-commit` - Fast commit-time checks (lint-staged, type-check, deadcode, dup)
-- `.husky/pre-push` - Heavy push-time checks (full lint + `test:safeall`)
+- `.husky/pre-commit` - Strict commit-time checks (lint-staged, type-check, deadcode, dup,
+  `test:safeall`)
+- No `.husky/pre-push` hook (intentional; CI is the final shared-branch gate)
 
 ### CI/CD Workflows
 
@@ -206,7 +211,7 @@ npm run format
 
 ```bash
 # Fix issues and re-commit
-npm run format && npm run lint:fix
+npm run format && npm run lint:fix && npm run test:safeall
 git add .
 git commit -m "fix: resolve linting issues"
 ```
