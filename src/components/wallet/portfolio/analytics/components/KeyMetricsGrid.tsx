@@ -5,7 +5,7 @@
  */
 
 import { Activity, ArrowDownRight, ArrowUpRight } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { KeyMetrics, MetricData } from "@/types/analytics";
@@ -37,10 +37,10 @@ interface KeyMetricsGridProps {
  *
  * Displays a 4-column grid of key analytics metrics with trend indicators.
  */
-export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({
+export function KeyMetricsGrid({
   metrics,
   isLoading = false,
-}) => {
+}: KeyMetricsGridProps): ReactElement {
   const metricList: MetricData[] = [
     metrics.timeWeightedReturn,
     metrics.maxDrawdown,
@@ -96,4 +96,4 @@ export const KeyMetricsGrid: React.FC<KeyMetricsGridProps> = ({
       ))}
     </div>
   );
-};
+}

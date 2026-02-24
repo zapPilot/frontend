@@ -12,7 +12,10 @@ import { z } from "zod";
  * const user = validateUser(apiResponse); // typed as User
  * ```
  */
-export const createValidator =
-  <T>(schema: z.ZodSchema<T>) =>
-  (data: unknown): T =>
-    schema.parse(data);
+export function createValidator<T>(
+  schema: z.ZodSchema<T>
+): (data: unknown) => T {
+  return function validate(data: unknown): T {
+    return schema.parse(data);
+  };
+}

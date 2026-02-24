@@ -47,7 +47,11 @@ vi.mock("../../src/services/analyticsService", async () => {
 
 setupMockCleanup();
 
-const createWrapper = () => createQueryWrapper().QueryWrapper;
+function createWrapper(): ReturnType<
+  typeof createQueryWrapper
+>["QueryWrapper"] {
+  return createQueryWrapper().QueryWrapper;
+}
 
 // Mock data generators
 function createMockPoolDetails(count = 3): PoolDetail[] {

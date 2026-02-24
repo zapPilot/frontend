@@ -27,26 +27,28 @@ vi.mock("@/services", () => ({
 }));
 
 // Create factory functions for mocks to avoid hoisting issues
-const createMocks = () => ({
-  mockSetValue: vi.fn(),
-  mockCloseDropdowns: vi.fn(),
-  mockBuildModalFormState: vi.fn(() => ({
-    handlePercentage: vi.fn(),
-    isValid: false,
-  })),
-  mockResolveActionLabel: vi.fn(() => "Action Label"),
-  mockModalState: {
-    transactionData: {
-      tokenQuery: { data: [] },
-      balances: {},
-      selectedToken: null,
+function createMocks() {
+  return {
+    mockSetValue: vi.fn(),
+    mockCloseDropdowns: vi.fn(),
+    mockBuildModalFormState: vi.fn(() => ({
+      handlePercentage: vi.fn(),
+      isValid: false,
+    })),
+    mockResolveActionLabel: vi.fn(() => "Action Label"),
+    mockModalState: {
+      transactionData: {
+        tokenQuery: { data: [] },
+        balances: {},
+        selectedToken: null,
+      },
+      form: {
+        setValue: vi.fn(),
+        watch: vi.fn(),
+      },
     },
-    form: {
-      setValue: vi.fn(),
-      watch: vi.fn(),
-    },
-  },
-});
+  };
+}
 
 const mocks = createMocks();
 

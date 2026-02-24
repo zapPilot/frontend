@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ToastProvider, useToast } from "@/providers/ToastProvider";
 
 // Test component that uses the toast hook
-const TestComponent = () => {
+function TestComponent() {
   const { showToast, hideToast } = useToast();
   return (
     <div>
@@ -23,7 +23,7 @@ const TestComponent = () => {
       <button onClick={() => hideToast("test-id")}>Hide Toast</button>
     </div>
   );
-};
+}
 
 describe("ToastProvider", () => {
   it("provides toast context to children", () => {

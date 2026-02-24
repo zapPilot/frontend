@@ -42,7 +42,10 @@ interface UseBundlePageResult {
 }
 
 const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
-const NOOP_SWITCH_ACTIVE_WALLET = () => Promise.resolve();
+
+function NOOP_SWITCH_ACTIVE_WALLET(): Promise<void> {
+  return Promise.resolve();
+}
 
 async function invalidateWalletSwitchQueries(
   queryClient: QueryClient

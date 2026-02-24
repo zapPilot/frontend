@@ -18,7 +18,9 @@ import type {
 } from "@/types/domain/transaction";
 import { clamp } from "@/utils/mathUtils";
 
-const delay = (ms = 700) => new Promise(resolve => setTimeout(resolve, ms));
+function delay(ms = 700): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function simulateBasicTransaction(
   type: TransactionResult["type"],
@@ -95,10 +97,11 @@ const MOCK_TOKEN_BALANCES: Record<
   "137:0xmatic": { balance: "1200", usdValue: 984 },
 };
 
-const createTxHash = () =>
-  `0x${Math.random().toString(16).slice(2)}${Math.random()
+function createTxHash(): string {
+  return `0x${Math.random().toString(16).slice(2)}${Math.random()
     .toString(16)
     .slice(2)}`.slice(0, 66);
+}
 
 export async function getSupportedTokens(
   chainId: number

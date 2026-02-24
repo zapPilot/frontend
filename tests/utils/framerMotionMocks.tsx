@@ -99,9 +99,9 @@ export const mockFramerMotion = {
 /**
  * Mock AnimatePresence component (pass-through)
  */
-export const MockAnimatePresence = ({ children }: { children: ReactNode }) => {
+export function MockAnimatePresence({ children }: { children: ReactNode }) {
   return <>{children}</>;
-};
+}
 
 /**
  * Setup function to apply all Framer Motion mocks

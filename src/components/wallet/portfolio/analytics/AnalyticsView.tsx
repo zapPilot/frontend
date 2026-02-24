@@ -5,6 +5,8 @@
  * Receives all data and handlers via props
  */
 
+import type { ReactElement } from "react";
+
 import type {
   AnalyticsData,
   AnalyticsTimePeriod,
@@ -64,7 +66,7 @@ interface AnalyticsViewProps {
  *
  * All state and data fetching handled by AnalyticsViewContainer.
  */
-export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
+export function AnalyticsView({
   data,
   selectedPeriod,
   activeChartTab,
@@ -79,39 +81,41 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   availableWallets,
   onWalletChange,
   showWalletSelector,
-}) => (
-  <div className="space-y-6 animate-in fade-in duration-500">
-    {/* Header */}
-    <AnalyticsHeader
-      onExport={onExport}
-      isExporting={isExporting}
-      exportError={exportError}
-      selectedWallet={selectedWallet}
-      availableWallets={availableWallets}
-      onWalletChange={onWalletChange}
-      showWalletSelector={showWalletSelector}
-    />
+}: AnalyticsViewProps): ReactElement {
+  return (
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Header */}
+      <AnalyticsHeader
+        onExport={onExport}
+        isExporting={isExporting}
+        exportError={exportError}
+        selectedWallet={selectedWallet}
+        availableWallets={availableWallets}
+        onWalletChange={onWalletChange}
+        showWalletSelector={showWalletSelector}
+      />
 
-    {/* Primary Chart Section with Tabs */}
-    <ChartSection
-      data={data}
-      selectedPeriod={selectedPeriod}
-      activeChartTab={activeChartTab}
-      onPeriodChange={onPeriodChange}
-      onChartTabChange={onChartTabChange}
-      isLoading={isLoading}
-    />
+      {/* Primary Chart Section with Tabs */}
+      <ChartSection
+        data={data}
+        selectedPeriod={selectedPeriod}
+        activeChartTab={activeChartTab}
+        onPeriodChange={onPeriodChange}
+        onChartTabChange={onChartTabChange}
+        isLoading={isLoading}
+      />
 
-    {/* Key Metrics Grid */}
-    <KeyMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
+      {/* Key Metrics Grid */}
+      <KeyMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
 
-    {/* Additional Metrics Row */}
-    <AdditionalMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
+      {/* Additional Metrics Row */}
+      <AdditionalMetricsGrid metrics={data.keyMetrics} isLoading={isLoading} />
 
-    {/* PnL Heatmap - Uses independent loading state for yield/daily endpoint */}
-    <MonthlyPnLHeatmap
-      monthlyPnL={data.monthlyPnL}
-      isLoading={isMonthlyPnLLoading}
-    />
-  </div>
-);
+      {/* PnL Heatmap - Uses independent loading state for yield/daily endpoint */}
+      <MonthlyPnLHeatmap
+        monthlyPnL={data.monthlyPnL}
+        isLoading={isMonthlyPnLLoading}
+      />
+    </div>
+  );
+}

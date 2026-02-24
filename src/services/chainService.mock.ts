@@ -36,7 +36,9 @@ const MOCK_CHAIN_DATA: ChainData[] = [
   },
 ];
 
-const delay = (ms = 120) => new Promise(resolve => setTimeout(resolve, ms));
+function delay(ms = 120): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export async function getSupportedChains(): Promise<ChainData[]> {
   await delay();

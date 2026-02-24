@@ -23,7 +23,7 @@ vi.mock("../../../src/utils/logger", () => ({
   },
 }));
 
-const TestComponent = () => {
+function TestComponent() {
   const { userInfo, loading, error, isConnected, triggerRefetch } = useUser();
   return (
     <div>
@@ -40,7 +40,7 @@ const TestComponent = () => {
       </button>
     </div>
   );
-};
+}
 
 describe("UserContext", () => {
   const mockRefetch = vi.fn();

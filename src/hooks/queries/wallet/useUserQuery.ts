@@ -50,13 +50,12 @@ function buildUserInfo({
 }: BuildUserInfoInput): UserInfo {
   const wallets = profileData.wallets || [];
   const userEmail = profileData.user?.email || "";
-
-  const bundleWallets =
-    wallets.length > 0
-      ? wallets.map(w => w.wallet)
-      : fallbackWallet
-        ? [fallbackWallet]
-        : [];
+  let bundleWallets: string[] = [];
+  if (wallets.length > 0) {
+    bundleWallets = wallets.map(w => w.wallet);
+  } else if (fallbackWallet) {
+    bundleWallets = [fallbackWallet];
+  }
 
   const additionalWallets = wallets.map(w => ({
     wallet_address: w.wallet,

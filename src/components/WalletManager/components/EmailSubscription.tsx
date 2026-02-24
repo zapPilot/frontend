@@ -27,6 +27,8 @@ export function EmailSubscription({
   onStartEditing,
   onCancelEditing,
 }: EmailSubscriptionProps): ReactElement {
+  const subscribeButtonText = subscribedEmail ? "Save" : "Subscribe";
+
   return (
     <div className="p-6 bg-gray-900/20">
       <h3 className="text-sm font-medium text-gray-300 mb-3">
@@ -72,10 +74,8 @@ export function EmailSubscription({
             >
               {subscriptionOperation.isLoading ? (
                 <LoadingSpinner size="sm" color="white" />
-              ) : subscribedEmail ? (
-                "Save"
               ) : (
-                "Subscribe"
+                subscribeButtonText
               )}
             </GradientButton>
             {subscribedEmail && (

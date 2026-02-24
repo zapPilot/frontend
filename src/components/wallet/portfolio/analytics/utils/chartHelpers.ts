@@ -14,18 +14,19 @@
  * @param getY - Function to extract Y pixel coordinate from point
  * @returns SVG path string (space-separated "x,y" pairs)
  */
-export const buildPath = <T extends { x: number }>(
+export function buildPath<T extends { x: number }>(
   points: T[],
   width: number,
   getY: (point: T) => number
-): string =>
-  points
+): string {
+  return points
     .map(point => {
       const x = (point.x / 100) * width;
       const y = getY(point);
       return `${x},${y}`;
     })
     .join(" L ");
+}
 
 /**
  * Grid line positions (percentages from top)

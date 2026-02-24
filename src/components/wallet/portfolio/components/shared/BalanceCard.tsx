@@ -31,13 +31,20 @@ const STYLES = {
 } as const;
 
 /** Get button className based on action type and disabled state */
-const getButtonClassName = (
+function getButtonClassName(
   type: "deposit" | "withdraw",
   isDisabled: boolean
-): string => {
-  if (isDisabled) return `${STYLES.buttonBase} ${STYLES.buttonDisabled}`;
-  return `${STYLES.buttonBase} ${type === "deposit" ? STYLES.depositEnabled : STYLES.withdrawEnabled}`;
-};
+): string {
+  if (isDisabled) {
+    return `${STYLES.buttonBase} ${STYLES.buttonDisabled}`;
+  }
+
+  if (type === "deposit") {
+    return `${STYLES.buttonBase} ${STYLES.depositEnabled}`;
+  }
+
+  return `${STYLES.buttonBase} ${STYLES.withdrawEnabled}`;
+}
 
 interface BalanceCardProps {
   balance: number;

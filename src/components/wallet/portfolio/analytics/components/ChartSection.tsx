@@ -5,6 +5,7 @@
  */
 
 import { ArrowDownRight, TrendingUp } from "lucide-react";
+import type { ElementType, ReactElement } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 import type { AnalyticsData, AnalyticsTimePeriod } from "@/types/analytics";
@@ -19,7 +20,7 @@ import { ANALYTICS_TIME_PERIODS } from "../constants";
 interface ChartTab {
   id: "performance" | "drawdown";
   label: string;
-  icon: React.ElementType;
+  icon: ElementType;
 }
 
 const CHART_TABS: ChartTab[] = [
@@ -47,14 +48,14 @@ interface ChartSectionProps {
  * - Time period selector (1M/3M/6M/1Y/ALL)
  * - Active chart display
  */
-export const ChartSection: React.FC<ChartSectionProps> = ({
+export function ChartSection({
   data,
   selectedPeriod,
   activeChartTab,
   onPeriodChange,
   onChartTabChange,
   isLoading = false,
-}) => {
+}: ChartSectionProps): ReactElement {
   return (
     <BaseCard variant="glass" className="p-1">
       <div className="p-4 border-b border-gray-800/50 flex justify-between items-center bg-gray-900/40 rounded-t-xl">
@@ -133,4 +134,4 @@ export const ChartSection: React.FC<ChartSectionProps> = ({
       </div>
     </BaseCard>
   );
-};
+}

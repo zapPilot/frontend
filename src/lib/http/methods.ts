@@ -6,7 +6,7 @@
 import type { HttpRequestConfig, ResponseTransformer } from "./config";
 import { httpRequest } from "./request";
 
-function buildUrl(endpoint: string, baseURL?: string) {
+function buildUrl(endpoint: string, baseURL?: string): string {
   return baseURL ? `${baseURL}${endpoint}` : endpoint;
 }
 
@@ -16,7 +16,7 @@ function requestWithMethod<T>(
   config: Partial<HttpRequestConfig>,
   transformer?: ResponseTransformer<T>,
   body?: unknown
-) {
+): Promise<T> {
   const url = buildUrl(endpoint, config.baseURL);
   const requestConfig: HttpRequestConfig = {
     ...config,
@@ -45,15 +45,26 @@ type MutationFunction = <T = unknown>(
   transformer?: ResponseTransformer<T>
 ) => Promise<T>;
 
-const createQuery =
-  (method: "GET" | "DELETE"): QueryFunction =>
-  (endpoint, config = {}, transformer) =>
-    requestWithMethod(method, endpoint, config, transformer);
+function createQuery(method: "GET" | "DELETE"): QueryFunction {
+  return function query<T = unknown>(
+    endpoint: string,
+    config: Omit<HttpRequestConfig, "method" | "body"> = {},
+    transformer?: ResponseTransformer<T>
+  ): Promise<T> {
+    return requestWithMethod(method, endpoint, config, transformer);
+  };
+}
 
-const createMutation =
-  (method: HttpRequestConfig["method"]): MutationFunction =>
-  (endpoint, body, config = {}, transformer) =>
-    requestWithMethod(method, endpoint, config, transformer, body);
+function createMutation(method: HttpRequestConfig["method"]): MutationFunction {
+  return function mutation<T = unknown>(
+    endpoint: string,
+    body?: unknown,
+    config: Omit<HttpRequestConfig, "method"> = {},
+    transformer?: ResponseTransformer<T>
+  ): Promise<T> {
+    return requestWithMethod(method, endpoint, config, transformer, body);
+  };
+}
 
 // --- Exported Methods ---
 

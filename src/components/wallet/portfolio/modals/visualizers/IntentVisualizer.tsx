@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 
 import { getProtocolLogo } from "../utils/assetHelpers";
 
@@ -24,10 +24,25 @@ const DEFAULT_LANES: VisualizerLane[] = [
 
 const DEFAULT_STEPS = ["Approve", "Swap", "Deposit"];
 
+function getStepStatusClassName(
+  isStepComplete: boolean,
+  isStepActive: boolean
+): string {
+  if (isStepComplete) {
+    return "bg-green-500 border-green-500";
+  }
+
+  if (isStepActive) {
+    return "bg-gray-900 border-green-500 animate-pulse";
+  }
+
+  return "bg-gray-950 border-gray-800";
+}
+
 export function IntentVisualizer({
   steps = DEFAULT_STEPS,
   lanes = DEFAULT_LANES,
-}: IntentVisualizerProps) {
+}: IntentVisualizerProps): ReactElement {
   const [laneProgress, setLaneProgress] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -123,13 +138,10 @@ export function IntentVisualizer({
                     <div
                       className={`
                                         w-3 h-3 rounded-full border-2 transition-colors duration-300
-                                        ${
-                                          isStepComplete
-                                            ? "bg-green-500 border-green-500"
-                                            : isStepActive
-                                              ? "bg-gray-900 border-green-500 animate-pulse"
-                                              : "bg-gray-950 border-gray-800"
-                                        }
+                                        ${getStepStatusClassName(
+                                          isStepComplete,
+                                          isStepActive
+                                        )}
                                     `}
                     ></div>
                     <span

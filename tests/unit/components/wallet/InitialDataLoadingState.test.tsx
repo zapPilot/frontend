@@ -19,6 +19,23 @@ import { InitialDataLoadingState } from "@/components/wallet/InitialDataLoadingS
 
 import { render, screen } from "../../../test-utils";
 
+function getExpectedStatusBadgeText(
+  status: "pending" | "processing" | "completed" | "failed"
+): string {
+  switch (status) {
+    case "pending":
+      return "Job queued...";
+    case "processing":
+      return "Fetching data from DeBank...";
+    case "completed":
+      return "Finalizing...";
+    case "failed":
+      return "Something went wrong";
+    default:
+      return "Initializing...";
+  }
+}
+
 // Mock lucide-react icons — spread originals so transitive imports (e.g. ToastNotification) work
 vi.mock("lucide-react", async importOriginal => ({
   ...(await importOriginal<typeof import("lucide-react")>()),
@@ -174,15 +191,7 @@ describe("InitialDataLoadingState", () => {
         const { unmount } = render(<InitialDataLoadingState status={status} />);
 
         // Each status should render a badge with the purple theme
-        const badge = screen.getByText(
-          status === "pending"
-            ? "Job queued..."
-            : status === "processing"
-              ? "Fetching data from DeBank..."
-              : status === "completed"
-                ? "Finalizing..."
-                : "Something went wrong"
-        );
+        const badge = screen.getByText(getExpectedStatusBadgeText(status));
 
         expect(badge).toHaveClass("text-purple-300");
         expect(badge).toHaveClass("bg-purple-500/10");

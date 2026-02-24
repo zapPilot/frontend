@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import { useEffect } from "react";
+import { type ReactElement, useEffect } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
 
@@ -11,7 +11,7 @@ import { BacktestTerminalDisplay } from "./backtesting/components/BacktestTermin
 import { useBacktestConfiguration } from "./backtesting/hooks/useBacktestConfiguration";
 import { useBacktestResult } from "./backtesting/hooks/useBacktestResult";
 
-export function BacktestingView() {
+export function BacktestingView(): ReactElement {
   const {
     backtestData,
     editorValue,
@@ -28,6 +28,35 @@ export function BacktestingView() {
     handleRunBacktest();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  let content: ReactElement;
+  if (isPending) {
+    content = (
+      <BaseCard variant="glass" className="bg-gray-900/40">
+        <BacktestLoadingState />
+      </BaseCard>
+    );
+  } else if (!backtestData) {
+    content = (
+      <BaseCard variant="glass" className="p-8 bg-gray-900/40">
+        <BacktestEmptyState />
+      </BaseCard>
+    );
+  } else {
+    content = (
+      <BacktestTerminalDisplay
+        summary={summary}
+        sortedStrategyIds={sortedStrategyIds}
+        actualDays={actualDays}
+        chartData={chartData}
+        yAxisDomain={yAxisDomain}
+        isPending={isPending}
+        onRun={handleRunBacktest}
+        editorValue={editorValue}
+        onEditorValueChange={updateEditorValue}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -52,27 +81,7 @@ export function BacktestingView() {
         </BaseCard>
       )}
 
-      {isPending ? (
-        <BaseCard variant="glass" className="bg-gray-900/40">
-          <BacktestLoadingState />
-        </BaseCard>
-      ) : !backtestData ? (
-        <BaseCard variant="glass" className="p-8 bg-gray-900/40">
-          <BacktestEmptyState />
-        </BaseCard>
-      ) : (
-        <BacktestTerminalDisplay
-          summary={summary}
-          sortedStrategyIds={sortedStrategyIds}
-          actualDays={actualDays}
-          chartData={chartData}
-          yAxisDomain={yAxisDomain}
-          isPending={isPending}
-          onRun={handleRunBacktest}
-          editorValue={editorValue}
-          onEditorValueChange={updateEditorValue}
-        />
-      )}
+      {content}
     </div>
   );
 }
