@@ -21,11 +21,16 @@ import {
   buildTargetCryptoAssets,
 } from "../utils/portfolioCompositionHelpers";
 
+interface CompositionTarget {
+  crypto: number;
+  stable: number;
+}
+
 interface PortfolioCompositionProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
   /** Optional target allocation to render without regime */
-  targetAllocation?: { crypto: number; stable: number } | undefined;
+  targetAllocation?: CompositionTarget | undefined;
   isEmptyState?: boolean;
   /** Whether user is viewing their own bundle (enables wallet actions) */
   isOwnBundle?: boolean;
@@ -48,10 +53,9 @@ const STYLES = {
  * Builds unified target segments from crypto/stable percentages.
  * The entire crypto portion maps to BTC (the sole spot crypto asset).
  */
-function buildTargetUnifiedSegments(target: {
-  crypto: number;
-  stable: number;
-}): UnifiedSegment[] {
+function buildTargetUnifiedSegments(
+  target: CompositionTarget
+): UnifiedSegment[] {
   const segments: UnifiedSegment[] = [];
 
   if (target.crypto > 0) {
@@ -75,6 +79,47 @@ function buildTargetUnifiedSegments(target: {
   return segments.sort((a, b) => b.percentage - a.percentage);
 }
 
+function resolveTargetAllocation(
+  targetAllocation: CompositionTarget | undefined,
+  currentRegime: Regime | undefined
+): CompositionTarget | undefined {
+  if (targetAllocation) {
+    return targetAllocation;
+  }
+
+  if (!currentRegime) {
+    return undefined;
+  }
+
+  const breakdown = getRegimeAllocation(currentRegime);
+  return {
+    crypto: breakdown.spot + breakdown.lp,
+    stable: breakdown.stable,
+  };
+}
+
+function resolveCurrentSegments(
+  data: WalletPortfolioDataWithDirection,
+  isEmptyState: boolean,
+  currentRegime: Regime | undefined,
+  target: CompositionTarget
+): UnifiedSegment[] {
+  const cryptoAssets =
+    isEmptyState && currentRegime
+      ? buildTargetCryptoAssets(currentRegime)
+      : buildRealCryptoAssets(data);
+
+  const stablePercentage = isEmptyState
+    ? target.stable
+    : data.currentAllocation.stable;
+
+  return mapLegacyConstituentsToUnified(cryptoAssets, stablePercentage);
+}
+
+function getDriftClassName(delta: number): string {
+  return delta > 5 ? "text-orange-400" : "text-gray-500";
+}
+
 export function PortfolioComposition({
   data,
   currentRegime,
@@ -85,17 +130,7 @@ export function PortfolioComposition({
   onRebalance,
 }: PortfolioCompositionProps): ReactElement | null {
   const isActionsDisabled = isEmptyState || !isOwnBundle;
-  // Determine target breakdown source
-  // Priority: 1. Explicit prop (from progressive loading) 2. Derived from Regime 3. Fallback
-  let target = targetAllocation;
-
-  if (!target && currentRegime) {
-    const breakdown = getRegimeAllocation(currentRegime);
-    target = {
-      crypto: breakdown.spot + breakdown.lp,
-      stable: breakdown.stable,
-    };
-  }
+  const target = resolveTargetAllocation(targetAllocation, currentRegime);
 
   if (isLoading) {
     return <PortfolioCompositionSkeleton />;
@@ -106,19 +141,11 @@ export function PortfolioComposition({
   }
 
   const targetSegments = buildTargetUnifiedSegments(target);
-
-  const cryptoAssets =
-    isEmptyState && currentRegime
-      ? buildTargetCryptoAssets(currentRegime)
-      : buildRealCryptoAssets(data);
-
-  const stablePercentage = isEmptyState
-    ? target.stable
-    : data.currentAllocation.stable;
-
-  const currentSegments = mapLegacyConstituentsToUnified(
-    cryptoAssets,
-    stablePercentage
+  const currentSegments = resolveCurrentSegments(
+    data,
+    isEmptyState,
+    currentRegime,
+    target
   );
 
   return (
@@ -130,9 +157,7 @@ export function PortfolioComposition({
             <div className={STYLES.allocationRow}>
               {/* Drift Indicator moved here for context */}
               <span
-                className={`text-xs font-bold ${
-                  data.delta > 5 ? "text-orange-400" : "text-gray-500"
-                }`}
+                className={`text-xs font-bold ${getDriftClassName(data.delta)}`}
               >
                 Drift: {data.delta.toFixed(1)}%
               </span>

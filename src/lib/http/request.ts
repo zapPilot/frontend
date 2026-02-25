@@ -23,6 +23,36 @@ import {
 } from "./errors";
 import { calculateBackoffDelay, delay, shouldAttemptRetry } from "./retry";
 
+function createRequestConfig(config: HttpRequestConfig): RequestInit {
+  const { method = "GET", headers = {}, body } = config;
+  const requestConfig: RequestInit = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...headers,
+    },
+  };
+
+  if (body && method !== "GET") {
+    requestConfig.body = JSON.stringify(body);
+  }
+
+  return requestConfig;
+}
+
+function normalizeRequestExecutionError(error: unknown): Error {
+  const normalizedError = toError(error);
+  if (normalizedError instanceof APIError) {
+    throw normalizedError;
+  }
+
+  if (isAbortError(normalizedError)) {
+    throw new TimeoutError();
+  }
+
+  return normalizedError;
+}
+
 async function executeRequest<T>(
   url: string,
   requestInit: RequestInit,
@@ -63,26 +93,13 @@ export async function httpRequest<T = unknown>(
   transformer?: ResponseTransformer<T>
 ): Promise<T> {
   const {
-    method = "GET",
-    headers = {},
-    body,
     timeout = HTTP_CONFIG.timeout,
     retries = HTTP_CONFIG.retries,
     retryDelay = HTTP_CONFIG.retryDelay,
     signal,
   } = config;
 
-  const requestConfig: RequestInit = {
-    method,
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-  };
-
-  if (body && method !== "GET") {
-    requestConfig.body = JSON.stringify(body);
-  }
+  const requestConfig = createRequestConfig(config);
 
   let lastError: Error | undefined;
 
@@ -94,28 +111,17 @@ export async function httpRequest<T = unknown>(
     requestConfig.signal = composedSignal;
 
     try {
-      const result = await executeRequest(url, requestConfig, transformer);
-      cleanup();
-      return result;
+      return await executeRequest(url, requestConfig, transformer);
     } catch (error) {
-      cleanup();
-      const normalizedError = toError(error);
+      lastError = normalizeRequestExecutionError(error);
 
-      if (normalizedError instanceof APIError) {
-        throw normalizedError;
-      }
-
-      if (isAbortError(normalizedError)) {
-        throw new TimeoutError();
-      }
-
-      lastError = normalizedError;
-
-      if (!shouldAttemptRetry(attempt, retries, normalizedError)) {
+      if (!shouldAttemptRetry(attempt, retries, lastError)) {
         break;
       }
 
       await delay(calculateBackoffDelay(retryDelay, attempt));
+    } finally {
+      cleanup();
     }
   }
 

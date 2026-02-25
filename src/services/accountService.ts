@@ -30,6 +30,47 @@ import { logger } from "@/utils/logger";
 
 export { AccountServiceError };
 
+function mapAccountConflictMessage(message: string | undefined): string | null {
+  if (message?.includes("wallet already belongs to another user")) {
+    return message;
+  }
+
+  if (message?.includes("wallet")) {
+    return "This wallet is already associated with an account.";
+  }
+
+  if (message?.includes("email")) {
+    return "This email address is already in use.";
+  }
+
+  return null;
+}
+
+function mapAccountServiceErrorMessage(
+  status: number | undefined,
+  message: string | undefined
+): string {
+  if (status === 400 && message?.includes("wallet")) {
+    return "Invalid wallet address format. Must be a 42-character Ethereum address.";
+  }
+
+  if (status === 404) {
+    return "User account not found. Please connect your wallet first.";
+  }
+
+  if (status === 409) {
+    return (
+      mapAccountConflictMessage(message) ?? message ?? "Account service error"
+    );
+  }
+
+  if (status === 422) {
+    return "Invalid request data. Please check your input and try again.";
+  }
+
+  return message ?? "Account service error";
+}
+
 /**
  * Create enhanced error messages for common account API errors
  */
@@ -38,30 +79,7 @@ function createAccountServiceError(error: unknown): AccountServiceError {
     error,
     AccountServiceError,
     "Account service error",
-    (status, message) => {
-      switch (status) {
-        case 400:
-          if (message?.includes("wallet")) {
-            return "Invalid wallet address format. Must be a 42-character Ethereum address.";
-          }
-          break;
-        case 404:
-          return "User account not found. Please connect your wallet first.";
-        case 409:
-          if (message?.includes("wallet already belongs to another user")) {
-            return message;
-          }
-          if (message?.includes("wallet")) {
-            return "This wallet is already associated with an account.";
-          } else if (message?.includes("email")) {
-            return "This email address is already in use.";
-          }
-          break;
-        case 422:
-          return "Invalid request data. Please check your input and try again.";
-      }
-      return message;
-    }
+    mapAccountServiceErrorMessage
   );
 }
 

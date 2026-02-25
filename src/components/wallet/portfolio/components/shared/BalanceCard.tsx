@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import type { ReactElement } from "react";
 
 import type {
   BorrowingSummary,
@@ -46,6 +47,137 @@ function getButtonClassName(
   return `${STYLES.buttonBase} ${STYLES.withdrawEnabled}`;
 }
 
+function getActionTitle(
+  isOwnBundle: boolean,
+  action: "deposit" | "withdraw"
+): string | undefined {
+  if (isOwnBundle) {
+    return undefined;
+  }
+
+  if (action === "deposit") {
+    return "Switch to your bundle to deposit";
+  }
+
+  return "Switch to your bundle to withdraw";
+}
+
+interface BalanceCardState {
+  isActionsDisabled: boolean;
+  showLeverageHealth: boolean;
+  showBorrowingAlert: boolean;
+}
+
+function deriveBalanceCardState(
+  isEmptyState: boolean,
+  isOwnBundle: boolean,
+  riskMetrics: RiskMetrics | null | undefined,
+  borrowingSummary: BorrowingSummary | null | undefined
+): BalanceCardState {
+  return {
+    isActionsDisabled: isEmptyState || !isOwnBundle,
+    showLeverageHealth: Boolean(
+      !isEmptyState && riskMetrics?.has_leverage && riskMetrics.health_rate
+    ),
+    showBorrowingAlert: Boolean(!isEmptyState && borrowingSummary?.has_debt),
+  };
+}
+
+interface BalanceRiskColumnProps {
+  isEmptyState: boolean;
+  lastUpdated: string | null | undefined;
+  showLeverageHealth: boolean;
+  showBorrowingAlert: boolean;
+  riskMetrics: RiskMetrics | null | undefined;
+  borrowingSummary: BorrowingSummary | null | undefined;
+  isOwnBundle: boolean;
+  onViewRiskDetails: (() => void) | undefined;
+  userId: string | undefined;
+}
+
+function BalanceRiskColumn({
+  isEmptyState,
+  lastUpdated,
+  showLeverageHealth,
+  showBorrowingAlert,
+  riskMetrics,
+  borrowingSummary,
+  isOwnBundle,
+  onViewRiskDetails,
+  userId,
+}: BalanceRiskColumnProps): ReactElement {
+  const shouldShowBadges = showLeverageHealth || showBorrowingAlert;
+
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      {!isEmptyState && lastUpdated && (
+        <div className="mb-1">
+          <DataFreshnessIndicator
+            lastUpdated={lastUpdated}
+            size="sm"
+            variant="text-only"
+            className="opacity-50"
+          />
+        </div>
+      )}
+      {shouldShowBadges && (
+        <>
+          {showLeverageHealth && riskMetrics && (
+            <HealthFactorPill
+              riskMetrics={riskMetrics}
+              isOwnBundle={isOwnBundle}
+              size="sm"
+              onViewDetails={onViewRiskDetails}
+            />
+          )}
+          {showBorrowingAlert && borrowingSummary && userId && (
+            <BorrowingHealthPill
+              summary={borrowingSummary}
+              userId={userId}
+              size="sm"
+            />
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+interface BalanceActionsProps {
+  isActionsDisabled: boolean;
+  isOwnBundle: boolean;
+  onOpenModal: (type: Extract<ModalType, "deposit" | "withdraw">) => void;
+}
+
+function BalanceActions({
+  isActionsDisabled,
+  isOwnBundle,
+  onOpenModal,
+}: BalanceActionsProps): ReactElement {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button
+        data-testid="deposit-button"
+        onClick={() => onOpenModal("deposit")}
+        disabled={isActionsDisabled}
+        title={getActionTitle(isOwnBundle, "deposit")}
+        className={getButtonClassName("deposit", isActionsDisabled)}
+      >
+        <ArrowDownCircle className="w-4 h-4" /> Deposit
+      </button>
+      <button
+        data-testid="withdraw-button"
+        onClick={() => onOpenModal("withdraw")}
+        disabled={isActionsDisabled}
+        title={getActionTitle(isOwnBundle, "withdraw")}
+        className={getButtonClassName("withdraw", isActionsDisabled)}
+      >
+        <ArrowUpCircle className="w-4 h-4" /> Withdraw
+      </button>
+    </div>
+  );
+}
+
 interface BalanceCardProps {
   balance: number;
   isEmptyState?: boolean;
@@ -75,15 +207,14 @@ export function BalanceCard({
   borrowingSummary,
   onViewRiskDetails,
   userId,
-}: BalanceCardProps) {
-  // Disable buttons if empty state OR not own bundle (visitor mode)
-  const isActionsDisabled = isEmptyState || !isOwnBundle;
-  // Show health rate (leverage) if user has leverage and is not in empty state
-  const showLeverageHealth =
-    !isEmptyState && riskMetrics?.has_leverage && riskMetrics.health_rate;
-
-  // Show borrowing alert if user has debt and is not in empty state
-  const showBorrowingAlert = !isEmptyState && borrowingSummary?.has_debt;
+}: BalanceCardProps): ReactElement {
+  const { isActionsDisabled, showLeverageHealth, showBorrowingAlert } =
+    deriveBalanceCardState(
+      isEmptyState,
+      isOwnBundle,
+      riskMetrics,
+      borrowingSummary
+    );
 
   if (isLoading) {
     return <BalanceCardSkeleton />;
@@ -113,65 +244,24 @@ export function BalanceCard({
             </div>
           </div>
 
-          {/* Right Side Risk Column */}
-          <div className="flex flex-col items-end gap-1.5">
-            {!isEmptyState && lastUpdated && (
-              <div className="mb-1">
-                <DataFreshnessIndicator
-                  lastUpdated={lastUpdated}
-                  size="sm"
-                  variant="text-only"
-                  className="opacity-50"
-                />
-              </div>
-            )}
-            {(showLeverageHealth || showBorrowingAlert) && (
-              <>
-                {showLeverageHealth && (
-                  <HealthFactorPill
-                    riskMetrics={riskMetrics}
-                    isOwnBundle={isOwnBundle}
-                    size="sm"
-                    onViewDetails={onViewRiskDetails}
-                  />
-                )}
-                {showBorrowingAlert && borrowingSummary && userId && (
-                  <BorrowingHealthPill
-                    summary={borrowingSummary}
-                    userId={userId}
-                    size="sm"
-                  />
-                )}
-              </>
-            )}
-          </div>
+          <BalanceRiskColumn
+            isEmptyState={isEmptyState}
+            lastUpdated={lastUpdated}
+            showLeverageHealth={showLeverageHealth}
+            showBorrowingAlert={showBorrowingAlert}
+            riskMetrics={riskMetrics}
+            borrowingSummary={borrowingSummary}
+            isOwnBundle={isOwnBundle}
+            onViewRiskDetails={onViewRiskDetails}
+            userId={userId}
+          />
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            data-testid="deposit-button"
-            onClick={() => onOpenModal("deposit")}
-            disabled={isActionsDisabled}
-            title={
-              !isOwnBundle ? "Switch to your bundle to deposit" : undefined
-            }
-            className={getButtonClassName("deposit", isActionsDisabled)}
-          >
-            <ArrowDownCircle className="w-4 h-4" /> Deposit
-          </button>
-          <button
-            data-testid="withdraw-button"
-            onClick={() => onOpenModal("withdraw")}
-            disabled={isActionsDisabled}
-            title={
-              !isOwnBundle ? "Switch to your bundle to withdraw" : undefined
-            }
-            className={getButtonClassName("withdraw", isActionsDisabled)}
-          >
-            <ArrowUpCircle className="w-4 h-4" /> Withdraw
-          </button>
-        </div>
+        <BalanceActions
+          isActionsDisabled={isActionsDisabled}
+          isOwnBundle={isOwnBundle}
+          onOpenModal={onOpenModal}
+        />
       </div>
     </>
   );

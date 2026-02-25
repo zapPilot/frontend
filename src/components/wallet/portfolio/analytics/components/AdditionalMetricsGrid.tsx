@@ -7,7 +7,7 @@
 import { Activity } from "lucide-react";
 import type { ReactElement } from "react";
 
-import type { KeyMetrics } from "@/types/analytics";
+import type { KeyMetrics, MetricData } from "@/types/analytics";
 
 import { AnalyticsMetricCard } from "./AnalyticsMetricCard";
 
@@ -19,6 +19,75 @@ interface AdditionalMetricsGridProps {
   isLoading?: boolean;
 }
 
+interface MetricCardDisplayConfig {
+  label: string;
+  value: string;
+  subValue: string;
+  valueColor?: string;
+}
+
+function resolveMetricData(
+  metric: MetricData | undefined,
+  fallbackValue: string,
+  fallbackSubValue: string
+): MetricData {
+  if (!metric) {
+    return {
+      value: fallbackValue,
+      subValue: fallbackSubValue,
+      trend: "neutral",
+    };
+  }
+
+  return metric;
+}
+
+function buildAlphaMetricConfig(
+  alpha: MetricData | undefined
+): MetricCardDisplayConfig {
+  const alphaMetric = resolveMetricData(alpha, "N/A", "Excess Return");
+
+  return {
+    label: "Alpha",
+    value: alphaMetric.value,
+    subValue: alphaMetric.subValue,
+    ...(alphaMetric.value.startsWith("+")
+      ? { valueColor: "text-green-400" }
+      : {}),
+  };
+}
+
+function getMetricDisplayConfig(
+  metrics: KeyMetrics
+): MetricCardDisplayConfig[] {
+  const sortinoMetric = resolveMetricData(
+    metrics.sortino,
+    "N/A",
+    "Coming soon"
+  );
+  const betaMetric = resolveMetricData(metrics.beta, "N/A", "vs BTC");
+  const alphaMetricConfig = buildAlphaMetricConfig(metrics.alpha);
+
+  return [
+    {
+      label: "Sortino Ratio",
+      value: sortinoMetric.value,
+      subValue: sortinoMetric.subValue,
+    },
+    {
+      label: "Beta (vs BTC)",
+      value: betaMetric.value,
+      subValue: betaMetric.subValue,
+    },
+    {
+      label: "Volatility",
+      value: metrics.volatility.value,
+      subValue: metrics.volatility.subValue,
+    },
+    alphaMetricConfig,
+  ];
+}
+
 /**
  * Additional Metrics Grid
  *
@@ -28,39 +97,23 @@ export function AdditionalMetricsGrid({
   metrics,
   isLoading = false,
 }: AdditionalMetricsGridProps): ReactElement {
+  const metricDisplayConfigs = getMetricDisplayConfig(metrics);
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <AnalyticsMetricCard
-        icon={Activity}
-        label="Sortino Ratio"
-        value={metrics.sortino?.value || "N/A"}
-        subValue={metrics.sortino?.subValue || "Coming soon"}
-        isLoading={isLoading}
-      />
-      <AnalyticsMetricCard
-        icon={Activity}
-        label="Beta (vs BTC)"
-        value={metrics.beta?.value || "N/A"}
-        subValue={metrics.beta?.subValue || "vs BTC"}
-        isLoading={isLoading}
-      />
-      <AnalyticsMetricCard
-        icon={Activity}
-        label="Volatility"
-        value={metrics.volatility.value}
-        subValue={metrics.volatility.subValue}
-        isLoading={isLoading}
-      />
-      <AnalyticsMetricCard
-        icon={Activity}
-        label="Alpha"
-        value={metrics.alpha?.value || "N/A"}
-        subValue={metrics.alpha?.subValue || "Excess Return"}
-        {...(metrics.alpha?.value?.startsWith("+") && {
-          valueColor: "text-green-400",
-        })}
-        isLoading={isLoading}
-      />
+      {metricDisplayConfigs.map(metricConfig => (
+        <AnalyticsMetricCard
+          key={metricConfig.label}
+          icon={Activity}
+          label={metricConfig.label}
+          value={metricConfig.value}
+          subValue={metricConfig.subValue}
+          {...(metricConfig.valueColor
+            ? { valueColor: metricConfig.valueColor }
+            : {})}
+          isLoading={isLoading}
+        />
+      ))}
     </div>
   );
 }

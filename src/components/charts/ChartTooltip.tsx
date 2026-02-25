@@ -42,6 +42,26 @@ const EDGE_PADDING = 12;
 const VERTICAL_OFFSET = 20;
 const LEGEND_GUARD_TOP = 60;
 
+interface ChartBounds {
+  width: number;
+  height: number;
+}
+
+interface PointerPosition {
+  x: number;
+  y: number;
+}
+
+interface HorizontalPosition {
+  left: number;
+  translateX: "0" | "-50%" | "-100%";
+}
+
+interface VerticalPosition {
+  top: number;
+  translateY: "0" | "-100%";
+}
+
 interface ChartTooltipProps {
   /** Current hover state or null */
   hoveredPoint: ChartHoverState | null;
@@ -83,19 +103,52 @@ function calculatePosition(
   tooltipWidth: number,
   tooltipHeight: number
 ) {
-  const containerWidth = hoveredPoint.containerWidth ?? chartWidth;
-  const containerHeight = hoveredPoint.containerHeight ?? chartHeight;
+  const bounds: ChartBounds = {
+    width: hoveredPoint.containerWidth ?? chartWidth,
+    height: hoveredPoint.containerHeight ?? chartHeight,
+  };
 
-  const pointerX =
-    hoveredPoint.screenX ??
-    (chartWidth > 0 ? (hoveredPoint.x / chartWidth) * containerWidth : 0);
-  const pointerY =
-    hoveredPoint.screenY ??
-    (chartHeight > 0 ? (hoveredPoint.y / chartHeight) * containerHeight : 0);
+  const pointer: PointerPosition = {
+    x:
+      hoveredPoint.screenX ??
+      (chartWidth > 0 ? (hoveredPoint.x / chartWidth) * bounds.width : 0),
+    y:
+      hoveredPoint.screenY ??
+      (chartHeight > 0 ? (hoveredPoint.y / chartHeight) * bounds.height : 0),
+  };
 
-  // Horizontal positioning
+  const horizontalPosition = getHorizontalPosition(
+    pointer.x,
+    bounds.width,
+    tooltipWidth
+  );
+  const verticalPosition = getVerticalPosition(
+    pointer.y,
+    bounds.height,
+    tooltipHeight
+  );
+  const legendSafePosition = getLegendSafeVerticalPosition(
+    hoveredPoint.chartType,
+    pointer.y,
+    tooltipHeight,
+    verticalPosition
+  );
+
+  return {
+    left: horizontalPosition.left,
+    top: legendSafePosition.top,
+    translateX: horizontalPosition.translateX,
+    translateY: legendSafePosition.translateY,
+  };
+}
+
+function getHorizontalPosition(
+  pointerX: number,
+  containerWidth: number,
+  tooltipWidth: number
+): HorizontalPosition {
   let left = pointerX;
-  let translateX = "-50%";
+  let translateX: HorizontalPosition["translateX"] = "-50%";
   const halfWidth = tooltipWidth / 2;
 
   if (left - halfWidth < EDGE_PADDING) {
@@ -106,24 +159,43 @@ function calculatePosition(
     translateX = "-100%";
   }
 
-  // Vertical positioning
+  return { left, translateX };
+}
+
+function getVerticalPosition(
+  pointerY: number,
+  containerHeight: number,
+  tooltipHeight: number
+): VerticalPosition {
   let top = pointerY - VERTICAL_OFFSET;
-  let translateY = "-100%";
+  let translateY: VerticalPosition["translateY"] = "-100%";
 
   if (top - tooltipHeight < EDGE_PADDING) {
     top = Math.min(pointerY + VERTICAL_OFFSET, containerHeight - EDGE_PADDING);
     translateY = "0";
   }
 
-  // Avoid top legend overlap
-  if (CHARTS_WITH_TOP_LEGEND.has(hoveredPoint.chartType)) {
-    if (translateY === "-100%" && top < LEGEND_GUARD_TOP + tooltipHeight) {
-      translateY = "0";
-      top = Math.max(pointerY + VERTICAL_OFFSET, LEGEND_GUARD_TOP);
-    }
+  return { top, translateY };
+}
+
+function getLegendSafeVerticalPosition(
+  chartType: ChartHoverState["chartType"],
+  pointerY: number,
+  tooltipHeight: number,
+  verticalPosition: VerticalPosition
+): VerticalPosition {
+  const overlapsLegend =
+    verticalPosition.translateY === "-100%" &&
+    verticalPosition.top < LEGEND_GUARD_TOP + tooltipHeight;
+
+  if (!CHARTS_WITH_TOP_LEGEND.has(chartType) || !overlapsLegend) {
+    return verticalPosition;
   }
 
-  return { left, top, translateX, translateY };
+  return {
+    top: Math.max(pointerY + VERTICAL_OFFSET, LEGEND_GUARD_TOP),
+    translateY: "0",
+  };
 }
 
 /**

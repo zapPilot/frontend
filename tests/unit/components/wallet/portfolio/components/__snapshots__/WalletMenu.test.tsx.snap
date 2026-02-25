@@ -42,16 +42,20 @@ exports[`WalletMenu Component > Connected State - Multiple Wallets > matches sna
         2
       </span>
       <svg
-        class="w-4 h-4 transition-transform duration-200 rotate-180"
+        aria-hidden="true"
+        class="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 rotate-180"
         fill="none"
+        height="24"
         stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
         viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M19 9l-7 7-7-7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
+          d="m6 9 6 6 6-6"
         />
       </svg>
     </button>
@@ -346,16 +350,20 @@ exports[`WalletMenu Component > Connected State - Single Wallet > matches snapsh
         0x1234...5678
       </span>
       <svg
-        class="w-4 h-4 transition-transform duration-200 rotate-180"
+        aria-hidden="true"
+        class="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200 rotate-180"
         fill="none"
+        height="24"
         stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
         viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M19 9l-7 7-7-7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
+          d="m6 9 6 6 6-6"
         />
       </svg>
     </button>
@@ -548,16 +556,20 @@ exports[`WalletMenu Component > Disconnected State > matches snapshot - disconne
         Connect Wallet
       </span>
       <svg
-        class="w-4 h-4 transition-transform duration-200 "
+        aria-hidden="true"
+        class="lucide lucide-chevron-down w-4 h-4 transition-transform duration-200"
         fill="none"
+        height="24"
         stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
         viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
       >
         <path
-          d="M19 9l-7 7-7-7"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
+          d="m6 9 6 6 6-6"
         />
       </svg>
     </button>

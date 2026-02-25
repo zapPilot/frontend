@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { type ReactNode, type RefObject, useEffect } from "react";
 import { createPortal } from "react-dom";
 
 import {
@@ -10,7 +10,10 @@ import {
   RiskLevel,
 } from "@/constants/riskThresholds";
 import { useBorrowingPositions } from "@/hooks/queries/analytics/useBorrowingPositions";
-import type { BorrowingSummary } from "@/services/analyticsService";
+import type {
+  BorrowingPositionsResponse,
+  BorrowingSummary,
+} from "@/services/analyticsService";
 
 import { BorrowingPositionsTooltip } from "./BorrowingPositionsTooltip";
 import { useTooltipPosition } from "./useTooltipPosition";
@@ -33,52 +36,30 @@ const SIZE_CONFIGS = {
   },
 } as const;
 
-/**
- * Borrowing Health Pill
- *
- * A lightweight visual indicator for borrowing position health.
- * Displays color-coded status and health rate.
- *
- * Click to expand and view detailed borrowing positions with per-protocol breakdowns.
- */
-export function BorrowingHealthPill({
-  summary,
-  userId,
-  size = "md",
-}: BorrowingHealthPillProps) {
-  const {
-    isVisible: isExpanded,
-    setIsVisible: setIsExpanded,
-    isMounted,
-    containerRef,
-    tooltipRef,
-  } = useTooltipState();
+interface BorrowingSummaryWithHealth extends BorrowingSummary {
+  overall_status: "HEALTHY" | "WARNING" | "CRITICAL";
+  worst_health_rate: number;
+}
 
-  const { overall_status, worst_health_rate } = summary;
-
-  // Early return if no borrowing data (null values when has_debt is false)
-
-  // Fetch positions on-demand when expanded
-  const {
-    data: positionsData,
-    isLoading,
-    error,
-    refetch,
-  } = useBorrowingPositions(userId, isExpanded);
-
-  // Handle click outside to close
+function useCloseOnOutsideClick(
+  isExpanded: boolean,
+  containerRef: RefObject<HTMLDivElement | null>,
+  tooltipRef: RefObject<HTMLDivElement | null>,
+  setIsExpanded: (isVisible: boolean) => void
+): void {
   useEffect(() => {
-    if (!isExpanded) return;
+    if (!isExpanded) {
+      return;
+    }
 
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent): void => {
       const target = event.target as Node;
-      const isOutside =
-        containerRef.current &&
-        !containerRef.current.contains(target) &&
-        tooltipRef.current &&
-        !tooltipRef.current.contains(target);
+      const isOutsideContainer =
+        containerRef.current && !containerRef.current.contains(target);
+      const isOutsideTooltip =
+        tooltipRef.current && !tooltipRef.current.contains(target);
 
-      if (isOutside) {
+      if (isOutsideContainer && isOutsideTooltip) {
         setIsExpanded(false);
       }
     };
@@ -87,28 +68,31 @@ export function BorrowingHealthPill({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isExpanded, containerRef, tooltipRef, setIsExpanded]);
+  }, [containerRef, isExpanded, setIsExpanded, tooltipRef]);
+}
 
-  const tooltipPosition = useTooltipPosition(
-    isExpanded,
-    containerRef,
-    tooltipRef
-  );
+function hasBorrowingHealthData(
+  summary: BorrowingSummary
+): summary is BorrowingSummaryWithHealth {
+  return summary.overall_status !== null && summary.worst_health_rate !== null;
+}
 
-  // Early return if no borrowing data (null values when has_debt is false)
-  if (overall_status === null || worst_health_rate === null) {
+function buildExpandedTooltip(
+  isExpanded: boolean,
+  isMounted: boolean,
+  tooltipRef: RefObject<HTMLDivElement | null>,
+  tooltipPosition: { top: number; left: number },
+  positionsData: BorrowingPositionsResponse | undefined,
+  summary: BorrowingSummary,
+  isLoading: boolean,
+  error: Error | null,
+  refetch: () => Promise<unknown>
+): ReactNode {
+  if (!isExpanded || !isMounted) {
     return null;
   }
 
-  const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
-  const config = RISK_COLORS[riskLevel];
-  const sizeConfig = SIZE_CONFIGS[size];
-
-  // Only Pulse for Critical
-  const shouldPulse = riskLevel === RiskLevel.CRITICAL;
-
-  // Expanded tooltip (shown on click)
-  const expandedTooltip = isExpanded && isMounted && (
+  return (
     <div
       ref={tooltipRef}
       className="fixed z-50"
@@ -121,9 +105,71 @@ export function BorrowingHealthPill({
         totalDebtUsd={positionsData?.total_debt_usd || 0}
         isLoading={isLoading}
         error={error}
-        onRetry={refetch}
+        onRetry={() => {
+          void refetch();
+        }}
       />
     </div>
+  );
+}
+
+/**
+ * Borrowing Health Pill
+ *
+ * A lightweight visual indicator for borrowing position health.
+ * Displays color-coded status and health rate.
+ *
+ * Click to expand and view detailed borrowing positions with per-protocol breakdowns.
+ */
+export function BorrowingHealthPill({
+  summary,
+  userId,
+  size = "md",
+}: BorrowingHealthPillProps): ReactNode {
+  const {
+    isVisible: isExpanded,
+    setIsVisible: setIsExpanded,
+    isMounted,
+    containerRef,
+    tooltipRef,
+  } = useTooltipState();
+  // Fetch positions on-demand when expanded
+  const {
+    data: positionsData,
+    isLoading,
+    error,
+    refetch,
+  } = useBorrowingPositions(userId, isExpanded);
+  useCloseOnOutsideClick(isExpanded, containerRef, tooltipRef, setIsExpanded);
+
+  const tooltipPosition = useTooltipPosition(
+    isExpanded,
+    containerRef,
+    tooltipRef
+  );
+
+  if (!hasBorrowingHealthData(summary)) {
+    return null;
+  }
+  const { overall_status, worst_health_rate } = summary;
+
+  const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
+  const config = RISK_COLORS[riskLevel];
+  const sizeConfig = SIZE_CONFIGS[size];
+
+  // Only Pulse for Critical
+  const shouldPulse = riskLevel === RiskLevel.CRITICAL;
+
+  const expandedTooltip = buildExpandedTooltip(
+    isExpanded,
+    isMounted,
+    tooltipRef,
+    tooltipPosition,
+    positionsData,
+    summary,
+    isLoading,
+    error,
+    refetch
   );
 
   return (
@@ -159,7 +205,9 @@ export function BorrowingHealthPill({
           {worst_health_rate.toFixed(2)}
         </span>
       </div>
-      {isMounted && createPortal(expandedTooltip, document.body)}
+      {isMounted &&
+        expandedTooltip &&
+        createPortal(expandedTooltip, document.body)}
     </>
   );
 }

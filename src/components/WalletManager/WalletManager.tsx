@@ -29,6 +29,222 @@ function getWalletDescription(isConnected: boolean, isOwner: boolean): string {
   return "Viewing wallet bundle";
 }
 
+type WalletOperationsState = ReturnType<typeof useWalletOperations>;
+type EmailSubscriptionState = ReturnType<typeof useEmailSubscription>;
+type DropdownMenuState = ReturnType<typeof useDropdownMenu>;
+
+function isWalletManagerBusy(loading: boolean, isRefreshing: boolean): boolean {
+  return loading || isRefreshing;
+}
+
+function WalletManagerHeader({
+  isConnected,
+  isOwner,
+  onClose,
+}: {
+  isConnected: boolean;
+  isOwner: boolean;
+  onClose: () => void;
+}): ReactElement {
+  return (
+    <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
+      <div className="flex items-center space-x-3">
+        <div
+          className={`w-10 h-10 rounded-xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
+        >
+          <Wallet className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h2
+            id="wallet-manager-title"
+            className="text-xl font-bold text-white"
+          >
+            Bundled Wallets
+          </h2>
+          <p id="wallet-manager-description" className="text-sm text-gray-400">
+            {getWalletDescription(isConnected, isOwner)}
+          </p>
+        </div>
+      </div>
+      <button
+        onClick={onClose}
+        className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
+        aria-label="Close wallet manager"
+      >
+        <X className="w-5 h-5 text-gray-300" />
+      </button>
+    </div>
+  );
+}
+
+function WalletManagerLoadingState({
+  isRefreshing,
+}: {
+  isRefreshing: boolean;
+}): ReactElement {
+  return (
+    <div className="p-6 text-center">
+      <div className="flex justify-center mb-3">
+        <Skeleton
+          variant="rectangular"
+          width="8rem"
+          height={32}
+          aria-label="Loading wallet data"
+          data-testid="unified-loading"
+        />
+      </div>
+      <p className="text-gray-400 text-sm">
+        {isRefreshing ? "Refreshing wallets..." : "Loading bundled wallets..."}
+      </p>
+    </div>
+  );
+}
+
+function WalletManagerErrorState({
+  error,
+  onRetry,
+  isRetrying,
+}: {
+  error: string;
+  onRetry: () => void;
+  isRetrying: boolean;
+}): ReactElement {
+  return (
+    <div className="p-6 text-center">
+      <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
+      <p className="text-red-400 text-sm mb-3">{error}</p>
+      <button
+        onClick={onRetry}
+        disabled={isRetrying}
+        className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {isRetrying ? "Retrying..." : "Retry"}
+      </button>
+    </div>
+  );
+}
+
+interface WalletManagerContentProps {
+  isOwner: boolean;
+  walletSectionProps: WalletManagerSectionProps;
+}
+
+interface WalletManagerSectionProps {
+  walletOperations: WalletOperationsState;
+  emailSubscription: EmailSubscriptionState;
+  dropdownMenu: DropdownMenuState;
+  onWalletChange: (
+    changes: Partial<WalletOperationsState["newWallet"]>
+  ) => void;
+  onEditWallet: (walletId: string, label: string) => void;
+  onCancelAdding: () => void;
+}
+
+function WalletManagerContent({
+  isOwner,
+  walletSectionProps,
+}: WalletManagerContentProps): ReactElement {
+  const {
+    walletOperations,
+    emailSubscription,
+    dropdownMenu,
+    onWalletChange,
+    onEditWallet,
+    onCancelAdding,
+  } = walletSectionProps;
+
+  return (
+    <>
+      <WalletListProvider
+        operations={walletOperations.operations}
+        openDropdown={dropdownMenu.openDropdown}
+        menuPosition={dropdownMenu.menuPosition}
+        onCopyAddress={walletOperations.handleCopyAddress}
+        onEditWallet={onEditWallet}
+        onDeleteWallet={walletOperations.handleDeleteWallet}
+        onToggleDropdown={dropdownMenu.toggleDropdown}
+        onCloseDropdown={dropdownMenu.closeDropdown}
+      >
+        <WalletList
+          wallets={walletOperations.wallets}
+          isOwner={isOwner}
+          isAdding={walletOperations.isAdding}
+          newWallet={walletOperations.newWallet}
+          validationError={walletOperations.validationError}
+          onWalletChange={onWalletChange}
+          onAddWallet={walletOperations.handleAddWallet}
+          onStartAdding={() => walletOperations.setIsAdding(true)}
+          onCancelAdding={onCancelAdding}
+        />
+      </WalletListProvider>
+
+      {isOwner && (
+        <EmailSubscription
+          email={emailSubscription.email}
+          subscribedEmail={emailSubscription.subscribedEmail}
+          isEditingSubscription={emailSubscription.isEditingSubscription}
+          subscriptionOperation={emailSubscription.subscriptionOperation}
+          onEmailChange={emailSubscription.setEmail}
+          onSubscribe={emailSubscription.handleSubscribe}
+          onUnsubscribe={emailSubscription.handleUnsubscribe}
+          onStartEditing={emailSubscription.startEditingSubscription}
+          onCancelEditing={emailSubscription.cancelEditingSubscription}
+        />
+      )}
+
+      {isOwner && (
+        <div className="p-6">
+          <DeleteAccountButton
+            onDelete={walletOperations.handleDeleteAccount}
+            isDeleting={walletOperations.isDeletingAccount}
+          />
+        </div>
+      )}
+    </>
+  );
+}
+
+interface WalletManagerStateSectionsProps {
+  isBusy: boolean;
+  isRefreshing: boolean;
+  error: string | null;
+  handleRetry: () => void;
+  isRetrying: boolean;
+  showContent: boolean;
+  isOwnerView: boolean;
+  walletSectionProps: WalletManagerSectionProps;
+}
+
+function WalletManagerStateSections({
+  isBusy,
+  isRefreshing,
+  error,
+  handleRetry,
+  isRetrying,
+  showContent,
+  isOwnerView,
+  walletSectionProps,
+}: WalletManagerStateSectionsProps): ReactElement {
+  return (
+    <>
+      {isBusy && <WalletManagerLoadingState isRefreshing={isRefreshing} />}
+      {error && (
+        <WalletManagerErrorState
+          error={error}
+          onRetry={handleRetry}
+          isRetrying={isRetrying}
+        />
+      )}
+      {showContent && (
+        <WalletManagerContent
+          isOwner={isOwnerView}
+          walletSectionProps={walletSectionProps}
+        />
+      )}
+    </>
+  );
+}
+
 function WalletManagerComponent({
   isOpen,
   onClose,
@@ -93,8 +309,19 @@ function WalletManagerComponent({
     walletOperations.setEditingWallet(null);
   }, [walletOperations]);
 
-  // Early return if modal is closed
   if (!isOpen) return null;
+
+  const isOwnerView = Boolean(isOwner);
+  const isBusy = isWalletManagerBusy(loading, walletOperations.isRefreshing);
+  const showContent = !isBusy && !error;
+  const walletSectionProps: WalletManagerSectionProps = {
+    walletOperations,
+    emailSubscription,
+    dropdownMenu,
+    onWalletChange: handleWalletChange,
+    onEditWallet: handleEditWallet,
+    onCancelAdding: handleCancelAdding,
+  };
 
   return (
     <AnimatePresence>
@@ -103,126 +330,23 @@ function WalletManagerComponent({
         innerClassName="w-full max-w-2xl max-h-[80vh] overflow-y-auto"
       >
         <BaseCard variant="glass" className="p-0 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
-            <div className="flex items-center space-x-3">
-              <div
-                className={`w-10 h-10 rounded-xl bg-gradient-to-r ${GRADIENTS.PRIMARY} flex items-center justify-center`}
-              >
-                <Wallet className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2
-                  id="wallet-manager-title"
-                  className="text-xl font-bold text-white"
-                >
-                  Bundled Wallets
-                </h2>
-                <p
-                  id="wallet-manager-description"
-                  className="text-sm text-gray-400"
-                >
-                  {getWalletDescription(isConnected, !!isOwner)}
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="p-2 rounded-xl glass-morphism hover:bg-white/10 transition-all duration-200"
-              aria-label="Close wallet manager"
-            >
-              <X className="w-5 h-5 text-gray-300" />
-            </button>
-          </div>
-
-          {/* Loading State */}
-          {(loading || walletOperations.isRefreshing) && (
-            <div className="p-6 text-center">
-              <div className="flex justify-center mb-3">
-                <Skeleton
-                  variant="rectangular"
-                  width="8rem"
-                  height={32}
-                  aria-label="Loading wallet data"
-                  data-testid="unified-loading"
-                />
-              </div>
-              <p className="text-gray-400 text-sm">
-                {walletOperations.isRefreshing
-                  ? "Refreshing wallets..."
-                  : "Loading bundled wallets..."}
-              </p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="p-6 text-center">
-              <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />
-              <p className="text-red-400 text-sm mb-3">{error}</p>
-              <button
-                onClick={handleRetry}
-                disabled={isRetrying}
-                className="px-3 py-1 text-xs bg-red-600/20 text-red-300 rounded-lg hover:bg-red-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isRetrying ? "Retrying..." : "Retry"}
-              </button>
-            </div>
-          )}
-
-          {/* Wallet List */}
-          {!loading && !walletOperations.isRefreshing && !error && (
-            <WalletListProvider
-              operations={walletOperations.operations}
-              openDropdown={dropdownMenu.openDropdown}
-              menuPosition={dropdownMenu.menuPosition}
-              onCopyAddress={walletOperations.handleCopyAddress}
-              onEditWallet={handleEditWallet}
-              onDeleteWallet={walletOperations.handleDeleteWallet}
-              onToggleDropdown={dropdownMenu.toggleDropdown}
-              onCloseDropdown={dropdownMenu.closeDropdown}
-            >
-              <WalletList
-                wallets={walletOperations.wallets}
-                isOwner={!!isOwner}
-                isAdding={walletOperations.isAdding}
-                newWallet={walletOperations.newWallet}
-                validationError={walletOperations.validationError}
-                onWalletChange={handleWalletChange}
-                onAddWallet={walletOperations.handleAddWallet}
-                onStartAdding={() => walletOperations.setIsAdding(true)}
-                onCancelAdding={handleCancelAdding}
-              />
-            </WalletListProvider>
-          )}
-
-          {/* Email Subscription */}
-          {!loading && !walletOperations.isRefreshing && !error && isOwner && (
-            <EmailSubscription
-              email={emailSubscription.email}
-              subscribedEmail={emailSubscription.subscribedEmail}
-              isEditingSubscription={emailSubscription.isEditingSubscription}
-              subscriptionOperation={emailSubscription.subscriptionOperation}
-              onEmailChange={emailSubscription.setEmail}
-              onSubscribe={emailSubscription.handleSubscribe}
-              onUnsubscribe={emailSubscription.handleUnsubscribe}
-              onStartEditing={emailSubscription.startEditingSubscription}
-              onCancelEditing={emailSubscription.cancelEditingSubscription}
-            />
-          )}
-
-          {/* Delete Account */}
-          {!loading && !walletOperations.isRefreshing && !error && isOwner && (
-            <div className="p-6">
-              <DeleteAccountButton
-                onDelete={walletOperations.handleDeleteAccount}
-                isDeleting={walletOperations.isDeletingAccount}
-              />
-            </div>
-          )}
+          <WalletManagerHeader
+            isConnected={isConnected}
+            isOwner={isOwnerView}
+            onClose={onClose}
+          />
+          <WalletManagerStateSections
+            isBusy={isBusy}
+            isRefreshing={walletOperations.isRefreshing}
+            error={error}
+            handleRetry={handleRetry}
+            isRetrying={isRetrying}
+            showContent={showContent}
+            isOwnerView={isOwnerView}
+            walletSectionProps={walletSectionProps}
+          />
         </BaseCard>
 
-        {/* Edit Wallet Modal */}
         <EditWalletModal
           editingWallet={walletOperations.editingWallet}
           wallets={walletOperations.wallets}

@@ -36,6 +36,13 @@ export interface BacktestTooltipProps {
   sortedStrategyIds?: string[];
 }
 
+interface TooltipPayloadEntry {
+  name?: string;
+  value?: number;
+  color?: string;
+  payload?: Record<string, unknown>;
+}
+
 export interface TooltipItem {
   name: string;
   value: number;
@@ -73,6 +80,174 @@ export interface ParsedTooltipData {
   };
 }
 
+interface StrategyPayloadItem {
+  portfolio_constituant?: BacktestConstituentsSource;
+}
+
+type StrategiesRecord = Record<string, StrategyPayloadItem>;
+type EventStrategiesRecord = Record<string, string[]>;
+
+interface TooltipSections {
+  strategies: TooltipItem[];
+  events: EventItem[];
+  signals: SignalItem[];
+}
+
+function getOrderedStrategyIds(
+  strategies: StrategiesRecord | undefined,
+  sortedStrategyIds: string[] | undefined
+): string[] {
+  const strategyKeys = Object.keys(strategies ?? {});
+  if (!sortedStrategyIds?.length) {
+    return strategyKeys;
+  }
+
+  const sortedExistingIds = sortedStrategyIds.filter(id => strategies?.[id]);
+  const remainingIds = strategyKeys.filter(
+    id => !sortedExistingIds.includes(id)
+  );
+  return [...sortedExistingIds, ...remainingIds];
+}
+
+function hasAllocationData(constituents: BacktestConstituentsSource): boolean {
+  const percentages = calculatePercentages(constituents);
+  return percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
+}
+
+function buildSpotBreakdown(
+  constituents: BacktestConstituentsSource
+): string | null {
+  if (
+    !constituents.spot ||
+    typeof constituents.spot !== "object" ||
+    Array.isArray(constituents.spot)
+  ) {
+    return null;
+  }
+
+  const parts = Object.entries(constituents.spot)
+    .filter(([, value]) => value > 0)
+    .map(
+      ([token, value]) =>
+        `${token.toUpperCase()}: ${formatCurrency(value, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0,
+        })}`
+    );
+
+  if (parts.length === 0) {
+    return null;
+  }
+
+  return parts.join(", ");
+}
+
+function buildAllocationBlock(
+  strategyId: string,
+  strategies: StrategiesRecord | undefined,
+  sortedStrategyIds: string[] | undefined
+): AllocationBlock | null {
+  const strategy = strategies?.[strategyId];
+  const constituents = strategy?.portfolio_constituant;
+  if (!constituents || !hasAllocationData(constituents)) {
+    return null;
+  }
+
+  return {
+    id: strategyId,
+    displayName: getStrategyDisplayName(strategyId),
+    constituents,
+    spotBreakdown: buildSpotBreakdown(constituents),
+    index: sortedStrategyIds?.indexOf(strategyId),
+  };
+}
+
+function buildAllocations(
+  orderedIds: string[],
+  strategies: StrategiesRecord | undefined,
+  sortedStrategyIds: string[] | undefined
+): AllocationBlock[] {
+  return orderedIds
+    .map(strategyId =>
+      buildAllocationBlock(strategyId, strategies, sortedStrategyIds)
+    )
+    .filter((allocation): allocation is AllocationBlock => allocation !== null);
+}
+
+function formatSentimentValue(
+  value: number | undefined,
+  sentiment: string | undefined
+): string {
+  const label = sentiment
+    ? sentiment.charAt(0).toUpperCase() + sentiment.slice(1)
+    : "Unknown";
+  return `${label} (${value})`;
+}
+
+function formatSignalValue(
+  signalName: string,
+  value: number | undefined,
+  sentiment: string | undefined
+): string | number {
+  if (signalName === "Sentiment") {
+    return formatSentimentValue(value, sentiment);
+  }
+
+  if (typeof value === "number") {
+    return Number(value.toFixed(2));
+  }
+
+  return value ?? "";
+}
+
+function buildTooltipSections(
+  payload: TooltipPayloadEntry[],
+  eventStrategies: EventStrategiesRecord | undefined,
+  sentiment: string | undefined
+): TooltipSections {
+  const strategyItems: TooltipItem[] = [];
+  const eventItems: EventItem[] = [];
+  const signalItems: SignalItem[] = [];
+
+  for (const entry of payload) {
+    if (!entry) {
+      continue;
+    }
+
+    const name = entry.name || "";
+    const color = entry.color || "#fff";
+
+    if (KNOWN_SIGNALS.includes(name)) {
+      signalItems.push({
+        name,
+        value: formatSignalValue(name, entry.value, sentiment),
+        color,
+      });
+      continue;
+    }
+
+    const eventKey = SIGNAL_TO_EVENT_KEY[name];
+    if (eventKey) {
+      eventItems.push({
+        name,
+        strategies: eventStrategies?.[eventKey] || [],
+        color,
+      });
+      continue;
+    }
+
+    if (typeof entry.value === "number") {
+      strategyItems.push({ name, value: entry.value, color });
+    }
+  }
+
+  return {
+    strategies: strategyItems,
+    events: eventItems,
+    signals: signalItems,
+  };
+}
+
 export function useBacktestTooltipData({
   payload,
   label,
@@ -91,104 +266,22 @@ export function useBacktestTooltipData({
     (firstPayload?.["price"] as number | undefined);
 
   const eventStrategies = firstPayload?.["eventStrategies"] as
-    | Record<string, string[]>
+    | EventStrategiesRecord
     | undefined;
-
   const strategies = firstPayload?.["strategies"] as
-    | Record<
-        string,
-        {
-          portfolio_constituant?: BacktestConstituentsSource;
-        }
-      >
+    | StrategiesRecord
     | undefined;
-
-  const orderedIds: string[] = (() => {
-    const keys = Object.keys(strategies ?? {});
-    if (!sortedStrategyIds?.length) return keys;
-    const fromSorted = sortedStrategyIds.filter(id => strategies?.[id]);
-    const rest = keys.filter(id => !fromSorted.includes(id));
-    return [...fromSorted, ...rest];
-  })();
-
-  const allocations: AllocationBlock[] = orderedIds
-    .map((id: string) => {
-      const s = strategies?.[id];
-      const constituents = s?.portfolio_constituant;
-      if (!constituents) return null;
-      const percentages = calculatePercentages(constituents);
-      const hasAny =
-        percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
-      if (!hasAny) return null;
-
-      // Prepare spot breakdown string if spot is a map
-      let spotBreakdown: string | null = null;
-      if (
-        constituents.spot &&
-        typeof constituents.spot === "object" &&
-        !Array.isArray(constituents.spot)
-      ) {
-        const parts = Object.entries(constituents.spot)
-          .filter(([, val]) => val > 0)
-          .map(
-            ([token, val]) =>
-              `${token.toUpperCase()}: ${formatCurrency(val, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0,
-              })}`
-          );
-        if (parts.length > 0) {
-          spotBreakdown = parts.join(", ");
-        }
-      }
-
-      return {
-        id,
-        displayName: getStrategyDisplayName(id),
-        constituents,
-        spotBreakdown,
-        index: sortedStrategyIds?.indexOf(id),
-      };
-    })
-    .filter((b): b is AllocationBlock => b != null);
-
-  const strategyItems: TooltipItem[] = [];
-  const eventItems: EventItem[] = [];
-  const signalItems: SignalItem[] = [];
-
-  for (const entry of payload) {
-    if (!entry) continue;
-    const name = entry.name || "";
-    const color = entry.color || "#fff";
-
-    if (KNOWN_SIGNALS.includes(name)) {
-      let displayValue: string | number = entry.value as number;
-      if (name === "Sentiment") {
-        const label = sentiment
-          ? sentiment.charAt(0).toUpperCase() + sentiment.slice(1)
-          : "Unknown";
-        displayValue = `${label} (${entry.value})`;
-      } else if (typeof entry.value === "number") {
-        displayValue = Number(entry.value.toFixed(2));
-      }
-      signalItems.push({ name, value: displayValue, color });
-    } else if (SIGNAL_TO_EVENT_KEY[name]) {
-      const eventKey = SIGNAL_TO_EVENT_KEY[name];
-      const strategyList = eventStrategies?.[eventKey] || [];
-      eventItems.push({ name, strategies: strategyList, color });
-    } else if (typeof entry.value === "number") {
-      strategyItems.push({ name, value: entry.value, color });
-    }
-  }
+  const orderedIds = getOrderedStrategyIds(strategies, sortedStrategyIds);
+  const allocations = buildAllocations(
+    orderedIds,
+    strategies,
+    sortedStrategyIds
+  );
+  const sections = buildTooltipSections(payload, eventStrategies, sentiment);
 
   return {
     dateStr,
     btcPrice: tokenPrice,
-    sections: {
-      strategies: strategyItems,
-      events: eventItems,
-      signals: signalItems,
-      allocations,
-    },
+    sections: { ...sections, allocations },
   };
 }

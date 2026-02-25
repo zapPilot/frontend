@@ -58,6 +58,39 @@ async function invalidateWalletSwitchQueries(
   });
 }
 
+function shouldAttemptAutoSwitch(
+  walletId: string | undefined,
+  isConnected: boolean,
+  currentUserId: string | undefined,
+  viewedUserId: string
+): walletId is string {
+  return Boolean(walletId && isConnected && currentUserId === viewedUserId);
+}
+
+function findWalletByAddress(
+  connectedWallets: { address: string; isActive?: boolean }[],
+  walletId: string
+): { address: string; isActive?: boolean } | undefined {
+  const normalizedWalletId = walletId.toLowerCase();
+  return connectedWallets.find(
+    walletItem => walletItem.address.toLowerCase() === normalizedWalletId
+  );
+}
+
+async function performWalletSwitchAndRefresh(
+  walletId: string,
+  switchActiveWallet: (walletId: string) => Promise<void>,
+  queryClient: QueryClient
+): Promise<void> {
+  try {
+    await switchActiveWallet(walletId);
+    await invalidateWalletSwitchQueries(queryClient);
+    logger.info("Cache invalidated after wallet switch");
+  } catch (err) {
+    logger.error("Failed to auto-switch wallet:", err);
+  }
+}
+
 function buildBundlePageUrl(searchParams: URLSearchParams): string {
   const queryString = searchParams.toString();
   if (!queryString) {
@@ -134,6 +167,33 @@ export function computeRedirectUrl(search: string): string {
   return `/?${search}`;
 }
 
+function shouldRedirectDisconnectedOwner(
+  isConnected: boolean,
+  currentUserId: string | undefined,
+  viewedUserId: string
+): boolean {
+  return !isConnected && currentUserId === viewedUserId;
+}
+
+function buildUserBundleParams(userInfo: {
+  userId?: string;
+  etlJobId?: string | null | undefined;
+}): URLSearchParams {
+  const params = new URLSearchParams(window.location.search);
+  if (!userInfo.userId) {
+    return params;
+  }
+
+  params.set("userId", userInfo.userId);
+  if (userInfo.etlJobId) {
+    params.set("etlJobId", userInfo.etlJobId);
+  } else {
+    params.delete("etlJobId");
+  }
+
+  return params;
+}
+
 /**
  * Hook for managing bundle page state and visibility logic.
  *
@@ -165,32 +225,23 @@ export function useBundlePage(
   const [isWalletManagerOpen, setIsWalletManagerOpen] = useState(false);
 
   useEffect(() => {
-    if (!walletId || !isConnected || userInfo?.userId !== userId) {
+    if (
+      !shouldAttemptAutoSwitch(walletId, isConnected, userInfo?.userId, userId)
+    ) {
       return;
     }
 
-    const normalizedWalletId = walletId.toLowerCase();
-    const targetWallet = connectedWallets.find(
-      walletItem => walletItem.address.toLowerCase() === normalizedWalletId
-    );
+    const targetWallet = findWalletByAddress(connectedWallets, walletId);
 
     if (!targetWallet || targetWallet.isActive) {
       return;
     }
 
-    const targetWalletId = walletId;
-
-    async function switchWalletAndRefresh(): Promise<void> {
-      try {
-        await switchActiveWallet(targetWalletId);
-        await invalidateWalletSwitchQueries(queryClient);
-        logger.info("Cache invalidated after wallet switch");
-      } catch (err) {
-        logger.error("Failed to auto-switch wallet:", err);
-      }
-    }
-
-    void switchWalletAndRefresh();
+    void performWalletSwitchAndRefresh(
+      walletId,
+      switchActiveWallet,
+      queryClient
+    );
   }, [
     walletId,
     isConnected,
@@ -244,8 +295,9 @@ export function useBundlePage(
   }, [userId]);
 
   useEffect(() => {
-    const ownsBundle = userInfo?.userId === userId;
-    if (!isConnected && ownsBundle) {
+    if (
+      shouldRedirectDisconnectedOwner(isConnected, userInfo?.userId, userId)
+    ) {
       const newUrl = computeRedirectUrl(window.location.search);
       router.replace(newUrl);
     }
@@ -262,15 +314,9 @@ export function useBundlePage(
       return;
     }
 
-    const params = new URLSearchParams(window.location.search);
-    params.set("userId", userInfo.userId);
-    if (userInfo.etlJobId) {
-      params.set("etlJobId", userInfo.etlJobId);
-    } else {
-      params.delete("etlJobId");
-    }
+    const params = buildUserBundleParams(userInfo);
     router.replace(buildBundlePageUrl(params));
-  }, [router, userInfo?.userId, userInfo?.etlJobId]);
+  }, [router, userInfo]);
 
   const handleStayHere = useCallback((): void => undefined, []);
 

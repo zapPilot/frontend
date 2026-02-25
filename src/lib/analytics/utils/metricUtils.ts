@@ -42,22 +42,57 @@ interface DrawdownAnalysis {
   };
 }
 
+interface DrawdownSummary {
+  max_drawdown_pct?: number;
+  max_drawdown_date?: string;
+  recovery_days?: number;
+}
+
+interface UnderwaterDataPoint {
+  drawdown_pct?: number;
+  date?: string;
+}
+
+interface DrawdownSummaryExtraction {
+  maxDrawdownPct: number;
+  maxDrawdownDate: string;
+  recoveryDays: number;
+  underwaterData: UnderwaterDataPoint[];
+}
+
+function getDrawdownAnalysis(
+  dashboard: UnifiedDashboardResponse | undefined
+): DrawdownAnalysis | undefined {
+  return dashboard?.drawdown_analysis as unknown as
+    | DrawdownAnalysis
+    | undefined;
+}
+
+function getDrawdownSummary(
+  drawdownAnalysis: DrawdownAnalysis | undefined
+): DrawdownSummary | undefined {
+  return drawdownAnalysis?.enhanced?.summary;
+}
+
+function getUnderwaterData(
+  drawdownAnalysis: DrawdownAnalysis | undefined
+): UnderwaterDataPoint[] {
+  return drawdownAnalysis?.underwater_recovery?.underwater_data ?? [];
+}
+
 /**
  * Safely extract drawdown summary data from response
  */
 export function extractDrawdownSummary(
   dashboard: UnifiedDashboardResponse | undefined
-) {
-  const drawdownAnalysis =
-    dashboard?.drawdown_analysis as unknown as DrawdownAnalysis;
+): DrawdownSummaryExtraction {
+  const drawdownAnalysis = getDrawdownAnalysis(dashboard);
+  const summary = getDrawdownSummary(drawdownAnalysis);
 
   return {
-    maxDrawdownPct: drawdownAnalysis?.enhanced?.summary?.max_drawdown_pct ?? 0,
-    maxDrawdownDate:
-      drawdownAnalysis?.enhanced?.summary?.max_drawdown_date ??
-      new Date().toISOString(),
-    recoveryDays: drawdownAnalysis?.enhanced?.summary?.recovery_days ?? 0,
-    underwaterData:
-      drawdownAnalysis?.underwater_recovery?.underwater_data ?? [],
+    maxDrawdownPct: summary?.max_drawdown_pct ?? 0,
+    maxDrawdownDate: summary?.max_drawdown_date ?? new Date().toISOString(),
+    recoveryDays: summary?.recovery_days ?? 0,
+    underwaterData: getUnderwaterData(drawdownAnalysis),
   };
 }

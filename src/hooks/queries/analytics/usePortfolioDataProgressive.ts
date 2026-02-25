@@ -29,6 +29,75 @@ import { logger } from "@/utils/logger";
 
 import { useLandingPageData } from "./usePortfolioQuery";
 
+type LandingQuery = ReturnType<typeof useLandingPageData>;
+type SentimentQuery = ReturnType<typeof useSentimentData>;
+type RegimeQuery = ReturnType<typeof useRegimeHistory>;
+
+function logProgressiveQueryStates(
+  userId: string,
+  isEtlInProgress: boolean,
+  landingQuery: LandingQuery,
+  sentimentQuery: SentimentQuery,
+  regimeQuery: RegimeQuery
+): void {
+  logger.debug("[usePortfolioDataProgressive] Query States:", {
+    userId,
+    isEtlInProgress,
+    landingQuery: {
+      data: landingQuery.data ? "exists" : "null",
+      isLoading: landingQuery.isLoading,
+      error: landingQuery.error ? (landingQuery.error as Error).message : null,
+    },
+    sentimentQuery: {
+      data: sentimentQuery.data ? "exists" : "null",
+      isLoading: sentimentQuery.isLoading,
+    },
+    regimeQuery: {
+      data: regimeQuery.data ? "exists" : "null",
+      isLoading: regimeQuery.isLoading,
+    },
+  });
+}
+
+function buildUnifiedData(
+  landingQuery: LandingQuery,
+  sentimentQuery: SentimentQuery,
+  regimeQuery: RegimeQuery
+): WalletPortfolioDataWithDirection | null {
+  if (!landingQuery.data) {
+    return null;
+  }
+
+  return transformToWalletPortfolioDataWithDirection(
+    landingQuery.data,
+    sentimentQuery.data ?? null,
+    regimeQuery.data ?? null
+  );
+}
+
+function hasAnyLoadingState(
+  landingQuery: LandingQuery,
+  sentimentQuery: SentimentQuery,
+  regimeQuery: RegimeQuery
+): boolean {
+  return Boolean(
+    landingQuery.isLoading || sentimentQuery.isLoading || regimeQuery.isLoading
+  );
+}
+
+function getProgressiveError(
+  landingQuery: LandingQuery,
+  sentimentQuery: SentimentQuery,
+  regimeQuery: RegimeQuery
+): Error | null {
+  const firstError =
+    (landingQuery.error as Error) ||
+    (sentimentQuery.error as Error) ||
+    (regimeQuery.error as Error) ||
+    null;
+  return firstError;
+}
+
 /**
  * Progressive portfolio data hook
  *
@@ -72,33 +141,18 @@ export function usePortfolioDataProgressive(
     extractSentimentData
   );
 
-  // Debug logging for data fetching
-  logger.debug("[usePortfolioDataProgressive] Query States:", {
+  logProgressiveQueryStates(
     userId,
     isEtlInProgress,
-    landingQuery: {
-      data: landingQuery.data ? "exists" : "null",
-      isLoading: landingQuery.isLoading,
-      error: landingQuery.error ? (landingQuery.error as Error).message : null,
-    },
-    sentimentQuery: {
-      data: sentimentQuery.data ? "exists" : "null",
-      isLoading: sentimentQuery.isLoading,
-    },
-    regimeQuery: {
-      data: regimeQuery.data ? "exists" : "null",
-      isLoading: regimeQuery.isLoading,
-    },
-  });
-
-  // Legacy Unified Data (for backward compatibility)
-  const unifiedData: WalletPortfolioDataWithDirection | null = landingQuery.data
-    ? transformToWalletPortfolioDataWithDirection(
-        landingQuery.data,
-        sentimentQuery.data ?? null,
-        regimeQuery.data ?? null
-      )
-    : null;
+    landingQuery,
+    sentimentQuery,
+    regimeQuery
+  );
+  const unifiedData = buildUnifiedData(
+    landingQuery,
+    sentimentQuery,
+    regimeQuery
+  );
 
   const refetchAll = async () => {
     await Promise.all([
@@ -116,15 +170,8 @@ export function usePortfolioDataProgressive(
       strategy: strategySection,
       sentiment: sentimentSection,
     },
-    isLoading:
-      landingQuery.isLoading ||
-      sentimentQuery.isLoading ||
-      regimeQuery.isLoading,
-    error:
-      (landingQuery.error as Error) ||
-      (sentimentQuery.error as Error) ||
-      (regimeQuery.error as Error) ||
-      null,
+    isLoading: hasAnyLoadingState(landingQuery, sentimentQuery, regimeQuery),
+    error: getProgressiveError(landingQuery, sentimentQuery, regimeQuery),
     refetch: refetchAll,
   };
 }

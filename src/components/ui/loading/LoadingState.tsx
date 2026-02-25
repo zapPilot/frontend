@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import type { ComponentSize, LoadingVariant } from "@/types/ui/ui.types";
 
 import { Skeleton } from "./Skeleton";
@@ -15,6 +17,54 @@ interface LoadingStateProps {
   lines?: number;
 }
 
+type SkeletonType = NonNullable<LoadingStateProps["skeletonType"]>;
+
+function renderSkeletonContent(
+  skeletonType: SkeletonType,
+  lines: number
+): ReactNode {
+  switch (skeletonType) {
+    case "card":
+      return <CardSkeleton />;
+    case "metrics":
+      return <MetricsSkeleton />;
+    case "chart":
+      return <ChartSkeleton />;
+    case "text":
+      return <Skeleton variant="text" lines={lines} />;
+    default:
+      return null;
+  }
+}
+
+function renderSpinnerContainer(
+  size: ComponentSize,
+  className: string,
+  message: string
+): React.ReactNode {
+  return (
+    <div className={`flex items-center justify-center p-8 ${className}`}>
+      <div className="text-center">
+        <Spinner size={size} color="primary" />
+        {message && <p className="mt-2 text-sm text-gray-400">{message}</p>}
+      </div>
+    </div>
+  );
+}
+
+function renderInlineSpinner(
+  size: ComponentSize,
+  className: string,
+  message: string
+): React.ReactNode {
+  return (
+    <div className={`inline-flex items-center space-x-2 ${className}`}>
+      <Spinner size={size} color="primary" />
+      {message && <span className="text-sm text-gray-400">{message}</span>}
+    </div>
+  );
+}
+
 export function LoadingState({
   variant = "spinner",
   size = "md",
@@ -25,14 +75,7 @@ export function LoadingState({
 }: LoadingStateProps) {
   switch (variant) {
     case "spinner":
-      return (
-        <div className={`flex items-center justify-center p-8 ${className}`}>
-          <div className="text-center">
-            <Spinner size={size} color="primary" />
-            {message && <p className="mt-2 text-sm text-gray-400">{message}</p>}
-          </div>
-        </div>
-      );
+      return renderSpinnerContainer(size, className, message);
 
     case "card":
       return <LoadingCard message={message} className={className} />;
@@ -40,20 +83,12 @@ export function LoadingState({
     case "skeleton":
       return (
         <div className={className}>
-          {skeletonType === "card" && <CardSkeleton />}
-          {skeletonType === "metrics" && <MetricsSkeleton />}
-          {skeletonType === "chart" && <ChartSkeleton />}
-          {skeletonType === "text" && <Skeleton variant="text" lines={lines} />}
+          {renderSkeletonContent(skeletonType, lines)}
         </div>
       );
 
     case "inline":
-      return (
-        <div className={`inline-flex items-center space-x-2 ${className}`}>
-          <Spinner size={size} color="primary" />
-          {message && <span className="text-sm text-gray-400">{message}</span>}
-        </div>
-      );
+      return renderInlineSpinner(size, className, message);
 
     default:
       return (

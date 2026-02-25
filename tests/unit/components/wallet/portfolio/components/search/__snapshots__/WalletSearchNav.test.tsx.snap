@@ -4,8 +4,7 @@ exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
 <div>
   <button
     aria-label="Open search"
-    class="md:hidden p-2 text-gray-400 hover:text-white transition-colors 
-          block "
+    class="md:hidden p-2 text-gray-400 hover:text-white transition-colors block "
     type="button"
   >
     <svg
@@ -33,24 +32,24 @@ exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
   </button>
   <form
     class="
-          relative flex items-center transition-all duration-300 ease-in-out
-          hidden md:flex h-10
-          md:w-64 
-          
-        "
+    relative flex items-center transition-all duration-300 ease-in-out
+    hidden md:flex h-10
+    md:w-64
+    
+  "
   >
     <div
       class="
-          relative flex items-center w-full h-full
-          bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all
-        "
+    relative flex items-center w-full h-full
+    bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all
+  "
     >
       <svg
         aria-hidden="true"
         class="lucide lucide-search 
-              absolute w-4 h-4 pointer-events-none transition-colors duration-200
-              left-3
-              text-gray-500"
+    absolute w-4 h-4 pointer-events-none transition-colors duration-200
+    left-3
+    text-gray-500"
         fill="none"
         height="24"
         stroke="currentColor"
@@ -72,11 +71,11 @@ exports[`WalletSearchNav Component > renders correctly (snapshot) 1`] = `
       </svg>
       <input
         class="
-              w-full bg-transparent border-none text-white text-sm placeholder-gray-500
-              focus:ring-0 focus:outline-none transition-all
-              pl-9 pr-8 h-full
-              
-            "
+    w-full bg-transparent border-none text-white text-sm placeholder-gray-500
+    focus:ring-0 focus:outline-none transition-all
+    pl-9 pr-8 h-full
+    
+  "
         placeholder="Search address..."
         type="text"
         value=""
@@ -90,8 +89,7 @@ exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
 <div>
   <button
     aria-label="Open search"
-    class="md:hidden p-2 text-gray-400 hover:text-white transition-colors 
-          block "
+    class="md:hidden p-2 text-gray-400 hover:text-white transition-colors block "
     type="button"
   >
     <svg
@@ -119,24 +117,24 @@ exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
   </button>
   <form
     class="
-          relative flex items-center transition-all duration-300 ease-in-out
-          hidden md:flex h-10
-          md:w-64 
-          
-        "
+    relative flex items-center transition-all duration-300 ease-in-out
+    hidden md:flex h-10
+    md:w-64
+    
+  "
   >
     <div
       class="
-          relative flex items-center w-full h-full
-          bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all
-        "
+    relative flex items-center w-full h-full
+    bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all
+  "
     >
       <svg
         aria-hidden="true"
         class="lucide lucide-search 
-              absolute w-4 h-4 pointer-events-none transition-colors duration-200
-              left-3
-              text-gray-500"
+    absolute w-4 h-4 pointer-events-none transition-colors duration-200
+    left-3
+    text-gray-500"
         fill="none"
         height="24"
         stroke="currentColor"
@@ -158,11 +156,11 @@ exports[`WalletSearchNav Component > renders with custom placeholder 1`] = `
       </svg>
       <input
         class="
-              w-full bg-transparent border-none text-white text-sm placeholder-gray-500
-              focus:ring-0 focus:outline-none transition-all
-              pl-9 pr-8 h-full
-              
-            "
+    w-full bg-transparent border-none text-white text-sm placeholder-gray-500
+    focus:ring-0 focus:outline-none transition-all
+    pl-9 pr-8 h-full
+    
+  "
         placeholder="Custom placeholder"
         type="text"
         value=""

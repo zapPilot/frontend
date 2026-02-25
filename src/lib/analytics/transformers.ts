@@ -73,6 +73,42 @@ function getVolatilityRiskLabel(value: number): string {
   return "High risk";
 }
 
+interface TrendValue {
+  total_value_usd?: number;
+  date?: string;
+}
+
+function getPositivePortfolioValues(dailyValues: TrendValue[]): number[] {
+  return dailyValues.map(d => d.total_value_usd ?? 0).filter(v => v > 0);
+}
+
+function resolveBaselinePortfolioValue(
+  dailyValues: TrendValue[],
+  firstBtcDate: string | null
+): number {
+  const firstPortfolioValue = dailyValues[0]?.total_value_usd ?? 0;
+  if (!firstBtcDate) {
+    return firstPortfolioValue;
+  }
+
+  const baselineMatch = dailyValues.find(
+    d => toDateKey(d.date) === firstBtcDate
+  );
+  return baselineMatch?.total_value_usd ?? firstPortfolioValue;
+}
+
+function normalizeBtcBenchmark(
+  btcEquivalentValue: number | null,
+  min: number,
+  range: number
+): number | null {
+  if (btcEquivalentValue === null) {
+    return null;
+  }
+
+  return clampPercentage(normalizeToScale(btcEquivalentValue, min, range));
+}
+
 // ============================================================================
 // CHART TRANSFORMERS
 // ============================================================================
@@ -90,9 +126,7 @@ export function transformToPerformanceChart(
     return { points: [], ...buildDateRange(dailyValues) };
   }
 
-  const portfolioValues = dailyValues
-    .map(d => d.total_value_usd ?? 0)
-    .filter(v => v > 0);
+  const portfolioValues = getPositivePortfolioValues(dailyValues);
 
   if (portfolioValues.length === 0) {
     return { points: [], ...buildDateRange(dailyValues) };
@@ -108,13 +142,10 @@ export function transformToPerformanceChart(
     btcPriceMap
   );
 
-  // Baseline portfolio value for BTC comparison
-  const baselinePortfolioValue = firstBtcDate
-    ? (dailyValues.find(d => toDateKey(d.date) === firstBtcDate)
-        ?.total_value_usd ??
-      dailyValues[0]?.total_value_usd ??
-      0)
-    : (dailyValues[0]?.total_value_usd ?? 0);
+  const baselinePortfolioValue = resolveBaselinePortfolioValue(
+    dailyValues,
+    firstBtcDate
+  );
 
   const points = dailyValues.map((d, idx) => {
     const value = d.total_value_usd ?? min;
@@ -127,12 +158,7 @@ export function transformToPerformanceChart(
       firstBtcPrice,
       baselinePortfolioValue
     );
-    let normalizedBTC: number | null = null;
-    if (btcEquivalentValue !== null) {
-      normalizedBTC = clampPercentage(
-        normalizeToScale(btcEquivalentValue, min, range)
-      );
-    }
+    const normalizedBTC = normalizeBtcBenchmark(btcEquivalentValue, min, range);
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,

@@ -105,6 +105,10 @@ interface Transfer {
   to_bucket?: string;
 }
 
+type BacktestStrategy = NonNullable<
+  BacktestTimelinePoint["strategies"][string]
+>;
+
 const MS_PER_DAY = 86_400_000;
 const DEFAULT_Y_DOMAIN: [number, number] = [0, 1000];
 
@@ -157,6 +161,59 @@ function updateSignal(
   }
 }
 
+function isProcessableStrategy(
+  strategy: BacktestStrategy | undefined
+): strategy is BacktestStrategy {
+  if (!strategy) {
+    return false;
+  }
+
+  return strategy.metrics?.["signal"] !== "dca";
+}
+
+function processBorrowSignal(
+  strategy: BacktestStrategy,
+  acc: SignalAccumulator,
+  displayName: string
+): void {
+  const borrowSignalKey = classifyBorrowEvent(strategy.metrics);
+  if (!borrowSignalKey) {
+    return;
+  }
+
+  updateSignal(acc, borrowSignalKey, strategy.portfolio_value, displayName);
+}
+
+function getTransfers(strategy: BacktestStrategy): Transfer[] {
+  const metadata = strategy.metrics?.["metadata"] as
+    | { transfers?: Transfer[] }
+    | undefined;
+  const transfers = metadata?.transfers;
+  return Array.isArray(transfers) ? transfers : [];
+}
+
+function processTransferSignals(
+  strategy: BacktestStrategy,
+  acc: SignalAccumulator,
+  displayName: string
+): void {
+  for (const transfer of getTransfers(strategy)) {
+    if (!transfer.from_bucket || !transfer.to_bucket) {
+      continue;
+    }
+
+    const signalKey = classifyTransfer(
+      transfer.from_bucket,
+      transfer.to_bucket
+    );
+    if (!signalKey) {
+      continue;
+    }
+
+    updateSignal(acc, signalKey, strategy.portfolio_value, displayName);
+  }
+}
+
 function processStrategyTransfers(
   point: BacktestTimelinePoint,
   strategyIds: string[],
@@ -164,30 +221,13 @@ function processStrategyTransfers(
 ): void {
   for (const strategyId of strategyIds) {
     const strategy = point.strategies[strategyId];
-    if (!strategy || strategy.metrics?.["signal"] === "dca") continue;
+    if (!isProcessableStrategy(strategy)) {
+      continue;
+    }
 
     const displayName = getStrategyDisplayName(strategyId);
-
-    // 1. Borrow events
-    const borrowSignalKey = classifyBorrowEvent(strategy.metrics);
-    if (borrowSignalKey) {
-      updateSignal(acc, borrowSignalKey, strategy.portfolio_value, displayName);
-    }
-
-    // 2. Transfer events
-    const metadata = strategy.metrics?.["metadata"] as
-      | { transfers?: Transfer[] }
-      | undefined;
-    const transfers = metadata?.transfers;
-    if (Array.isArray(transfers)) {
-      for (const { from_bucket, to_bucket } of transfers) {
-        if (!from_bucket || !to_bucket) continue;
-        const signalKey = classifyTransfer(from_bucket, to_bucket);
-        if (signalKey) {
-          updateSignal(acc, signalKey, strategy.portfolio_value, displayName);
-        }
-      }
-    }
+    processBorrowSignal(strategy, acc, displayName);
+    processTransferSignals(strategy, acc, displayName);
   }
 }
 

@@ -5,6 +5,7 @@ import type {
 
 const VALID_BUCKETS = new Set(["spot", "stable", "lp"]);
 const DMA_WINDOW_DAYS = 200;
+const EVENT_PADDING = 20;
 
 interface StrategyMetrics {
   metadata?: { transfers?: unknown };
@@ -145,6 +146,69 @@ function sampleEvenlyFromIndices(
   return sampled;
 }
 
+function hasCriticalStrategyEvent(
+  strategy: BacktestTimelinePoint["strategies"][string] | undefined
+): boolean {
+  if (isDcaBaselineStrategy(strategy)) {
+    return false;
+  }
+
+  const hasEvent = strategy?.event != null;
+  const hasTransfers = extractTransfers(strategy).length > 0;
+  return hasEvent || hasTransfers;
+}
+
+function collectCriticalIndices(
+  timeline: BacktestTimelinePoint[]
+): Set<number> {
+  const criticalIndices = new Set<number>([0, timeline.length - 1]);
+
+  for (const [index, point] of timeline.entries()) {
+    const hasCriticalEvent = Object.values(point.strategies).some(
+      hasCriticalStrategyEvent
+    );
+    if (hasCriticalEvent) {
+      criticalIndices.add(index);
+    }
+  }
+
+  return criticalIndices;
+}
+
+function calculateEffectiveMax(
+  minPoints: number,
+  criticalIndexCount: number
+): number {
+  return Math.min(
+    MAX_CHART_POINTS,
+    Math.max(minPoints, criticalIndexCount + EVENT_PADDING)
+  );
+}
+
+function mapIndicesToTimeline(
+  timeline: BacktestTimelinePoint[],
+  indices: number[]
+): BacktestTimelinePoint[] {
+  return indices
+    .map(index => timeline[index])
+    .filter((point): point is BacktestTimelinePoint => point !== undefined);
+}
+
+function collectNonCriticalIndices(
+  timelineLength: number,
+  criticalIndices: Set<number>
+): number[] {
+  const nonCriticalIndices: number[] = [];
+
+  for (let i = 0; i < timelineLength; i++) {
+    if (!criticalIndices.has(i)) {
+      nonCriticalIndices.push(i);
+    }
+  }
+
+  return nonCriticalIndices;
+}
+
 /**
  * Sample timeline data while preserving critical trading events.
  *
@@ -171,28 +235,8 @@ export function sampleTimelineData(
     return timeline;
   }
 
-  const criticalIndices = new Set<number>([0, timeline.length - 1]);
-
-  for (const [index, point] of timeline.entries()) {
-    for (const strategy of Object.values(point.strategies)) {
-      if (isDcaBaselineStrategy(strategy)) {
-        continue;
-      }
-
-      const hasEvent = strategy?.event != null;
-      const hasTransfers = extractTransfers(strategy).length > 0;
-      if (hasEvent || hasTransfers) {
-        criticalIndices.add(index);
-        break;
-      }
-    }
-  }
-
-  const eventPadding = 20;
-  const effectiveMax = Math.min(
-    MAX_CHART_POINTS,
-    Math.max(minPoints, criticalIndices.size + eventPadding)
-  );
+  const criticalIndices = collectCriticalIndices(timeline);
+  const effectiveMax = calculateEffectiveMax(minPoints, criticalIndices.size);
 
   if (timeline.length <= effectiveMax) {
     return timeline;
@@ -204,18 +248,13 @@ export function sampleTimelineData(
   const remainingSlots = effectiveMax - sortedCriticalIndices.length;
 
   if (remainingSlots <= 0) {
-    return sortedCriticalIndices
-      .map(index => timeline[index])
-      .filter((point): point is BacktestTimelinePoint => point !== undefined);
+    return mapIndicesToTimeline(timeline, sortedCriticalIndices);
   }
 
-  const nonCriticalIndices: number[] = [];
-  for (let i = 0; i < timeline.length; i++) {
-    if (!criticalIndices.has(i)) {
-      nonCriticalIndices.push(i);
-    }
-  }
-
+  const nonCriticalIndices = collectNonCriticalIndices(
+    timeline.length,
+    criticalIndices
+  );
   const sampledNonCriticalIndices = sampleEvenlyFromIndices(
     nonCriticalIndices,
     remainingSlots
@@ -226,7 +265,5 @@ export function sampleTimelineData(
     ...sampledNonCriticalIndices,
   ].sort((a, b) => a - b);
 
-  return finalIndices
-    .map(index => timeline[index])
-    .filter((point): point is BacktestTimelinePoint => point !== undefined);
+  return mapIndicesToTimeline(timeline, finalIndices);
 }

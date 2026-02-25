@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import type { ReactNode } from "react";
 
 import type { SkeletonVariant } from "@/types/ui/ui.types";
 
@@ -21,26 +22,22 @@ export interface SkeletonProps extends BaseLoadingProps {
   spacing?: string;
 }
 
-export function Skeleton({
-  variant = "rectangular",
-  width,
-  height,
-  lines = 1,
-  spacing = "mb-2",
-  className = "",
-  [ARIA_LABEL_PROP]: ariaLabel = DEFAULT_SKELETON_LABEL,
-  [DATA_TEST_ID_PROP]: testId = "loading-skeleton",
-}: SkeletonProps) {
-  const baseClasses = BASE_SKELETON_CLASS;
+type SkeletonStyle = Record<string, string | number>;
 
-  const variantClasses: Record<SkeletonVariant, string> = {
-    text: "h-4 rounded",
-    circular: "rounded-full",
-    rectangular: "rounded",
-    rounded: "rounded-lg",
-  };
+const VARIANT_CLASSES: Record<SkeletonVariant, string> = {
+  text: "h-4 rounded",
+  circular: "rounded-full",
+  rectangular: "rounded",
+  rounded: "rounded-lg",
+};
 
-  const style: Record<string, string | number> = {};
+function buildSkeletonStyle(
+  variant: SkeletonVariant,
+  width: string | number | undefined,
+  height: string | number | undefined
+): SkeletonStyle {
+  const style: SkeletonStyle = {};
+
   if (width !== undefined) {
     style["width"] = width;
   } else if (variant === "text") {
@@ -53,6 +50,58 @@ export function Skeleton({
     style["height"] = width;
   }
 
+  return style;
+}
+
+function getLineStyle(
+  baseStyle: SkeletonStyle,
+  variant: SkeletonVariant,
+  index: number,
+  lines: number
+): SkeletonStyle {
+  const isLastTextLine = index === lines - 1 && variant === "text";
+  const width = isLastTextLine ? "75%" : (baseStyle["width"] ?? "100%");
+  return {
+    ...baseStyle,
+    width,
+  };
+}
+
+function renderSkeletonLines(
+  lines: number,
+  variant: SkeletonVariant,
+  spacing: string,
+  baseStyle: SkeletonStyle
+): ReactNode {
+  return Array.from({ length: lines }).map((_, index) => (
+    <motion.div
+      key={index}
+      className={`${BASE_SKELETON_CLASS} ${VARIANT_CLASSES[variant]} ${
+        index < lines - 1 ? spacing : ""
+      }`}
+      style={getLineStyle(baseStyle, variant, index, lines)}
+      initial={PULSE_ANIMATION.initial}
+      animate={PULSE_ANIMATION.animate}
+      transition={{
+        ...PULSE_TRANSITION,
+        delay: index * 0.1,
+      }}
+    />
+  ));
+}
+
+export function Skeleton({
+  variant = "rectangular",
+  width,
+  height,
+  lines = 1,
+  spacing = "mb-2",
+  className = "",
+  [ARIA_LABEL_PROP]: ariaLabel = DEFAULT_SKELETON_LABEL,
+  [DATA_TEST_ID_PROP]: testId = "loading-skeleton",
+}: SkeletonProps) {
+  const style = buildSkeletonStyle(variant, width, height);
+
   if (lines > 1) {
     return (
       <div
@@ -63,27 +112,7 @@ export function Skeleton({
         data-variant={variant}
         data-lines={lines}
       >
-        {Array.from({ length: lines }).map((_, index) => (
-          <motion.div
-            key={index}
-            className={`${baseClasses} ${variantClasses[variant]} ${
-              index < lines - 1 ? spacing : ""
-            }`}
-            style={{
-              ...style,
-              width:
-                index === lines - 1 && variant === "text"
-                  ? "75%"
-                  : (style["width"] ?? "100%"),
-            }}
-            initial={PULSE_ANIMATION.initial}
-            animate={PULSE_ANIMATION.animate}
-            transition={{
-              ...PULSE_TRANSITION,
-              delay: index * 0.1,
-            }}
-          />
-        ))}
+        {renderSkeletonLines(lines, variant, spacing, style)}
         <span className={SR_ONLY_CLASS}>{ariaLabel}</span>
       </div>
     );
@@ -91,7 +120,7 @@ export function Skeleton({
 
   return (
     <motion.div
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
+      className={`${BASE_SKELETON_CLASS} ${VARIANT_CLASSES[variant]} ${className}`}
       style={style}
       data-testid={testId}
       role="status"

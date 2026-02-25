@@ -25,103 +25,129 @@ interface DashboardShellProps {
   isNewUser?: boolean | undefined;
 }
 
-export function DashboardShell({
-  urlUserId,
-  isOwnBundle,
-  bundleUserName,
-  bundleUrl,
-  headerBanners,
-  footerOverlays,
-  initialEtlJobId,
-}: DashboardShellProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
+type EtlState = ReturnType<typeof useEtlJobPolling>["state"];
 
-  // ETL Polling for new wallets
-  const {
-    state: etlState,
-    startPolling,
-    completeTransition,
-  } = useEtlJobPolling();
-  const isEtlInProgress = ["pending", "processing", "completing"].includes(
-    etlState.status
-  );
-  const activeEtlJobIdRef = useRef<string | null>(null);
+function isEtlProcessing(status: EtlState["status"]): boolean {
+  return ["pending", "processing", "completing"].includes(status);
+}
 
-  // Portfolio data with ETL-aware queries
-  const { unifiedData, sections, isLoading, error, refetch } =
-    usePortfolioDataProgressive(urlUserId, isEtlInProgress);
-
-  // Start polling when initialEtlJobId is provided
+function useStartPollingFromInitialJobId(
+  initialEtlJobId: string | undefined,
+  startPolling: (jobId: string) => void,
+  activeEtlJobIdRef: { current: string | null }
+): void {
   useEffect(() => {
     if (!initialEtlJobId || initialEtlJobId === activeEtlJobIdRef.current) {
       return;
     }
+
     activeEtlJobIdRef.current = initialEtlJobId;
     startPolling(initialEtlJobId);
-  }, [initialEtlJobId, startPolling]);
+  }, [activeEtlJobIdRef, initialEtlJobId, startPolling]);
+}
 
+function useTrackActiveEtlJobId(
+  etlJobId: string | null,
+  activeEtlJobIdRef: { current: string | null }
+): void {
   useEffect(() => {
-    activeEtlJobIdRef.current = etlState.jobId;
-  }, [etlState.jobId]);
+    activeEtlJobIdRef.current = etlJobId;
+  }, [activeEtlJobIdRef, etlJobId]);
+}
 
-  // Handle ETL completion auto-refresh
-  // When status transitions to "completing", coordinate cache invalidation and refetch
+function shouldClearEtlUrlParams(completingJobId: string): boolean {
+  const url = new URL(window.location.href);
+  const urlJobId = url.searchParams.get("etlJobId");
+  return urlJobId === completingJobId || url.searchParams.has("isNewUser");
+}
+
+function clearEtlUrlParams(router: ReturnType<typeof useRouter>): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("etlJobId");
+  url.searchParams.delete("isNewUser");
+  router.replace(url.pathname + url.search, { scroll: false });
+}
+
+interface CompletionSyncParams {
+  etlState: EtlState;
+  queryClient: ReturnType<typeof useQueryClient>;
+  urlUserId: string;
+  refetch: () => Promise<unknown>;
+  activeEtlJobIdRef: { current: string | null };
+  router: ReturnType<typeof useRouter>;
+  completeTransition: () => void;
+}
+
+function useSyncOnEtlCompletion({
+  etlState,
+  queryClient,
+  urlUserId,
+  refetch,
+  activeEtlJobIdRef,
+  router,
+  completeTransition,
+}: CompletionSyncParams): void {
   useEffect(() => {
     if (etlState.status !== "completing" || !etlState.jobId) {
       return;
     }
 
-    const handleCompletion = async () => {
+    const handleCompletion = async (): Promise<void> => {
       const completingJobId = etlState.jobId;
+      if (!completingJobId) {
+        return;
+      }
 
-      // 1. Wait for cache invalidation to complete
       await queryClient.invalidateQueries({
         queryKey: queryKeys.portfolio.landingPage(urlUserId),
       });
-
-      // 2. Trigger refetch and wait for it to complete
       await refetch();
 
-      // 3. Clean URL params
       if (activeEtlJobIdRef.current !== completingJobId) {
         return;
       }
 
-      const url = new URL(window.location.href);
-      const urlJobId = url.searchParams.get("etlJobId");
-      const shouldClearParams =
-        urlJobId === completingJobId || url.searchParams.has("isNewUser");
-      if (shouldClearParams) {
-        url.searchParams.delete("etlJobId");
-        url.searchParams.delete("isNewUser");
-        router.replace(url.pathname + url.search, { scroll: false });
+      if (shouldClearEtlUrlParams(completingJobId)) {
+        clearEtlUrlParams(router);
       }
 
-      // 4. Complete the transition (moves state from "completing" to "idle")
       completeTransition();
     };
 
     void handleCompletion();
   }, [
-    etlState.status,
-    etlState.jobId,
-    refetch,
+    activeEtlJobIdRef,
     completeTransition,
-    urlUserId,
+    etlState.jobId,
+    etlState.status,
     queryClient,
+    refetch,
     router,
+    urlUserId,
   ]);
-  const { data: sentimentData } = useSentimentData();
-  const { data: regimeHistoryData } = useRegimeHistory();
-  const safeError = error instanceof Error ? error : null;
+}
 
-  // Keep error state handling (full-page replacement is appropriate for errors)
-  if (safeError && !unifiedData) {
-    return <WalletPortfolioErrorState error={safeError} onRetry={refetch} />;
-  }
+function getSafeError(error: Error | null | unknown): Error | null {
+  return error instanceof Error ? error : null;
+}
 
-  // Debug logging for button disable issue
+function computeIsEmptyState(
+  isLoading: boolean,
+  unifiedData: { positions?: number; balance?: number } | null
+): boolean {
+  return Boolean(
+    !isLoading &&
+      (unifiedData === null ||
+        ((unifiedData.positions ?? 0) === 0 &&
+          (unifiedData.balance ?? 0) === 0))
+  );
+}
+
+function logDashboardState(
+  unifiedData: { balance?: number; positions?: number } | null,
+  isLoading: boolean,
+  error: Error | null
+): void {
   logger.debug("[DashboardShell] Debug State:", {
     unifiedData: unifiedData ? "exists" : "null",
     balance: unifiedData?.balance ?? "N/A",
@@ -129,21 +155,35 @@ export function DashboardShell({
     isLoading,
     error: error ? error.message : null,
   });
+}
 
-  // Determine if this is empty state (no real portfolio data)
-  // Ghost mode shows when loading complete AND (wallet disconnected OR empty portfolio)
-  // - unifiedData === null: wallet disconnected, no user to query
-  // - unifiedData with zero positions/balance: connected but empty portfolio
-  const isEmptyState =
-    !isLoading &&
-    (unifiedData === null ||
-      ((unifiedData.positions ?? 0) === 0 && (unifiedData.balance ?? 0) === 0));
+interface DashboardShellViewProps {
+  urlUserId: string;
+  isOwnBundle: boolean;
+  bundleUserName: string | undefined;
+  bundleUrl: string | undefined;
+  portfolioData: ReturnType<typeof createEmptyPortfolioState>;
+  sections: ReturnType<typeof usePortfolioDataProgressive>["sections"];
+  isEmptyState: boolean;
+  isLoading: boolean;
+  etlState: EtlState;
+  headerBanners?: ReactNode;
+  footerOverlays?: ReactNode;
+}
 
-  // Use real data if available, otherwise create empty state with real sentiment
-  const portfolioData =
-    unifiedData ??
-    createEmptyPortfolioState(sentimentData ?? null, regimeHistoryData ?? null);
-
+function DashboardShellView({
+  urlUserId,
+  isOwnBundle,
+  bundleUserName,
+  bundleUrl,
+  portfolioData,
+  sections,
+  isEmptyState,
+  isLoading,
+  etlState,
+  headerBanners,
+  footerOverlays,
+}: DashboardShellViewProps): ReactNode {
   return (
     <div
       data-bundle-user-id={urlUserId}
@@ -163,5 +203,76 @@ export function DashboardShell({
         footerOverlays={footerOverlays}
       />
     </div>
+  );
+}
+
+export function DashboardShell({
+  urlUserId,
+  isOwnBundle,
+  bundleUserName,
+  bundleUrl,
+  headerBanners,
+  footerOverlays,
+  initialEtlJobId,
+}: DashboardShellProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // ETL Polling for new wallets
+  const {
+    state: etlState,
+    startPolling,
+    completeTransition,
+  } = useEtlJobPolling();
+  const isEtlInProgress = isEtlProcessing(etlState.status);
+  const activeEtlJobIdRef = useRef<string | null>(null);
+
+  // Portfolio data with ETL-aware queries
+  const { unifiedData, sections, isLoading, error, refetch } =
+    usePortfolioDataProgressive(urlUserId, isEtlInProgress);
+
+  useStartPollingFromInitialJobId(
+    initialEtlJobId,
+    startPolling,
+    activeEtlJobIdRef
+  );
+  useTrackActiveEtlJobId(etlState.jobId, activeEtlJobIdRef);
+  useSyncOnEtlCompletion({
+    etlState,
+    queryClient,
+    urlUserId,
+    refetch,
+    activeEtlJobIdRef,
+    router,
+    completeTransition,
+  });
+  const { data: sentimentData } = useSentimentData();
+  const { data: regimeHistoryData } = useRegimeHistory();
+  const safeError = getSafeError(error);
+
+  if (safeError && !unifiedData) {
+    return <WalletPortfolioErrorState error={safeError} onRetry={refetch} />;
+  }
+
+  logDashboardState(unifiedData, isLoading, safeError);
+  const isEmptyState = computeIsEmptyState(isLoading, unifiedData);
+  const portfolioData =
+    unifiedData ??
+    createEmptyPortfolioState(sentimentData ?? null, regimeHistoryData ?? null);
+
+  return (
+    <DashboardShellView
+      urlUserId={urlUserId}
+      isOwnBundle={isOwnBundle}
+      bundleUserName={bundleUserName}
+      bundleUrl={bundleUrl}
+      portfolioData={portfolioData}
+      sections={sections}
+      isEmptyState={isEmptyState}
+      isLoading={isLoading}
+      etlState={etlState}
+      headerBanners={headerBanners}
+      footerOverlays={footerOverlays}
+    />
   );
 }
