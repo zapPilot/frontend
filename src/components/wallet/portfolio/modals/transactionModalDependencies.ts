@@ -10,8 +10,6 @@ export {
   TokenOptionButton,
   TransactionModalContent,
 } from "./components/TransactionModalSelectors";
-export { useTransactionDropdownState } from "./hooks/useTransactionDropdownState";
 export { useTransactionModalState } from "./hooks/useTransactionModalState";
 export { resolveActionLabel } from "./utils/actionLabelUtils";
-export { getChainLogo } from "./utils/assetHelpers";
 export { buildModalFormState } from "./utils/modalHelpers";

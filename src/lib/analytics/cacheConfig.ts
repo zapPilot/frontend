@@ -4,7 +4,7 @@
  * Defines stale time values for React Query caching of analytics data.
  * These values optimize performance while ensuring data freshness based on context.
  */
-export const ANALYTICS_CACHE_TIME = {
+const ANALYTICS_CACHE_TIME = {
   /**
    * No caching when period changes
    * Forces immediate refetch to ensure users see updated data for new time periods

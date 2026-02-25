@@ -60,7 +60,7 @@ export const REGIME_DISPLAY_CONFIG: Record<
 };
 
 // Helper to map short IDs to labels if needed
-export const REGIME_ID_MAP: Record<string, RegimeLabel> = {
+const REGIME_ID_MAP: Record<string, RegimeLabel> = {
   ef: "extreme_fear",
   f: "fear",
   n: "neutral",

@@ -101,9 +101,10 @@ function resolveStrategyCardData(
   }
 
   const displayRegime = resolveDisplayRegime(selectedRegimeId, effectiveRegime);
-  const isViewingCurrent = Boolean(
-    displayRegime && effectiveRegime && displayRegime.id === effectiveRegime.id
-  );
+  const isViewingCurrent =
+    displayRegime?.id !== undefined &&
+    effectiveRegime?.id !== undefined &&
+    displayRegime.id === effectiveRegime.id;
   const activeDirection = determineActiveDirection(
     displayRegime,
     selectedDirection,

@@ -25,6 +25,10 @@
     "pino-pretty"
   ],
 
+  "ignoreIssues": {
+    "src/lib/errors/ServiceError.ts": ["exports"]
+  },
+
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true

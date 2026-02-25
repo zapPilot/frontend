@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactElement } from "react";
 import {
   Area,
   CartesianGrid,
@@ -225,10 +226,13 @@ function StrategyArea({
   index: number;
   isPrimary: boolean;
   prefix: string;
-}) {
+}): ReactElement {
   const color = getStrategyColor(strategyId, index);
   const displayName = getStrategyDisplayName(strategyId);
   const isDcaClassic = strategyId === DCA_CLASSIC_STRATEGY_ID;
+  const strokeDasharrayProps: { strokeDasharray?: string } = isDcaClassic
+    ? { strokeDasharray: "4 4" }
+    : {};
 
   return (
     <Area
@@ -239,7 +243,7 @@ function StrategyArea({
       fillOpacity={isPrimary ? 1 : 0}
       fill={isPrimary ? `url(#${prefix}-color-${strategyId})` : "transparent"}
       strokeWidth={2}
-      strokeDasharray={isDcaClassic ? "4 4" : undefined}
+      {...strokeDasharrayProps}
     />
   );
 }

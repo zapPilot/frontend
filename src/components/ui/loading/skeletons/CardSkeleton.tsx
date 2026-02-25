@@ -5,7 +5,7 @@ import {
 } from "../constants";
 import { Skeleton } from "../Skeleton";
 
-export function CardSkeletonContent() {
+function CardSkeletonContent() {
   return (
     <>
       <Skeleton variant="text" height={24} className="mb-4" width="60%" />

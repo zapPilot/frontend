@@ -82,7 +82,7 @@ export const CHART_SIGNALS: SignalConfig[] = [
   },
 ];
 
-export const SIGNAL_FIELDS = CHART_SIGNALS.map(s => s.field);
+const SIGNAL_FIELDS = CHART_SIGNALS.map(s => s.field);
 
 /** Sentiment label to numeric index for Y-axis positioning */
 const SENTIMENT_MAP: Record<string, number> = {

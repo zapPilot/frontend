@@ -17,13 +17,13 @@ export const ARIA_LABEL_PROP = "aria-label" as const;
 export const ARIA_HIDDEN_PROP = "aria-hidden" as const;
 export const DATA_TEST_ID_PROP = "data-testid" as const;
 
-export const TEXT_BLUE = "text-blue-600";
-export const TEXT_GRAY = "text-gray-400";
-export const TEXT_GRAY_DARK = "text-gray-600";
-export const TEXT_GREEN = "text-green-600";
-export const TEXT_RED = "text-red-600";
-export const TEXT_YELLOW = "text-yellow-600";
-export const TEXT_WHITE = "text-white";
+const TEXT_BLUE = "text-blue-600";
+const TEXT_GRAY = "text-gray-400";
+const TEXT_GRAY_DARK = "text-gray-600";
+const TEXT_GREEN = "text-green-600";
+const TEXT_RED = "text-red-600";
+const TEXT_YELLOW = "text-yellow-600";
+const TEXT_WHITE = "text-white";
 
 export const BASE_SKELETON_CLASS = "bg-gray-200 animate-pulse";
 export const SR_ONLY_CLASS = "sr-only";
@@ -36,7 +36,7 @@ export const PULSE_ANIMATION = {
   animate: { opacity: [0.6, 1, 0.6] },
 };
 
-export const PULSE_EASE = [0.42, 0, 0.58, 1] as const;
+const PULSE_EASE = [0.42, 0, 0.58, 1] as const;
 
 export const PULSE_TRANSITION = {
   duration: 1.5,

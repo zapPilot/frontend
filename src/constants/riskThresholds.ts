@@ -25,7 +25,7 @@ export enum RiskLevel {
  *
  * Defines numerical boundaries for each risk level.
  */
-export const HEALTH_RATE_THRESHOLDS = {
+const HEALTH_RATE_THRESHOLDS = {
   SAFE: 2.0, // Above 2.0 = Green (100% buffer)
   MODERATE: 1.5, // 1.5-2.0 = Yellow (50% buffer)
   RISKY: 1.2, // 1.2-1.5 = Orange (20% buffer)

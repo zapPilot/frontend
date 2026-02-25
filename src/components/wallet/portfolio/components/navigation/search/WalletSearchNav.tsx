@@ -1,7 +1,9 @@
 import { Search, X } from "lucide-react";
 import {
-  type FormEvent,
+  type EventHandler,
   type MouseEvent,
+  type ReactNode,
+  type SyntheticEvent,
   useEffect,
   useRef,
   useState,
@@ -119,7 +121,7 @@ export function WalletSearchNav({
   placeholder = "Search address...",
   className = "",
   isSearching = false,
-}: WalletSearchNavProps) {
+}: WalletSearchNavProps): ReactNode {
   const [address, setAddress] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [isMobileExpanded, setIsMobileExpanded] = useState(false); // Mobile toggle state
@@ -132,8 +134,8 @@ export function WalletSearchNav({
     }
   }, [isMobileExpanded]);
 
-  const handleSubmit = (e: FormEvent): void => {
-    e.preventDefault();
+  const handleSubmit: EventHandler<SyntheticEvent<HTMLFormElement>> = event => {
+    event.preventDefault();
     const trimmedAddress = address.trim();
 
     const validationMessage = getValidationError(trimmedAddress);
