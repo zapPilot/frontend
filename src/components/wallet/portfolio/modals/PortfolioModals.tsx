@@ -14,6 +14,7 @@ interface PortfolioModalsProps {
   data: WalletPortfolioDataWithDirection;
   isSettingsOpen: boolean;
   setIsSettingsOpen: (isOpen: boolean) => void;
+  userId?: string | undefined;
 }
 
 export function PortfolioModals({
@@ -22,6 +23,7 @@ export function PortfolioModals({
   data,
   isSettingsOpen,
   setIsSettingsOpen,
+  userId,
 }: PortfolioModalsProps) {
   const rebalanceAllocation = {
     crypto: data.currentAllocation.crypto,
@@ -46,6 +48,7 @@ export function PortfolioModals({
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
+        userId={userId}
       />
     </>
   );

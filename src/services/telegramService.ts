@@ -21,12 +21,14 @@ import { createServiceError } from "@/lib/http/serviceErrorUtils";
  * Response from requesting a Telegram verification token
  */
 export interface TelegramTokenResponse {
-  /** 6-digit verification token */
+  /** 32-character hex verification token */
   token: string;
-  /** Token expiration timestamp (ISO 8601) */
-  expiresAt: string;
+  /** Telegram bot username */
+  botName: string;
   /** Deep link to open Telegram bot */
   deepLink: string;
+  /** Token expiration timestamp (ISO 8601) */
+  expiresAt: string;
 }
 
 /**
@@ -35,10 +37,8 @@ export interface TelegramTokenResponse {
 export interface TelegramStatus {
   /** Whether user has connected Telegram */
   isConnected: boolean;
-  /** Telegram chat ID if connected */
-  chatId: string | null;
-  /** Telegram username if available */
-  username: string | null;
+  /** Whether notifications are enabled (user hasn't blocked bot) */
+  isEnabled: boolean;
   /** When the connection was established */
   connectedAt: string | null;
 }
@@ -47,6 +47,7 @@ export interface TelegramStatus {
  * Response from disconnect operation
  */
 export interface TelegramDisconnectResponse {
+  success: boolean;
   message: string;
 }
 
@@ -113,14 +114,11 @@ export async function requestTelegramToken(
  * Get the current Telegram connection status for a user.
  *
  * @param userId - User identifier
- * @returns Connection status including chat ID if connected
+ * @returns Connection status with enabled flag
  *
  * @example
  * ```typescript
- * const { isConnected, username } = await getTelegramStatus(userId);
- * if (isConnected) {
- *   console.log(`Connected as @${username}`);
- * }
+ * const { isConnected, isEnabled } = await getTelegramStatus(userId);
  * ```
  */
 export async function getTelegramStatus(

@@ -210,6 +210,7 @@ export function WalletPortfolioPresenter({
         data={data}
         isSettingsOpen={isSettingsOpen}
         setIsSettingsOpen={setIsSettingsOpen}
+        userId={userId}
       />
 
       {/* Wallet Manager Modal */}

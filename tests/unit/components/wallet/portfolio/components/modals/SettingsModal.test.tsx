@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SettingsModal } from "@/components/wallet/portfolio/modals/SettingsModal";
 
@@ -37,18 +37,33 @@ vi.mock("@/components/ui/modal", () => ({
   ),
 }));
 
+// Mock Telegram service functions
+const mockGetTelegramStatus = vi.fn();
+const mockRequestTelegramToken = vi.fn();
+const mockDisconnectTelegram = vi.fn();
+
+vi.mock("@/services", () => ({
+  getTelegramStatus: (...args: unknown[]) => mockGetTelegramStatus(...args),
+  requestTelegramToken: (...args: unknown[]) =>
+    mockRequestTelegramToken(...args),
+  disconnectTelegram: (...args: unknown[]) => mockDisconnectTelegram(...args),
+}));
+
 describe("SettingsModal", () => {
   const mockOnClose = vi.fn();
 
   beforeEach(() => {
     mockOnClose.mockClear();
+    mockGetTelegramStatus.mockReset();
+    mockRequestTelegramToken.mockReset();
+    mockDisconnectTelegram.mockReset();
   });
 
-  it("renders when open", () => {
+  it("renders when open with Notifications title", () => {
     render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
     expect(screen.getByTestId("mock-modal")).toBeInTheDocument();
-    expect(screen.getByText("Core Settings")).toBeInTheDocument();
+    expect(screen.getByText("Notifications")).toBeInTheDocument();
   });
 
   it("does not render when closed", () => {
@@ -57,25 +72,69 @@ describe("SettingsModal", () => {
     expect(screen.queryByTestId("mock-modal")).not.toBeInTheDocument();
   });
 
-  it("displays Google Calendar connection option", () => {
+  it("displays subtitle about Telegram alerts", () => {
     render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-    expect(screen.getByText("Google Calendar")).toBeInTheDocument();
-    expect(screen.getByText("Remind me to rebalance")).toBeInTheDocument();
+    expect(
+      screen.getByText(/connect telegram to receive portfolio alerts/i)
+    ).toBeInTheDocument();
   });
 
-  it("displays subtitle about automated rebalancing", () => {
+  it("shows connect-wallet message when no userId", () => {
     render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-    // Check for part of the subtitle text that's definitely unique
-    expect(screen.getByText(/personal regime/i)).toBeInTheDocument();
+    expect(screen.getByText(/connect your wallet first/i)).toBeInTheDocument();
   });
 
-  it("has a Connect button for Google Calendar", () => {
-    render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
+  it("shows loading state initially with userId", () => {
+    mockGetTelegramStatus.mockReturnValue(new Promise(() => undefined));
 
-    const connectButton = screen.getByRole("button", { name: /Connect/i });
-    expect(connectButton).toBeInTheDocument();
+    const { container } = render(
+      <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+    );
+
+    // Loader2 renders an SVG with the animate-spin class
+    expect(container.querySelector("svg.animate-spin")).toBeInTheDocument();
+  });
+
+  it("shows disconnected state with Connect button", async () => {
+    mockGetTelegramStatus.mockResolvedValue({
+      isConnected: false,
+      isEnabled: false,
+      connectedAt: null,
+    });
+
+    render(
+      <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Telegram")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("button", { name: /Connect/i })
+    ).toBeInTheDocument();
+  });
+
+  it("shows connected state with Disconnect button", async () => {
+    mockGetTelegramStatus.mockResolvedValue({
+      isConnected: true,
+      isEnabled: true,
+      connectedAt: "2026-01-01T00:00:00Z",
+    });
+
+    render(
+      <SettingsModal isOpen={true} onClose={mockOnClose} userId="0x123" />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Connected")).toBeInTheDocument();
+    });
+
+    expect(
+      screen.getByRole("button", { name: /Disconnect/i })
+    ).toBeInTheDocument();
   });
 
   it("calls onClose when modal header close button is clicked", () => {
@@ -96,14 +155,5 @@ describe("SettingsModal", () => {
     fireEvent.click(footerCloseButton);
 
     expect(mockOnClose).toHaveBeenCalledTimes(1);
-  });
-
-  it("renders Calendar icon", () => {
-    const { container } = render(
-      <SettingsModal isOpen={true} onClose={mockOnClose} />
-    );
-
-    // Calendar icon from lucide-react should be present
-    expect(container.querySelector("svg")).toBeInTheDocument();
   });
 });
