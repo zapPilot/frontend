@@ -6,10 +6,11 @@ type WalletId = Parameters<typeof createWallet>[0];
 
 // Ambire is currently supported at runtime but omitted from thirdweb's WalletId union.
 const AMBIRE_WALLET_ID = "com.ambire" as unknown as WalletId;
+const METAMASK_WALLET_ID: WalletId = "io.metamask";
 
 export const DEFAULT_WALLETS = [
   createWallet(AMBIRE_WALLET_ID) as Wallet,
-  createWallet("io.metamask") as Wallet,
+  createWallet(METAMASK_WALLET_ID) as Wallet,
 ];
 
 export const DEFAULT_SUPPORTED_CHAINS = getThirdWebChains();

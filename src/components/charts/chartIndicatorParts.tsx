@@ -4,11 +4,16 @@
  */
 
 import { motion } from "framer-motion";
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 
 import { CHART_COLORS } from "@/constants/portfolio";
 import type { ChartHoverState } from "@/types/ui/chartHover";
 import { getSharpeColor } from "@/utils/chartHoverUtils";
+
+const STROKE_COLOR = "#ffffff";
+const HIGH_VOL_STROKE_COLOR = "#f59e0b";
+const RECOVERY_COLOR = "#10b981";
+const HIGH_VOLATILITY_THRESHOLD = 25;
 
 const CIRCLE_ANIMATION = {
   initial: { opacity: 0, scale: 0 },
@@ -64,7 +69,7 @@ function IndicatorCircle({
       cy={point.y + dy}
       r={r}
       fill={fill}
-      stroke="#ffffff"
+      stroke={STROKE_COLOR}
       strokeWidth={sw}
       initial={CIRCLE_ANIMATION.initial}
       animate={CIRCLE_ANIMATION.animate}
@@ -83,11 +88,18 @@ interface VariantCircleProps {
   label: string;
 }
 
-export function SingleCircle({ point, r, sw, color }: VariantCircleProps) {
+export const SingleCircle = memo(function SingleCircle({
+  point,
+  r,
+  sw,
+  color,
+}: Omit<VariantCircleProps, "label">) {
   const effectiveColor =
     point.chartType === "sharpe" ? getSharpeColor(point.sharpe || 0) : color;
 
-  const isHighVol = point.chartType === "volatility" && point.volatility > 25;
+  const isHighVol =
+    point.chartType === "volatility" &&
+    point.volatility > HIGH_VOLATILITY_THRESHOLD;
 
   return (
     <>
@@ -98,7 +110,7 @@ export function SingleCircle({ point, r, sw, color }: VariantCircleProps) {
           cy={point.y}
           r={r + 6}
           fill="none"
-          stroke="#f59e0b"
+          stroke={HIGH_VOL_STROKE_COLOR}
           strokeWidth="2"
           initial={{ opacity: 0.6, scale: 1 }}
           animate={{ opacity: 0, scale: 2 }}
@@ -108,9 +120,9 @@ export function SingleCircle({ point, r, sw, color }: VariantCircleProps) {
       )}
     </>
   );
-}
+});
 
-export function MultiCircle({
+export const MultiCircle = memo(function MultiCircle({
   point,
   r,
   sw,
@@ -120,7 +132,7 @@ export function MultiCircle({
   if (point.chartType !== "asset-allocation") {
     return (
       <IndicatorWrapper point={point} label={label}>
-        <SingleCircle point={point} r={r} sw={sw} color={color} label={label} />
+        <SingleCircle point={point} r={r} sw={sw} color={color} />
       </IndicatorWrapper>
     );
   }
@@ -161,9 +173,9 @@ export function MultiCircle({
       ))}
     </IndicatorWrapper>
   );
-}
+});
 
-export function FlaggedCircle({
+export const FlaggedCircle = memo(function FlaggedCircle({
   point,
   r,
   sw,
@@ -188,17 +200,17 @@ export function FlaggedCircle({
             y1={point.y - r}
             x2={point.x}
             y2={point.y - r - 12}
-            stroke="#10b981"
+            stroke={RECOVERY_COLOR}
             strokeWidth="2"
           />
           <path
             d={`M ${point.x} ${point.y - r - 12} L ${point.x + 8} ${point.y - r - 9} L ${point.x} ${point.y - r - 6} Z`}
-            fill="#10b981"
-            stroke="#ffffff"
+            fill={RECOVERY_COLOR}
+            stroke={STROKE_COLOR}
             strokeWidth="1"
           />
         </motion.g>
       )}
     </IndicatorWrapper>
   );
-}
+});

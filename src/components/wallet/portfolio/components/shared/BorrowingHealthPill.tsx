@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 
 import {
   mapBorrowingStatusToRiskLevel,
-  RISK_COLORS,
+  RISK_DISPLAY_CONFIG,
   RiskLevel,
 } from "@/constants/riskThresholds";
 import { useBorrowingPositions } from "@/hooks/queries/analytics/useBorrowingPositions";
@@ -154,7 +154,7 @@ export function BorrowingHealthPill({
   const { overall_status, worst_health_rate } = summary;
 
   const riskLevel = mapBorrowingStatusToRiskLevel(overall_status);
-  const config = RISK_COLORS[riskLevel];
+  const config = RISK_DISPLAY_CONFIG[riskLevel];
   const sizeConfig = SIZE_CONFIGS[size];
 
   // Only Pulse for Critical

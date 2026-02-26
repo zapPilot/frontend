@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  RISK_COLORS,
-  RISK_LABELS,
-  RiskLevel,
-} from "@/constants/riskThresholds";
+import { RISK_DISPLAY_CONFIG, RiskLevel } from "@/constants/riskThresholds";
 import type { RiskMetrics } from "@/services/analyticsService";
 
 import { FinancialMetricRow } from "./FinancialMetricRow";
@@ -58,8 +54,8 @@ export function HealthRiskTooltip({
     position_count,
   } = riskMetrics;
 
-  const riskConfig = RISK_COLORS[riskLevel];
-  const riskLabel = RISK_LABELS[riskLevel];
+  const riskConfig = RISK_DISPLAY_CONFIG[riskLevel];
+  const riskLabel = riskConfig.label;
 
   // Calculate buffer from liquidation threshold
   const buffer = health_rate - liquidation_threshold;

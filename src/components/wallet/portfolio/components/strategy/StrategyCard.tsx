@@ -371,7 +371,6 @@ function StrategyCardExpandedContent({
 export interface StrategyCardProps {
   data: WalletPortfolioDataWithDirection;
   currentRegime: Regime | undefined;
-  isEmptyState?: boolean;
   isLoading?: boolean;
   /** Independent sentiment section for progressive loading */
   sentimentSection?: SectionState<SentimentData>;

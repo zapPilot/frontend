@@ -34,87 +34,8 @@ function getValidationError(address: string): string | null {
   return null;
 }
 
-function getTriggerClassName(
-  isMobileExpanded: boolean,
-  className: string
-): string {
-  return `md:hidden p-2 text-gray-400 hover:text-white transition-colors ${
-    isMobileExpanded ? "hidden" : "block"
-  } ${className}`;
-}
-
-function getFormClassName(
-  isMobileExpanded: boolean,
-  isFocused: boolean,
-  className: string
-): string {
-  const mobileOrDesktopClass = isMobileExpanded
-    ? "fixed inset-x-0 top-0 h-16 bg-gray-950/95 backdrop-blur-xl px-4 z-50 border-b border-gray-800"
-    : "hidden md:flex h-10";
-  const widthClass = isFocused ? "md:w-80" : "md:w-64";
-
-  return `
-    relative flex items-center transition-all duration-300 ease-in-out
-    ${mobileOrDesktopClass}
-    ${widthClass}
-    ${className}
-  `;
-}
-
-function getInputWrapperClassName(isMobileExpanded: boolean): string {
-  const desktopStyles =
-    "bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all";
-
-  return `
-    relative flex items-center w-full h-full
-    ${!isMobileExpanded ? desktopStyles : ""}
-  `;
-}
-
-function getIconClassName(
-  isMobileExpanded: boolean,
-  isFocused: boolean
-): string {
-  const offsetClass = isMobileExpanded ? "left-0 text-gray-400" : "left-3";
-  const focusClass = isFocused ? "text-purple-400" : "text-gray-500";
-
-  return `
-    absolute w-4 h-4 pointer-events-none transition-colors duration-200
-    ${offsetClass}
-    ${focusClass}
-  `;
-}
-
-function getSpinnerClassName(isMobileExpanded: boolean): string {
-  return `
-    absolute w-4 h-4 animate-spin rounded-full border-2 border-purple-400 border-t-transparent
-    ${isMobileExpanded ? "left-0" : "left-3"}
-  `;
-}
-
-function getInputClassName(
-  isMobileExpanded: boolean,
-  isSearching: boolean
-): string {
-  const spacingClass = isMobileExpanded
-    ? "pl-8 pr-10 h-full text-base"
-    : "pl-9 pr-8 h-full";
-  const disabledClass = isSearching ? "opacity-50 cursor-not-allowed" : "";
-
-  return `
-    w-full bg-transparent border-none text-white text-sm placeholder-gray-500
-    focus:ring-0 focus:outline-none transition-all
-    ${spacingClass}
-    ${disabledClass}
-  `;
-}
-
-function getClearButtonClassName(isMobileExpanded: boolean): string {
-  return `
-    absolute right-0 p-2 text-gray-500 hover:text-white transition-colors
-    ${isMobileExpanded ? "mr-0" : "mr-1"}
-  `;
-}
+const DESKTOP_INPUT_WRAPPER =
+  "bg-gray-900/50 hover:bg-gray-900/80 border border-gray-800 focus-within:border-purple-500/50 focus-within:ring-2 focus-within:ring-purple-500/20 rounded-xl transition-all";
 
 export function WalletSearchNav({
   onSearch,
@@ -124,7 +45,7 @@ export function WalletSearchNav({
 }: WalletSearchNavProps): ReactNode {
   const [address, setAddress] = useState("");
   const [isFocused, setIsFocused] = useState(false);
-  const [isMobileExpanded, setIsMobileExpanded] = useState(false); // Mobile toggle state
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const [validationError, setValidationError] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -176,7 +97,7 @@ export function WalletSearchNav({
       <button
         type="button"
         onClick={() => setIsMobileExpanded(true)}
-        className={getTriggerClassName(isMobileExpanded, className)}
+        className={`md:hidden p-2 text-gray-400 hover:text-white transition-colors ${isMobileExpanded ? "hidden" : "block"} ${className}`}
         aria-label="Open search"
       >
         <Search className="w-5 h-5" />
@@ -184,13 +105,23 @@ export function WalletSearchNav({
 
       <form
         onSubmit={handleSubmit}
-        className={getFormClassName(isMobileExpanded, isFocused, className)}
+        className={`relative flex items-center transition-all duration-300 ease-in-out ${
+          isMobileExpanded
+            ? "fixed inset-x-0 top-0 h-16 bg-gray-950/95 backdrop-blur-xl px-4 z-50 border-b border-gray-800"
+            : "hidden md:flex h-10"
+        } ${isFocused ? "md:w-80" : "md:w-64"} ${className}`}
       >
-        <div className={getInputWrapperClassName(isMobileExpanded)}>
+        <div
+          className={`relative flex items-center w-full h-full ${!isMobileExpanded ? DESKTOP_INPUT_WRAPPER : ""}`}
+        >
           {isSearching ? (
-            <div className={getSpinnerClassName(isMobileExpanded)} />
+            <div
+              className={`absolute w-4 h-4 animate-spin rounded-full border-2 border-purple-400 border-t-transparent ${isMobileExpanded ? "left-0" : "left-3"}`}
+            />
           ) : (
-            <Search className={getIconClassName(isMobileExpanded, isFocused)} />
+            <Search
+              className={`absolute w-4 h-4 pointer-events-none transition-colors duration-200 ${isMobileExpanded ? "left-0 text-gray-400" : "left-3"} ${isFocused ? "text-purple-400" : "text-gray-500"}`}
+            />
           )}
 
           <input
@@ -202,7 +133,11 @@ export function WalletSearchNav({
             onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
             disabled={isSearching}
-            className={getInputClassName(isMobileExpanded, isSearching)}
+            className={`w-full bg-transparent border-none text-white text-sm placeholder-gray-500 focus:ring-0 focus:outline-none transition-all ${
+              isMobileExpanded
+                ? "pl-8 pr-10 h-full text-base"
+                : "pl-9 pr-8 h-full"
+            } ${isSearching ? "opacity-50 cursor-not-allowed" : ""}`}
           />
 
           {(address || isMobileExpanded) && (
@@ -212,7 +147,7 @@ export function WalletSearchNav({
                 e.preventDefault();
               }}
               onClick={handleClearOrClose}
-              className={getClearButtonClassName(isMobileExpanded)}
+              className={`absolute right-0 p-2 text-gray-500 hover:text-white transition-colors ${isMobileExpanded ? "mr-0" : "mr-1"}`}
             >
               <X className="w-4 h-4" />
             </button>

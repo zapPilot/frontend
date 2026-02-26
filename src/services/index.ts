@@ -68,10 +68,7 @@ export {
 } from "./sentimentService";
 
 // Analytics Export
-export {
-  exportAnalyticsToCSV,
-  validateExportData,
-} from "./analyticsExportService";
+export { exportAnalyticsToCSV } from "./analyticsExportService";
 
 // Backtesting
 export { runBacktest } from "./backtestingService";

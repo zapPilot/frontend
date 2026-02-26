@@ -52,16 +52,6 @@ export interface AddressFormatOptions {
 // INTERNAL HELPERS
 // =============================================================================
 
-function normalizeOptions<T extends BaseFormatOptions>(
-  optionsOrHidden: T | boolean,
-  defaultOptions: T
-): T {
-  if (typeof optionsOrHidden === "boolean") {
-    return { ...defaultOptions, isHidden: optionsOrHidden };
-  }
-  return { ...defaultOptions, ...optionsOrHidden };
-}
-
 function formatSmartCurrency(
   amount: number,
   threshold: number,
@@ -91,6 +81,19 @@ function formatSmartNumber(amount: number): string {
   return amount.toFixed(0);
 }
 
+function resolveFormatOptions<T extends BaseFormatOptions>(
+  optionsOrIsHidden: T | boolean,
+  defaults: T,
+  hiddenPlaceholder: string
+): T | string {
+  const options =
+    typeof optionsOrIsHidden === "boolean"
+      ? { ...defaults, isHidden: optionsOrIsHidden }
+      : { ...defaults, ...optionsOrIsHidden };
+  if (options.isHidden) return hiddenPlaceholder;
+  return options;
+}
+
 function parseUtcDate(dateString: string): Dayjs | null {
   const parsedDate = dayjs.utc(dateString);
   if (!parsedDate.isValid()) {
@@ -108,14 +111,18 @@ export function formatCurrency(
   amount: number,
   optionsOrIsHidden: CurrencyFormatOptions | boolean = {}
 ): string {
-  const options = normalizeOptions(optionsOrIsHidden, {
-    currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
-    locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
-    threshold: 0.01,
-    showNegative: true,
-  });
-
-  if (options.isHidden) return PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER;
+  const resolved = resolveFormatOptions(
+    optionsOrIsHidden,
+    {
+      currency: PORTFOLIO_CONFIG.CURRENCY_CODE,
+      locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+      threshold: 0.01,
+      showNegative: true,
+    },
+    PORTFOLIO_CONFIG.HIDDEN_BALANCE_PLACEHOLDER
+  );
+  if (typeof resolved === "string") return resolved;
+  const options = resolved;
 
   const maxDigits = options.maximumFractionDigits ?? 2;
   const minDigits = Math.min(options.minimumFractionDigits ?? 2, maxDigits);
@@ -145,13 +152,17 @@ export function formatNumber(
   amount: number,
   optionsOrIsHidden: NumberFormatOptions | boolean = {}
 ): string {
-  const options = normalizeOptions(optionsOrIsHidden, {
-    locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
-    maximumFractionDigits: 4,
-    minimumFractionDigits: 0,
-  });
-
-  if (options.isHidden) return PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER;
+  const resolved = resolveFormatOptions(
+    optionsOrIsHidden,
+    {
+      locale: PORTFOLIO_CONFIG.CURRENCY_LOCALE,
+      maximumFractionDigits: 4,
+      minimumFractionDigits: 0,
+    },
+    PORTFOLIO_CONFIG.HIDDEN_NUMBER_PLACEHOLDER
+  );
+  if (typeof resolved === "string") return resolved;
+  const options = resolved;
 
   if (options.smartPrecision) {
     return formatSmartNumber(amount);

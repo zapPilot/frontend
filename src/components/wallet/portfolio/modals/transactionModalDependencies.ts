@@ -1,8 +1,7 @@
 /**
  * Transaction Modal Dependencies
  *
- * Barrel file for shared modal utilities and components.
- * Hooks are imported directly from their files for better tree-shaking.
+ * Barrel file for shared modal utilities, hooks, and components.
  */
 
 export {

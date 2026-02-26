@@ -20,10 +20,6 @@ import type {
 import type { ExportMetadata, ExportResult } from "@/types/export";
 import { logger } from "@/utils/logger";
 
-// Re-export validation utility from lib for backward compatibility
-// Prefer importing directly from @/lib/analytics in new code
-export { validateExportData } from "@/lib/analytics/analyticsValidation";
-
 // =============================================================================
 // EXPORT FUNCTIONS
 // =============================================================================
@@ -69,9 +65,8 @@ export async function exportAnalyticsToCSV(
 ): Promise<ExportResult> {
   try {
     // Import validation utility dynamically to avoid circular dependencies
-    const { validateExportData } = await import(
-      "@/lib/analytics/analyticsValidation"
-    );
+    const { validateExportData } =
+      await import("@/lib/analytics/analyticsValidation");
 
     // Validate user ID
     if (!userId || typeof userId !== "string" || userId.trim().length === 0) {

@@ -17,14 +17,6 @@ export const ARIA_LABEL_PROP = "aria-label" as const;
 export const ARIA_HIDDEN_PROP = "aria-hidden" as const;
 export const DATA_TEST_ID_PROP = "data-testid" as const;
 
-const TEXT_BLUE = "text-blue-600";
-const TEXT_GRAY = "text-gray-400";
-const TEXT_GRAY_DARK = "text-gray-600";
-const TEXT_GREEN = "text-green-600";
-const TEXT_RED = "text-red-600";
-const TEXT_YELLOW = "text-yellow-600";
-const TEXT_WHITE = "text-white";
-
 export const BASE_SKELETON_CLASS = "bg-gray-200 animate-pulse";
 export const SR_ONLY_CLASS = "sr-only";
 
@@ -36,12 +28,10 @@ export const PULSE_ANIMATION = {
   animate: { opacity: [0.6, 1, 0.6] },
 };
 
-const PULSE_EASE = [0.42, 0, 0.58, 1] as const;
-
 export const PULSE_TRANSITION = {
   duration: 1.5,
   repeat: Infinity,
-  ease: PULSE_EASE,
+  ease: [0.42, 0, 0.58, 1] as const,
 } satisfies Transition;
 
 export const sizeClasses: Record<ComponentSize, string> = {
@@ -52,16 +42,17 @@ export const sizeClasses: Record<ComponentSize, string> = {
   xl: "w-12 h-12",
 };
 
+/** Aliases: primary=blue, success=green for semantic usage */
 export const colorClasses: Record<LoadingColor, string> = {
-  primary: TEXT_BLUE,
-  secondary: TEXT_GRAY_DARK,
-  blue: TEXT_BLUE,
-  white: TEXT_WHITE,
-  gray: TEXT_GRAY,
-  green: TEXT_GREEN,
-  success: TEXT_GREEN,
-  red: TEXT_RED,
-  warning: TEXT_YELLOW,
+  primary: "text-blue-600",
+  secondary: "text-gray-600",
+  blue: "text-blue-600",
+  white: "text-white",
+  gray: "text-gray-400",
+  green: "text-green-600",
+  success: "text-green-600",
+  red: "text-red-600",
+  warning: "text-yellow-600",
 };
 
 export interface BaseLoadingProps {

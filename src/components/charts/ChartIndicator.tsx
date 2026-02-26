@@ -128,23 +128,22 @@ export function ChartIndicator({
   const effectiveVariant = resolveIndicatorVariant(variant, hoveredPoint);
   const color = getIndicatorColor(hoveredPoint.chartType);
   const label = getAriaLabel(hoveredPoint);
-  const props = {
+  const circleProps = {
     point: hoveredPoint,
     r: radius,
     sw: strokeWidth,
     color,
-    label,
   };
 
   switch (effectiveVariant) {
     case "multi-circle":
-      return <MultiCircle {...props} />;
+      return <MultiCircle {...circleProps} label={label} />;
     case "flagged-circle":
-      return <FlaggedCircle {...props} />;
+      return <FlaggedCircle {...circleProps} label={label} />;
     default:
       return (
         <IndicatorWrapper point={hoveredPoint} label={label}>
-          <SingleCircle {...props} />
+          <SingleCircle {...circleProps} />
         </IndicatorWrapper>
       );
   }

@@ -59,25 +59,11 @@ export const REGIME_DISPLAY_CONFIG: Record<
   },
 };
 
-// Helper to map short IDs to labels if needed
-const REGIME_ID_MAP: Record<string, RegimeLabel> = {
-  ef: "extreme_fear",
-  f: "fear",
-  n: "neutral",
-  g: "greed",
-  eg: "extreme_greed",
-};
-
 export type RegimeDisplayConfig = (typeof REGIME_DISPLAY_CONFIG)[RegimeLabel];
 
-function isRegimeLabel(value: string): value is RegimeLabel {
-  return value in REGIME_DISPLAY_CONFIG;
-}
-
-export function getRegimeConfig(idOrLabel: string): RegimeDisplayConfig {
-  const mappedLabel = REGIME_ID_MAP[idOrLabel] ?? idOrLabel;
-  if (isRegimeLabel(mappedLabel)) {
-    return REGIME_DISPLAY_CONFIG[mappedLabel];
+export function getRegimeConfig(label: string): RegimeDisplayConfig {
+  if (label in REGIME_DISPLAY_CONFIG) {
+    return REGIME_DISPLAY_CONFIG[label as RegimeLabel];
   }
 
   return REGIME_DISPLAY_CONFIG.neutral;

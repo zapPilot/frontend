@@ -6,8 +6,6 @@
   "project": ["src/**/*.{ts,tsx}", "scripts/**/*.{js,ts}"],
 
   "ignore": [
-    "**/*.test.{ts,tsx}",
-    "**/*.spec.{ts,tsx}",
     "tests/**",
     "**/index.ts",
     "playwright.config.ts",

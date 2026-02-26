@@ -4,11 +4,9 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { validateExportData } from "@/lib/analytics/analyticsValidation";
 import * as csvGenerator from "@/lib/csvGenerator";
-import {
-  exportAnalyticsToCSV,
-  validateExportData,
-} from "@/services/analyticsExportService";
+import { exportAnalyticsToCSV } from "@/services/analyticsExportService";
 import type { AnalyticsData } from "@/types/analytics";
 
 // =============================================================================

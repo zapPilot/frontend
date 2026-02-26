@@ -139,7 +139,6 @@ export function DashboardView({
           currentRegime={
             sections.strategy.isLoading ? undefined : currentRegime
           }
-          isEmptyState={isEmptyState}
           isLoading={false} // Allow partial rendering
           sentimentSection={sections.sentiment}
         />

@@ -85,7 +85,7 @@ export const CHART_SIGNALS: SignalConfig[] = [
 const SIGNAL_FIELDS = CHART_SIGNALS.map(s => s.field);
 
 /** Sentiment label to numeric index for Y-axis positioning */
-const SENTIMENT_MAP: Record<string, number> = {
+const SENTIMENT_INDEX_MAP: Record<string, number> = {
   extreme_fear: 0,
   fear: 1,
   neutral: 2,
@@ -96,7 +96,7 @@ const SENTIMENT_MAP: Record<string, number> = {
 // --- Helper Types ---
 
 interface SignalAccumulator {
-  [key: string]: number | null | Record<string, string[]> | unknown;
+  [key: string]: number | null | Record<SignalKey, string[]>;
   eventStrategies: Record<SignalKey, string[]>;
 }
 
@@ -118,7 +118,7 @@ export function sentimentLabelToIndex(
   label: string | null | undefined
 ): number | null {
   if (!label) return null;
-  return SENTIMENT_MAP[label] ?? null;
+  return SENTIMENT_INDEX_MAP[label] ?? null;
 }
 
 const TRANSFER_SIGNAL_MAP: Record<string, Record<string, SignalKey>> = {
@@ -248,19 +248,11 @@ function getPointValues(
   point: Record<string, unknown>,
   strategyIds: string[]
 ): number[] {
+  const keys = [...strategyIds.map(id => `${id}_value`), ...SIGNAL_FIELDS];
   const values: number[] = [];
 
-  // Strategy values
-  for (const id of strategyIds) {
-    const val = point[`${id}_value`];
-    if (typeof val === "number") {
-      values.push(val);
-    }
-  }
-
-  // Signal values
-  for (const field of SIGNAL_FIELDS) {
-    const val = point[field];
+  for (const key of keys) {
+    const val = point[key];
     if (typeof val === "number") {
       values.push(val);
     }

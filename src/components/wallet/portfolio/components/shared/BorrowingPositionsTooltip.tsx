@@ -2,8 +2,7 @@
 
 import {
   mapBorrowingStatusToRiskLevel,
-  RISK_COLORS,
-  RISK_LABELS,
+  RISK_DISPLAY_CONFIG,
 } from "@/constants/riskThresholds";
 import type {
   BorrowingPosition,
@@ -96,7 +95,7 @@ function TooltipEmpty() {
  */
 function PositionCard({ position }: { position: BorrowingPosition }) {
   const riskLevel = mapBorrowingStatusToRiskLevel(position.health_status);
-  const riskConfig = RISK_COLORS[riskLevel];
+  const riskConfig = RISK_DISPLAY_CONFIG[riskLevel];
 
   return (
     <div className="bg-gray-800/50 rounded-lg p-3 space-y-2">
@@ -232,8 +231,8 @@ export function BorrowingPositionsTooltip({
   }
 
   const riskLevel = mapBorrowingStatusToRiskLevel(summary.overall_status);
-  const riskConfig = RISK_COLORS[riskLevel];
-  const riskLabel = RISK_LABELS[riskLevel];
+  const riskConfig = RISK_DISPLAY_CONFIG[riskLevel];
+  const riskLabel = RISK_DISPLAY_CONFIG[riskLevel].label;
 
   return (
     <div

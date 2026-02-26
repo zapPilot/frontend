@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactElement } from "react";
+import { memo, type ReactElement } from "react";
 import {
   Area,
   CartesianGrid,
@@ -29,6 +29,15 @@ import {
 import { BacktestChartLegend } from "./BacktestChartLegend";
 import { BacktestTooltip, type BacktestTooltipProps } from "./BacktestTooltip";
 
+const AXIS_DEFAULTS = {
+  tickLine: false,
+  axisLine: false,
+} as const;
+
+function axisTick(fill: string) {
+  return { fontSize: 10, fill };
+}
+
 export interface BacktestChartProps {
   chartData: Record<string, unknown>[];
   sortedStrategyIds: string[];
@@ -38,7 +47,7 @@ export interface BacktestChartProps {
   chartIdPrefix?: string;
 }
 
-export function BacktestChart({
+export const BacktestChart = memo(function BacktestChart({
   chartData,
   sortedStrategyIds,
   yAxisDomain,
@@ -75,27 +84,24 @@ export function BacktestChart({
 
             <XAxis
               dataKey="date"
-              tick={{ fontSize: 10, fill: "#6b7280" }}
-              tickLine={false}
-              axisLine={false}
+              tick={axisTick("#6b7280")}
+              {...AXIS_DEFAULTS}
               minTickGap={30}
               tickFormatter={formatChartDate}
             />
 
             <YAxis
               domain={yAxisDomain}
-              tick={{ fontSize: 10, fill: "#6b7280" }}
-              tickLine={false}
-              axisLine={false}
+              tick={axisTick("#6b7280")}
+              {...AXIS_DEFAULTS}
               tickFormatter={formatCurrencyAxis}
             />
 
             <YAxis
               yAxisId="priceRight"
               orientation="right"
-              tick={{ fontSize: 10, fill: "#f59e0b" }}
-              tickLine={false}
-              axisLine={false}
+              tick={axisTick("#f59e0b")}
+              {...AXIS_DEFAULTS}
               width={64}
               tickFormatter={formatCurrencyAxis}
             />
@@ -104,9 +110,8 @@ export function BacktestChart({
               yAxisId="sentimentRight"
               orientation="right"
               domain={[0, 100]}
-              tick={{ fontSize: 10, fill: "#a855f7" }}
-              tickLine={false}
-              axisLine={false}
+              tick={axisTick("#a855f7")}
+              {...AXIS_DEFAULTS}
               width={48}
               label={{
                 value: "Sentiment",
@@ -183,7 +188,7 @@ export function BacktestChart({
       </div>
     </BaseCard>
   );
-}
+});
 
 // --- Sub-components for cleaner render ---
 

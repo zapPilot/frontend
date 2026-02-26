@@ -21,28 +21,18 @@ export enum RiskLevel {
 }
 
 /**
- * Health Rate Thresholds
- *
- * Defines numerical boundaries for each risk level.
- */
-const HEALTH_RATE_THRESHOLDS = {
-  SAFE: 2.0, // Above 2.0 = Green (100% buffer)
-  MODERATE: 1.5, // 1.5-2.0 = Yellow (50% buffer)
-  RISKY: 1.2, // 1.2-1.5 = Orange (20% buffer)
-  CRITICAL: 1.0, // Below 1.2 = Red (approaching liquidation)
-} as const;
-
-/**
  * Risk Level Display Configuration
  *
- * Comprehensive display configuration for each risk level including:
+ * Unified display configuration for each risk level including:
  * - Colors (Tailwind CSS classes)
  * - Icons (multi-modal indicators for accessibility)
  * - Animation patterns
  * - ARIA labels
+ * - Human-readable labels
  */
-export const RISK_COLORS = {
+export const RISK_DISPLAY_CONFIG = {
   [RiskLevel.SAFE]: {
+    label: "Safe",
     text: "text-emerald-500",
     bg: "bg-emerald-500/10",
     border: "border-emerald-500/20",
@@ -53,6 +43,7 @@ export const RISK_COLORS = {
     ariaLabel: "Safe - Large safety buffer",
   },
   [RiskLevel.MODERATE]: {
+    label: "Moderate",
     text: "text-amber-500",
     bg: "bg-amber-500/10",
     border: "border-amber-500/20",
@@ -63,6 +54,7 @@ export const RISK_COLORS = {
     ariaLabel: "Warning - Moderate safety buffer",
   },
   [RiskLevel.RISKY]: {
+    label: "Risky",
     text: "text-orange-500",
     bg: "bg-orange-500/10",
     border: "border-orange-500/20",
@@ -73,6 +65,7 @@ export const RISK_COLORS = {
     ariaLabel: "Risky - Low safety buffer",
   },
   [RiskLevel.CRITICAL]: {
+    label: "Critical",
     text: "text-rose-500",
     bg: "bg-rose-500/10",
     border: "border-rose-500/30 shadow-rose-500/20",
@@ -84,22 +77,10 @@ export const RISK_COLORS = {
   },
 } as const;
 
-/**
- * Risk Level Labels
- *
- * Human-readable labels for each risk level.
- */
-export const RISK_LABELS = {
-  [RiskLevel.SAFE]: "Safe",
-  [RiskLevel.MODERATE]: "Moderate",
-  [RiskLevel.RISKY]: "Risky",
-  [RiskLevel.CRITICAL]: "Critical",
-} as const;
-
 export interface RiskConfig {
   level: RiskLevel;
-  colors: (typeof RISK_COLORS)[RiskLevel];
-  label: (typeof RISK_LABELS)[RiskLevel];
+  colors: (typeof RISK_DISPLAY_CONFIG)[RiskLevel];
+  label: string;
   emoji: string;
 }
 
@@ -118,16 +99,10 @@ export interface RiskConfig {
  * ```
  */
 export function getRiskLevel(healthRate: number): RiskLevel {
-  if (healthRate >= HEALTH_RATE_THRESHOLDS.SAFE) {
-    return RiskLevel.SAFE;
-  }
-  if (healthRate >= HEALTH_RATE_THRESHOLDS.MODERATE) {
-    return RiskLevel.MODERATE;
-  }
-  if (healthRate >= HEALTH_RATE_THRESHOLDS.RISKY) {
-    return RiskLevel.RISKY;
-  }
-  return RiskLevel.CRITICAL;
+  if (healthRate >= 2.0) return RiskLevel.SAFE; // 100% buffer
+  if (healthRate >= 1.5) return RiskLevel.MODERATE; // 50% buffer
+  if (healthRate >= 1.2) return RiskLevel.RISKY; // 20% buffer
+  return RiskLevel.CRITICAL; // Approaching liquidation
 }
 
 /**
@@ -149,13 +124,13 @@ export function getRiskLevel(healthRate: number): RiskLevel {
  */
 export function getRiskConfig(healthRate: number): RiskConfig {
   const level = getRiskLevel(healthRate);
-  const colors = RISK_COLORS[level];
+  const config = RISK_DISPLAY_CONFIG[level];
 
   return {
     level,
-    colors,
-    label: RISK_LABELS[level],
-    emoji: colors.emoji,
+    colors: config,
+    label: config.label,
+    emoji: config.emoji,
   };
 }
 
@@ -175,14 +150,17 @@ export function getRiskConfig(healthRate: number): RiskConfig {
  * mapBorrowingStatusToRiskLevel("HEALTHY")  // RiskLevel.SAFE
  * ```
  */
-const BORROWING_STATUS_TO_RISK: Record<string, RiskLevel> = {
-  HEALTHY: RiskLevel.SAFE,
-  WARNING: RiskLevel.RISKY, // Map WARNING to RISKY for visual consistency
-  CRITICAL: RiskLevel.CRITICAL,
-};
-
 export function mapBorrowingStatusToRiskLevel(
   status: "HEALTHY" | "WARNING" | "CRITICAL"
 ): RiskLevel {
-  return BORROWING_STATUS_TO_RISK[status] ?? RiskLevel.MODERATE;
+  switch (status) {
+    case "HEALTHY":
+      return RiskLevel.SAFE;
+    case "WARNING":
+      return RiskLevel.RISKY;
+    case "CRITICAL":
+      return RiskLevel.CRITICAL;
+    default:
+      return RiskLevel.MODERATE;
+  }
 }
