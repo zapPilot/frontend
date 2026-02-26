@@ -43,6 +43,23 @@ interface WalletPortfolioPresenterProps {
   footerOverlays?: React.ReactNode;
 }
 
+const ETL_IN_PROGRESS_STATUSES = new Set([
+  "pending",
+  "processing",
+  "completing",
+]);
+
+function isValidationSearchError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  return (
+    error.message.includes("Invalid wallet") ||
+    error.message.includes("42-character")
+  );
+}
+
 export function WalletPortfolioPresenter({
   data,
   userId,
@@ -72,7 +89,7 @@ export function WalletPortfolioPresenter({
     setIsSettingsOpen,
   } = usePortfolioModalState();
 
-  const handleSearch = async (address: string) => {
+  async function handleSearch(address: string): Promise<void> {
     const trimmedAddress = address.trim();
     if (!trimmedAddress) {
       return;
@@ -108,14 +125,7 @@ export function WalletPortfolioPresenter({
       // Navigate with Next.js router
       router.push(bundleUrl);
     } catch (error) {
-      // More accurate error messaging based on error type
-      // connectWallet creates new users, so "Wallet Not Found" is misleading
-      const isValidationError =
-        error instanceof Error &&
-        (error.message.includes("Invalid wallet") ||
-          error.message.includes("42-character"));
-
-      if (isValidationError) {
+      if (isValidationSearchError(error)) {
         showToast({
           type: "error",
           title: "Invalid Address",
@@ -134,10 +144,10 @@ export function WalletPortfolioPresenter({
         setIsSearching(false);
       }
     }
-  };
+  }
 
   /** Tab view mapping for cleaner conditional rendering */
-  const TAB_VIEWS: Record<TabType, React.ReactNode> = {
+  const tabViews: Record<TabType, React.ReactNode> = {
     dashboard: (
       <DashboardView
         data={data}
@@ -163,9 +173,7 @@ export function WalletPortfolioPresenter({
   };
 
   // Determine if ETL loading screen should be shown
-  const isEtlInProgress = ["pending", "processing", "completing"].includes(
-    etlState.status
-  );
+  const isEtlInProgress = ETL_IN_PROGRESS_STATUSES.has(etlState.status);
 
   const shouldShowEtlLoading = isEtlInProgress || etlState.isLoading;
 
@@ -195,7 +203,7 @@ export function WalletPortfolioPresenter({
 
       {/* Main content */}
       <main className={LAYOUT.main}>
-        <div className={LAYOUT.content}>{TAB_VIEWS[activeTab]}</div>
+        <div className={LAYOUT.content}>{tabViews[activeTab]}</div>
       </main>
 
       {/* Footer */}
