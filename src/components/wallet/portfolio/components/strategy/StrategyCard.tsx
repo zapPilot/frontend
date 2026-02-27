@@ -1,6 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, Gauge } from "lucide-react";
-import { type MouseEvent, type ReactNode, useState } from "react";
+import {
+  type MouseEvent,
+  type ReactElement,
+  type ReactNode,
+  useState,
+} from "react";
 
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import { type Regime, regimes } from "@/components/wallet/regime/regimeData";
@@ -8,10 +13,7 @@ import { type StrategyDirection } from "@/components/wallet/regime/strategyLabel
 import { ANIMATIONS } from "@/constants/design-system";
 import { getRegimeConfig } from "@/constants/regimeDisplay";
 import { cn } from "@/lib/ui/classNames";
-import type {
-  SectionState,
-  SentimentData,
-} from "@/types/portfolio-progressive";
+import type { SectionState, SentimentData } from "@/types";
 
 import { StrategyCardSkeleton } from "../../views/DashboardSkeleton";
 import { RegimeSelector } from "./RegimeSelector";
@@ -43,7 +45,7 @@ function getCardClassName(isExpanded: boolean): string {
 function renderSentimentDisplay(
   sentimentSection: SectionState<SentimentData> | undefined,
   fallbackValue: string | number | undefined
-): ReactNode {
+): ReactElement {
   if (sentimentSection?.isLoading) {
     return (
       <span
@@ -63,7 +65,9 @@ function renderSentimentDisplay(
   );
 }
 
-function getDisplayConfig(regime: Regime | undefined) {
+function getDisplayConfig(
+  regime: Regime | undefined
+): ReturnType<typeof getRegimeConfig> | null {
   if (!regime) {
     return null;
   }
@@ -190,7 +194,7 @@ function renderExpandedSection({
   targetAllocation,
   onSelectRegime,
   onSelectDirection,
-}: ExpandedSectionRenderParams): ReactNode {
+}: ExpandedSectionRenderParams): ReactElement | null {
   if (!isStrategyExpanded || !displayRegime) {
     return null;
   }
@@ -227,7 +231,7 @@ function StrategyCardHeader({
   sentimentDisplay,
   strategyPhilosophy,
   isStrategyExpanded,
-}: StrategyCardHeaderProps): ReactNode {
+}: StrategyCardHeaderProps): ReactElement {
   return (
     <motion.div
       layout="position"
@@ -311,7 +315,7 @@ function StrategyCardExpandedContent({
   hideAllocationTarget,
   onSelectRegime,
   onSelectDirection,
-}: StrategyCardExpandedContentProps): ReactNode {
+}: StrategyCardExpandedContentProps): ReactElement {
   return (
     <motion.div
       {...ANIMATIONS.EXPAND_COLLAPSE}
@@ -381,7 +385,7 @@ export function StrategyCard({
   currentRegime,
   isLoading = false,
   sentimentSection,
-}: StrategyCardProps): ReactNode {
+}: StrategyCardProps): ReactElement | null {
   const [isStrategyExpanded, setIsStrategyExpanded] = useState(false);
   const [selectedRegimeId, setSelectedRegimeId] = useState<string | null>(null);
   const [selectedDirection, setSelectedDirection] =
@@ -413,14 +417,25 @@ export function StrategyCard({
   } = strategyCardData;
   const strategyDetails = getActiveStrategyDetails(activeStrategy);
 
+  function handleStrategyCardClick(event: MouseEvent<HTMLDivElement>): void {
+    handleCardToggle(event, displayRegime, setIsStrategyExpanded);
+  }
+
+  function handleSelectRegime(regimeId: string): void {
+    setSelectedRegimeId(regimeId);
+    setSelectedDirection(null);
+  }
+
+  function handleSelectDirection(direction: StrategyDirection): void {
+    setSelectedDirection(direction);
+  }
+
   return (
     <motion.div
       data-testid="strategy-card"
       layout
       className={getCardClassName(isStrategyExpanded)}
-      onClick={event =>
-        handleCardToggle(event, displayRegime, setIsStrategyExpanded)
-      }
+      onClick={handleStrategyCardClick}
     >
       <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
         <Gauge
@@ -448,13 +463,8 @@ export function StrategyCard({
           activeDirection,
           strategyDetails,
           targetAllocation,
-          onSelectRegime: regimeId => {
-            setSelectedRegimeId(regimeId);
-            setSelectedDirection(null);
-          },
-          onSelectDirection: direction => {
-            setSelectedDirection(direction);
-          },
+          onSelectRegime: handleSelectRegime,
+          onSelectDirection: handleSelectDirection,
         })}
       </AnimatePresence>
     </motion.div>

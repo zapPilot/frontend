@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactElement } from "react";
+
 import {
   mapBorrowingStatusToRiskLevel,
   RISK_DISPLAY_CONFIG,
@@ -30,10 +32,36 @@ interface BorrowingPositionsTooltipProps {
   onRetry?: (() => void) | undefined;
 }
 
+interface TooltipErrorProps {
+  error: Error;
+  onRetry?: (() => void) | undefined;
+}
+
+interface PositionCardProps {
+  position: BorrowingPosition;
+}
+
+interface TooltipStateWrapperProps {
+  children: React.ReactNode;
+}
+
+/**
+ * Common wrapper for tooltips in various states (loading, error, empty)
+ */
+function TooltipStateWrapper({
+  children,
+}: TooltipStateWrapperProps): ReactElement {
+  return (
+    <div className="w-96 bg-gray-900/95 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl p-4">
+      {children}
+    </div>
+  );
+}
+
 /**
  * Loading Skeleton Component
  */
-function TooltipSkeleton() {
+function TooltipSkeleton(): ReactElement {
   return (
     <div className="w-96 bg-gray-900/95 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl p-4 animate-pulse">
       <div className="h-4 bg-gray-700 rounded w-3/4 mb-3" />
@@ -49,15 +77,9 @@ function TooltipSkeleton() {
 /**
  * Error State Component
  */
-function TooltipError({
-  error,
-  onRetry,
-}: {
-  error: Error;
-  onRetry?: (() => void) | undefined;
-}) {
+function TooltipError({ error, onRetry }: TooltipErrorProps): ReactElement {
   return (
-    <div className="w-96 bg-gray-900/95 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl p-4">
+    <TooltipStateWrapper>
       <div className="text-center py-4">
         <p className="text-sm text-rose-400 mb-2">Failed to load positions</p>
         <p className="text-xs text-gray-400 mb-3">{error.message}</p>
@@ -70,30 +92,30 @@ function TooltipError({
           </button>
         )}
       </div>
-    </div>
+    </TooltipStateWrapper>
   );
 }
 
 /**
  * Empty State Component
  */
-function TooltipEmpty() {
+function TooltipEmpty(): ReactElement {
   return (
-    <div className="w-96 bg-gray-900/95 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl p-4">
+    <TooltipStateWrapper>
       <div className="text-center py-4">
         <p className="text-sm text-gray-400">No borrowing positions found</p>
         <p className="text-xs text-gray-500 mt-1">
           You don&apos;t have any active debt positions
         </p>
       </div>
-    </div>
+    </TooltipStateWrapper>
   );
 }
 
 /**
  * Position Card Component
  */
-function PositionCard({ position }: { position: BorrowingPosition }) {
+function PositionCard({ position }: PositionCardProps): ReactElement {
   const riskLevel = mapBorrowingStatusToRiskLevel(position.health_status);
   const riskConfig = RISK_DISPLAY_CONFIG[riskLevel];
 
@@ -209,7 +231,7 @@ export function BorrowingPositionsTooltip({
   isLoading,
   error,
   onRetry,
-}: BorrowingPositionsTooltipProps) {
+}: BorrowingPositionsTooltipProps): ReactElement {
   // Loading state
   if (isLoading) {
     return <TooltipSkeleton />;

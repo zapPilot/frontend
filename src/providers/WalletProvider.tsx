@@ -10,6 +10,7 @@
 import {
   createContext,
   type Dispatch,
+  type ReactElement,
   type ReactNode,
   type SetStateAction,
   useCallback,
@@ -29,9 +30,10 @@ import {
   useWalletBalance,
 } from "thirdweb/react";
 
-import type { WalletProviderInterface } from "@/types/domain/wallet";
-import { walletLogger } from "@/utils/logger";
+import type { WalletProviderInterface } from "@/types";
 // Chain types are handled internally
+import { getErrorMessage } from "@/utils";
+import { walletLogger } from "@/utils/logger";
 import THIRDWEB_CLIENT from "@/utils/thirdweb";
 
 // Essential types for simplified wallet
@@ -62,14 +64,6 @@ interface WalletProviderProps {
   children: ReactNode;
 }
 
-function getErrorMessage(error: unknown, fallbackMessage: string): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return fallbackMessage;
-}
-
 function getWalletAddress(walletItem: {
   getAccount: () => { address?: string } | undefined | null;
 }): string {
@@ -94,7 +88,9 @@ function handleWalletOperationError(
 }
 
 // Main Provider Component
-export function WalletProvider({ children }: WalletProviderProps) {
+export function WalletProvider({
+  children,
+}: WalletProviderProps): ReactElement {
   // ThirdWeb hooks
   const account = useActiveAccount();
   const wallet = useActiveWallet();

@@ -6,7 +6,7 @@
  */
 
 import { motion } from "framer-motion";
-import { useRef } from "react";
+import { type ReactElement, useRef } from "react";
 
 import type {
   AllocationHoverData,
@@ -16,7 +16,7 @@ import type {
   PerformanceHoverData,
   SharpeHoverData,
   VolatilityHoverData,
-} from "@/types/ui/chartHover";
+} from "@/types";
 
 import {
   AllocationTooltip,
@@ -71,10 +71,14 @@ interface ChartTooltipProps {
   chartHeight?: number;
 }
 
+interface TooltipContentProps {
+  data: ChartHoverState;
+}
+
 /**
  * Render chart-specific tooltip content based on chart type
  */
-function TooltipContent({ data }: { data: ChartHoverState }) {
+function TooltipContent({ data }: TooltipContentProps): ReactElement | null {
   switch (data.chartType) {
     case "performance":
       return <PerformanceTooltip data={data as PerformanceHoverData} />;
@@ -205,7 +209,7 @@ export function ChartTooltip({
   hoveredPoint,
   chartWidth = 800,
   chartHeight = 300,
-}: ChartTooltipProps) {
+}: ChartTooltipProps): ReactElement | null {
   const tooltipRef = useRef<HTMLDivElement>(null);
 
   if (!hoveredPoint) return null;

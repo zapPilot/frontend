@@ -1,7 +1,13 @@
 "use client";
 
 import { AlertCircle, CheckCircle2, Loader2, Send, Unlink } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  type ReactElement,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Modal,
@@ -15,6 +21,7 @@ import {
   requestTelegramToken,
   type TelegramStatus,
 } from "@/services";
+import { getErrorMessage } from "@/utils";
 
 type ViewState =
   | { kind: "loading" }
@@ -31,21 +38,91 @@ interface SettingsModalProps {
   userId?: string | undefined;
 }
 
-export function SettingsModal({ isOpen, onClose, userId }: SettingsModalProps) {
+interface ErrorStateProps {
+  message: string;
+  onRetry: () => void;
+}
+
+interface ConnectingStateProps {
+  deepLink: string;
+}
+
+interface ConnectedStateProps {
+  onDisconnect: () => void;
+  isDisconnecting: boolean;
+}
+
+interface DisconnectedStateProps {
+  onConnect: () => void;
+}
+
+interface RenderSettingsContentParams {
+  userId?: string | undefined;
+  view: ViewState;
+  isDisconnecting: boolean;
+  onRetry: () => void;
+  onConnect: () => void;
+  onDisconnect: () => void;
+}
+
+function renderSettingsContent({
+  userId,
+  view,
+  isDisconnecting,
+  onRetry,
+  onConnect,
+  onDisconnect,
+}: RenderSettingsContentParams): ReactElement {
+  if (!userId) {
+    return <NoUserMessage />;
+  }
+
+  if (view.kind === "loading") {
+    return <LoadingState />;
+  }
+
+  if (view.kind === "error") {
+    return <ErrorState message={view.message} onRetry={onRetry} />;
+  }
+
+  if (view.kind === "connecting") {
+    return <ConnectingState deepLink={view.deepLink} />;
+  }
+
+  if (view.status.isConnected) {
+    return (
+      <ConnectedState
+        onDisconnect={onDisconnect}
+        isDisconnecting={isDisconnecting}
+      />
+    );
+  }
+
+  return <DisconnectedState onConnect={onConnect} />;
+}
+
+export function SettingsModal({
+  isOpen,
+  onClose,
+  userId,
+}: SettingsModalProps): ReactElement {
   const [view, setView] = useState<ViewState>({ kind: "loading" });
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollStartRef = useRef<number>(0);
 
-  const stopPolling = useCallback(() => {
+  const stopPolling = useCallback((): void => {
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
     }
   }, []);
 
-  const fetchStatus = useCallback(async () => {
-    if (!userId) return;
+  const fetchStatus = useCallback(async (): Promise<TelegramStatus | null> => {
+    if (!userId) {
+      return null;
+    }
+
     try {
       const status = await getTelegramStatus(userId);
       setView({ kind: "idle", status });
@@ -91,38 +168,43 @@ export function SettingsModal({ isOpen, onClose, userId }: SettingsModalProps) {
     }, POLL_INTERVAL_MS);
   }, [userId, stopPolling]);
 
-  const handleConnect = async () => {
-    if (!userId) return;
+  const handleConnect = async (): Promise<void> => {
+    if (!userId) {
+      return;
+    }
+
     try {
       const { deepLink } = await requestTelegramToken(userId);
       window.open(deepLink, "_blank");
       setView({ kind: "connecting", deepLink });
       startPolling();
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Failed to generate connection link.";
+      const message = getErrorMessage(
+        err,
+        "Failed to generate connection link."
+      );
       setView({ kind: "error", message });
     }
   };
 
-  const handleDisconnect = async () => {
-    if (!userId) return;
+  const handleDisconnect = async (): Promise<void> => {
+    if (!userId) {
+      return;
+    }
+
     setIsDisconnecting(true);
     try {
       await disconnectTelegram(userId);
       await fetchStatus();
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to disconnect Telegram.";
+      const message = getErrorMessage(err, "Failed to disconnect Telegram.");
       setView({ kind: "error", message });
     } finally {
       setIsDisconnecting(false);
     }
   };
 
-  const handleRetry = () => {
+  const handleRetry = (): void => {
     stopPolling();
     setView({ kind: "loading" });
     void fetchStatus();
@@ -136,22 +218,18 @@ export function SettingsModal({ isOpen, onClose, userId }: SettingsModalProps) {
         onClose={onClose}
       />
       <ModalContent>
-        {!userId ? (
-          <NoUserMessage />
-        ) : view.kind === "loading" ? (
-          <LoadingState />
-        ) : view.kind === "error" ? (
-          <ErrorState message={view.message} onRetry={handleRetry} />
-        ) : view.kind === "connecting" ? (
-          <ConnectingState deepLink={view.deepLink} />
-        ) : view.kind === "idle" && view.status.isConnected ? (
-          <ConnectedState
-            onDisconnect={handleDisconnect}
-            isDisconnecting={isDisconnecting}
-          />
-        ) : (
-          <DisconnectedState onConnect={handleConnect} />
-        )}
+        {renderSettingsContent({
+          userId,
+          view,
+          isDisconnecting,
+          onRetry: handleRetry,
+          onConnect: () => {
+            void handleConnect();
+          },
+          onDisconnect: () => {
+            void handleDisconnect();
+          },
+        })}
       </ModalContent>
       <ModalFooter className="justify-end">
         <button
@@ -165,7 +243,7 @@ export function SettingsModal({ isOpen, onClose, userId }: SettingsModalProps) {
   );
 }
 
-function NoUserMessage() {
+function NoUserMessage(): ReactElement {
   return (
     <p className="text-sm text-gray-400 text-center py-4">
       Connect your wallet first to enable notifications.
@@ -173,7 +251,7 @@ function NoUserMessage() {
   );
 }
 
-function LoadingState() {
+function LoadingState(): ReactElement {
   return (
     <div className="flex items-center justify-center py-8">
       <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
@@ -181,13 +259,7 @@ function LoadingState() {
   );
 }
 
-function ErrorState({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) {
+function ErrorState({ message, onRetry }: ErrorStateProps): ReactElement {
   return (
     <div className="flex flex-col items-center gap-3 py-4">
       <div className="w-10 h-10 rounded-lg bg-red-500/20 flex items-center justify-center">
@@ -204,7 +276,7 @@ function ErrorState({
   );
 }
 
-function ConnectingState({ deepLink }: { deepLink: string }) {
+function ConnectingState({ deepLink }: ConnectingStateProps): ReactElement {
   return (
     <div className="flex flex-col items-center gap-4 py-4">
       <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
@@ -231,60 +303,88 @@ function ConnectingState({ deepLink }: { deepLink: string }) {
   );
 }
 
-function ConnectedState({
-  onDisconnect,
-  isDisconnecting,
-}: {
-  onDisconnect: () => void;
-  isDisconnecting: boolean;
-}) {
+interface TelegramConnectionCardProps {
+  icon: React.ReactNode;
+  iconBg: string;
+  title: string;
+  subtitle: React.ReactNode;
+  action: React.ReactNode;
+}
+
+function TelegramConnectionCard({
+  icon,
+  iconBg,
+  title,
+  subtitle,
+  action,
+}: TelegramConnectionCardProps): ReactElement {
   return (
     <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-          <CheckCircle2 className="w-5 h-5 text-green-400" />
+        <div
+          className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center`}
+        >
+          {icon}
         </div>
         <div>
-          <div className="font-bold text-white text-sm">Telegram</div>
-          <div className="text-xs text-green-400">Connected</div>
+          <div className="font-bold text-white text-sm">{title}</div>
+          <div className="text-xs">{subtitle}</div>
         </div>
       </div>
-      <button
-        onClick={onDisconnect}
-        disabled={isDisconnecting}
-        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
-      >
-        {isDisconnecting ? (
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-        ) : (
-          <Unlink className="w-3.5 h-3.5" />
-        )}
-        Disconnect
-      </button>
+      {action}
     </div>
   );
 }
 
-function DisconnectedState({ onConnect }: { onConnect: () => void }) {
+function ConnectedState({
+  onDisconnect,
+  isDisconnecting,
+}: ConnectedStateProps): ReactElement {
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-800/50 rounded-xl border border-gray-700/50">
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
-          <Send className="w-5 h-5" />
-        </div>
-        <div>
-          <div className="font-bold text-white text-sm">Telegram</div>
-          <div className="text-xs text-gray-400">
-            Receive alerts & daily suggestions
-          </div>
-        </div>
-      </div>
-      <button
-        onClick={onConnect}
-        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors"
-      >
-        Connect
-      </button>
-    </div>
+    <TelegramConnectionCard
+      icon={<CheckCircle2 className="w-5 h-5 text-green-400" />}
+      iconBg="bg-green-500/20"
+      title="Telegram"
+      subtitle={<span className="text-green-400">Connected</span>}
+      action={
+        <button
+          onClick={onDisconnect}
+          disabled={isDisconnecting}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 text-xs font-bold rounded-lg transition-colors disabled:opacity-50"
+        >
+          {isDisconnecting ? (
+            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          ) : (
+            <Unlink className="w-3.5 h-3.5" />
+          )}
+          Disconnect
+        </button>
+      }
+    />
+  );
+}
+
+function DisconnectedState({
+  onConnect,
+}: DisconnectedStateProps): ReactElement {
+  return (
+    <TelegramConnectionCard
+      icon={<Send className="w-5 h-5 text-blue-400" />}
+      iconBg="bg-blue-500/20"
+      title="Telegram"
+      subtitle={
+        <span className="text-gray-400">
+          Receive alerts & daily suggestions
+        </span>
+      }
+      action={
+        <button
+          onClick={onConnect}
+          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg transition-colors"
+        >
+          Connect
+        </button>
+      }
+    />
   );
 }

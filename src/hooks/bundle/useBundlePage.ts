@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useWalletProvider } from "@/providers/WalletProvider";
 import {
-  BundleUser,
+  type BundleUser,
   generateBundleUrl,
   getBundleUser,
   isOwnBundle as isBundleOwned,
@@ -41,9 +41,14 @@ interface UseBundlePageResult {
   };
 }
 
-const EMPTY_CONNECTED_WALLETS: { address: string; isActive?: boolean }[] = [];
+interface ConnectedWalletItem {
+  address: string;
+  isActive?: boolean;
+}
 
-function NOOP_SWITCH_ACTIVE_WALLET(): Promise<void> {
+const EMPTY_CONNECTED_WALLETS: ConnectedWalletItem[] = [];
+
+function noopSwitchActiveWallet(): Promise<void> {
   return Promise.resolve();
 }
 
@@ -68,9 +73,9 @@ function shouldAttemptAutoSwitch(
 }
 
 function findWalletByAddress(
-  connectedWallets: { address: string; isActive?: boolean }[],
+  connectedWallets: ConnectedWalletItem[],
   walletId: string
-): { address: string; isActive?: boolean } | undefined {
+): ConnectedWalletItem | undefined {
   const normalizedWalletId = walletId.toLowerCase();
   return connectedWallets.find(
     walletItem => walletItem.address.toLowerCase() === normalizedWalletId
@@ -218,7 +223,7 @@ export function useBundlePage(
   const connectedWallets =
     walletContext?.connectedWallets ?? EMPTY_CONNECTED_WALLETS;
   const switchActiveWallet =
-    walletContext?.switchActiveWallet ?? NOOP_SWITCH_ACTIVE_WALLET;
+    walletContext?.switchActiveWallet ?? noopSwitchActiveWallet;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);
   const [bundleNotFound, setBundleNotFound] = useState(false);
   const [emailBannerDismissed, setEmailBannerDismissed] = useState(false);
@@ -309,7 +314,7 @@ export function useBundlePage(
     router,
   ]);
 
-  const handleSwitchToMyBundle = useCallback(() => {
+  const handleSwitchToMyBundle = useCallback((): void => {
     if (!userInfo?.userId) {
       return;
     }
@@ -320,15 +325,15 @@ export function useBundlePage(
 
   const handleStayHere = useCallback((): void => undefined, []);
 
-  const openWalletManager = useCallback(() => {
+  const openWalletManager = useCallback((): void => {
     setIsWalletManagerOpen(true);
   }, []);
 
-  const closeWalletManager = useCallback(() => {
+  const closeWalletManager = useCallback((): void => {
     setIsWalletManagerOpen(false);
   }, []);
 
-  const handleDismissEmailBanner = useCallback(() => {
+  const handleDismissEmailBanner = useCallback((): void => {
     setEmailBannerDismissed(true);
   }, []);
 

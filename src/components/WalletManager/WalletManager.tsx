@@ -37,15 +37,17 @@ function isWalletManagerBusy(loading: boolean, isRefreshing: boolean): boolean {
   return loading || isRefreshing;
 }
 
+interface WalletManagerHeaderProps {
+  isConnected: boolean;
+  isOwner: boolean;
+  onClose: () => void;
+}
+
 function WalletManagerHeader({
   isConnected,
   isOwner,
   onClose,
-}: {
-  isConnected: boolean;
-  isOwner: boolean;
-  onClose: () => void;
-}): ReactElement {
+}: WalletManagerHeaderProps): ReactElement {
   return (
     <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
       <div className="flex items-center space-x-3">
@@ -79,9 +81,7 @@ function WalletManagerHeader({
 
 function WalletManagerLoadingState({
   isRefreshing,
-}: {
-  isRefreshing: boolean;
-}): ReactElement {
+}: WalletManagerLoadingStateProps): ReactElement {
   return (
     <div className="p-6 text-center">
       <div className="flex justify-center mb-3">
@@ -100,15 +100,21 @@ function WalletManagerLoadingState({
   );
 }
 
+interface WalletManagerLoadingStateProps {
+  isRefreshing: boolean;
+}
+
+interface WalletManagerErrorStateProps {
+  error: string;
+  onRetry: () => void;
+  isRetrying: boolean;
+}
+
 function WalletManagerErrorState({
   error,
   onRetry,
   isRetrying,
-}: {
-  error: string;
-  onRetry: () => void;
-  isRetrying: boolean;
-}): ReactElement {
+}: WalletManagerErrorStateProps): ReactElement {
   return (
     <div className="p-6 text-center">
       <AlertTriangle className="w-6 h-6 text-red-400 mx-auto mb-3" />

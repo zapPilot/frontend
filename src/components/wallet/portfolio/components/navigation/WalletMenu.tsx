@@ -10,7 +10,7 @@ import {
   Settings,
   Wallet,
 } from "lucide-react";
-import { type ReactNode, useRef, useState } from "react";
+import { type ReactElement, useRef, useState } from "react";
 import { useConnectModal } from "thirdweb/react";
 
 import { ConnectWalletButton } from "@/components/WalletManager/components/ConnectWalletButton";
@@ -36,20 +36,28 @@ interface CopyAddressButtonProps {
   variant?: CopyButtonVariant;
 }
 
+function getCopyButtonClassName(variant: CopyButtonVariant): string {
+  if (variant === "text") {
+    return "text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors";
+  }
+
+  return "text-xs text-gray-400 hover:text-purple-300 transition-colors";
+}
+
 function CopyAddressButton({
   address,
   copiedAddress,
   onCopyAddress,
   variant = "text",
-}: CopyAddressButtonProps): ReactNode {
-  const buttonClassName =
-    variant === "text"
-      ? "text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors"
-      : "text-xs text-gray-400 hover:text-purple-300 transition-colors";
+}: CopyAddressButtonProps): ReactElement {
+  const buttonClassName = getCopyButtonClassName(variant);
   const isCopied = copiedAddress === address;
+  function handleCopyClick(): void {
+    onCopyAddress(address);
+  }
 
   return (
-    <button onClick={() => onCopyAddress(address)} className={buttonClassName}>
+    <button onClick={handleCopyClick} className={buttonClassName}>
       {isCopied ? (
         <>
           <Check className="w-3 h-3" />
@@ -75,15 +83,22 @@ function WalletMenuItems({
   onOpenWalletManager,
   onOpenSettings,
   onCloseMenu,
-}: WalletMenuItemsProps): ReactNode {
+}: WalletMenuItemsProps): ReactElement {
+  function handleOpenWalletManager(): void {
+    onCloseMenu();
+    onOpenWalletManager?.();
+  }
+
+  function handleOpenSettings(): void {
+    onCloseMenu();
+    onOpenSettings();
+  }
+
   return (
     <>
       {onOpenWalletManager && (
         <button
-          onClick={() => {
-            onCloseMenu();
-            onOpenWalletManager();
-          }}
+          onClick={handleOpenWalletManager}
           className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
         >
           <Wallet className="w-4 h-4 text-purple-400" />
@@ -91,10 +106,7 @@ function WalletMenuItems({
         </button>
       )}
       <button
-        onClick={() => {
-          onCloseMenu();
-          onOpenSettings();
-        }}
+        onClick={handleOpenSettings}
         className="w-full px-4 py-2.5 text-left text-sm text-gray-200 hover:bg-purple-500/10 hover:text-white transition-colors flex items-center gap-3"
       >
         <Settings className="w-4 h-4 text-purple-400" />
@@ -112,7 +124,7 @@ interface DisconnectButtonProps {
 function DisconnectButton({
   label,
   onDisconnect,
-}: DisconnectButtonProps): ReactNode {
+}: DisconnectButtonProps): ReactElement {
   return (
     <div className="border-t border-gray-800 py-1">
       <button
@@ -140,7 +152,7 @@ function WalletSectionFooter({
   onCloseMenu,
   onDisconnect,
   disconnectLabel,
-}: WalletSectionFooterProps): ReactNode {
+}: WalletSectionFooterProps): ReactElement {
   return (
     <>
       <div className="py-1">
@@ -192,13 +204,21 @@ function WalletMenuButton({
   connectedWalletCount,
   onConnectClick,
   onToggleMenu,
-}: WalletMenuButtonProps): ReactNode {
+}: WalletMenuButtonProps): ReactElement {
   const showConnectedAddress = isConnected && Boolean(accountAddress);
+  function handleButtonClick(): void {
+    if (!isConnected) {
+      void onConnectClick();
+      return;
+    }
+
+    onToggleMenu();
+  }
 
   return (
     <button
       data-testid="unified-wallet-menu-button"
-      onClick={!isConnected ? onConnectClick : onToggleMenu}
+      onClick={handleButtonClick}
       disabled={isConnecting}
       className={getMenuButtonClassName(isConnecting)}
       aria-expanded={isMenuOpen}
@@ -242,7 +262,7 @@ function WalletSingleWalletSection({
   onOpenSettings,
   onCloseMenu,
   onDisconnect,
-}: WalletSingleWalletSectionProps): ReactNode {
+}: WalletSingleWalletSectionProps): ReactElement {
   return (
     <div className="py-2">
       <div className="px-4 py-3 border-b border-gray-800">
@@ -277,6 +297,22 @@ interface WalletMultipleWalletSectionProps extends WalletSectionCopyProps {
   connectedWallets: ConnectedWalletItem[];
 }
 
+function getWalletItemClassName(isActive: boolean | undefined): string {
+  if (isActive) {
+    return "p-3 rounded-lg border transition-all bg-purple-500/10 border-purple-500/30";
+  }
+
+  return "p-3 rounded-lg border transition-all bg-gray-800/30 border-gray-700/50 hover:border-gray-600";
+}
+
+function getWalletStatusDotClassName(isActive: boolean | undefined): string {
+  if (isActive) {
+    return "w-2 h-2 rounded-full bg-purple-400 animate-pulse";
+  }
+
+  return "w-2 h-2 rounded-full bg-gray-600";
+}
+
 function WalletMultipleWalletSection({
   connectedWallets,
   copiedAddress,
@@ -285,7 +321,7 @@ function WalletMultipleWalletSection({
   onOpenSettings,
   onCloseMenu,
   onDisconnect,
-}: WalletMultipleWalletSectionProps): ReactNode {
+}: WalletMultipleWalletSectionProps): ReactElement {
   return (
     <div className="py-2">
       <div className="px-4 py-2 border-b border-gray-800">
@@ -296,20 +332,12 @@ function WalletMultipleWalletSection({
           {connectedWallets.map(wallet => (
             <div
               key={wallet.address}
-              className={`p-3 rounded-lg border transition-all ${
-                wallet.isActive
-                  ? "bg-purple-500/10 border-purple-500/30"
-                  : "bg-gray-800/30 border-gray-700/50 hover:border-gray-600"
-              }`}
+              className={getWalletItemClassName(wallet.isActive)}
             >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <div
-                    className={`w-2 h-2 rounded-full ${
-                      wallet.isActive
-                        ? "bg-purple-400 animate-pulse"
-                        : "bg-gray-600"
-                    }`}
+                    className={getWalletStatusDotClassName(wallet.isActive)}
                   />
                   <span className="font-mono text-sm text-white">
                     {formatAddress(wallet.address)}
@@ -370,7 +398,7 @@ function WalletMenuDropdown({
   onOpenSettings,
   onCloseMenu,
   onDisconnect,
-}: WalletMenuDropdownProps): ReactNode {
+}: WalletMenuDropdownProps): ReactElement | null {
   if (!isConnected || !isMenuOpen) {
     return null;
   }
@@ -422,7 +450,7 @@ function WalletMenuDropdown({
 export function WalletMenu({
   onOpenWalletManager,
   onOpenSettings,
-}: WalletMenuProps) {
+}: WalletMenuProps): ReactElement {
   const {
     connectedWallets,
     hasMultipleWallets,
@@ -439,7 +467,7 @@ export function WalletMenu({
   const { connect, isConnecting } = useConnectModal();
 
   // Handle direct wallet connection (1-step flow)
-  const handleConnectClick = async () => {
+  async function handleConnectClick(): Promise<void> {
     await connect({
       client: THIRDWEB_CLIENT,
       wallets: DEFAULT_WALLETS,
@@ -449,24 +477,37 @@ export function WalletMenu({
       title: WALLET_LABELS.CONNECT,
       showThirdwebBranding: false,
     });
-  };
+  }
+
+  function closeMenu(): void {
+    setIsMenuOpen(false);
+  }
+
+  function toggleMenu(): void {
+    setIsMenuOpen(prevIsOpen => !prevIsOpen);
+  }
 
   // Click outside and Escape key handler
-  useClickOutside(menuRef, () => setIsMenuOpen(false), isMenuOpen);
+  useClickOutside(menuRef, closeMenu, isMenuOpen);
 
-  const handleCopyAddress = async (address: string) => {
+  async function copyAddress(address: string): Promise<void> {
     await navigator.clipboard.writeText(address);
     setCopiedAddress(address);
     setTimeout(() => setCopiedAddress(null), 2000);
-  };
+  }
 
-  const handleDisconnect = async () => {
+  async function disconnectWallet(): Promise<void> {
     await disconnect();
     setIsMenuOpen(false);
-  };
-  const closeMenu = () => {
-    setIsMenuOpen(false);
-  };
+  }
+
+  function handleCopyAddress(address: string): void {
+    void copyAddress(address);
+  }
+
+  function handleDisconnect(): void {
+    void disconnectWallet();
+  }
 
   return (
     <div className="relative" ref={menuRef}>
@@ -478,7 +519,7 @@ export function WalletMenu({
         hasMultipleWallets={hasMultipleWallets}
         connectedWalletCount={connectedWallets.length}
         onConnectClick={handleConnectClick}
-        onToggleMenu={() => setIsMenuOpen(!isMenuOpen)}
+        onToggleMenu={toggleMenu}
       />
 
       <AnimatePresence>

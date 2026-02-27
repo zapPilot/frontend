@@ -34,8 +34,61 @@ const AXIS_DEFAULTS = {
   axisLine: false,
 } as const;
 
-function axisTick(fill: string) {
+function axisTick(fill: string): { fontSize: number; fill: string } {
   return { fontSize: 10, fill };
+}
+
+interface ChartDefsProps {
+  strategyIds: string[];
+  prefix: string;
+}
+
+interface StrategyAreaProps {
+  strategyId: string;
+  index: number;
+  isPrimary: boolean;
+  prefix: string;
+}
+
+function buildBacktestTooltipProps(params: {
+  active: boolean | undefined;
+  payload:
+    | readonly {
+        name?: string;
+        value?: number;
+        color?: string;
+        payload?: Record<string, unknown>;
+      }[]
+    | undefined;
+  label: string | number | undefined;
+  sortedStrategyIds: string[];
+}): BacktestTooltipProps {
+  const { active, payload, label, sortedStrategyIds } = params;
+  const tooltipProps: BacktestTooltipProps = { sortedStrategyIds };
+
+  if (active !== undefined) {
+    tooltipProps.active = active;
+  }
+
+  if (payload != null) {
+    tooltipProps.payload = Array.from(payload, item => ({ ...item }));
+  }
+
+  if (label != null) {
+    tooltipProps.label = label;
+  }
+
+  return tooltipProps;
+}
+
+function getStrokeDasharrayProps(isDcaClassic: boolean): {
+  strokeDasharray?: string;
+} {
+  if (!isDcaClassic) {
+    return {};
+  }
+
+  return { strokeDasharray: "4 4" };
 }
 
 export interface BacktestChartProps {
@@ -53,7 +106,7 @@ export const BacktestChart = memo(function BacktestChart({
   yAxisDomain,
   actualDays,
   chartIdPrefix = "default",
-}: BacktestChartProps) {
+}: BacktestChartProps): ReactElement {
   const primarySeriesId = getPrimaryStrategyId(sortedStrategyIds);
 
   return (
@@ -124,16 +177,14 @@ export const BacktestChart = memo(function BacktestChart({
 
             <Tooltip
               content={({ active, payload, label }) => {
-                const props: BacktestTooltipProps = {
+                const tooltipProps = buildBacktestTooltipProps({
                   active,
+                  payload,
+                  label,
                   sortedStrategyIds,
-                };
-                if (payload != null)
-                  props.payload = [...payload] as NonNullable<
-                    BacktestTooltipProps["payload"]
-                  >;
-                if (label != null) props.label = label;
-                return <BacktestTooltip {...props} />;
+                });
+
+                return <BacktestTooltip {...tooltipProps} />;
               }}
             />
 
@@ -192,13 +243,7 @@ export const BacktestChart = memo(function BacktestChart({
 
 // --- Sub-components for cleaner render ---
 
-function ChartDefs({
-  strategyIds,
-  prefix,
-}: {
-  strategyIds: string[];
-  prefix: string;
-}) {
+function ChartDefs({ strategyIds, prefix }: ChartDefsProps): ReactElement {
   return (
     <defs>
       {strategyIds.map((strategyId, index) => {
@@ -226,18 +271,11 @@ function StrategyArea({
   index,
   isPrimary,
   prefix,
-}: {
-  strategyId: string;
-  index: number;
-  isPrimary: boolean;
-  prefix: string;
-}): ReactElement {
+}: StrategyAreaProps): ReactElement {
   const color = getStrategyColor(strategyId, index);
   const displayName = getStrategyDisplayName(strategyId);
   const isDcaClassic = strategyId === DCA_CLASSIC_STRATEGY_ID;
-  const strokeDasharrayProps: { strokeDasharray?: string } = isDcaClassic
-    ? { strokeDasharray: "4 4" }
-    : {};
+  const strokeDasharrayProps = getStrokeDasharrayProps(isDcaClassic);
 
   return (
     <Area

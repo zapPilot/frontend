@@ -7,11 +7,12 @@ import {
   Send,
   X,
 } from "lucide-react";
+import type { ComponentType, ReactElement, SVGProps } from "react";
 
 import { GithubIcon } from "@/components/icons/GithubIcon";
 
 interface SocialLink {
-  icon: LucideIcon | React.ComponentType<React.SVGProps<SVGSVGElement>>;
+  icon: LucideIcon | ComponentType<SVGProps<SVGSVGElement>>;
   label: string;
   url: string;
 }
@@ -39,7 +40,7 @@ const SOCIAL_LINKS: SocialLink[] = [
 /**
  * Internal component: Renders social media links
  */
-function SocialLinksSection() {
+function SocialLinksSection(): ReactElement {
   return (
     <div className="flex items-center gap-6">
       {SOCIAL_LINKS.map(link => (
@@ -58,10 +59,14 @@ function SocialLinksSection() {
   );
 }
 
+interface CopyrightTextProps {
+  year: number;
+}
+
 /**
  * Internal component: Renders copyright text
  */
-function CopyrightText({ year }: { year: number }) {
+function CopyrightText({ year }: CopyrightTextProps): ReactElement {
   return (
     <p className="text-sm text-gray-500">
       © {year} Zap Pilot. All rights reserved.
@@ -85,7 +90,7 @@ const STYLES = {
 export function Footer({
   className = "",
   containerClassName = "max-w-7xl",
-}: FooterProps) {
+}: FooterProps): ReactElement {
   const currentYear = new Date().getFullYear();
 
   return (

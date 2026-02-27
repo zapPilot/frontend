@@ -15,7 +15,7 @@ import type {
   MetricData,
   MonthlyPnL,
   PerformanceChartData,
-} from "@/types/analytics";
+} from "@/types";
 
 import {
   buildBtcPriceMap,

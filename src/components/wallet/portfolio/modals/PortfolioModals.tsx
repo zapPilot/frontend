@@ -1,10 +1,12 @@
+import type { ReactElement } from "react";
+
 import type { WalletPortfolioDataWithDirection } from "@/adapters/walletPortfolioDataAdapter";
 import {
   DepositModal,
   RebalanceModal,
   WithdrawModal,
 } from "@/components/wallet/portfolio/modals";
-import type { ModalType } from "@/types/portfolio";
+import type { ModalType } from "@/types";
 
 import { SettingsModal } from "./SettingsModal";
 
@@ -24,12 +26,16 @@ export function PortfolioModals({
   isSettingsOpen,
   setIsSettingsOpen,
   userId,
-}: PortfolioModalsProps) {
+}: PortfolioModalsProps): ReactElement {
   const rebalanceAllocation = {
     crypto: data.currentAllocation.crypto,
     stable: data.currentAllocation.stable,
     simplifiedCrypto: data.currentAllocation.simplifiedCrypto,
   };
+
+  function closeSettingsModal(): void {
+    setIsSettingsOpen(false);
+  }
 
   return (
     <>
@@ -47,7 +53,7 @@ export function PortfolioModals({
       />
       <SettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={closeSettingsModal}
         userId={userId}
       />
     </>

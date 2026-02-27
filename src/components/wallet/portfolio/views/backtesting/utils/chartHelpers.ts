@@ -309,9 +309,11 @@ export function getPrimaryStrategyId(sortedIds: string[]): string | null {
 }
 
 export function sortStrategyIds(ids: string[]): string[] {
-  const dca = ids.includes(DCA_CLASSIC_STRATEGY_ID)
-    ? [DCA_CLASSIC_STRATEGY_ID]
-    : [];
+  const dca: string[] = [];
+  if (ids.includes(DCA_CLASSIC_STRATEGY_ID)) {
+    dca.push(DCA_CLASSIC_STRATEGY_ID);
+  }
+
   const others = ids
     .filter(id => id !== DCA_CLASSIC_STRATEGY_ID)
     .sort((a, b) =>

@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactElement, type ReactNode, useEffect, useRef } from "react";
 
 import { createEmptyPortfolioState } from "@/adapters/walletPortfolioDataAdapter";
 import { WalletPortfolioErrorState } from "@/components/wallet/portfolio/views/LoadingStates";
@@ -26,6 +26,7 @@ interface DashboardShellProps {
 }
 
 type EtlState = ReturnType<typeof useEtlJobPolling>["state"];
+type UnifiedPortfolioSnapshot = { positions?: number; balance?: number } | null;
 
 function isEtlProcessing(status: EtlState["status"]): boolean {
   return ["pending", "processing", "completing"].includes(status);
@@ -133,18 +134,17 @@ function getSafeError(error: Error | null | unknown): Error | null {
 
 function computeIsEmptyState(
   isLoading: boolean,
-  unifiedData: { positions?: number; balance?: number } | null
+  unifiedData: UnifiedPortfolioSnapshot
 ): boolean {
   return Boolean(
     !isLoading &&
-      (unifiedData === null ||
-        ((unifiedData.positions ?? 0) === 0 &&
-          (unifiedData.balance ?? 0) === 0))
+    (unifiedData === null ||
+      ((unifiedData.positions ?? 0) === 0 && (unifiedData.balance ?? 0) === 0))
   );
 }
 
 function logDashboardState(
-  unifiedData: { balance?: number; positions?: number } | null,
+  unifiedData: UnifiedPortfolioSnapshot,
   isLoading: boolean,
   error: Error | null
 ): void {
@@ -183,7 +183,7 @@ function DashboardShellView({
   etlState,
   headerBanners,
   footerOverlays,
-}: DashboardShellViewProps): ReactNode {
+}: DashboardShellViewProps): ReactElement {
   return (
     <div
       data-bundle-user-id={urlUserId}
@@ -214,7 +214,7 @@ export function DashboardShell({
   headerBanners,
   footerOverlays,
   initialEtlJobId,
-}: DashboardShellProps) {
+}: DashboardShellProps): ReactElement {
   const router = useRouter();
   const queryClient = useQueryClient();
 

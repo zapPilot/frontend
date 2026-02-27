@@ -1,3 +1,5 @@
+import type { ReactElement } from "react";
+
 import {
   getStrategyColor,
   getStrategyDisplayName,
@@ -12,9 +14,14 @@ interface BacktestChartLegendProps {
   sortedStrategyIds: string[];
 }
 
+interface LegendGroupProps {
+  title: string;
+  items: LegendItem[];
+}
+
 export function BacktestChartLegend({
   sortedStrategyIds,
-}: BacktestChartLegendProps) {
+}: BacktestChartLegendProps): ReactElement {
   const strategyLegend = sortedStrategyIds.map((strategyId, index) => ({
     label: getStrategyDisplayName(strategyId),
     color: getStrategyColor(strategyId, index),
@@ -29,7 +36,7 @@ export function BacktestChartLegend({
   );
 }
 
-function LegendGroup({ title, items }: { title: string; items: LegendItem[] }) {
+function LegendGroup({ title, items }: LegendGroupProps): ReactElement | null {
   if (items.length === 0) {
     return null;
   }

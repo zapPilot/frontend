@@ -55,24 +55,30 @@ export interface TelegramDisconnectResponse {
 // ERROR HANDLING
 // ============================================================================
 
+function mapTelegramServiceErrorMessage(
+  status: number,
+  message: string
+): string {
+  switch (status) {
+    case 404:
+      return "User not found. Please connect your wallet first.";
+    case 409:
+      return "Telegram account is already connected.";
+    case 410:
+      return "Verification token has expired. Please request a new one.";
+    case 429:
+      return "Too many requests. Please wait before trying again.";
+    default:
+      return message;
+  }
+}
+
 function createTelegramServiceError(error: unknown): AccountServiceError {
   return createServiceError(
     error,
     AccountServiceError,
     "Telegram service error",
-    (status, message) => {
-      switch (status) {
-        case 404:
-          return "User not found. Please connect your wallet first.";
-        case 409:
-          return "Telegram account is already connected.";
-        case 410:
-          return "Verification token has expired. Please request a new one.";
-        case 429:
-          return "Too many requests. Please wait before trying again.";
-      }
-      return message;
-    }
+    mapTelegramServiceErrorMessage
   );
 }
 
