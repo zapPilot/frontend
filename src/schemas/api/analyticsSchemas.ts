@@ -346,6 +346,31 @@ export const dailyYieldReturnsResponseSchema = z.object({
 export const poolPerformanceResponseSchema = z.array(poolDetailSchema);
 
 // ============================================================================
+// MARKET DASHBOARD SCHEMAS
+// ============================================================================
+
+export const marketDashboardPointSchema = z.object({
+  snapshot_date: z.string(),
+  price_usd: z.number(),
+  dma_200: z.number().nullable(),
+  sentiment_value: z.number().nullable(),
+  regime: z.enum(["ef", "f", "n", "g", "eg"]).nullable(),
+});
+
+export const marketDashboardResponseSchema = z.object({
+  snapshots: z.array(marketDashboardPointSchema),
+  count: z.number(),
+  token_symbol: z.string(),
+  days_requested: z.number(),
+  timestamp: z.string(),
+});
+
+/** Validator function for market dashboard response */
+export const validateMarketDashboardResponse = createValidator(
+  marketDashboardResponseSchema
+);
+
+// ============================================================================
 // TYPE EXPORTS
 // ============================================================================
 
@@ -439,6 +464,10 @@ export type DailyYieldReturnsResponse = z.infer<
   typeof poolPerformanceResponseSchema
 >;
 export type PoolDetail = z.infer<typeof poolDetailSchema>;
+export type MarketDashboardPoint = z.infer<typeof marketDashboardPointSchema>;
+export type MarketDashboardResponse = z.infer<
+  typeof marketDashboardResponseSchema
+>;
 
 // ============================================================================
 // VALIDATION HELPER FUNCTIONS

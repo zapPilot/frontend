@@ -3,6 +3,7 @@
 import { type JSX, useState } from "react";
 
 import { BacktestingView } from "../BacktestingView";
+import { MarketDashboardView } from "./market/MarketDashboardView";
 import { TradingView } from "./trading/TradingView";
 
 interface InvestViewProps {
@@ -10,6 +11,7 @@ interface InvestViewProps {
 }
 
 const SUB_TABS = [
+  { id: "market", label: "market data" },
   { id: "trading", label: "trading" },
   { id: "backtesting", label: "backtesting" },
 ] as const;
@@ -26,6 +28,8 @@ function renderActiveSubTab(
   userId: string | undefined
 ): JSX.Element {
   switch (activeSubTab) {
+    case "market":
+      return <MarketDashboardView />;
     case "trading":
       return <TradingView userId={userId} />;
     case "backtesting":
@@ -34,7 +38,7 @@ function renderActiveSubTab(
 }
 
 export function InvestView({ userId }: InvestViewProps): JSX.Element {
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>("trading");
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>("market");
 
   return (
     <div className="space-y-8">

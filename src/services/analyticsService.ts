@@ -9,10 +9,12 @@ import {
   type BorrowingPositionsResponse,
   type DailyYieldReturnsResponse,
   type LandingPageResponse,
+  type MarketDashboardResponse,
   type UnifiedDashboardResponse,
   validateBorrowingPositionsResponse,
   validateDailyYieldReturnsResponse,
   validateLandingPageResponse,
+  validateMarketDashboardResponse,
   validateUnifiedDashboardResponse,
 } from "@/schemas/api/analyticsSchemas";
 
@@ -23,6 +25,8 @@ export type {
   BorrowingSummary,
   /** @public */ DailyYieldReturnsResponse,
   LandingPageResponse,
+  MarketDashboardPoint,
+  MarketDashboardResponse,
   PoolDetail,
   RiskMetrics,
   UnifiedDashboardResponse,
@@ -182,4 +186,27 @@ export async function getBorrowingPositions(
   const endpoint = `/api/v2/analytics/${userId}/borrowing/positions`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return validateBorrowingPositionsResponse(response);
+}
+
+// ============================================================================
+// MARKET DASHBOARD ENDPOINT
+// ============================================================================
+
+/**
+ * Get aggregated market dashboard data
+ *
+ * Combines BTC price, 200 DMA, and Fear & Greed Index into a single series.
+ *
+ * @param days - Days of history (default: 365)
+ * @param token - Token symbol (default: 'btc')
+ * @returns Promise<MarketDashboardResponse>
+ */
+export async function getMarketDashboardData(
+  days = 365,
+  token = "btc"
+): Promise<MarketDashboardResponse> {
+  const params = new URLSearchParams({ days: String(days), token });
+  const endpoint = `/api/v2/market/dashboard?${params}`;
+  const response = await httpUtils.analyticsEngine.get(endpoint);
+  return validateMarketDashboardResponse(response);
 }
