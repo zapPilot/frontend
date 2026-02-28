@@ -14,6 +14,7 @@ import { httpUtils } from "@/lib/http";
 import {
   getBorrowingPositions,
   getLandingPagePortfolioData,
+  getMarketDashboardData,
   getPortfolioDashboard,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
@@ -598,9 +599,8 @@ describe("analyticsService", () => {
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
       // Import dynamically to test
-      const { getDailyYieldReturns } = await import(
-        "../../../src/services/analyticsService"
-      );
+      const { getDailyYieldReturns } =
+        await import("../../../src/services/analyticsService");
       const result = await getDailyYieldReturns(testUserId);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
@@ -617,9 +617,8 @@ describe("analyticsService", () => {
 
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
-      const { getDailyYieldReturns } = await import(
-        "../../../src/services/analyticsService"
-      );
+      const { getDailyYieldReturns } =
+        await import("../../../src/services/analyticsService");
       const result = await getDailyYieldReturns(testUserId, 7);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
@@ -652,9 +651,8 @@ describe("analyticsService", () => {
 
       analyticsEngineGetSpy.mockResolvedValue(mockResponse);
 
-      const { getDailyYieldReturns } = await import(
-        "../../../src/services/analyticsService"
-      );
+      const { getDailyYieldReturns } =
+        await import("../../../src/services/analyticsService");
       const result = await getDailyYieldReturns(testUserId, 30, walletAddress);
 
       expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
@@ -667,13 +665,69 @@ describe("analyticsService", () => {
       const error = new Error("Failed to fetch yield data");
       analyticsEngineGetSpy.mockRejectedValue(error);
 
-      const { getDailyYieldReturns } = await import(
-        "../../../src/services/analyticsService"
-      );
+      const { getDailyYieldReturns } =
+        await import("../../../src/services/analyticsService");
 
       await expect(getDailyYieldReturns(testUserId)).rejects.toThrow(
         "Failed to fetch yield data"
       );
+    });
+  });
+
+  describe("getMarketDashboardData", () => {
+    const mockResponse = {
+      snapshots: [
+        {
+          snapshot_date: "2025-01-01",
+          price_usd: 42000,
+          dma_200: 38000,
+          sentiment_value: 65,
+          regime: "g",
+        },
+        {
+          snapshot_date: "2025-01-02",
+          price_usd: 43000,
+          dma_200: 38500,
+          sentiment_value: 70,
+          regime: "eg",
+        },
+      ],
+      count: 2,
+      token_symbol: "btc",
+      days_requested: 365,
+      timestamp: "2025-01-02T12:00:00Z",
+    };
+
+    it("should fetch market dashboard data with default parameters", async () => {
+      analyticsEngineGetSpy.mockResolvedValue(mockResponse);
+
+      const result = await getMarketDashboardData();
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v2/market/dashboard?days=365&token=btc"
+      );
+      expect(result.snapshots).toHaveLength(2);
+      expect(result.token_symbol).toBe("btc");
+    });
+
+    it("should fetch market dashboard data with custom parameters", async () => {
+      analyticsEngineGetSpy.mockResolvedValue({
+        ...mockResponse,
+        days_requested: 90,
+      });
+
+      const result = await getMarketDashboardData(90, "eth");
+
+      expect(analyticsEngineGetSpy).toHaveBeenCalledWith(
+        "/api/v2/market/dashboard?days=90&token=eth"
+      );
+      expect(result.days_requested).toBe(90);
+    });
+
+    it("should propagate errors from HTTP layer", async () => {
+      analyticsEngineGetSpy.mockRejectedValue(new Error("Network error"));
+
+      await expect(getMarketDashboardData()).rejects.toThrow("Network error");
     });
   });
 

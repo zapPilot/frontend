@@ -17,6 +17,13 @@ vi.mock("@/components/wallet/portfolio/views/BacktestingView", () => ({
   BacktestingView: () => <div data-testid="backtesting-view" />,
 }));
 
+vi.mock(
+  "@/components/wallet/portfolio/views/invest/market/MarketDashboardView",
+  () => ({
+    MarketDashboardView: () => <div data-testid="market-dashboard-view" />,
+  })
+);
+
 describe("InvestView", () => {
   it("renders trading tab by default", () => {
     render(<InvestView userId="0xabc" />);
@@ -25,11 +32,21 @@ describe("InvestView", () => {
     expect(screen.getByText("0xabc")).toBeDefined();
   });
 
-  it("renders both tab buttons", () => {
+  it("renders all three tab buttons", () => {
     render(<InvestView userId="0xabc" />);
 
+    expect(screen.getByText("market data")).toBeDefined();
     expect(screen.getByText("trading")).toBeDefined();
     expect(screen.getByText("backtesting")).toBeDefined();
+  });
+
+  it("switches to market tab on click", () => {
+    render(<InvestView userId="0xabc" />);
+
+    fireEvent.click(screen.getByText("market data"));
+
+    expect(screen.getByTestId("market-dashboard-view")).toBeDefined();
+    expect(screen.queryByTestId("trading-view")).toBeNull();
   });
 
   it("switches to backtesting tab on click", () => {

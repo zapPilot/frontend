@@ -28,17 +28,17 @@ function renderActiveSubTab(
   userId: string | undefined
 ): JSX.Element {
   switch (activeSubTab) {
-    case "market":
-      return <MarketDashboardView />;
     case "trading":
       return <TradingView userId={userId} />;
     case "backtesting":
       return <BacktestingView />;
+    case "market":
+      return <MarketDashboardView />;
   }
 }
 
 export function InvestView({ userId }: InvestViewProps): JSX.Element {
-  const [activeSubTab, setActiveSubTab] = useState<SubTab>("market");
+  const [activeSubTab, setActiveSubTab] = useState<SubTab>("trading");
 
   return (
     <div className="space-y-8">

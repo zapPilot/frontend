@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { type JSX, useEffect, useMemo, useState } from "react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -44,6 +44,74 @@ const TIMEFRAMES = [
 ] as const;
 
 type Timeframe = (typeof TIMEFRAMES)[number]["id"];
+
+const AXIS_COLOR = "#9CA3AF";
+
+function formatXAxisDate(val: string): string {
+  const d = new Date(val);
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+
+function formatPriceLabel(val: number): string {
+  return `$${(val / 1000).toFixed(0)}k`;
+}
+
+function formatFgiLabel(val: number): string {
+  return String(val);
+}
+
+function formatTooltipValue(
+  value: string | number | (string | number)[] | undefined,
+  name: string | number | undefined,
+  props: {
+    payload?: { sentiment_value?: number | null; regime?: string | null };
+  }
+): [string | number, string | number] {
+  const labelName = String(name ?? "");
+  if (labelName === "BTC Price" || labelName === "200 DMA") {
+    return [`$${Number(value ?? 0).toLocaleString()}`, labelName];
+  }
+  if (labelName === "Fear & Greed Index") {
+    const rawFgi = props.payload?.sentiment_value;
+    const regime = props.payload?.regime as
+      | keyof typeof REGIME_LABELS
+      | undefined;
+    const label = regime ? REGIME_LABELS[regime] : "";
+    return [`${String(rawFgi)} (${label})`, labelName];
+  }
+  return [value as string | number, labelName];
+}
+
+function SimpleStatCard({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass: string;
+}): JSX.Element {
+  return (
+    <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
+      <p className="text-sm font-medium text-gray-400 mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
+    </div>
+  );
+}
+
+function renderFgiActiveDot(dotProps: {
+  cx?: number | undefined;
+  cy?: number | undefined;
+  payload?: { regime?: string | null | undefined };
+}): JSX.Element {
+  const { cx = 0, cy = 0, payload } = dotProps;
+  const color = payload?.regime
+    ? REGIME_COLORS[payload.regime as keyof typeof REGIME_COLORS]
+    : "#10B981";
+  return (
+    <circle cx={cx} cy={cy} r={6} fill={color} stroke="#fff" strokeWidth={2} />
+  );
+}
 
 export function MarketDashboardView() {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
@@ -184,38 +252,35 @@ export function MarketDashboardView() {
             />
             <XAxis
               dataKey="snapshot_date"
-              stroke="#9CA3AF"
-              tick={{ fill: "#9CA3AF", fontSize: 11 }}
+              stroke={AXIS_COLOR}
+              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
               tickMargin={35}
               minTickGap={40}
-              tickFormatter={val => {
-                const d = new Date(val);
-                return `${d.getMonth() + 1}/${d.getDate()}`;
-              }}
+              tickFormatter={formatXAxisDate}
             />
 
             {/* Left Y-axis for Price / DMA / Normalized FGI */}
             <YAxis
               yAxisId="left"
-              stroke="#9CA3AF"
-              tick={{ fill: "#9CA3AF", fontSize: 11 }}
+              stroke={AXIS_COLOR}
+              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
               domain={["auto", "auto"]}
-              tickFormatter={val => `$${(val / 1000).toFixed(0)}k`}
+              tickFormatter={formatPriceLabel}
             />
 
             {/* Right Y-axis for raw FGI reference */}
             <YAxis
               yAxisId="right"
               orientation="right"
-              stroke="#9CA3AF"
-              tick={{ fill: "#9CA3AF", fontSize: 11 }}
+              stroke={AXIS_COLOR}
+              tick={{ fill: AXIS_COLOR, fontSize: 11 }}
               domain={[0, 100]}
-              tickFormatter={val => `${val}`}
+              tickFormatter={formatFgiLabel}
               label={{
                 value: "FGI",
                 angle: 90,
                 position: "insideRight",
-                fill: "#9CA3AF",
+                fill: AXIS_COLOR,
                 fontSize: 10,
               }}
             />
@@ -248,25 +313,12 @@ export function MarketDashboardView() {
               }}
               itemStyle={{ color: "#E5E7EB", fontSize: "13px" }}
               labelStyle={{
-                color: "#9CA3AF",
+                color: AXIS_COLOR,
                 marginBottom: "8px",
                 fontWeight: "bold",
               }}
               cursor={{ stroke: "#4B5563", strokeWidth: 1 }}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={(value: any, name: any, props: any) => {
-                const labelName = String(name || "");
-                if (labelName === "BTC Price" || labelName === "200 DMA")
-                  return [`$${Number(value).toLocaleString()}`, labelName];
-                if (labelName === "Fear & Greed Index") {
-                  const rawFgi = props.payload.sentiment_value;
-                  const regime = props.payload
-                    .regime as keyof typeof REGIME_LABELS;
-                  const label = regime ? REGIME_LABELS[regime] : "";
-                  return [`${rawFgi} (${label})`, labelName];
-                }
-                return [value, labelName];
-              }}
+              formatter={formatTooltipValue}
             />
             <Legend
               verticalAlign="top"
@@ -280,12 +332,12 @@ export function MarketDashboardView() {
               type="monotone"
               name="BTC Price"
               dataKey="price_usd"
-              stroke="#9CA3AF"
+              stroke={AXIS_COLOR}
               strokeWidth={2}
               dot={false}
               activeDot={{
                 r: 5,
-                fill: "#9CA3AF",
+                fill: AXIS_COLOR,
                 strokeWidth: 2,
                 stroke: "#fff",
               }}
@@ -310,45 +362,23 @@ export function MarketDashboardView() {
               strokeWidth={2.5}
               dot={false}
               connectNulls
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              activeDot={(props: any) => {
-                const { cx, cy, payload } = props;
-                const color = payload.regime
-                  ? REGIME_COLORS[payload.regime as keyof typeof REGIME_COLORS]
-                  : "#10B981";
-                return (
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={6}
-                    fill={color}
-                    stroke="#fff"
-                    strokeWidth={2}
-                  />
-                );
-              }}
+              activeDot={renderFgiActiveDot}
             />
           </ComposedChart>
         </ResponsiveContainer>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-        <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
-          <p className="text-sm font-medium text-gray-400 mb-1">
-            Current BTC Price
-          </p>
-          <p className="text-2xl font-bold text-white">
-            ${latestPoint?.price_usd.toLocaleString() ?? "---"}
-          </p>
-        </div>
-        <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
-          <p className="text-sm font-medium text-gray-400 mb-1">
-            Current 200 DMA
-          </p>
-          <p className="text-2xl font-bold text-[#A855F7]">
-            ${latestPoint?.dma_200?.toLocaleString() ?? "---"}
-          </p>
-        </div>
+        <SimpleStatCard
+          label="Current BTC Price"
+          value={`$${latestPoint?.price_usd.toLocaleString() ?? "---"}`}
+          valueClass="text-white"
+        />
+        <SimpleStatCard
+          label="Current 200 DMA"
+          value={`$${latestPoint?.dma_200?.toLocaleString() ?? "---"}`}
+          valueClass="text-[#A855F7]"
+        />
         <div className="p-5 bg-gray-800/40 rounded-xl border border-gray-700/50 hover:bg-gray-800/60 transition-colors">
           <p className="text-sm font-medium text-gray-400 mb-1">
             Fear & Greed Index
