@@ -5,12 +5,14 @@
  * - getLandingPagePortfolioData (HTTP)
  * - getRiskSummary (HTTP)
  * - getPortfolioDashboard (HTTP)
+ * - getDailyYieldReturns (HTTP)
+ * - getBorrowingPositions (HTTP)
+ * - getMarketDashboardData (HTTP)
  */
 
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { httpUtils } from "@/lib/http";
-
 import {
   getBorrowingPositions,
   getLandingPagePortfolioData,
@@ -18,7 +20,7 @@ import {
   getPortfolioDashboard,
   type LandingPageResponse,
   type UnifiedDashboardResponse,
-} from "../../../src/services/analyticsService";
+} from "@/services/analyticsService";
 
 const analyticsEngineGetSpy = vi.spyOn(httpUtils.analyticsEngine, "get");
 

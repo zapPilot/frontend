@@ -35,12 +35,29 @@ const REGIME_LABELS = {
   eg: "Extreme Greed",
 };
 
+type RegimeKey = keyof typeof REGIME_COLORS;
+
+function getRegimeColor(
+  regime: string | null | undefined,
+  fallback = "#eab308"
+): string {
+  return regime && regime in REGIME_COLORS
+    ? REGIME_COLORS[regime as RegimeKey]
+    : fallback;
+}
+
+function getRegimeLabel(regime: string | null | undefined): string {
+  return regime && regime in REGIME_LABELS
+    ? REGIME_LABELS[regime as RegimeKey]
+    : "";
+}
+
 const TIMEFRAMES = [
-  { id: "1W", days: 7, label: "1W" },
-  { id: "1M", days: 30, label: "1M" },
-  { id: "3M", days: 90, label: "3M" },
-  { id: "1Y", days: 365, label: "1Y" },
-  { id: "ALL", days: 365, label: "ALL" },
+  { id: "1W", days: 7 },
+  { id: "1M", days: 30 },
+  { id: "3M", days: 90 },
+  { id: "1Y", days: 365 },
+  { id: "ALL", days: 365 },
 ] as const;
 
 type Timeframe = (typeof TIMEFRAMES)[number]["id"];
@@ -54,10 +71,6 @@ function formatXAxisDate(val: string): string {
 
 function formatPriceLabel(val: number): string {
   return `$${(val / 1000).toFixed(0)}k`;
-}
-
-function formatFgiLabel(val: number): string {
-  return String(val);
 }
 
 function formatTooltipValue(
@@ -105,15 +118,13 @@ function renderFgiActiveDot(dotProps: {
   payload?: { regime?: string | null | undefined };
 }): JSX.Element {
   const { cx = 0, cy = 0, payload } = dotProps;
-  const color = payload?.regime
-    ? REGIME_COLORS[payload.regime as keyof typeof REGIME_COLORS]
-    : "#10B981";
+  const color = getRegimeColor(payload?.regime, "#10B981");
   return (
     <circle cx={cx} cy={cy} r={6} fill={color} stroke="#fff" strokeWidth={2} />
   );
 }
 
-export function MarketDashboardView() {
+export function MarketDashboardView(): JSX.Element {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
   const [data, setData] = useState<MarketDashboardPoint[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -145,16 +156,16 @@ export function MarketDashboardView() {
     const blocks: {
       start: string;
       end: string;
-      regime: keyof typeof REGIME_COLORS;
+      regime: RegimeKey;
     }[] = [];
     let currentBlock: {
       start: string;
       end: string;
-      regime: keyof typeof REGIME_COLORS;
+      regime: RegimeKey;
     } | null = null;
 
     for (const [i, d] of filteredData.entries()) {
-      const regime = (d.regime || "n") as keyof typeof REGIME_COLORS;
+      const regime = (d.regime || "n") as RegimeKey;
 
       if (!currentBlock) {
         currentBlock = { start: d.snapshot_date, end: d.snapshot_date, regime };
@@ -203,7 +214,7 @@ export function MarketDashboardView() {
                   : "text-gray-400 hover:text-gray-200 hover:bg-gray-700/50"
               }`}
             >
-              {tf.label}
+              {tf.id}
             </button>
           ))}
         </div>
@@ -232,9 +243,7 @@ export function MarketDashboardView() {
                 {filteredData.map((d, i) => {
                   const offset =
                     filteredData.length > 1 ? i / (filteredData.length - 1) : 0;
-                  const color = d.regime
-                    ? REGIME_COLORS[d.regime as keyof typeof REGIME_COLORS]
-                    : "#eab308";
+                  const color = getRegimeColor(d.regime);
                   return (
                     <stop
                       key={i}
@@ -275,7 +284,7 @@ export function MarketDashboardView() {
               stroke={AXIS_COLOR}
               tick={{ fill: AXIS_COLOR, fontSize: 11 }}
               domain={[0, 100]}
-              tickFormatter={formatFgiLabel}
+              tickFormatter={String}
               label={{
                 value: "FGI",
                 angle: 90,
@@ -387,23 +396,13 @@ export function MarketDashboardView() {
             <p
               className="text-2xl font-bold"
               style={{
-                color: latestPoint?.regime
-                  ? REGIME_COLORS[
-                      latestPoint.regime as keyof typeof REGIME_COLORS
-                    ]
-                  : "#10B981",
+                color: getRegimeColor(latestPoint?.regime, "#10B981"),
               }}
             >
               {latestPoint?.sentiment_value ?? "---"} / 100
               {latestPoint?.regime && (
                 <span className="text-sm ml-2 font-medium opacity-80">
-                  (
-                  {
-                    REGIME_LABELS[
-                      latestPoint.regime as keyof typeof REGIME_LABELS
-                    ]
-                  }
-                  )
+                  ({getRegimeLabel(latestPoint.regime)})
                 </span>
               )}
             </p>

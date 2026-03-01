@@ -11,9 +11,9 @@ interface InvestViewProps {
 }
 
 const SUB_TABS = [
-  { id: "market", label: "market data" },
   { id: "trading", label: "trading" },
   { id: "backtesting", label: "backtesting" },
+  { id: "market", label: "market data" },
 ] as const;
 
 type SubTab = (typeof SUB_TABS)[number]["id"];
