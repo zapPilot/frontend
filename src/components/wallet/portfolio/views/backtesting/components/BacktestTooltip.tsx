@@ -25,7 +25,7 @@ export function BacktestTooltip(props: BacktestTooltipProps) {
   const { strategies, events, signals, allocations } = sections;
 
   return (
-    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px]">
+    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px] max-h-[80vh] overflow-y-auto">
       <div className="text-xs font-medium text-white mb-2">{dateStr}</div>
       {btcPrice != null && (
         <div className="text-xs text-gray-400 mb-2">

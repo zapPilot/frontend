@@ -13,8 +13,9 @@ const EVENT_LEGEND_KEYS: SignalKey[] = [
 ];
 
 export const INDICATOR_LEGEND: LegendItem[] = [
-  { label: "Sentiment", color: "#a855f7" },
+  { label: "BTC Price", color: "#3b82f6" },
   { label: "DMA 200", color: "#f59e0b" },
+  { label: "Sentiment", color: "#a855f7" },
 ];
 
 /** Event subset shown in the chart legend (excludes borrow/repay/liquidate). */

@@ -212,13 +212,17 @@ function updateBorrowingConfig(
     regimeConfig = {
       config_id: SIMPLE_REGIME_STRATEGY_ID,
       strategy_id: SIMPLE_REGIME_STRATEGY_ID,
-      params: {},
+      params: {
+        enable_borrowing: false,
+      },
     };
     updated.configs.push(regimeConfig);
   }
 
   if (!regimeConfig.params) {
-    regimeConfig.params = {};
+    regimeConfig.params = {
+      enable_borrowing: false,
+    };
   }
 
   // Convert borrow_apr from percentage to decimal
@@ -226,6 +230,9 @@ function updateBorrowingConfig(
     field === "borrow_apr" && typeof value === "number" ? value / 100 : value;
 
   regimeConfig.params[field] = storeValue;
+
+  // Force enable_borrowing to false regardless of input field/value
+  regimeConfig.params["enable_borrowing"] = false;
 
   return JSON.stringify(updated, null, 2);
 }

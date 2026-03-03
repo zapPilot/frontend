@@ -136,12 +136,13 @@ describe("patchBacktestConfig", () => {
   });
 
   describe("borrowing field updates - enable_borrowing", () => {
-    it("should create configs array if it doesn't exist", () => {
+    it("should create configs array if it doesn't exist and force enable_borrowing to false", () => {
       const input = {};
       const result = patchBacktestConfig(input, "enable_borrowing", true);
 
       const parsed = JSON.parse(result!);
       expect(Array.isArray(parsed.configs)).toBe(true);
+      expect(parsed.configs[0].params.enable_borrowing).toBe(false);
     });
 
     it("should create simple_regime config if it doesn't exist", () => {
@@ -157,7 +158,7 @@ describe("patchBacktestConfig", () => {
       expect(regimeConfig.strategy_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
     });
 
-    it("should update enable_borrowing in simple_regime params", () => {
+    it("should NOT update enable_borrowing in simple_regime params (forced to false)", () => {
       const input = {};
       const result = patchBacktestConfig(input, "enable_borrowing", true);
 
@@ -165,20 +166,20 @@ describe("patchBacktestConfig", () => {
       const regimeConfig = parsed.configs.find(
         (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
-      expect(regimeConfig.params.enable_borrowing).toBe(true);
+      expect(regimeConfig.params.enable_borrowing).toBe(false);
     });
 
-    it("should use existing simple_regime config if present", () => {
+    it("should use existing simple_regime config if present and force enable_borrowing to false", () => {
       const input = {
         configs: [
           {
             config_id: SIMPLE_REGIME_STRATEGY_ID,
             strategy_id: SIMPLE_REGIME_STRATEGY_ID,
-            params: { existing_param: "keep-me" },
+            params: { existing_param: "keep-me", enable_borrowing: true },
           },
         ],
       };
-      const result = patchBacktestConfig(input, "enable_borrowing", false);
+      const result = patchBacktestConfig(input, "enable_borrowing", true);
 
       const parsed = JSON.parse(result!);
       expect(parsed.configs.length).toBe(1);
@@ -187,7 +188,7 @@ describe("patchBacktestConfig", () => {
       expect(regimeConfig.params.existing_param).toBe("keep-me");
     });
 
-    it("should preserve other configs when updating borrowing field", () => {
+    it("should preserve other configs when updating borrowing field and force enable_borrowing to false", () => {
       const input = {
         configs: [
           {
@@ -203,6 +204,7 @@ describe("patchBacktestConfig", () => {
       expect(parsed.configs.length).toBe(2);
       expect(parsed.configs[0].strategy_id).toBe("other-strategy");
       expect(parsed.configs[1].strategy_id).toBe(SIMPLE_REGIME_STRATEGY_ID);
+      expect(parsed.configs[1].params.enable_borrowing).toBe(false);
     });
 
     it("should create params object if it doesn't exist on existing regime config", () => {
@@ -221,7 +223,7 @@ describe("patchBacktestConfig", () => {
         (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params).toBeDefined();
-      expect(regimeConfig.params.enable_borrowing).toBe(true);
+      expect(regimeConfig.params.enable_borrowing).toBe(false);
     });
 
     it("should handle params being null", () => {
@@ -241,7 +243,7 @@ describe("patchBacktestConfig", () => {
         (c: any) => c.strategy_id === SIMPLE_REGIME_STRATEGY_ID
       );
       expect(regimeConfig.params).toBeDefined();
-      expect(regimeConfig.params.enable_borrowing).toBe(true);
+      expect(regimeConfig.params.enable_borrowing).toBe(false);
     });
   });
 
@@ -268,7 +270,7 @@ describe("patchBacktestConfig", () => {
       expect(regimeConfig.params.borrow_ltv).toBe("80");
     });
 
-    it("should preserve other borrowing params when updating borrow_ltv", () => {
+    it("should preserve other borrowing params when updating borrow_ltv and force enable_borrowing to false", () => {
       const input = {
         configs: [
           {
@@ -286,7 +288,7 @@ describe("patchBacktestConfig", () => {
       const parsed = JSON.parse(result!);
       const regimeConfig = parsed.configs[0];
       expect(regimeConfig.params.borrow_ltv).toBe(70);
-      expect(regimeConfig.params.enable_borrowing).toBe(true);
+      expect(regimeConfig.params.enable_borrowing).toBe(false);
       expect(regimeConfig.params.borrow_apr).toBe(0.05);
     });
   });
@@ -483,7 +485,7 @@ describe("patchBacktestConfig", () => {
 
       // But the function modifies nested objects in the spread copy
       // This is expected behavior - shallow copy at top level only
-      expect(parsed.configs[0].params.enable_borrowing).toBe(true);
+      expect(parsed.configs[0].params.enable_borrowing).toBe(false);
     });
   });
 });

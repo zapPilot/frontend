@@ -1,7 +1,6 @@
 import { httpUtils } from "@/lib/http";
 import { createApiServiceCaller } from "@/lib/http/createApiServiceCaller";
 import {
-  enrichTimelineWithDma200,
   MAX_CHART_POINTS,
   MIN_CHART_POINTS,
   sampleTimelineData,
@@ -39,10 +38,7 @@ const callBacktestingApi = createApiServiceCaller(
  * Export internal helpers for testing purposes.
  * @internal - Not part of the public API
  */
-export {
-  enrichTimelineWithDma200 as _enrichTimelineWithDma200,
-  sampleTimelineData as _sampleTimelineData,
-};
+export { sampleTimelineData as _sampleTimelineData };
 export { MAX_CHART_POINTS, MIN_CHART_POINTS };
 
 export async function getBacktestingStrategiesV3(): Promise<BacktestStrategyCatalogResponseV3> {
@@ -66,12 +62,9 @@ export async function runBacktest(
     )
   );
 
-  // Compute DMA200 on the full timeline first, then sample while preserving events.
-  const timelineWithDma = enrichTimelineWithDma200(response.timeline);
-
   // Sample timeline data to reduce memory usage while preserving signals
   return {
     ...response,
-    timeline: sampleTimelineData(timelineWithDma),
+    timeline: sampleTimelineData(response.timeline),
   };
 }

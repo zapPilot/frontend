@@ -1,3 +1,4 @@
+import type { MarketDashboardPoint } from "@/schemas/api/analyticsSchemas";
 import type { BacktestTimelinePoint } from "@/types/backtesting";
 
 import { DCA_CLASSIC_STRATEGY_ID } from "../constants";
@@ -325,7 +326,8 @@ export function sortStrategyIds(ids: string[]): string[] {
 
 export function buildChartPoint(
   point: BacktestTimelinePoint,
-  strategyIds: string[]
+  strategyIds: string[],
+  marketDataMap?: Map<string, MarketDashboardPoint>
 ): Record<string, unknown> {
   const data: Record<string, unknown> = { ...point };
 
@@ -337,11 +339,11 @@ export function buildChartPoint(
     }
   }
 
-  // Sentiment
-  data["sentiment"] =
-    point.sentiment ??
-    sentimentLabelToIndex(point.sentiment_label ?? undefined);
-  data["dma_200"] = point.dma_200 ?? null;
+  // Market dashboard overlay data (BTC price, DMA 200, sentiment)
+  const marketPoint = marketDataMap?.get(point.date);
+  data["btc_price"] = marketPoint?.price_usd ?? null;
+  data["dma_200"] = marketPoint?.dma_200 ?? null;
+  data["sentiment"] = marketPoint?.sentiment_value ?? null;
 
   // Signals
   const acc = createSignalAccumulator();

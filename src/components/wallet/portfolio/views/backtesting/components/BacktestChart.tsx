@@ -112,7 +112,7 @@ export const BacktestChart = memo(function BacktestChart({
   return (
     <BaseCard
       variant="glass"
-      className="p-1 h-[500px] relative overflow-hidden flex flex-col"
+      className="p-1 h-[500px] relative overflow-visible flex flex-col"
     >
       <div className="p-4 border-b border-gray-800/50 bg-gray-900/30 flex justify-between items-center">
         <div className="text-sm font-medium text-white flex items-center gap-2">
@@ -157,6 +157,12 @@ export const BacktestChart = memo(function BacktestChart({
               {...AXIS_DEFAULTS}
               width={64}
               tickFormatter={formatCurrencyAxis}
+              label={{
+                value: "BTC / DMA 200",
+                angle: 90,
+                position: "insideRight",
+                style: { fontSize: 10, fill: "#f59e0b" },
+              }}
             />
 
             <YAxis
@@ -176,6 +182,7 @@ export const BacktestChart = memo(function BacktestChart({
             />
 
             <Tooltip
+              allowEscapeViewBox={{ x: false, y: true }}
               content={({ active, payload, label }) => {
                 const tooltipProps = buildBacktestTooltipProps({
                   active,
@@ -208,6 +215,18 @@ export const BacktestChart = memo(function BacktestChart({
               dot={false}
               connectNulls={true}
               strokeOpacity={0.4}
+              legendType="none"
+            />
+
+            <Line
+              yAxisId="priceRight"
+              type="monotone"
+              dataKey="btc_price"
+              name="BTC Price"
+              stroke="#3b82f6"
+              strokeWidth={1.5}
+              dot={false}
+              connectNulls={true}
               legendType="none"
             />
 

@@ -21,7 +21,7 @@ const SIGNAL_TO_EVENT_KEY: Record<string, string> = Object.fromEntries(
   ])
 );
 
-const KNOWN_SIGNALS = ["Sentiment", "VIX", "DMA 200"];
+const KNOWN_SIGNALS = ["BTC Price", "Sentiment", "VIX", "DMA 200"];
 
 export interface BacktestTooltipProps {
   active?: boolean;
@@ -193,6 +193,16 @@ function formatSignalValue(
     return formatSentimentValue(value, sentiment);
   }
 
+  if (signalName === "BTC Price" || signalName === "DMA 200") {
+    if (typeof value === "number") {
+      return formatCurrency(value, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      });
+    }
+    return "";
+  }
+
   if (typeof value === "number") {
     return Number(value.toFixed(2));
   }
@@ -262,6 +272,7 @@ export function useBacktestTooltipData({
   const sentiment = firstPayload?.["sentiment_label"] as string | undefined;
 
   const tokenPrice =
+    (firstPayload?.["btc_price"] as number | undefined) ??
     (firstPayload?.["token_price"] as { btc?: number } | undefined)?.btc ??
     (firstPayload?.["price"] as number | undefined);
 
