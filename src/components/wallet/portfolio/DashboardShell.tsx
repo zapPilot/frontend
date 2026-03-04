@@ -28,10 +28,6 @@ interface DashboardShellProps {
 type EtlState = ReturnType<typeof useEtlJobPolling>["state"];
 type UnifiedPortfolioSnapshot = { positions?: number; balance?: number } | null;
 
-function isEtlProcessing(status: EtlState["status"]): boolean {
-  return ["pending", "processing", "completing"].includes(status);
-}
-
 function useStartPollingFromInitialJobId(
   initialEtlJobId: string | undefined,
   startPolling: (jobId: string) => void,
@@ -224,7 +220,7 @@ export function DashboardShell({
     startPolling,
     completeTransition,
   } = useEtlJobPolling();
-  const isEtlInProgress = isEtlProcessing(etlState.status);
+  const isEtlInProgress = etlState.isInProgress;
   const activeEtlJobIdRef = useRef<string | null>(null);
 
   // Portfolio data with ETL-aware queries

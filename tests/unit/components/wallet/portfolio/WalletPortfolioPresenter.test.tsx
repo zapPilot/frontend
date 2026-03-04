@@ -87,6 +87,7 @@ const DEFAULT_ETL_STATE = {
   status: "idle" as const,
   errorMessage: undefined,
   isLoading: false,
+  isInProgress: false,
 };
 
 // Mock Next.js router
@@ -619,6 +620,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
           jobId: "test-job",
           status,
           isLoading,
+          isInProgress: true,
         };
 
         render(
@@ -688,6 +690,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
           jobId: "test-job",
           status,
           isLoading: status !== "completing",
+          isInProgress: true,
         };
 
         const { unmount } = render(
@@ -734,6 +737,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         jobId: "test-job",
         status: "completing" as const,
         isLoading: false,
+        isInProgress: true,
       };
 
       const { unmount: unmount1 } = render(
@@ -844,6 +848,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         status: "processing" as const,
         errorMessage: undefined,
         isLoading: true,
+        isInProgress: true,
       };
 
       render(
@@ -867,6 +872,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
         status: "idle" as const,
         errorMessage: undefined,
         isLoading: false,
+        isInProgress: false,
       };
 
       // This would be triggered in handleSearch's catch block for non-validation errors
@@ -911,6 +917,7 @@ describe("WalletPortfolioPresenter - Regime Highlighting", () => {
           status,
           errorMessage: undefined,
           isLoading: shouldShowLoading,
+          isInProgress: shouldShowLoading,
         };
 
         const { unmount } = render(

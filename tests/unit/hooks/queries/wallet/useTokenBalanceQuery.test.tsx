@@ -20,9 +20,9 @@ vi.mock("@/providers/WalletProvider", () => ({
   })),
 }));
 
-// Mock transactionService
+// Mock transactionServiceMock
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     getTokenBalance: mockGetTokenBalance,
   },
 }));

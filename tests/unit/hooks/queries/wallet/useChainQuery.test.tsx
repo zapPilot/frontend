@@ -21,9 +21,9 @@ function createTestQueryWrapper() {
   return TestQueryWrapper;
 }
 
-// Mock chainService
+// Mock chainServiceMock
 vi.mock("@/services", () => ({
-  chainService: {
+  chainServiceMock: {
     getSupportedChains: vi.fn().mockResolvedValue([
       { chainId: 1, name: "Ethereum", symbol: "ETH" },
       { chainId: 42161, name: "Arbitrum", symbol: "ETH" },

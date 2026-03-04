@@ -23,7 +23,7 @@ vi.mock("@/providers/WalletProvider", () => ({
 }));
 
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     computeProjectedAllocation: vi.fn((intensity, current, target) => {
       // Simple linear interpolation for testing
       const factor = intensity / 100;
@@ -208,9 +208,9 @@ describe("RebalanceModal", () => {
   });
 
   it("should call transaction service on submit", async () => {
-    const { transactionService } = await import("@/services");
+    const { transactionServiceMock } = await import("@/services");
     const simulateRebalanceSpy = vi.spyOn(
-      transactionService,
+      transactionServiceMock,
       "simulateRebalance"
     );
 
@@ -268,9 +268,9 @@ describe("RebalanceModal", () => {
   });
 
   it("should compute projected allocation correctly", async () => {
-    const { transactionService } = await import("@/services");
+    const { transactionServiceMock } = await import("@/services");
     const computeSpy = vi.spyOn(
-      transactionService,
+      transactionServiceMock,
       "computeProjectedAllocation"
     );
 
@@ -307,8 +307,8 @@ describe("RebalanceModal", () => {
   });
 
   it("should handle transaction error gracefully", async () => {
-    const { transactionService } = await import("@/services");
-    vi.spyOn(transactionService, "simulateRebalance").mockRejectedValueOnce(
+    const { transactionServiceMock } = await import("@/services");
+    vi.spyOn(transactionServiceMock, "simulateRebalance").mockRejectedValueOnce(
       new Error("Network error")
     );
 
@@ -327,11 +327,13 @@ describe("RebalanceModal", () => {
   });
 
   it("should display success message after successful rebalance", async () => {
-    const { transactionService } = await import("@/services");
-    vi.spyOn(transactionService, "simulateRebalance").mockResolvedValueOnce({
-      success: true,
-      txHash: "0xABC",
-    });
+    const { transactionServiceMock } = await import("@/services");
+    vi.spyOn(transactionServiceMock, "simulateRebalance").mockResolvedValueOnce(
+      {
+        success: true,
+        txHash: "0xABC",
+      }
+    );
 
     render(<RebalanceModal {...defaultProps} />);
 

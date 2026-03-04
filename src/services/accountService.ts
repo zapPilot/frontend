@@ -11,21 +11,19 @@ import { httpUtils } from "@/lib/http";
 import { createServiceCaller } from "@/lib/http/createServiceCaller";
 import { createServiceError } from "@/lib/http/serviceErrorUtils";
 import {
+  type AddWalletResponse,
+  type ConnectWalletResponse,
   connectWalletResponseSchema,
   etlJobStatusResponseSchema,
+  type UpdateEmailResponse,
+  type UserCryptoWallet,
+  type UserProfileResponse,
   validateAddWalletResponse,
   validateMessageResponse,
   validateUpdateEmailResponse,
   validateUserProfileResponse,
   validateUserWallets,
 } from "@/schemas/api/accountSchemas";
-import type {
-  AddWalletResponse,
-  ConnectWalletResponse,
-  UpdateEmailResponse,
-  UserCryptoWallet,
-  UserProfileResponse,
-} from "@/types/domain/user.types";
 import { logger } from "@/utils/logger";
 
 export { AccountServiceError };

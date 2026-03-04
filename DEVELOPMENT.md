@@ -71,9 +71,6 @@ etc.) now include both passes, so failures will surface whenever either tool det
    - Prettier formatting
    - ESLint fixing
    - Type checking
-   - Dead code scan
-   - Duplicate code scan
-   - Comprehensive tests (`npm run test:safeall`)
 
 ### Quality Checks
 
@@ -123,8 +120,7 @@ On every push/PR to main/develop:
 - `.vscode/settings.json` - VS Code workspace settings
 - `.vscode/extensions.json` - Recommended extensions
 - `.editorconfig` - Cross-editor configuration
-- `.husky/pre-commit` - Strict commit-time checks (lint-staged, type-check, deadcode, dup,
-  `test:safeall`)
+- `.husky/pre-commit` - Fast commit-time checks (`lint-staged`, `type-check`)
 - No `.husky/pre-push` hook (intentional; CI is the final shared-branch gate)
 
 ### CI/CD Workflows
@@ -210,8 +206,8 @@ npm run format
 **Pre-commit hook failures**
 
 ```bash
-# Fix issues and re-commit
-npm run format && npm run lint:fix && npm run test:safeall
+# Fix staged formatting/lint issues and re-commit
+npm run format && npm run lint:fix && npm run type-check
 git add .
 git commit -m "fix: resolve linting issues"
 ```

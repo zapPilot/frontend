@@ -28,7 +28,6 @@ export * from "./strategy";
 
 export * from "./domain/allocation";
 export * from "./domain/transaction";
-export * from "./domain/user.types";
 export * from "./domain/wallet";
 
 // ============================================================================

@@ -38,6 +38,8 @@ export interface EtlJobPollingState {
   errorMessage: string | undefined;
   /** Whether the job is currently loading */
   isLoading: boolean;
+  /** Whether ETL is actively in progress (pending, processing, or completing) */
+  isInProgress: boolean;
 }
 
 /**
@@ -62,6 +64,8 @@ const DEFAULT_TRIGGER_ERROR_MESSAGE = "Failed to trigger ETL";
 const PENDING_STATUS = "pending";
 const COMPLETED_STATUS = "completed";
 const FAILED_STATUS = "failed";
+const ETL_IN_PROGRESS_STATUSES: ReadonlySet<EtlJobPollingState["status"]> =
+  new Set(["pending", "processing", "completing"]);
 
 function shouldStopPolling(status: string | undefined): boolean {
   return status === COMPLETED_STATUS || status === FAILED_STATUS;
@@ -158,6 +162,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     status,
     errorMessage,
     isLoading: isPolling || hasPendingJob,
+    isInProgress: ETL_IN_PROGRESS_STATUSES.has(status),
   };
 
   const triggerEtl = useCallback(

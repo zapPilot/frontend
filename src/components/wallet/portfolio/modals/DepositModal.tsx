@@ -1,6 +1,6 @@
 "use client";
 
-import { transactionService as depositTransactionService } from "@/services";
+import { transactionServiceMock as depositTransactionService } from "@/services";
 import type { DepositModalProps } from "@/types/ui/modals";
 
 import { TransactionModalBase } from "./base/TransactionModalBase";

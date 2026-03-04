@@ -46,7 +46,7 @@ interface ConnectedWalletItem {
   isActive?: boolean;
 }
 
-const EMPTY_CONNECTED_WALLETS: ConnectedWalletItem[] = [];
+const EMPTY_WALLETS: ConnectedWalletItem[] = [];
 
 function noopSwitchActiveWallet(): Promise<void> {
   return Promise.resolve();
@@ -220,8 +220,7 @@ export function useBundlePage(
   const queryClient = useSafeQueryClient(fallbackQueryClient);
   const { userInfo, isConnected, connectedWallet, loading } = useUser();
   const walletContext = useSafeWalletProvider();
-  const connectedWallets =
-    walletContext?.connectedWallets ?? EMPTY_CONNECTED_WALLETS;
+  const connectedWallets = walletContext?.connectedWallets ?? EMPTY_WALLETS;
   const switchActiveWallet =
     walletContext?.switchActiveWallet ?? noopSwitchActiveWallet;
   const [bundleUser, setBundleUser] = useState<BundleUser | null>(null);

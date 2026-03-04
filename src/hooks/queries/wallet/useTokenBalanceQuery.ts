@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 
 interface UseTokenBalanceQueryOptions {
   enabled?: boolean;
@@ -26,7 +26,7 @@ export function useTokenBalanceQuery(
         throw new Error("Missing chain or token for balance lookup");
       }
 
-      return transactionService.getTokenBalance(chainId, tokenAddress);
+      return transactionServiceMock.getTokenBalance(chainId, tokenAddress);
     },
     enabled:
       Boolean(chainId && tokenAddress && account?.address) &&

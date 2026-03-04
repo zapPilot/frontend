@@ -64,7 +64,7 @@ vi.mock(
 );
 
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     simulateDeposit: vi.fn(),
     simulateWithdraw: vi.fn(),
   },
@@ -207,9 +207,8 @@ describe("TransactionPanel", () => {
   });
 
   it("renders token loading skeletons when loading", async () => {
-    const { useWatchedTransactionData } = await import(
-      "@/components/wallet/portfolio/modals/hooks/useWatchedTransactionData"
-    );
+    const { useWatchedTransactionData } =
+      await import("@/components/wallet/portfolio/modals/hooks/useWatchedTransactionData");
     vi.mocked(useWatchedTransactionData).mockReturnValue({
       amount: "",
       transactionData: {

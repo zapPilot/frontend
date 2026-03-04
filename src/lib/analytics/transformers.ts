@@ -4,6 +4,7 @@
  * Pure functions to transform API responses into chart/metric display formats.
  */
 
+import { MONTH_ABBREVIATIONS } from "@/constants/dates";
 import type {
   DailyYieldReturnsResponse,
   UnifiedDashboardResponse,
@@ -346,20 +347,7 @@ export function aggregateMonthlyPnL(
     );
   }
 
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
+  const monthNames = MONTH_ABBREVIATIONS;
 
   return Array.from(monthlyMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))

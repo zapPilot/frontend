@@ -146,31 +146,6 @@ function buildErrorContext(
   return { status, code, errorObj, message };
 }
 
-function resolveIntentMessage(status: number, message: string): string {
-  if (status === 400) {
-    const lowerMessage = message.toLowerCase();
-
-    if (lowerMessage.includes("slippage")) {
-      return "Invalid slippage tolerance. Must be between 0.1% and 50%.";
-    }
-    if (lowerMessage.includes("amount")) {
-      return "Invalid transaction amount. Please check your balance.";
-    }
-
-    return message;
-  }
-
-  if (status === 429) {
-    return "Too many transactions in progress. Please wait before submitting another.";
-  }
-
-  if (status === 503) {
-    return "Intent engine is temporarily overloaded. Please try again in a moment.";
-  }
-
-  return message;
-}
-
 /**
  * Enhanced error messages for common intent engine errors
  *
@@ -184,8 +159,7 @@ export function createIntentServiceError(error: unknown): IntentServiceError {
     errorObj,
     message: fallbackMessage,
   } = buildErrorContext(error, "Intent service error");
-  const message = resolveIntentMessage(status, fallbackMessage);
-  const userMessage = getIntentErrorMessage(status, message);
+  const userMessage = getIntentErrorMessage(status, fallbackMessage);
 
   return new IntentServiceError(
     userMessage,

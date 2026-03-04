@@ -21,7 +21,7 @@ vi.mock("@/lib/domain/assetCategoryUtils", () => ({
 
 // Mock dependencies
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     simulateWithdraw: vi.fn(),
   },
 }));

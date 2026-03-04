@@ -73,7 +73,7 @@ vi.mock(
 );
 
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     simulateDeposit: vi.fn(),
   },
 }));

@@ -4,7 +4,7 @@
  */
 
 import { APIError, handleHTTPError } from "@/lib/http";
-import type { UserCryptoWallet } from "@/types/domain/user.types";
+import type { UserCryptoWallet } from "@/schemas/api/accountSchemas";
 
 export interface WalletData {
   id: string;

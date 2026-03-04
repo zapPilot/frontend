@@ -1,23 +1,22 @@
 #!/usr/bin/env sh
 set -eu
 
-# Pre-commit quality gates (strict local safety)
-# Block commits unless static analysis and comprehensive tests pass.
+# Fast pre-commit checks for local commit safety.
+# Full verification remains enforced in CI.
 
-printf '%s\n' "🔍 Running pre-commit quality gates..."
+printf '%s\n' "🔍 Running pre-commit fast checks..."
 
-# Phase 1: Staged file formatting/linting
+# Phase 1: Staged formatting/linting
 printf '\n📋 Phase 1: Staged Formatting & Linting\n'
 npx lint-staged
 
 # Phase 2: Fast static analysis
-printf '\n📋 Phase 2: Fast Static Analysis\n'
+printf '\n📋 Phase 2: TypeScript Check\n'
 npm run type-check
-npm run deadcode:check
-npm run dup:all
 
-# Phase 3: Comprehensive tests
-printf '\n🧪 Phase 3: Comprehensive Test Suite\n'
-npm run test:safeall
-
-printf '\n✅ Pre-commit quality gates passed!\n'
+printf '\n✅ Pre-commit fast checks passed!\n'
+printf '%s\n' "   Full verification remains in CI."
+printf '%s\n' "   Run manually when needed:"
+printf '%s\n' "   - npm run deadcode:check"
+printf '%s\n' "   - npm run dup:all"
+printf '%s\n' "   - npm run test:safeall"

@@ -10,9 +10,8 @@ vi.mock("@/services/accountService", () => ({
   triggerWalletDataFetch: vi.fn(),
 }));
 
-const { getEtlJobStatus, triggerWalletDataFetch } = await import(
-  "@/services/accountService"
-);
+const { getEtlJobStatus, triggerWalletDataFetch } =
+  await import("@/services/accountService");
 const USER_ID = "user-123";
 const WALLET_ADDRESS = "0x123abc";
 const DEFAULT_JOB_ID = "job-123";
@@ -62,6 +61,7 @@ describe("useEtlJobPolling", () => {
       status: "idle",
       errorMessage: undefined,
       isLoading: false,
+      isInProgress: false,
     });
 
     expect(result.current.triggerEtl).toBeInstanceOf(Function);
@@ -239,6 +239,7 @@ describe("useEtlJobPolling", () => {
       status: "idle",
       errorMessage: undefined,
       isLoading: false,
+      isInProgress: false,
     });
   });
 
@@ -264,6 +265,7 @@ describe("useEtlJobPolling", () => {
       status: "idle",
       errorMessage: undefined,
       isLoading: false,
+      isInProgress: false,
     });
   });
 });

@@ -14,7 +14,7 @@ import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 
 import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 import type {
   ChainData,
   TokenBalance,
@@ -126,7 +126,7 @@ export function useTransactionData({
       if (chainId === undefined) {
         throw new Error("Chain ID is required to load tokens");
       }
-      return transactionService.getSupportedTokens(chainId);
+      return transactionServiceMock.getSupportedTokens(chainId);
     },
     enabled: isOpen && Boolean(chainId),
   });

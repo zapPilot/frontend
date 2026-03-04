@@ -5,13 +5,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useTransactionData } from "@/components/wallet/portfolio/modals/hooks/useTransactionData";
 import { useChainQuery } from "@/hooks/queries/wallet/useChainQuery";
 import { useTokenBalanceQuery } from "@/hooks/queries/wallet/useTokenBalanceQuery";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 
 // Mock dependencies
 vi.mock("@/hooks/queries/wallet/useChainQuery");
 vi.mock("@/hooks/queries/wallet/useTokenBalanceQuery");
 vi.mock("@/services", () => ({
-  transactionService: {
+  transactionServiceMock: {
     getSupportedTokens: vi.fn(),
   },
 }));
@@ -63,7 +63,7 @@ describe("useTransactionData", () => {
 
   it("should fetch tokens for selected chain", async () => {
     vi.mocked(useChainQuery).mockReturnValue({ data: mockChains } as any);
-    vi.mocked(transactionService.getSupportedTokens).mockResolvedValue(
+    vi.mocked(transactionServiceMock.getSupportedTokens).mockResolvedValue(
       mockTokens
     );
     vi.mocked(useTokenBalanceQuery).mockReturnValue({
@@ -92,7 +92,7 @@ describe("useTransactionData", () => {
 
   it("should select token by address", async () => {
     vi.mocked(useChainQuery).mockReturnValue({ data: mockChains } as any);
-    vi.mocked(transactionService.getSupportedTokens).mockResolvedValue(
+    vi.mocked(transactionServiceMock.getSupportedTokens).mockResolvedValue(
       mockTokens
     );
     vi.mocked(useTokenBalanceQuery).mockReturnValue({
@@ -118,7 +118,7 @@ describe("useTransactionData", () => {
 
   it("should calculate USD amount", async () => {
     vi.mocked(useChainQuery).mockReturnValue({ data: mockChains } as any);
-    vi.mocked(transactionService.getSupportedTokens).mockResolvedValue(
+    vi.mocked(transactionServiceMock.getSupportedTokens).mockResolvedValue(
       mockTokens
     );
     vi.mocked(useTokenBalanceQuery).mockReturnValue({
@@ -145,7 +145,7 @@ describe("useTransactionData", () => {
 
   it("should handle balance fetching", async () => {
     vi.mocked(useChainQuery).mockReturnValue({ data: mockChains } as any);
-    vi.mocked(transactionService.getSupportedTokens).mockResolvedValue(
+    vi.mocked(transactionServiceMock.getSupportedTokens).mockResolvedValue(
       mockTokens
     );
     vi.mocked(useTokenBalanceQuery).mockReturnValue({

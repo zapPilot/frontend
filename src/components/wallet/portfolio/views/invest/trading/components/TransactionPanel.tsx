@@ -7,7 +7,7 @@ import { useTransactionSubmission } from "@/components/wallet/portfolio/modals/h
 import { useWatchedTransactionData } from "@/components/wallet/portfolio/modals/hooks/useWatchedTransactionData";
 import { cn } from "@/lib/ui/classNames";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 
 import { BaseTradingPanel } from "./BaseTradingPanel";
 
@@ -16,13 +16,13 @@ const MODE_CONFIG = {
     subtitle: "Add capital to your strategy.",
     buttonLabel: "Deposit",
     reviewTitle: "Confirm Deposit",
-    submitFn: transactionService.simulateDeposit,
+    submitFn: transactionServiceMock.simulateDeposit,
   },
   withdraw: {
     subtitle: "Withdraw funds to your wallet.",
     buttonLabel: "Withdrawal",
     reviewTitle: "Confirm Withdrawal",
-    submitFn: transactionService.simulateWithdraw,
+    submitFn: transactionServiceMock.simulateWithdraw,
   },
 } as const;
 

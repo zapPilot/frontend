@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import * as walletService from "@/components/WalletManager/services/WalletService";
+import type { UserCryptoWallet } from "@/schemas/api/accountSchemas";
 import * as accountService from "@/services/accountService";
-import type { UserCryptoWallet } from "@/types/domain/user.types";
 
 // Mock account service functions
 vi.mock("@/services/accountService", () => ({

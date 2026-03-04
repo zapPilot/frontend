@@ -77,18 +77,16 @@ The project uses Husky and lint-staged to run quality checks automatically:
 
 - **lint-staged** - Runs Prettier and ESLint fixers on staged files
 - **TypeScript** - `npm run type-check`
-- **Dead code scan** - `npm run deadcode:check`
-- **Duplicate code scan** - `npm run dup:all`
-- **Comprehensive tests** - `npm run test:safeall`
 
-There is no local `pre-push` hook by design. If a hook fails, fix the reported issues and re-run
-commit. CI remains the final gate for shared branches.
+There is no local `pre-push` hook by design. The commit hook stays fast and local-only, while CI
+remains responsible for dead-code scanning, duplication checks, and the comprehensive test suite. If
+a hook fails, fix the reported issues and re-run commit.
 
 ### Handling Code Duplication Failures
 
-If your commit is blocked by code duplication:
+If CI fails on code duplication:
 
-1. **Review the JSCPD report**: The pre-commit output shows which files have duplicated code
+1. **Review the JSCPD report**: The CI output shows which files have duplicated code
 2. **Check the HTML report**: Open `.jscpd/html/index.html` for detailed visualization
 3. **Refactor duplications**:
    - Extract common logic into shared utilities (`src/lib/`)

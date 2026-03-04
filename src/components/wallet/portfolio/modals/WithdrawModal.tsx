@@ -7,7 +7,7 @@ import {
   type AssetCategoryKey,
   getCategoryForToken,
 } from "@/lib/domain/assetCategoryUtils";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 import type { WithdrawModalProps } from "@/types/ui/modals";
 
 import { TransactionModalBase } from "./base/TransactionModalBase";
@@ -55,7 +55,7 @@ export function WithdrawModal({
       indicatorColor="bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
       defaultChainId={defaultChainId}
       slippage={0.5}
-      submitFn={transactionService.simulateWithdraw}
+      submitFn={transactionServiceMock.simulateWithdraw}
       successMessage="Withdrawal Executed Successfully!"
       successTone="indigo"
       modalContentClassName="p-0 overflow-visible bg-gray-950 border-gray-800"

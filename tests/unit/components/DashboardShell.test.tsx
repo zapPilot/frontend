@@ -163,6 +163,7 @@ describe("DashboardShell", () => {
       status: "idle",
       errorMessage: undefined,
       isLoading: false,
+      isInProgress: false,
     });
   });
 
@@ -450,6 +451,7 @@ describe("DashboardShell", () => {
         status: "completing",
         errorMessage: undefined,
         isLoading: false,
+        isInProgress: true,
       });
 
       render(<DashboardShell {...defaultProps} />, {
@@ -466,6 +468,7 @@ describe("DashboardShell", () => {
         status: "idle",
         errorMessage: undefined,
         isLoading: false,
+        isInProgress: false,
       });
 
       render(
@@ -482,6 +485,7 @@ describe("DashboardShell", () => {
         status: "processing",
         errorMessage: undefined,
         isLoading: true,
+        isInProgress: true,
       });
 
       render(
@@ -500,6 +504,7 @@ describe("DashboardShell", () => {
         status: "completing",
         errorMessage: undefined,
         isLoading: false,
+        isInProgress: true,
       });
 
       render(<DashboardShell {...defaultProps} />, {
@@ -516,6 +521,7 @@ describe("DashboardShell", () => {
         status: "pending",
         errorMessage: undefined,
         isLoading: true,
+        isInProgress: true,
       });
 
       render(<DashboardShell {...defaultProps} />, {
@@ -531,6 +537,7 @@ describe("DashboardShell", () => {
         status: "processing",
         errorMessage: undefined,
         isLoading: true,
+        isInProgress: true,
       });
 
       render(<DashboardShell {...defaultProps} />, {
@@ -546,6 +553,7 @@ describe("DashboardShell", () => {
         status: "failed",
         errorMessage: "ETL processing failed",
         isLoading: false,
+        isInProgress: false,
       });
 
       render(<DashboardShell {...defaultProps} />, {
@@ -561,6 +569,7 @@ describe("DashboardShell", () => {
         status: "idle",
         errorMessage: undefined,
         isLoading: false,
+        isInProgress: false,
       });
 
       render(<DashboardShell {...defaultProps} />, {

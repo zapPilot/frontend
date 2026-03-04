@@ -42,12 +42,6 @@ interface WalletPortfolioPresenterProps {
   footerOverlays?: ReactNode;
 }
 
-const ETL_IN_PROGRESS_STATUSES = new Set([
-  "pending",
-  "processing",
-  "completing",
-]);
-
 function isValidationSearchError(error: unknown): boolean {
   if (!(error instanceof Error)) {
     return false;
@@ -187,7 +181,7 @@ export function WalletPortfolioPresenter({
   };
 
   // Determine if ETL loading screen should be shown
-  const isEtlInProgress = ETL_IN_PROGRESS_STATUSES.has(etlState.status);
+  const isEtlInProgress = etlState.isInProgress;
   const shouldShowEtlLoading = isEtlInProgress || etlState.isLoading;
   const isNavigationSearching =
     isSearching || etlState.isLoading || isEtlInProgress;

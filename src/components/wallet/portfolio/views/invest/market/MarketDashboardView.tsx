@@ -1,6 +1,6 @@
 "use client";
 
-import { type JSX, useEffect, useMemo, useState } from "react";
+import { type JSX, useMemo, useState } from "react";
 import {
   CartesianGrid,
   ComposedChart,
@@ -13,26 +13,17 @@ import {
   YAxis,
 } from "recharts";
 
-import {
-  getMarketDashboardData,
-  type MarketDashboardPoint,
-} from "@/services/analyticsService";
+import { useMarketDashboardQuery } from "@/hooks/queries/market/useMarketDashboardQuery";
+import { REGIME_LABELS } from "@/lib/domain/regimeMapper";
+import type { MarketDashboardPoint } from "@/services/analyticsService";
 
-// Regime colors
-const REGIME_COLORS = {
+// Regime hex colors keyed by short RegimeId (ef/f/n/g/eg)
+const REGIME_COLORS: Record<string, string> = {
   ef: "#ef4444", // Extreme Fear - Red
   f: "#f97316", // Fear - Orange
   n: "#eab308", // Neutral - Yellow
   g: "#84cc16", // Greed - Lime
   eg: "#22c55e", // Extreme Greed - Green
-};
-
-const REGIME_LABELS = {
-  ef: "Extreme Fear",
-  f: "Fear",
-  n: "Neutral",
-  g: "Greed",
-  eg: "Extreme Greed",
 };
 
 type RegimeKey = keyof typeof REGIME_COLORS;
@@ -41,14 +32,13 @@ function getRegimeColor(
   regime: string | null | undefined,
   fallback = "#eab308"
 ): string {
-  return regime && regime in REGIME_COLORS
-    ? REGIME_COLORS[regime as RegimeKey]
-    : fallback;
+  if (!regime || !(regime in REGIME_COLORS)) return fallback;
+  return REGIME_COLORS[regime] ?? fallback;
 }
 
 function getRegimeLabel(regime: string | null | undefined): string {
   return regime && regime in REGIME_LABELS
-    ? REGIME_LABELS[regime as RegimeKey]
+    ? REGIME_LABELS[regime as keyof typeof REGIME_LABELS]
     : "";
 }
 
@@ -126,29 +116,16 @@ function renderFgiActiveDot(dotProps: {
 
 export function MarketDashboardView(): JSX.Element {
   const [timeframe, setTimeframe] = useState<Timeframe>("1Y");
-  const [data, setData] = useState<MarketDashboardPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const res = await getMarketDashboardData(365);
-        setData(res.snapshots);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to fetch market dashboard data", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    void fetchData();
-  }, []);
+  const { data: dashboardData, isLoading } = useMarketDashboardQuery(365);
+  const snapshots = useMemo<MarketDashboardPoint[]>(
+    () => dashboardData?.snapshots ?? [],
+    [dashboardData?.snapshots]
+  );
 
   const filteredData = useMemo(() => {
     const days = TIMEFRAMES.find(tf => tf.id === timeframe)?.days || 30;
-    return data.slice(-days);
-  }, [data, timeframe]);
+    return snapshots.slice(-days);
+  }, [snapshots, timeframe]);
 
   const regimeBlocks = useMemo(() => {
     if (!filteredData.length) return [];
@@ -184,7 +161,7 @@ export function MarketDashboardView(): JSX.Element {
     return blocks;
   }, [filteredData]);
 
-  const latestPoint = data[data.length - 1];
+  const latestPoint = snapshots[snapshots.length - 1];
 
   if (isLoading) {
     return (

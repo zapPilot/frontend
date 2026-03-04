@@ -8,21 +8,7 @@ import { Calendar } from "lucide-react";
 import type { ReactElement } from "react";
 
 import { BaseCard } from "@/components/ui/BaseCard";
-
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-] as const;
+import { MONTH_ABBREVIATIONS as MONTH_LABELS } from "@/constants/dates";
 
 function getMonthlyPnLCellClassName(value: number): string {
   if (value > 0) {

@@ -5,7 +5,7 @@ import { type ReactElement, useState } from "react";
 
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { useWalletProvider } from "@/providers/WalletProvider";
-import { transactionService } from "@/services";
+import { transactionServiceMock } from "@/services";
 import type { RebalanceModalProps } from "@/types/ui/modals";
 
 import {
@@ -27,7 +27,7 @@ export function RebalanceModal({
     "idle"
   );
 
-  const projected = transactionService.computeProjectedAllocation(
+  const projected = transactionServiceMock.computeProjectedAllocation(
     100,
     currentAllocation,
     targetAllocation
@@ -36,7 +36,7 @@ export function RebalanceModal({
   const handleSubmit = async () => {
     setStatus("submitting");
     try {
-      await transactionService.simulateRebalance(
+      await transactionServiceMock.simulateRebalance(
         100,
         currentAllocation,
         targetAllocation

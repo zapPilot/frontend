@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useActiveAccount } from "thirdweb/react";
 
 import { queryKeys } from "@/lib/state/queryClient";
+import type { UserProfileResponse } from "@/schemas/api/accountSchemas";
 // Use account service directly for wallet connection and profile data
 import { connectWallet, getUserProfile } from "@/services/accountService";
-import type { UserProfileResponse } from "@/types/domain/user.types";
 
 import { createQueryConfig } from "../queryDefaults";
 
