@@ -29,14 +29,12 @@ interface BaseHoverData {
 
 /**
  * Performance chart hover data
- * Shows portfolio value and benchmark comparison
+ * Shows portfolio value
  */
 export interface PerformanceHoverData extends BaseHoverData {
   chartType: "performance";
   /** Portfolio value in USD */
   value: number;
-  /** Benchmark value in USD, undefined if no BTC data available */
-  benchmark: number | undefined;
   /** DeFi portion of the portfolio value in USD */
   defiValue?: number;
   /** Wallet portion of the portfolio value in USD */

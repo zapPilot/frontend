@@ -43,66 +43,10 @@ describe("PerformanceTooltip", () => {
     const data: PerformanceHoverData = {
       date: "2024-01-15",
       value: 10000,
-      benchmark: 9000,
     };
 
     render(<PerformanceTooltip data={data} />);
 
     expect(screen.getByText("Portfolio Value")).toBeInTheDocument();
-    expect(screen.getByText("BTC Benchmark")).toBeInTheDocument();
-  });
-
-  it("shows positive relative performance in green", () => {
-    const data: PerformanceHoverData = {
-      date: "2024-01-15",
-      value: 11000,
-      benchmark: 10000,
-    };
-
-    const { container } = render(<PerformanceTooltip data={data} />);
-
-    // Relative should be +10%
-    expect(screen.getByText("Relative")).toBeInTheDocument();
-    const relativeValue = container.querySelector(".text-green-400");
-    expect(relativeValue).toBeInTheDocument();
-  });
-
-  it("shows negative relative performance in red", () => {
-    const data: PerformanceHoverData = {
-      date: "2024-01-15",
-      value: 9000,
-      benchmark: 10000,
-    };
-
-    const { container } = render(<PerformanceTooltip data={data} />);
-
-    const relativeValue = container.querySelector(".text-red-400");
-    expect(relativeValue).toBeInTheDocument();
-  });
-
-  it("does not show relative when benchmark is undefined", () => {
-    const data: PerformanceHoverData = {
-      date: "2024-01-15",
-      value: 10000,
-      benchmark: undefined,
-    };
-
-    render(<PerformanceTooltip data={data} />);
-
-    expect(screen.queryByText("Relative")).not.toBeInTheDocument();
-  });
-
-  it("renders explanatory text", () => {
-    const data: PerformanceHoverData = {
-      date: "2024-01-15",
-      value: 10000,
-      benchmark: 9000,
-    };
-
-    render(<PerformanceTooltip data={data} />);
-
-    expect(
-      screen.getByText("Value if initial capital was held in BTC")
-    ).toBeInTheDocument();
   });
 });

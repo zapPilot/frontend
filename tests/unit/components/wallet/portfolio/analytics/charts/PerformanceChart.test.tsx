@@ -44,18 +44,14 @@ describe("PerformanceChart", () => {
     {
       x: 0,
       portfolio: 10,
-      btc: 10,
       date: "2024-01-01",
       portfolioValue: 100,
-      btcBenchmarkValue: 100,
     },
     {
       x: 1,
       portfolio: 20,
-      btc: 20,
       date: "2024-01-02",
       portfolioValue: 200,
-      btcBenchmarkValue: 200,
     },
   ];
 
@@ -109,7 +105,6 @@ describe("PerformanceChart", () => {
       {
         date: "2024-01-01",
         portfolioValue: 100,
-        btcBenchmarkValue: 110,
       },
       75,
       150
@@ -120,36 +115,6 @@ describe("PerformanceChart", () => {
       y: 150,
       date: "2024-01-01",
       value: 100,
-      benchmark: 110,
-    });
-  });
-
-  it("buildHoverData handles null btcBenchmarkValue", () => {
-    render(
-      <PerformanceChart
-        chartData={mockData}
-        startDate="2024-01-01"
-        endDate="2024-01-02"
-      />
-    );
-
-    expect(capturedBuildHoverData).toBeDefined();
-    const result = capturedBuildHoverData(
-      {
-        date: "2024-01-01",
-        portfolioValue: 100,
-        btcBenchmarkValue: null,
-      },
-      75,
-      150
-    );
-    expect(result).toEqual({
-      chartType: "performance",
-      x: 75,
-      y: 150,
-      date: "2024-01-01",
-      value: 100,
-      benchmark: undefined, // null converted to undefined
     });
   });
 });

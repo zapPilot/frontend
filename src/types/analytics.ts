@@ -11,14 +11,12 @@
  * SVG-ready data points for portfolio vs BTC benchmark visualization
  */
 export interface PerformanceChartData {
-  /** Normalized data points (x: 0-100, portfolio/btc: 0-100 inverted Y) */
+  /** Normalized data points (x: 0-100, portfolio: 0-100 inverted Y) */
   points: {
     x: number;
     portfolio: number;
-    btc: number | null; // null when BTC data unavailable
     date: string; // ISO date string for each point
     portfolioValue: number; // Original USD value for tooltip
-    btcBenchmarkValue: number | null; // Actual BTC equivalent value in USD, null if unavailable
   }[];
   /** ISO date string for chart start */
   startDate: string;

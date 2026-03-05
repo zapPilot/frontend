@@ -17,7 +17,6 @@ import type {
   DailyYieldReturnsResponse,
   UnifiedDashboardResponse,
 } from "@/services/analyticsService";
-import type { BtcPriceSnapshot } from "@/services/btcPriceService";
 
 describe("Analytics Transformers", () => {
   describe("transformToPerformanceChart", () => {
@@ -96,149 +95,8 @@ describe("Analytics Transformers", () => {
       expect(result.points[1].x).toBeCloseTo(33.33, 1);
       expect(result.points[2].x).toBeCloseTo(66.67, 1);
       expect(result.points[3].x).toBe(100);
-    });
-
-    it("should include BTC benchmark when price data provided", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01", total_value_usd: 10000 },
-            { date: "2024-01-02", total_value_usd: 11000 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const btcPrices: BtcPriceSnapshot[] = [
-        { date: "2024-01-01", price_usd: 50000, source: "coingecko" },
-        { date: "2024-01-02", price_usd: 52000, source: "coingecko" },
-      ];
-
-      const result = transformToPerformanceChart(dashboard, btcPrices);
-
-      expect(result.points).toHaveLength(2);
-      expect(result.points[0].btc).toBeDefined();
-      expect(result.points[1].btc).toBeDefined();
-      expect(result.points[0].btcBenchmarkValue).toBe(10000); // Same as portfolio at start
-      expect(result.points[1].btcBenchmarkValue).toBe(10400); // (10000/50000) * 52000
-      // Verify NO 0.95x fallback was used
-      expect(result.points[0].btcBenchmarkValue).not.toBe(10000 * 0.95);
-      expect(result.points[1].btcBenchmarkValue).not.toBe(11000 * 0.95);
-    });
-
-    it("should normalize daily date strings to match BTC snapshot dates", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01T00:00:00Z", total_value_usd: 10000 },
-            { date: "2024-01-02T12:34:56Z", total_value_usd: 11000 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const btcPrices: BtcPriceSnapshot[] = [
-        { date: "2024-01-01", price_usd: 50000, source: "coingecko" },
-        { date: "2024-01-02", price_usd: 52000, source: "coingecko" },
-      ];
-
-      const result = transformToPerformanceChart(dashboard, btcPrices);
-
-      expect(result.points).toHaveLength(2);
-      expect(result.points[0].date).toBe("2024-01-01");
-      expect(result.points[0].btcBenchmarkValue).toBe(10000);
-      expect(result.points[1].btcBenchmarkValue).toBe(10400);
-    });
-
-    it("should clamp BTC values to 0-100 range", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01", total_value_usd: 10000 },
-            { date: "2024-01-02", total_value_usd: 10100 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const btcPrices: BtcPriceSnapshot[] = [
-        { date: "2024-01-01", price_usd: 50000, source: "coingecko" },
-        { date: "2024-01-02", price_usd: 500000, source: "coingecko" }, // Extreme increase
-      ];
-
-      const result = transformToPerformanceChart(dashboard, btcPrices);
-
-      expect(result.points[1].btc).toBeGreaterThanOrEqual(0);
-      expect(result.points[1].btc).toBeLessThanOrEqual(100);
-    });
-
-    it("should return null when BTC price missing for specific date", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01", total_value_usd: 10000 },
-            { date: "2024-01-02", total_value_usd: 11000 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const btcPrices: BtcPriceSnapshot[] = [
-        { date: "2024-01-01", price_usd: 50000, source: "coingecko" },
-        // Missing 2024-01-02
-      ];
-
-      const result = transformToPerformanceChart(dashboard, btcPrices);
-
-      expect(result.points).toHaveLength(2);
-      expect(result.points[0].btcBenchmarkValue).toBe(10000); // Real data
-      expect(result.points[1].btcBenchmarkValue).toBeNull(); // No fallback, null for missing data
-      expect(result.points[1].btc).toBeNull(); // Normalized value also null
-    });
-
-    it("should handle empty BTC data array", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01", total_value_usd: 10000 },
-            { date: "2024-01-02", total_value_usd: 11000 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const result = transformToPerformanceChart(dashboard, []); // No BTC data
-
-      expect(result.points).toHaveLength(2);
-      expect(result.points[0].btcBenchmarkValue).toBeNull();
-      expect(result.points[1].btcBenchmarkValue).toBeNull();
-      expect(result.points[0].btc).toBeNull(); // Normalized value also null
-      expect(result.points[1].btc).toBeNull();
-    });
-
-    it("should handle undefined BTC data", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [{ date: "2024-01-01", total_value_usd: 10000 }],
-        },
-      } as UnifiedDashboardResponse;
-
-      const result = transformToPerformanceChart(dashboard); // BTC data undefined
-
-      expect(result.points).toHaveLength(1);
-      expect(result.points[0].btcBenchmarkValue).toBeNull();
-      expect(result.points[0].btc).toBeNull();
-    });
-
-    it("should set start and end dates from data", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-01-01", total_value_usd: 1000 },
-            { date: "2024-01-15", total_value_usd: 2000 },
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const result = transformToPerformanceChart(dashboard);
-
       expect(result.startDate).toBe("2024-01-01");
-      expect(result.endDate).toBe("2024-01-15");
+      expect(result.endDate).toBe("2024-01-04");
     });
 
     it("should handle values with zero total_value_usd", () => {
@@ -270,49 +128,6 @@ describe("Analytics Transformers", () => {
       const result = transformToPerformanceChart(dashboard);
 
       expect(result.points).toEqual([]);
-    });
-
-    // 🚨 CRITICAL TEST - Verifies the baseline date mismatch bug fix
-    it("should handle portfolio data starting before BTC data (baseline date mismatch)", () => {
-      const dashboard = {
-        trends: {
-          daily_values: [
-            { date: "2024-10-01T00:00:00Z", total_value_usd: 8000 }, // No BTC data
-            { date: "2024-11-01T00:00:00Z", total_value_usd: 10000 }, // No BTC data
-            { date: "2024-12-01T00:00:00Z", total_value_usd: 15000 }, // First BTC data! (baseline)
-            { date: "2024-12-15T00:00:00Z", total_value_usd: 16000 }, // Has BTC data
-            { date: "2025-01-15T00:00:00Z", total_value_usd: 18000 }, // Has BTC data
-          ],
-        },
-      } as UnifiedDashboardResponse;
-
-      const btcPrices: BtcPriceSnapshot[] = [
-        // BTC data starts on 2024-12-01 (portfolio already has 2 months of data)
-        { date: "2024-12-01", price_usd: 50000, source: "coingecko" },
-        { date: "2024-12-15", price_usd: 52000, source: "coingecko" },
-        { date: "2025-01-15", price_usd: 60000, source: "coingecko" },
-      ];
-
-      const result = transformToPerformanceChart(dashboard, btcPrices);
-
-      // Points before BTC data starts should be null
-      expect(result.points[0].btcBenchmarkValue).toBeNull(); // 2024-10-01
-      expect(result.points[1].btcBenchmarkValue).toBeNull(); // 2024-11-01
-
-      // From 2024-12-01 onwards, use that as baseline
-      // Baseline: $15,000 portfolio @ $50,000 BTC
-
-      // 2024-12-01: ($15,000 / $50,000) * $50,000 = $15,000
-      expect(result.points[2].btcBenchmarkValue).toBe(15000);
-
-      // 2024-12-15: ($15,000 / $50,000) * $52,000 = $15,600
-      expect(result.points[3].btcBenchmarkValue).toBe(15600);
-
-      // 2025-01-15: ($15,000 / $50,000) * $60,000 = $18,000
-      expect(result.points[4].btcBenchmarkValue).toBe(18000);
-
-      // Verify we're NOT using first portfolio value ($8,000) as baseline
-      expect(result.points[2].btcBenchmarkValue).not.toBe(8000);
     });
   });
 
@@ -432,8 +247,6 @@ describe("Analytics Transformers", () => {
       expect(result.winRate.value).toBe("0%");
       expect(result.volatility.value).toBe("N/A");
       expect(result.sortino.value).toBe("N/A");
-      expect(result.beta.value).toBe("N/A");
-      expect(result.alpha.value).toBe("N/A");
     });
 
     it("should calculate Time-Weighted Return correctly", () => {
@@ -478,7 +291,7 @@ describe("Analytics Transformers", () => {
       const result = calculateKeyMetrics(dashboard);
 
       expect(result.timeWeightedReturn.value).toBe("0%");
-      expect(result.timeWeightedReturn.subValue).toBe("Insufficient data");
+      expect(result.timeWeightedReturn.subValue).toBe("0% total return");
     });
 
     it("should calculate Max Drawdown from enhanced summary", () => {
@@ -642,10 +455,6 @@ describe("Analytics Transformers", () => {
 
       expect(result.sortino.value).toBe("N/A");
       expect(result.sortino.subValue).toBe("Coming soon");
-      expect(result.beta.value).toBe("N/A");
-      expect(result.beta.subValue).toBe("vs BTC");
-      expect(result.alpha.value).toBe("N/A");
-      expect(result.alpha.subValue).toBe("vs BTC");
     });
   });
 

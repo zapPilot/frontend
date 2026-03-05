@@ -23,7 +23,6 @@ import type {
 } from "@/types/analytics";
 
 import { usePortfolioDashboard } from "../../analytics/usePortfolioDashboard";
-import { useBtcPriceQuery } from "../market/useBtcPriceQuery";
 
 /**
  * Hook return type
@@ -108,12 +107,6 @@ export function useAnalyticsData(
   );
 
   // ============================================================================
-  // SECONDARY QUERY: BTC Price History (for benchmark)
-  // ============================================================================
-
-  const btcPriceQuery = useBtcPriceQuery(timePeriod.days);
-
-  // ============================================================================
   // TERTIARY QUERY: Monthly PnL (conditional on dashboard success)
   // ============================================================================
 
@@ -148,28 +141,21 @@ export function useAnalyticsData(
     // Get daily values for monthly PnL calculation
     const dailyValues = dashboardQuery.data.trends?.daily_values ?? [];
 
-    // Get BTC price snapshots (gracefully handle missing data)
-    const btcSnapshots = btcPriceQuery.data?.snapshots;
-
     return {
-      performanceChart: transformToPerformanceChart(
-        dashboardQuery.data,
-        btcSnapshots
-      ),
+      performanceChart: transformToPerformanceChart(dashboardQuery.data),
       drawdownChart: transformToDrawdownChart(dashboardQuery.data),
       keyMetrics: calculateKeyMetrics(dashboardQuery.data),
       monthlyPnL: monthlyPnLQuery.data
         ? aggregateMonthlyPnL(monthlyPnLQuery.data, dailyValues)
         : [], // Graceful degradation if PnL query fails
     };
-  }, [dashboardQuery.data, monthlyPnLQuery.data, btcPriceQuery.data]);
+  }, [dashboardQuery.data, monthlyPnLQuery.data]);
 
   // ============================================================================
   // ERROR HANDLING
   // ============================================================================
 
-  // Prioritize dashboard error (critical), fallback to BTC or monthly PnL errors
-  // Note: BTC price failure shouldn't block the dashboard (graceful degradation)
+  // Prioritize dashboard error (critical), fallback to monthly PnL error
   const error = dashboardQuery.error ?? monthlyPnLQuery.error ?? null;
 
   // ============================================================================
@@ -178,7 +164,6 @@ export function useAnalyticsData(
 
   const refetch = () => {
     void dashboardQuery.refetch();
-    void btcPriceQuery.refetch();
     if (dashboardQuery.data) {
       void monthlyPnLQuery.refetch();
     }

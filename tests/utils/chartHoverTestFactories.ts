@@ -36,7 +36,6 @@ export const PortfolioDataFactory: BaseChartDataFactory<PortfolioDataPoint> = {
       date: "2025-01-01",
       value: 10000,
       change: 0,
-      benchmark: 9800,
       protocols: [],
       chainsCount: 1,
       ...overrides,
@@ -52,7 +51,6 @@ export const PortfolioDataFactory: BaseChartDataFactory<PortfolioDataPoint> = {
         date: baseDate.toISOString().split("T")[0],
         value: 10000 + i * 100,
         change: i * 0.01,
-        benchmark: 9800 + i * 95,
         ...(generator ? generator(i) : {}),
       });
     });
@@ -213,7 +211,6 @@ export const HoverDataBuilders = {
         year: "numeric",
       }),
       value: point.value,
-      benchmark: point.benchmark || 0,
     };
   },
 

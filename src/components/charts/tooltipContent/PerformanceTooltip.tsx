@@ -1,5 +1,5 @@
 /**
- * PerformanceTooltip - Portfolio vs BTC benchmark
+ * PerformanceTooltip - Portfolio
  */
 
 import type { PerformanceHoverData } from "@/types/ui/chartHover";
@@ -8,14 +8,6 @@ import { TooltipRow } from "./TooltipRow";
 import { TooltipWrapper } from "./TooltipWrapper";
 
 export function PerformanceTooltip({ data }: { data: PerformanceHoverData }) {
-  // Extract benchmark with proper null narrowing to avoid non-null assertions
-  const benchmark = data.benchmark;
-  // Calculate relative performance only if benchmark is defined (not undefined)
-  const relativePerf =
-    benchmark !== undefined
-      ? ((data.value - benchmark) / benchmark) * 100
-      : null;
-
   return (
     <TooltipWrapper date={data.date} spacing="tight">
       {/* Primary Metric */}
@@ -26,31 +18,6 @@ export function PerformanceTooltip({ data }: { data: PerformanceHoverData }) {
         valueColor="text-white"
         format="currencyPrecise"
       />
-
-      {/* Benchmark Section with visual separator */}
-      <div className="border-t border-gray-700/50 mt-1.5 pt-1.5">
-        <TooltipRow
-          label="BTC Benchmark"
-          labelColor="text-orange-300"
-          value={data.benchmark}
-          valueColor="text-orange-200"
-          format="currencyPrecise"
-        />
-
-        {relativePerf !== null && (
-          <TooltipRow
-            label="Relative"
-            labelColor="text-gray-400"
-            value={relativePerf}
-            valueColor={relativePerf >= 0 ? "text-green-400" : "text-red-400"}
-            format="percent"
-            prefix={relativePerf >= 0 ? "+" : ""}
-          />
-        )}
-        <div className="mt-2 text-[10px] text-gray-500 leading-tight">
-          Value if initial capital was held in BTC
-        </div>
-      </div>
     </TooltipWrapper>
   );
 }

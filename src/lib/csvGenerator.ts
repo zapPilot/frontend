@@ -122,12 +122,11 @@ export function buildPerformanceSection(metadata: ExportMetadata): string[] {
     point.date,
     point.portfolioValue.toFixed(2),
     point.portfolio.toFixed(2),
-    point.btc !== null ? point.btc.toFixed(2) : "N/A",
   ]);
 
   return buildSection(
     "PERFORMANCE CHART DATA",
-    ["Date", "Portfolio Value (USD)", "Normalized Portfolio", "Normalized BTC"],
+    ["Date", "Portfolio Value (USD)", "Normalized Portfolio"],
     rows
   );
 }

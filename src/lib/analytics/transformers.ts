@@ -9,7 +9,6 @@ import type {
   DailyYieldReturnsResponse,
   UnifiedDashboardResponse,
 } from "@/services/analyticsService";
-import type { BtcPriceSnapshot } from "@/services/btcPriceService";
 import type {
   DrawdownChartData,
   KeyMetrics,
@@ -18,21 +17,12 @@ import type {
   PerformanceChartData,
 } from "@/types";
 
-import {
-  buildBtcPriceMap,
-  calculateBtcEquivalent,
-  findBtcBaseline,
-} from "./utils/benchmarkUtils";
 import { buildDateRange, normalizeToScale, toDateKey } from "./utils/dateUtils";
 import {
   createPlaceholderMetric,
   extractDrawdownSummary,
   getSharpePercentile,
 } from "./utils/metricUtils";
-
-function clampPercentage(value: number): number {
-  return Math.max(0, Math.min(100, value));
-}
 
 function getRecoverySubValue(days: number): string {
   if (days > 0) {
@@ -83,33 +73,6 @@ function getPositivePortfolioValues(dailyValues: TrendValue[]): number[] {
   return dailyValues.map(d => d.total_value_usd ?? 0).filter(v => v > 0);
 }
 
-function resolveBaselinePortfolioValue(
-  dailyValues: TrendValue[],
-  firstBtcDate: string | null
-): number {
-  const firstPortfolioValue = dailyValues[0]?.total_value_usd ?? 0;
-  if (!firstBtcDate) {
-    return firstPortfolioValue;
-  }
-
-  const baselineMatch = dailyValues.find(
-    d => toDateKey(d.date) === firstBtcDate
-  );
-  return baselineMatch?.total_value_usd ?? firstPortfolioValue;
-}
-
-function normalizeBtcBenchmark(
-  btcEquivalentValue: number | null,
-  min: number,
-  range: number
-): number | null {
-  if (btcEquivalentValue === null) {
-    return null;
-  }
-
-  return clampPercentage(normalizeToScale(btcEquivalentValue, min, range));
-}
-
 // ============================================================================
 // CHART TRANSFORMERS
 // ============================================================================
@@ -118,8 +81,7 @@ function normalizeBtcBenchmark(
  * Transform dashboard trends to Performance Chart SVG points
  */
 export function transformToPerformanceChart(
-  dashboard: UnifiedDashboardResponse | undefined,
-  btcPriceData?: BtcPriceSnapshot[]
+  dashboard: UnifiedDashboardResponse | undefined
 ): PerformanceChartData {
   const dailyValues = dashboard?.trends?.daily_values ?? [];
 
@@ -137,37 +99,17 @@ export function transformToPerformanceChart(
   const max = Math.max(...portfolioValues);
   const range = max - min;
 
-  const btcPriceMap = buildBtcPriceMap(btcPriceData);
-  const { firstBtcPrice, firstBtcDate } = findBtcBaseline(
-    dailyValues,
-    btcPriceMap
-  );
-
-  const baselinePortfolioValue = resolveBaselinePortfolioValue(
-    dailyValues,
-    firstBtcDate
-  );
-
   const points = dailyValues.map((d, idx) => {
     const value = d.total_value_usd ?? min;
     const dateKey = toDateKey(d.date);
 
     const normalizedPortfolio = normalizeToScale(value, min, range);
-    const btcEquivalentValue = calculateBtcEquivalent(
-      dateKey,
-      btcPriceMap,
-      firstBtcPrice,
-      baselinePortfolioValue
-    );
-    const normalizedBTC = normalizeBtcBenchmark(btcEquivalentValue, min, range);
 
     return {
       x: (idx / (dailyValues.length - 1)) * 100,
       portfolio: normalizedPortfolio,
-      btc: normalizedBTC,
       date: dateKey ?? d.date ?? new Date().toISOString(),
       portfolioValue: value,
-      btcBenchmarkValue: btcEquivalentValue,
     };
   });
 
@@ -226,8 +168,6 @@ export function calculateKeyMetrics(
     winRate: calculateWinRate(dailyValues),
     volatility: extractVolatility(rollingAnalytics),
     sortino: createPlaceholderMetric("N/A", "Coming soon"),
-    beta: createPlaceholderMetric("N/A", "vs BTC"),
-    alpha: createPlaceholderMetric("N/A", "vs BTC"),
   };
 }
 
@@ -235,14 +175,14 @@ function calculateTWR(
   dailyValues: { total_value_usd?: number; date?: string }[]
 ): MetricData {
   if (dailyValues.length < 2) {
-    return createPlaceholderMetric("0%", "Insufficient data");
+    return createPlaceholderMetric("0%", "0% total return");
   }
 
   const first = dailyValues[0]?.total_value_usd ?? 0;
   const last = dailyValues[dailyValues.length - 1]?.total_value_usd ?? 0;
 
   if (first === 0) {
-    return createPlaceholderMetric("0%", "No starting value");
+    return createPlaceholderMetric("0%", "0% total return");
   }
 
   const returnPct = ((last - first) / first) * 100;
@@ -250,7 +190,7 @@ function calculateTWR(
 
   return {
     value: `${prefix}${returnPct.toFixed(1)}%`,
-    subValue: `${prefix}${(returnPct - 15).toFixed(1)}% vs BTC`,
+    subValue: `${prefix}${returnPct.toFixed(1)}% total return`,
     trend: returnPct > 0 ? "up" : "down",
   };
 }
