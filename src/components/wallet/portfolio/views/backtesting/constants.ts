@@ -27,4 +27,6 @@ export const SIGNAL_PROVIDER_OPTIONS = [
 /** Available pacing-policy options for the regime strategy backtest controls. */
 export const PACING_POLICY_OPTIONS = [
   { value: "fgi_exponential", label: "fgi_exponential" },
+  { value: "score_exponential", label: "score_exponential" },
+  { value: "dma_sentiment_tanh", label: "dma_sentiment_tanh" },
 ] as const;
