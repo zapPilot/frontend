@@ -158,3 +158,5 @@ export const isDrawdownHover =
 export const isSharpeHover = createHoverGuard<SharpeHoverData>("sharpe");
 export const isVolatilityHover =
   createHoverGuard<VolatilityHoverData>("volatility");
+export const isYieldHover =
+  createHoverGuard<DailyYieldHoverData>("daily-yield");

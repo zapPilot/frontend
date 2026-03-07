@@ -42,7 +42,7 @@ describe("createHeroMetrics", () => {
 
   it("formats ROI with + prefix and % suffix", () => {
     const metrics = createHeroMetrics(createMockSummary({ roi_percent: 50.7 }));
-    const roi = metrics.find((m: { label: string }) => m.label === "ROI");
+    const roi = metrics.find(m => m.label === "ROI");
 
     expect(roi).toBeDefined();
     expect(roi!.value).toBe("+50.7%");
@@ -53,7 +53,7 @@ describe("createHeroMetrics", () => {
     const metrics = createHeroMetrics(
       createMockSummary({ roi_percent: 123.456 })
     );
-    const roi = metrics.find((m: { label: string }) => m.label === "ROI");
+    const roi = metrics.find(m => m.label === "ROI");
 
     expect(roi!.value).toBe("+123.5%");
   });
@@ -62,7 +62,7 @@ describe("createHeroMetrics", () => {
     const metrics = createHeroMetrics(
       createMockSummary({ calmar_ratio: 2.567 })
     );
-    const calmar = metrics.find((m: { label: string }) => m.label === "CALMAR");
+    const calmar = metrics.find(m => m.label === "CALMAR");
 
     expect(calmar).toBeDefined();
     expect(calmar!.value).toBe("2.57");
@@ -73,7 +73,7 @@ describe("createHeroMetrics", () => {
     const metrics = createHeroMetrics(
       createMockSummary({ calmar_ratio: null })
     );
-    const calmar = metrics.find((m: { label: string }) => m.label === "CALMAR");
+    const calmar = metrics.find(m => m.label === "CALMAR");
 
     expect(calmar!.value).toBe("N/A");
   });
@@ -82,9 +82,7 @@ describe("createHeroMetrics", () => {
     const metrics = createHeroMetrics(
       createMockSummary({ max_drawdown_percent: -18.3 })
     );
-    const drawdown = metrics.find(
-      (m: { label: string }) => m.label === "MAX DRAWDOWN"
-    );
+    const drawdown = metrics.find(m => m.label === "MAX DRAWDOWN");
 
     expect(drawdown).toBeDefined();
     expect(drawdown!.value).toBe("-18.3%");
@@ -93,7 +91,7 @@ describe("createHeroMetrics", () => {
 
   it("generates ASCII bar strings using block characters", () => {
     const metrics = createHeroMetrics(createMockSummary({ roi_percent: 100 }));
-    const roi = metrics.find((m: { label: string }) => m.label === "ROI");
+    const roi = metrics.find(m => m.label === "ROI");
 
     // Bar should contain block characters (█ and ░)
     expect(roi!.bar).toMatch(/[█░]+/);
@@ -121,7 +119,7 @@ describe("createSecondaryMetrics", () => {
 
   it("returns metrics in correct order", () => {
     const metrics = createSecondaryMetrics(createMockSummary());
-    const labels = metrics.map((m: { label: string }) => m.label);
+    const labels = metrics.map(m => m.label);
 
     expect(labels).toEqual(["SHARPE", "SORTINO", "VOL", "BETA", "FINAL"]);
   });
@@ -130,7 +128,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ sharpe_ratio: 1.256 })
     );
-    const sharpe = metrics.find((m: { label: string }) => m.label === "SHARPE");
+    const sharpe = metrics.find(m => m.label === "SHARPE");
 
     expect(sharpe!.value).toBe("1.26");
   });
@@ -139,7 +137,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ sharpe_ratio: null })
     );
-    const sharpe = metrics.find((m: { label: string }) => m.label === "SHARPE");
+    const sharpe = metrics.find(m => m.label === "SHARPE");
 
     expect(sharpe!.value).toBe("N/A");
   });
@@ -148,7 +146,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ sharpe_ratio: undefined })
     );
-    const sharpe = metrics.find((m: { label: string }) => m.label === "SHARPE");
+    const sharpe = metrics.find(m => m.label === "SHARPE");
 
     expect(sharpe!.value).toBe("N/A");
   });
@@ -157,9 +155,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ sortino_ratio: 2.345 })
     );
-    const sortino = metrics.find(
-      (m: { label: string }) => m.label === "SORTINO"
-    );
+    const sortino = metrics.find(m => m.label === "SORTINO");
 
     expect(sortino!.value).toBe("2.35");
   });
@@ -168,9 +164,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ sortino_ratio: null })
     );
-    const sortino = metrics.find(
-      (m: { label: string }) => m.label === "SORTINO"
-    );
+    const sortino = metrics.find(m => m.label === "SORTINO");
 
     expect(sortino!.value).toBe("N/A");
   });
@@ -179,7 +173,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ volatility: 0.15 })
     );
-    const vol = metrics.find((m: { label: string }) => m.label === "VOL");
+    const vol = metrics.find(m => m.label === "VOL");
 
     expect(vol!.value).toBe("15.0%");
   });
@@ -188,7 +182,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ volatility: null })
     );
-    const vol = metrics.find((m: { label: string }) => m.label === "VOL");
+    const vol = metrics.find(m => m.label === "VOL");
 
     expect(vol!.value).toBe("N/A");
   });
@@ -197,21 +191,21 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ volatility: undefined })
     );
-    const vol = metrics.find((m: { label: string }) => m.label === "VOL");
+    const vol = metrics.find(m => m.label === "VOL");
 
     expect(vol!.value).toBe("N/A");
   });
 
   it("formats BETA with 2 decimal places", () => {
     const metrics = createSecondaryMetrics(createMockSummary({ beta: 0.857 }));
-    const beta = metrics.find((m: { label: string }) => m.label === "BETA");
+    const beta = metrics.find(m => m.label === "BETA");
 
     expect(beta!.value).toBe("0.86");
   });
 
   it("shows N/A for null beta", () => {
     const metrics = createSecondaryMetrics(createMockSummary({ beta: null }));
-    const beta = metrics.find((m: { label: string }) => m.label === "BETA");
+    const beta = metrics.find(m => m.label === "BETA");
 
     expect(beta!.value).toBe("N/A");
   });
@@ -220,7 +214,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ final_value: 15000 })
     );
-    const final = metrics.find((m: { label: string }) => m.label === "FINAL");
+    const final = metrics.find(m => m.label === "FINAL");
 
     expect(final!.value).toBe("$15,000");
   });
@@ -229,7 +223,7 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ final_value: 1234567 })
     );
-    const final = metrics.find((m: { label: string }) => m.label === "FINAL");
+    const final = metrics.find(m => m.label === "FINAL");
 
     expect(final!.value).toBe("$1,234,567");
   });
@@ -238,10 +232,9 @@ describe("createSecondaryMetrics", () => {
     const metrics = createSecondaryMetrics(
       createMockSummary({ volatility: 0 })
     );
-    const vol = metrics.find((m: { label: string }) => m.label === "VOL");
+    const vol = metrics.find(m => m.label === "VOL");
 
-    // 0 is falsy so `strategy.volatility ? ... : "N/A"` returns "N/A"
-    expect(vol!.value).toBe("N/A");
+    expect(vol!.value).toBe("0.0%");
   });
 
   it("handles all null optional fields", () => {
@@ -254,21 +247,11 @@ describe("createSecondaryMetrics", () => {
       })
     );
 
-    expect(
-      metrics.find((m: { label: string }) => m.label === "SHARPE")!.value
-    ).toBe("N/A");
-    expect(
-      metrics.find((m: { label: string }) => m.label === "SORTINO")!.value
-    ).toBe("N/A");
-    expect(
-      metrics.find((m: { label: string }) => m.label === "VOL")!.value
-    ).toBe("N/A");
-    expect(
-      metrics.find((m: { label: string }) => m.label === "BETA")!.value
-    ).toBe("N/A");
+    expect(metrics.find(m => m.label === "SHARPE")!.value).toBe("N/A");
+    expect(metrics.find(m => m.label === "SORTINO")!.value).toBe("N/A");
+    expect(metrics.find(m => m.label === "VOL")!.value).toBe("N/A");
+    expect(metrics.find(m => m.label === "BETA")!.value).toBe("N/A");
     // FINAL is not optional, should still format
-    expect(
-      metrics.find((m: { label: string }) => m.label === "FINAL")!.value
-    ).toMatch(/^\$/);
+    expect(metrics.find(m => m.label === "FINAL")!.value).toMatch(/^\$/);
   });
 });

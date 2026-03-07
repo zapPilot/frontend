@@ -59,9 +59,10 @@ export function createSecondaryMetrics(
     { label: "SORTINO", value: strategy.sortino_ratio?.toFixed(2) ?? "N/A" },
     {
       label: "VOL",
-      value: strategy.volatility
-        ? `${(strategy.volatility * 100).toFixed(1)}%`
-        : "N/A",
+      value:
+        strategy.volatility != null
+          ? `${(strategy.volatility * 100).toFixed(1)}%`
+          : "N/A",
     },
     { label: "BETA", value: strategy.beta?.toFixed(2) ?? "N/A" },
     { label: "FINAL", value: `$${strategy.final_value.toLocaleString()}` },

@@ -11,7 +11,7 @@ import type {
   PerformanceHoverData,
   SharpeHoverData,
   VolatilityHoverData,
-} from "@/types/chartHover";
+} from "@/types";
 import type {
   AssetAllocationPoint,
   PortfolioDataPoint,
@@ -236,7 +236,6 @@ export const HoverDataBuilders = {
       btc: total > 0 ? (point.btc / total) * 100 : 0,
       eth: total > 0 ? (point.eth / total) * 100 : 0,
       stablecoin: total > 0 ? (point.stablecoin / total) * 100 : 0,
-      defi: total > 0 ? (point.defi / total) * 100 : 0,
       altcoin: total > 0 ? (point.altcoin / total) * 100 : 0,
     };
   },
@@ -287,18 +286,18 @@ export const HoverDataBuilders = {
    */
   sharpe(point: SharpeDataPoint, x: number, y: number): SharpeHoverData {
     const sharpe = point.rolling_sharpe_ratio || 0;
-    let interpretation: string;
+    let interpretation: SharpeHoverData["interpretation"];
 
     if (sharpe >= 2.0) {
       interpretation = "Excellent";
     } else if (sharpe >= 1.5) {
-      interpretation = "Very Good";
-    } else if (sharpe >= 1.0) {
       interpretation = "Good";
+    } else if (sharpe >= 1.0) {
+      interpretation = "Fair";
     } else if (sharpe >= 0.5) {
-      interpretation = "Acceptable";
-    } else {
       interpretation = "Poor";
+    } else {
+      interpretation = "Very Poor";
     }
 
     return {
@@ -324,7 +323,7 @@ export const HoverDataBuilders = {
     y: number
   ): VolatilityHoverData {
     const vol = point.annualized_volatility_pct || 0;
-    let riskLevel: string;
+    let riskLevel: VolatilityHoverData["riskLevel"];
 
     if (vol >= 35) {
       riskLevel = "Very High";
@@ -352,67 +351,38 @@ export const HoverDataBuilders = {
 };
 
 /**
- * Builder for type-safe useChartHover options
+ * Creates type-safe useChartHover options for a given chart type
+ *
+ * @param config - Chart configuration including dimensions, value range, and data extractors
+ * @returns Complete UseChartHoverOptions ready for use in tests
  */
-export class ChartHoverOptionsBuilder<T> {
-  private options: Partial<UseChartHoverOptions<T>>;
-
-  constructor(private defaultChartType: string) {
-    this.options = {
-      chartType: defaultChartType,
-      chartWidth: 800,
-      chartHeight: 300,
-      chartPadding: 10,
-      enabled: true,
-    };
-  }
-
-  withDimensions(width: number, height: number, padding = 10): this {
-    this.options.chartWidth = width;
-    this.options.chartHeight = height;
-    this.options.chartPadding = padding;
-    return this;
-  }
-
-  withValueRange(min: number, max: number): this {
-    this.options.minValue = min;
-    this.options.maxValue = max;
-    return this;
-  }
-
-  withYValueExtractor(extractor: (point: T) => number): this {
-    this.options.getYValue = extractor;
-    return this;
-  }
-
-  withHoverDataBuilder(
-    builder: (point: T, x: number, y: number, index: number) => ChartHoverState
-  ): this {
-    this.options.buildHoverData = builder;
-    return this;
-  }
-
-  disabled(): this {
-    this.options.enabled = false;
-    return this;
-  }
-
-  build(): UseChartHoverOptions<T> {
-    if (this.options.minValue === undefined) {
-      throw new Error("minValue is required");
-    }
-    if (this.options.maxValue === undefined) {
-      throw new Error("maxValue is required");
-    }
-    if (!this.options.getYValue) {
-      throw new Error("getYValue is required");
-    }
-    if (!this.options.buildHoverData) {
-      throw new Error("buildHoverData is required");
-    }
-
-    return this.options as UseChartHoverOptions<T>;
-  }
+function createChartHoverOptions<T>(config: {
+  chartType: string;
+  chartWidth?: number;
+  chartHeight?: number;
+  chartPadding?: number;
+  minValue: number;
+  maxValue: number;
+  getYValue: (point: T) => number;
+  buildHoverData: (
+    point: T,
+    x: number,
+    y: number,
+    index: number
+  ) => ChartHoverState;
+  enabled?: boolean;
+}): UseChartHoverOptions<T> {
+  return {
+    chartType: config.chartType,
+    chartWidth: config.chartWidth ?? 800,
+    chartHeight: config.chartHeight ?? 300,
+    chartPadding: config.chartPadding ?? 10,
+    minValue: config.minValue,
+    maxValue: config.maxValue,
+    getYValue: config.getYValue,
+    buildHoverData: config.buildHoverData,
+    enabled: config.enabled ?? true,
+  };
 }
 
 /**
@@ -423,52 +393,56 @@ export const ChartHoverOptionsFactory = {
     const minValue = Math.min(...data.map(d => d.value));
     const maxValue = Math.max(...data.map(d => d.value));
 
-    return new ChartHoverOptionsBuilder<PortfolioDataPoint>("performance")
-      .withValueRange(minValue, maxValue)
-      .withYValueExtractor(point => point.value)
-      .withHoverDataBuilder((point, x, y) =>
-        HoverDataBuilders.performance(point, x, y)
-      )
-      .build();
+    return createChartHoverOptions<PortfolioDataPoint>({
+      chartType: "performance",
+      minValue,
+      maxValue,
+      getYValue: point => point.value,
+      buildHoverData: (point, x, y) =>
+        HoverDataBuilders.performance(point, x, y),
+    });
   },
 
   allocation() {
-    return new ChartHoverOptionsBuilder<AssetAllocationPoint>("allocation")
-      .withValueRange(0, 100)
-      .withYValueExtractor(() => 50) // Mid-point for stacked chart
-      .withHoverDataBuilder((point, x, y) =>
-        HoverDataBuilders.allocation(point, x, y)
-      )
-      .build();
+    return createChartHoverOptions<AssetAllocationPoint>({
+      chartType: "allocation",
+      minValue: 0,
+      maxValue: 100,
+      getYValue: () => 50,
+      buildHoverData: (point, x, y) =>
+        HoverDataBuilders.allocation(point, x, y),
+    });
   },
 
   drawdown(data: DrawdownDataPoint[]) {
-    return new ChartHoverOptionsBuilder<DrawdownDataPoint>("drawdown-recovery")
-      .withValueRange(-20, 0)
-      .withYValueExtractor(point => point.drawdown_pct)
-      .withHoverDataBuilder((point, x, y, index) =>
-        HoverDataBuilders.drawdown(point, x, y, index, data)
-      )
-      .build();
+    return createChartHoverOptions<DrawdownDataPoint>({
+      chartType: "drawdown-recovery",
+      minValue: -20,
+      maxValue: 0,
+      getYValue: point => point.drawdown_pct,
+      buildHoverData: (point, x, y, index) =>
+        HoverDataBuilders.drawdown(point, x, y, index, data),
+    });
   },
 
   sharpe() {
-    return new ChartHoverOptionsBuilder<SharpeDataPoint>("sharpe")
-      .withValueRange(0, 2.5)
-      .withYValueExtractor(point => point.rolling_sharpe_ratio)
-      .withHoverDataBuilder((point, x, y) =>
-        HoverDataBuilders.sharpe(point, x, y)
-      )
-      .build();
+    return createChartHoverOptions<SharpeDataPoint>({
+      chartType: "sharpe",
+      minValue: 0,
+      maxValue: 2.5,
+      getYValue: point => point.rolling_sharpe_ratio,
+      buildHoverData: (point, x, y) => HoverDataBuilders.sharpe(point, x, y),
+    });
   },
 
   volatility() {
-    return new ChartHoverOptionsBuilder<VolatilityDataPoint>("volatility")
-      .withValueRange(10, 40)
-      .withYValueExtractor(point => point.annualized_volatility_pct)
-      .withHoverDataBuilder((point, x, y) =>
-        HoverDataBuilders.volatility(point, x, y)
-      )
-      .build();
+    return createChartHoverOptions<VolatilityDataPoint>({
+      chartType: "volatility",
+      minValue: 10,
+      maxValue: 40,
+      getYValue: point => point.annualized_volatility_pct,
+      buildHoverData: (point, x, y) =>
+        HoverDataBuilders.volatility(point, x, y),
+    });
   },
 };

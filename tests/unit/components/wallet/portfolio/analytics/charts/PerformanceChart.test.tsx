@@ -2,9 +2,17 @@ import { render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { PerformanceChart } from "@/components/wallet/portfolio/analytics/charts/PerformanceChart";
+import type { ChartHoverState } from "@/types";
 
 // Capture buildHoverData callback
-let capturedBuildHoverData: any;
+type BuildHoverDataFn = (
+  point: Record<string, unknown>,
+  x: number,
+  y: number,
+  index: number
+) => ChartHoverState;
+
+let capturedBuildHoverData: BuildHoverDataFn | undefined;
 
 // Mock dependencies
 vi.mock("@/components/charts", () => ({
@@ -13,14 +21,16 @@ vi.mock("@/components/charts", () => ({
 }));
 
 vi.mock("@/hooks/ui/useChartHover", () => ({
-  useChartHover: vi.fn((_data: any, options: any) => {
-    capturedBuildHoverData = options?.buildHoverData;
-    return {
-      hoveredPoint: null,
-      onMouseMove: vi.fn(),
-      onMouseLeave: vi.fn(),
-    };
-  }),
+  useChartHover: vi.fn(
+    (_data: unknown, options?: { buildHoverData?: BuildHoverDataFn }) => {
+      capturedBuildHoverData = options?.buildHoverData;
+      return {
+        hoveredPoint: null,
+        onMouseMove: vi.fn(),
+        onMouseLeave: vi.fn(),
+      };
+    }
+  ),
 }));
 
 vi.mock("@/utils/formatters", () => ({
@@ -101,13 +111,14 @@ describe("PerformanceChart", () => {
     );
 
     expect(capturedBuildHoverData).toBeDefined();
-    const result = capturedBuildHoverData(
+    const result = capturedBuildHoverData!(
       {
         date: "2024-01-01",
         portfolioValue: 100,
       },
       75,
-      150
+      150,
+      0
     );
     expect(result).toEqual({
       chartType: "performance",
