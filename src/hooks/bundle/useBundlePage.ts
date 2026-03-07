@@ -279,23 +279,14 @@ export function useBundlePage(
   );
 
   useEffect(() => {
-    async function loadBundleUser(): Promise<void> {
-      if (!userId) {
-        setBundleNotFound(true);
-        return;
-      }
-
-      try {
-        const user = await getBundleUser(userId);
-        setBundleUser(user);
-        setBundleNotFound(!user);
-      } catch (error) {
-        logger.error("Failed to load bundle user:", error);
-        setBundleNotFound(true);
-      }
+    if (!userId) {
+      setBundleNotFound(true);
+      return;
     }
 
-    void loadBundleUser();
+    const user = getBundleUser(userId);
+    setBundleUser(user);
+    setBundleNotFound(false);
   }, [userId]);
 
   useEffect(() => {

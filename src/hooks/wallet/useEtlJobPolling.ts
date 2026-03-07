@@ -67,18 +67,6 @@ const FAILED_STATUS = "failed";
 const ETL_IN_PROGRESS_STATUSES: ReadonlySet<EtlJobPollingState["status"]> =
   new Set(["pending", "processing", "completing"]);
 
-function shouldStopPolling(status: string | undefined): boolean {
-  return status === COMPLETED_STATUS || status === FAILED_STATUS;
-}
-
-function resolveTriggerErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return DEFAULT_TRIGGER_ERROR_MESSAGE;
-}
-
 function normalizeStatus(status: string): EtlJobPollingState["status"] {
   if (status === COMPLETED_STATUS) {
     return "completing";
@@ -137,7 +125,7 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
     enabled: !!jobId,
     refetchInterval: query => {
       const data = query.state.data;
-      if (shouldStopPolling(data?.status)) {
+      if (data?.status === COMPLETED_STATUS || data?.status === FAILED_STATUS) {
         return false;
       }
       return POLLING_INTERVAL;
@@ -185,7 +173,9 @@ export function useEtlJobPolling(): UseEtlJobPollingReturn {
           setJobId(response.job_id);
         }
       } catch (error) {
-        setTriggerError(resolveTriggerErrorMessage(error));
+        setTriggerError(
+          error instanceof Error ? error.message : DEFAULT_TRIGGER_ERROR_MESSAGE
+        );
       }
     },
     []

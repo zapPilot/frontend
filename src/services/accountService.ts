@@ -28,22 +28,6 @@ import { logger } from "@/utils/logger";
 
 export { AccountServiceError };
 
-function mapAccountConflictMessage(message: string | undefined): string | null {
-  if (message?.includes("wallet already belongs to another user")) {
-    return message;
-  }
-
-  if (message?.includes("wallet")) {
-    return "This wallet is already associated with an account.";
-  }
-
-  if (message?.includes("email")) {
-    return "This email address is already in use.";
-  }
-
-  return null;
-}
-
 function mapAccountServiceErrorMessage(
   status: number | undefined,
   message: string | undefined
@@ -57,9 +41,13 @@ function mapAccountServiceErrorMessage(
   }
 
   if (status === 409) {
-    return (
-      mapAccountConflictMessage(message) ?? message ?? "Account service error"
-    );
+    if (message?.includes("wallet already belongs to another user"))
+      return message;
+    if (message?.includes("wallet"))
+      return "This wallet is already associated with an account.";
+    if (message?.includes("email"))
+      return "This email address is already in use.";
+    return message ?? "Account service error";
   }
 
   if (status === 422) {

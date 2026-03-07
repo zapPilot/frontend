@@ -66,7 +66,7 @@ describe("useBundlePage", () => {
     } as any);
 
     // Default Service mocks
-    vi.mocked(getBundleUser).mockResolvedValue({
+    vi.mocked(getBundleUser).mockReturnValue({
       id: "user-target",
       displayName: "Target User",
     } as any);
@@ -148,18 +148,6 @@ describe("useBundlePage", () => {
         });
       });
       expect(result.current.bundleNotFound).toBe(false);
-    });
-
-    it("handles bundle user load error", async () => {
-      vi.mocked(getBundleUser).mockRejectedValue(new Error("Failed"));
-      const { result } = renderHook(() => useBundlePage("user-target"), {
-        wrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.bundleNotFound).toBe(true);
-      });
-      expect(logger.error).toHaveBeenCalled();
     });
 
     it("handles missing user id (not found)", async () => {
@@ -446,18 +434,6 @@ describe("useBundlePage", () => {
 
       const returnValue = result.current.switchPrompt.onStay();
       expect(returnValue).toBeUndefined();
-    });
-
-    it("handles getBundleUser returning null", async () => {
-      vi.mocked(getBundleUser).mockResolvedValue(null);
-
-      const { result } = renderHook(() => useBundlePage("user-target"), {
-        wrapper,
-      });
-
-      await waitFor(() => {
-        expect(result.current.bundleNotFound).toBe(true);
-      });
     });
 
     it("uses safe fallback when useQueryClient throws", async () => {

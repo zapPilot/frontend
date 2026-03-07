@@ -11,36 +11,15 @@ vi.mock("@/utils/formatters", () => ({
   formatAddress: vi.fn((address: string) => `${address.slice(0, 6)}...`),
 }));
 
-vi.mock("@/utils/logger", () => ({
-  logger: {
-    createContextLogger: () => ({
-      error: vi.fn(),
-      info: vi.fn(),
-      debug: vi.fn(),
-    }),
-  },
-}));
-
 describe("bundleService", () => {
   describe("getBundleUser", () => {
-    it("should return user with userId and formatted displayName", async () => {
-      const result = await getBundleUser("0x1234567890abcdef");
+    it("should return user with userId and formatted displayName", () => {
+      const result = getBundleUser("0x1234567890abcdef");
 
       expect(result).toEqual({
         userId: "0x1234567890abcdef",
         displayName: "0x1234...",
       });
-    });
-
-    it("should return null and log error when processing fails", async () => {
-      const { formatAddress } = await import("@/utils/formatters");
-      vi.mocked(formatAddress).mockImplementationOnce(() => {
-        throw new Error("Formatting error");
-      });
-
-      const result = await getBundleUser("0xError");
-
-      expect(result).toBeNull();
     });
   });
 

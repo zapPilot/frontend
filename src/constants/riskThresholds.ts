@@ -13,12 +13,14 @@
  * - >1.0 = Safe (buffer above liquidation)
  * - <1.0 = Underwater (at risk of immediate liquidation)
  */
-export enum RiskLevel {
-  SAFE = "SAFE",
-  MODERATE = "MODERATE",
-  RISKY = "RISKY",
-  CRITICAL = "CRITICAL",
-}
+export const RiskLevel = {
+  SAFE: "SAFE",
+  MODERATE: "MODERATE",
+  RISKY: "RISKY",
+  CRITICAL: "CRITICAL",
+} as const;
+
+export type RiskLevel = (typeof RiskLevel)[keyof typeof RiskLevel];
 
 /**
  * Risk Level Display Configuration

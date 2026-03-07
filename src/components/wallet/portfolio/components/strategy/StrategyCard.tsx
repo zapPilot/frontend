@@ -136,19 +136,9 @@ function handleCardToggle(
   displayRegime: Regime | undefined,
   setIsStrategyExpanded: (value: (previous: boolean) => boolean) => void
 ): void {
-  if (!displayRegime) {
-    return;
-  }
-
-  if (event.target instanceof HTMLElement) {
-    const isInteractiveElement = event.target.closest(
-      '[data-interactive="true"]'
-    );
-    if (isInteractiveElement) {
-      return;
-    }
-  }
-
+  if (!displayRegime) return;
+  const target = event.target instanceof HTMLElement ? event.target : null;
+  if (target?.closest('[data-interactive="true"]')) return;
   setIsStrategyExpanded(previous => !previous);
 }
 

@@ -6,7 +6,6 @@
  */
 
 import { formatAddress } from "@/utils/formatters";
-import { logger } from "@/utils/logger";
 
 export { generateBundleUrl, isOwnBundle } from "@/lib/bundle/bundleUtils";
 
@@ -16,26 +15,15 @@ export interface BundleUser {
   avatar?: string;
 }
 
-const bundleLogger = logger.createContextLogger("BundleService");
-
 /**
  * Get user information for a bundle
  *
- * Service function: Performs async API call to fetch user data
- *
  * @param userId - User wallet address
- * @returns Promise resolving to user information or null on error
+ * @returns User information with formatted display name
  */
-export async function getBundleUser(
-  userId: string
-): Promise<BundleUser | null> {
-  try {
-    return {
-      userId,
-      displayName: formatAddress(userId),
-    };
-  } catch (error) {
-    bundleLogger.error("Failed to fetch bundle user:", error);
-    return null;
-  }
+export function getBundleUser(userId: string): BundleUser {
+  return {
+    userId,
+    displayName: formatAddress(userId),
+  };
 }

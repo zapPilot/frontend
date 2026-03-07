@@ -68,11 +68,3 @@ export type AllocationBreakdown = z.infer<typeof allocationBreakdownSchema>;
 export type RegimeAllocationBreakdown = z.infer<
   typeof regimeAllocationBreakdownSchema
 >;
-
-// ============================================================================
-// CONVERSION UTILITIES
-// ============================================================================
-
-// ============================================================================
-// VALIDATION UTILITIES
-// ============================================================================

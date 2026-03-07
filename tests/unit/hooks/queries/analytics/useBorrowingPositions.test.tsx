@@ -4,11 +4,13 @@ import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useBorrowingPositions } from "@/hooks/queries/analytics/useBorrowingPositions";
-import { logQueryError } from "@/hooks/queries/market/queryErrorUtils";
 import { getBorrowingPositions } from "@/services/analyticsService";
+import { logger } from "@/utils/logger";
 
 vi.mock("@/services/analyticsService");
-vi.mock("@/hooks/queries/market/queryErrorUtils");
+vi.mock("@/utils/logger", () => ({
+  logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+}));
 
 const mockResponse = {
   positions: [
@@ -107,9 +109,11 @@ describe("useBorrowingPositions", () => {
       { timeout: 2000 }
     );
 
-    expect(logQueryError).toHaveBeenCalledWith(
+    expect(logger.error).toHaveBeenCalledWith(
       "Failed to fetch borrowing positions",
-      mockError
+      expect.objectContaining({
+        error: "API request failed",
+      })
     );
     expect(result.current.error).toBeTruthy();
   });
