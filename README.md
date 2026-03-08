@@ -144,29 +144,29 @@ src/components/
 ### Core Development
 
 ```bash
-npm run dev          # Start development server (Turbopack)
-npm run build        # Production build
-npm run start        # Serve production build
+pnpm run dev          # Start development server (Turbopack)
+pnpm run build        # Production build
+pnpm run start        # Serve production build
 ```
 
 ### Code Quality
 
 ```bash
-npm run lint         # ESLint check with auto-fix
-npm run lint:fix     # Fix all auto-fixable issues
-npm run format       # Prettier formatting
-npm run format:check # Check formatting without changes
-npm run type-check   # TypeScript type checking
+pnpm run lint         # ESLint check with auto-fix
+pnpm run lint:fix     # Fix all auto-fixable issues
+pnpm run format       # Prettier formatting
+pnpm run format:check # Check formatting without changes
+pnpm run type-check   # TypeScript type checking
 ```
 
 ### Testing
 
 ```bash
-npm test             # Run all Vitest tests
-npm run test:unit    # Unit tests only
-npm run test:e2e     # Playwright end-to-end tests
-npm run test:coverage # Coverage report with thresholds
-npm run test:safe    # Memory-optimized test runner
+pnpm test             # Run all Vitest tests
+pnpm run test:unit    # Unit tests only
+pnpm run test:e2e     # Playwright end-to-end tests
+pnpm run test:coverage # Coverage report with thresholds
+pnpm run test:safe    # Memory-optimized test runner
 ```
 
 ## Environment Setup
@@ -193,7 +193,7 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
    ```bash
    git clone <repository-url>
    cd frontend
-   npm install
+   pnpm install
    ```
 
 2. **Environment Configuration**:
@@ -206,7 +206,7 @@ NEXT_PUBLIC_ENABLE_DEBUG=false
 3. **Start Development**:
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 4. **Access Application**:

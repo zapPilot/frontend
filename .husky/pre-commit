@@ -2,7 +2,7 @@
 set -eu
 # Don't ignore any of these checks
 pnpm run format
-npx lint-staged
+pnpm exec lint-staged
 pnpm run type-check
 pnpm run deadcode:check
 pnpm run dup:all

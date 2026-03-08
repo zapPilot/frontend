@@ -18,10 +18,10 @@
 # Testing
 
 ```bash
-npm run test:unit           # Run unit tests (memory optimized)
-npm run test:e2e           # Run Playwright E2E tests
-npm run test:coverage      # Check coverage thresholds (90% required)
-npm run type-check         # ALWAYS run before committing
+pnpm run test:unit           # Run unit tests (memory optimized)
+pnpm run test:e2e           # Run Playwright E2E tests
+pnpm run test:coverage      # Check coverage thresholds (90% required)
+pnpm run type-check         # ALWAYS run before committing
 ```
 
 - Unit tests in `tests/unit/`, E2E in `tests/e2e/`
@@ -96,17 +96,17 @@ NEXT_PUBLIC_INTENT_ENGINE_URL=      # Transaction execution API
 # Development Workflow
 
 ```bash
-npm run dev              # Start dev server (Turbopack default)
-npm run dev:webpack      # Use Webpack if Turbopack issues
-npm run lint:fix         # Auto-fix linting issues
-npm run format           # Format all files
+pnpm run dev              # Start dev server (Turbopack default)
+pnpm run dev:webpack      # Use Webpack if Turbopack issues
+pnpm run lint:fix         # Auto-fix linting issues
+pnpm run format           # Format all files
 ```
 
 **Before committing:**
 
-1. `npm run type-check` - TypeScript must pass
-2. `npm run lint` - No ESLint errors
-3. `npm run test:unit` - Tests must pass
+1. `pnpm run type-check` - TypeScript must pass
+2. `pnpm run lint` - No ESLint errors
+3. `pnpm run test:unit` - Tests must pass
 4. Pre-commit hook runs automatically (type-check, lint, tests, deadcode, duplicates)
 
 # Common Gotchas
@@ -145,7 +145,6 @@ npm run format           # Format all files
 
 # Files to Never Modify
 
-- `package-lock.json` - Use `npm install` only
 - `.next/` - Build output, auto-generated
 - `coverage/` - Test coverage reports
 - `playwright-report/` - E2E test results
@@ -153,15 +152,15 @@ npm run format           # Format all files
 
 # Quick Reference
 
-| Task             | Command                  |
-| ---------------- | ------------------------ |
-| Add dependency   | `npm install <package>`  |
-| Type check       | `npm run type-check`     |
-| Fix linting      | `npm run lint:fix`       |
-| Run tests        | `npm run test:unit`      |
-| Check coverage   | `npm run test:coverage`  |
-| Find dead code   | `npm run deadcode:check` |
-| Find duplicates  | `npm run dup:check`      |
-| E2E tests        | `npm run test:e2e`       |
-| E2E debug        | `npm run test:e2e:debug` |
-| Build production | `npm run build`          |
+| Task             | Command                   |
+| ---------------- | ------------------------- |
+| Add dependency   | `pnpm add <package>`      |
+| Type check       | `pnpm run type-check`     |
+| Fix linting      | `pnpm run lint:fix`       |
+| Run tests        | `pnpm run test:unit`      |
+| Check coverage   | `pnpm run test:coverage`  |
+| Find dead code   | `pnpm run deadcode:check` |
+| Find duplicates  | `pnpm run dup:check`      |
+| E2E tests        | `pnpm run test:e2e`       |
+| E2E debug        | `pnpm run test:e2e:debug` |
+| Build production | `pnpm run build`          |
