@@ -4,6 +4,7 @@ import type { PropsWithChildren } from "react";
 
 import { BaseCard } from "@/components/ui";
 import { HEADER, Z_INDEX } from "@/constants/design-system";
+import { cn } from "@/lib/ui/classNames";
 
 interface StickyBannerShellProps {
   cardClassName?: string;
@@ -18,9 +19,7 @@ export function StickyBannerShell({
   cardClassName,
   "data-testid": dataTestId,
 }: PropsWithChildren<StickyBannerShellProps>) {
-  const mergedCardClasses = cardClassName
-    ? `${BASE_CARD_CLASSES} ${cardClassName}`
-    : BASE_CARD_CLASSES;
+  const mergedCardClasses = cn(BASE_CARD_CLASSES, cardClassName);
 
   return (
     <div

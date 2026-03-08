@@ -1,7 +1,5 @@
 "use client";
 
-import { formatCurrency } from "@/utils";
-
 import {
   type BacktestTooltipProps,
   useBacktestTooltipData,
@@ -21,21 +19,12 @@ export function BacktestTooltip(props: BacktestTooltipProps) {
 
   if (!active || !data) return null;
 
-  const { dateStr, btcPrice, sections } = data;
+  const { dateStr, sections } = data;
   const { strategies, events, signals, allocations } = sections;
 
   return (
-    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px] max-h-[80vh] overflow-y-auto">
+    <div className="bg-[#111827] border border-[#374151] rounded-lg p-3 shadow-lg min-w-[200px] z-50">
       <div className="text-xs font-medium text-white mb-2">{dateStr}</div>
-      {btcPrice != null && (
-        <div className="text-xs text-gray-400 mb-2">
-          BTC Price:{" "}
-          {formatCurrency(btcPrice, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}
-        </div>
-      )}
       <div className="space-y-1">
         {strategies.map((entry, index) => (
           <div key={index} className="text-xs" style={{ color: entry.color }}>
@@ -89,7 +78,6 @@ export function BacktestTooltip(props: BacktestTooltipProps) {
               constituents={block.constituents}
               strategyId={block.id}
               index={block.index}
-              spotBreakdown={block.spotBreakdown}
             />
           ))}
         </div>

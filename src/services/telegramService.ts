@@ -89,10 +89,6 @@ function createTelegramServiceError(error: unknown): AccountServiceError {
 const accountApiClient = httpUtils.accountApi;
 const callTelegramApi = createServiceCaller(createTelegramServiceError);
 
-function getTelegramUserPath(userId: string): string {
-  return `/users/${userId}/telegram`;
-}
-
 // ============================================================================
 // SERVICE FUNCTIONS
 // ============================================================================
@@ -113,11 +109,9 @@ function getTelegramUserPath(userId: string): string {
 export async function requestTelegramToken(
   userId: string
 ): Promise<TelegramTokenResponse> {
-  const telegramUserPath = getTelegramUserPath(userId);
-
   return callTelegramApi(() =>
     accountApiClient.post<TelegramTokenResponse>(
-      `${telegramUserPath}/request-token`
+      `/users/${userId}/telegram/request-token`
     )
   );
 }
@@ -136,10 +130,8 @@ export async function requestTelegramToken(
 export async function getTelegramStatus(
   userId: string
 ): Promise<TelegramStatus> {
-  const telegramUserPath = getTelegramUserPath(userId);
-
   return callTelegramApi(() =>
-    accountApiClient.get<TelegramStatus>(`${telegramUserPath}/status`)
+    accountApiClient.get<TelegramStatus>(`/users/${userId}/telegram/status`)
   );
 }
 
@@ -159,11 +151,9 @@ export async function getTelegramStatus(
 export async function disconnectTelegram(
   userId: string
 ): Promise<TelegramDisconnectResponse> {
-  const telegramUserPath = getTelegramUserPath(userId);
-
   return callTelegramApi(() =>
     accountApiClient.delete<TelegramDisconnectResponse>(
-      `${telegramUserPath}/disconnect`
+      `/users/${userId}/telegram/disconnect`
     )
   );
 }

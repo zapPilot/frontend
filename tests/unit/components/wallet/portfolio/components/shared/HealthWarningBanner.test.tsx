@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { HealthWarningBanner } from "@/components/wallet/portfolio/components/shared/HealthWarningBanner";
 import type { RiskMetrics } from "@/services/analyticsService";
@@ -15,40 +15,17 @@ describe("HealthWarningBanner", () => {
     position_count: 1,
   } as RiskMetrics;
 
-  const originalInnerWidth = window.innerWidth;
-
-  beforeEach(() => {
-    // Default to mobile width
-    Object.defineProperty(window, "innerWidth", {
-      writable: true,
-      configurable: true,
-      value: 400,
-    });
-    window.dispatchEvent(new Event("resize"));
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window, "innerWidth", {
-      writable: true,
-      configurable: true,
-      value: originalInnerWidth,
-    });
-    window.dispatchEvent(new Event("resize"));
-  });
-
-  it("renders on mobile when health is risky", () => {
+  it("renders when health is risky", () => {
     render(<HealthWarningBanner riskMetrics={mockRiskMetrics} />);
     expect(screen.getByRole("alert")).toBeInTheDocument();
     expect(screen.getByText("Liquidation Risk")).toBeInTheDocument();
     expect(screen.getByText(/Health factor at 1.10/)).toBeInTheDocument();
   });
 
-  it("does not render on desktop", () => {
-    Object.defineProperty(window, "innerWidth", { value: 1024 });
-    window.dispatchEvent(new Event("resize"));
-
+  it("has sm:hidden class for mobile-only visibility", () => {
     render(<HealthWarningBanner riskMetrics={mockRiskMetrics} />);
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    const alert = screen.getByRole("alert");
+    expect(alert.className).toContain("sm:hidden");
   });
 
   it("does not render when health is safe", () => {

@@ -65,13 +65,11 @@ export interface AllocationBlock {
   id: string;
   displayName: string;
   constituents: BacktestConstituentsSource;
-  spotBreakdown: string | null;
   index: number | undefined;
 }
 
 export interface ParsedTooltipData {
   dateStr: string;
-  btcPrice: number | undefined;
   sections: {
     strategies: TooltipItem[];
     events: EventItem[];
@@ -114,34 +112,6 @@ function hasAllocationData(constituents: BacktestConstituentsSource): boolean {
   return percentages.spot > 0 || percentages.stable > 0 || percentages.lp > 0;
 }
 
-function buildSpotBreakdown(
-  constituents: BacktestConstituentsSource
-): string | null {
-  if (
-    !constituents.spot ||
-    typeof constituents.spot !== "object" ||
-    Array.isArray(constituents.spot)
-  ) {
-    return null;
-  }
-
-  const parts = Object.entries(constituents.spot)
-    .filter(([, value]) => value > 0)
-    .map(
-      ([token, value]) =>
-        `${token.toUpperCase()}: ${formatCurrency(value, {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 0,
-        })}`
-    );
-
-  if (parts.length === 0) {
-    return null;
-  }
-
-  return parts.join(", ");
-}
-
 function buildAllocationBlock(
   strategyId: string,
   strategies: StrategiesRecord | undefined,
@@ -157,7 +127,6 @@ function buildAllocationBlock(
     id: strategyId,
     displayName: getStrategyDisplayName(strategyId),
     constituents,
-    spotBreakdown: buildSpotBreakdown(constituents),
     index: sortedStrategyIds?.indexOf(strategyId),
   };
 }
@@ -271,11 +240,6 @@ export function useBacktestTooltipData({
     | undefined;
   const sentiment = firstPayload?.["sentiment_label"] as string | undefined;
 
-  const tokenPrice =
-    (firstPayload?.["btc_price"] as number | undefined) ??
-    (firstPayload?.["token_price"] as { btc?: number } | undefined)?.btc ??
-    (firstPayload?.["price"] as number | undefined);
-
   const eventStrategies = firstPayload?.["eventStrategies"] as
     | EventStrategiesRecord
     | undefined;
@@ -290,9 +254,36 @@ export function useBacktestTooltipData({
   );
   const sections = buildTooltipSections(payload, eventStrategies, sentiment);
 
+  // Compute BTC / DMA 200 ratio from signal items
+  const btcSignal = sections.signals.find(s => s.name === "BTC Price");
+  const dmaSignal = sections.signals.find(s => s.name === "DMA 200");
+  if (btcSignal && dmaSignal) {
+    const btcNum = parseNumericSignal(btcSignal.value);
+    const dmaNum = parseNumericSignal(dmaSignal.value);
+    if (btcNum != null && dmaNum != null && dmaNum > 0) {
+      sections.signals.push({
+        name: "BTC / DMA 200",
+        value: (btcNum / dmaNum).toFixed(2),
+        color: "#a78bfa",
+      });
+    }
+  }
+
   return {
     dateStr,
-    btcPrice: tokenPrice,
     sections: { ...sections, allocations },
   };
+}
+
+/**
+ * Extracts a numeric value from a signal value that may be a formatted currency string or a number.
+ *
+ * @param value - The signal value (string like "$98,432" or number)
+ * @returns The numeric value, or null if parsing fails
+ */
+function parseNumericSignal(value: string | number): number | null {
+  if (typeof value === "number") return value;
+  const cleaned = value.replace(/[$,]/g, "");
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : null;
 }

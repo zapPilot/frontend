@@ -70,10 +70,6 @@ function getWalletAddress(walletItem: {
   return walletItem.getAccount()?.address ?? "";
 }
 
-function createWalletError(message: string, code: string): WalletError {
-  return { message, code };
-}
-
 function handleWalletOperationError(
   setError: Dispatch<SetStateAction<WalletError | null>>,
   error: unknown,
@@ -82,7 +78,7 @@ function handleWalletOperationError(
   logPrefix: string
 ): never {
   const errorMessage = getErrorMessage(error, fallbackMessage);
-  setError(createWalletError(errorMessage, code));
+  setError({ message: errorMessage, code });
   walletLogger.error(logPrefix, error);
   throw error;
 }
@@ -128,7 +124,7 @@ export function WalletProvider({
 
       if (!targetWallet) {
         const errorMessage = `Wallet ${address} not found`;
-        setError(createWalletError(errorMessage, "WALLET_NOT_FOUND"));
+        setError({ message: errorMessage, code: "WALLET_NOT_FOUND" });
         throw new Error(errorMessage);
       }
 

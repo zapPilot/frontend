@@ -13,18 +13,6 @@ vi.mock(
   })
 );
 
-// Mock utilities
-vi.mock("@/utils", () => ({
-  formatCurrency: vi.fn((val: number) =>
-    val.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })
-  ),
-}));
-
 // Mock BacktestAllocationBar
 vi.mock(
   "@/components/wallet/portfolio/views/backtesting/components/BacktestAllocationBar",
@@ -51,7 +39,6 @@ const mockedUseBacktestTooltipData = vi.mocked(useBacktestTooltipData);
 function createTooltipData(overrides: Record<string, unknown> = {}) {
   return {
     dateStr: "1/15/2025",
-    btcPrice: 42000,
     sections: {
       strategies: [],
       events: [],
@@ -72,8 +59,6 @@ describe("BacktestTooltip", () => {
 
     render(<BacktestTooltip active={false} payload={[]} label="" />);
 
-    // The component should not render the tooltip content
-    expect(screen.queryByText(/BTC Price:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Signals/i)).not.toBeInTheDocument();
   });
 
@@ -82,8 +67,6 @@ describe("BacktestTooltip", () => {
 
     render(<BacktestTooltip active={true} payload={[]} label="" />);
 
-    // The component should not render the tooltip content
-    expect(screen.queryByText(/BTC Price:/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Signals/i)).not.toBeInTheDocument();
   });
 
@@ -95,31 +78,6 @@ describe("BacktestTooltip", () => {
     render(<BacktestTooltip active={true} payload={[]} label="" />);
 
     expect(screen.getByText("1/15/2025")).toBeInTheDocument();
-  });
-
-  it("renders BTC price when provided", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({ btcPrice: 42000 }) as ReturnType<
-        typeof useBacktestTooltipData
-      >
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.getByText(/BTC Price:/)).toBeInTheDocument();
-    expect(screen.getByText(/\$42,000\.00/)).toBeInTheDocument();
-  });
-
-  it("does not render BTC price section when btcPrice is undefined", () => {
-    mockedUseBacktestTooltipData.mockReturnValue(
-      createTooltipData({ btcPrice: undefined }) as ReturnType<
-        typeof useBacktestTooltipData
-      >
-    );
-
-    render(<BacktestTooltip active={true} payload={[]} label="" />);
-
-    expect(screen.queryByText(/BTC Price:/)).not.toBeInTheDocument();
   });
 
   it("renders strategy items with name and value", () => {
@@ -246,14 +204,12 @@ describe("BacktestTooltip", () => {
               displayName: "AWP Portfolio",
               constituents: { BTC: 0.6, ETH: 0.4 },
               index: 0,
-              spotBreakdown: null,
             },
             {
               id: "momentum",
               displayName: "Momentum",
               constituents: { BTC: 1.0 },
               index: 1,
-              spotBreakdown: "BTC 0.5 | ETH 0.3",
             },
           ],
         },
@@ -289,11 +245,37 @@ describe("BacktestTooltip", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("does not have scrollable overflow styles", () => {
+    mockedUseBacktestTooltipData.mockReturnValue(
+      createTooltipData() as ReturnType<typeof useBacktestTooltipData>
+    );
+
+    const { container } = render(
+      <BacktestTooltip active={true} payload={[]} label="" />
+    );
+
+    const tooltipDiv = container.firstChild as HTMLElement;
+    expect(tooltipDiv.className).not.toMatch(/overflow-y-auto/);
+    expect(tooltipDiv.className).not.toMatch(/max-h/);
+  });
+
+  it("has z-50 class for high z-index", () => {
+    mockedUseBacktestTooltipData.mockReturnValue(
+      createTooltipData() as ReturnType<typeof useBacktestTooltipData>
+    );
+
+    const { container } = render(
+      <BacktestTooltip active={true} payload={[]} label="" />
+    );
+
+    const tooltipDiv = container.firstChild as HTMLElement;
+    expect(tooltipDiv.className).toMatch(/z-50/);
+  });
+
   it("renders multiple sections together", () => {
     mockedUseBacktestTooltipData.mockReturnValue(
       createTooltipData({
         dateStr: "2/1/2025",
-        btcPrice: 45000,
         sections: {
           strategies: [{ name: "AWP", value: 12000, color: "#3b82f6" }],
           events: [
@@ -310,7 +292,6 @@ describe("BacktestTooltip", () => {
               displayName: "AWP",
               constituents: { BTC: 0.7, ETH: 0.3 },
               index: 0,
-              spotBreakdown: null,
             },
           ],
         },
@@ -320,7 +301,6 @@ describe("BacktestTooltip", () => {
     render(<BacktestTooltip active={true} payload={[]} label="" />);
 
     expect(screen.getByText("2/1/2025")).toBeInTheDocument();
-    expect(screen.getByText(/\$45,000\.00/)).toBeInTheDocument();
     expect(screen.getByText(/AWP: \$12,000/)).toBeInTheDocument();
     expect(screen.getByText("Rebalance (AWP)")).toBeInTheDocument();
     expect(screen.getByText("Signals")).toBeInTheDocument();

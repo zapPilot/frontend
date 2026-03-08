@@ -87,79 +87,6 @@ describe("useBacktestTooltipData", () => {
     });
   });
 
-  describe("btcPrice extraction", () => {
-    it("extracts btcPrice from token_price.btc", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "Strategy A",
-            value: 100,
-            color: "#fff",
-            payload: {
-              token_price: { btc: 45000 },
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.btcPrice).toBe(45000);
-    });
-
-    it("extracts btcPrice from price fallback", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "Strategy A",
-            value: 100,
-            color: "#fff",
-            payload: {
-              price: 50000,
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.btcPrice).toBe(50000);
-    });
-
-    it("prioritizes token_price.btc over price", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "Strategy A",
-            value: 100,
-            color: "#fff",
-            payload: {
-              token_price: { btc: 45000 },
-              price: 50000,
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.btcPrice).toBe(45000);
-    });
-
-    it("returns undefined when neither price source exists", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "Strategy A",
-            value: 100,
-            color: "#fff",
-            payload: {},
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.btcPrice).toBeUndefined();
-    });
-  });
-
   describe("strategy items categorization", () => {
     it("categorizes numeric values as strategy items", () => {
       const result = useBacktestTooltipData({
@@ -390,11 +317,103 @@ describe("useBacktestTooltipData", () => {
       expect(result?.sections.signals).toHaveLength(1);
       expect(result?.sections.signals[0]).toEqual({
         name: "DMA 200",
-        value: 48765.43,
+        value: "$48765",
         color: "#f59e0b",
       });
       expect(result?.sections.strategies).toHaveLength(1);
       expect(result?.sections.strategies[0]?.name).toBe("Strategy A");
+    });
+  });
+
+  describe("BTC / DMA 200 ratio signal", () => {
+    it("computes ratio when both BTC Price and DMA 200 are present", () => {
+      const result = useBacktestTooltipData({
+        payload: [
+          {
+            name: "BTC Price",
+            value: 98000,
+            color: "#f7931a",
+            payload: {},
+          },
+          {
+            name: "DMA 200",
+            value: 87000,
+            color: "#f59e0b",
+            payload: {},
+          },
+        ],
+        label: "2026-01-01",
+      });
+
+      const ratioSignal = result?.sections.signals.find(
+        (s: { name: string }) => s.name === "BTC / DMA 200"
+      );
+      expect(ratioSignal).toBeDefined();
+      expect(ratioSignal?.value).toBe((98000 / 87000).toFixed(2));
+      expect(ratioSignal?.color).toBe("#a78bfa");
+    });
+
+    it("does not add ratio when DMA 200 is missing", () => {
+      const result = useBacktestTooltipData({
+        payload: [
+          {
+            name: "BTC Price",
+            value: 98000,
+            color: "#f7931a",
+            payload: {},
+          },
+        ],
+        label: "2026-01-01",
+      });
+
+      const ratioSignal = result?.sections.signals.find(
+        (s: { name: string }) => s.name === "BTC / DMA 200"
+      );
+      expect(ratioSignal).toBeUndefined();
+    });
+
+    it("does not add ratio when BTC Price is missing", () => {
+      const result = useBacktestTooltipData({
+        payload: [
+          {
+            name: "DMA 200",
+            value: 87000,
+            color: "#f59e0b",
+            payload: {},
+          },
+        ],
+        label: "2026-01-01",
+      });
+
+      const ratioSignal = result?.sections.signals.find(
+        (s: { name: string }) => s.name === "BTC / DMA 200"
+      );
+      expect(ratioSignal).toBeUndefined();
+    });
+
+    it("does not add ratio when DMA 200 is zero", () => {
+      const result = useBacktestTooltipData({
+        payload: [
+          {
+            name: "BTC Price",
+            value: 98000,
+            color: "#f7931a",
+            payload: {},
+          },
+          {
+            name: "DMA 200",
+            value: 0,
+            color: "#f59e0b",
+            payload: {},
+          },
+        ],
+        label: "2026-01-01",
+      });
+
+      const ratioSignal = result?.sections.signals.find(
+        (s: { name: string }) => s.name === "BTC / DMA 200"
+      );
+      expect(ratioSignal).toBeUndefined();
     });
   });
 
@@ -605,102 +624,8 @@ describe("useBacktestTooltipData", () => {
           stable: 3000,
           lp: 2000,
         },
-        spotBreakdown: null,
         index: undefined,
       });
-    });
-
-    it("handles spot as Record with breakdown string", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "risk_parity",
-            value: 10000,
-            color: "#00ff00",
-            payload: {
-              strategies: {
-                risk_parity: {
-                  portfolio_constituant: {
-                    spot: {
-                      btc: 3000,
-                      eth: 2000,
-                    },
-                    stable: 3000,
-                    lp: 2000,
-                  },
-                },
-              },
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.sections.allocations).toHaveLength(1);
-      expect(result?.sections.allocations[0]?.spotBreakdown).toBe(
-        "BTC: $3000, ETH: $2000"
-      );
-    });
-
-    it("filters out zero values from spot breakdown", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "strategy_a",
-            value: 10000,
-            color: "#0000ff",
-            payload: {
-              strategies: {
-                strategy_a: {
-                  portfolio_constituant: {
-                    spot: {
-                      btc: 5000,
-                      eth: 0,
-                      sol: 2000,
-                    },
-                    stable: 3000,
-                    lp: 0,
-                  },
-                },
-              },
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.sections.allocations[0]?.spotBreakdown).toBe(
-        "BTC: $5000, SOL: $2000"
-      );
-    });
-
-    it("returns null spotBreakdown when all spot values are zero", () => {
-      const result = useBacktestTooltipData({
-        payload: [
-          {
-            name: "strategy_a",
-            value: 10000,
-            color: "#0000ff",
-            payload: {
-              strategies: {
-                strategy_a: {
-                  portfolio_constituant: {
-                    spot: {
-                      btc: 0,
-                      eth: 0,
-                    },
-                    stable: 10000,
-                    lp: 0,
-                  },
-                },
-              },
-            },
-          },
-        ],
-        label: "2026-01-01",
-      });
-
-      expect(result?.sections.allocations[0]?.spotBreakdown).toBeNull();
     });
 
     it("filters out allocations with all-zero percentages", () => {
@@ -1119,7 +1044,6 @@ describe("useBacktestTooltipData", () => {
 
       expect(result).not.toBeNull();
       expect(result?.dateStr).toBe(new Date("2026-01-15").toLocaleDateString());
-      expect(result?.btcPrice).toBe(45000);
       expect(result?.sections.strategies).toHaveLength(2);
       expect(result?.sections.signals).toHaveLength(2);
       expect(result?.sections.events).toHaveLength(2);

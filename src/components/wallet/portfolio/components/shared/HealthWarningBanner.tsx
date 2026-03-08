@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
 
 import { getRiskLevel, RiskLevel } from "@/constants/riskThresholds";
 import type { RiskMetrics } from "@/services/analyticsService";
@@ -38,27 +37,12 @@ export function HealthWarningBanner({
   riskMetrics,
   onViewDetails,
 }: HealthWarningBannerProps) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Client-side detection of mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
   const { health_rate } = riskMetrics;
   const riskLevel = getRiskLevel(health_rate);
 
-  // Only show on mobile for dangerous states
+  // Only show for dangerous states (CSS `sm:hidden` handles mobile-only visibility)
   const shouldShow =
-    isMobile &&
-    (riskLevel === RiskLevel.RISKY || riskLevel === RiskLevel.CRITICAL);
+    riskLevel === RiskLevel.RISKY || riskLevel === RiskLevel.CRITICAL;
 
   if (!shouldShow) {
     return null;

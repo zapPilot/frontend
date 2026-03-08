@@ -15,21 +15,19 @@ export interface BacktestAllocationBarProps {
   constituents: BacktestConstituentsSource;
   strategyId?: string;
   index?: number | undefined;
-  spotBreakdown?: string | null;
 }
 
 /**
- * BacktestAllocationBar - Allocation bar for backtest tooltip.
+ * BacktestAllocationBar - Compact allocation bar for backtest tooltip.
  *
  * Uses the unified allocation bar with backtest-specific data mapping.
- * Shows a strategy color indicator and optional spot breakdown details.
+ * Shows a strategy color indicator without legend or labels for compactness.
  */
 export function BacktestAllocationBar({
   displayName,
   constituents,
   strategyId,
   index,
-  spotBreakdown,
 }: BacktestAllocationBarProps): ReactElement | null {
   const segments = mapBacktestToUnified(constituents);
 
@@ -58,18 +56,11 @@ export function BacktestAllocationBar({
       <UnifiedAllocationBar
         segments={segments}
         size="sm"
-        showLegend
-        showLabels
+        showLegend={false}
+        showLabels={false}
         labelThreshold={15}
         testIdPrefix={`backtest-${strategyId ?? "default"}`}
       />
-
-      {/* Optional spot breakdown text */}
-      {spotBreakdown && (
-        <div className="text-[8px] text-gray-500 pl-4">
-          Spot: {spotBreakdown}
-        </div>
-      )}
     </div>
   );
 }

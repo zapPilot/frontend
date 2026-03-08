@@ -156,58 +156,6 @@ describe("BacktestAllocationBar", () => {
     expect(screen.getByText("1 segments")).toBeInTheDocument();
   });
 
-  it("renders spot breakdown when provided", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-
-    render(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-        strategyId="awp"
-        spotBreakdown="BTC 0.5 | ETH 0.3 | USDT 0.2"
-      />
-    );
-
-    expect(
-      screen.getByText("Spot: BTC 0.5 | ETH 0.3 | USDT 0.2")
-    ).toBeInTheDocument();
-  });
-
-  it("does not render spot breakdown when not provided", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-
-    render(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-        strategyId="awp"
-      />
-    );
-
-    expect(screen.queryByText(/Spot:/)).not.toBeInTheDocument();
-  });
-
-  it("does not render spot breakdown when explicitly null", () => {
-    mockedMapBacktestToUnified.mockReturnValue([
-      { id: "BTC", label: "BTC", percentage: 50, color: "#f7931a" },
-    ]);
-
-    render(
-      <BacktestAllocationBar
-        displayName="AWP"
-        constituents={{ spot: 5000, lp: 3000, stable: 2000 }}
-        strategyId="awp"
-        spotBreakdown={null}
-      />
-    );
-
-    expect(screen.queryByText(/Spot:/)).not.toBeInTheDocument();
-  });
-
   it("recalculates segments when constituents change", () => {
     mockedMapBacktestToUnified.mockReturnValue([
       { id: "BTC", label: "BTC", percentage: 70, color: "#f7931a" },
@@ -247,7 +195,6 @@ describe("BacktestAllocationBar", () => {
         constituents={{ spot: 6000, lp: 2000, stable: 2000 }}
         strategyId="awp"
         index={0}
-        spotBreakdown="BTC 0.6 | ETH 0.4"
       />
     );
 
@@ -257,6 +204,5 @@ describe("BacktestAllocationBar", () => {
       container.querySelector(".w-2.h-2.rounded-full.shrink-0")
     ).toBeInTheDocument();
     expect(screen.getByTestId("backtest-awp")).toBeInTheDocument();
-    expect(screen.getByText("Spot: BTC 0.6 | ETH 0.4")).toBeInTheDocument();
   });
 });

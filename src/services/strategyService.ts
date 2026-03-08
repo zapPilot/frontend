@@ -23,26 +23,6 @@ export type {
   StrategyPreset,
 };
 
-/**
- * Build query string from params, filtering out undefined values
- */
-function buildQueryString(params: DailySuggestionParams): string {
-  const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value === undefined) {
-      continue;
-    }
-
-    query.append(key, String(value));
-  }
-  const queryString = query.toString();
-  if (!queryString) {
-    return "";
-  }
-
-  return `?${queryString}`;
-}
-
 // =========================================================================
 // CONFIG PRESETS ENDPOINT
 // =========================================================================
@@ -117,8 +97,12 @@ export async function getDailySuggestion(
   userId: string,
   params: DailySuggestionParams = {}
 ): Promise<DailySuggestionResponse> {
-  const queryString = buildQueryString(params);
-  const endpoint = `/api/v3/strategy/daily-suggestion/${userId}${queryString}`;
+  const query = new URLSearchParams(
+    Object.entries(params)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, String(v)])
+  ).toString();
+  const endpoint = `/api/v3/strategy/daily-suggestion/${userId}${query ? `?${query}` : ""}`;
   const response = await httpUtils.analyticsEngine.get(endpoint);
   return response as DailySuggestionResponse;
 }
