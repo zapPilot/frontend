@@ -1,8 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 # Don't ignore any of these checks
+pnpm run format
 npx lint-staged
-npm run type-check
-npm run deadcode:check
-npm run dup:all
-npm run test:safeall
+pnpm run type-check
+pnpm run deadcode:check
+pnpm run dup:all
+pnpm run test:safeall

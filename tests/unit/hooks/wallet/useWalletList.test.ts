@@ -10,9 +10,8 @@ vi.mock("@/components/WalletManager/services/WalletService", () => ({
   loadWallets: vi.fn(),
 }));
 
-const { loadWallets: mockLoadWallets } = await import(
-  "@/components/WalletManager/services/WalletService"
-);
+const { loadWallets: mockLoadWallets } =
+  await import("@/components/WalletManager/services/WalletService");
 
 const MOCK_WALLETS = [
   { address: "0xABC123", label: "Main", isActive: false },

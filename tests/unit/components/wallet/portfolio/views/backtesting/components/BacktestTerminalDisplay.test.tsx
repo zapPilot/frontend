@@ -193,9 +193,8 @@ describe("BacktestTerminalDisplay", () => {
   });
 
   it("handleDaysChange: calls onEditorValueChange with updateJsonField result", async () => {
-    const { updateJsonField } = await import(
-      "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers"
-    );
+    const { updateJsonField } =
+      await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
 
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
@@ -207,9 +206,8 @@ describe("BacktestTerminalDisplay", () => {
   });
 
   it("handleSignalChange: calls onEditorValueChange with updateRegimeParam result", async () => {
-    const { updateRegimeParam } = await import(
-      "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers"
-    );
+    const { updateRegimeParam } =
+      await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
 
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
@@ -228,9 +226,8 @@ describe("BacktestTerminalDisplay", () => {
   });
 
   it("handlePacingChange: calls onEditorValueChange with updateRegimeParam result", async () => {
-    const { updateRegimeParam } = await import(
-      "@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers"
-    );
+    const { updateRegimeParam } =
+      await import("@/components/wallet/portfolio/views/backtesting/utils/jsonConfigurationHelpers");
 
     render(<BacktestTerminalDisplay {...defaultProps} />);
 
