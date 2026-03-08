@@ -57,7 +57,7 @@ export function BacktestAllocationBar({
         segments={segments}
         size="sm"
         showLegend={false}
-        showLabels={false}
+        showLabels
         labelThreshold={15}
         testIdPrefix={`backtest-${strategyId ?? "default"}`}
       />

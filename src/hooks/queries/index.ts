@@ -4,5 +4,5 @@ export * from "./market";
 export * from "./wallet";
 
 // Query configuration
-export { createQueryConfig } from "./queryDefaults";
+export { createQueryConfig, logQueryError } from "./queryDefaults";
 export { queryKeys } from "@/lib/state/queryClient";

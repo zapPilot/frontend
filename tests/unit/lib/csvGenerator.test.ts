@@ -261,9 +261,7 @@ describe("buildPerformanceSection", () => {
     const lines = buildPerformanceSection(mockMetadata);
 
     expect(lines[0]).toBe("=== PERFORMANCE CHART DATA ===");
-    expect(lines[1]).toBe(
-      "Date,Portfolio Value (USD),Normalized Portfolio,Normalized BTC"
-    );
+    expect(lines[1]).toBe("Date,Portfolio Value (USD),Normalized Portfolio");
 
     // Check data rows (3 points + header + title + empty)
     expect(lines).toHaveLength(6);
@@ -272,9 +270,9 @@ describe("buildPerformanceSection", () => {
   it("should format portfolio values with 2 decimal places", () => {
     const lines = buildPerformanceSection(mockMetadata);
 
-    expect(lines[2]).toBe("2024-01-17,10000.00,0.00,0.00");
-    expect(lines[3]).toBe("2024-07-17,12500.00,25.00,10.00");
-    expect(lines[4]).toBe("2025-01-17,22450.00,100.00,50.00");
+    expect(lines[2]).toBe("2024-01-17,10000.00,0.00");
+    expect(lines[3]).toBe("2024-07-17,12500.00,25.00");
+    expect(lines[4]).toBe("2025-01-17,22450.00,100.00");
   });
 });
 

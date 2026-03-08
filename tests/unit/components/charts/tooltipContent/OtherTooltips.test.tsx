@@ -63,23 +63,12 @@ describe("Other Tooltips", () => {
       benchmark: 800,
     };
 
-    it("should render portfolio value and benchmark", () => {
+    it("should render portfolio value", () => {
       render(<PerformanceTooltip data={mockData} />);
       const rows = screen.getAllByTestId("tooltip-row");
+      expect(rows).toHaveLength(1);
       expect(rows[0]).toHaveAttribute("data-label", "Portfolio Value");
       expect(rows[0]).toHaveAttribute("data-value", "1000");
-
-      expect(rows[1]).toHaveAttribute("data-label", "BTC Benchmark");
-      expect(rows[1]).toHaveAttribute("data-value", "800");
-    });
-
-    it("should render relative performance row if benchmark exists", () => {
-      render(<PerformanceTooltip data={mockData} />);
-      const rows = screen.getAllByTestId("tooltip-row");
-      // 3rd row is Relative
-      expect(rows[2]).toHaveAttribute("data-label", "Relative");
-      // (1000 - 800) / 800 * 100 = 25
-      expect(rows[2]).toHaveAttribute("data-value", "25");
     });
   });
 

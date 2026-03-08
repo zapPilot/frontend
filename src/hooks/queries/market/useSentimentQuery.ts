@@ -6,11 +6,12 @@
  */
 import { useQuery } from "@tanstack/react-query";
 
-import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { APIError } from "@/lib/http";
+import {
+  createQueryConfig,
+  logQueryError,
+} from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
 import { fetchMarketSentiment } from "@/services/sentimentService";
-import { logger } from "@/utils/logger";
 
 const SENTIMENT_CACHE_MS = 10 * 60 * 1000; // 10 minutes (matches backend cache)
 
@@ -27,10 +28,7 @@ export function useSentimentData() {
       try {
         return await fetchMarketSentiment();
       } catch (error) {
-        logger.error("Failed to fetch market sentiment", {
-          error: error instanceof Error ? error.message : String(error),
-          status: error instanceof APIError ? error.status : undefined,
-        });
+        logQueryError("Failed to fetch market sentiment", error);
         throw error;
       }
     },

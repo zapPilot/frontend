@@ -33,6 +33,8 @@
 
 import { CACHE_WINDOW } from "@/config/cacheWindow";
 import { isClientError } from "@/lib/errors/errorHelpers";
+import { APIError } from "@/lib/http";
+import { logger } from "@/utils/logger";
 
 /**
  * Data freshness profiles for different query types
@@ -93,6 +95,36 @@ interface QueryConfigResult {
   gcTime: number;
   retry: (failureCount: number, error: unknown) => boolean;
   retryDelay: (attemptIndex: number) => number;
+}
+
+/**
+ * Create standardized React Query configuration
+ *
+ * @param options - Configuration options
+ * @returns Query configuration object with retry, retryDelay, staleTime, and gcTime
+ */
+/**
+ * Log a query error with structured context
+ *
+ * Encapsulates the shared error-logging pattern used across query hooks,
+ * extracting `APIError` status when available.
+ *
+ * @param context - Human-readable description of what failed
+ * @param error - The caught error
+ *
+ * @example
+ * ```typescript
+ * catch (error) {
+ *   logQueryError("Failed to fetch sentiment", error);
+ *   throw error;
+ * }
+ * ```
+ */
+export function logQueryError(context: string, error: unknown): void {
+  logger.error(context, {
+    error: error instanceof Error ? error.message : String(error),
+    status: error instanceof APIError ? error.status : undefined,
+  });
 }
 
 /**

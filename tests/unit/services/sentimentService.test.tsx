@@ -68,6 +68,7 @@ vi.mock("@/hooks/queries/queryDefaults", () => ({
     refetchOnWindowFocus: false,
     staleTime: 600000,
   })),
+  logQueryError: vi.fn(),
 }));
 
 // Mock query keys
@@ -199,9 +200,8 @@ describe("sentimentService", () => {
         timestamp: "2024-01-15T12:00:00Z",
       };
 
-      const { validateSentimentApiResponse } = await import(
-        "@/schemas/api/sentimentSchemas"
-      );
+      const { validateSentimentApiResponse } =
+        await import("@/schemas/api/sentimentSchemas");
 
       vi.mocked(httpUtils.analyticsEngine.get).mockResolvedValue(
         mockApiResponse
@@ -224,7 +224,7 @@ describe("sentimentService", () => {
   // indirectly through the 13 passing integration tests.
   describe("Error handling with createSentimentServiceError", () => {
     it("should handle 503 Service Unavailable errors with enhanced message", async () => {
-      const { logger } = await import("@/utils/logger");
+      const { logQueryError } = await import("@/hooks/queries/queryDefaults");
       const error503 = {
         status: 503,
         message: "Service temporarily unavailable",
@@ -241,7 +241,7 @@ describe("sentimentService", () => {
       });
 
       expect(result.current.error).toBeDefined();
-      expect(logger.error).toHaveBeenCalled();
+      expect(logQueryError).toHaveBeenCalled();
     });
 
     it("should handle 504 Gateway Timeout errors with enhanced message", async () => {
@@ -318,7 +318,7 @@ describe("sentimentService", () => {
     });
 
     it("should log errors with structured format", async () => {
-      const { logger } = await import("@/utils/logger");
+      const { logQueryError } = await import("@/hooks/queries/queryDefaults");
       const error = new Error("API failure");
 
       vi.mocked(httpUtils.analyticsEngine.get).mockRejectedValue(error);
@@ -331,11 +331,9 @@ describe("sentimentService", () => {
         timeout: 3000,
       });
 
-      expect(logger.error).toHaveBeenCalledWith(
+      expect(logQueryError).toHaveBeenCalledWith(
         "Failed to fetch market sentiment",
-        expect.objectContaining({
-          error: expect.any(String),
-        })
+        expect.any(Error)
       );
     });
     it("should handle non-object errors", async () => {
@@ -535,9 +533,8 @@ describe("sentimentService", () => {
     });
 
     it("should use createQueryConfig for base configuration", async () => {
-      const { createQueryConfig } = await import(
-        "@/hooks/queries/queryDefaults"
-      );
+      const { createQueryConfig } =
+        await import("@/hooks/queries/queryDefaults");
 
       const mockApiResponse = {
         value: 50,

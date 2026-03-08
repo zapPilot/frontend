@@ -6,11 +6,12 @@
  */
 import { useQuery } from "@tanstack/react-query";
 
-import { createQueryConfig } from "@/hooks/queries/queryDefaults";
-import { APIError } from "@/lib/http";
+import {
+  createQueryConfig,
+  logQueryError,
+} from "@/hooks/queries/queryDefaults";
 import { queryKeys } from "@/lib/state/queryClient";
 import { getBorrowingPositions } from "@/services/analyticsService";
-import { logger } from "@/utils/logger";
 
 const BORROWING_POSITIONS_CACHE_MS = 12 * 60 * 60 * 1000; // 12 hours (matches backend)
 
@@ -43,10 +44,7 @@ export function useBorrowingPositions(
       try {
         return await getBorrowingPositions(userId);
       } catch (error) {
-        logger.error("Failed to fetch borrowing positions", {
-          error: error instanceof Error ? error.message : String(error),
-          status: error instanceof APIError ? error.status : undefined,
-        });
+        logQueryError("Failed to fetch borrowing positions", error);
         throw error;
       }
     },

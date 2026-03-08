@@ -2,7 +2,7 @@
 // Since useAnalyticsData uses useQuery internally for monthlyPnL, we need to mock it.
 // However, useQuery is imported from @tanstack/react-query.
 // We can mock the module or relying on proper wrapper.
-// But wait, usePortfolioDashboard and useBtcPriceQuery are custom hooks, so we mocked them easily.
+// But wait, usePortfolioDashboard is a custom hook, so we mocked it easily.
 // monthlyPnLQuery uses raw useQuery.
 import { useQuery } from "@tanstack/react-query";
 import { renderHook } from "@testing-library/react";
@@ -10,12 +10,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { usePortfolioDashboard } from "@/hooks/analytics/usePortfolioDashboard";
 import { useAnalyticsData } from "@/hooks/queries/analytics/useAnalyticsData";
-import { useBtcPriceQuery } from "@/hooks/queries/market/useBtcPriceQuery";
 import * as AnalyticsTransformers from "@/lib/analytics/transformers";
 
 // Mock dependencies
 vi.mock("@/hooks/analytics/usePortfolioDashboard");
-vi.mock("@/hooks/queries/market/useBtcPriceQuery");
 vi.mock("@/services/analyticsService");
 vi.mock("@/lib/analytics/transformers", async () => {
   return {
@@ -35,7 +33,6 @@ vi.mock("@tanstack/react-query", async () => {
 
 describe("useAnalyticsData", () => {
   const mockDashboardData = { trends: { daily_values: [1, 2] } };
-  const mockBtcData = { snapshots: [] };
   const mockPnLData = [{ date: "2024-01", value: 100 }];
 
   const defaultDashboardQuery = {
@@ -46,19 +43,11 @@ describe("useAnalyticsData", () => {
     isFetching: false,
   };
 
-  const defaultBtcQuery = {
-    data: null,
-    isLoading: false,
-    error: null,
-    refetch: vi.fn(),
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(usePortfolioDashboard).mockReturnValue(
       defaultDashboardQuery as any
     );
-    vi.mocked(useBtcPriceQuery).mockReturnValue(defaultBtcQuery as any);
     // Default mock for useQuery (monthlyPnL)
     vi.mocked(useQuery).mockReturnValue({
       data: null,
@@ -100,11 +89,6 @@ describe("useAnalyticsData", () => {
     vi.mocked(usePortfolioDashboard).mockReturnValue({
       ...defaultDashboardQuery,
       data: mockDashboardData,
-    } as any);
-
-    vi.mocked(useBtcPriceQuery).mockReturnValue({
-      ...defaultBtcQuery,
-      data: mockBtcData,
     } as any);
 
     // Mock monthly PnL query success
@@ -183,7 +167,6 @@ describe("useAnalyticsData", () => {
 
   it("should refetch all queries", () => {
     const mockRefetchDashboard = vi.fn();
-    const mockRefetchBtc = vi.fn();
     const mockRefetchPnL = vi.fn();
 
     vi.mocked(usePortfolioDashboard).mockReturnValue({
@@ -191,10 +174,6 @@ describe("useAnalyticsData", () => {
       refetch: mockRefetchDashboard,
       data: mockDashboardData, // Needs data to refetch PnL
     } as any);
-    vi.mocked(useBtcPriceQuery).mockReturnValue({
-      ...defaultBtcQuery,
-      refetch: mockRefetchBtc,
-    } as any);
     vi.mocked(useQuery).mockReturnValue({
       data: null,
       isLoading: false,
@@ -208,13 +187,11 @@ describe("useAnalyticsData", () => {
     result.current.refetch();
 
     expect(mockRefetchDashboard).toHaveBeenCalled();
-    expect(mockRefetchBtc).toHaveBeenCalled();
     expect(mockRefetchPnL).toHaveBeenCalled();
   });
 
   it("should not refetch monthlyPnL when dashboard data is missing", () => {
     const mockRefetchDashboard = vi.fn();
-    const mockRefetchBtc = vi.fn();
     const mockRefetchPnL = vi.fn();
 
     vi.mocked(usePortfolioDashboard).mockReturnValue({
@@ -222,10 +199,6 @@ describe("useAnalyticsData", () => {
       refetch: mockRefetchDashboard,
       data: null, // No dashboard data
     } as any);
-    vi.mocked(useBtcPriceQuery).mockReturnValue({
-      ...defaultBtcQuery,
-      refetch: mockRefetchBtc,
-    } as any);
     vi.mocked(useQuery).mockReturnValue({
       data: null,
       isLoading: false,
@@ -239,7 +212,6 @@ describe("useAnalyticsData", () => {
     result.current.refetch();
 
     expect(mockRefetchDashboard).toHaveBeenCalled();
-    expect(mockRefetchBtc).toHaveBeenCalled();
     expect(mockRefetchPnL).not.toHaveBeenCalled();
   });
 
@@ -437,11 +409,6 @@ describe("useAnalyticsData", () => {
       data: mockDashboardData,
     } as any);
 
-    vi.mocked(useBtcPriceQuery).mockReturnValue({
-      ...defaultBtcQuery,
-      data: null, // No BTC data
-    } as any);
-
     const { result } = renderHook(() =>
       useAnalyticsData("user1", { key: "1M", days: 30, label: "1M" })
     );
@@ -449,7 +416,7 @@ describe("useAnalyticsData", () => {
     expect(result.current.data).not.toBeNull();
     expect(
       AnalyticsTransformers.transformToPerformanceChart
-    ).toHaveBeenCalledWith(mockDashboardData, undefined);
+    ).toHaveBeenCalledWith(mockDashboardData);
   });
 
   it("should track period changes and update staleTime", () => {

@@ -1,7 +1,13 @@
-import { renderHook } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { useBacktestResult } from "@/components/wallet/portfolio/views/backtesting/hooks/useBacktestResult";
+
+import { renderHook } from "../../../../../../test-utils";
+
+// Mock market service (used by useBacktestResult's useQuery)
+vi.mock("@/services/analyticsService", () => ({
+  getMarketDashboardData: vi.fn().mockResolvedValue({ snapshots: [] }),
+}));
 
 describe("useBacktestResult markers", () => {
   it("derives buy/sell markers from metrics.metadata.transfers", () => {

@@ -342,8 +342,12 @@ export function buildChartPoint(
   // Market dashboard overlay data (BTC price, DMA 200, sentiment)
   const marketPoint = marketDataMap?.get(point.date);
   data["btc_price"] = marketPoint?.price_usd ?? null;
-  data["dma_200"] = marketPoint?.dma_200 ?? null;
-  data["sentiment"] = marketPoint?.sentiment_value ?? null;
+  data["dma_200"] = marketPoint?.dma_200 ?? point.dma_200 ?? null;
+  data["sentiment"] =
+    marketPoint?.sentiment_value ??
+    point.sentiment ??
+    sentimentLabelToIndex(point.sentiment_label) ??
+    null;
 
   // Signals
   const acc = createSignalAccumulator();

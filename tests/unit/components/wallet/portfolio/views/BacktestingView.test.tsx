@@ -1,10 +1,12 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { BacktestingView } from "@/components/wallet/portfolio/views/BacktestingView";
 import { useBacktestMutation } from "@/hooks/mutations/useBacktestMutation";
 import * as backtestingService from "@/services/backtestingService";
 import * as strategyService from "@/services/strategyService";
+
+import { render } from "../../../../../test-utils";
 
 // Mock useBacktestMutation
 vi.mock("@/hooks/mutations/useBacktestMutation", () => ({
@@ -20,6 +22,11 @@ vi.mock("@/services/backtestingService", () => ({
 // Mock the strategy service
 vi.mock("@/services/strategyService", () => ({
   getStrategyConfigs: vi.fn(),
+}));
+
+// Mock market service (used by useBacktestResult's useQuery)
+vi.mock("@/services/analyticsService", () => ({
+  getMarketDashboardData: vi.fn().mockResolvedValue({ snapshots: [] }),
 }));
 
 // Mock Recharts (BacktestChart dependency)
